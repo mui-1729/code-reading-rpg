@@ -19,6 +19,10 @@ MVPは完成済みです。以後の開発はMVP後の拡張として進めま�
 ## Docs
 
 - [ロードマップ](./docs/ROADMAP.md) — MVP後に追加する機能、優先順位、バージョン計画、技術導入基準
+- [ゲーム設計](./docs/GAME_DESIGN.md) — コードリーディングRPGとして守る仕様と学習・ゲーム設計の原則
+- [アーキテクチャ](./docs/ARCHITECTURE.md) — 現在の構成、責務、データフロー、今後の拡張展望
+- [コンテンツ作成ガイド](./docs/CONTENT_GUIDE.md) — Battle / Skill / 解説を追加するときの設計基準
+- [テスト方針](./docs/TESTING.md) — 現在の確認方法とunit / component / E2Eの段階的な導入方針
 - [開発フロー](./docs/DEVELOPMENT_WORKFLOW.md) — Issue / Branch / Commit / PR / Review / Merge / Vercel Productionの運用規約
 
 ## Production
