@@ -133,7 +133,21 @@ RPG要素は学習と独立した飾りだけにしない。
 
 ## 5. P0: 拡張前の技術・コンテンツ基盤
 
-### 5.1 Vitest導入
+### 5.1 package-lock.jsonをコミット
+
+最初に依存関係の再現性を整える。
+
+目的:
+
+- ローカル / GitHub Actions / Vercelで同じ依存バージョンを使う
+- 新しいテストライブラリ等を追加した際の差分を明確にする
+- CIの再現性を高める
+
+導入後はCIを原則 `npm ci` に切り替える。
+
+### 5.2 Vitest導入
+
+次の大きなゲームロジック変更より前にunit testを用意する。
 
 目的:
 
@@ -150,12 +164,6 @@ RPG要素は学習と独立した飾りだけにしない。
 - 対象なしの場合に空配列になる
 - Battleごとの利用可能スキルが意図どおり累積する
 
-### 5.2 package-lock.jsonをコミット
-
-CI / Vercel / ローカルで依存バージョンを再現可能にする。
-
-導入後はCIを原則 `npm ci` に切り替える。
-
 ### 5.3 lint / format
 
 候補:
@@ -165,7 +173,43 @@ CI / Vercel / ローカルで依存バージョンを再現可能にする。
 
 目的はルールを増やすことではなく、レビューで機械的な指摘を減らすこと。
 
-### 5.4 game領域の責務分割
+CIへの追加は、設定が安定してから行う。
+
+### 5.4 テスト戦略を段階化する
+
+テストは最初から全画面をE2Eで覆わず、責務に応じて使い分ける。
+
+#### Unit: Vitest
+
+対象:
+
+- targeting
+- ダメージ計算
+- Battle生成
+- seed再現性
+- solvability
+- LocalStorage migration等の純粋ロジック
+
+#### Component: React Testing Library
+
+導入トリガー:
+
+- UI状態分岐が増える
+- 「1回目で選択 / 2回目で実行」のような操作回帰をunitだけで守りづらい
+- Stage Selectや設定画面など、DOM上の振る舞いを検証したい
+
+全コンポーネントを機械的にテストしない。重要なユーザー操作を中心にする。
+
+#### E2E: Playwright
+
+導入トリガー:
+
+- Stage Select → Battle → Victory → Unlock → 次Stageのような主要フローが増える
+- route / LocalStorage / UIを跨いだ回帰をunit/component testだけで検知しづらい
+
+E2Eは主要フローに絞り、細かいロジックはunitへ寄せる。
+
+### 5.5 game領域の責務分割
 
 現在の規模では `game.ts` でも成立するが、コンテンツ追加前に必要に応じて以下へ分割する。
 
@@ -182,7 +226,7 @@ src/game/
 
 分割自体を目的にしない。ランダム問題・大量Battle・テスト追加で1ファイルの責務が混ざり始めた時点で行う。
 
-### 5.5 CSSの整理
+### 5.6 CSSの整理
 
 暫定の `layout-fixes.css` は、次回UIを大きく触る際に `styles.css` またはコンポーネント単位の構成へ統合する。
 
@@ -194,7 +238,7 @@ src/game/
 
 ### 6.1 Battleの可変化
 
-最優先機能。
+最優先のプロダクト機能。
 
 初期段階では完全ランダムではなく、**制約付き生成**にする。
 
@@ -602,7 +646,7 @@ LocalStorageのみの段階では導入しない。
 
 ### Zustand
 
-複数画面から共有するクライアント状態が増え、props / route state /局所stateでは管理が不自然になった時点で検討する。
+複数画面から共有するクライアント状態が増え、props / route state / 局所stateでは管理が不自然になった時点で検討する。
 
 「将来使いそう」だけでは導入しない。
 
@@ -738,12 +782,14 @@ AI問題生成を導入する場合も、生成結果をそのまま実行・公
 
 候補:
 
-- Vitest
 - package-lock + `npm ci`
-- Battleロジックのテスト
+- Vitest
+- Battleロジックのunit test
+- lint / format
 - 制約付き盤面可変化
 - seed導入
 - 問題テンプレート
+- 生成盤面のsolvability test
 - game領域の必要最小限の責務分割
 
 完了目安:
@@ -764,6 +810,7 @@ AI問題生成を導入する場合も、生成結果をそのまま実行・公
 - 実行後Trace
 - コード解説改善
 - syntax highlighting
+- 必要なcomponent test
 
 完了目安:
 
@@ -776,12 +823,14 @@ JavaScriptの主要な「読む力」を複数ステージで段階的に練習�
 候補:
 
 - LocalStorage
+- 保存データversion / migration
 - 進捗保存
 - 解放状態保存
 - 学習記録
 - 苦手概念
 - 復習導線
 - Challenge Battle
+- 主要フローのE2E
 
 ### v0.5 — RPG Depth
 
@@ -802,7 +851,7 @@ JavaScriptの主要な「読む力」を複数ステージで段階的に練習�
 
 - JavaScript Chapterが一通り完成
 - 問題追加の仕組みが安定
-- unit / UI / E2Eの必要範囲が整備
+- unit / component / E2Eの必要範囲が整備
 - モバイル・アクセシビリティを確認
 - セーブデータmigration方針あり
 - Production運用が安定
@@ -816,24 +865,28 @@ JavaScriptの主要な「読む力」を複数ステージで段階的に練習�
 
 上から順に優先度が高い。
 
-1. Vitestを導入してターゲット判定をテストする
-2. package-lockを追加しCIを`npm ci`へ変更する
-3. Battle生成を再現可能にするseed設計を決める
-4. 敵順とHPを制約付きで可変化する
-5. 生成Battleのsolvabilityをテストする
-6. Battle / Skill / targetingの責務を必要範囲で分割する
-7. JavaScript Stage Selectを追加する
-8. `some()` / `every()` Battleを追加する
-9. `map()` Battleを追加する
-10. `reduce()` Battleを追加する
-11. 複数行コードBattleを追加する
-12. 実行後Traceを追加する
-13. Boss Battleを設計する
-14. LocalStorageで進捗を保存する
-15. 学習記録のデータモデルを設計する
-16. syntax highlightingを追加する
-17. デッキ編成のゲームデザインを決める
-18. 敵特性 / 状態異常をコードデータと結びつける
+1. package-lockを追加しCIを`npm ci`へ変更する
+2. Vitestを導入してターゲット判定をテストする
+3. ESLint / Prettierの最小構成を導入する
+4. Battle生成を再現可能にするseed設計を決める
+5. 敵順とHPを制約付きで可変化する
+6. 生成Battleのsolvabilityをテストする
+7. Battle / Skill / targetingの責務を必要範囲で分割する
+8. JavaScript Stage Selectを追加する
+9. `some()` / `every()` Battleを追加する
+10. `map()` Battleを追加する
+11. `reduce()` Battleを追加する
+12. 複数行コードBattleを追加する
+13. 実行後Traceを追加する
+14. Boss Battleを設計する
+15. LocalStorageで進捗を保存する
+16. 保存データversion / migrationを追加する
+17. 学習記録のデータモデルを設計する
+18. syntax highlightingを追加する
+19. 主要Battle操作のcomponent testを追加する
+20. Stage Select → Battle → UnlockのE2Eを追加する
+21. デッキ編成のゲームデザインを決める
+22. 敵特性 / 状態異常をコードデータと結びつける
 
 各項目は原則として別Issueに分ける。複数の独立した機能を1 Issueへまとめない。
 
@@ -872,10 +925,16 @@ JavaScriptの主要な「読む力」を複数ステージで段階的に練習�
 - Chapter単位でrouteが増える
 - code-based route treeの編集が煩雑になる
 
+### React Testing Libraryを検討
+
+- DOM上の操作や表示状態が重要になる
+- unit testではユーザー操作の回帰を十分に守れない
+- Stage Selectや設定などUI状態が増える
+
 ### Playwrightを検討
 
 - Stage選択 → Battle → Victory → Unlock → 次Stageのような主要ユーザーフローが増える
-- unit testだけでは回帰を検知しづらくなる
+- unit / component testだけでは回帰を検知しづらくなる
 
 ---
 
