@@ -2,29 +2,32 @@
 
 ## 1. この文書の役割
 
-この文書は、現在の技術構成・責務・データフローと、今後の拡張展望をまとめる。
+この文書は、現在の技術構成・責務・データフローと、RPG拡張後の構成方針をまとめる。
 
-技術比較や「なぜ別の技術を使わなかったか」は扱わない。
+重要なのは「将来使うかもしれない構造を先に完成させる」ことではなく、**現在の責務を分けたまま、RPGの外側のループを段階的に足せること**。
 
 ---
 
-## 2. 現在の構成
+## 2. 現在の全体構成
 
-現在はクライアント完結のSPA。
+現在の`main`はクライアント完結のVite SPA。
 
 ```text
 Browser
   ↓
-React
+React 19
   ↓
 TanStack Router
   ↓
 Battle UI / Local State
   ↓
 Game Domain
-  ├── Battle Data
-  ├── Skill Data
-  └── Targeting Rules
+  ├── Battle base definitions
+  ├── SkillDefinition / SkillCard
+  ├── Targeting Rules
+  ├── Seeded Random
+  ├── Battle Generator
+  └── Solvability
 ```
 
 技術スタック:
@@ -39,19 +42,25 @@ Game Domain
 - ESLint
 - Prettier
 - GitHub Actions
-- Vercel
+- Cloudflare Workers Static Assets
+- Cloudflare Workers Builds
 
-現時点では以下を持たない。
+現在の`main`には以下を持たない。
 
+- PlayerProgress / Level / EXP
+- Stage Select
+- LocalStorage進行保存
 - Backend API
 - Database
 - Authentication
 - Server state
-- Global state library
+- 専用global state library
 
 ---
 
 ## 3. 現在の主要構成
+
+概念上の主な構造:
 
 ```text
 src/
@@ -63,57 +72,172 @@ src/
 ├── game/
 │   ├── index.ts
 │   ├── types.ts
-│   ├── skills.ts
 │   ├── battles.ts
-│   └── targeting.ts
-├── game.test.ts
-├── styles.css
-└── layout-fixes.css
+│   ├── skillDefinitions.ts
+│   ├── skills.ts
+│   ├── targeting.ts
+│   ├── random.ts
+│   ├── generator.ts
+│   └── solvability.ts
+└── *.css
 ```
 
-### `main.tsx`
+テストはGame Domainの各責務に合わせて配置している。
 
-- Reactアプリの起点
-- `AppRouter` のmount
-- グローバルCSSの読み込み
+---
 
-### `AppRouter.tsx`
-
-- TanStack Routerの`RouterProvider`を描画する
-- router定義とReactコンポーネントの責務を分離する
-
-### `router.tsx`
-
-- route treeの定義
-- URLとroute componentの対応付け
-- Router instanceの生成
-- TanStack Routerの型登録
+## 4. Routing
 
 現在のroute:
 
 ```text
 /
-/javascript/battle/$battleId
+/javascript/battle/$battleId?seed=...
 /javascript/complete
 ```
 
-### `routeComponents.tsx`
+`battleId`はpath、`seed`はsearch paramとして扱う。
 
-- タイトル画面
-- Battle URLの解決
-- Chapter完了画面
-- 存在しないBattle IDの表示
+同じBattle IDとseedから同じ可変盤面を再現できる。
 
-### `App.tsx`
+RPG最小ループ導入後は次を追加する予定。
 
-- Battle画面
-- Battle中のlocal state
-- Skill選択 / 発動
-- 敵ターン
-- 勝利 / 敗北 / unlock状態
-- Battle間navigation
+```text
+/javascript                 # JavaScript Kingdom / Stage Select
+/javascript/battle/$battleId
+/javascript/complete        # Area Clearとして整理
+```
 
-主なstate:
+Stage Selectは最終的な世界UIではない。将来トップダウンフィールドへ置き換えるときも、Battle route自体は再利用できるように保つ。
+
+---
+
+## 5. Game Domain
+
+`src/game/`はUIから独立したゲームデータと純粋ロジックを担当する。
+
+### `types.ts`
+
+現在の主な型:
+
+- `Enemy`
+- `SkillCard`
+- `Battle`
+- `TargetRule`
+
+### `battles.ts`
+
+固定された**世界側の基準Battle**を持つ。
+
+現在はBattle 1〜3の基準Enemy / Skill構成を定義する。
+
+ここで定義される基準HPや攻撃力は、将来Player Levelが入ってもcurrent Playerに合わせてruntimeで弱体化しない。
+
+### `skillDefinitions.ts`
+
+Skillのsource definition。
+
+```ts
+SkillDefinition = {
+  id,
+  name,
+  power,
+  rule,
+  concept,
+  explanation,
+  codeVariants,
+}
+```
+
+`codeVariants`は、同じSkill / TargetRule / 学習概念を保ったまま表示コードを切り替えるための基盤。
+
+現在は各Skillにdefault variantが1つ。今後#31でseed付きvariant選択を追加し、#32で一部multi-line variantへ拡張する。
+
+### `skills.ts`
+
+現在のBattle UIが使う`SkillCard`へ`SkillDefinition`を変換する。
+
+現時点では先頭のdefault code variantを使用する。
+
+### `targeting.ts`
+
+表示コードの意味に対応した安全な内部`TargetRule`を評価する。
+
+表示コード自体を`eval()`しない。
+
+### `random.ts`
+
+seedから決定的な乱数を作る。
+
+用途:
+
+- 敵HP
+- 敵順
+- Skill順
+- 将来のcode variant選択
+
+### `generator.ts`
+
+現在の可変Battle生成を担当する。
+
+```text
+Battle base definition
++ seed
+↓
+HP倍率を85〜115%で生成
+敵順をshuffle
+Skill順をshuffle
+↓
+validation
+  - initial valid target
+  - base Battleで意味があったSkillのtargetを維持
+  - solvability
+↓
+validなら採用
+```
+
+最大32回試行し、成立しなければ基準Battleのcloneへfallbackする。
+
+これは「Playerが弱いから敵を自動で弱くする」仕組みではない。**学習意図を壊さない盤面variationを生成する仕組み**。
+
+### `solvability.ts`
+
+生成されたBattleに勝ち筋があるかを検証する。
+
+現在のBattle MVPでは固定Player条件を前提にgenerator validationでも利用している。
+
+Level導入後は、current Player Levelに合わせて敵を弱体化するためには使わない。Battleごとの**基準 / 推奨Player stats**で設計・生成品質を検証する方向へ整理する。
+
+---
+
+## 6. ProblemTemplateを採用しない決定
+
+一度、問題生成のために`ProblemTemplate`という独立抽象を導入したが、現在は削除済み。
+
+理由:
+
+- 現在のSkill / TargetRuleと責務が重複しやすい
+- 問題種類ごとの大きなテンプレート階層を先に作る必要がない
+- コードvariantはSkillの意味と密接なので`SkillDefinition`に置く方が単純
+
+現在の方針:
+
+```text
+Battle base definition
++ SkillDefinition
++ seed
++ generator constraints
+```
+
+必要な責務が実際に増えるまで、別の「問題テンプレート層」は作らない。
+
+---
+
+## 7. Battle中の状態
+
+現在のBattle実行中stateはReact local stateが中心。
+
+例:
 
 - phase
 - playerHp
@@ -125,263 +249,170 @@ src/
 - animatingIds
 - isResolving
 
-Battle単体で完結するため、現状はReact local stateで管理する。
+Battle中だけ必要な一時状態は、将来も進行保存データへ混ぜない。
 
 ---
 
-## 4. Game Domain
+## 8. RPG進行の次期構成
 
-`src/game/` はゲームのデータと純粋ロジックをUIから分離する。
+次に追加するのはBattleをまたいで共有するPlayer進行。
 
-### `index.ts`
+予定する責務:
 
-Game Domainの公開口。
+```text
+src/
+├── progression/
+│   ├── types.ts
+│   ├── constants.ts
+│   ├── progression.ts
+│   └── index.ts
+├── features/
+│   └── stage-select/
+└── persistence/
+```
 
-UIやテスト側は原則 `./game` から必要な値・型をimportする。
-
-### `types.ts`
-
-- `Enemy`
-- `SkillCard`
-- `Battle`
-- `TargetRule`
-
-### `skills.ts`
-
-- Skill定義
-- 表示コード
-- POWER
-- target rule
-- concept / explanation
-
-### `battles.ts`
-
-- 固定Battle定義
-- 敵データ
-- 利用可能Skill
-- unlock Skill
-
-### `targeting.ts`
-
-- `getTargets()`
-- target ruleの評価
-
-表示されているJavaScriptコード自体を`eval()`せず、`TargetRule`を安全な内部表現として評価する。
-
----
-
-## 5. 現在のデータモデル
-
-### Enemy
+初期PlayerProgress候補:
 
 ```ts
 {
-  id
-  name
-  hp
-  maxHp
-  attackName
-  attackDamage
-  glyph
+  exp,
+  clearedStageIds,
+  unlockedStageIds,
+  unlockedSkillIds,
 }
 ```
 
-### SkillCard
+LevelはEXPから導出し、二重管理を避ける。
 
-```ts
-{
-  id
-  name
-  code
-  power
-  rule
-  concept
-  explanation
-}
-```
-
-### Battle
-
-```ts
-{
-  id
-  label
-  title
-  subtitle
-  enemies
-  skillIds
-  unlockSkillId?
-}
-```
-
-### TargetRule
-
-現在:
-
-- firstBelow
-- allBelow
-- named
-- lowestHp
-- firstAbove
-- allAbove
+Battle transient stateとPlayerProgressは明確に分ける。
 
 ---
 
-## 6. Battle開始時の流れ
+## 9. RPGデータフロー
+
+RPG最小ループ完成時のイメージ:
 
 ```text
-URLからbattleIdを取得
+PlayerProgress
 ↓
-route componentがBattle存在確認
+Stage Select
 ↓
-AppにbattleIdを渡す
+Stage / seedを選ぶ
 ↓
-battlesからBattle定義を取得
+Battle
 ↓
-Enemy配列をcloneしてlocal stateへ
+Victory Reward
+  - EXP
+  - Stage CLEAR
+  - Skill unlock
+  - Next Stage unlock
 ↓
-skillIdsから利用可能Skillを解決
+PlayerProgress更新
 ↓
-Battle開始
+Stage Selectへ戻る / 次へ
 ```
 
-Battle定義は元データとして扱い、現在HPなどの実行時状態はReact state側に持つ。
-
----
-
-## 7. Skill発動の流れ
+Level成長がBattleへ影響する場合も、Player statsをBattle開始時に入力として渡す。
 
 ```text
-カード1回目押下
+PlayerProgress
 ↓
-selectedSkillIdを設定
+PlayerStats
+  - level
+  - maxHp
+  - powerMultiplier
 ↓
-同じカードを2回目押下
-↓
-getTargets(enemies, skill.rule)
-↓
-対象IDを取得
-↓
-各対象へskill.powerの固定ダメージ
-↓
-Enemy state更新
-↓
-生存敵が敵ターンを実行
-↓
-勝利 / 継続 / 敗北を判定
+Battle Runtime
 ```
 
-表示コードと内部target ruleは常に同じ意味になるよう管理する。
+Enemy base statsはPlayerStatsを参照して書き換えない。
 
 ---
 
-## 8. 状態管理
-
-### 現在
-
-Battle stateは`App.tsx`のlocal state。
-
-画面をまたいで永続的に共有する状態はほぼ存在しない。
-
-### 今後
-
-LocalStorage導入後は、例えば以下がBattle外でも必要になる。
-
-- クリア済みBattle
-- 解放済みSkill
-- 最終プレイ位置
-- 設定
-- 学習記録
-
-最初は専用のpersistence moduleとReact stateで扱う。
-
-複数画面で同じclient stateを広範囲に共有する必要が生じた場合に、global state管理を検討する。
-
----
-
-## 9. 問題生成の展望
-
-固定Battleから、再現可能な制約付き生成へ段階的に拡張する。
-
-```text
-Battle Template
-  + Seed
-  + Generation Constraints
-        ↓
-Generated Battle
-        ↓
-Validation
-  - learning intent
-  - valid targets
-  - solvability
-        ↓
-Battle UI
-```
-
-必要になった段階で次を追加する。
-
-```text
-src/game/
-├── generator.ts
-└── solvability.ts
-```
-
-空ファイルや将来用抽象化を先に作らない。
-
-表示コード・target rule・解説に必要な値は、同じ問題定義から生成できる構造を目指す。
-
----
-
-## 10. 進捗保存の展望
+## 10. Persistence
 
 第一段階はLocalStorage。
 
 ```text
-React
-  ↓
+React / Progress Provider
+↓
 Progress Repository
-  ↓
+↓
 LocalStorage
 ```
 
-保存候補:
+保存するもの:
 
 - schema version
-- cleared battles
-- unlocked skills
-- settings
-- learning history
+- EXP
+- cleared Stage
+- unlocked Stage
+- unlocked Skill
+- Area CLEAR等の長期進行
 
-保存形式変更に備えてversionとmigration方針を持つ。
+保存しないもの:
+
+- 現在ターン
+- Battle中の敵残HP
+- animation state
+- selected card
+
+壊れたdata / 未知schema versionでは安全に初期状態へfallbackする。
 
 ---
 
-## 11. クラウド機能の展望
+## 11. Stage SelectからFieldへ
 
-複数端末同期やアカウントが必要になった段階でserver-side storageを追加する。
+Stage SelectはRPG進行を先に成立させるための暫定UI。
+
+最終的なRPG世界は次を目指す。
 
 ```text
-React App
-  ↓
-Server-state layer
-  ↓
-Backend / Database
+Top-down Field / Hub
+├── Player movement
+├── Collision
+├── Interactable objects
+├── NPC / Dialogue
+├── Battle entrance
+└── Area exit
 ```
 
-クラウド化後も、targetingや盤面生成などのゲームロジックは可能な限り純粋なGame Domainとして保つ。
+Battle終了後はFieldへ戻り、進行状態に応じてNPC会話・入口・Area状態が変わる。
+
+重要なのは、Field rendering / movement / DialogueをBattle Domainへ混ぜないこと。
 
 ---
 
-## 12. テスト構造
+## 12. Backendの展望
 
-現在はVitestでGame Domainのunit testを実行している。
+Cloudflareへdeployしたが、backend選定は未決定。
 
-主な対象:
+現在はbackend不要。
 
-- targeting
-- Skill progression
+必要になるトリガー:
 
-CIでは次を実行する。
+- 複数端末同期
+- アカウント
+- クラウドセーブ
+- ランキング
+- 共有Challengeの永続保存
+- 管理画面
+
+候補:
+
+```text
+Cloudflare Workers + D1 / KV / R2
+Supabase
+その他のBaaS / API
+```
+
+選定時もtargeting、generator、solvability、progression計算などは可能な限り純粋Domainとして保つ。
+
+---
+
+## 13. テスト構造
+
+現在のCI:
 
 ```text
 npm ci
@@ -393,62 +424,57 @@ npm test
 npm run build
 ```
 
-今後は必要性に応じて段階的に追加する。
+Unitの主対象:
 
-### Component
+- targeting
+- seeded random
+- Battle generator
+- SkillDefinition
+- solvability
+- 将来のprogression / persistence
 
-候補:
+将来のComponent:
 
-- 2回押し発動
-- Skill選択状態
-- modal / unlock
-- UI上の状態遷移
+- card select / execute
+- victory / defeat
+- Stage Select状態
+- EXP / Level表示
 
-### E2E
+将来のE2E:
 
-候補:
-
-- Stage Select → Battle → Victory → Unlock → Next Stage
-- 保存 / 再読み込み
-- 主要route
-
-詳細は [`TESTING.md`](./TESTING.md) を参照する。
+- Stage Select → Battle → Reward → Unlock
+- reload → Progress復元
+- Field → Battle → Field復帰
 
 ---
 
-## 13. デプロイ構成
+## 14. デプロイ構成
 
 ```text
-GitHub PR / Branch
-  ↓
-GitHub Actions CI
-  ↓
-Vercel Preview
+PR / Branch
+├─ GitHub Actions CI
+└─ Cloudflare Workers Preview Build
 
 main merge
-  ↓
-Vercel Production
+├─ GitHub Actions CI
+└─ Cloudflare Workers Production Build
 ```
 
-正式Project:
+正式Production:
 
 ```text
-code-reading-rpg-live
+https://code-reading-rpg.profuse-comb.workers.dev
 ```
 
-Production:
+Vercelは現在のdeploy pathに含めない。
 
-```text
-https://code-reading-rpg-live.vercel.app
-```
-
-通常はGit Integration経由でデプロイする。
+詳細は[`DEPLOYMENT.md`](./DEPLOYMENT.md)を参照する。
 
 ---
 
-## 14. 将来の構成イメージ
+## 15. 将来構成イメージ
 
-責務が実際に増えた段階で、必要な部分から拡張する。
+責務が実際に増えた段階で必要な部分から拡張する。
 
 ```text
 src/
@@ -456,35 +482,37 @@ src/
 │   ├── routes/
 │   └── providers/
 ├── game/
-│   ├── types.ts
-│   ├── skills.ts
 │   ├── battles.ts
+│   ├── skillDefinitions.ts
 │   ├── targeting.ts
+│   ├── random.ts
 │   ├── generator.ts
 │   └── solvability.ts
+├── progression/
+├── persistence/
 ├── features/
 │   ├── battle/
 │   ├── stage-select/
-│   ├── progress/
-│   └── reference/
-├── persistence/
+│   ├── field/
+│   └── dialogue/
 ├── components/
 └── styles/
 ```
 
-この形を先に完成させるのではなく、実際の要件に合わせて移行する。
+このdirectory treeを先に作るのではなく、Issueごとに責務が必要になった時点で移行する。
 
 ---
 
-## 15. 更新タイミング
+## 16. 更新タイミング
 
-次の変更が入ったら、この文書も更新する。
+次の変更が入ったらこの文書も更新する。
 
-- Game Domainの責務を変更した
-- routing方式を変えた
-- LocalStorageを導入した
-- global stateを導入した
-- backend / databaseを追加した
-- 問題生成方式を変更した
-- test layerを追加した
-- Production構成を変更した
+- Game Domainの責務を変更
+- SkillDefinition / generator方式を変更
+- PlayerProgressを導入
+- routing方式を変更
+- LocalStorageを導入
+- Field / Dialogueを追加
+- backend / databaseを追加
+- test layerを追加
+- Production構成を変更

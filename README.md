@@ -2,44 +2,97 @@
 
 コードを「書く」のではなく、**読んで意味を判断して戦う**コードリーディングRPGです。
 
-MVPは完成済みです。以後の開発はMVP後の拡張として進めます。
+現在の`main`はBattle中心のMVPです。MVPの戦闘体験は成立しており、次の開発では「RPG風の戦闘画面」から、**育成・再挑戦・探索を含むRPGそのもの**へ外側のループを拡張します。
 
-## MVP
+## Current main
 
-- JavaScript編 3 battles
-- コードカードを2回押して発動
-- コードが攻撃対象を決定、POWERが固定ダメージを決定
+現在実装済みの主な機能:
+
+- JavaScript編 3 Battles
+- コードカードを1回押して選択、同じカードを2回目に押して実行
+- 表示コードが攻撃対象を決定し、POWERがダメージを決定
 - 対象プレビューなし
-- 敵の次行動を表示
+- 敵のHP / NEXT行動を見て戦略を決める
 - `find` / `filter` / 比較 / `sort` を使用
 - 任意のコード解説
-- Battleクリアで新カード解放
-- 評価・レベル・装備・セーブ・バックエンドなし
+- BattleクリアによるSkill解放
+- seed付き乱数とURLの`seed` queryによる盤面再現
+- seedに基づく敵HP・敵順・Skill順の制約付き可変Battle
+- 生成盤面の学習条件・有効対象・solvability検証
+- `SkillDefinition` / `codeVariants`によるコード表現拡張の基盤
+- Vitest / ESLint / Prettier / GitHub Actions CI
+
+まだ`main`には入っていない主なRPG機能:
+
+- Player Level / EXP
+- Stage Select
+- 過去Stageでの育成・再挑戦ループ
+- LocalStorage進行保存
+- Boss / Area CLEAR
+- トップダウンフィールド
+- NPC / 会話 / 拠点
+- 装備 / アイテム
+- Backend / Database / Authentication
+
+## Product direction
+
+次の優先は、Battleの種類を増やすことより先にRPGの外側の循環を作ることです。
+
+```text
+Stage Select / 将来のフィールド・拠点
+↓
+行き先を選ぶ
+↓
+Battle
+↓
+EXP・Skill・CLEAR報酬
+↓
+Playerが成長
+↓
+前のStageへ戻って育成・復習もできる
+↓
+強敵へ再挑戦
+```
+
+敵はPlayer Levelに合わせてruntimeで弱体化しません。強い敵に勝てない場合は、過去Stageへ戻り、EXPを稼いでPlayer側を成長させて再挑戦します。
+
+ただしLevelはコード読解を不要にするためのものではありません。**育成で戦える余裕を増やし、勝ち方はコード読解と戦略で決める**ことを基本原則とします。
+
+Stage Selectはこのループを早く成立させるための暫定UIです。RPG最小ループ完成後は、プレイヤーが歩いてBattle入口・NPC・拠点へ移動するトップダウンフィールドへ発展させます。
 
 ## Docs
 
-- [ロードマップ](./docs/ROADMAP.md) — MVP後に追加する機能、優先順位、バージョン計画、技術導入基準
-- [ゲーム設計](./docs/GAME_DESIGN.md) — コードリーディングRPGとして守る仕様と学習・ゲーム設計の原則
-- [RPG成長ループ](./docs/RPG_PROGRESSION.md) — レベル、EXP、再挑戦、敵の強さに関する成長設計
-- [アーキテクチャ](./docs/ARCHITECTURE.md) — 現在の構成、責務、データフロー、今後の拡張展望
-- [コンテンツ作成ガイド](./docs/CONTENT_GUIDE.md) — Battle / Skill / 解説を追加するときの設計基準
-- [テスト方針](./docs/TESTING.md) — 現在の確認方法とunit / component / E2Eの段階的な導入方針
-- [開発フロー](./docs/DEVELOPMENT_WORKFLOW.md) — Issue / Branch / Commit / PR / Review / Merge / Vercel Productionの運用規約
+- [ロードマップ](./docs/ROADMAP.md) — 実装済み基盤、次の優先順位、長期展望
+- [ゲーム設計](./docs/GAME_DESIGN.md) — コードリーディングRPGとして守る原則
+- [RPG成長ループ](./docs/RPG_PROGRESSION.md) — Level / EXP / 再挑戦 / Stage / Fieldの設計
+- [アーキテクチャ](./docs/ARCHITECTURE.md) — 現在の構成と将来の責務分割
+- [コンテンツ作成ガイド](./docs/CONTENT_GUIDE.md) — SkillDefinition / Battle生成 / 学習コンテンツ設計
+- [テスト方針](./docs/TESTING.md) — Unit / Preview / E2E / solvability方針
+- [開発フロー](./docs/DEVELOPMENT_WORKFLOW.md) — IssueからCloudflare Production確認までの運用
+- [デプロイ運用](./docs/DEPLOYMENT.md) — Cloudflare Workers Builds / Preview / Production設定
 
 ## Production
 
-- Vercel: https://code-reading-rpg-live.vercel.app
-- `main` へのmergeをProduction Deployのトリガーとして運用します。
+正式なデプロイ先はCloudflare Workers Static Assetsです。
+
+- Production: https://code-reading-rpg.profuse-comb.workers.dev
+- Production branch: `main`
+- PR / branch: Cloudflare Workers Builds Preview
+- `main` merge: Cloudflare Workers Production Build
+
+VercelのGit連携は解除済みで、自動deployも`vercel.json`で無効化しています。現在の開発フローではVercelをPreview / Productionの必須条件にしません。
 
 ## Routes
 
 TanStack Routerで画面遷移とBattle URLを管理しています。
 
 - `/` - スタート画面
-- `/javascript/battle/$battleId` - JavaScript編の各Battle
-- `/javascript/complete` - Chapterクリア画面
+- `/javascript/battle/$battleId?seed=...` - JavaScript編の各Battle
+- `/javascript/complete` - 現MVPのChapterクリア画面
 
-現在は小規模なためcode-based routingを採用しています。ルート数が増えた段階で、TanStack Routerが推奨するfile-based routingへの移行を検討します。
+同じBattle IDとseedなら同じ可変盤面を再現できます。
+
+Stage Select導入後は`/javascript`をJavaScript Kingdomの入口として追加する予定です。
 
 ## Run
 
@@ -48,20 +101,28 @@ npm install
 npm run dev
 ```
 
-## Build
+## Quality checks
 
 ```bash
+npm ci
+npm run lint
+npm test
 npm run build
 ```
 
 ## Tech
 
 - Vite
-- React
+- React 19
 - TypeScript
 - TanStack Router
 - CSS
+- Node.js 24
+- Vitest
+- ESLint / Prettier
+- GitHub Actions
+- Cloudflare Workers Static Assets / Workers Builds
 
 ## Design note
 
-表示されているコードを `eval()` してゲームロジックとして実行していません。カードごとに安全な内部ルールを持ち、表示コードとゲーム効果を対応させています。
+表示されているコードを`eval()`してゲームロジックとして実行しません。コード表示と安全な内部ルールを同じ定義から対応させ、JavaScript上の意味とゲーム効果がずれない構造を維持します。

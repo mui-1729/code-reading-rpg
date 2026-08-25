@@ -2,948 +2,437 @@
 
 ## 1. この文書の目的
 
-この文書は、MVP完成後の `CODE//READ RPG` をどの順序で拡張するかを定義する。
+この文書は、MVP完成後の`CODE//READ RPG`をどの順序で拡張するかを定義する。
 
-このプロジェクトの中心は「RPGを作ること」そのものではなく、**コードを読んで実行結果を予測する行為をゲームとして成立させること**にある。
+2026-08-26時点で方針を更新し、**「Battleを増やし続ける」より先に、RPGとしての成長・再挑戦・探索ループを成立させる**ことを次の優先事項とする。
 
-したがって、機能追加は次の問いを満たすものから優先する。
+ただしゲームの中心は常にコードリーディング。
 
-1. 本当にコードを読まないと判断できないか
-2. 同じ問題の答えを暗記するだけにならないか
-3. コードを読んだ結果がゲーム内の意思決定に結びついているか
-4. 初学者が「なぜその結果になったか」を振り返れるか
-5. 問題数が増えても保守・テスト・追加が容易か
-
----
-
-## 2. MVPの完成定義
-
-MVPは完成済みとする。
-
-現在のMVPでは以下が成立している。
-
-- JavaScript編3 Battleをプレイできる
-- コードカードを読み、対象を予測して戦う
-- 1回目の押下で選択、同じカードを2回目に押すと実行する
-- 対象プレビューを表示しない
-- コードの読み間違いを「不正解」と表示せず、対応するゲーム効果をそのまま実行する
-- 敵のHPとNEXT行動を見て意思決定できる
-- `find` / `filter` / 比較演算 / `sort` を扱う
-- Battleクリアで技が解放され、後続Battleでも保持される
-- 勝利・敗北・再挑戦・コード解説の基本ループがある
-- オリジナルの8-bit RPG風UIがある
-- GitHub Actions CIが動作する
-- `main` へのmergeからVercel Productionへ自動デプロイされる
-
-MVPでは意図的に以下を持たない。
-
-- アカウント
-- DB / バックエンド
-- クラウドセーブ
-- ランキング
-- レベル / 装備 / アイテム
-- 高度なデッキ構築
-- 大量のChapter
-- AIによる問題生成
-- ユーザー入力コードの実行
-
-以後、これらは「MVP不足」ではなく、MVP後の拡張として扱う。
+1. コードを読まないと判断しづらいか
+2. 同じ手順の暗記だけで攻略できないか
+3. コードを読んだ結果がゲーム内の意思決定につながるか
+4. RPGの数値成長が読解を不要にしていないか
+5. コンテンツを増やしても保守・テストできるか
 
 ---
 
-## 3. プロダクト原則
+## 2. 現在地
 
-### 3.1 コードを読まないと勝てない
+### Battle MVP: 完成済み
 
-最重要原則。
+現在の`main`では以下が成立している。
 
-固定された敵HP・敵順・カード順だけで構成すると、繰り返しプレイ時にコードを読まず「このカードを押せばいい」と暗記できる。
+- JavaScript編3 Battle
+- コードカードのSELECT → EXECUTE
+- 対象プレビューなし
+- HP / NEXTを使った戦略判断
+- `find` / `filter` / 比較 / `sort`
+- Skill解放
+- コード解説
+- 勝利 / 敗北 / Retry
+- 8-bit RPG風UI
 
-今後は以下を組み合わせ、毎回コードを確認する必要がある状態を作る。
+### 暗記防止・生成基盤: 実装済み
 
-- 敵の並び順を変える
-- 敵HPを変える
-- 比較する閾値を変える
-- 同名の敵を複数出す
-- 条件に一致する敵数を変える
-- 配列データ自体を変える
-- カードのコード式を同概念の別表現に変える
-- 複数行コードを導入する
+すでに以下を`main`へ導入済み。
 
-ただしランダム化によって「勝てない盤面」「学習意図が崩れる盤面」を生成しないこと。
+- seed付き決定的乱数
+- Battle URLの`seed` search param
+- 敵HPの制約付きvariation
+- 敵順shuffle
+- Skill順shuffle
+- 学習対象を維持するgenerator validation
+- `isBattleSolvable()`による勝ち筋検証
+- `SkillDefinition`
+- `codeVariants`を持てる構造
+- ProblemTemplate抽象の削除
 
-### 3.2 コードと効果の対応を壊さない
+したがって、旧ロードマップの「seed / generator / solvabilityをこれから作る」という項目は完了扱いとする。
 
-表示コードとゲーム効果は常に同じ意味でなければならない。
+### 品質・運用基盤: 実装済み
 
-現在と同様、表示コードを安易に `eval()` してゲームロジックとして実行しない。
-
-問題生成を導入する場合も、内部ルールと表示コードを同じ定義から生成し、意味のズレを防ぐ。
-
-### 3.3 難しさは「文章の意地悪さ」ではなく「読む量と状態」で作る
-
-難易度を上げるとき、曖昧な日本語や引っかけ問題を増やさない。
-
-難易度は主に以下で上げる。
-
-- 対象候補の数
-- 条件の数
-- コードの行数
-- データ構造の深さ
-- 状態変化の回数
-- 実行順序
-- 複数の選択肢が持つトレードオフ
-
-### 3.4 RPG要素は学習判断を補強する
-
-RPG要素は学習と独立した飾りだけにしない。
-
-良い例:
-
-- `filter()` を正しく読めると複数敵をまとめて攻撃できる
-- `sort()` を読めると危険な敵を優先して倒せる
-- NEXT行動を見ながらコードの対象を判断する
-
-避けたい例:
-
-- コードとは無関係なレベル差だけで勝敗が決まる
-- 強いレアカードを持っていればコードを読まなくても勝てる
-- 周回による数値強化が学習判断を上書きする
-
-### 3.5 機能追加より問題追加のしやすさを優先する
-
-コンテンツが増えるゲームなので、Battleを1個追加するたびにUIやゲームロジックを書き換える状態を避ける。
-
-問題定義・表示・判定・テストを分離し、データ追加中心でBattleを増やせる構造を目指す。
-
----
-
-## 4. 優先度
-
-優先度は次の意味で使用する。
-
-- **P0**: 次の大規模機能追加より前に整える
-- **P1**: プロダクトの核を強くする。優先して実装する
-- **P2**: 学習体験・継続体験を成立させる
-- **P3**: RPGとしての深さや楽しさを増やす
-- **P4**: サービス化・複数端末・運用規模拡大時に導入する
-- **P5**: 長期候補。必要性を検証してから着手する
-
----
-
-## 5. P0: 拡張前の技術・コンテンツ基盤
-
-### 5.1 package-lock.jsonをコミット
-
-最初に依存関係の再現性を整える。
-
-目的:
-
-- ローカル / GitHub Actions / Vercelで同じ依存バージョンを使う
-- 新しいテストライブラリ等を追加した際の差分を明確にする
-- CIの再現性を高める
-
-導入後はCIを原則 `npm ci` に切り替える。
-
-### 5.2 Vitest導入
-
-次の大きなゲームロジック変更より前にunit testを用意する。
-
-目的:
-
-- `getTargets()` の回帰を防ぐ
-- Battle追加時に既存カードを壊さない
-- ランダム生成後も盤面条件を保証する
-
-最低限テストするもの:
-
-- `find` 系が最初の1体だけを返す
-- `filter` 系が一致する全員を返す
-- `lowestHp` が最小HPを選ぶ
-- 倒れた敵を対象にしない
-- 対象なしの場合に空配列になる
-- Battleごとの利用可能スキルが意図どおり累積する
-
-### 5.3 lint / format
-
-候補:
-
+- `package-lock.json`
+- Node.js 24
+- Vitest
 - ESLint
 - Prettier
+- GitHub Actions CI
+- Cloudflare Workers Static Assets
+- Cloudflare Workers Builds Preview / Production
 
-目的はルールを増やすことではなく、レビューで機械的な指摘を減らすこと。
-
-CIへの追加は、設定が安定してから行う。
-
-### 5.4 テスト戦略を段階化する
-
-テストは最初から全画面をE2Eで覆わず、責務に応じて使い分ける。
-
-#### Unit: Vitest
-
-対象:
-
-- targeting
-- ダメージ計算
-- Battle生成
-- seed再現性
-- solvability
-- LocalStorage migration等の純粋ロジック
-
-#### Component: React Testing Library
-
-導入トリガー:
-
-- UI状態分岐が増える
-- 「1回目で選択 / 2回目で実行」のような操作回帰をunitだけで守りづらい
-- Stage Selectや設定画面など、DOM上の振る舞いを検証したい
-
-全コンポーネントを機械的にテストしない。重要なユーザー操作を中心にする。
-
-#### E2E: Playwright
-
-導入トリガー:
-
-- Stage Select → Battle → Victory → Unlock → 次Stageのような主要フローが増える
-- route / LocalStorage / UIを跨いだ回帰をunit/component testだけで検知しづらい
-
-E2Eは主要フローに絞り、細かいロジックはunitへ寄せる。
-
-### 5.5 game領域の責務分割
-
-現在の規模では `game.ts` でも成立するが、コンテンツ追加前に必要に応じて以下へ分割する。
-
-例:
-
-```text
-src/game/
-  types.ts
-  skills.ts
-  battles.ts
-  targeting.ts
-  generator.ts
-```
-
-分割自体を目的にしない。ランダム問題・大量Battle・テスト追加で1ファイルの責務が混ざり始めた時点で行う。
-
-### 5.6 CSSの整理
-
-暫定の `layout-fixes.css` は、次回UIを大きく触る際に `styles.css` またはコンポーネント単位の構成へ統合する。
-
-単独Issueとして無理に先行しなくてもよいが、修正CSSを積み重ね続けない。
+Vercelは自動deploy経路から外した。
 
 ---
 
-## 6. P1: 「暗記ではなく読む」ゲームへの強化
+## 3. 最重要プロダクト方針
 
-### 6.1 Battleの可変化
+現在のMVPは**RPGの戦闘要素しか持っていない**。
 
-最優先のプロダクト機能。
+次は「RPGっぽい戦闘UI」ではなく、次の循環を作る。
 
-初期段階では完全ランダムではなく、**制約付き生成**にする。
+```text
+Stage Select / Field / Hub
+↓
+行き先を選ぶ
+↓
+Battle
+↓
+EXP・Skill・CLEAR報酬
+↓
+Playerが成長
+↓
+次へ進む / 前へ戻って育成する
+↓
+強敵へ再挑戦
+```
 
-可変候補:
+強い敵に勝てないとき、ゲーム側がcurrent Player Levelを見て敵を自動弱体化する設計にはしない。
 
-- 敵の並び順
-- HP
-- 比較閾値
-- 対象人数
-- 敵名
-- カード順
+```text
+Level不足
+↓
+過去Stageへ戻る
+↓
+EXPを稼ぐ
+↓
+Level Up
+↓
+同じ世界へ再挑戦
+```
 
-生成時に保証すること:
+これをRPGの基本とする。
 
-- 学ばせたい概念が必ず盤面に現れる
-- 少なくとも1つ有効な選択がある
-- 意図したターン数程度でクリア可能
-- ボス戦など意図的な例外を除き理不尽な即死盤面を作らない
+---
 
-### 6.2 Seed付き問題生成
+## 4. P0: RPG最小ループ
 
-ランダム生成を再現可能にする。
+次の大きな優先は#43〜#48。
 
-用途:
+### #43 Player Progression Model
 
-- バグ報告時に同じ盤面を再現
-- テスト
-- Daily Challenge
-- 友人と同じ問題を共有
+追加するもの:
 
-URLや内部状態にseedを持つ方式を検討する。
+- EXP
+- Level導出
+- 最大HP
+- 小幅なPOWER倍率
+- cleared Stage
+- unlocked Stage
+- unlocked Skill
 
-### 6.3 問題テンプレート
+初期案:
 
-「Battleそのもの」と「生成ルール」を分離する。
+```text
+累計EXP: 20 * level * (level - 1)
+Lv2: 40
+Lv3: 120
+Lv4: 240
 
-例:
+maxHp = 100 + (level - 1) * 8
+powerMultiplier = 1 + (level - 1) * 0.02
+```
 
-- `find-first-below`
-- `filter-all-below`
-- `find-by-name`
-- `sort-lowest-hp`
+UI / LocalStorageから独立した純粋Domainとして作る。
 
-テンプレートに対して敵データ・閾値・POWERなどを設定し、複数Battleを生成できるようにする。
+### #44 JavaScript Kingdom Stage Select
 
-### 6.4 同じ概念の別表現
+`/javascript`へStage Selectを追加する。
 
-暗記防止と実践的な読み取りのため、同一概念を異なる記述で出す。
+- Battle 1〜3をStage表示
+- 推奨Level
+- EXP報酬
+- READY / LOCKED / CLEAR
+- Boss表示
+- 過去Stage再挑戦
+- 新seedで再挑戦
+- 現在Level / EXP / maxHP表示
+
+重要: **Stage Selectは最終世界UIではない。**
+
+RPGループを早く成立させるための暫定UIとして作り、後でFieldへ置き換えられる構造にする。
+
+### #45 Battle Reward / Stage Progress
+
+Battle勝利をRPG進行へ接続する。
+
+初期EXP案:
+
+- Battle 1: 40 EXP
+- Battle 2: 60 EXP
+- Battle 3: 100 EXP
+
+想定:
+
+```text
+Battle 1 clear → 40 → Lv2
+Battle 2 clear → total 100 → Lv2
+Battle 3 recommended Lv3
+↓
+必要なら過去Battleを再戦
+↓
+120以上 → Lv3
+↓
+Boss再挑戦
+```
+
+再クリアでもEXPを得られる。
+
+### #46 Level Growth in Battle
+
+Player側だけ成長させる。
+
+- Battle開始HP = current maxHP
+- HUDにLevel
+- Skill damageへ小幅POWER倍率
+- Retry時もcurrent maxHP
+
+敵のHP / 攻撃力 / 構成はcurrent Player Levelで変えない。
+
+### #47 LocalStorage Persistence
+
+保存するもの:
+
+- EXP
+- clearedStageIds
+- unlockedStageIds
+- unlockedSkillIds
+- Area進行
+- schema version
+
+Battle中のターンや敵残HPは保存しない。
+
+### #48 Boss / Area CLEAR
+
+Battle 3をJavaScript Kingdom Bossとして扱う。
+
+- Boss属性
+- Area CLEAR
+- Area Clear画面
+- CLEAR後も過去Stage再戦可能
+- 将来の複数Areaへ拡張可能な進行構造
+
+### P0完了条件
+
+次が揃った段階を「RPG最小ループ完成」とする。
+
+1. Stage Select
+2. 過去Battle再挑戦
+3. EXP獲得
+4. Level Up
+5. Player stats成長
+6. Stage CLEAR / unlock
+7. 敗北後に戻って育成
+8. LocalStorage保存
+9. Boss / Area CLEAR
+10. コードを読む必要性を維持
+
+---
+
+## 5. P1: RPG世界を歩けるようにする
+
+RPG最小ループ完成後、Stage Select中心の画面遷移から**トップダウンのField / Hub**へ拡張する。
+
+### #49 Top-down Field
+
+最初のスコープ:
+
+- 2D 1画面程度
+- 4方向移動
+- collision
+- interaction
+- Battle入口
+- Area出口
+- Battle終了後にFieldへ復帰
+- Keyboard / Mobile操作
+
+最初から巨大なopen worldや複雑なphysicsは作らない。
+
+### #50 Hub / NPC / Dialogue
+
+- NPC 2〜3人
+- 汎用Dialogue data
+- 進行状態による会話分岐
+- 次の目的の提示
+- 学習ヒント / 復習導線
+
+将来候補:
+
+- Quest
+- Shop
+- 回復施設
+- Story event
+- 装備変更
+
+RPGの世界観はBattleから独立した飾りではなく、学習導線にも利用する。
+
+---
+
+## 6. P1: 読解体験の再強化
+
+#31 / #32は重要だが、現在は**RPG最小ループを先に成立させる**ため後ろへ回す。
+
+### #31 同概念のcode variant
+
+`SkillDefinition.codeVariants`の基盤はすでにある。
+
+次に行うこと:
+
+- 同じTargetRuleの複数1行表現
+- `battleId + seed + skillId`から決定的選択
+- 同じseedでは同じコード
+- 新しい未習構文を急に混ぜない
 
 例:
 
 ```js
 enemies.find(e => e.hp < 45)
-enemies.find(enemy => enemy.hp <= 40)
-enemies.find(({ hp }) => hp < 50)
+enemies.find(enemy => enemy.hp < 45)
 ```
 
-ただし未習構文を突然混ぜない。Chapter内で学習済みの構文だけを使う。
+### #32 複数行コード
 
-### 6.5 複数行コード
-
-1行式だけでなく、段階的に複数行へ進める。
-
-例:
+Battle 3から少量導入する。
 
 ```js
-const alive = enemies.filter(e => e.hp > 0)
-const target = alive.find(e => e.hp < 50)
+const ordered = [...enemies].sort((a, b) => a.hp - b.hp)
+ordered[0]
 ```
 
-最初は2行程度から始め、実行順序を読む体験へ広げる。
+新しい概念を同時に増やすのではなく、既知の処理を複数行で追う体験から始める。
 
 ---
 
-## 7. P1: JavaScript学習コンテンツ拡張
+## 7. P2: JavaScript学習コンテンツ拡張
 
-追加候補は「構文を網羅する順」ではなく、ゲーム内で意味のある判断に変換しやすい順で導入する。
+RPGループとvariant基盤が安定した後、学習内容を広げる。
 
-### 7.1 配列探索・判定
+候補:
 
-- `find`
-- `filter`
-- `some`
-- `every`
-- `findIndex`
-- `includes`
+- `some()` / `every()`
+- object property access
+- 複数条件
+- `map()`
+- `reduce()`
+- nested data
+- status / shield等の状態
+- 実行順序
 
-### 7.2 配列変換
-
-- `map`
-- `sort`
-- `toSorted` など非破壊操作との違い
-- `slice`
-
-### 7.3 集約
-
-- `reduce`
-
-例:
-
-- 敵全体の攻撃力合計
-- 生存敵のHP合計
-- 条件を満たす敵の数
-
-### 7.4 オブジェクト
-
-- プロパティアクセス
-- `Object.keys`
-- `Object.values`
-- `Object.entries`
-- 分割代入
-- spread / rest
-
-### 7.5 条件・値の扱い
-
-- `&&`
-- `||`
-- `!`
-- optional chaining `?.`
-- nullish coalescing `??`
-- 三項演算子
-
-### 7.6 実行順序
-
-- 変数
-- 関数呼び出し
-- 戻り値
-- コールバック
-- 複数行処理
-
-### 7.7 非同期処理
-
-後半Chapter候補。
-
-- Promise
-- `async` / `await`
-- 成功 / 失敗
-- 複数リクエストの順序
-
-非同期処理は通常Battleへ無理に押し込まず、イベントやターン待機など相性のよい専用ルールを設計する。
+構文網羅ではなく、**ゲーム上の判断へ変換しやすい順**に追加する。
 
 ---
 
-## 8. P2: Chapter / Stage進行
+## 8. P2: Area拡張
 
-### 8.1 Chapter選択
-
-最初はJavaScript Chapterのみでも、内部構造としてChapterを持つ。
-
-将来候補:
+JavaScript Kingdomの次の候補:
 
 ```text
-JavaScript
-TypeScript
-SQL
-React
+World
+├── JavaScript Kingdom
+├── TypeScript Area
+├── SQL Dungeon
+└── React City
 ```
 
-### 8.2 Stage Select
+名前や順序は固定ではない。
 
-一本道URLだけでなく、クリア済みBattleへ戻れる画面を追加する。
-
-表示候補:
-
-- 未クリア
-- クリア済み
-- Boss
-- 習得概念
-- ベスト結果
-
-### 8.3 Boss Battle
-
-Bossは単純にHPが多いだけにしない。
-
-Boss向けギミック例:
-
-- 敵順が重要
-- 複数条件を組み合わせる
-- ターンごとにデータが変化
-- 一部の敵を先に倒さないと危険
-- 複数行コードを読む
-
-### 8.4 Challenge Battle
-
-通常進行とは分離した高難度。
-
-新知識ではなく、既習知識の複合問題にする。
+Area追加時も、単なる問題カテゴリ選択ではなく、RPG世界の進行と学習カリキュラムを一致させる。
 
 ---
 
-## 9. P2: 学習支援
+## 9. P3: RPGの深さ
 
-### 9.1 実行後のTrace
-
-カード実行後に、必要に応じて「何が起きたか」を確認できる。
-
-例:
-
-```text
-条件: hp < 55
-Slime 42  -> true
-Goblin 68 -> false
-Golem 124 -> false
-結果: Slime
-```
-
-重要:
-
-実行前に答えを見せない。
-
-対象プレビューOFFという現在の設計を維持し、Traceは**実行後の振り返り**として提供する。
-
-### 9.2 コード解説の改善
-
-解説は構文説明だけで終わらせず、今回の盤面に結びつける。
-
-- 一般的な意味
-- 今回どのデータが条件に一致したか
-- `find` と `filter` なら何が違うか
-- よくある読み間違い
-
-### 9.3 用語・構文辞典
-
-Battle外から確認できるReference画面。
-
-ただし最初から巨大なJavaScript辞典を作らない。ゲームで登場した概念だけ蓄積する。
-
-### 9.4 ヒント
-
-段階式を検討する。
-
-例:
-
-1. 「`find` が返す要素数を確認しよう」
-2. 「配列の先頭から条件を確認しよう」
-3. 実行過程を一部表示
-
-答えそのものを即表示するボタンだけにしない。
-
----
-
-## 10. P2: 進捗保存
-
-### 10.1 LocalStorage
-
-アカウントより先に導入する。
-
-保存候補:
-
-- クリア済みBattle
-- 解放済みSkill
-- 最終プレイ位置
-- 設定
-- 学習履歴の簡易データ
-
-### 10.2 データVersion
-
-LocalStorageのschema変更に備え、保存データにversionを持たせる。
-
-古いデータでアプリが壊れないmigration / reset方針を用意する。
-
----
-
-## 11. P2: 学習記録
-
-「ゲームスコア」ではなく「学習の振り返り」に寄せる。
+RPG最小ループとField / NPCが成立してから検討する。
 
 候補:
 
-- 初回で適切なカードを選べた割合
-- 再挑戦回数
-- 概念ごとの成功率
-- ヒント使用回数
-- 解説を開いた概念
-- 苦手概念
-- 最終学習日時
+- 装備
+- アイテム
+- Gold
+- Shop
+- Quest
+- Status effect
+- Deck編成
+- Boss固有mechanic
 
-注意:
+禁止したい方向:
 
-現在のゲームは「間違い」を明示しない設計なので、単純な正誤率の定義は慎重に行う。
+- 攻撃力を上げるだけでコードを読まなくてよくなる
+- Rare装備が既存Skillを完全に無意味にする
+- Grind量だけで全Battleを突破できる
 
-「その盤面で推奨される戦略」と「コードとして正しい効果」を混同しない。
-
----
-
-## 12. P3: カード / デッキシステム
-
-学習体験が安定してから追加する。
-
-### 12.1 Battle前のカード選択
-
-候補:
-
-- 解放済み5〜8枚から3〜5枚を持ち込む
-- Battleの敵情報を見て構成を考える
-
-### 12.2 カードの役割
-
-カードの強さを単純なPOWER差だけにしない。
-
-- 単体高火力
-- 複数低火力
-- 条件が狭い代わりに高火力
-- 安全だが低火力
-
-「複雑なコード = 常に強い」にはしない。
-
-### 12.3 レアリティ
-
-優先度は低い。
-
-導入する場合もガチャ的な希少性より、学習進行や見た目の区分として利用する。
+成長は「余裕」を増やし、読解は「正しい行動」を決める役割にする。
 
 ---
 
-## 13. P3: 敵・Battleの深さ
+## 10. P4: サービス化
 
-候補:
+必要性が出てから導入する。
 
-- Shield
-- Defense
-- Buff / Debuff
-- 状態異常
-- 敵の行動順
-- 敵の特性
-- ターンごとのHP以外の状態変化
-- Boss固有ルール
+トリガー:
 
-追加条件:
+- 複数端末同期
+- ログイン
+- Cloud Save
+- Ranking
+- Shared Challenge
+- 教員 / 管理者向け機能
 
-新しい状態は、コードから読めるデータとして表現できることが望ましい。
+候補技術:
 
-例:
+- Cloudflare Workers / D1 / KV / R2
+- Supabase
+- その他BaaS
 
-```js
-enemies.filter(e => e.status === 'poisoned')
-```
-
-こうすればRPG要素とコードリーディングを結びつけられる。
+Cloudflareでfrontendをhostingしていることだけを理由にbackendをCloudflareへ固定しない。
 
 ---
 
-## 14. P3: 演出・RPG感
-
-候補:
-
-- ダメージ数字
-- 攻撃アニメーション
-- 被弾アニメーション
-- 敵撃破演出
-- カード解放演出
-- Chapterクリア演出
-- SE
-- BGM
-- 音量設定
-- reduced motion対応
-
-演出は操作性やコード可読性を邪魔しない範囲で追加する。
-
-BGM / SE / 画像素材は著作権・ライセンスを確認し、既存ゲームの素材を流用しない。
-
----
-
-## 15. P3: UI / UX
-
-候補:
-
-- syntax highlighting
-- コード表示の折り返し改善
-- モバイルカード配置
-- キーボード操作
-- focus表示
-- スクリーンリーダー向けラベル
-- Battle Logの可読性
-- 大きい敵でもステータスを隠さない共通レイアウト
-- 設定画面
-
-syntax highlightingは「見た目を派手にする」より、変数・関数・値・演算子の構造を読み取りやすくすることを目的とする。
-
----
-
-## 16. P4: アカウント / クラウド
-
-LocalStorageだけでは要件を満たせなくなった場合に検討する。
-
-導入トリガー:
-
-- 複数端末で進捗同期したい
-- ログインユーザーごとに履歴を保存したい
-- 教員 / 管理者が学習状況を確認したい
-- ランキングや共有機能が必要
-
-候補:
-
-- Supabase Auth
-- Supabase Postgres
-
-現時点では不要。
-
-### TanStack Query
-
-サーバー状態が発生してから導入する。
-
-LocalStorageのみの段階では導入しない。
-
-### Zustand
-
-複数画面から共有するクライアント状態が増え、props / route state / 局所stateでは管理が不自然になった時点で検討する。
-
-「将来使いそう」だけでは導入しない。
-
----
-
-## 17. P4: コンテンツ管理
-
-Battle数が増え、コード修正による追加がボトルネックになった段階で検討する。
-
-段階:
-
-1. TypeScriptデータ定義
-2. JSON等の外部データ
-3. schema validation
-4. 管理画面
-
-最初からCMSを導入しない。
-
-管理画面が必要になる条件:
-
-- 非エンジニアが問題追加する
-- 数十〜数百問を継続運用する
-- 公開前レビュー / draft管理が必要
-
----
-
-## 18. P5: 他言語 / 他分野
-
-JavaScript Chapterの学習ループが十分成立してから横展開する。
-
-### TypeScript
-
-相性が良い題材:
-
-- union
-- narrowing
-- optional property
-- generics
-- type guard
-
-### SQL
-
-非常に相性が良い候補。
-
-例:
-
-```sql
-SELECT *
-FROM enemies
-WHERE hp < 50;
-```
-
-SQL結果をそのまま対象敵として表現できる。
-
-### React
-
-候補:
-
-- props
-- state
-- render結果
-- event handler
-- derived state
-- effect依存配列
-
-Reactは画面状態を読む問題として別ルールを設計する。
-
-### Python / その他
-
-需要と既存Chapterの完成度を見て判断する。
-
----
-
-## 19. P5: 長期候補
+## 11. 長期候補
 
 必要性を検証してから着手する。
 
 - Daily Challenge
-- seeded challenge共有
-- Endless Mode
-- 実績
-- ランキング
-- フレンド
-- 教員向けDashboard
-- クラス単位の課題配信
-- 多言語UI
-- PWA / オフライン
-- AIによる問題案生成
+- Seed共有
+- 学習履歴分析
+- Achievement
+- Cosmetic
+- BGM / SE拡張
+- Gamepad
+- PWA / Offline
+- 多言語化
+- AIによる補助的な問題作成
 
-AI問題生成を導入する場合も、生成結果をそのまま実行・公開しない。
-
-- schema validation
-- 意味整合性チェック
-- solvability test
-- 人間または自動レビュー
-
-を通す。
+AIに問題を作らせる場合も、表示コード / TargetRule / solvabilityを機械的に検証できる構造を前提とする。
 
 ---
 
-## 20. 当面やらないこと
+## 12. 優先順位まとめ
 
-近いバージョンでは以下を優先しない。
+```text
+[実装済み]
+Battle MVP
+→ seeded RNG / constrained generation / solvability
+→ SkillDefinition / codeVariants foundation
+→ CI / Cloudflare deployment
 
-- リアルタイム対戦
-- MMO的機能
-- ガチャ / 課金
-- 大規模SNS
-- 3D化
-- 独自バックエンド
-- 任意ユーザーコードのサーバー実行
-- AIチャットを中心にした学習体験
+[次]
+#43 PlayerProgress
+→ #44 Stage Select
+→ #45 EXP / CLEAR / unlock
+→ #46 Level growth
+→ #47 LocalStorage
+→ #48 Boss / Area CLEAR
 
-理由は、コードリーディングという核の検証より複雑性が先行するため。
+[RPG世界]
+#49 Top-down Field
+→ #50 Hub / NPC / Dialogue
 
----
+[読解強化]
+#31 code variants
+→ #32 multi-line code
 
-## 21. バージョンロードマップ
+[その後]
+新Area / 装備 / Quest / Backend等
+```
 
-### v0.1 — MVP ✅
-
-- 3 Battle
-- 基本Battle loop
-- `find` / `filter` / 比較 / `sort`
-- カード解放
-- 8-bit UI
-- CI
-- Vercel Production
-
-### v0.2 — Repeatable Reading
-
-テーマ: **毎回コードを読む必要がある状態にする**
-
-候補:
-
-- package-lock + `npm ci`
-- Vitest
-- Battleロジックのunit test
-- lint / format
-- 制約付き盤面可変化
-- seed導入
-- 問題テンプレート
-- 生成盤面のsolvability test
-- game領域の必要最小限の責務分割
-
-完了目安:
-
-同じBattleを複数回プレイしても、回答手順を暗記するだけでは安定して勝てない。
-
-### v0.3 — JavaScript Chapter
-
-テーマ: **MVPを教材として1つのChapterへ成長させる**
-
-候補:
-
-- Stage Select
-- 追加Battle
-- `some` / `every` / `map` / `reduce` 等
-- 複数行コード
-- Boss Battle
-- 実行後Trace
-- コード解説改善
-- syntax highlighting
-- 必要なcomponent test
-
-完了目安:
-
-JavaScriptの主要な「読む力」を複数ステージで段階的に練習できる。
-
-### v0.4 — Progress & Review
-
-テーマ: **継続学習できるようにする**
-
-候補:
-
-- LocalStorage
-- 保存データversion / migration
-- 進捗保存
-- 解放状態保存
-- 学習記録
-- 苦手概念
-- 復習導線
-- Challenge Battle
-- 主要フローのE2E
-
-### v0.5 — RPG Depth
-
-テーマ: **学習判断を壊さずゲームとして深くする**
-
-候補:
-
-- デッキ編成
-- 敵特性
-- 状態異常
-- Bossギミック
-- 演出
-- BGM / SE
-
-### v1.0 — Stable JavaScript Learning Game
-
-目安:
-
-- JavaScript Chapterが一通り完成
-- 問題追加の仕組みが安定
-- unit / component / E2Eの必要範囲が整備
-- モバイル・アクセシビリティを確認
-- セーブデータmigration方針あり
-- Production運用が安定
-- 主要な学習ループに重大な既知バグがない
-
-アカウントはv1.0必須条件にしない。
-
----
-
-## 22. 次にIssue化する候補
-
-上から順に優先度が高い。
-
-1. package-lockを追加しCIを`npm ci`へ変更する
-2. Vitestを導入してターゲット判定をテストする
-3. ESLint / Prettierの最小構成を導入する
-4. Battle生成を再現可能にするseed設計を決める
-5. 敵順とHPを制約付きで可変化する
-6. 生成Battleのsolvabilityをテストする
-7. Battle / Skill / targetingの責務を必要範囲で分割する
-8. JavaScript Stage Selectを追加する
-9. `some()` / `every()` Battleを追加する
-10. `map()` Battleを追加する
-11. `reduce()` Battleを追加する
-12. 複数行コードBattleを追加する
-13. 実行後Traceを追加する
-14. Boss Battleを設計する
-15. LocalStorageで進捗を保存する
-16. 保存データversion / migrationを追加する
-17. 学習記録のデータモデルを設計する
-18. syntax highlightingを追加する
-19. 主要Battle操作のcomponent testを追加する
-20. Stage Select → Battle → UnlockのE2Eを追加する
-21. デッキ編成のゲームデザインを決める
-22. 敵特性 / 状態異常をコードデータと結びつける
-
-各項目は原則として別Issueに分ける。複数の独立した機能を1 Issueへまとめない。
-
----
-
-## 23. 技術導入の判断基準
-
-### React stateのままでよい
-
-- Battle画面内だけで完結
-- 親子関係が明確
-- 状態共有が少ない
-
-### Zustandを検討
-
-- Chapter / Battle / Settingsなど複数画面で同じクライアント状態を共有
-- state liftingが広範囲になる
-- Contextが多数の責務を持ち始める
-
-### Supabaseを検討
-
-- アカウント
-- 複数端末同期
-- クラウド学習履歴
-- 管理画面
-- 教員機能
-
-### TanStack Queryを検討
-
-- Supabase/API等のserver stateを取得・更新する
-- cache / revalidation / mutation管理が必要
-
-### TanStack Router file-based routingを検討
-
-- ルート数が増える
-- Chapter単位でrouteが増える
-- code-based route treeの編集が煩雑になる
-
-### React Testing Libraryを検討
-
-- DOM上の操作や表示状態が重要になる
-- unit testではユーザー操作の回帰を十分に守れない
-- Stage Selectや設定などUI状態が増える
-
-### Playwrightを検討
-
-- Stage選択 → Battle → Victory → Unlock → 次Stageのような主要ユーザーフローが増える
-- unit / component testだけでは回帰を検知しづらくなる
-
----
-
-## 24. ロードマップの更新ルール
-
-- 大きな方向転換はIssueで議論してから変更する
-- 実装済み項目は完了状態へ更新する
-- 新技術は「使いたい」ではなく要件を満たすために追加する
-- 優先順位は固定ではないが、変更理由を残す
-- MVP完成定義を後から拡張して「MVP未完成」に戻さない
-
-開発手順そのものは [`DEVELOPMENT_WORKFLOW.md`](./DEVELOPMENT_WORKFLOW.md) を参照する。
+優先順位は変更可能だが、**Battleだけを増やしてRPGの外側が無い状態を長く続けない**ことを現在の方針とする。
