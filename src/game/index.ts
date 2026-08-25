@@ -1,7 +1,7 @@
 export { battles } from './battles'
 export { generateBattle } from './generator'
 export { skillDefinitionById, skillDefinitions } from './skillDefinitions'
-export { skills } from './skills'
+export { resolveSkillCard, skills } from './skills'
 export { createSeededRandom } from './random'
 export { hasInitialValidTarget, isBattleSolvable } from './solvability'
 export { getTargets } from './targeting'
