@@ -228,9 +228,82 @@ Battle 3をJavaScript Kingdom Bossとして扱う。
 
 ---
 
-## 5. P1: RPG世界を歩けるようにする
+## 5. P1: Battleの手触りを仕上げる
 
-RPG最小ループ完成後、Stage Select中心の画面遷移から**トップダウンのField / Hub**へ拡張する。
+RPG最小ループが成立したら、Field / NPCを本格化する前に**Battleの音・動き・間**を整える。
+
+狙いは派手な演出を増やすことではなく、クラシックJRPGのように、プレイヤーの入力へ短く明確な反応を返し、1手ごとの手応えを作ること。
+
+既存作品の音源・メロディ・具体的な演出はコピーせず、8-bit RPGを想起させるオリジナル表現にする。
+
+### #64 Battle Animation / Motion
+
+基本テンポ:
+
+```text
+SELECT
+↓
+EXECUTE
+↓
+短い予備動作
+↓
+攻撃演出
+↓
+Enemy flash / shake
+↓
+Damage / HP反映
+↓
+撃破演出
+↓
+短い間
+↓
+Enemy Turn
+```
+
+初期対象:
+
+- Skill発動
+- 被弾flash / shake
+- damage表示
+- Enemy撃破
+- Player被弾
+- Victory / Defeat
+- Level Up / Skill Unlock / Area CLEAR
+
+重要:
+
+- Skill実行前のtarget previewは出さない
+- 実行後の演出で「実際に誰が対象だったか」を伝える
+- animation中の二重入力を防ぐ
+- `prefers-reduced-motion`へ対応する
+- 長い演出でcode readingのテンポを壊さない
+
+### #63 Audio System
+
+初期対象:
+
+- cursor / select / decide / cancel
+- Skill SELECT / EXECUTE
+- attack / hit / enemy attack / player hit
+- Victory / Defeat jingle
+- Level Up / Skill Unlock / Area CLEAR
+- 将来のfootstep / dialogue / area transition
+
+設計:
+
+- BGMとSEを別channelとして扱える
+- Mute / volumeを持てる
+- browser autoplay制約に対応する
+- Audio再生をBattle Domainへ直接埋め込まない
+- code reading中の邪魔にならない音量・密度にする
+
+音と動きは別Issueで実装するが、最終的には同じBattle event timelineへ同期させる。
+
+---
+
+## 6. P1: RPG世界を歩けるようにする
+
+RPG最小ループとBattleの基本的な手触りが整った後、Stage Select中心の画面遷移から**トップダウンのField / Hub**へ拡張する。
 
 ### #49 Top-down Field
 
@@ -267,7 +340,7 @@ RPGの世界観はBattleから独立した飾りではなく、学習導線に�
 
 ---
 
-## 6. P1: 読解体験の再強化
+## 7. P1: 読解体験の再強化
 
 #31 / #32は重要だが、現在は**RPG最小ループを先に成立させる**ため後ろへ回す。
 
@@ -302,7 +375,7 @@ ordered[0]
 
 ---
 
-## 7. P2: JavaScript学習コンテンツ拡張
+## 8. P2: JavaScript学習コンテンツ拡張
 
 RPGループとvariant基盤が安定した後、学習内容を広げる。
 
@@ -321,7 +394,7 @@ RPGループとvariant基盤が安定した後、学習内容を広げる。
 
 ---
 
-## 8. P2: Area拡張
+## 9. P2: Area拡張
 
 JavaScript Kingdomの次の候補:
 
@@ -339,7 +412,7 @@ Area追加時も、単なる問題カテゴリ選択ではなく、RPG世界の�
 
 ---
 
-## 9. P3: RPGの深さ
+## 10. P3: RPGの深さ
 
 RPG最小ループとField / NPCが成立してから検討する。
 
@@ -364,7 +437,7 @@ RPG最小ループとField / NPCが成立してから検討する。
 
 ---
 
-## 10. P4: サービス化
+## 11. P4: サービス化
 
 必要性が出てから導入する。
 
@@ -387,7 +460,7 @@ Cloudflareでfrontendをhostingしていることだけを理由にbackendをClo
 
 ---
 
-## 11. 長期候補
+## 12. 長期候補
 
 必要性を検証してから着手する。
 
@@ -396,7 +469,7 @@ Cloudflareでfrontendをhostingしていることだけを理由にbackendをClo
 - 学習履歴分析
 - Achievement
 - Cosmetic
-- BGM / SE拡張
+- BGM曲数 / 環境音 / 音響variationの拡張
 - Gamepad
 - PWA / Offline
 - 多言語化
@@ -406,7 +479,7 @@ AIに問題を作らせる場合も、表示コード / TargetRule / solvability
 
 ---
 
-## 12. 優先順位まとめ
+## 13. 優先順位まとめ
 
 ```text
 [実装済み]
@@ -415,13 +488,17 @@ Battle MVP
 → SkillDefinition / codeVariants foundation
 → CI / Cloudflare deployment
 
-[次]
+[次: RPG最小ループ]
 #43 PlayerProgress
 → #44 Stage Select
 → #45 EXP / CLEAR / unlock
 → #46 Level growth
 → #47 LocalStorage
 → #48 Boss / Area CLEAR
+
+[Battleの手触り]
+#64 Battle animation / motion
+→ #63 Audio system
 
 [RPG世界]
 #49 Top-down Field
@@ -435,4 +512,4 @@ Battle MVP
 新Area / 装備 / Quest / Backend等
 ```
 
-優先順位は変更可能だが、**Battleだけを増やしてRPGの外側が無い状態を長く続けない**ことを現在の方針とする。
+優先順位は変更可能だが、**Battleだけを増やしてRPGの外側が無い状態を長く続けない**こと、そしてRPG最小ループ成立後は**音と動きで操作結果の手応えを作る**ことを現在の方針とする。

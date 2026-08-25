@@ -458,7 +458,98 @@ Equipment / Itemを追加する場合も、code readingを補強する用途に�
 
 ---
 
-## 21. 新機能を追加する前の質問
+## 21. 音と動きは「答えを教える」のではなく「結果を感じさせる」
+
+Battleには、クラシックJRPGのような短いSE・被弾・間・勝利反応を入れる。
+
+ただし目的は演出そのものではなく、**プレイヤーの入力とゲーム状態の変化を気持ちよく、分かりやすく返すこと**。
+
+基本の流れ:
+
+```text
+SELECT
+↓
+EXECUTE
+↓
+短い予備動作 / SE
+↓
+攻撃
+↓
+対象Enemyがflash / shake + hit SE
+↓
+Damage / HP更新
+↓
+撃破なら消滅演出
+↓
+短い間
+↓
+Enemy Turn
+```
+
+### 実行前と実行後を分ける
+
+対象Preview OFFの原則は維持する。
+
+実行前:
+
+- target highlightを出さない
+- target人数を出さない
+- 演出で正解を先読みさせない
+
+実行後:
+
+- 実際にtargetになったEnemyをflash / shakeさせる
+- damageとHP変化を同期させる
+- 複数targetなら全targetへ結果を返す
+
+つまり、音と動きは**予測の答えを教えるUIではなく、予測した結果を確認するfeedback**として使う。
+
+### 派手さよりテンポ
+
+長い必殺技演出でコードを読む時間を奪わない。
+
+目指すのは、
+
+- cursor / decideの小さな反応
+- attack前の一瞬の間
+- hitの明確な反応
+- defeat / victoryの区切り
+- Level Up / Skill Unlockの達成感
+
+の積み重ね。
+
+Boss等では強い演出を使ってよいが、通常Battleまで毎回長く止めない。
+
+### サウンド
+
+初期の音:
+
+- cursor / select / decide / cancel
+- Skill SELECT / EXECUTE
+- attack / hit / enemy attack / player hit
+- Victory / Defeat jingle
+- Level Up / Skill Unlock / Area CLEAR
+
+BGMとSEは別に扱い、Mute / volumeを用意する。
+
+ブラウザのautoplay制約を考慮し、ユーザー操作を起点にAudioを有効化する。
+
+### Accessibility
+
+- `prefers-reduced-motion`ではshake・大きな移動・flash頻度を抑える
+- motionを減らしてもdamage / HP / stateが理解できる
+- 音をMuteしてもゲーム情報が欠落しない
+- 音だけ、色だけ、animationだけに重要情報を依存させない
+
+### オリジナル表現
+
+8-bit / classic JRPGのテンポ感は参考にしてよいが、既存作品の音源・メロディ・sprite・具体的な演出をそのまま再現しない。
+
+CODE//READ RPGとして独自の音と動きを作る。
+
+---
+
+## 22. 新機能を追加する前の質問
 
 1. この機能でcodeを読む理由が増えるか
 2. codeを読まずに済むshortcutになっていないか
@@ -466,6 +557,8 @@ Equipment / Itemを追加する場合も、code readingを補強する用途に�
 4. seed / generation / progressionの責務を混ぜていないか
 5. Player成長とWorld難易度を分離できているか
 6. test可能な純粋logicへ分けられるか
-7. 本当に今必要か
+7. 音や動きが答えを先に見せていないか
+8. 演出が操作テンポを悪くしていないか
+9. 本当に今必要か
 
 これを満たさない機能は、RPGらしく見えても後回しにする。
