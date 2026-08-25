@@ -1,29 +1,26 @@
 import { describe, expect, it } from 'vitest'
-import { problemTemplates, problemTemplateBySkillId } from './problemTemplates'
+import { skillDefinitionById, skillDefinitions } from './skillDefinitions'
 import { skills } from './skills'
 
-describe('problem templates', () => {
-  it('templateIdとSkill IDが重複しない', () => {
-    expect(new Set(problemTemplates.map((template) => template.templateId)).size).toBe(
-      problemTemplates.length,
-    )
-    expect(new Set(problemTemplates.map((template) => template.id)).size).toBe(
-      problemTemplates.length,
+describe('skill definitions', () => {
+  it('Skill IDが重複しない', () => {
+    expect(new Set(skillDefinitions.map((definition) => definition.id)).size).toBe(
+      skillDefinitions.length,
     )
   })
 
-  it('全テンプレートが少なくとも1つのコードvariantを持つ', () => {
-    expect(problemTemplates.every((template) => template.codeVariants.length > 0)).toBe(true)
+  it('全Skillが少なくとも1つのコードvariantを持つ', () => {
+    expect(skillDefinitions.every((definition) => definition.codeVariants.length > 0)).toBe(true)
   })
 
-  it('skillsはテンプレートの標準variantと同じruleから生成される', () => {
-    for (const template of problemTemplates) {
-      const skill = skills[template.id]
+  it('skillsは定義の標準variantと同じruleから生成される', () => {
+    for (const definition of skillDefinitions) {
+      const skill = skills[definition.id]
       expect(skill).toBeDefined()
-      expect(skill.code).toBe(template.codeVariants[0].code)
-      expect(skill.rule).toEqual(template.rule)
-      expect(skill.power).toBe(template.power)
-      expect(problemTemplateBySkillId[template.id]).toBe(template)
+      expect(skill.code).toBe(definition.codeVariants[0].code)
+      expect(skill.rule).toEqual(definition.rule)
+      expect(skill.power).toBe(definition.power)
+      expect(skillDefinitionById[definition.id]).toBe(definition)
     }
   })
 

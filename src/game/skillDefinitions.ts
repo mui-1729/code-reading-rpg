@@ -6,14 +6,12 @@ export type CodeVariant = {
   lineMode: 'single' | 'multi'
 }
 
-export type ProblemTemplate = Omit<SkillCard, 'code'> & {
-  templateId: string
+export type SkillDefinition = Omit<SkillCard, 'code'> & {
   codeVariants: readonly CodeVariant[]
 }
 
-export const problemTemplates: readonly ProblemTemplate[] = [
+export const skillDefinitions: readonly SkillDefinition[] = [
   {
-    templateId: 'find-first-below',
     id: 'trace',
     name: 'TRACE',
     power: 34,
@@ -26,7 +24,6 @@ export const problemTemplates: readonly ProblemTemplate[] = [
     ],
   },
   {
-    templateId: 'find-by-name',
     id: 'pulse',
     name: 'PULSE',
     power: 48,
@@ -39,7 +36,6 @@ export const problemTemplates: readonly ProblemTemplate[] = [
     ],
   },
   {
-    templateId: 'find-first-above',
     id: 'nova',
     name: 'NOVA',
     power: 62,
@@ -52,7 +48,6 @@ export const problemTemplates: readonly ProblemTemplate[] = [
     ],
   },
   {
-    templateId: 'filter-all-below',
     id: 'viper',
     name: 'VIPER',
     power: 22,
@@ -65,7 +60,6 @@ export const problemTemplates: readonly ProblemTemplate[] = [
     ],
   },
   {
-    templateId: 'filter-all-above',
     id: 'echo',
     name: 'ECHO',
     power: 26,
@@ -78,7 +72,6 @@ export const problemTemplates: readonly ProblemTemplate[] = [
     ],
   },
   {
-    templateId: 'sort-lowest-hp',
     id: 'moon-edge',
     name: 'MOON EDGE',
     power: 72,
@@ -96,6 +89,6 @@ export const problemTemplates: readonly ProblemTemplate[] = [
   },
 ]
 
-export const problemTemplateBySkillId: Record<string, ProblemTemplate> = Object.fromEntries(
-  problemTemplates.map((template) => [template.id, template]),
+export const skillDefinitionById: Record<string, SkillDefinition> = Object.fromEntries(
+  skillDefinitions.map((definition) => [definition.id, definition]),
 )
