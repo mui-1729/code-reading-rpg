@@ -1,16 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { battles } from './battles'
 import { generateBattle } from './generator'
-
-const byName = (battleId: number, seed: string, name: string) => {
-  const battle = generateBattle(battleId, seed)
-  if (!battle) throw new Error(`Battle ${battleId} was not generated`)
-
-  const enemy = battle.enemies.find((candidate) => candidate.name === name)
-  if (!enemy) throw new Error(`${name} was not generated for Battle ${battleId}`)
-
-  return enemy
-}
+import { skills } from './skills'
+import { getTargets } from './targeting'
 
 describe('generateBattle', () => {
   it('同じseedとbattleIdなら同じ盤面を再現する', () => {
@@ -19,7 +11,7 @@ describe('generateBattle', () => {
 
   it('異なるseedから複数の盤面パターンを生成する', () => {
     const patterns = new Set(
-      Array.from({ length: 12 }, (_, index) => JSON.stringify(generateBattle(2, `seed-${index}`))),
+      Array.from({ length: 20 }, (_, index) => JSON.stringify(generateBattle(2, `seed-${index}`))),
     )
 
     expect(patterns.size).toBeGreaterThan(1)
@@ -35,39 +27,49 @@ describe('generateBattle', () => {
     expect(battles).toEqual(before)
   })
 
-  it('Skillの集合を維持したままカード順だけを可変化する', () => {
+  it('Skillの集合を維持したままカード順を可変化する', () => {
     const generated = generateBattle(3, 'skills')
     if (!generated) throw new Error('Battle 3 was not generated')
 
     expect([...generated.skillIds].sort()).toEqual([...battles[2].skillIds].sort())
   })
 
-  it('Battle 1はSlimeを45未満、Goblinを60より大きく保つ', () => {
-    for (let index = 0; index < 30; index += 1) {
-      const seed = `battle-1-${index}`
-      expect(byName(1, seed, 'Slime').hp).toBeLessThan(45)
-      expect(byName(1, seed, 'Goblin').hp).toBeGreaterThan(60)
+  it('基準HPに0.85〜1.15の倍率を掛けた範囲でHPを生成する', () => {
+    for (const template of battles) {
+      for (let index = 0; index < 50; index += 1) {
+        const generated = generateBattle(template.id, `multiplier-${template.id}-${index}`)
+        if (!generated) throw new Error(`Battle ${template.id} was not generated`)
+
+        for (const enemy of generated.enemies) {
+          const baseEnemy = template.enemies.find((candidate) => candidate.id === enemy.id)
+          if (!baseEnemy) throw new Error(`Base enemy ${enemy.id} was not found`)
+
+          const minHp = Math.round(baseEnemy.maxHp * 0.85)
+          const maxHp = Math.round(baseEnemy.maxHp * 1.15)
+          expect(enemy.hp).toBeGreaterThanOrEqual(minHp)
+          expect(enemy.hp).toBeLessThanOrEqual(maxHp)
+          expect(enemy.maxHp).toBe(enemy.hp)
+        }
+      }
     }
   })
 
-  it('Battle 2はSlimeを45未満、Goblin/Golemを60より大きく保つ', () => {
-    for (let index = 0; index < 30; index += 1) {
-      const seed = `battle-2-${index}`
-      expect(byName(2, seed, 'Slime').hp).toBeLessThan(45)
-      expect(byName(2, seed, 'Goblin').hp).toBeGreaterThan(60)
-      expect(byName(2, seed, 'Golem').hp).toBeGreaterThan(60)
-    }
-  })
+  it('元Battleで初手から有効なSkillは生成後も有効対象を持つ', () => {
+    for (const template of battles) {
+      const requiredSkillIds = template.skillIds.filter((skillId) => {
+        const skill = skills[skillId]
+        return skill ? getTargets(template.enemies, skill.rule).length > 0 : false
+      })
 
-  it('Battle 3はSlimeを55未満かつ45より大きく、Goblin/Bossを60より大きく保つ', () => {
-    for (let index = 0; index < 30; index += 1) {
-      const seed = `battle-3-${index}`
-      const slime = byName(3, seed, 'Slime')
+      for (let index = 0; index < 50; index += 1) {
+        const generated = generateBattle(template.id, `learning-${template.id}-${index}`)
+        if (!generated) throw new Error(`Battle ${template.id} was not generated`)
 
-      expect(slime.hp).toBeGreaterThan(45)
-      expect(slime.hp).toBeLessThan(55)
-      expect(byName(3, seed, 'Goblin').hp).toBeGreaterThan(60)
-      expect(byName(3, seed, 'Boss').hp).toBeGreaterThan(60)
+        for (const skillId of requiredSkillIds) {
+          const skill = skills[skillId]
+          expect(getTargets(generated.enemies, skill.rule).length).toBeGreaterThan(0)
+        }
+      }
     }
   })
 })
