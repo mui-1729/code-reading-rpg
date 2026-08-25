@@ -14,6 +14,9 @@ const indexRoute = createRoute({
 const battleRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'javascript/battle/$battleId',
+  validateSearch: (search: Record<string, unknown>) => ({
+    seed: typeof search.seed === 'string' && search.seed.length > 0 ? search.seed : undefined,
+  }),
   component: BattleRoutePage,
 })
 

@@ -155,6 +155,7 @@ function App({ battleId, seed }: AppProps) {
     navigate({
       to: '/javascript/battle/$battleId',
       params: { battleId: String(nextBattle.id) },
+      search: { seed: String(seed) },
     })
   }
 
