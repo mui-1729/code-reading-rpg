@@ -57,29 +57,54 @@ function HomePage() {
   const navigate = useNavigate()
 
   return (
-    <main className="app-shell intro-shell">
-      <section className="hero-panel">
-        <div className="eyebrow">JAVASCRIPT // CHAPTER 01</div>
-        <h1>CODE<span>//</span>READ RPG</h1>
-        <p className="hero-copy">
-          技の説明はない。コードを読めば、誰に当たるかが分かる。
-        </p>
-        <div className="rule-grid">
-          <div><strong>01</strong><span>敵とNEXT行動を見る</span></div>
-          <div><strong>02</strong><span>コードから対象を読む</span></div>
+    <main className="app-shell intro-shell title-screen">
+      <div className="crt-overlay" aria-hidden="true" />
+      <section className="title-stage pixel-window">
+        <div className="title-sky" aria-hidden="true">
+          <span className="star star-a">+</span>
+          <span className="star star-b">.</span>
+          <span className="star star-c">*</span>
+          <span className="star star-d">+</span>
+          <span className="moon">C</span>
+        </div>
+
+        <div className="title-copy">
+          <div className="chapter-label">JAVASCRIPT // CHAPTER 01</div>
+          <h1 className="pixel-logo">
+            <span>CODE</span><b>//</b><span>READ</span>
+            <em>RPG</em>
+          </h1>
+          <p className="title-tagline">READ CODE. CHOOSE FATE.</p>
+        </div>
+
+        <div className="title-landscape" aria-hidden="true">
+          <div className="pixel-castle" />
+          <div className="pixel-mountains" />
+          <div className="pixel-hero"><span className="hero-sword" /></div>
+          <div className="pixel-slime" />
+        </div>
+
+        <div className="title-menu pixel-window inner-window">
+          <button
+            className="menu-button selected-menu"
+            onClick={() =>
+              navigate({
+                to: '/javascript/battle/$battleId',
+                params: { battleId: '1' },
+              })
+            }
+          >
+            <span className="menu-cursor">▶</span>
+            START RUN
+          </button>
+          <div className="menu-note">技の説明はない。コードを読んで、戦況を選べ。</div>
+        </div>
+
+        <div className="how-to-grid" aria-label="How to play">
+          <div><strong>01</strong><span>敵のHPとNEXT行動を見る</span></div>
+          <div><strong>02</strong><span>コードが選ぶ対象を読む</span></div>
           <div><strong>03</strong><span>同じカードを2回押して発動</span></div>
         </div>
-        <button
-          className="primary-button"
-          onClick={() =>
-            navigate({
-              to: '/javascript/battle/$battleId',
-              params: { battleId: '1' },
-            })
-          }
-        >
-          START RUN
-        </button>
       </section>
     </main>
   )
@@ -101,13 +126,15 @@ function CompletePage() {
   const navigate = useNavigate()
 
   return (
-    <main className="app-shell center-shell">
-      <section className="result-card complete-card">
-        <div className="eyebrow">CHAPTER CLEAR</div>
-        <h2>JavaScript // MVP COMPLETE</h2>
-        <p>3つの戦闘をクリアした。次はカード、敵、そして読むコード自体を増やせる。</p>
+    <main className="app-shell center-shell result-screen">
+      <div className="crt-overlay" aria-hidden="true" />
+      <section className="result-card complete-card pixel-window">
+        <div className="chapter-label">CHAPTER CLEAR</div>
+        <div className="result-rune" aria-hidden="true">✦</div>
+        <h2>JAVASCRIPT<br />MVP COMPLETE</h2>
+        <p>3つの戦闘をクリアした。次の章では、もっと複雑なコードを読む。</p>
         <button className="primary-button" onClick={() => navigate({ to: '/' })}>
-          PLAY AGAIN
+          ▶ PLAY AGAIN
         </button>
       </section>
     </main>
@@ -118,13 +145,14 @@ function NotFoundBattle() {
   const navigate = useNavigate()
 
   return (
-    <main className="app-shell center-shell">
-      <section className="result-card defeat-card">
-        <div className="eyebrow">ROUTE ERROR</div>
-        <h2>そのBattleは存在しない</h2>
+    <main className="app-shell center-shell result-screen">
+      <div className="crt-overlay" aria-hidden="true" />
+      <section className="result-card defeat-card pixel-window">
+        <div className="chapter-label danger-label">ROUTE ERROR</div>
+        <h2>そのBATTLEは存在しない</h2>
         <p>Battle 1〜3のURLを指定してください。</p>
         <button className="primary-button" onClick={() => navigate({ to: '/' })}>
-          BACK TO START
+          ◀ BACK TO START
         </button>
       </section>
     </main>
