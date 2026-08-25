@@ -50,6 +50,8 @@ Game Domain
 - PlayerProgress / Level / EXP
 - Stage Select
 - LocalStorage進行保存
+- 専用Audio layer
+- 整理されたBattle animation layer
 - Backend API
 - Database
 - Authentication
@@ -251,6 +253,8 @@ Battle base definition
 
 Battle中だけ必要な一時状態は、将来も進行保存データへ混ぜない。
 
+`animatingIds`や`isResolving`のようなpresentation都合のstateは存在するが、今後の演出拡張ではGame Domainの勝敗・damage計算そのものと分離して整理する。
+
 ---
 
 ## 8. RPG進行の次期構成
@@ -383,7 +387,109 @@ Battle終了後はFieldへ戻り、進行状態に応じてNPC会話・入口・
 
 ---
 
-## 12. Backendの展望
+## 12. Audio / Animation presentation layer
+
+#63 / #64では、音と動きをGame Domainのロジックそのものへ埋め込まず、**状態変化をプレイヤーへ返すpresentation layer**として扱う。
+
+概念上の流れ:
+
+```text
+Player Input
+↓
+Battle Runtime / Game Domain
+↓
+Battle Result / Presentation Event
+├── damage target
+├── damage amount
+├── defeated enemy
+├── player hit
+├── victory / defeat
+└── reward / level up
+↓
+Presentation Layer
+├── Animation
+├── SFX
+└── UI update
+```
+
+### Animation
+
+候補責務:
+
+- Skill executeの予備動作
+- target hit flash / shake
+- damage number
+- enemy defeat
+- player hit
+- victory / defeat
+- reward / level up
+
+重要:
+
+- CSS animationの終了そのものをGame Domainの正しさへ依存させない
+- animation durationは散在させず、必要なら定数またはtimeline定義へ寄せる
+- animation中の入力lockはUI / Battle controller側で扱う
+- `prefers-reduced-motion`時もBattle stateは同じ結果になる
+
+### Audio
+
+候補構成:
+
+```text
+Audio Layer
+├── BGM channel
+├── SE channel
+└── Settings
+    ├── master volume
+    ├── bgm volume
+    ├── se volume
+    └── mute
+```
+
+Audio再生は、
+
+```text
+onSkillExecute
+onHit
+onEnemyDefeat
+onPlayerHit
+onVictory
+onLevelUp
+```
+
+のようなpresentation eventから行える構造を目指す。
+
+Battleのtargeting / damage / victory判定関数の中で直接`audio.play()`しない。
+
+ブラウザのautoplay policyに合わせ、最初の明示的なユーザー操作後にAudioContext等を有効化する。
+
+### 音と動きの同期
+
+最終的には、同じBattle eventに対してanimationとSEを同期させる。
+
+例:
+
+```text
+HIT event
+├── Enemy flash
+├── Enemy shake
+├── Hit SE
+├── Damage number
+└── HP update
+```
+
+ただし「演出が終了しないとGame Domain上のdamageが存在しない」という構造にはしない。
+
+### Accessibility
+
+- `prefers-reduced-motion`で大きなmotionを減らす
+- Muteでも情報を失わない
+- motion / sound / colorのどれか1つだけに重要stateを依存させない
+- code reading中に不要なloop animationや過密なSEを鳴らさない
+
+---
+
+## 13. Backendの展望
 
 Cloudflareへdeployしたが、backend選定は未決定。
 
@@ -410,7 +516,7 @@ Supabase
 
 ---
 
-## 13. テスト構造
+## 14. テスト構造
 
 現在のCI:
 
@@ -439,16 +545,22 @@ Unitの主対象:
 - victory / defeat
 - Stage Select状態
 - EXP / Level表示
+- animation中のinput lock
+- reduced motion時の状態遷移
+- audio setting UI
 
 将来のE2E:
 
 - Stage Select → Battle → Reward → Unlock
 - reload → Progress復元
 - Field → Battle → Field復帰
+- Battle操作がanimation追加後も進行不能にならない
+
+Audioそのものの波形や音質を自動テストすることを目的にせず、event発火・設定・mute等のlogicをテストする。
 
 ---
 
-## 14. デプロイ構成
+## 15. デプロイ構成
 
 ```text
 PR / Branch
@@ -472,7 +584,7 @@ Vercelは現在のdeploy pathに含めない。
 
 ---
 
-## 15. 将来構成イメージ
+## 16. 将来構成イメージ
 
 責務が実際に増えた段階で必要な部分から拡張する。
 
@@ -490,8 +602,12 @@ src/
 │   └── solvability.ts
 ├── progression/
 ├── persistence/
+├── audio/
+│   ├── audioManager.ts
+│   └── settings.ts
 ├── features/
 │   ├── battle/
+│   │   └── presentation/
 │   ├── stage-select/
 │   ├── field/
 │   └── dialogue/
@@ -499,11 +615,13 @@ src/
 └── styles/
 ```
 
-このdirectory treeを先に作るのではなく、Issueごとに責務が必要になった時点で移行する。
+これは設計イメージであり、このdirectory treeを先に作らない。
+
+#63 / #64を実装する時点で必要な最小責務だけ追加する。
 
 ---
 
-## 16. 更新タイミング
+## 17. 更新タイミング
 
 次の変更が入ったらこの文書も更新する。
 
@@ -512,6 +630,7 @@ src/
 - PlayerProgressを導入
 - routing方式を変更
 - LocalStorageを導入
+- Audio / Animation layerを導入
 - Field / Dialogueを追加
 - backend / databaseを追加
 - test layerを追加
