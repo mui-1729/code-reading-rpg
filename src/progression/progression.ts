@@ -1,17 +1,18 @@
+import {
+  BASE_PLAYER_HP,
+  DEFAULT_INITIAL_SKILL_IDS,
+  DEFAULT_INITIAL_STAGE_IDS,
+  EXP_CURVE_FACTOR,
+  HP_PER_LEVEL,
+  POWER_MULTIPLIER_PER_LEVEL,
+} from './constants'
 import type { PlayerProgress, PlayerStats } from './types'
-
-export const BASE_PLAYER_HP = 100
-export const HP_PER_LEVEL = 8
-export const POWER_MULTIPLIER_PER_LEVEL = 0.02
-export const EXP_CURVE_FACTOR = 20
-
-const DEFAULT_INITIAL_SKILL_IDS = ['trace', 'pulse', 'nova'] as const
 
 export function createInitialPlayerProgress(): PlayerProgress {
   return {
     exp: 0,
     clearedStageIds: [],
-    unlockedStageIds: [1],
+    unlockedStageIds: [...DEFAULT_INITIAL_STAGE_IDS],
     unlockedSkillIds: [...DEFAULT_INITIAL_SKILL_IDS],
   }
 }
