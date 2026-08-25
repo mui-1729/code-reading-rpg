@@ -62,6 +62,13 @@ describe('player progression', () => {
     expect(progress.exp).toBe(0)
   })
 
+  it('負のEXP追加では進行を巻き戻さない', () => {
+    const progress = addExp(createInitialPlayerProgress(), 40)
+    const next = addExp(progress, -10)
+
+    expect(next.exp).toBe(40)
+  })
+
   it('負のEXPやLevelを安全な最小値へ正規化する', () => {
     expect(getLevelForExp(-100)).toBe(1)
     expect(getTotalExpForLevel(-3)).toBe(0)
