@@ -1,6 +1,14 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { battles, getTargets, skills, type Enemy, type SkillCard } from './game'
+import {
+  battles,
+  generateBattle,
+  getTargets,
+  skills,
+  type Enemy,
+  type Seed,
+  type SkillCard,
+} from './game'
 
 type Phase = 'battle' | 'unlock' | 'victory' | 'defeat'
 
@@ -12,15 +20,20 @@ type LogEntry = {
 
 type AppProps = {
   battleId: number
+  seed: Seed
 }
 
 const cloneEnemies = (enemies: Enemy[]) => enemies.map((enemy) => ({ ...enemy }))
 const spriteClassName = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
 
-function App({ battleId }: AppProps) {
+function App({ battleId, seed }: AppProps) {
   const navigate = useNavigate()
   const battleIndex = battles.findIndex((candidate) => candidate.id === battleId)
-  const battle = battles[battleIndex]
+  const battle = useMemo(() => {
+    const generated = generateBattle(battleId, seed)
+    if (!generated) throw new Error(`Unknown battle: ${battleId}`)
+    return generated
+  }, [battleId, seed])
 
   const [phase, setPhase] = useState<Phase>('battle')
   const [playerHp, setPlayerHp] = useState(100)
@@ -66,7 +79,10 @@ function App({ battleId }: AppProps) {
 
     setTimeout(() => {
       survivors.forEach((enemy, index) => {
-        setTimeout(() => addLog('enemy', `${enemy.name} / ${enemy.attackName} → ${enemy.attackDamage} DMG`), index * 90)
+        setTimeout(
+          () => addLog('enemy', `${enemy.name} / ${enemy.attackName} → ${enemy.attackDamage} DMG`),
+          index * 90,
+        )
       })
       setPlayerHp(nextPlayerHp)
 
@@ -92,7 +108,10 @@ function App({ battleId }: AppProps) {
 
     const targetIds = targets.map((target) => target.id)
     setAnimatingIds(targetIds)
-    addLog('player', `${skill.name} → ${targets.map((target) => target.name).join(' / ')} · ${skill.power} DMG`)
+    addLog(
+      'player',
+      `${skill.name} → ${targets.map((target) => target.name).join(' / ')} · ${skill.power} DMG`,
+    )
 
     const nextEnemies = enemies.map((enemy) =>
       targetIds.includes(enemy.id)
@@ -149,10 +168,17 @@ function App({ battleId }: AppProps) {
           <div className="eyebrow">SKILL UNLOCKED</div>
           <div className="unlock-icon">＋</div>
           <h2>{unlocked.name}</h2>
-          <pre><code>{unlocked.code}</code></pre>
-          <div className="power-line"><span>POWER</span><strong>{unlocked.power}</strong></div>
+          <pre>
+            <code>{unlocked.code}</code>
+          </pre>
+          <div className="power-line">
+            <span>POWER</span>
+            <strong>{unlocked.power}</strong>
+          </div>
           <p>{unlocked.explanation}</p>
-          <button className="primary-button" onClick={goNextBattle}>▶ NEXT BATTLE</button>
+          <button className="primary-button" onClick={goNextBattle}>
+            ▶ NEXT BATTLE
+          </button>
         </section>
       </main>
     )
@@ -164,7 +190,9 @@ function App({ battleId }: AppProps) {
         <div>
           <div className="eyebrow">JAVASCRIPT // {battle.label}</div>
           <h1>CODE//READ RPG</h1>
-          <p>{battle.title} — {battle.subtitle}</p>
+          <p>
+            {battle.title} — {battle.subtitle}
+          </p>
         </div>
         <div className="turn-pill">TURN {String(turn).padStart(2, '0')}</div>
       </header>
@@ -180,10 +208,18 @@ function App({ battleId }: AppProps) {
         </div>
 
         <aside className="status-strip player-panel">
-          <div className="player-sprite" aria-hidden="true"><span /></div>
+          <div className="player-sprite" aria-hidden="true">
+            <span />
+          </div>
           <div className="player-stats">
             <div className="status-title">CODE KNIGHT</div>
-            <div className="status-label-row"><span>HP</span><strong>{playerHp}<em>/100</em></strong></div>
+            <div className="status-label-row">
+              <span>HP</span>
+              <strong>
+                {playerHp}
+                <em>/100</em>
+              </strong>
+            </div>
             <div className="hp-track player-track">
               <div className="hp-fill" style={{ width: `${playerHp}%` }} />
             </div>
@@ -206,7 +242,9 @@ function App({ battleId }: AppProps) {
                 </div>
                 <div className="enemy-name-row">
                   <h2>{enemy.name}</h2>
-                  <span>{enemy.hp}/{enemy.maxHp}</span>
+                  <span>
+                    {enemy.hp}/{enemy.maxHp}
+                  </span>
                 </div>
                 <div className="hp-track enemy-track">
                   <div className="hp-fill" style={{ width: `${hpPercent}%` }} />
@@ -248,7 +286,9 @@ function App({ battleId }: AppProps) {
                   <span>{skill.name}</span>
                   <strong>POWER {skill.power}</strong>
                 </div>
-                <pre><code>{skill.code}</code></pre>
+                <pre>
+                  <code>{skill.code}</code>
+                </pre>
                 <div className="skill-card-foot">
                   <span>{selected ? '▶ PRESS AGAIN TO EXECUTE' : '▷ SELECT'}</span>
                 </div>
@@ -262,9 +302,13 @@ function App({ battleId }: AppProps) {
           <div className="log-list">
             {logs.length === 0 ? (
               <span className="log-empty">&gt; The battle begins. Read the code.</span>
-            ) : logs.map((log) => (
-              <span key={log.id} className={`log-${log.tone}`}>&gt; {log.text}</span>
-            ))}
+            ) : (
+              logs.map((log) => (
+                <span key={log.id} className={`log-${log.tone}`}>
+                  &gt; {log.text}
+                </span>
+              ))
+            )}
           </div>
         </div>
       </section>
@@ -275,7 +319,9 @@ function App({ battleId }: AppProps) {
             <div className="eyebrow">VICTORY</div>
             <h2>{battle.title} cleared.</h2>
             <p>評価はなし。倒せたらクリア。</p>
-            <button className="primary-button" onClick={continueAfterVictory}>▶ CONTINUE</button>
+            <button className="primary-button" onClick={continueAfterVictory}>
+              ▶ CONTINUE
+            </button>
           </section>
         </div>
       )}
@@ -287,8 +333,15 @@ function App({ battleId }: AppProps) {
             <h2>コードを読み直して再戦</h2>
             <p>必要ならカードの解説を確認してからリトライできる。</p>
             <div className="defeat-actions">
-              <button className="primary-button" onClick={resetBattle}>▶ RETRY</button>
-              <button className="secondary-button" onClick={() => setExplainedSkill(availableSkills[0])}>CODE HELP</button>
+              <button className="primary-button" onClick={resetBattle}>
+                ▶ RETRY
+              </button>
+              <button
+                className="secondary-button"
+                onClick={() => setExplainedSkill(availableSkills[0])}
+              >
+                CODE HELP
+              </button>
             </div>
           </section>
         </div>
@@ -297,14 +350,20 @@ function App({ battleId }: AppProps) {
       {explainedSkill && (
         <div className="overlay modal-overlay" onClick={() => setExplainedSkill(null)}>
           <section className="explain-modal pixel-window" onClick={(event) => event.stopPropagation()}>
-            <button className="close-button" onClick={() => setExplainedSkill(null)}>×</button>
+            <button className="close-button" onClick={() => setExplainedSkill(null)}>
+              ×
+            </button>
             <div className="eyebrow">CODE EXPLANATION</div>
             <h2>{explainedSkill.concept}</h2>
-            <pre><code>{explainedSkill.code}</code></pre>
+            <pre>
+              <code>{explainedSkill.code}</code>
+            </pre>
             <p>{explainedSkill.explanation}</p>
             <div className="explain-switcher">
               {availableSkills.map((skill) => (
-                <button key={skill.id} onClick={() => setExplainedSkill(skill)}>{skill.name}</button>
+                <button key={skill.id} onClick={() => setExplainedSkill(skill)}>
+                  {skill.name}
+                </button>
               ))}
             </div>
           </section>
