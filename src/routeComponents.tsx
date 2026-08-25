@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { getRouteApi, useNavigate } from '@tanstack/react-router'
 import App from './App'
 import { battles } from './game'
 
 const battleRouteApi = getRouteApi('/javascript/battle/$battleId')
+const createRunSeed = () => crypto.randomUUID()
 
 export function HomePage() {
   const navigate = useNavigate()
@@ -38,6 +39,7 @@ export function HomePage() {
               navigate({
                 to: '/javascript/battle/$battleId',
                 params: { battleId: '1' },
+                search: { seed: createRunSeed() },
               })
             }
           >
@@ -71,9 +73,23 @@ export function HomePage() {
 
 export function BattleRoutePage() {
   const { battleId } = battleRouteApi.useParams()
-  const [seed] = useState(() => crypto.randomUUID())
+  const { seed: searchSeed } = battleRouteApi.useSearch()
+  const navigate = useNavigate()
+  const [fallbackSeed] = useState(createRunSeed)
+  const seed = searchSeed ?? fallbackSeed
   const numericBattleId = Number(battleId)
   const exists = battles.some((battle) => battle.id === numericBattleId)
+
+  useEffect(() => {
+    if (searchSeed || !exists) return
+
+    navigate({
+      to: '/javascript/battle/$battleId',
+      params: { battleId },
+      search: { seed },
+      replace: true,
+    })
+  }, [battleId, exists, navigate, searchSeed, seed])
 
   if (!exists) {
     return <NotFoundBattle />
