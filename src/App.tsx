@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { battles, getTargets, skills, type Enemy, type SkillCard } from './game'
 
-type Phase = 'intro' | 'battle' | 'unlock' | 'victory' | 'defeat' | 'complete'
+type Phase = 'battle' | 'unlock' | 'victory' | 'defeat'
 
 type LogEntry = {
   id: number
@@ -9,13 +10,20 @@ type LogEntry = {
   text: string
 }
 
+type AppProps = {
+  battleId: number
+}
+
 const cloneEnemies = (enemies: Enemy[]) => enemies.map((enemy) => ({ ...enemy }))
 
-function App() {
-  const [battleIndex, setBattleIndex] = useState(0)
-  const [phase, setPhase] = useState<Phase>('intro')
+function App({ battleId }: AppProps) {
+  const navigate = useNavigate()
+  const battleIndex = battles.findIndex((candidate) => candidate.id === battleId)
+  const battle = battles[battleIndex]
+
+  const [phase, setPhase] = useState<Phase>('battle')
   const [playerHp, setPlayerHp] = useState(100)
-  const [enemies, setEnemies] = useState<Enemy[]>(cloneEnemies(battles[0].enemies))
+  const [enemies, setEnemies] = useState<Enemy[]>(cloneEnemies(battle.enemies))
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null)
   const [explainedSkill, setExplainedSkill] = useState<SkillCard | null>(null)
   const [logs, setLogs] = useState<LogEntry[]>([])
@@ -23,7 +31,6 @@ function App() {
   const [animatingIds, setAnimatingIds] = useState<string[]>([])
   const [isResolving, setIsResolving] = useState(false)
 
-  const battle = battles[battleIndex]
   const availableSkills = useMemo(
     () => battle.skillIds.map((id) => skills[id]),
     [battle],
@@ -33,11 +40,9 @@ function App() {
     setLogs((current) => [...current.slice(-4), { id: Date.now() + Math.random(), tone, text }])
   }
 
-  const resetBattle = (index = battleIndex) => {
-    const nextBattle = battles[index]
-    setBattleIndex(index)
+  const resetBattle = () => {
     setPlayerHp(100)
-    setEnemies(cloneEnemies(nextBattle.enemies))
+    setEnemies(cloneEnemies(battle.enemies))
     setSelectedSkillId(null)
     setLogs([])
     setTurn(1)
@@ -113,38 +118,24 @@ function App() {
   const continueAfterVictory = () => {
     if (battle.unlockSkillId) {
       setPhase('unlock')
-    } else {
-      setPhase('complete')
+      return
     }
+
+    navigate({ to: '/javascript/complete' })
   }
 
   const goNextBattle = () => {
-    const nextIndex = battleIndex + 1
-    if (nextIndex >= battles.length) {
-      setPhase('complete')
+    const nextBattle = battles[battleIndex + 1]
+
+    if (!nextBattle) {
+      navigate({ to: '/javascript/complete' })
       return
     }
-    resetBattle(nextIndex)
-  }
 
-  if (phase === 'intro') {
-    return (
-      <main className="app-shell intro-shell">
-        <section className="hero-panel">
-          <div className="eyebrow">JAVASCRIPT // CHAPTER 01</div>
-          <h1>CODE<span>//</span>READ RPG</h1>
-          <p className="hero-copy">
-            技の説明はない。コードを読めば、誰に当たるかが分かる。
-          </p>
-          <div className="rule-grid">
-            <div><strong>01</strong><span>敵とNEXT行動を見る</span></div>
-            <div><strong>02</strong><span>コードから対象を読む</span></div>
-            <div><strong>03</strong><span>同じカードを2回押して発動</span></div>
-          </div>
-          <button className="primary-button" onClick={() => resetBattle(0)}>START RUN</button>
-        </section>
-      </main>
-    )
+    navigate({
+      to: '/javascript/battle/$battleId',
+      params: { battleId: String(nextBattle.id) },
+    })
   }
 
   if (phase === 'unlock') {
@@ -161,22 +152,6 @@ function App() {
           <div className="power-line"><span>POWER</span><strong>{unlocked.power}</strong></div>
           <p>{unlocked.explanation}</p>
           <button className="primary-button" onClick={goNextBattle}>NEXT BATTLE</button>
-        </section>
-      </main>
-    )
-  }
-
-  if (phase === 'complete') {
-    return (
-      <main className="app-shell center-shell">
-        <section className="result-card complete-card">
-          <div className="eyebrow">CHAPTER CLEAR</div>
-          <h2>JavaScript // MVP COMPLETE</h2>
-          <p>3つの戦闘をクリアした。次はカード、敵、そして読むコード自体を増やせる。</p>
-          <button className="primary-button" onClick={() => {
-            setBattleIndex(0)
-            setPhase('intro')
-          }}>PLAY AGAIN</button>
         </section>
       </main>
     )
@@ -291,7 +266,7 @@ function App() {
             <h2>コードを読み直して再戦</h2>
             <p>必要ならカードの解説を確認してからリトライできる。</p>
             <div className="defeat-actions">
-              <button className="primary-button" onClick={() => resetBattle()}>RETRY</button>
+              <button className="primary-button" onClick={resetBattle}>RETRY</button>
               <button className="secondary-button" onClick={() => setExplainedSkill(availableSkills[0])}>コード解説</button>
             </div>
           </section>
