@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { AppRouter } from './AppRouter'
 import './styles.css'
 import './layout-fixes.css'
+import './stage-select.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

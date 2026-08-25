@@ -15,4 +15,6 @@ export {
   getPowerMultiplierForLevel,
   getTotalExpForLevel,
 } from './progression'
+export { ProgressProvider } from './ProgressProvider'
+export { useProgress } from './useProgress'
 export type { PlayerProgress, PlayerStats } from './types'
