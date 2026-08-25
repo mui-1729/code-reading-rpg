@@ -23,7 +23,8 @@ export function getTotalExpForLevel(level: number): number {
 
 export function getLevelForExp(exp: number): number {
   const normalizedExp = Math.max(0, exp)
-  return Math.max(1, Math.floor((1 + Math.sqrt(1 + normalizedExp / 5)) / 2))
+  const discriminant = 1 + (4 * normalizedExp) / EXP_CURVE_FACTOR
+  return Math.max(1, Math.floor((1 + Math.sqrt(discriminant)) / 2))
 }
 
 export function getMaxHpForLevel(level: number): number {
