@@ -1,47 +1,33 @@
 import { battles } from './battles'
-import { createSeededRandom, type Seed } from './random'
+import { createSeededRandom, type Seed, type SeededRandom } from './random'
+import { skills } from './skills'
+import { hasInitialValidTarget, isBattleSolvable } from './solvability'
+import { getTargets } from './targeting'
 import type { Battle } from './types'
 
-type HpRange = readonly [min: number, max: number]
-
-type BattleGenerationRules = {
-  hpByEnemyId: Record<string, HpRange>
-}
-
-const generationRules: Record<number, BattleGenerationRules> = {
-  1: {
-    hpByEnemyId: {
-      'slime-a': [30, 40],
-      'goblin-a': [66, 78],
-    },
-  },
-  2: {
-    hpByEnemyId: {
-      'slime-b': [36, 44],
-      'goblin-b': [64, 76],
-      'golem-b': [123, 132],
-    },
-  },
-  3: {
-    hpByEnemyId: {
-      'slime-c': [46, 54],
-      'goblin-c': [78, 92],
-      'boss-c': [148, 166],
-    },
-  },
-}
+const HP_MULTIPLIER_MIN_PERCENT = 85
+const HP_MULTIPLIER_MAX_PERCENT = 115
+const MAX_GENERATION_ATTEMPTS = 32
 
 export function generateBattle(battleId: number, seed: Seed): Battle | undefined {
   const template = battles.find((battle) => battle.id === battleId)
   if (!template) return undefined
 
-  const rules = generationRules[template.id]
-  if (!rules) return cloneBattle(template)
-
   const random = createSeededRandom(`${String(seed)}:battle:${template.id}`)
+
+  for (let attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt += 1) {
+    const candidate = createCandidate(template, random)
+    if (isValidCandidate(template, candidate)) return candidate
+  }
+
+  return cloneBattle(template)
+}
+
+function createCandidate(template: Battle, random: SeededRandom): Battle {
   const enemies = template.enemies.map((enemy) => {
-    const range = rules.hpByEnemyId[enemy.id]
-    const hp = range ? random.int(range[0], range[1]) : enemy.hp
+    const multiplier =
+      random.int(HP_MULTIPLIER_MIN_PERCENT, HP_MULTIPLIER_MAX_PERCENT) / 100
+    const hp = Math.max(1, Math.round(enemy.maxHp * multiplier))
 
     return { ...enemy, hp, maxHp: hp }
   })
@@ -51,6 +37,24 @@ export function generateBattle(battleId: number, seed: Seed): Battle | undefined
     enemies: random.shuffle(enemies),
     skillIds: random.shuffle(template.skillIds),
   }
+}
+
+function isValidCandidate(template: Battle, candidate: Battle): boolean {
+  if (!hasInitialValidTarget(candidate)) return false
+  if (!preservesInitialLearningTargets(template, candidate)) return false
+  return isBattleSolvable(candidate)
+}
+
+function preservesInitialLearningTargets(template: Battle, candidate: Battle): boolean {
+  const requiredSkillIds = template.skillIds.filter((skillId) => {
+    const skill = skills[skillId]
+    return skill ? getTargets(template.enemies, skill.rule).length > 0 : false
+  })
+
+  return requiredSkillIds.every((skillId) => {
+    const skill = skills[skillId]
+    return skill ? getTargets(candidate.enemies, skill.rule).length > 0 : false
+  })
 }
 
 function cloneBattle(battle: Battle): Battle {
