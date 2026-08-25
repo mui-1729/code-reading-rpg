@@ -1,4 +1,5 @@
 export { battles } from './battles'
+export { generateBattle } from './generator'
 export { skills } from './skills'
 export { createSeededRandom } from './random'
 export { getTargets } from './targeting'
