@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { getRouteApi, useNavigate } from '@tanstack/react-router'
 import App from './App'
 import { battles } from './game'
@@ -12,17 +13,21 @@ export function HomePage() {
       <section className="hero-panel pixel-window title-window">
         <div className="title-stars" aria-hidden="true">✦ · ✧ · ✦</div>
         <div className="eyebrow">JAVASCRIPT // CHAPTER 01</div>
-        <h1>CODE<span>//</span>READ <em>RPG</em></h1>
-        <p className="hero-copy">
-          技の説明はない。コードを読んで、戦況を変えろ。
-        </p>
+        <h1>
+          CODE<span>//</span>READ <em>RPG</em>
+        </h1>
+        <p className="hero-copy">技の説明はない。コードを読んで、戦況を変えろ。</p>
 
         <div className="title-scene" aria-hidden="true">
           <div className="pixel-moon" />
           <div className="pixel-mountains mountain-left" />
           <div className="pixel-mountains mountain-right" />
-          <div className="player-sprite title-player"><span /></div>
-          <div className="enemy-sprite slime title-slime"><span className="sprite-face">··</span></div>
+          <div className="player-sprite title-player">
+            <span />
+          </div>
+          <div className="enemy-sprite slime title-slime">
+            <span className="sprite-face">··</span>
+          </div>
           <div className="ground-strip" />
         </div>
 
@@ -44,9 +49,18 @@ export function HomePage() {
         </nav>
 
         <div className="rule-grid" id="how-to-play">
-          <div><strong>01</strong><span>敵とNEXT行動を見る</span></div>
-          <div><strong>02</strong><span>コードから対象を読む</span></div>
-          <div><strong>03</strong><span>同じカードを2回押して発動</span></div>
+          <div>
+            <strong>01</strong>
+            <span>敵とNEXT行動を見る</span>
+          </div>
+          <div>
+            <strong>02</strong>
+            <span>コードから対象を読む</span>
+          </div>
+          <div>
+            <strong>03</strong>
+            <span>同じカードを2回押して発動</span>
+          </div>
         </div>
 
         <div className="title-footer">8-BIT CODE READING SYSTEM // MVP</div>
@@ -57,6 +71,7 @@ export function HomePage() {
 
 export function BattleRoutePage() {
   const { battleId } = battleRouteApi.useParams()
+  const [seed] = useState(() => crypto.randomUUID())
   const numericBattleId = Number(battleId)
   const exists = battles.some((battle) => battle.id === numericBattleId)
 
@@ -64,7 +79,7 @@ export function BattleRoutePage() {
     return <NotFoundBattle />
   }
 
-  return <App key={battleId} battleId={numericBattleId} />
+  return <App key={`${battleId}:${seed}`} battleId={numericBattleId} seed={seed} />
 }
 
 export function CompletePage() {
