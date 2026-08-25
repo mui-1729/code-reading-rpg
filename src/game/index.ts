@@ -1,4 +1,6 @@
 export { battles } from './battles'
 export { skills } from './skills'
+export { createSeededRandom } from './random'
 export { getTargets } from './targeting'
+export type { Seed, SeededRandom } from './random'
 export type { Battle, Enemy, SkillCard, TargetRule } from './types'
