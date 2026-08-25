@@ -23,6 +23,8 @@ merge前に以下を確認する。
 - 対象画面が開ける
 - route追加・変更時は直URLと再読込が機能する
 
+Cloudflare側ではGit repositoryに `mui-1729/code-reading-rpg` を接続し、non-production branch buildsを有効にする。
+
 ## Vercel
 
 VercelはCloudflareへの移行確認中のfallbackとして当面残す。
