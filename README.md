@@ -1,6 +1,8 @@
 # CODE//READ RPG
 
-コードを「書く」のではなく、**読んで意味を判断して戦う**コードリーディングRPGのMVPです。
+コードを「書く」のではなく、**読んで意味を判断して戦う**コードリーディングRPGです。
+
+MVPは完成済みです。以後の開発はMVP後の拡張として進めます。
 
 ## MVP
 
@@ -13,6 +15,11 @@
 - 任意のコード解説
 - Battleクリアで新カード解放
 - 評価・レベル・装備・セーブ・バックエンドなし
+
+## Docs
+
+- [ロードマップ](./docs/ROADMAP.md) — MVP後に追加する機能、優先順位、バージョン計画、技術導入基準
+- [開発フロー](./docs/DEVELOPMENT_WORKFLOW.md) — Issue / Branch / Commit / PR / Review / Merge / Vercel Productionの運用規約
 
 ## Production
 
