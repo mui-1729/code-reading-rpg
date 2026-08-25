@@ -14,6 +14,16 @@
 - Battleクリアで新カード解放
 - 評価・レベル・装備・セーブ・バックエンドなし
 
+## Routes
+
+TanStack Routerで画面遷移とBattle URLを管理しています。
+
+- `/` - スタート画面
+- `/javascript/battle/$battleId` - JavaScript編の各Battle
+- `/javascript/complete` - Chapterクリア画面
+
+現在は小規模なためcode-based routingを採用しています。ルート数が増えた段階で、TanStack Routerが推奨するfile-based routingへの移行を検討します。
+
 ## Run
 
 ```bash
@@ -32,6 +42,7 @@ npm run build
 - Vite
 - React
 - TypeScript
+- TanStack Router
 - CSS
 
 ## Design note
