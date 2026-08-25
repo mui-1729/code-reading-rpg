@@ -15,6 +15,7 @@ type AppProps = {
 }
 
 const cloneEnemies = (enemies: Enemy[]) => enemies.map((enemy) => ({ ...enemy }))
+const spriteClassName = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
 
 function App({ battleId }: AppProps) {
   const navigate = useNavigate()
@@ -143,73 +144,93 @@ function App({ battleId }: AppProps) {
     if (!unlocked) return null
 
     return (
-      <main className="app-shell center-shell">
-        <section className="result-card unlock-card">
+      <main className="app-shell center-shell title-screen">
+        <section className="result-card unlock-card pixel-window">
           <div className="eyebrow">SKILL UNLOCKED</div>
           <div className="unlock-icon">＋</div>
           <h2>{unlocked.name}</h2>
           <pre><code>{unlocked.code}</code></pre>
           <div className="power-line"><span>POWER</span><strong>{unlocked.power}</strong></div>
           <p>{unlocked.explanation}</p>
-          <button className="primary-button" onClick={goNextBattle}>NEXT BATTLE</button>
+          <button className="primary-button" onClick={goNextBattle}>▶ NEXT BATTLE</button>
         </section>
       </main>
     )
   }
 
   return (
-    <main className="app-shell">
-      <header className="topbar">
+    <main className="app-shell battle-screen">
+      <header className="topbar pixel-window">
         <div>
           <div className="eyebrow">JAVASCRIPT // {battle.label}</div>
-          <h1>{battle.title}</h1>
-          <p>{battle.subtitle}</p>
+          <h1>CODE//READ RPG</h1>
+          <p>{battle.title} — {battle.subtitle}</p>
         </div>
         <div className="turn-pill">TURN {String(turn).padStart(2, '0')}</div>
       </header>
 
-      <section className="status-strip">
-        <div className="status-title">PLAYER</div>
-        <div className="hp-track player-track">
-          <div className="hp-fill" style={{ width: `${playerHp}%` }} />
+      <section className="battle-stage pixel-window">
+        <div className="stage-sky" aria-hidden="true">
+          <span className="stage-moon" />
+          <span className="stage-star star-a">✦</span>
+          <span className="stage-star star-b">·</span>
+          <span className="stage-star star-c">✧</span>
+          <span className="stage-mountain mountain-a" />
+          <span className="stage-mountain mountain-b" />
         </div>
-        <strong>{playerHp}<span>/100 HP</span></strong>
+
+        <aside className="status-strip player-panel">
+          <div className="player-sprite" aria-hidden="true"><span /></div>
+          <div className="player-stats">
+            <div className="status-title">CODE KNIGHT</div>
+            <div className="status-label-row"><span>HP</span><strong>{playerHp}<em>/100</em></strong></div>
+            <div className="hp-track player-track">
+              <div className="hp-fill" style={{ width: `${playerHp}%` }} />
+            </div>
+            <div className="player-command">READ → SELECT → EXECUTE</div>
+          </div>
+        </aside>
+
+        <section className="enemy-grid" aria-label="Enemies">
+          {enemies.map((enemy) => {
+            const hpPercent = (enemy.hp / enemy.maxHp) * 100
+            const defeated = enemy.hp <= 0
+            const spriteClass = spriteClassName(enemy.name)
+            return (
+              <article
+                className={`enemy-card ${defeated ? 'defeated' : ''} ${animatingIds.includes(enemy.id) ? 'hit' : ''}`}
+                key={enemy.id}
+              >
+                <div className={`enemy-sprite ${spriteClass}`} aria-hidden="true">
+                  <span className="sprite-face">{enemy.glyph}</span>
+                </div>
+                <div className="enemy-name-row">
+                  <h2>{enemy.name}</h2>
+                  <span>{enemy.hp}/{enemy.maxHp}</span>
+                </div>
+                <div className="hp-track enemy-track">
+                  <div className="hp-fill" style={{ width: `${hpPercent}%` }} />
+                </div>
+                <div className="intent-box">
+                  <span>NEXT</span>
+                  <strong>{defeated ? '—' : enemy.attackName}</strong>
+                  <em>{defeated ? 'DEFEATED' : `${enemy.attackDamage} DMG`}</em>
+                </div>
+              </article>
+            )
+          })}
+        </section>
+
+        <div className="stage-ground" aria-hidden="true" />
       </section>
 
-      <section className="enemy-grid" aria-label="Enemies">
-        {enemies.map((enemy) => {
-          const hpPercent = (enemy.hp / enemy.maxHp) * 100
-          const defeated = enemy.hp <= 0
-          return (
-            <article
-              className={`enemy-card ${defeated ? 'defeated' : ''} ${animatingIds.includes(enemy.id) ? 'hit' : ''}`}
-              key={enemy.id}
-            >
-              <div className="enemy-glyph">{enemy.glyph}</div>
-              <div className="enemy-name-row">
-                <h2>{enemy.name}</h2>
-                <span>{enemy.hp}/{enemy.maxHp}</span>
-              </div>
-              <div className="hp-track enemy-track">
-                <div className="hp-fill" style={{ width: `${hpPercent}%` }} />
-              </div>
-              <div className="intent-box">
-                <span>NEXT</span>
-                <strong>{defeated ? '—' : enemy.attackName}</strong>
-                <em>{defeated ? 'DEFEATED' : `${enemy.attackDamage} DMG`}</em>
-              </div>
-            </article>
-          )
-        })}
-      </section>
-
-      <section className="battle-console">
+      <section className="battle-console pixel-window">
         <div className="console-head">
           <div>
-            <div className="eyebrow">CHOOSE CODE</div>
-            <h2>読む → 選ぶ → もう一度押して発動</h2>
+            <div className="eyebrow">SELECT CODE SKILL</div>
+            <h2>コードを読む → カードを選ぶ → 同じカードをもう一度押す</h2>
           </div>
-          <span className="no-preview">NO TARGET PREVIEW</span>
+          <span className="no-preview">TARGET PREVIEW: OFF</span>
         </div>
 
         <div className="skill-grid">
@@ -229,20 +250,20 @@ function App({ battleId }: AppProps) {
                 </div>
                 <pre><code>{skill.code}</code></pre>
                 <div className="skill-card-foot">
-                  <span>{selected ? 'PRESS AGAIN TO EXECUTE' : 'SELECT'}</span>
+                  <span>{selected ? '▶ PRESS AGAIN TO EXECUTE' : '▷ SELECT'}</span>
                 </div>
               </button>
             )
           })}
         </div>
 
-        <div className="log-panel">
+        <div className="log-panel pixel-inner-window">
           <div className="log-title">BATTLE LOG</div>
           <div className="log-list">
             {logs.length === 0 ? (
-              <span className="log-empty">No action yet.</span>
+              <span className="log-empty">&gt; The battle begins. Read the code.</span>
             ) : logs.map((log) => (
-              <span key={log.id} className={`log-${log.tone}`}>{log.text}</span>
+              <span key={log.id} className={`log-${log.tone}`}>&gt; {log.text}</span>
             ))}
           </div>
         </div>
@@ -250,24 +271,24 @@ function App({ battleId }: AppProps) {
 
       {phase === 'victory' && (
         <div className="overlay">
-          <section className="result-card">
+          <section className="result-card pixel-window">
             <div className="eyebrow">VICTORY</div>
             <h2>{battle.title} cleared.</h2>
             <p>評価はなし。倒せたらクリア。</p>
-            <button className="primary-button" onClick={continueAfterVictory}>CONTINUE</button>
+            <button className="primary-button" onClick={continueAfterVictory}>▶ CONTINUE</button>
           </section>
         </div>
       )}
 
       {phase === 'defeat' && (
         <div className="overlay">
-          <section className="result-card defeat-card">
+          <section className="result-card defeat-card pixel-window">
             <div className="eyebrow">DEFEAT</div>
             <h2>コードを読み直して再戦</h2>
             <p>必要ならカードの解説を確認してからリトライできる。</p>
             <div className="defeat-actions">
-              <button className="primary-button" onClick={resetBattle}>RETRY</button>
-              <button className="secondary-button" onClick={() => setExplainedSkill(availableSkills[0])}>コード解説</button>
+              <button className="primary-button" onClick={resetBattle}>▶ RETRY</button>
+              <button className="secondary-button" onClick={() => setExplainedSkill(availableSkills[0])}>CODE HELP</button>
             </div>
           </section>
         </div>
@@ -275,7 +296,7 @@ function App({ battleId }: AppProps) {
 
       {explainedSkill && (
         <div className="overlay modal-overlay" onClick={() => setExplainedSkill(null)}>
-          <section className="explain-modal" onClick={(event) => event.stopPropagation()}>
+          <section className="explain-modal pixel-window" onClick={(event) => event.stopPropagation()}>
             <button className="close-button" onClick={() => setExplainedSkill(null)}>×</button>
             <div className="eyebrow">CODE EXPLANATION</div>
             <h2>{explainedSkill.concept}</h2>
