@@ -14,6 +14,11 @@
 - Battleクリアで新カード解放
 - 評価・レベル・装備・セーブ・バックエンドなし
 
+## Production
+
+- Vercel: https://code-reading-rpg-live.vercel.app
+- `main` へのmergeをProduction Deployのトリガーとして運用します。
+
 ## Routes
 
 TanStack Routerで画面遷移とBattle URLを管理しています。
