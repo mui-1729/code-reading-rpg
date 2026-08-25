@@ -2,7 +2,7 @@
 
 ## 1. この文書の役割
 
-この文書は、現在の技術構成と責務、データフロー、今後の拡張展望をまとめる。
+この文書は、現在の技術構成・責務・データフローと、今後の拡張展望をまとめる。
 
 技術比較や「なぜ別の技術を使わなかったか」は扱わない。
 
@@ -19,9 +19,12 @@ React
   ↓
 TanStack Router
   ↓
-Battle UI / Game State
+Battle UI / Local State
   ↓
-Game Data + Targeting Rules
+Game Domain
+  ├── Battle Data
+  ├── Skill Data
+  └── Targeting Rules
 ```
 
 技術スタック:
@@ -32,6 +35,9 @@ Game Data + Targeting Rules
 - TanStack Router
 - CSS
 - Node.js 24
+- Vitest
+- ESLint
+- Prettier
 - GitHub Actions
 - Vercel
 
@@ -45,35 +51,43 @@ Game Data + Targeting Rules
 
 ---
 
-## 3. 現在の主要ファイル
+## 3. 現在の主要構成
 
 ```text
 src/
 ├── main.tsx
+├── AppRouter.tsx
 ├── router.tsx
+├── routeComponents.tsx
 ├── App.tsx
-├── game.ts
+├── game/
+│   ├── index.ts
+│   ├── types.ts
+│   ├── skills.ts
+│   ├── battles.ts
+│   └── targeting.ts
+├── game.test.ts
 ├── styles.css
 └── layout-fixes.css
 ```
 
 ### `main.tsx`
 
-役割:
-
 - Reactアプリの起点
 - `AppRouter` のmount
 - グローバルCSSの読み込み
 
+### `AppRouter.tsx`
+
+- TanStack Routerの`RouterProvider`を描画する
+- router定義とReactコンポーネントの責務を分離する
+
 ### `router.tsx`
 
-役割:
-
-- ルート定義
-- タイトル画面
-- Battle URLの解決
-- Chapter完了画面
-- 存在しないBattle IDの処理
+- route treeの定義
+- URLとroute componentの対応付け
+- Router instanceの生成
+- TanStack Routerの型登録
 
 現在のroute:
 
@@ -83,19 +97,23 @@ src/
 /javascript/complete
 ```
 
-### `App.tsx`
+### `routeComponents.tsx`
 
-役割:
+- タイトル画面
+- Battle URLの解決
+- Chapter完了画面
+- 存在しないBattle IDの表示
+
+### `App.tsx`
 
 - Battle画面
 - Battle中のlocal state
-- Skill選択
-- Skill発動
+- Skill選択 / 発動
 - 敵ターン
 - 勝利 / 敗北 / unlock状態
 - Battle間navigation
 
-現在の主なstate:
+主なstate:
 
 - phase
 - playerHp
@@ -109,40 +127,50 @@ src/
 
 Battle単体で完結するため、現状はReact local stateで管理する。
 
-### `game.ts`
+---
 
-役割:
+## 4. Game Domain
+
+`src/game/` はゲームのデータと純粋ロジックをUIから分離する。
+
+### `index.ts`
+
+Game Domainの公開口。
+
+UIやテスト側は原則 `./game` から必要な値・型をimportする。
+
+### `types.ts`
 
 - `Enemy`
 - `SkillCard`
 - `Battle`
 - `TargetRule`
+
+### `skills.ts`
+
 - Skill定義
-- Battle定義
-- 対象判定 `getTargets()`
+- 表示コード
+- POWER
+- target rule
+- concept / explanation
 
-現時点では小規模なので、データとtargeting logicを1ファイルに置いている。
+### `battles.ts`
 
-### `styles.css`
+- 固定Battle定義
+- 敵データ
+- 利用可能Skill
+- unlock Skill
 
-役割:
+### `targeting.ts`
 
-- 8-bit RPG風の主要UI
-- Battle / title / modal / card / spriteなどの見た目
-- responsive対応
-- reduced motion対応
+- `getTargets()`
+- target ruleの評価
 
-### `layout-fixes.css`
-
-役割:
-
-- 大きい敵スプライトがHP/NEXT表示を隠さないための補助レイアウト
-
-今後UI整理を行う際に統合候補。
+表示されているJavaScriptコード自体を`eval()`せず、`TargetRule`を安全な内部表現として評価する。
 
 ---
 
-## 4. 現在のデータモデル
+## 5. 現在のデータモデル
 
 ### Enemy
 
@@ -188,9 +216,7 @@ Battle単体で完結するため、現状はReact local stateで管理する。
 
 ### TargetRule
 
-表示コードを直接実行せず、内部ルールで対象を決める。
-
-現在の例:
+現在:
 
 - firstBelow
 - allBelow
@@ -201,12 +227,12 @@ Battle単体で完結するため、現状はReact local stateで管理する。
 
 ---
 
-## 5. Battle開始時の流れ
+## 6. Battle開始時の流れ
 
 ```text
 URLからbattleIdを取得
 ↓
-routerがBattle存在確認
+route componentがBattle存在確認
 ↓
 AppにbattleIdを渡す
 ↓
@@ -219,11 +245,11 @@ skillIdsから利用可能Skillを解決
 Battle開始
 ```
 
-Battle定義自体はimmutableな元データとして扱い、現在HPなどの実行時状態はReact state側に持つ。
+Battle定義は元データとして扱い、現在HPなどの実行時状態はReact state側に持つ。
 
 ---
 
-## 6. Skill発動の流れ
+## 7. Skill発動の流れ
 
 ```text
 カード1回目押下
@@ -245,33 +271,7 @@ Enemy state更新
 勝利 / 継続 / 敗北を判定
 ```
 
-表示コードとtarget ruleは同じ意味になるように管理する。
-
----
-
-## 7. ルーティング
-
-現在はcode-based routing。
-
-```text
-root
-├── /
-├── /javascript/battle/$battleId
-└── /javascript/complete
-```
-
-Battle IDはURLで表現するため、特定Battleへ直接アクセスできる。
-
-今後、以下が増えた場合はroute構成を整理する。
-
-- Chapter Select
-- Stage Select
-- Reference
-- Settings
-- Challenge
-- Profile
-
-ルート数が増えてcode-based route treeの保守が煩雑になった段階でfile-based routingへの移行を検討する。
+表示コードと内部target ruleは常に同じ意味になるよう管理する。
 
 ---
 
@@ -283,9 +283,9 @@ Battle stateは`App.tsx`のlocal state。
 
 画面をまたいで永続的に共有する状態はほぼ存在しない。
 
-### 将来
+### 今後
 
-LocalStorage導入後は、例えば次の状態がBattle外でも必要になる。
+LocalStorage導入後は、例えば以下がBattle外でも必要になる。
 
 - クリア済みBattle
 - 解放済みSkill
@@ -295,65 +295,11 @@ LocalStorage導入後は、例えば次の状態がBattle外でも必要にな�
 
 最初は専用のpersistence moduleとReact stateで扱う。
 
-複数画面で同じclient stateを広範囲に共有し、state liftingが不自然になった場合はglobal state管理を検討する。
+複数画面で同じclient stateを広範囲に共有する必要が生じた場合に、global state管理を検討する。
 
 ---
 
-## 9. 今後のgame領域分割
-
-Battle数とテストが増えた段階で、`game.ts` を責務ごとに分割する。
-
-候補:
-
-```text
-src/game/
-├── types.ts
-├── skills.ts
-├── battles.ts
-├── targeting.ts
-├── generator.ts
-├── solvability.ts
-└── index.ts
-```
-
-### `types.ts`
-
-- Enemy
-- SkillCard
-- Battle
-- TargetRule
-- 将来の生成用型
-
-### `skills.ts`
-
-- Skill定義
-- Skill lookup
-
-### `battles.ts`
-
-- 固定Battle定義
-- Chapter構成
-
-### `targeting.ts`
-
-- `getTargets()`
-- target rule評価
-
-### `generator.ts`
-
-- seed付き盤面生成
-- 敵HP / 並び順 / 閾値の制約付き可変化
-
-### `solvability.ts`
-
-- 生成盤面に勝ち筋があるかの検証
-- テスト用の探索ロジック
-
-分割は必要になった責務から順に行う。
-
----
-
-## 10. 問題生成の将来像
+## 9. 問題生成の展望
 
 固定Battleから、再現可能な制約付き生成へ段階的に拡張する。
 
@@ -372,19 +318,21 @@ Validation
 Battle UI
 ```
 
-重要なのは、表示コードと内部ルールを別々にランダム生成しないこと。
+必要になった段階で次を追加する。
 
-同じ定義から、
+```text
+src/game/
+├── generator.ts
+└── solvability.ts
+```
 
-- 表示コード
-- target rule
-- 解説に必要な値
+空ファイルや将来用抽象化を先に作らない。
 
-を生成できる構造を目指す。
+表示コード・target rule・解説に必要な値は、同じ問題定義から生成できる構造を目指す。
 
 ---
 
-## 11. 進捗保存の将来像
+## 10. 進捗保存の展望
 
 第一段階はLocalStorage。
 
@@ -408,11 +356,9 @@ LocalStorage
 
 ---
 
-## 12. クラウド機能の将来像
+## 11. クラウド機能の展望
 
 複数端末同期やアカウントが必要になった段階でserver-side storageを追加する。
-
-将来イメージ:
 
 ```text
 React App
@@ -422,34 +368,36 @@ Server-state layer
 Backend / Database
 ```
 
-クラウド化した場合も、Battleのtargetingや盤面ロジック自体は可能な限り純粋なgame domainとして保つ。
+クラウド化後も、targetingや盤面生成などのゲームロジックは可能な限り純粋なGame Domainとして保つ。
 
 ---
 
-## 13. テスト構造の将来像
+## 12. テスト構造
 
-段階的に次を追加する。
+現在はVitestでGame Domainのunit testを実行している。
 
-```text
-Unit
-  ↓
-Component
-  ↓
-E2E
-```
-
-### Unit
-
-主対象:
+主な対象:
 
 - targeting
-- generator
-- solvability
-- persistence migration
+- Skill progression
+
+CIでは次を実行する。
+
+```text
+npm ci
+↓
+npm run lint
+↓
+npm test
+↓
+npm run build
+```
+
+今後は必要性に応じて段階的に追加する。
 
 ### Component
 
-主対象:
+候補:
 
 - 2回押し発動
 - Skill選択状態
@@ -458,7 +406,7 @@ E2E
 
 ### E2E
 
-主対象:
+候補:
 
 - Stage Select → Battle → Victory → Unlock → Next Stage
 - 保存 / 再読み込み
@@ -468,7 +416,7 @@ E2E
 
 ---
 
-## 14. デプロイ構成
+## 13. デプロイ構成
 
 ```text
 GitHub PR / Branch
@@ -498,9 +446,9 @@ https://code-reading-rpg-live.vercel.app
 
 ---
 
-## 15. 将来の構成イメージ
+## 14. 将来の構成イメージ
 
-機能が増えた場合の一例。
+責務が実際に増えた段階で、必要な部分から拡張する。
 
 ```text
 src/
@@ -524,15 +472,15 @@ src/
 └── styles/
 ```
 
-この形を先に作るのではなく、責務が実際に増えた段階で移行する。
+この形を先に完成させるのではなく、実際の要件に合わせて移行する。
 
 ---
 
-## 16. アーキテクチャ更新のタイミング
+## 15. 更新タイミング
 
 次の変更が入ったら、この文書も更新する。
 
-- game domainを分割した
+- Game Domainの責務を変更した
 - routing方式を変えた
 - LocalStorageを導入した
 - global stateを導入した
