@@ -1,41 +1,77 @@
 import { battles } from './battles'
-import { createSeededRandom, type Seed, type SeededRandom } from './random'
+import { createSeededRandom, type Seed } from './random'
 import { skills } from './skills'
 import { hasInitialValidTarget, isBattleSolvable } from './solvability'
 import { getTargets } from './targeting'
-import type { Battle } from './types'
+import type { Battle, Enemy } from './types'
 
-const HP_MULTIPLIER_MIN_PERCENT = 85
-const HP_MULTIPLIER_MAX_PERCENT = 115
-const MAX_GENERATION_ATTEMPTS = 32
+const BASE_HP_MULTIPLIER_PERCENT = 100
+const HP_MULTIPLIER_STEP_PERCENT = 5
 
-export function generateBattle(battleId: number, seed: Seed): Battle | undefined {
+export function getHpMultiplierForLevel(level: number): number {
+  const normalizedLevel = Math.max(1, Math.floor(level))
+  return (
+    BASE_HP_MULTIPLIER_PERCENT +
+    (normalizedLevel - 1) * HP_MULTIPLIER_STEP_PERCENT
+  ) / 100
+}
+
+export function getHpMultiplierSteps(level: number): number[] {
+  const targetPercent = Math.round(getHpMultiplierForLevel(level) * 100)
+  const steps: number[] = []
+
+  for (
+    let percent = targetPercent;
+    percent >= BASE_HP_MULTIPLIER_PERCENT;
+    percent -= HP_MULTIPLIER_STEP_PERCENT
+  ) {
+    steps.push(percent / 100)
+  }
+
+  return steps
+}
+
+export function generateBattle(
+  battleId: number,
+  seed: Seed,
+  difficultyLevel: number = battleId,
+): Battle | undefined {
   const template = battles.find((battle) => battle.id === battleId)
   if (!template) return undefined
 
-  const random = createSeededRandom(`${String(seed)}:battle:${template.id}`)
+  const normalizedLevel = Math.max(1, Math.floor(difficultyLevel))
+  const random = createSeededRandom(
+    `${String(seed)}:battle:${template.id}:level:${normalizedLevel}`,
+  )
+  const enemyOrder = random.shuffle(template.enemies.map((enemy) => ({ ...enemy })))
+  const skillIds = random.shuffle(template.skillIds)
 
-  for (let attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt += 1) {
-    const candidate = createCandidate(template, random)
+  for (const multiplier of getHpMultiplierSteps(normalizedLevel)) {
+    const candidate = createCandidate(template, enemyOrder, skillIds, multiplier)
     if (isValidCandidate(template, candidate)) return candidate
   }
 
   return cloneBattle(template)
 }
 
-function createCandidate(template: Battle, random: SeededRandom): Battle {
-  const enemies = template.enemies.map((enemy) => {
-    const multiplier =
-      random.int(HP_MULTIPLIER_MIN_PERCENT, HP_MULTIPLIER_MAX_PERCENT) / 100
-    const hp = Math.max(1, Math.round(enemy.maxHp * multiplier))
+function createCandidate(
+  template: Battle,
+  enemyOrder: Enemy[],
+  skillIds: string[],
+  multiplier: number,
+): Battle {
+  const enemies = enemyOrder.map((enemy) => {
+    const baseEnemy = template.enemies.find((candidate) => candidate.id === enemy.id)
+    if (!baseEnemy) throw new Error(`Base enemy ${enemy.id} was not found`)
 
+    const hp = Math.max(1, Math.round(baseEnemy.maxHp * multiplier))
     return { ...enemy, hp, maxHp: hp }
   })
 
   return {
     ...template,
-    enemies: random.shuffle(enemies),
-    skillIds: random.shuffle(template.skillIds),
+    enemies,
+    skillIds: [...skillIds],
   }
 }
 
