@@ -19,7 +19,7 @@ const generationRules: Record<number, BattleGenerationRules> = {
     hpByEnemyId: {
       'slime-b': [36, 44],
       'goblin-b': [64, 76],
-      'golem-b': [116, 132],
+      'golem-b': [123, 132],
     },
   },
   3: {
