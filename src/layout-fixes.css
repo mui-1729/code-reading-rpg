@@ -1,0 +1,36 @@
+.enemy-card {
+  display: grid;
+  grid-template-rows: 104px auto auto auto;
+  align-content: start;
+  overflow: hidden;
+}
+
+.enemy-card > .enemy-sprite {
+  align-self: end;
+  margin-top: 0;
+  margin-bottom: 8px;
+  transform-origin: center bottom;
+}
+
+.enemy-card > .enemy-sprite.golem {
+  transform: scale(.7);
+  margin-bottom: 0;
+}
+
+.enemy-card > .enemy-name-row,
+.enemy-card > .hp-track,
+.enemy-card > .intent-box {
+  position: relative;
+  z-index: 2;
+  background: rgba(7, 7, 13, .96);
+}
+
+@media (max-width: 700px) {
+  .enemy-card {
+    grid-template-rows: 92px auto auto auto;
+  }
+
+  .enemy-card > .enemy-sprite.golem {
+    transform: scale(.62);
+  }
+}

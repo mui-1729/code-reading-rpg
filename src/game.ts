@@ -131,7 +131,7 @@ export const battles: Battle[] = [
       enemy('goblin-b', 'Goblin', 68, 'Heavy Slash', 15, '▲'),
       enemy('golem-b', 'Golem', 124, 'Stone Fist', 9, '■'),
     ],
-    skillIds: ['pulse', 'viper', 'nova'],
+    skillIds: ['trace', 'pulse', 'nova', 'viper'],
     unlockSkillId: 'moon-edge',
   },
   {
@@ -144,7 +144,7 @@ export const battles: Battle[] = [
       enemy('goblin-c', 'Goblin', 84, 'Execution', 8, '▲'),
       enemy('boss-c', 'Boss', 156, 'Meteor', 12, '◆'),
     ],
-    skillIds: ['viper', 'moon-edge', 'pulse'],
+    skillIds: ['trace', 'pulse', 'nova', 'viper', 'moon-edge'],
   },
 ]
 
