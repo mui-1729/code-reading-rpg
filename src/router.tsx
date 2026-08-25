@@ -1,6 +1,5 @@
 import {
   Outlet,
-  RouterProvider,
   createRootRoute,
   createRoute,
   createRouter,
@@ -47,10 +46,6 @@ declare module '@tanstack/react-router' {
   interface Register {
     router: typeof router
   }
-}
-
-export function AppRouter() {
-  return <RouterProvider router={router} />
 }
 
 function HomePage() {
