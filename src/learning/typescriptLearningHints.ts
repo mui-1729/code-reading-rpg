@@ -16,6 +16,48 @@ export const typescriptLearningHints: LearningHint[] = [
     ],
   },
   {
+    id: 'ts-function-signature',
+    concept: 'parameter / return type',
+    title: '関数の入口と出口の型を読む',
+    summary: '(enemy: Enemy): boolean は、Enemyを受け取りbooleanを返す関数を表す。',
+    codeLines: [
+      'const isWeak = (enemy: Enemy): boolean => enemy.hp < 55',
+      'enemies.find(isWeak)',
+    ],
+    notes: [
+      'parameter typeは関数へ渡せる値の形、return typeは返す値の形を示す。',
+      'Battleの対象を決めるのは型名ではなく、callbackが返すtrue / falseの条件。',
+    ],
+  },
+  {
+    id: 'ts-array-type',
+    concept: 'array type',
+    title: 'Enemy[]を配列として読む',
+    summary: 'Enemy[]はEnemyが複数入る配列。配列methodの前後で要素の集合がどう変わるかを追う。',
+    codeLines: [
+      'const alive: Enemy[] = enemies.filter((enemy: Enemy) => enemy.hp > 0)',
+      'alive[0]',
+    ],
+    notes: [
+      'EnemyとEnemy[]は「1体」と「複数」の違いがある。',
+      'filter()は条件に合うEnemyを残した新しい配列を返す。',
+    ],
+  },
+  {
+    id: 'ts-string-literal',
+    concept: 'string literal',
+    title: '文字列の具体的な値を読む',
+    summary: '"Goblin"のようなliteralは、stringの中でも特定の1値を表す。比較では現在値まで確認する。',
+    codeLines: [
+      'const name = "Goblin" as const',
+      'enemies.find((enemy: Enemy) => enemy.name === name)',
+    ],
+    notes: [
+      'literalの型情報だけでは対象は決まらない。',
+      '実行時にはenemy.nameが"Goblin"と一致する最初のEnemyを探している。',
+    ],
+  },
+  {
     id: 'ts-union',
     concept: 'union type',
     title: '候補が複数ある型を読む',

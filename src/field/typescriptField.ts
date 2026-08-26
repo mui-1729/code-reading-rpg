@@ -72,6 +72,27 @@ export const typescriptField: FieldDefinition = {
       y: 3,
     },
     {
+      id: 'ts-function-sign',
+      kind: 'sign',
+      x: 3,
+      y: 6,
+      learningHintId: 'ts-function-signature',
+    },
+    {
+      id: 'ts-array-sign',
+      kind: 'sign',
+      x: 6,
+      y: 6,
+      learningHintId: 'ts-array-type',
+    },
+    {
+      id: 'ts-literal-sign',
+      kind: 'sign',
+      x: 1,
+      y: 6,
+      learningHintId: 'ts-string-literal',
+    },
+    {
       id: 'ts-type-sign',
       kind: 'sign',
       x: 2,
