@@ -7,7 +7,9 @@ import {
   generateBattle,
   getSkillCardsForBattle,
   getTargets,
+  JAVASCRIPT_AREA_ID,
   skills,
+  TYPESCRIPT_AREA_ID,
   type Enemy,
   type Seed,
   type SkillCard,
@@ -29,10 +31,12 @@ type LogEntry = {
   text: string
 }
 
+type BattleReturnPath = '/javascript/field' | '/typescript/field'
+
 type AppProps = {
   battleId: number
   seed: Seed
-  returnTo?: '/javascript/field'
+  returnTo?: BattleReturnPath
 }
 
 const cloneEnemies = (enemies: Enemy[]) => enemies.map((enemy) => ({ ...enemy }))
@@ -47,6 +51,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
     if (!generated) throw new Error(`Unknown battle: ${battleId}`)
     return generated
   }, [battleId, seed])
+  const battleArea = areaById[battle.areaId]
   const battleIndex = battles.findIndex((candidate) => candidate.id === battleId)
   const nextBattleCandidate = battles[battleIndex + 1]
   const nextBattle = nextBattleCandidate?.areaId === battle.areaId ? nextBattleCandidate : undefined
@@ -243,22 +248,51 @@ function App({ battleId, seed, returnTo }: AppProps) {
 
   const goNextBattle = () => {
     gameAudio.playSe('confirm')
+
     if (!nextBattle) {
-      navigate({ to: '/javascript/complete' })
+      if (battle.areaId === TYPESCRIPT_AREA_ID) {
+        navigate({ to: '/typescript/complete' })
+      } else {
+        navigate({ to: '/javascript/complete' })
+      }
+      return
+    }
+
+    if (battle.areaId === TYPESCRIPT_AREA_ID) {
+      navigate({
+        to: '/typescript/battle/$battleId',
+        params: { battleId: String(nextBattle.id) },
+        search: {
+          seed: String(seed),
+          returnTo: returnTo === '/typescript/field' ? returnTo : undefined,
+        },
+      })
       return
     }
 
     navigate({
       to: '/javascript/battle/$battleId',
       params: { battleId: String(nextBattle.id) },
-      search: { seed: String(seed), returnTo },
+      search: {
+        seed: String(seed),
+        returnTo: returnTo === '/javascript/field' ? returnTo : undefined,
+      },
     })
   }
 
   const goReturnDestination = () => {
     gameAudio.playSe('confirm')
+
+    if (returnTo === '/typescript/field') {
+      navigate({ to: '/typescript/field' })
+      return
+    }
     if (returnTo === '/javascript/field') {
       navigate({ to: '/javascript/field' })
+      return
+    }
+    if (battle.areaId === TYPESCRIPT_AREA_ID) {
+      navigate({ to: '/typescript' })
       return
     }
     navigate({ to: '/javascript' })
@@ -281,12 +315,15 @@ function App({ battleId, seed, returnTo }: AppProps) {
     ? areaById[victoryReward.clearedAreaId]
     : null
   const playerHpPercent = Math.max(0, Math.min(100, (playerHp / playerStats.maxHp) * 100))
+  const areaLabel = battleArea?.title.toUpperCase() ?? (
+    battle.areaId === JAVASCRIPT_AREA_ID ? 'JAVASCRIPT KINGDOM' : 'TYPESCRIPT FRONTIER'
+  )
 
   return (
     <main className="app-shell battle-screen">
       <header className="topbar pixel-window">
         <div>
-          <div className="eyebrow">JAVASCRIPT // {battle.label}</div>
+          <div className="eyebrow">{areaLabel} // {battle.label}</div>
           <h1>CODE//READ RPG</h1>
           <p>
             {battle.title} — {battle.subtitle}
@@ -465,7 +502,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
                 {nextBattle ? '▶ NEXT STAGE' : '▶ AREA CLEAR'}
               </button>
               <button className="secondary-button" onClick={goReturnDestination}>
-                {returnTo === '/javascript/field' ? '◀ RETURN TO FIELD' : '◀ STAGE SELECT'}
+                {returnTo ? '◀ RETURN TO FIELD' : '◀ STAGE SELECT'}
               </button>
             </div>
           </section>
@@ -483,7 +520,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
                 ▶ RETRY
               </button>
               <button className="secondary-button" onClick={goReturnDestination}>
-                {returnTo === '/javascript/field' ? '◀ RETURN TO FIELD' : '◀ STAGE SELECT'}
+                {returnTo ? '◀ RETURN TO FIELD' : '◀ STAGE SELECT'}
               </button>
               <button
                 className="secondary-button"
