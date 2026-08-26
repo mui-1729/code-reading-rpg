@@ -4,7 +4,7 @@
 
 `CODE//READ RPG`を、コードを読む行為がそのままゲーム上の判断になるRPGとして拡張していく順序を定義する。
 
-2026-08-26時点では、JavaScript KingdomのRPGループ・World Map・複数Area向け基盤まで完成している。次の重点は、**JavaScriptの読解幅を広げたうえで複数構文を組み合わせる問題へ進み、その後TypeScript Frontierを実装すること**。
+2026-08-26時点では、JavaScript KingdomのRPGループ、World Map、複数Area向け基盤、単体構文学習、複数構文・複数行の読解まで実装済み。次の重点は **TypeScript Frontierを2つ目の実Areaとして成立させること**。
 
 常に次を守る。
 
@@ -22,15 +22,18 @@
 
 - JavaScript Kingdom 3 Battles
 - Skill SELECT → EXECUTE
-- `find()` / `filter()` / 比較 / `sort()`
+- `find()` / `filter()` / `map()` / `sort()` / 比較
 - `&&` / `||` / `some()` / `reduce()` / 三項演算子
+- 中間変数を使う3行の複合code
+- `filter() → sort() → [0]`
+- `filter() → some() → ? :`
+- `filter() → map() → reduce()`
+- 複合codeの行別CODE HELP
 - HP / NEXT行動による戦略判断
 - Target Previewなし
-- CODE HELP
 - seeded generation / solvability
 - SkillDefinition / TargetRule
 - 同一効果の複数code variant
-- Battle 3の複数行code
 - Field上の任意学習看板
 
 ### RPG進行
@@ -55,7 +58,8 @@ Enemyはcurrent Player Levelへ自動追従させない。
 - Battle Gate
 - Battle後のField復帰
 - NPC / Dialogue
-- `find()`等を知らないPlayer向けの学習看板
+- 構文を知らないPlayer向けの任意学習看板
+- `find()` / `filter()` / `map()` / `sort()` / 比較 / `&&` / `||` / `some()` / `reduce()`の看板
 
 ### World / Area
 
@@ -114,92 +118,47 @@ World Map
 
 ## 4. JavaScript Kingdomの現在の学習範囲
 
-基礎:
+単体概念:
 
 - property access (`enemy.hp`, `enemy.attackDamage`)
 - 比較演算子
 - `find()`
 - `filter()`
+- `map()`
 - `sort()`
-
-追加済み:
-
 - `&&`
 - `||`
 - `some()`
 - `reduce()`
 - 三項演算子 `? :`
-- 生存敵を絞ってから処理する複数行code
 
-Fieldでは単体概念を短く確認し、Battleでは実際の盤面と照らして読む。
+複合読解:
 
----
-
-## 5. 次: #89 複数構文を組み合わせたBattle
-
-単一の構文を見分けるだけでなく、**複数行を上から追って中間結果と最終結果を予測する**体験へ進める。
-
-難易度は次の順で上げる。
-
-```text
-Level 1
-2構文の組み合わせ
-
-Level 2
-3構文 + 複数行
-
-Level 3
-中間変数 + nested property + 条件分岐
-
-Boss
-複数候補から最終target / effectを読む
-```
-
-候補:
-
-```ts
-const wounded = enemies.filter((enemy) => enemy.hp < 40)
-const target = wounded.sort((a, b) => a.hp - b.hp)[0]
-```
-
-```ts
+```js
 const alive = enemies.filter((enemy) => enemy.hp > 0)
-const danger = alive.reduce((best, enemy) =>
-  enemy.attackDamage > best.attackDamage ? enemy : best,
-)
+const ordered = [...alive].sort((a, b) => a.hp - b.hp)
+ordered[0]
 ```
 
-方針:
+```js
+const alive = enemies.filter((enemy) => enemy.hp > 0)
+const hasWounded = alive.some((enemy) => enemy.hp < 50)
+hasWounded ? alive : []
+```
 
-- ただ長いだけのcodeにしない
-- 各行の中間値を追えること
-- CODE HELPで行ごとの意味を説明できること
-- 表示codeとTargetRule / effectを必ずtestすること
-- `eval()`しないこと
+```js
+const alive = enemies.filter((enemy) => enemy.hp > 0)
+const scored = alive.map((enemy) => ({ enemy, score: enemy.attackDamage }))
+scored.reduce((best, candidate) => candidate.score > best.score ? candidate : best).enemy
+```
 
----
-
-## 6. JavaScriptでさらに増やす候補
-
-#89の複合問題へ自然に必要になったものから追加する。
-
-- `every()`
-- `map()`
-- optional chaining `?.`
-- nullish coalescing `??`
-- destructuring
-- object / nested data
-- callback内の複数条件
-- 実行順序
-- status / shieldに対応するproperty
-
-構文網羅のためだけには追加しない。ゲーム内判断が変わるものを優先する。
+Battle 3ではCODE HELPが各物理行を順番に説明する。Playerは最終行だけでなく、中間配列・boolean・objectがどう変化したかを追える。
 
 ---
 
-## 7. その次: #90 TypeScript Frontier
+## 5. 次: #90 TypeScript Frontier
 
-2つ目の実AreaとしてTypeScript Frontierを実装する。
+World Map上でCOMING SOONのTypeScript Frontierを、2つ目の実Areaとして実装する。
 
 初期テーマ:
 
@@ -221,22 +180,52 @@ Stage 2
 union / optional property / narrowing
 
 Stage 3
-複数の型情報を組み合わせたBoss
+JavaScriptの実行読解 + 複数の型情報を組み合わせたBoss
 ```
 
-JavaScriptで身につけた「配列・条件・実行順序を読む」能力を、そのままTypeScriptの型情報へ接続する。
+JavaScript Kingdomで身につけた、
+
+```text
+配列を絞る
+→ 変換する
+→ 条件を読む
+→ 中間値を追う
+→ 最終結果を判断する
+```
+
+という読み方を、そのままTypeScriptの型情報へ接続する。
 
 必須条件:
 
 - JavaScript既存URL / save dataを壊さない
-- Stage IDを重複させない
-- TypeScript専用Field / 学習看板を持つ
+- Stage IDを既存1〜3と重複させない
+- `/typescript` / `/typescript/field` / `/typescript/battle/$battleId` / `/typescript/complete`
+- TypeScript専用Field / 学習看板
+- World MapでAVAILABLE化
 - 巨大なArea別条件分岐を作らない
 - generator / solvabilityを再利用できる構造にする
+- Bossは複数の型概念と複数行codeを組み合わせる
 
 ---
 
-## 8. RPGの深さ
+## 6. JavaScriptでさらに増やす候補
+
+TypeScript Frontierと並行して必要性が出たものから追加する。
+
+- `every()`
+- optional chaining `?.`
+- nullish coalescing `??`
+- destructuring
+- nested object
+- callback内の複数条件
+- status / shieldに対応するproperty
+- 実行順序がより深い4〜5行code
+
+構文網羅のためだけには追加しない。ゲーム内判断が変わるものを優先する。
+
+---
+
+## 7. RPGの深さ
 
 複数Areaと学習進行が安定してから追加する。
 
@@ -257,7 +246,7 @@ RPG要素はコード読解の代替ではなく、コードを読む理由を�
 
 ---
 
-## 9. Backend / サービス化
+## 8. Backend / サービス化
 
 次の必要性が発生してから導入する。
 
@@ -272,7 +261,7 @@ RPG要素はコード読解の代替ではなく、コードを読む理由を�
 
 ---
 
-## 10. 優先順位
+## 9. 優先順位
 
 ```text
 [実装済み]
@@ -286,15 +275,13 @@ Battle MVP
 → 複数Area routing基盤
 → Field学習看板
 → JavaScript構文拡張（&& / || / some / reduce）
+→ 複数構文・3行code / map / 行別CODE HELP（#89）
 
 [次]
-#89 複数構文・複数行Battle
-
-[その次]
 #90 TypeScript Frontier
 
 [以降]
-JavaScript追加構文 / TypeScript拡張
+TypeScript拡張 / JavaScript追加構文
 → Quest / Shop / 装備等のRPG深化
 
 [必要になってから]
