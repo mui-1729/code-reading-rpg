@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, feat/63-audio-system]
+    branches: [main]
   pull_request:
 
 jobs:
