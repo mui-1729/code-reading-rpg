@@ -1,10 +1,8 @@
-# Main Quest System
+# Quest System
 
 ## 目的
 
-Main Questは、Battle・Field・NPC・Area progressionを1つのRPGループとしてつなぐための目的管理レイヤーです。
-
-Quest状態そのものは保存せず、既存の`PlayerProgress`にあるStage CLEAR / Area CLEARから毎回導出します。
+QuestはBattle・Field・NPC・Area progressionを1つのRPGループとしてつなぐ。
 
 ```text
 PlayerProgress
@@ -14,9 +12,9 @@ Quest Progress
 Quest Tracker / Field Marker / Victory Feedback
 ```
 
-このため、Quest追加だけを理由にsave schemaを増やしません。
+## Main Quest
 
-## 現在のMain Quest
+Main Questは保存せず、Stage CLEAR / Area CLEARから毎回導出する。
 
 ### JavaScript Kingdom
 
@@ -38,68 +36,118 @@ MAYBE VALUE GATE CLEAR
 Frontier Compiler撃破 / AREA CLEAR
 ```
 
-Quest definitionとstep条件は`src/quests/quests.ts`をsource of truthにします。
+definitionとstep条件は`src/quests/quests.ts`をsource of truthにする。
 
-## プレイヤーへの表示
+## Side Quest
 
-### Quest Tracker
+Main Quest完了後に、過去Stageを再攻略する目的を追加する。
 
-World Map / Area / FieldでMain Quest一覧を開けます。
+現在のSide Quest:
 
-- `Q`: OPEN / CLOSE
-- `Esc`: CLOSE
-- `LOCKED / ACTIVE / COMPLETE`
-- 現在の次stepを`▶`で表示
+```text
+JavaScript AREA CLEAR
+→ SECOND PASS
+→ Stage 1を再攻略
+→ +40 EXP
+```
 
-Battle中はコード読解UIを邪魔しないためTrackerを表示しません。
+```text
+TypeScript AREA CLEAR
+→ TYPE RECHECK
+→ Stage 4を再攻略
+→ +50 EXP
+```
 
-### Field Quest Marker
+Side Questの進行は次のルールにする。
 
-ACTIVE Questから次のField目標を導出します。
+- Area CLEAR前: `LOCKED`
+- Area CLEAR後: `ACTIVE`
+- 対象Battleを再攻略: `COMPLETE`
+- bonus EXPはQuestごとに1回だけ
+- COMPLETE後の再攻略ではbonus EXPを重複付与しない
+
+一度だけの報酬を保証するため、`completedSideQuestIds`だけをPlayerProgressへ保存する。
+
+## Quest Tracker
+
+World Map / Area / Fieldで`Q`から開く。
+
+- 常設toggleは従来の`QUEST`のみ
+- Main Questを表示
+- Side Questは解放後だけ同じpanel内へ表示
+- Battle中は非表示
+- `Esc`で閉じる
+
+Side Questのために常設panelや別toggleは追加しない。
+
+## Field Quest Marker
+
+Main QuestのACTIVE stepだけをField Markerへ使う。
 
 - 次のBattle Gate: `NEXT`
 - Objective Guide NPC: `!`
 - Area CLEAR後: markerなし
 
-Markerは見た目だけで、collision / interaction / save schemaには影響しません。
+Side Questは現在Markerを増やさず、Quest Logから確認する。
 
-### Victory Feedback
+## Victory Feedback
 
-BattleでQuest条件が初めて成立したとき、Victory画面上にQuest更新を表示します。
+Main Quest条件が初めて成立した場合:
 
 ```text
 QUEST UPDATED
-✓ 今回完了したstep
-NEXT → 次のstep
 ```
 
-Boss撃破でMain Quest全stepが完了した場合は、
+Main Quest全step完了時:
 
 ```text
 MAIN QUEST COMPLETE
 ```
 
-として表示します。
+Side Quest完了時:
 
-再戦ではEXPが増えてもQuest条件自体は変化しないため、Quest更新を表示しません。
+```text
+SIDE QUEST COMPLETE
++XX EXP
+```
+
+Battle結果画面へ長い説明文を追加せず、状態変化だけを短く通知する。
+
+## Save
+
+schema v3:
+
+```text
+exp
+clearedStageIds
+clearedAreaIds
+completedSideQuestIds
+unlockedStageIds
+unlockedSkillIds
+```
+
+- Main Quest: Stage / Area進行から導出
+- Side Quest: 完了IDだけ保存
+- v1 / v2 migration: 既存CLEARを維持し、Side Questは未完了から開始
 
 ## 実装原則
 
 - Quest判定は`src/quests/`のpure functionへ置く
-- Battle logicへQuest条件判定を埋め込まない
-- save schemaをQuest表示都合で増やさない
-- Quest MarkerはField進行経路を塞がない
-- Battle中のコード読解をQuest UIで邪魔しない
-- 新Area追加時はArea固有UIを増やす前にdata-drivenなQuest definitionを追加する
+- BattleのTargetRuleへQuest条件を混ぜない
+- Main Questは導出可能な状態を重複保存しない
+- Side Questの永続化は一度だけの報酬に必要な最小情報だけ
+- Quest UIでBattleのコード読解を邪魔しない
+- Side Questを増やしてもField objectを無制限に増やさない
 
 ## テスト
 
-最低限、次をpure unit testで固定します。
+最低限:
 
-- Stage CLEARで次stepへ進む
-- Area CLEARでQuest COMPLETEになる
-- JavaScript / TypeScriptが独立して進行する
-- Field Markerが次Gateへ切り替わる
-- Area CLEAR後にMarkerが消える
-- 初回CLEARだけVictory Feedbackを返す
-- replayではVictory Feedbackを返さない
+- Main Quest Stage / Area進行
+- Field Marker切替
+- Main Quest replayでfeedbackなし
+- Side Quest LOCKED → ACTIVE → COMPLETE
+- 対象外BattleではSide Questが進まない
+- bonus EXPは一度だけ
+- JavaScript / TypeScript Side Questが独立
+- v1 / v2 → v3 migration
