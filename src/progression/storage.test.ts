@@ -45,6 +45,20 @@ describe('player progress storage', () => {
     })
   })
 
+  it('schema v1ですでにBossを倒していた場合はJavaScript Area CLEARを引き継ぐ', () => {
+    const raw = JSON.stringify({
+      version: 1,
+      progress: {
+        exp: 220,
+        clearedStageIds: [1, 2, 3],
+        unlockedStageIds: [1, 2, 3],
+        unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper', 'moon-edge'],
+      },
+    })
+
+    expect(restorePlayerProgress(raw).clearedAreaIds).toEqual(['javascript'])
+  })
+
   it('保存データがない場合は初期状態へfallbackする', () => {
     expect(restorePlayerProgress(null)).toEqual(createInitialPlayerProgress())
   })
