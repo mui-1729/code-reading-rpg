@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { PlayerStats } from '../progression'
-import { createInitialRpgState } from './RpgState'
+import { createInitialRpgState } from './state'
 import { getCombatStats, getIncomingDamage, getSkillDamage } from './combat'
 import { equipItem } from './equipment'
 import { getPartyFollowUpDamage } from './party'
