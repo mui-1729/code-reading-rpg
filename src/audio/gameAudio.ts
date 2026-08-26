@@ -13,7 +13,7 @@ export type SoundEffect =
   | 'skillUnlock'
   | 'stageClear'
 
-export type BgmTrack = 'battle'
+export type BgmTrack = 'menu' | 'field' | 'battle'
 
 export type AudioSettings = {
   muted: boolean
@@ -21,10 +21,52 @@ export type AudioSettings = {
   bgmVolume: number
 }
 
+type BgmPattern = {
+  notes: readonly number[]
+  stepMs: number
+  noteMs: number
+  type: OscillatorType
+  volume: number
+  bassEvery: number
+  bassVolume: number
+}
+
 export const DEFAULT_AUDIO_SETTINGS: AudioSettings = {
   muted: false,
   seVolume: 0.42,
-  bgmVolume: 0.16,
+  bgmVolume: 0.28,
+}
+
+export const BGM_TRACKS: readonly BgmTrack[] = ['menu', 'field', 'battle']
+
+export const BGM_PATTERNS: Readonly<Record<BgmTrack, BgmPattern>> = {
+  menu: {
+    notes: [261.63, 329.63, 392, 329.63, 293.66, 349.23, 440, 349.23],
+    stepMs: 260,
+    noteMs: 205,
+    type: 'triangle',
+    volume: 0.075,
+    bassEvery: 4,
+    bassVolume: 0.05,
+  },
+  field: {
+    notes: [220, 261.63, 329.63, 261.63, 246.94, 293.66, 369.99, 293.66],
+    stepMs: 220,
+    noteMs: 170,
+    type: 'square',
+    volume: 0.08,
+    bassEvery: 4,
+    bassVolume: 0.052,
+  },
+  battle: {
+    notes: [196, 246.94, 293.66, 246.94, 220, 261.63, 329.63, 261.63],
+    stepMs: 180,
+    noteMs: 140,
+    type: 'square',
+    volume: 0.1,
+    bassEvery: 4,
+    bassVolume: 0.06,
+  },
 }
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value))
@@ -43,6 +85,10 @@ export function getChannelVolume(
 ): number {
   if (settings.muted) return 0
   return channel === 'se' ? settings.seVolume : settings.bgmVolume
+}
+
+export function shouldReleaseBgm(current: BgmTrack | null, released: BgmTrack): boolean {
+  return current === released
 }
 
 class GameAudioEngine {
@@ -93,6 +139,11 @@ class GameAudioEngine {
   requestBgm(track: BgmTrack): void {
     this.desiredBgm = track
     this.startDesiredBgm()
+  }
+
+  releaseBgm(track: BgmTrack): void {
+    if (!shouldReleaseBgm(this.desiredBgm, track)) return
+    this.stopBgm()
   }
 
   stopBgm(): void {
@@ -220,20 +271,27 @@ class GameAudioEngine {
     this.playBgmStep()
 
     if (typeof window !== 'undefined') {
-      this.bgmTimer = window.setInterval(() => this.playBgmStep(), 180)
+      const pattern = BGM_PATTERNS[this.activeBgm]
+      this.bgmTimer = window.setInterval(() => this.playBgmStep(), pattern.stepMs)
     }
   }
 
   private playBgmStep(): void {
-    if (!this.bgmGain || this.activeBgm !== 'battle') return
+    if (!this.bgmGain || !this.activeBgm) return
 
-    const notes = [196, 246.94, 293.66, 246.94, 220, 261.63, 329.63, 261.63]
-    const frequency = notes[this.bgmStep % notes.length]
+    const pattern = BGM_PATTERNS[this.activeBgm]
+    const frequency = pattern.notes[this.bgmStep % pattern.notes.length]
     this.bgmStep += 1
-    this.tone(this.bgmGain, frequency, 135, { type: 'square', volume: 0.035 })
+    this.tone(this.bgmGain, frequency, pattern.noteMs, {
+      type: pattern.type,
+      volume: pattern.volume,
+    })
 
-    if (this.bgmStep % 4 === 1) {
-      this.tone(this.bgmGain, frequency / 2, 155, { type: 'triangle', volume: 0.028 })
+    if (this.bgmStep % pattern.bassEvery === 1) {
+      this.tone(this.bgmGain, frequency / 2, pattern.noteMs + 30, {
+        type: 'triangle',
+        volume: pattern.bassVolume,
+      })
     }
   }
 }
