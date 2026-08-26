@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   createCodeDataVariables,
   createEnemyInspectionSnapshot,
@@ -7,6 +7,8 @@ import {
 } from './enemyInspection'
 
 const BATTLE_PATH_PATTERN = /^\/(javascript|typescript)\/battle\/[^/]+$/
+
+type CodeDataCollection = readonly Record<string, string | number | boolean | null>[]
 
 function isBattleRoute() {
   return BATTLE_PATH_PATTERN.test(window.location.pathname)
@@ -26,7 +28,36 @@ function readSelectedSkillName() {
   return document.querySelector('.skill-card.selected .skill-card-head span')?.textContent?.trim() ?? null
 }
 
-function readEnemies(cache: Map<string, RuntimeEnemy>): RuntimeEnemy[] {
+function syncEnemyCards() {
+  const cards = Array.from(document.querySelectorAll<HTMLElement>('.enemy-card'))
+
+  cards.forEach((card, index) => {
+    const name = card.querySelector('.enemy-name-row h2')?.textContent?.trim() ?? `Enemy ${index + 1}`
+    const attackName = card.querySelector('.intent-box strong')?.textContent?.trim() ?? ''
+    const attackDamage = parseNumber(card.querySelector('.intent-box em')?.textContent?.trim())
+
+    if (attackName && attackName !== '—') card.dataset.codeDataAttackName = attackName
+    if (attackDamage !== null) card.dataset.codeDataAttackDamage = String(attackDamage)
+
+    card.classList.add('code-data-clickable')
+    card.setAttribute('role', 'button')
+    card.setAttribute('tabindex', '0')
+    card.setAttribute('aria-label', `${name}のコード上のデータを確認`)
+  })
+}
+
+function clearEnemyCardEnhancements() {
+  document.querySelectorAll<HTMLElement>('.enemy-card').forEach((card) => {
+    card.classList.remove('code-data-clickable', 'code-data-inspected')
+    card.removeAttribute('role')
+    card.removeAttribute('tabindex')
+    card.removeAttribute('aria-label')
+    delete card.dataset.codeDataAttackName
+    delete card.dataset.codeDataAttackDamage
+  })
+}
+
+function readEnemies(): RuntimeEnemy[] {
   const cards = Array.from(document.querySelectorAll<HTMLElement>('.enemy-card'))
 
   return cards.flatMap((card, index) => {
@@ -39,23 +70,21 @@ function readEnemies(cache: Map<string, RuntimeEnemy>): RuntimeEnemy[] {
     const maxHp = Number(maxHpRaw)
     if (!Number.isFinite(hp) || !Number.isFinite(maxHp)) return []
 
-    const key = `${index}:${name}`
-    const previous = cache.get(key)
-    const attackNameText = card.querySelector('.intent-box strong')?.textContent?.trim() ?? ''
-    const attackDamageText = card.querySelector('.intent-box em')?.textContent?.trim() ?? ''
-    const parsedAttackDamage = parseNumber(attackDamageText)
+    const visibleAttackName = card.querySelector('.intent-box strong')?.textContent?.trim() ?? ''
+    const visibleAttackDamage = parseNumber(card.querySelector('.intent-box em')?.textContent?.trim())
+    const storedAttackDamage = parseNumber(card.dataset.codeDataAttackDamage)
 
-    const enemy: RuntimeEnemy = {
-      key,
+    return [{
+      key: `${index}:${name}`,
       name,
       hp,
       maxHp,
-      attackName: attackNameText === '—' ? previous?.attackName ?? '—' : attackNameText,
-      attackDamage: parsedAttackDamage ?? previous?.attackDamage ?? 0,
-    }
-
-    cache.set(key, enemy)
-    return [enemy]
+      attackName:
+        visibleAttackName && visibleAttackName !== '—'
+          ? visibleAttackName
+          : card.dataset.codeDataAttackName ?? '—',
+      attackDamage: visibleAttackDamage ?? storedAttackDamage ?? 0,
+    }]
   })
 }
 
@@ -65,8 +94,12 @@ function formatScalar(value: string | number | boolean | null) {
   return String(value)
 }
 
+function isCollection(value: CodeDataValue): value is CodeDataCollection {
+  return Array.isArray(value)
+}
+
 function DataValue({ value }: { value: CodeDataValue }) {
-  if (!Array.isArray(value)) return <strong>{formatScalar(value)}</strong>
+  if (!isCollection(value)) return <strong>{formatScalar(value)}</strong>
 
   return (
     <div className="code-data-collection">
@@ -82,33 +115,42 @@ function DataValue({ value }: { value: CodeDataValue }) {
 }
 
 export function BattleCodeData() {
-  const [, setRevision] = useState(0)
+  const [revision, setRevision] = useState(0)
   const [open, setOpen] = useState(false)
   const [selectedEnemyKey, setSelectedEnemyKey] = useState<string | null>(null)
-  const enemyCacheRef = useRef(new Map<string, RuntimeEnemy>())
   const battleRoute = typeof window !== 'undefined' && isBattleRoute()
-  const enemies = battleRoute ? readEnemies(enemyCacheRef.current) : []
+  const enemies = battleRoute ? readEnemies() : []
   const selectedCode = battleRoute ? readSelectedCode() : null
   const selectedSkillName = battleRoute ? readSelectedSkillName() : null
   const selectedEnemy = selectedEnemyKey
     ? enemies.find((enemy) => enemy.key === selectedEnemyKey) ?? null
     : null
-
-  const codeVariables = useMemo(
-    () => createCodeDataVariables(enemies, selectedCode),
-    [enemies, selectedCode],
-  )
-  const enemySnapshot = useMemo(
-    () => selectedEnemy ? createEnemyInspectionSnapshot(selectedEnemy, selectedCode) : null,
-    [selectedCode, selectedEnemy],
-  )
+  const codeVariables = createCodeDataVariables(enemies, selectedCode)
+  const enemySnapshot = selectedEnemy
+    ? createEnemyInspectionSnapshot(selectedEnemy, selectedCode)
+    : null
 
   useEffect(() => {
     let frame = 0
+    let lastPath = window.location.pathname
+    syncEnemyCards()
+
     const observer = new MutationObserver(() => {
+      syncEnemyCards()
       if (frame !== 0) return
+
       frame = window.requestAnimationFrame(() => {
         frame = 0
+        const nextPath = window.location.pathname
+        if (nextPath !== lastPath) {
+          lastPath = nextPath
+          setOpen(false)
+          setSelectedEnemyKey(null)
+        }
+        if (document.querySelector('.result-overlay')) {
+          setOpen(false)
+          setSelectedEnemyKey(null)
+        }
         setRevision((current) => current + 1)
       })
     })
@@ -117,35 +159,9 @@ export function BattleCodeData() {
     return () => {
       observer.disconnect()
       if (frame !== 0) window.cancelAnimationFrame(frame)
+      clearEnemyCardEnhancements()
     }
   }, [])
-
-  useEffect(() => {
-    if (!battleRoute) {
-      setOpen(false)
-      setSelectedEnemyKey(null)
-      enemyCacheRef.current.clear()
-      return
-    }
-
-    const cards = Array.from(document.querySelectorAll<HTMLElement>('.enemy-card'))
-    cards.forEach((card, index) => {
-      const name = card.querySelector('.enemy-name-row h2')?.textContent?.trim() ?? `Enemy ${index + 1}`
-      card.classList.add('code-data-clickable')
-      card.setAttribute('role', 'button')
-      card.setAttribute('tabindex', '0')
-      card.setAttribute('aria-label', `${name}のコード上のデータを確認`)
-    })
-
-    return () => {
-      cards.forEach((card) => {
-        card.classList.remove('code-data-clickable', 'code-data-inspected')
-        card.removeAttribute('role')
-        card.removeAttribute('tabindex')
-        card.removeAttribute('aria-label')
-      })
-    }
-  }, [battleRoute, enemies.length])
 
   useEffect(() => {
     const openEnemy = (card: Element) => {
@@ -189,17 +205,14 @@ export function BattleCodeData() {
   }, [battleRoute, open])
 
   useEffect(() => {
-    document.querySelectorAll('.enemy-card').forEach((card) => {
-      card.classList.remove('code-data-inspected')
-    })
-    if (!selectedEnemyKey) return
-
     const cards = Array.from(document.querySelectorAll<HTMLElement>('.enemy-card'))
-    const selected = enemies.find((enemy) => enemy.key === selectedEnemyKey)
-    if (!selected) return
-    const index = enemies.indexOf(selected)
-    cards[index]?.classList.add('code-data-inspected')
-  }, [enemies, selectedEnemyKey])
+    cards.forEach((card) => card.classList.remove('code-data-inspected'))
+    if (!battleRoute || !selectedEnemyKey) return
+
+    const separatorIndex = selectedEnemyKey.indexOf(':')
+    const cardIndex = Number(selectedEnemyKey.slice(0, separatorIndex))
+    if (Number.isInteger(cardIndex)) cards[cardIndex]?.classList.add('code-data-inspected')
+  }, [battleRoute, revision, selectedEnemyKey])
 
   if (!battleRoute || document.querySelector('.result-overlay')) return null
 
@@ -243,10 +256,10 @@ export function BattleCodeData() {
                 <div className="code-data-variable" key={variable.name}>
                   <div className="code-data-variable-head">
                     <code>{variable.name}</code>
-                    {!Array.isArray(variable.value) && <DataValue value={variable.value} />}
+                    {!isCollection(variable.value) && <DataValue value={variable.value} />}
                   </div>
                   {variable.expression && <small>{variable.expression}</small>}
-                  {Array.isArray(variable.value) && <DataValue value={variable.value} />}
+                  {isCollection(variable.value) && <DataValue value={variable.value} />}
                 </div>
               ))}
             </div>
