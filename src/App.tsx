@@ -10,6 +10,7 @@ import {
   type Seed,
   type SkillCard,
 } from './game'
+import { BATTLE_MOTION, getNewlyDefeatedIds } from './motion/battleMotion'
 import {
   applyBattleVictory,
   getPlayerStats,
@@ -56,6 +57,12 @@ function App({ battleId, seed, returnTo }: AppProps) {
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [turn, setTurn] = useState(1)
   const [animatingIds, setAnimatingIds] = useState<string[]>([])
+  const [defeatingIds, setDefeatingIds] = useState<string[]>([])
+  const [damagePopups, setDamagePopups] = useState<Record<string, number>>({})
+  const [playerDamagePopup, setPlayerDamagePopup] = useState<number | null>(null)
+  const [playerHit, setPlayerHit] = useState(false)
+  const [skillWindup, setSkillWindup] = useState(false)
+  const [enemyTurnActive, setEnemyTurnActive] = useState(false)
   const [isResolving, setIsResolving] = useState(false)
   const [victoryReward, setVictoryReward] = useState<BattleVictoryReward | null>(null)
 
@@ -68,13 +75,23 @@ function App({ battleId, seed, returnTo }: AppProps) {
     setLogs((current) => [...current.slice(-4), { id: Date.now() + Math.random(), tone, text }])
   }
 
+  const clearMotionState = () => {
+    setAnimatingIds([])
+    setDefeatingIds([])
+    setDamagePopups({})
+    setPlayerDamagePopup(null)
+    setPlayerHit(false)
+    setSkillWindup(false)
+    setEnemyTurnActive(false)
+  }
+
   const resetBattle = () => {
     setPlayerHp(playerStats.maxHp)
     setEnemies(cloneEnemies(battle.enemies))
     setSelectedSkillId(null)
     setLogs([])
     setTurn(1)
-    setAnimatingIds([])
+    clearMotionState()
     setExplainedSkill(null)
     setIsResolving(false)
     setVictoryReward(null)
@@ -98,14 +115,15 @@ function App({ battleId, seed, returnTo }: AppProps) {
 
   const runEnemyTurn = (nextEnemies: Enemy[]) => {
     const survivors = nextEnemies.filter((enemy) => enemy.hp > 0)
-    const totalDamage = survivors.reduce((total, enemy) => total + enemy.attackDamage, 0)
 
     if (survivors.length === 0) {
-      completeVictory()
+      setTimeout(completeVictory, BATTLE_MOTION.resultDelayMs)
       return
     }
 
+    const totalDamage = survivors.reduce((total, enemy) => total + enemy.attackDamage, 0)
     const nextPlayerHp = Math.max(0, playerHp - totalDamage)
+    setEnemyTurnActive(true)
 
     setTimeout(() => {
       survivors.forEach((enemy, index) => {
@@ -114,45 +132,68 @@ function App({ battleId, seed, returnTo }: AppProps) {
           index * 90,
         )
       })
+
+      setPlayerHit(true)
+      setPlayerDamagePopup(totalDamage)
       setPlayerHp(nextPlayerHp)
 
-      if (nextPlayerHp === 0) {
-        setTimeout(() => setPhase('defeat'), 380)
-      } else {
-        setTurn((currentTurn) => currentTurn + 1)
-        setIsResolving(false)
-      }
-    }, 420)
+      setTimeout(() => {
+        setPlayerHit(false)
+        setPlayerDamagePopup(null)
+        setEnemyTurnActive(false)
+
+        if (nextPlayerHp === 0) {
+          setTimeout(() => setPhase('defeat'), BATTLE_MOTION.resultDelayMs)
+        } else {
+          setTurn((currentTurn) => currentTurn + 1)
+          setIsResolving(false)
+        }
+      }, BATTLE_MOTION.playerHitMs)
+    }, BATTLE_MOTION.enemyWindupMs)
   }
 
   const activateSkill = (skill: SkillCard) => {
     setIsResolving(true)
-    const targets = getTargets(enemies, skill.rule)
-    const skillPower = getSkillPowerForLevel(skill.power, playerStats.level)
+    setSkillWindup(true)
     setSelectedSkillId(null)
 
-    if (targets.length === 0) {
-      addLog('player', `${skill.name} → NO TARGET`)
-      runEnemyTurn(enemies)
-      return
-    }
+    const targets = getTargets(enemies, skill.rule)
+    const skillPower = getSkillPowerForLevel(skill.power, playerStats.level)
 
-    const targetIds = targets.map((target) => target.id)
-    setAnimatingIds(targetIds)
-    addLog(
-      'player',
-      `${skill.name} → ${targets.map((target) => target.name).join(' / ')} · ${skillPower} DMG`,
-    )
+    setTimeout(() => {
+      setSkillWindup(false)
 
-    const nextEnemies = enemies.map((enemy) =>
-      targetIds.includes(enemy.id)
-        ? { ...enemy, hp: Math.max(0, enemy.hp - skillPower) }
-        : enemy,
-    )
+      if (targets.length === 0) {
+        addLog('player', `${skill.name} → NO TARGET`)
+        runEnemyTurn(enemies)
+        return
+      }
 
-    setEnemies(nextEnemies)
-    setTimeout(() => setAnimatingIds([]), 360)
-    runEnemyTurn(nextEnemies)
+      const targetIds = targets.map((target) => target.id)
+      const nextEnemies = enemies.map((enemy) =>
+        targetIds.includes(enemy.id)
+          ? { ...enemy, hp: Math.max(0, enemy.hp - skillPower) }
+          : enemy,
+      )
+      const newlyDefeatedIds = getNewlyDefeatedIds(enemies, nextEnemies)
+
+      setAnimatingIds(targetIds)
+      setDefeatingIds(newlyDefeatedIds)
+      setDamagePopups(Object.fromEntries(targetIds.map((id) => [id, skillPower])))
+      setEnemies(nextEnemies)
+      addLog(
+        'player',
+        `${skill.name} → ${targets.map((target) => target.name).join(' / ')} · ${skillPower} DMG`,
+      )
+
+      setTimeout(() => {
+        setAnimatingIds([])
+        setDamagePopups({})
+      }, BATTLE_MOTION.hitMs)
+
+      setTimeout(() => setDefeatingIds([]), BATTLE_MOTION.defeatMs)
+      setTimeout(() => runEnemyTurn(nextEnemies), BATTLE_MOTION.hitMs)
+    }, BATTLE_MOTION.skillWindupMs)
   }
 
   const handleSkillClick = (skill: SkillCard) => {
@@ -205,10 +246,12 @@ function App({ battleId, seed, returnTo }: AppProps) {
             {battle.title} — {battle.subtitle}
           </p>
         </div>
-        <div className="turn-pill">TURN {String(turn).padStart(2, '0')}</div>
+        <div className={`turn-pill ${enemyTurnActive ? 'enemy-turn-active' : ''}`}>
+          {enemyTurnActive ? 'ENEMY TURN' : `TURN ${String(turn).padStart(2, '0')}`}
+        </div>
       </header>
 
-      <section className="battle-stage pixel-window">
+      <section className={`battle-stage pixel-window ${skillWindup ? 'skill-windup' : ''}`}>
         <div className="stage-sky" aria-hidden="true">
           <span className="stage-moon" />
           <span className="stage-star star-a">✦</span>
@@ -218,7 +261,10 @@ function App({ battleId, seed, returnTo }: AppProps) {
           <span className="stage-mountain mountain-b" />
         </div>
 
-        <aside className="status-strip player-panel">
+        <aside className={`status-strip player-panel ${playerHit ? 'player-hit' : ''}`}>
+          {playerDamagePopup !== null && (
+            <span className="damage-number player-damage-number">-{playerDamagePopup}</span>
+          )}
           <div className="player-sprite" aria-hidden="true">
             <span />
           </div>
@@ -243,11 +289,15 @@ function App({ battleId, seed, returnTo }: AppProps) {
             const hpPercent = (enemy.hp / enemy.maxHp) * 100
             const defeated = enemy.hp <= 0
             const spriteClass = spriteClassName(enemy.name)
+            const isBossEnemy = battle.isBoss && spriteClass === 'boss'
             return (
               <article
-                className={`enemy-card ${defeated ? 'defeated' : ''} ${animatingIds.includes(enemy.id) ? 'hit' : ''}`}
+                className={`enemy-card ${defeated ? 'defeated' : ''} ${animatingIds.includes(enemy.id) ? 'hit' : ''} ${defeatingIds.includes(enemy.id) ? 'defeating' : ''} ${isBossEnemy ? 'is-boss-enemy' : ''}`}
                 key={enemy.id}
               >
+                {damagePopups[enemy.id] !== undefined && (
+                  <span className="damage-number enemy-damage-number">-{damagePopups[enemy.id]}</span>
+                )}
                 <div className={`enemy-sprite ${spriteClass}`} aria-hidden="true">
                   <span className="sprite-face">{enemy.glyph}</span>
                 </div>
@@ -326,8 +376,8 @@ function App({ battleId, seed, returnTo }: AppProps) {
       </section>
 
       {phase === 'victory' && (
-        <div className="overlay">
-          <section className="result-card victory-card pixel-window">
+        <div className="overlay result-overlay victory-overlay">
+          <section className="result-card victory-card pixel-window result-card-enter">
             <div className="eyebrow">VICTORY</div>
             <h2>{battle.title} cleared.</h2>
             {victoryReward && (
@@ -346,19 +396,19 @@ function App({ battleId, seed, returnTo }: AppProps) {
                   </strong>
                 </div>
                 {victoryReward.newLevel > victoryReward.previousLevel && (
-                  <div className="reward-unlock level-up-reward">LEVEL UP!</div>
+                  <div className="reward-unlock level-up-reward motion-reward">LEVEL UP!</div>
                 )}
                 {victoryReward.firstClear && (
-                  <div className="reward-unlock">STAGE CLEAR RECORDED</div>
+                  <div className="reward-unlock motion-reward">STAGE CLEAR RECORDED</div>
                 )}
                 {victoryReward.unlockedStageId && (
-                  <div className="reward-unlock">STAGE {victoryReward.unlockedStageId} UNLOCKED</div>
+                  <div className="reward-unlock motion-reward">STAGE {victoryReward.unlockedStageId} UNLOCKED</div>
                 )}
                 {unlockedSkill && (
-                  <div className="reward-unlock">SKILL UNLOCKED: {unlockedSkill.name}</div>
+                  <div className="reward-unlock motion-reward">SKILL UNLOCKED: {unlockedSkill.name}</div>
                 )}
                 {clearedArea && (
-                  <div className="reward-unlock area-clear-reward">
+                  <div className="reward-unlock area-clear-reward motion-reward">
                     AREA CLEAR: {clearedArea.title.toUpperCase()}
                   </div>
                 )}
@@ -377,8 +427,8 @@ function App({ battleId, seed, returnTo }: AppProps) {
       )}
 
       {phase === 'defeat' && (
-        <div className="overlay">
-          <section className="result-card defeat-card pixel-window">
+        <div className="overlay result-overlay defeat-overlay">
+          <section className="result-card defeat-card pixel-window result-card-enter">
             <div className="eyebrow">DEFEAT</div>
             <h2>コードを読み直して再戦</h2>
             <p>必要ならカードの解説を確認するか、前のStageへ戻って再挑戦できる。</p>
@@ -428,6 +478,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
           className="floating-help"
           onClick={() => setExplainedSkill(availableSkills[0])}
           aria-label="コード解説を開く"
+          disabled={isResolving}
         >
           ?
         </button>
