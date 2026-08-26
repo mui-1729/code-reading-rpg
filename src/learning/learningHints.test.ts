@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { javascriptField } from '../field/javascriptField'
 import { learningHintById, learningHints } from './learningHints'
 
 describe('learning hints', () => {
@@ -22,6 +23,18 @@ describe('learning hints', () => {
       expect(hint.summary.length).toBeGreaterThan(0)
       expect(hint.codeLines.length).toBeGreaterThan(0)
       expect(hint.notes.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('Field上の学習看板が実在するヒントを参照する', () => {
+    const learningSigns = javascriptField.interactions.filter(
+      (interaction) => interaction.kind === 'sign' && 'learningHintId' in interaction,
+    )
+
+    expect(learningSigns).toHaveLength(4)
+    for (const sign of learningSigns) {
+      if (sign.kind !== 'sign' || !('learningHintId' in sign)) continue
+      expect(learningHintById[sign.learningHintId]).toBeDefined()
     }
   })
 })
