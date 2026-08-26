@@ -7,14 +7,23 @@ import {
   serializePlayerProgress,
 } from './storage'
 
+const initialSkills = ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label']
+
 describe('player progress storage', () => {
-  it('version付きschemaでArea進行を含めてserialize / restoreできる', () => {
+  it('version付きschemaで複数Area進行を含めてserialize / restoreできる', () => {
     const progress = {
-      exp: 220,
-      clearedStageIds: [1, 2, 3],
-      clearedAreaIds: ['javascript'],
-      unlockedStageIds: [1, 2, 3],
-      unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper', 'moon-edge'],
+      exp: 480,
+      clearedStageIds: [1, 2, 3, 4, 5, 6],
+      clearedAreaIds: ['javascript', 'typescript'],
+      unlockedStageIds: [1, 4, 2, 3, 5, 6],
+      unlockedSkillIds: [
+        ...initialSkills,
+        'viper',
+        'moon-edge',
+        'ts-union',
+        'ts-optional',
+        'ts-narrow',
+      ],
     }
 
     const raw = serializePlayerProgress(progress)
@@ -25,7 +34,7 @@ describe('player progress storage', () => {
     expect(restorePlayerProgress(raw)).toEqual(progress)
   })
 
-  it('schema v1の保存データをArea未クリアのv2 progressへmigrationする', () => {
+  it('schema v1の保存データをArea未クリアの現行progressへmigrationする', () => {
     const raw = JSON.stringify({
       version: 1,
       progress: {
@@ -40,8 +49,8 @@ describe('player progress storage', () => {
       exp: 120,
       clearedStageIds: [1, 2],
       clearedAreaIds: [],
-      unlockedStageIds: [1, 2, 3],
-      unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper', 'moon-edge'],
+      unlockedStageIds: [1, 4, 2, 3],
+      unlockedSkillIds: [...initialSkills, 'viper', 'moon-edge'],
     })
   })
 
@@ -57,6 +66,25 @@ describe('player progress storage', () => {
     })
 
     expect(restorePlayerProgress(raw).clearedAreaIds).toEqual(['javascript'])
+  })
+
+  it('旧v2のJavaScriptだけのsaveへTypeScript入口を安全に追加する', () => {
+    const raw = JSON.stringify({
+      version: PLAYER_PROGRESS_SCHEMA_VERSION,
+      progress: {
+        exp: 220,
+        clearedStageIds: [1, 2, 3],
+        clearedAreaIds: ['javascript'],
+        unlockedStageIds: [1, 2, 3],
+        unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper', 'moon-edge'],
+      },
+    })
+
+    const restored = restorePlayerProgress(raw)
+    expect(restored.clearedStageIds).toEqual([1, 2, 3])
+    expect(restored.clearedAreaIds).toEqual(['javascript'])
+    expect(restored.unlockedStageIds).toEqual([1, 4, 2, 3])
+    expect(restored.unlockedSkillIds).toEqual([...initialSkills, 'viper', 'moon-edge'])
   })
 
   it('保存データがない場合は初期状態へfallbackする', () => {
@@ -109,7 +137,11 @@ describe('player progress storage', () => {
       },
     }
 
-    expect(migrateStoredPlayerProgress(stored)).toEqual(stored.progress)
+    expect(migrateStoredPlayerProgress(stored)).toEqual({
+      ...stored.progress,
+      unlockedStageIds: [1, 4, 2],
+      unlockedSkillIds: [...initialSkills, 'viper'],
+    })
     expect(
       migrateStoredPlayerProgress({
         ...stored,
