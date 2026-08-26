@@ -201,6 +201,16 @@ export const skillDefinitions: readonly SkillDefinition[] = [
         code: 'enemies.some(target => target.hp > 0 && target.hp < 50) ? enemies.filter(target => target.hp > 0) : []',
         lineMode: 'single',
       },
+      {
+        id: 'alive-short',
+        code: 'const alive = enemies.filter(e => e.hp > 0)\nalive.some(e => e.hp < 50) ? alive : []',
+        lineMode: 'multi',
+      },
+      {
+        id: 'alive-enemy',
+        code: 'const alive = enemies.filter(enemy => enemy.hp > 0)\nalive.some(enemy => enemy.hp < 50) ? alive : []',
+        lineMode: 'multi',
+      },
     ],
   },
   {
@@ -226,6 +236,16 @@ export const skillDefinitions: readonly SkillDefinition[] = [
         id: 'candidate',
         code: 'enemies.filter(candidate => candidate.hp > 0).reduce((best, candidate) => candidate.attackDamage > best.attackDamage ? candidate : best)',
         lineMode: 'single',
+      },
+      {
+        id: 'alive-short',
+        code: 'const alive = enemies.filter(e => e.hp > 0)\nalive.reduce((best, e) => e.attackDamage > best.attackDamage ? e : best)',
+        lineMode: 'multi',
+      },
+      {
+        id: 'alive-enemy',
+        code: 'const alive = enemies.filter(enemy => enemy.hp > 0)\nalive.reduce((best, enemy) => enemy.attackDamage > best.attackDamage ? enemy : best)',
+        lineMode: 'multi',
       },
     ],
   },
