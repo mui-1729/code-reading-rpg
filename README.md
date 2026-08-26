@@ -24,12 +24,12 @@
 - JavaScript Kingdom Stage Select
 - 過去Stageへの再挑戦
 - Battle勝利によるEXP / Stage CLEAR / 次Stage / Skill解放
+- Level成長のBattle反映（最大HP / POWER倍率）
+- version付きLocalStorage進行保存 / 安全な復元 / リセット
 - Vitest / ESLint / Prettier / GitHub Actions CI
 
 まだ`main`には入っていない主なRPG機能:
 
-- Level成長のBattle反映（最大HP / POWER倍率）
-- LocalStorage進行保存
 - Boss / Area CLEAR
 - トップダウンフィールド
 - NPC / 会話 / 拠点
@@ -61,6 +61,16 @@ Playerが成長
 ただしLevelはコード読解を不要にするためのものではありません。**育成で戦える余裕を増やし、勝ち方はコード読解と戦略で決める**ことを基本原則とします。
 
 Stage Selectはこのループを早く成立させるための暫定UIです。RPG最小ループ完成後は、プレイヤーが歩いてBattle入口・NPC・拠点へ移動するトップダウンフィールドへ発展させます。
+
+## Progress persistence
+
+RPG進行はブラウザのLocalStorageへversion付きschemaで保存します。
+
+- 保存対象: EXP / Stage CLEAR / Stage解放 / Skill解放
+- Level / 最大HP / POWER倍率はEXPから導出し、重複保存しない
+- 壊れたJSONや未知schema versionは初期状態へ安全にfallback
+- Battle中のターンや敵残HPなど、一時的な戦闘状態は保存しない
+- Stage Selectから進行をリセット可能
 
 ## Docs
 
