@@ -93,6 +93,26 @@ BGM / SE slidersを常時表示しない。
 
 `Esc`またはbackdropで閉じられるようにする。
 
+## Tutorial
+
+Tutorialは初回Playerが操作を始めるための一時UIであり、常設説明の代替として使う。
+
+守ること:
+
+- 初回だけ表示する
+- MOVE / INTERACT / SELECT / EXECUTEの必要な瞬間だけ短く出す
+- 既存UIを実際に操作した結果で次stepへ進む
+- 全画面backdropでField / Battleを塞がない
+- `SKIP`可能にする
+- 特定SkillやEnemyを正解としてhighlightしない
+- target previewを出さない
+- CODE HELPは任意の補助導線として示すだけにする
+- MobileではD-Pad / INTERACT / Skill cardをpromptで覆わない
+- `prefers-reduced-motion`ではpulseを止める
+- 完了 / SKIP後は通常UIへ説明を残さない
+
+詳細仕様は`docs/TUTORIAL.md`をsource of truthとする。
+
 ## 文言を追加する基準
 
 新しい文言は、次のどれかに当てはまる場合だけ追加する。

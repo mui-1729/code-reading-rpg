@@ -1,0 +1,89 @@
+.tutorial-prompt {
+  position: fixed;
+  z-index: 80;
+  left: 50%;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  width: min(420px, calc(100vw - 32px));
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+}
+
+.tutorial-prompt-battle {
+  top: max(92px, calc(env(safe-area-inset-top) + 76px));
+  bottom: auto;
+}
+
+.tutorial-prompt-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.tutorial-prompt-copy > span {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  opacity: 0.72;
+}
+
+.tutorial-prompt-copy > strong {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.tutorial-prompt-copy > small {
+  font-size: 0.72rem;
+  line-height: 1.5;
+  opacity: 0.72;
+}
+
+.tutorial-skip {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.7rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.tutorial-highlight {
+  position: relative;
+  z-index: 2;
+  outline: 3px solid #f5d742;
+  outline-offset: 4px;
+  animation: tutorial-pulse 1.25s ease-in-out infinite;
+}
+
+.tutorial-highlight-soft {
+  position: relative;
+  z-index: 2;
+  outline: 2px dashed #f5d742;
+  outline-offset: 3px;
+}
+
+@keyframes tutorial-pulse {
+  0%, 100% { outline-offset: 3px; }
+  50% { outline-offset: 7px; }
+}
+
+@media (max-width: 720px) {
+  .tutorial-prompt {
+    bottom: calc(max(10px, env(safe-area-inset-bottom)) + 74px);
+    width: min(360px, calc(100vw - 20px));
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .tutorial-prompt-battle {
+    top: max(72px, calc(env(safe-area-inset-top) + 58px));
+    bottom: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tutorial-highlight { animation: none; }
+}
