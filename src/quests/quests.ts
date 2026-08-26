@@ -5,6 +5,7 @@ import type {
   QuestFieldFocus,
   QuestProgress,
   QuestProgressSnapshot,
+  QuestVictoryFeedback,
 } from './types'
 
 export const mainQuests: readonly QuestDefinition[] = [
@@ -121,4 +122,33 @@ export function getActiveQuestFieldFocus(
     stageId: questProgress.nextStep?.fieldTarget?.stageId,
     guideNpcId: quest.guideNpcId,
   }
+}
+
+export function getQuestVictoryFeedback(
+  before: QuestProgressSnapshot,
+  after: QuestProgressSnapshot,
+): QuestVictoryFeedback | null {
+  for (const quest of mainQuests) {
+    const newlyCompletedSteps = quest.steps.filter(
+      (step) =>
+        !matchesQuestCondition(step.condition, before) &&
+        matchesQuestCondition(step.condition, after),
+    )
+
+    if (newlyCompletedSteps.length === 0) continue
+
+    const afterProgress = getQuestProgress(quest, after)
+    const completedStep = newlyCompletedSteps[newlyCompletedSteps.length - 1]
+
+    return {
+      kind: afterProgress.status === 'complete' ? 'completed' : 'updated',
+      questId: quest.id,
+      areaId: quest.areaId,
+      questTitle: quest.title,
+      completedStepLabel: completedStep.label,
+      nextStepLabel: afterProgress.nextStep?.label,
+    }
+  }
+
+  return null
 }
