@@ -507,6 +507,17 @@ function App({ battleId, seed, returnTo }: AppProps) {
             <pre>
               <code>{explainedSkill.code}</code>
             </pre>
+            {explainedSkill.codeHelpLines && explainedSkill.codeHelpLines.length > 0 && (
+              <div className="code-help-steps" aria-label="コードを1行ずつ読む">
+                {explainedSkill.code.split('\n').map((line, index) => (
+                  <div className="code-help-step pixel-inner-window" key={`${index}:${line}`}>
+                    <span>LINE {String(index + 1).padStart(2, '0')}</span>
+                    <code>{line}</code>
+                    <p>{explainedSkill.codeHelpLines?.[index]}</p>
+                  </div>
+                ))}
+              </div>
+            )}
             <p>{explainedSkill.explanation}</p>
             <div className="explain-switcher">
               {availableSkills.map((skill) => (

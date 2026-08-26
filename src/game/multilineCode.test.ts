@@ -16,7 +16,7 @@ describe('Battle 3 multiline code', () => {
     }
   })
 
-  it('Battle 3はsort / some / reduceを複数行で表示する', () => {
+  it('Battle 3はsort / some / reduceを3行の複合コードで表示する', () => {
     for (let index = 0; index < 24; index += 1) {
       const seed = `multi-${index}`
       const battle = generateBattle(3, seed)
@@ -24,9 +24,10 @@ describe('Battle 3 multiline code', () => {
       if (!battle) continue
 
       const cards = getSkillCardsForBattle(battle, seed)
-      const multiLineIds = cards.filter((card) => card.code.includes('\n')).map((card) => card.id)
+      const compositeCards = cards.filter((card) => ['moon-edge', 'sweep', 'judge'].includes(card.id))
 
-      expect(multiLineIds).toEqual(expect.arrayContaining(['moon-edge', 'sweep', 'judge']))
+      expect(compositeCards).toHaveLength(3)
+      expect(compositeCards.every((card) => card.code.split('\n').length === 3)).toBe(true)
     }
   })
 
@@ -45,7 +46,7 @@ describe('Battle 3 multiline code', () => {
     }
   })
 
-  it('同じseedなら同じ複数行variantを再現する', () => {
+  it('同じseedなら同じ複数行variantとCODE HELPを再現する', () => {
     const battle = generateBattle(3, 'same-multi-seed')
     expect(battle).toBeDefined()
     if (!battle) return
@@ -54,6 +55,7 @@ describe('Battle 3 multiline code', () => {
     const second = getSkillCardsForBattle(battle, 'same-multi-seed')
 
     expect(second.map((card) => card.code)).toEqual(first.map((card) => card.code))
+    expect(second.map((card) => card.codeHelpLines)).toEqual(first.map((card) => card.codeHelpLines))
   })
 
   it('複数行化してもPOWER・TargetRule・concept・explanationを変えない', () => {
@@ -71,14 +73,18 @@ describe('Battle 3 multiline code', () => {
     }
   })
 
-  it('複数行variantは改行をコード文字列として保持する', () => {
+  it('複数行variantは3行のコードと同数の行別HELPを持つ', () => {
     for (const skillId of ['moon-edge', 'sweep', 'judge']) {
       const multiVariants = skillDefinitionById[skillId].codeVariants.filter(
         (variant) => variant.lineMode === 'multi',
       )
 
       expect(multiVariants.length).toBeGreaterThanOrEqual(2)
-      expect(multiVariants.every((variant) => variant.code.split('\n').length === 2)).toBe(true)
+      for (const variant of multiVariants) {
+        expect(variant.code.split('\n')).toHaveLength(3)
+        expect(variant.codeHelpLines).toHaveLength(3)
+        expect(variant.codeHelpLines?.every((help) => help.length > 0)).toBe(true)
+      }
     }
   })
 })

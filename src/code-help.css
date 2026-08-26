@@ -1,0 +1,44 @@
+.code-help-steps {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0 18px;
+}
+
+.code-help-step {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: 7px 12px;
+  align-items: start;
+  padding: 11px 12px;
+}
+
+.code-help-step > span {
+  grid-row: 1 / span 2;
+  color: var(--purple);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.code-help-step > code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: #f5f1ff;
+}
+
+.code-help-step > p {
+  margin: 0;
+  color: #aeadc5;
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+@media (max-width: 700px) {
+  .code-help-step {
+    grid-template-columns: 1fr;
+  }
+
+  .code-help-step > span {
+    grid-row: auto;
+  }
+}

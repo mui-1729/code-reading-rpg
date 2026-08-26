@@ -39,10 +39,11 @@
 
 単体概念を短く確認する場所。
 
-例:
+現在のJavaScript Kingdomでは、
 
 - `find()`
 - `filter()`
+- `map()`
 - `sort()`
 - 比較演算子
 - `&&`
@@ -50,7 +51,9 @@
 - `some()`
 - `reduce()`
 
-看板は任意。読まなくても進行できる。
+を任意に確認できる。
+
+看板は必須ではない。知っているPlayerはそのままBattleへ進める。
 
 ### Battle
 
@@ -58,7 +61,7 @@
 
 ### 後半Battle / Boss
 
-既習構文を複数組み合わせ、実行順序や中間値を追う場所。
+既習構文を複数組み合わせ、実行順序・中間値・最終targetを追う場所。
 
 ```text
 看板 = 単体概念
@@ -76,6 +79,9 @@ Battle definition
 
 SkillDefinition
   = Skillの意味 / TargetRule / codeVariants / explanation
+
+CodeVariant
+  = display code / single or multi / optional line help
 
 LearningHint
   = Fieldで読む任意の構文解説
@@ -108,6 +114,7 @@ Solvability
       id,
       code,
       lineMode,
+      codeHelpLines,
     },
   ],
 }
@@ -133,7 +140,7 @@ CODE HELPや学習内容を示す短い名前。
 
 1. 構文が一般に何をするか
 2. このSkillでは何を見るか
-3. 似た構文との違い
+3. どの中間値を追うか
 
 をできるだけ短く説明する。
 
@@ -148,6 +155,7 @@ CODE HELPや学習内容を示す短い名前。
   id: string
   code: string
   lineMode: 'single' | 'multi'
+  codeHelpLines?: readonly string[]
 }
 ```
 
@@ -158,7 +166,7 @@ CODE HELPや学習内容を示す短い名前。
 - callback variable名
 - 既習範囲の同義表現
 - line break
-- intermediate variable
+- intermediate variable名
 
 変えてはいけないもの:
 
@@ -167,14 +175,34 @@ CODE HELPや学習内容を示す短い名前。
 - conceptの本質
 - target集合
 
+見た目だけを暗記して攻略できないようにする。
+
+### `codeHelpLines`
+
+複数行variantで、各物理行を上から追うための説明。
+
+ルール:
+
+- `code.split('\n').length`と同じ件数を持つ
+- 1項目は対応する1行の意味だけを説明する
+- 最終targetを最初から答えとして書かず、中間値の意味を説明する
+- callback名が変わっても説明の意味を維持する
+
 例:
 
-```js
-enemies.find(e => e.hp < 45)
-enemies.find(enemy => enemy.hp < 45)
-```
+```ts
+code: [
+  'const alive = enemies.filter(e => e.hp > 0)',
+  'const ordered = [...alive].sort((a, b) => a.hp - b.hp)',
+  'ordered[0]',
+].join('\n')
 
-見た目だけを暗記して攻略できないようにする。
+codeHelpLines: [
+  '生存Enemyだけをaliveへ残す。',
+  'aliveをHPの小さい順に並べてorderedへ保存する。',
+  'orderedの先頭を選ぶ。',
+]
+```
 
 ---
 
@@ -183,12 +211,12 @@ enemies.find(enemy => enemy.hp < 45)
 最重要ルール。
 
 ```js
-enemies.filter(e => e.hp < 100 && e.attackDamage >= 8)
+enemies.filter(e => e.hp > 0 && e.hp < 100 && e.attackDamage >= 8)
 ```
 
 なら、TargetRuleも、
 
-> HPが100未満 **かつ** attackDamageが8以上の生存Enemy全員
+> 生存中で、HPが100未満 **かつ** attackDamageが8以上のEnemy全員
 
 でなければならない。
 
@@ -203,7 +231,9 @@ enemies.filter(e => e.hp < 100 && e.attackDamage >= 8)
 - dead Enemyの扱い
 - `sort()`の昇順 / 降順
 - `some()`が返すbooleanとtarget配列
-- `reduce()`のtie時の挙動
+- `map()`後のobject property
+- `reduce()`のaccumulator / tie時の挙動
+- 最後の`.enemy`や`[0]`などの取り出し
 
 Display code自体を`eval()`してgame logicとして使わない。
 
@@ -217,6 +247,7 @@ Display code自体を`eval()`してgame logicとして使わない。
 - comparison operators
 - `find()`
 - `filter()`
+- `map()`
 - `sort()`
 
 追加:
@@ -226,13 +257,14 @@ Display code自体を`eval()`してgame logicとして使わない。
 - `some()`
 - `reduce()`
 - 三項演算子 `? :`
+- object literal
 - intermediate variable
 - multi-line code
+- method chaining / 処理順序
 
 今後候補:
 
 - `every()`
-- `map()`
 - optional chaining `?.`
 - nullish coalescing `??`
 - destructuring
@@ -243,53 +275,58 @@ Display code自体を`eval()`してgame logicとして使わない。
 
 ---
 
-## 9. 複数条件
+## 9. `filter()` / `map()` / `reduce()`の役割を混同しない
 
-`&&` / `||`は境界値まで含めて読む。
+### `filter()`
+
+要素を残す / 落とす。要素数は減る可能性がある。
 
 ```js
-enemy.hp < 100 && enemy.attackDamage >= 8
+const alive = enemies.filter((enemy) => enemy.hp > 0)
 ```
 
-は両方必要。
+### `map()`
+
+各要素を別の形へ変換する。基本的に要素数は保つ。
 
 ```js
-enemy.attackDamage >= 14 || enemy.hp > 120
-```
-
-はどちらか一方でよい。
-
-Battleでは、同じEnemyが両条件を満たす場合だけでなく、条件ごとに別のEnemyが該当する盤面も用意し、暗記を避ける。
-
----
-
-## 10. `some()` / `reduce()`
-
-### `some()`
-
-booleanを返すAPIなので、Battle内では「条件成立時にtarget集合を切り替える」ようなeffectと相性がよい。
-
-例:
-
-```js
-const alive = enemies.filter(e => e.hp > 0)
-alive.some(e => e.hp < 50) ? alive : []
+const scored = alive.map((enemy) => ({
+  enemy,
+  score: enemy.attackDamage,
+}))
 ```
 
 ### `reduce()`
 
-1つの値・候補へ集約する処理と相性がよい。
-
-例:
+配列から1つの値・候補へ集約する。
 
 ```js
-const alive = enemies.filter(e => e.hp > 0)
-alive.reduce((best, enemy) =>
-  enemy.attackDamage > best.attackDamage ? enemy : best,
+const danger = scored.reduce((best, candidate) =>
+  candidate.score > best.score ? candidate : best,
 )
 ```
 
-`reduce()`は「何をaccumulatorとして残しているか」をCODE HELPで説明する。
+Battleでは、これらの戻り値が「配列 / 配列 / 1候補」とどう変化するかを読むことに意味を持たせる。
+
+---
+
+## 10. `some()` / boolean / 三項演算子
+
+`some()`はtargetを返さずbooleanを返す。
+
+```js
+const alive = enemies.filter((enemy) => enemy.hp > 0)
+const hasWounded = alive.some((enemy) => enemy.hp < 50)
+hasWounded ? alive : []
+```
+
+読む順番:
+
+1. `alive`に誰が残るか
+2. `hasWounded`がtrueかfalseか
+3. 三項演算子のどちら側が返るか
+
+CODE HELPもこの順番に合わせる。
 
 ---
 
@@ -297,22 +334,37 @@ alive.reduce((best, enemy) =>
 
 複数行は長さを増やすためではなく、**中間結果を追わせるため**に使う。
 
-良い例:
+良い構造:
+
+```text
+1行目: 対象集合を作る
+2行目: 並べ替え / 変換 / boolean化する
+3行目: 最終候補・target集合を返す
+```
+
+現在のBoss例:
 
 ```js
-const wounded = enemies.filter(enemy => enemy.hp < 40)
-const target = wounded.sort((a, b) => a.hp - b.hp)[0]
+const alive = enemies.filter((enemy) => enemy.hp > 0)
+const ordered = [...alive].sort((a, b) => a.hp - b.hp)
+ordered[0]
+```
+
+```js
+const alive = enemies.filter((enemy) => enemy.hp > 0)
+const scored = alive.map((enemy) => ({ enemy, score: enemy.attackDamage }))
+scored.reduce((best, candidate) => candidate.score > best.score ? candidate : best).enemy
 ```
 
 Playerが、
 
 1. 1行目の結果
-2. 2行目の変化
+2. 2行目の結果
 3. 最終target
 
 を順に追えること。
 
-未習構文を3つ以上まとめて初出させない。
+未習構文を3つ以上まとめて初出させない。JUDGEの`map()`のように新しく加える構文はField看板でも単体確認できるようにする。
 
 ---
 
@@ -351,6 +403,7 @@ Field学習ヒントはdata-drivenに管理する。
 - Enemy HP: base maxHPの85〜115%
 - Enemy順shuffle
 - Skill順shuffle
+- code variant選択
 
 候補盤面は、
 
@@ -376,8 +429,6 @@ Player Levelが低い
 → 再挑戦
 ```
 
-とする。
-
 Enemy HPをPlayer Levelへ自動追従させない。
 
 ---
@@ -392,6 +443,7 @@ Enemy HPをPlayer Levelへ自動追従させない。
 - HP変化でtarget条件が変わる余地がある
 - highest POWERだけで解けない
 - multi-targetが完全上位互換にならない
+- 複合codeの中間値に盤面差が反映される
 - recommended Levelで合理的な勝ち筋がある
 
 ---
@@ -433,6 +485,9 @@ RPG rewardがコード読解を上書きしないようにする。
 - Skill ID重複なし
 - code variant存在
 - code variantでTargetRule / POWER不変
+- multi variantが要求行数を満たす
+- `codeHelpLines`と物理行数が一致
+- 複合codeに必要な構文が含まれる
 - TargetRule単体test
 - display codeと内部ruleの対応test
 - generated battleのvalid target
@@ -468,6 +523,8 @@ PR CIはこの確認の代替ではなく二重確認。
 
 - [ ] display codeと内部効果一致
 - [ ] code variant複数
+- [ ] multi codeの各行に役割がある
+- [ ] 行別CODE HELPの件数と内容が対応
 - [ ] valid target
 - [ ] seed再現性
 - [ ] solvability
@@ -482,13 +539,13 @@ PR CIはこの確認の代替ではなく二重確認。
 ## 20. 現在の優先順位
 
 ```text
-JavaScript単体構文の幅を広げる
+JavaScript単体構文
 ↓
-複数構文・複数行を読むBattle
+複数構文・3行code・行別CODE HELP
 ↓
 TypeScript Frontier
 ↓
 追加Area / RPG深化
 ```
 
-新しい構文を増やすこと自体ではなく、**実際のコードを段階的に追えるPlayerを増やすこと**を最終目的とする。
+新しい構文を増やすこと自体ではなく、**実際のコードを段階的に追って中間結果から最終結果を判断できるPlayerを増やすこと**を最終目的とする。

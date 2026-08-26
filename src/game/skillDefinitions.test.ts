@@ -66,12 +66,12 @@ describe('skill definitions', () => {
       sweep: [
         'enemies.some(e => e.hp > 0 && e.hp < 50) ? enemies.filter(e => e.hp > 0) : []',
         { kind: 'allIfAnyBelow', hp: 50 },
-        'some() + ? :',
+        'filter() + some() + ? :',
       ],
       judge: [
         'enemies.filter(e => e.hp > 0).reduce((best, e) => e.attackDamage > best.attackDamage ? e : best)',
         { kind: 'highestAttack' },
-        'reduce() + ? :',
+        'filter() + map() + reduce()',
       ],
     })
   })
@@ -83,6 +83,17 @@ describe('skill definitions', () => {
       expect(new Set(definition.codeVariants.map((variant) => variant.code)).size).toBe(
         definition.codeVariants.length,
       )
+    }
+  })
+
+  it('複合code variantの行別HELPは物理行数と一致する', () => {
+    for (const skillId of ['moon-edge', 'sweep', 'judge']) {
+      const definition = skillDefinitionById[skillId]
+      const multiVariants = definition.codeVariants.filter((variant) => variant.lineMode === 'multi')
+
+      for (const variant of multiVariants) {
+        expect(variant.codeHelpLines).toHaveLength(variant.code.split('\n').length)
+      }
     }
   })
 })

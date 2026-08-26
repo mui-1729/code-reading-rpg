@@ -16,6 +16,7 @@ describe('learning hints', () => {
       expect.arrayContaining([
         'js-find',
         'js-filter',
+        'js-map',
         'js-sort',
         'js-comparison',
         'js-and',
@@ -40,7 +41,7 @@ describe('learning hints', () => {
       (interaction) => interaction.kind === 'sign' && 'learningHintId' in interaction,
     )
 
-    expect(learningSigns).toHaveLength(8)
+    expect(learningSigns).toHaveLength(9)
     for (const sign of learningSigns) {
       if (sign.kind !== 'sign' || !('learningHintId' in sign)) continue
       expect(learningHintById[sign.learningHintId]).toBeDefined()
