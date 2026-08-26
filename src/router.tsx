@@ -1,6 +1,7 @@
 import { Outlet, createRootRoute, createRoute, createRouter } from '@tanstack/react-router'
 import { JavaScriptFieldRoute } from './field/JavaScriptFieldRoute'
 import { TypeScriptFieldRoute } from './field/TypeScriptFieldRoute'
+import { QuestTracker } from './quests/QuestTracker'
 import {
   BattleRoutePage,
   CompletePage,
@@ -12,8 +13,17 @@ import {
 } from './routeComponents'
 import { WorldPage } from './world/WorldPage'
 
+function RootLayout() {
+  return (
+    <>
+      <Outlet />
+      <QuestTracker />
+    </>
+  )
+}
+
 const rootRoute = createRootRoute({
-  component: Outlet,
+  component: RootLayout,
 })
 
 const indexRoute = createRoute({
