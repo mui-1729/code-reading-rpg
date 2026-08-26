@@ -19,6 +19,7 @@ export const battles: Battle[] = [
     subtitle: 'コードが選ぶ「対象」を読む',
     recommendedLevel: 1,
     expReward: 40,
+    goldReward: 12,
     enemies: [
       enemy('slime-a', 'Slime', 34, 'Nibble', 6, '●'),
       enemy('goblin-a', 'Goblin', 72, 'Heavy Slash', 14, '▲'),
@@ -34,6 +35,7 @@ export const battles: Battle[] = [
     subtitle: 'find / filter と複数条件を戦況で使い分ける',
     recommendedLevel: 2,
     expReward: 60,
+    goldReward: 18,
     enemies: [
       enemy('slime-b', 'Slime', 42, 'Nibble', 6, '●'),
       enemy('goblin-b', 'Goblin', 68, 'Heavy Slash', 15, '▲'),
@@ -50,6 +52,7 @@ export const battles: Battle[] = [
     subtitle: '条件・集約・優先順位を読み、倒す順番を決める',
     recommendedLevel: 3,
     expReward: 100,
+    goldReward: 30,
     isBoss: true,
     enemies: [
       enemy('slime-c', 'Slime', 46, 'Bite', 3, '●'),
@@ -77,6 +80,7 @@ export const battles: Battle[] = [
     subtitle: '型注釈を読み、値を調べる条件そのものは変わらないと見抜く',
     recommendedLevel: 1,
     expReward: 50,
+    goldReward: 14,
     enemies: [
       enemy('slime-ts-a', 'Slime', 46, 'Type Ping', 4, '●'),
       enemy('goblin-ts-a', 'Goblin', 72, 'Strict Slash', 8, '▲'),
@@ -92,6 +96,7 @@ export const battles: Battle[] = [
     subtitle: 'unionとoptional propertyを追い、narrowing後の条件を読む',
     recommendedLevel: 2,
     expReward: 70,
+    goldReward: 20,
     enemies: [
       enemy('slime-ts-b', 'Slime', 44, 'Undefined Bite', 4, '●'),
       enemy('goblin-ts-b', 'Goblin', 74, 'Union Slash', 8, '▲'),
@@ -109,6 +114,7 @@ export const battles: Battle[] = [
     subtitle: '型の絞り込みとproperty keyを複合コードで追う',
     recommendedLevel: 3,
     expReward: 120,
+    goldReward: 32,
     isBoss: true,
     enemies: [
       enemy('slime-ts-c', 'Slime', 46, 'Literal Spark', 3, '●'),
