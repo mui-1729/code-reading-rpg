@@ -40,7 +40,7 @@ describe('TypeScript skill definitions', () => {
     expect(boss.skillIds).toContain('ts-keyof')
 
     const cards = getSkillCardsForBattle(boss, 'typescript-boss')
-    expect(cards.find((card) => card.id === 'ts-narrow')?.code).toContain('item is')
+    expect(cards.find((card) => card.id === 'ts-narrow')?.code).toContain('candidate is')
     expect(cards.find((card) => card.id === 'ts-keyof')?.code).toContain('keyof Enemy')
   })
 })
