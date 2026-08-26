@@ -167,6 +167,8 @@ export function TutorialPrompt() {
       const skillButton = target.closest<HTMLButtonElement>('.skill-card')
       if (!skillButton || skillButton.disabled) return
 
+      // Capture phaseでReactのonClickより先に現在の選択状態を読む。
+      // これにより1回目のclickをSELECT、選択済みcardの2回目だけをEXECUTEとして扱える。
       if (skillButton.classList.contains('selected')) {
         completeBattle()
         return
@@ -186,10 +188,10 @@ export function TutorialPrompt() {
       }
     }
 
-    document.addEventListener('click', onClick)
+    document.addEventListener('click', onClick, true)
     document.addEventListener('keydown', onKeyDown)
     return () => {
-      document.removeEventListener('click', onClick)
+      document.removeEventListener('click', onClick, true)
       document.removeEventListener('keydown', onKeyDown)
     }
   }, [completeBattle, completeFieldInteraction, state.phase, state.status])
