@@ -34,7 +34,7 @@ export function HomePage() {
         </div>
 
         <nav className="title-menu" aria-label="Title menu">
-          <button className="primary-button menu-button" onClick={() => navigate({ to: '/javascript/field' })}>
+          <button className="primary-button menu-button" onClick={() => navigate({ to: '/world' })}>
             <span aria-hidden="true">▶</span> START RUN
           </button>
           <a className="secondary-button menu-button" href="#how-to-play">
@@ -45,7 +45,7 @@ export function HomePage() {
         <div className="rule-grid" id="how-to-play">
           <div>
             <strong>01</strong>
-            <span>フィールドを歩いてBattle Gateを探す</span>
+            <span>World MapからAreaを選び、フィールドを探索する</span>
           </div>
           <div>
             <strong>02</strong>
@@ -97,8 +97,8 @@ export function JavaScriptAreaPage() {
             <button className="primary-button area-back" onClick={() => navigate({ to: '/javascript/field' })}>
               ▶ EXPLORE FIELD
             </button>
-            <button className="secondary-button area-back" onClick={() => navigate({ to: '/' })}>
-              ◀ TITLE
+            <button className="secondary-button area-back" onClick={() => navigate({ to: '/world' })}>
+              ◀ WORLD MAP
             </button>
           </div>
         </header>
@@ -240,12 +240,15 @@ export function CompletePage() {
         <h2>{areaCleared ? `${area.title} CLEAR` : 'BOSS NOT CLEARED'}</h2>
         <p>
           {areaCleared
-            ? '王国のBossを倒した。フィールドへ戻って探索するか、Stage Selectから過去Battleへ再挑戦できる。'
+            ? '王国のBossを倒した。World Mapへ戻るか、フィールドやStage Selectから過去Battleへ再挑戦できる。'
             : 'この画面はBoss初回クリア後に解放される。フィールドへ戻って王国を攻略しよう。'}
         </p>
         <div className="result-actions">
-          <button className="primary-button" onClick={() => navigate({ to: '/javascript/field' })}>
-            ◀ RETURN TO FIELD
+          <button className="primary-button" onClick={() => navigate({ to: '/world' })}>
+            ◀ WORLD MAP
+          </button>
+          <button className="secondary-button" onClick={() => navigate({ to: '/javascript/field' })}>
+            RETURN TO FIELD
           </button>
           <button className="secondary-button" onClick={() => navigate({ to: '/javascript' })}>
             STAGE SELECT
