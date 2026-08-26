@@ -16,6 +16,7 @@ import './quests.css'
 import './quest-markers.css'
 import './codex.css'
 import './tutorial.css'
+import './inspector.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

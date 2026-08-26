@@ -1,0 +1,168 @@
+.enemy-card.code-data-clickable {
+  cursor: pointer;
+}
+
+.enemy-card.code-data-clickable:focus-visible,
+.enemy-card.code-data-inspected {
+  outline: 3px solid #f5d742;
+  outline-offset: 4px;
+}
+
+.floating-code-data {
+  position: fixed;
+  z-index: 10;
+  right: 18px;
+  bottom: 72px;
+  min-width: 58px;
+  height: 38px;
+  padding: 0 10px;
+  border: 3px solid #d8d5e4;
+  background: #10101c;
+  color: #f5d742;
+  box-shadow: 4px 4px 0 #000;
+  cursor: pointer;
+  font: 900 10px/1 "Courier New", ui-monospace, monospace;
+  letter-spacing: .08em;
+}
+
+.code-data-panel {
+  position: fixed;
+  z-index: 75;
+  top: 88px;
+  right: max(18px, env(safe-area-inset-right));
+  width: min(410px, calc(100vw - 36px));
+  max-height: calc(100vh - 112px);
+  overflow: auto;
+  padding: 16px;
+}
+
+.code-data-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-right: 44px;
+}
+
+.code-data-head h2 {
+  margin: 5px 0 0;
+  color: #fff;
+  font-size: 15px;
+}
+
+.code-data-section {
+  margin-top: 18px;
+}
+
+.code-data-section-title {
+  margin-bottom: 8px;
+  color: #9c99ae;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .14em;
+}
+
+.code-data-note {
+  margin: 12px 0 0;
+  color: #9f9cad;
+  font-size: 10px;
+  line-height: 1.65;
+}
+
+.code-data-variables,
+.enemy-data-list,
+.code-data-derived {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+}
+
+.code-data-variable,
+.enemy-data-row {
+  padding: 9px 10px;
+  border: 2px solid #414055;
+  background: #07070e;
+}
+
+.code-data-variable-head,
+.enemy-data-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 14px;
+  align-items: baseline;
+}
+
+.code-data-variable-head > code,
+.enemy-data-row dt {
+  color: #b9a9ff;
+  font: 900 11px/1.5 "Courier New", ui-monospace, monospace;
+}
+
+.code-data-variable-head > strong,
+.enemy-data-row dd strong {
+  color: #f5d742;
+  font: 900 11px/1.5 "Courier New", ui-monospace, monospace;
+}
+
+.code-data-variable small {
+  display: block;
+  margin-top: 5px;
+  color: #77758f;
+  font: 700 9px/1.5 "Courier New", ui-monospace, monospace;
+  overflow-wrap: anywhere;
+}
+
+.code-data-collection {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 4px;
+  margin-top: 7px;
+}
+
+.code-data-collection code,
+.code-data-collection span {
+  display: block;
+  padding: 5px 7px;
+  border-left: 2px solid #55536e;
+  color: #ddd9e9;
+  font-size: 9px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.enemy-data-row dt,
+.enemy-data-row dd {
+  margin: 0;
+}
+
+.enemy-data-row dd {
+  min-width: 0;
+  text-align: right;
+}
+
+.code-data-selected-enemy {
+  margin-bottom: 8px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.code-data-derived {
+  margin-top: 14px;
+}
+
+@media (max-width: 720px) {
+  .floating-code-data {
+    right: 12px;
+    bottom: calc(max(12px, env(safe-area-inset-bottom)) + 58px);
+  }
+
+  .code-data-panel {
+    top: auto;
+    right: 10px;
+    bottom: calc(max(10px, env(safe-area-inset-bottom)) + 8px);
+    left: 10px;
+    width: auto;
+    max-height: min(62vh, 520px);
+  }
+}
