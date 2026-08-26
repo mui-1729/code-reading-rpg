@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import { getDialogueForNpc } from '../dialogue/dialogue'
+import { npcById } from '../dialogue/npcs'
+import type { DialogueEntry, NpcDefinition } from '../dialogue/types'
 import { battles } from '../game'
 import { typescriptLearningHintById } from '../learning/typescriptLearningHints'
 import type { LearningHint } from '../learning/learningHints'
@@ -17,20 +20,36 @@ const directionGlyph: Record<Direction, string> = {
   right: '▶',
 }
 
+type ActiveDialogue = {
+  npc: NpcDefinition
+  dialogue: DialogueEntry
+  lineIndex: number
+}
+
 export function TypeScriptFieldPage() {
   const navigate = useNavigate()
   const { progress, stats } = useProgress()
   const [position, setPosition] = useState<FieldPosition>(typescriptField.start)
   const [facing, setFacing] = useState<Direction>('up')
   const [message, setMessage] = useState(
-    '型の辺境を探索しよう。看板で型情報を確認し、GateからBattleへ進める。',
+    '型の辺境を探索しよう。NPCから目的や読み方を聞き、看板で型情報を確認してGateへ進める。',
   )
+  const [activeDialogue, setActiveDialogue] = useState<ActiveDialogue | null>(null)
   const [activeLearningHint, setActiveLearningHint] = useState<LearningHint | null>(null)
-  const overlayOpen = Boolean(activeLearningHint)
+  const overlayOpen = Boolean(activeDialogue || activeLearningHint)
 
   const battleByStageId = useMemo(
     () => new Map(battles.map((battle) => [battle.id, battle])),
     [],
+  )
+
+  const dialogueProgress = useMemo(
+    () => ({
+      level: stats.level,
+      clearedStageIds: progress.clearedStageIds,
+      clearedAreaIds: progress.clearedAreaIds,
+    }),
+    [progress.clearedAreaIds, progress.clearedStageIds, stats.level],
   )
 
   const describeInteraction = useCallback(
@@ -47,7 +66,10 @@ export function TypeScriptFieldPage() {
       if (interaction.kind === 'exit') {
         return `${interaction.label}への出口。ENTER / INTERACTで移動。`
       }
-      if (interaction.kind === 'npc') return 'このAreaにはまだ会話できるNPCはいない。'
+      if (interaction.kind === 'npc') {
+        const npc = npcById[interaction.npcId]
+        return npc ? `${npc.name}がいる。ENTER / INTERACTで話す。` : '誰かがいる。'
+      }
 
       const unlocked = progress.unlockedStageIds.includes(interaction.stageId)
       const battle = battleByStageId.get(interaction.stageId)
@@ -68,13 +90,25 @@ export function TypeScriptFieldPage() {
         const interaction = getInteractionInFront(typescriptField, position, direction)
         setMessage(interaction ? describeInteraction(interaction) : 'そこには進めない。')
       } else {
-        setMessage('移動中… Gate・看板・出口の手前でINTERACT。')
+        setMessage('移動中… Gate・NPC・看板・出口の手前でINTERACT。')
       }
 
       setPosition(next)
     },
     [describeInteraction, overlayOpen, position],
   )
+
+  const advanceDialogue = useCallback(() => {
+    if (!activeDialogue) return
+
+    if (activeDialogue.lineIndex < activeDialogue.dialogue.lines.length - 1) {
+      setActiveDialogue({ ...activeDialogue, lineIndex: activeDialogue.lineIndex + 1 })
+      return
+    }
+
+    setMessage(`${activeDialogue.npc.name}との会話を終えた。`)
+    setActiveDialogue(null)
+  }, [activeDialogue])
 
   const closeLearningHint = useCallback(() => {
     if (!activeLearningHint) return
@@ -83,6 +117,11 @@ export function TypeScriptFieldPage() {
   }, [activeLearningHint])
 
   const handleInteract = useCallback(() => {
+    if (activeDialogue) {
+      advanceDialogue()
+      return
+    }
+
     if (activeLearningHint) {
       closeLearningHint()
       return
@@ -109,13 +148,23 @@ export function TypeScriptFieldPage() {
       return
     }
 
-    if (interaction.kind === 'exit') {
-      navigate({ to: '/typescript' })
+    if (interaction.kind === 'npc') {
+      const npc = npcById[interaction.npcId]
+      if (!npc) {
+        setMessage('このNPCの会話データが見つからない。')
+        return
+      }
+
+      setActiveDialogue({
+        npc,
+        dialogue: getDialogueForNpc(npc, dialogueProgress),
+        lineIndex: 0,
+      })
       return
     }
 
-    if (interaction.kind === 'npc') {
-      setMessage('このAreaにはまだ会話できるNPCはいない。')
+    if (interaction.kind === 'exit') {
+      navigate({ to: '/typescript' })
       return
     }
 
@@ -129,10 +178,34 @@ export function TypeScriptFieldPage() {
       params: { battleId: String(interaction.stageId) },
       search: { seed: createRunSeed(), returnTo: '/typescript/field' },
     })
-  }, [activeLearningHint, closeLearningHint, facing, navigate, position, progress.unlockedStageIds])
+  }, [
+    activeDialogue,
+    activeLearningHint,
+    advanceDialogue,
+    closeLearningHint,
+    dialogueProgress,
+    facing,
+    navigate,
+    position,
+    progress.unlockedStageIds,
+  ])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (activeDialogue) {
+        if (event.key === 'Escape') {
+          event.preventDefault()
+          setMessage(`${activeDialogue.npc.name}との会話を閉じた。`)
+          setActiveDialogue(null)
+          return
+        }
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          advanceDialogue()
+        }
+        return
+      }
+
       if (activeLearningHint) {
         if (event.key === 'Escape' || event.key === 'Enter' || event.key === ' ') {
           event.preventDefault()
@@ -171,7 +244,7 @@ export function TypeScriptFieldPage() {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [activeLearningHint, closeLearningHint, handleInteract, handleMove])
+  }, [activeDialogue, activeLearningHint, advanceDialogue, closeLearningHint, handleInteract, handleMove])
 
   const cells = Array.from({ length: typescriptField.width * typescriptField.height }, (_, index) => ({
     x: index % typescriptField.width,
@@ -185,7 +258,7 @@ export function TypeScriptFieldPage() {
           <div>
             <div className="eyebrow">WORLD 02 // TYPESCRIPT FRONTIER</div>
             <h1>Frontier Hub</h1>
-            <p>型注釈・union・optional・narrowingを看板で確認し、Battleで実際のコードへ適用する。</p>
+            <p>NPCから目的と型読解のヒントを聞き、看板で概念を確認してBattleへ適用する。</p>
           </div>
           <div className="field-player-summary pixel-inner-window">
             <span>LV {stats.level}</span>
@@ -208,6 +281,7 @@ export function TypeScriptFieldPage() {
             const interaction = typescriptField.interactions.find((item) => samePosition(item, cell))
             const isPlayer = samePosition(position, cell)
             const battle = interaction?.kind === 'battle' ? battleByStageId.get(interaction.stageId) : undefined
+            const npc = interaction?.kind === 'npc' ? npcById[interaction.npcId] : undefined
             const unlocked =
               interaction?.kind === 'battle'
                 ? progress.unlockedStageIds.includes(interaction.stageId)
@@ -227,6 +301,14 @@ export function TypeScriptFieldPage() {
                     {battle?.isBoss ? 'BOSS' : `ST${interaction.stageId}`}
                   </span>
                 )}
+                {interaction?.kind === 'npc' && (
+                  <span
+                    className={`field-npc field-npc-${interaction.npcId}`}
+                    aria-label={npc?.name ?? 'NPC'}
+                  >
+                    <span>{npc?.name.slice(0, 1) ?? 'N'}</span>
+                  </span>
+                )}
                 {interaction?.kind === 'sign' && (
                   <span className="field-object-glyph">
                     {'learningHintId' in interaction ? 'TS' : '?'}
@@ -243,7 +325,32 @@ export function TypeScriptFieldPage() {
           })}
         </div>
 
-        {activeLearningHint ? (
+        {activeDialogue ? (
+          <section
+            className="dialogue-window pixel-inner-window"
+            aria-live="polite"
+            aria-label="NPC dialogue"
+          >
+            <div className="dialogue-speaker">
+              <div>
+                <span>{activeDialogue.npc.role}</span>
+                <strong>{activeDialogue.npc.name}</strong>
+              </div>
+              <span className="dialogue-progress">
+                {activeDialogue.lineIndex + 1}/{activeDialogue.dialogue.lines.length}
+              </span>
+            </div>
+            <p>{activeDialogue.dialogue.lines[activeDialogue.lineIndex]}</p>
+            <div className="dialogue-actions">
+              <span>Enter / Space · Esc = Close</span>
+              <button className="primary-button" onClick={advanceDialogue}>
+                {activeDialogue.lineIndex < activeDialogue.dialogue.lines.length - 1
+                  ? '▶ NEXT'
+                  : '■ CLOSE'}
+              </button>
+            </div>
+          </section>
+        ) : activeLearningHint ? (
           <section
             className="learning-hint-window pixel-inner-window"
             aria-live="polite"
@@ -285,7 +392,7 @@ export function TypeScriptFieldPage() {
             <button aria-label="Move right" disabled={overlayOpen} onClick={() => handleMove('right')}>▶</button>
           </div>
           <button className="primary-button field-interact" onClick={handleInteract}>
-            {activeLearningHint ? 'CLOSE' : 'INTERACT'}
+            {activeDialogue ? 'NEXT' : activeLearningHint ? 'CLOSE' : 'INTERACT'}
           </button>
           <button
             className="secondary-button"
@@ -297,7 +404,7 @@ export function TypeScriptFieldPage() {
         </div>
 
         <footer className="field-help">
-          Keyboard: Arrow / WASD = MOVE · Enter / Space = INTERACT · Mobile: D-PAD + INTERACT
+          Keyboard: Arrow / WASD = MOVE · Enter / Space = INTERACT / NEXT · Mobile: D-PAD + INTERACT
         </footer>
       </section>
     </main>
