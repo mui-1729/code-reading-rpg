@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom'
 import { buildResultSequence, type RawResultItem, type ResultSequenceItem } from './resultSequence'
 
 const AUTO_ADVANCE_MS = 1100
+const WORLD_PROGRESS_SELECTOR =
+  '[data-result-feedback="world-progress"]:not(.result-sequence-consumed)'
 
 const readRewardItems = (summary: HTMLElement): RawResultItem[] => {
   const items: RawResultItem[] = []
@@ -24,17 +26,15 @@ const readRewardItems = (summary: HTMLElement): RawResultItem[] => {
     }
   }
 
-  const questFeedback = document.querySelector<HTMLElement>(
-    '.quest-victory-feedback:not(.result-sequence-consumed)',
-  )
-  if (questFeedback) {
-    const status = questFeedback.querySelector('span')?.textContent?.trim()
-    const title = questFeedback.querySelector('strong')?.textContent?.trim()
-    const next = questFeedback.querySelector('em')?.textContent?.trim()
-    const completed = questFeedback.querySelector('p')?.textContent?.trim()
-    const detail = [title, completed, next].filter(Boolean).join(' · ')
+  const progressFeedback = document.querySelector<HTMLElement>(WORLD_PROGRESS_SELECTOR)
+  if (progressFeedback) {
+    const status = progressFeedback.querySelector('span')?.textContent?.trim()
+    const title = progressFeedback.querySelector('strong')?.textContent?.trim()
+    const progress = progressFeedback.querySelector('p')?.textContent?.trim()
+    const next = progressFeedback.querySelector('em')?.textContent?.trim()
+    const detail = [title, progress, next].filter(Boolean).join(' · ')
     if (status && detail) items.push({ text: `${status}: ${detail}` })
-    questFeedback.classList.add('result-sequence-consumed')
+    progressFeedback.classList.add('result-sequence-consumed')
   }
 
   return items
@@ -63,10 +63,8 @@ export function BattleResultSequence() {
       const nextTarget = document.querySelector<HTMLElement>('.victory-card .reward-summary')
 
       if (nextTarget === activeTarget.current) {
-        const pendingQuest = document.querySelector(
-          '.quest-victory-feedback:not(.result-sequence-consumed)',
-        )
-        if (nextTarget && pendingQuest) collect(nextTarget)
+        const pendingProgress = document.querySelector(WORLD_PROGRESS_SELECTOR)
+        if (nextTarget && pendingProgress) collect(nextTarget)
         return
       }
 
