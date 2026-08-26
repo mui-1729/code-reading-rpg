@@ -45,10 +45,6 @@ export function QuestTracker() {
   }, [pathname, progress.clearedAreaIds, progress.clearedStageIds])
 
   useEffect(() => {
-    if (!visible) setOpen(false)
-  }, [visible])
-
-  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (!visible || isEditableTarget(event.target)) return
 
