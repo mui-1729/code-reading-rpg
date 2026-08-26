@@ -72,13 +72,6 @@ export const javascriptField: FieldDefinition = {
       y: 3,
     },
     {
-      id: 'field-sign',
-      kind: 'sign',
-      x: 6,
-      y: 7,
-      message: '矢印キー / WASDで移動。門・NPC・看板の手前でENTERまたはINTERACT。',
-    },
-    {
       id: 'find-sign',
       kind: 'sign',
       x: 2,
@@ -142,9 +135,9 @@ export const javascriptField: FieldDefinition = {
       learningHintId: 'js-reduce',
     },
     {
-      id: 'stage-select-exit',
+      id: 'world-map-exit',
       kind: 'exit',
-      label: 'STAGE SELECT',
+      label: 'WORLD MAP',
       x: 10,
       y: 7,
     },
