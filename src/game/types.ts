@@ -31,6 +31,9 @@ export type Battle = {
   label: string
   title: string
   subtitle: string
+  recommendedLevel: number
+  expReward: number
+  isBoss?: boolean
   enemies: Enemy[]
   skillIds: string[]
   unlockSkillId?: string

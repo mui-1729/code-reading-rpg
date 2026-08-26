@@ -1,5 +1,5 @@
 import { Outlet, createRootRoute, createRoute, createRouter } from '@tanstack/react-router'
-import { BattleRoutePage, CompletePage, HomePage } from './routeComponents'
+import { BattleRoutePage, CompletePage, HomePage, JavaScriptAreaPage } from './routeComponents'
 
 const rootRoute = createRootRoute({
   component: Outlet,
@@ -9,6 +9,12 @@ const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
   component: HomePage,
+})
+
+const javascriptRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'javascript',
+  component: JavaScriptAreaPage,
 })
 
 const battleRoute = createRoute({
@@ -28,6 +34,7 @@ const completeRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
+  javascriptRoute,
   battleRoute,
   completeRoute,
 ])
