@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, refactor/110-ui-cleanup]
+    branches: [main]
   pull_request:
 
 jobs:
