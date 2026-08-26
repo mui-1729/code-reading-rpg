@@ -22,11 +22,13 @@
 - コードカードを1回押して選択、同じカードを2回目に押して実行
 - 表示コードが攻撃対象を決定し、POWERがダメージを決定
 - 敵のHP / NEXT行動を見た戦略判断
+- CODE DATAによるEnemy実値・コード読解用runtime中間値の確認
 - seeded generation / URL `seed`による盤面再現
 - Enemy HP・Enemy順・Skill順・code variantの制約付きvariation
 - valid target / solvability検証
 - 複数code variant / 複数行code / 行別CODE HELP
 - PlayerProgress / EXP / Level / 最大HP / POWER倍率
+- Battle報酬Gold / Area Shop / PATCH KIT
 - Stage CLEAR / Skill unlock / Area CLEAR / 再挑戦
 - version付きLocalStorage保存 / migration / reset
 - Battle motion / damage feedback / `prefers-reduced-motion`
@@ -37,7 +39,7 @@
 まだ入っていない主なRPG機能:
 
 - SQL / Reactなど3つ目以降のArea
-- 装備 / Item / Gold / Shop / Inn
+- 装備 / Inn
 - Backend / Database / Authentication / Cloud Save
 
 ## Learning content
@@ -118,7 +120,9 @@ Skillを選ぶ
 ↓
 Battle結果
 ↓
-EXP / Level / Stage CLEAR / Skill unlock / Quest更新
+EXP / Gold / Level / Stage CLEAR / Skill unlock / Quest更新
+↓
+必要ならArea SHOPでPATCH KITを購入
 ↓
 Fieldへ復帰 or 次Stage
 ↓
@@ -133,7 +137,7 @@ World Map
 
 学習看板は補助であり必須ではありません。構文数が増えてもFieldを看板で埋めず、発展概念はCodexでも確認できます。
 
-Levelはコード読解を不要にするためのものではありません。**育成で戦える余裕を増やし、勝ち方はコード読解と戦略で決める**ことを基本原則とします。EnemyはPlayer Levelへ自動追従して弱体化しません。
+LevelやItemはコード読解を不要にするためのものではありません。**育成やsupport itemで戦える余裕を増やし、勝ち方はコード読解と戦略で決める**ことを基本原則とします。EnemyはPlayer Levelへ自動追従して弱体化しません。
 
 ## World Map / Area progression
 
@@ -184,6 +188,21 @@ Main QuestはStage / Area CLEARから導出します。Area CLEAR後はQuest Log
 - Side Quest報酬は各Questにつき1回だけ
 - Side QuestはQuest Log内だけに表示し、常設UIは増やさない
 
+## Gold / Shop / PATCH KIT
+
+Battle勝利ではEXPに加えてGoldを獲得します。JavaScript / TypeScriptのArea画面headerから同じ`SHOP`を開けます。
+
+現在の商品は`PATCH KIT`のみです。
+
+- 価格: 30 G
+- Battle中に最大24 HP回復
+- 1Battleにつき1回だけ使用可能
+- HP満タン時は使用不可
+- 使用時に1個消費
+- ItemはTargetRule / Skill POWER / generator / solvabilityを変更しない
+
+GoldとPATCH KIT所持数はPlayerProgressへ保存します。詳細は[Economy設計](./docs/ECONOMY.md)を参照してください。
+
 ## Code Codex
 
 World Map / Area Select / Fieldで`C`または`CODEX`から開きます。Battle中は非表示です。
@@ -213,6 +232,8 @@ RPG進行はLocalStorageへversion付きschemaで保存します。
 保存対象:
 
 - EXP
+- Gold
+- PATCH KIT所持数
 - Stage CLEAR
 - Area CLEAR
 - Side Quest完了ID
@@ -221,9 +242,9 @@ RPG進行はLocalStorageへversion付きschemaで保存します。
 
 Main Questの状態はStage / Area CLEARから導出します。Side Questは一度だけ報酬を受け取る必要があるため、完了IDだけを保存します。
 
-Level / 最大HP / POWER倍率はEXPから導出し、重複保存しません。旧saveはクリア情報を保ったまま復元し、現在の各Area入口Stageとbaseline Skillを不足分だけ追加します。v1 / v2 saveからv3へmigrationし、Side Questは未完了から開始します。壊れたJSONや未知schema versionは初期状態へ安全にfallbackします。
+Level / 最大HP / POWER倍率はEXPから導出し、重複保存しません。現行schemaはv4です。v1 / v2 / v3の旧saveは既存のクリア・unlock・Side Quest進行を保ったまま復元し、Economyだけ`gold = 0` / `inventory.patchKit = 0`から開始します。壊れたJSONや未知schema versionは初期状態へ安全にfallbackします。
 
-Battle中のturn / Enemy残HPなど一時的な戦闘状態は保存しません。
+Battle中のturn / Enemy残HP / PATCH KIT使用済み状態など一時的な戦闘状態は保存しません。
 
 ## Routes
 
@@ -251,6 +272,7 @@ TanStack Routerで画面遷移とBattle URLを管理しています。
 - [ロードマップ](./docs/ROADMAP.md)
 - [ゲーム設計](./docs/GAME_DESIGN.md)
 - [RPG成長ループ](./docs/RPG_PROGRESSION.md)
+- [Economy / Gold / Shop / PATCH KIT](./docs/ECONOMY.md)
 - [Quest](./docs/QUEST_SYSTEM.md)
 - [アーキテクチャ](./docs/ARCHITECTURE.md)
 - [コンテンツ作成ガイド](./docs/CONTENT_GUIDE.md)
