@@ -4,7 +4,6 @@ import { AppRouter } from './AppRouter'
 import { AudioControls } from './audio/AudioControls'
 import './styles.css'
 import './layout-fixes.css'
-import './stage-select.css'
 import './reward.css'
 import './field.css'
 import './dialogue.css'
@@ -18,6 +17,7 @@ import './codex.css'
 import './tutorial.css'
 import './inspector.css'
 import './economy.css'
+import './simplify.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

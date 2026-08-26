@@ -3,18 +3,10 @@ export const TYPESCRIPT_AREA_ID = 'typescript'
 
 export type AreaAvailability = 'available' | 'comingSoon'
 
-export type AreaRoutePath =
-  | '/javascript'
-  | '/javascript/field'
-  | '/javascript/complete'
-  | '/typescript'
-  | '/typescript/field'
-  | '/typescript/complete'
+export type AreaRoutePath = '/javascript/field' | '/typescript/field'
 
 export type AreaRoutes = {
-  stageSelect: AreaRoutePath | null
   field: AreaRoutePath | null
-  complete: AreaRoutePath | null
 }
 
 export type AreaDefinition = {
@@ -35,9 +27,7 @@ export const areas: AreaDefinition[] = [
     description: '配列操作のコードを読み、敵の対象と優先順位を見抜く王国。',
     availability: 'available',
     routes: {
-      stageSelect: '/javascript',
       field: '/javascript/field',
-      complete: '/javascript/complete',
     },
     bossBattleId: 3,
   },
@@ -48,9 +38,7 @@ export const areas: AreaDefinition[] = [
     description: '型注釈・union・narrowingを手がかりに、実行結果まで追う辺境地。',
     availability: 'available',
     routes: {
-      stageSelect: '/typescript',
       field: '/typescript/field',
-      complete: '/typescript/complete',
     },
     bossBattleId: 6,
   },

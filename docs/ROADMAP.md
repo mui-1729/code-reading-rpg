@@ -1,323 +1,150 @@
 # CODE//READ RPG ロードマップ
 
-## 1. 目的
+## 目的
 
-`CODE//READ RPG`を、コードを読む行為がそのままゲーム上の判断になるRPGとして拡張する。
+`CODE//READ RPG`を、**コードを読む行為がそのままゲーム上の判断になるRPG**として育てる。
 
-現在はJavaScript Kingdom / TypeScript Frontierの2 Area、Field探索、NPC、学習看板、Code Codex、Main Quest、Side Quest、RPG進行、CODE DATA、Gold / Shop / PATCH KIT、複数行・複合codeまで実装済み。
+機能数を増やすこと自体を目的にしない。現在は一度増えた補助画面・常設UIを整理し、次のコア導線を基準にする。
 
-守ること:
+```text
+Title
+↓
+World Map
+↓
+Field
+↓
+Battle
+↓
+次Battle
+↓
+Boss
+↓
+Area Clear
+```
+
+## 守る原則
 
 1. コードを読まないと正しい行動を選びにくい
 2. 同じ手順の暗記だけで攻略できない
 3. 読んだ結果がゲーム内の意思決定へつながる
-4. Level / POWER / Itemだけで読解を不要にしない
-5. コンテンツを増やしても自動テストできる
-6. 学習オブジェクトを増やしてもFieldの進行経路を塞がない
-7. UIから分かることを説明文で重ねない
+4. Level / Itemだけでコード読解を不要にしない
+5. 1画面へ情報・説明・buttonを詰め込みすぎない
+6. 同じ役割の画面やnavigationを重複させない
+7. Tutorialで教えた操作説明を常設しない
+8. 読解に必要な実値は確認できるようにするが、正解targetは先に見せない
+9. Fieldの進行経路とtile geometryを安定させる
+10. コンテンツを増やしても自動テストできる
 
----
+## 実装済み
 
-## 2. 実装済み
-
-### Battle / 読解基盤
+### Battle / 読解
 
 - JavaScript Kingdom: Battle 1〜3
 - TypeScript Frontier: Battle 4〜6
-- Skill SELECT → EXECUTE
+- SELECT → EXECUTE
 - seeded generation / solvability
-- SkillDefinition / TargetRule
-- 同一効果の複数code variant
-- 3行以上の複合code
-- 行別CODE HELP
-- CODE DATA / Enemy runtime data / 中間値確認
+- code variants / multi-line code
+- CODE HELP
+- CODE DATA / runtime中間値
 - Battle motion / damage feedback
-- Battle Log
 
-### JavaScript学習
-
-- property access / 比較
-- `find()` / `filter()` / `map()` / `sort()`
-- `&&` / `||`
-- `some()` / `every()` / `reduce()`
-- 三項演算子
-- destructuring
-- optional chaining `?.`
-- nullish coalescing `??`
-- nested object
-- object / 中間変数
-- 複数methodをまたぐBoss読解
-
-### TypeScript学習
-
-- primitive / type annotation
-- function parameter / return type
-- literal / union type
-- object type
-- optional property
-- narrowing / type predicate
-- intersectionの初歩
-- `keyof` / indexed access
-- genericの初歩
-- `Pick<T, K>`
-- JavaScript配列処理と型情報を組み合わせるBoss読解
-
-### RPG進行
-
-- PlayerProgress
-- EXP / Level
-- Levelによる最大HP / POWER倍率
-- Stage CLEAR / next Stage unlock
-- Skill unlock
-- 再挑戦
-- Boss / Area CLEAR
-- Main Quest / Quest Tracker / marker
-- JavaScript / TypeScript再攻略Side Quest
-- Side Quest一回限りbonus EXP
-- Battle Gold reward
-- Area SHOP
-- PATCH KIT購入 / Battle中回復 / 1Battle 1回制限
-- save schema v4
-- v1 / v2 / v3 migration
-- LocalStorage / reset
-
-Enemyはcurrent Player Levelへ自動追従させない。PATCH KITもTargetRule / Skill POWER / generator / solvabilityを変更しない。
-
-### Field / World
+### RPG loop
 
 - World Map
-- JavaScript Kingdom / TypeScript Frontier
-- 両AreaのStage Select / Field / Battle / Complete route
-- 4方向移動 / collision
-- Keyboard / Mobile操作
-- Battle Gate / Battle後のField復帰
-- JavaScript / TypeScript NPC / Dialogue
+- AreaごとのField
+- Battle Gate
+- Boss / Area Clear
+- EXP / Level / 最大HP / POWER倍率
+- Gold
+- PATCH KIT
+- Field内の簡易SHOP
+- Skill / Battle unlock
+- LocalStorage schema v4 / migration / reset
+
+### Field / learning
+
+- Keyboard / Mobile移動
+- collision / interaction
+- NPC / Dialogue
 - 任意学習看板
 - Code Codex
-- Field到達可能性test
-- Area metadataによるdata-driven表示
-- Area ↔ Battle / Boss lookup helper
+- 次のGateを示す最小marker
+- reachability test
+- 12×9の固定正方形tile
 
-### Audio / UI / 品質
+### Onboarding / result UI
 
-- menu / field / battle BGM
-- SE / mute / BGM・SE別volume
-- Sound Settings modal
-- Web Audio API / autoplay制約対応
-- 必要時だけ開くShop / Settings / Codex / CODE DATA
+- 初回Tutorial: MOVE → INTERACT → SELECT → EXECUTE
+- Titleの常設HOW TO PLAYを廃止
+- Battle結果をEXP / Gold / Level Up / Unlock / Clear等の順に段階表示
+- click / tap / auto advance / skip
 - `prefers-reduced-motion`
-- Node.js 24
-- Vitest
-- ESLint / Prettier
-- GitHub Actions
-- Cloudflare Workers Preview / Production
-- PR前 `npm ci` / `npm run lint` / `npm test` / `npm run build`
 
----
+## 削除・無効化したもの
 
-## 3. 現在のゲームループ
+単純な導線を優先するため、次を通常ゲームから外す。
 
-```text
-World Map
-↓
-Area
-↓
-Field
-↓
-Main Quest / markerで目的を確認
-↓
-必要ならNPC / 看板 / Codex
-↓
-Battle Gate
-↓
-コードを読む
-↓
-Skillを選ぶ
-↓
-Battle結果
-↓
-EXP / Gold / Level / CLEAR / unlock / Quest更新
-↓
-必要ならArea SHOPでPATCH KIT購入
-↓
-Fieldへ復帰 or 次Stage
-↓
-Boss
-↓
-Area CLEAR
-↓
-Side Quest / 過去Stage再攻略
-↓
-World Map
-```
+- 独立Stage Select画面
+- 独立Complete画面
+- 常設Quest Tracker
+- 再攻略Side Quest / bonus EXP
+- Tutorialと重複するField常設操作説明
 
-Field看板は補助であり必須ではない。構文追加のたびに看板を増やさず、発展概念はCodexへ寄せられる。
+Legacy URLや旧save dataは壊さず、安全にredirect / restoreする。
 
----
-
-## 4. JavaScript Kingdom
-
-Battle 1〜2では単体〜少数概念、Battle 3 Bossでは中間結果を追う複合読解へ進む。
-
-Side Quest:
+## 現在のArea
 
 ```text
-SECOND PASS
-→ FIRST READ replay
-→ +40 EXP
+JavaScript Kingdom
+Battle 1 → Battle 2 → Battle 3 Boss
+
+TypeScript Frontier
+Battle 4 → Battle 5 → Battle 6 Boss
 ```
 
-今後候補:
+## 次に増やす場合の優先順位
 
-- callback内のさらに複雑な条件
-- status / shield property
-- 4〜5行以上の実行順序
-- object / arrayの変換をまたぐ追跡
+### 1. 3つ目のArea
 
-構文網羅のためだけには追加せず、game decisionが変わるものを優先する。
-
----
-
-## 5. TypeScript Frontier
-
-```text
-Battle 4: Typed Entry
-型注釈 / primitive / parameter / return type / literal
-
-Battle 5: Maybe Value
-union / optional property / narrowing
-
-Battle 6: Frontier Compiler (Boss)
-JavaScript配列処理 + narrowing / type predicate / keyof / indexed access
-+ generic / Pick<T, K>
-```
-
-TypeScriptは型用語だけを問わず、runtimeで最終的にどのEnemyが対象になるかまで読む。
-
-Side Quest:
-
-```text
-TYPE RECHECK
-→ TYPED ENTRY replay
-→ +50 EXP
-```
-
-今後候補:
-
-- discriminated unionの発展
-- generic function
-- `Record` / `Partial`など別utility type
-- nested object type
-
----
-
-## 6. Gold / Shop / PATCH KIT
-
-最小economy loopは実装済み。
-
-```text
-Battle
-↓
-Gold
-↓
-Area SHOP
-↓
-PATCH KIT
-↓
-Battleで限定的にHP回復
-```
-
-現在のPATCH KIT:
-
-- 30 G
-- 最大24 HP回復
-- 1Battle 1回
-- 所持数を1個消費
-- HP満タンでは使用不可
-
-今後Itemを追加する場合も、コード読解を飛ばせる攻撃力inflationにはしない。詳細は`docs/ECONOMY.md`をsource of truthとする。
-
----
-
-## 7. 次のRPG拡張
-
-Economyまで成立したため、次の優先候補:
-
-1. 3つ目のArea（SQL / React候補）
-2. Boss固有mechanic
-3. Field複数screen / camera追従
-4. 必要性が明確になった場合のみ追加support item
+SQL / Reactなどを候補にする。
 
 追加条件:
 
-- 現在のBattleと違う読み方またはRPG上の理由がある
-- game decisionへ影響する
-- 読解をLevel / Itemで不要にしない
-- unit test / solvability / reachabilityで品質を固定できる
+- 既存2Areaと違う「読み方」が必要
+- Battle上の判断が変わる
+- 新Areaのためだけに大量の補助UIを増やさない
 
----
+### 2. Boss固有mechanic
 
-## 8. Field拡張
+Bossだけに意味のある読解・戦略要素を検討する。ただし説明量を増やしすぎない。
 
-現在は各Areaとも1画面grid Field。
+### 3. Field拡張
 
-守ること:
+1画面が本当に窮屈になった場合だけ複数screen / camera追従を検討する。
 
-- Main routeを学習看板で塞がない
-- すべてのGate / 看板 / NPC / Exitへ到達可能にする
-- layout変更時にreachability testを通す
-- 新概念を追加するだけならCodexを優先し、Field objectを無制限に増やさない
+## 当面増やさないもの
 
-看板・NPC・施設が増えて1画面が窮屈になったら、RPGのような複数screen / camera追従型Fieldへ移行する。
+必要性が明確になるまで追加しない。
 
----
+- 装備system
+- Inn
+- 大量のsupport item
+- Side Quest layer
+- 複雑なQuest Log
+- 独立Stage Select
+- Backend / Login / Cloud Save / Ranking
 
-## 9. Backend / サービス化
+Backendは複数端末同期や共有機能が必要になった時点で検討する。
 
-必要性が発生してから導入する。
+## Quality gate
 
-- Login
-- Cloud Save
-- 複数端末同期
-- Ranking
-- Shared Challenge
-- 教員 / 管理者機能
+PR前に必ず次を通す。
 
-候補はCloudflare Workers / D1 / KV / R2、Supabase等。Frontendのdeploy先だけを理由に固定しない。
-
----
-
-## 10. 優先順位
-
-```text
-[実装済み]
-Battle MVP
-→ seeded generation / solvability
-→ RPG Progression / LocalStorage / Area CLEAR
-→ Field / NPC / Dialogue
-→ Battle Motion / Audio
-→ code variants / multi-line
-→ World Map / 複数Area routing
-→ Field学習看板
-→ JavaScript構文拡張
-→ TypeScript Frontier / Battle 4〜6
-→ Main Quest / Quest Tracker / marker / victory feedback
-→ Code Codex
-→ JavaScript / TypeScript発展構文・Boss複合variant
-→ 再攻略Side Quest / bonus EXP / save v3
-→ Runtime CODE DATA
-→ Gold / Shop / PATCH KIT / save v4
-
-[次]
-3つ目のArea
-or
-Boss固有mechanic
-
-[その後]
-複数screen Field
-
-[必要になってから]
-Backend / Login / Cloud Save / Ranking
+```bash
+npm ci
+npm run lint
+npm test
+npm run build
 ```
 
-**Battleだけを増やして問題集へ戻さず、Field・RPG進行・読解判断が1つのループとしてつながる状態を維持する。**
+その後、Cloudflare Preview・self-review・merge・main CI・Productionを確認する。

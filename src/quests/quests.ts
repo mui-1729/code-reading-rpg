@@ -71,26 +71,9 @@ export const mainQuests: readonly QuestDefinition[] = [
   },
 ]
 
-export const sideQuests: readonly SideQuestDefinition[] = [
-  {
-    id: 'javascript-second-pass',
-    areaId: JAVASCRIPT_AREA_ID,
-    title: 'SECOND PASS',
-    objective: 'FIRST READを再攻略する',
-    unlockWhen: { kind: 'areaCleared', areaId: JAVASCRIPT_AREA_ID },
-    targetBattleId: 1,
-    expReward: 40,
-  },
-  {
-    id: 'typescript-type-recheck',
-    areaId: TYPESCRIPT_AREA_ID,
-    title: 'TYPE RECHECK',
-    objective: 'TYPED ENTRYを再攻略する',
-    unlockWhen: { kind: 'areaCleared', areaId: TYPESCRIPT_AREA_ID },
-    targetBattleId: 4,
-    expReward: 50,
-  },
-]
+// The simplified game loop has no Side Quest layer. Keep the generic helpers so old
+// save data remains compatible, but expose no active Side Quest definitions.
+export const sideQuests: readonly SideQuestDefinition[] = []
 
 export function matchesQuestCondition(
   condition: QuestCondition,
