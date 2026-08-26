@@ -4,7 +4,7 @@ export type RawResultItem = {
   text?: string
 }
 
-export type ResultSequenceTone = 'reward' | 'level' | 'unlock' | 'clear' | 'quest'
+export type ResultSequenceTone = 'reward' | 'level' | 'unlock' | 'clear' | 'progress'
 
 export type ResultSequenceItem = {
   id: string
@@ -14,9 +14,15 @@ export type ResultSequenceItem = {
 }
 
 const normalized = (value?: string) => value?.replace(/\s+/g, ' ').trim() ?? ''
+const detailAfterColon = (text: string) => text.slice(text.indexOf(':') + 1).trim()
+const isWorldProgressText = (text: string) =>
+  text.startsWith('WORLD PROGRESS:') ||
+  text.startsWith('BOSS UNLOCKED:') ||
+  text.startsWith('WORLD COMPLETE:')
 
 export function buildResultSequence(rawItems: RawResultItem[]): ResultSequenceItem[] {
   const items: ResultSequenceItem[] = []
+  const hasWorldProgress = rawItems.some((item) => isWorldProgressText(normalized(item.text)))
 
   for (let index = 0; index < rawItems.length; index += 1) {
     const raw = rawItems[index]
@@ -46,6 +52,12 @@ export function buildResultSequence(rawItems: RawResultItem[]): ResultSequenceIt
     if (text === 'STAGE CLEAR RECORDED') {
       const nextText = normalized(rawItems[index + 1]?.text)
       const unlocked = /^STAGE \d+ UNLOCKED$/.test(nextText) ? nextText : ''
+
+      if (hasWorldProgress) {
+        if (unlocked) index += 1
+        continue
+      }
+
       items.push({
         id: `stage-clear-${index}`,
         title: 'STAGE CLEAR',
@@ -60,29 +72,50 @@ export function buildResultSequence(rawItems: RawResultItem[]): ResultSequenceIt
       items.push({
         id: `skill-${index}`,
         title: 'SKILL UNLOCKED',
-        detail: text.replace('SKILL UNLOCKED:', '').trim(),
+        detail: detailAfterColon(text),
         tone: 'unlock',
       })
       continue
     }
 
     if (text.startsWith('AREA CLEAR:')) {
+      const nextText = normalized(rawItems[index + 1]?.text)
+      const worldComplete = nextText.startsWith('WORLD COMPLETE:') ? nextText : ''
+      const detail = worldComplete
+        ? `${detailAfterColon(text)} · ${detailAfterColon(worldComplete)}`
+        : detailAfterColon(text)
+
+      items.push({ id: `area-${index}`, title: 'AREA CLEAR', detail, tone: 'clear' })
+      if (worldComplete) index += 1
+      continue
+    }
+
+    if (text.startsWith('WORLD PROGRESS:')) {
       items.push({
-        id: `area-${index}`,
-        title: 'AREA CLEAR',
-        detail: text.replace('AREA CLEAR:', '').trim(),
-        tone: 'clear',
+        id: `world-progress-${index}`,
+        title: 'WORLD PROGRESS',
+        detail: detailAfterColon(text),
+        tone: 'progress',
       })
       continue
     }
 
-    if (text.startsWith('QUEST UPDATED:') || text.startsWith('MAIN QUEST COMPLETE:') || text.startsWith('SIDE QUEST COMPLETE:')) {
-      const separator = text.indexOf(':')
+    if (text.startsWith('BOSS UNLOCKED:')) {
       items.push({
-        id: `quest-${index}`,
-        title: text.slice(0, separator),
-        detail: text.slice(separator + 1).trim(),
-        tone: 'quest',
+        id: `boss-unlocked-${index}`,
+        title: 'BOSS UNLOCKED',
+        detail: detailAfterColon(text),
+        tone: 'progress',
+      })
+      continue
+    }
+
+    if (text.startsWith('WORLD COMPLETE:')) {
+      items.push({
+        id: `world-complete-${index}`,
+        title: 'WORLD COMPLETE',
+        detail: detailAfterColon(text),
+        tone: 'clear',
       })
       continue
     }
