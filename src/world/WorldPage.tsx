@@ -1,7 +1,7 @@
 import { useNavigate } from '@tanstack/react-router'
 import { gameAudio } from '../audio/gameAudio'
 import { useBgm } from '../audio/useBgm'
-import { areas } from '../game'
+import { areas, type AreaRoutePath } from '../game'
 import { useProgress } from '../progression'
 
 export function WorldPage() {
@@ -9,7 +9,7 @@ export function WorldPage() {
   const { progress, stats } = useProgress()
   useBgm('menu')
 
-  const enterArea = (entryPath: '/javascript/field' | null) => {
+  const enterArea = (entryPath: AreaRoutePath | null) => {
     if (!entryPath) return
     gameAudio.playSe('confirm')
     navigate({ to: entryPath })
@@ -35,6 +35,7 @@ export function WorldPage() {
           {areas.map((area, index) => {
             const available = area.availability === 'available'
             const cleared = progress.clearedAreaIds.includes(area.id)
+            const entryPath = area.routes.field
 
             return (
               <article
@@ -54,8 +55,8 @@ export function WorldPage() {
                 <button
                   type="button"
                   className={available ? 'primary-button world-enter' : 'secondary-button world-enter'}
-                  disabled={!available || !area.entryPath}
-                  onClick={() => enterArea(area.entryPath)}
+                  disabled={!available || !entryPath}
+                  onClick={() => enterArea(entryPath)}
                 >
                   {available ? (cleared ? '▶ REVISIT AREA' : '▶ ENTER AREA') : '■ LOCKED'}
                 </button>
