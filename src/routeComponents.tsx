@@ -159,7 +159,7 @@ export function JavaScriptAreaPage() {
                     navigate({
                       to: '/javascript/battle/$battleId',
                       params: { battleId: String(battle.id) },
-                      search: { seed: createRunSeed() },
+                      search: { seed: createRunSeed(), returnTo: undefined },
                     })
                   }
                 >
