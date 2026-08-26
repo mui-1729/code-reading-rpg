@@ -7,15 +7,13 @@
 }
 
 .quest-toggle {
-  min-width: 190px;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 3px 10px;
-  padding: 9px 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
   border-color: #64538e;
   background: rgba(10, 10, 19, .95);
   color: #fff;
-  text-align: left;
   cursor: pointer;
 }
 
@@ -27,17 +25,13 @@
 }
 
 .quest-toggle > strong {
-  grid-row: 2;
   color: var(--gold);
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .quest-toggle > em {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  align-self: center;
   color: var(--muted);
-  font-size: 8px;
+  font-size: 9px;
   font-style: normal;
   font-weight: 900;
 }
@@ -64,19 +58,6 @@
 .quest-panel-header {
   padding-bottom: 10px;
   border-bottom: 2px dashed #3c3851;
-}
-
-.quest-panel-header > div {
-  display: grid;
-  gap: 3px;
-}
-
-.quest-panel-header span,
-.quest-card-heading span {
-  color: var(--purple);
-  font-size: 9px;
-  font-weight: 900;
-  letter-spacing: .08em;
 }
 
 .quest-panel-header h2,
@@ -126,6 +107,13 @@
 .quest-card-heading > div {
   display: grid;
   gap: 3px;
+}
+
+.quest-card-heading span {
+  color: var(--purple);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .08em;
 }
 
 .quest-card-heading h3 {
@@ -215,14 +203,6 @@
   color: var(--green);
 }
 
-.quest-panel footer {
-  margin-top: 12px;
-  padding-top: 9px;
-  border-top: 2px dashed #3c3851;
-  color: var(--muted);
-  font-size: 9px;
-}
-
 .quest-victory-feedback {
   position: fixed;
   left: 50%;
@@ -284,7 +264,6 @@
   }
 
   .quest-toggle {
-    min-width: 165px;
     padding: 7px 9px;
   }
 
