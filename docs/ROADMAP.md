@@ -2,384 +2,212 @@
 
 ## 1. この文書の目的
 
-この文書は、MVP完成後の`CODE//READ RPG`をどの順序で拡張するかを定義する。
+この文書は、`CODE//READ RPG`をどの順序で拡張するかを定義する。
 
-2026-08-26時点で方針を更新し、**「Battleを増やし続ける」より先に、RPGとしての成長・再挑戦・探索ループを成立させる**ことを次の優先事項とする。
+2026-08-26時点では、Battleだけを増やす段階から、**育成・探索・会話・Area移動を含むRPG世界を拡張する段階**へ進んでいる。
 
-ただしゲームの中心は常にコードリーディング。
+ゲームの中心は常にコードリーディングとする。
 
-1. コードを読まないと判断しづらいか
+1. コードを読まないと正しい行動を選びにくいか
 2. 同じ手順の暗記だけで攻略できないか
-3. コードを読んだ結果がゲーム内の意思決定につながるか
-4. RPGの数値成長が読解を不要にしていないか
-5. コンテンツを増やしても保守・テストできるか
+3. 読んだ結果がゲーム内の意思決定へつながるか
+4. Levelや装備の数値だけで読解を不要にしていないか
+5. コンテンツを増やしても自動テストできる構造か
 
 ---
 
 ## 2. 現在地
 
-### Battle MVP: 完成済み
+### Battle / 読解基盤: 実装済み
 
-現在の`main`では以下が成立している。
-
-- JavaScript編3 Battle
-- コードカードのSELECT → EXECUTE
-- 対象プレビューなし
-- HP / NEXTを使った戦略判断
-- `find` / `filter` / 比較 / `sort`
-- Skill解放
-- コード解説
-- 勝利 / 敗北 / Retry
-- 8-bit RPG風UI
-
-### 暗記防止・生成基盤: 実装済み
-
-すでに以下を`main`へ導入済み。
-
+- JavaScript編 3 Battles
+- Skill SELECT → EXECUTE
+- `find()` / `filter()` / 比較 / `sort()`
+- HP / NEXT行動を見た戦略判断
+- Skill実行前のTarget Previewなし
+- 任意のCODE HELP
 - seed付き決定的乱数
-- Battle URLの`seed` search param
-- 敵HPの制約付きvariation
-- 敵順shuffle
-- Skill順shuffle
-- 学習対象を維持するgenerator validation
-- `isBattleSolvable()`による勝ち筋検証
-- `SkillDefinition`
-- `codeVariants`を持てる構造
-- ProblemTemplate抽象の削除
+- 敵HP・敵順・Skill順の制約付きvariation
+- generator validation / solvability検証
+- `SkillDefinition` / `TargetRule`
+- 同一概念の複数code variant
+- Battle 3の複数行code variant
 
-したがって、旧ロードマップの「seed / generator / solvabilityをこれから作る」という項目は完了扱いとする。
+表示コードを`eval()`してBattleを実行せず、表示内容と安全な内部TargetRuleを対応させる構造を維持する。
 
-### 品質・運用基盤: 実装済み
+### RPG最小ループ: 実装済み
 
-- `package-lock.json`
-- Node.js 24
-- Vitest
-- ESLint
-- Prettier
-- GitHub Actions CI
-- Cloudflare Workers Static Assets
-- Cloudflare Workers Builds Preview / Production
+#43〜#48で次を実装済み。
 
-Vercelは自動deploy経路から外した。
+- PlayerProgress
+- EXP / Level導出
+- 最大HP / POWER倍率
+- Stage Select
+- Stage CLEAR / unlock
+- Skill unlock
+- 過去Battleへの再挑戦
+- 敗北後の育成と再挑戦
+- LocalStorage保存 / migration / reset
+- Boss属性
+- JavaScript Kingdom Area CLEAR
+- CLEAR後の再戦
 
----
-
-## 3. 最重要プロダクト方針
-
-現在のMVPは**RPGの戦闘要素しか持っていない**。
-
-次は「RPGっぽい戦闘UI」ではなく、次の循環を作る。
+敵はcurrent Player Levelに合わせてruntimeで弱体化しない。
 
 ```text
-Stage Select / Field / Hub
-↓
-行き先を選ぶ
-↓
-Battle
-↓
-EXP・Skill・CLEAR報酬
-↓
-Playerが成長
-↓
-次へ進む / 前へ戻って育成する
-↓
-強敵へ再挑戦
-```
-
-強い敵に勝てないとき、ゲーム側がcurrent Player Levelを見て敵を自動弱体化する設計にはしない。
-
-```text
-Level不足
+強敵に負ける
 ↓
 過去Stageへ戻る
 ↓
-EXPを稼ぐ
+EXPを獲得
 ↓
-Level Up
+Playerが成長
 ↓
 同じ世界へ再挑戦
 ```
 
-これをRPGの基本とする。
+育成は「余裕」を増やし、読解は「正しい行動」を決める役割にする。
 
----
+### RPG世界: 実装済み
 
-## 4. P0: RPG最小ループ
+#49 / #50でJavaScript KingdomのHub / Fieldを実装済み。
 
-次の大きな優先は#43〜#48。
+- 1画面トップダウンField
+- 4方向移動
+- collision
+- Keyboard / Mobile操作
+- Battle Gate
+- Stage Select出口
+- Battle後にFieldへ復帰
+- NPC 3人
+- 汎用Dialogue data
+- 進行状態による会話分岐
+- 次の目的 / 学習ヒント / 復習導線
 
-### #43 Player Progression Model
+Stage Selectは進行確認・再挑戦用として残し、通常の冒険はFieldを歩いてGateへ向かう。
 
-追加するもの:
+### Battleの手触り: 実装済み
 
-- EXP
-- Level導出
-- 最大HP
-- 小幅なPOWER倍率
-- cleared Stage
-- unlocked Stage
-- unlocked Skill
+#64 / #63でBattle presentationを追加済み。
 
-初期案:
-
-```text
-累計EXP: 20 * level * (level - 1)
-Lv2: 40
-Lv3: 120
-Lv4: 240
-
-maxHp = 100 + (level - 1) * 8
-powerMultiplier = 1 + (level - 1) * 0.02
-```
-
-UI / LocalStorageから独立した純粋Domainとして作る。
-
-### #44 JavaScript Kingdom Stage Select
-
-`/javascript`へStage Selectを追加する。
-
-- Battle 1〜3をStage表示
-- 推奨Level
-- EXP報酬
-- READY / LOCKED / CLEAR
-- Boss表示
-- 過去Stage再挑戦
-- 新seedで再挑戦
-- 現在Level / EXP / maxHP表示
-
-重要: **Stage Selectは最終世界UIではない。**
-
-RPGループを早く成立させるための暫定UIとして作り、後でFieldへ置き換えられる構造にする。
-
-### #45 Battle Reward / Stage Progress
-
-Battle勝利をRPG進行へ接続する。
-
-初期EXP案:
-
-- Battle 1: 40 EXP
-- Battle 2: 60 EXP
-- Battle 3: 100 EXP
-
-想定:
-
-```text
-Battle 1 clear → 40 → Lv2
-Battle 2 clear → total 100 → Lv2
-Battle 3 recommended Lv3
-↓
-必要なら過去Battleを再戦
-↓
-120以上 → Lv3
-↓
-Boss再挑戦
-```
-
-再クリアでもEXPを得られる。
-
-### #46 Level Growth in Battle
-
-Player側だけ成長させる。
-
-- Battle開始HP = current maxHP
-- HUDにLevel
-- Skill damageへ小幅POWER倍率
-- Retry時もcurrent maxHP
-
-敵のHP / 攻撃力 / 構成はcurrent Player Levelで変えない。
-
-### #47 LocalStorage Persistence
-
-保存するもの:
-
-- EXP
-- clearedStageIds
-- unlockedStageIds
-- unlockedSkillIds
-- Area進行
-- schema version
-
-Battle中のターンや敵残HPは保存しない。
-
-### #48 Boss / Area CLEAR
-
-Battle 3をJavaScript Kingdom Bossとして扱う。
-
-- Boss属性
-- Area CLEAR
-- Area Clear画面
-- CLEAR後も過去Stage再戦可能
-- 将来の複数Areaへ拡張可能な進行構造
-
-### P0完了条件
-
-次が揃った段階を「RPG最小ループ完成」とする。
-
-1. Stage Select
-2. 過去Battle再挑戦
-3. EXP獲得
-4. Level Up
-5. Player stats成長
-6. Stage CLEAR / unlock
-7. 敗北後に戻って育成
-8. LocalStorage保存
-9. Boss / Area CLEAR
-10. コードを読む必要性を維持
-
----
-
-## 5. P1: Battleの手触りを仕上げる
-
-RPG最小ループが成立したら、Field / NPCを本格化する前に**Battleの音・動き・間**を整える。
-
-狙いは派手な演出を増やすことではなく、クラシックJRPGのように、プレイヤーの入力へ短く明確な反応を返し、1手ごとの手応えを作ること。
-
-既存作品の音源・メロディ・具体的な演出はコピーせず、8-bit RPGを想起させるオリジナル表現にする。
-
-### #64 Battle Animation / Motion
-
-基本テンポ:
-
-```text
-SELECT
-↓
-EXECUTE
-↓
-短い予備動作
-↓
-攻撃演出
-↓
-Enemy flash / shake
-↓
-Damage / HP反映
-↓
-撃破演出
-↓
-短い間
-↓
-Enemy Turn
-```
-
-初期対象:
-
-- Skill発動
+- Skill予備動作
 - 被弾flash / shake
 - damage表示
-- Enemy撃破
-- Player被弾
-- Victory / Defeat
-- Level Up / Skill Unlock / Area CLEAR
+- Enemy撃破演出
+- Player被弾演出
+- Victory / Defeat / Level Up等の短い演出
+- `prefers-reduced-motion`対応
+- SE / BGM channel
+- Mute / SE音量 / BGM音量
+- Web Audio APIによるオリジナル8-bit風音響
+
+Audio / MotionはBattleのTargetRuleやdamage計算とは分離する。
+
+### 品質・デプロイ: 実装済み
+
+- Node.js 24
+- Vitest
+- ESLint
+- Prettier
+- PR前 `npm ci` / `lint` / `test` / `build`
+- GitHub Actions CI
+- Cloudflare Workers Static Assets
+- Cloudflare Workers Builds Preview / Production
+
+Vercelは現在の自動deploy経路から除外済み。
+
+---
+
+## 3. 現在のRPGループ
+
+```text
+World Map / Area Select
+↓
+Areaへ入る
+↓
+Hub / Fieldを探索
+↓
+NPCから目的・ヒントを得る
+↓
+Battle Gate
+↓
+コードを読んでBattle
+↓
+EXP / Skill / Stage CLEAR
+↓
+Fieldへ戻る
+↓
+Boss撃破でArea CLEAR
+↓
+World Mapへ戻る
+```
+
+この循環を今後のAreaにも共通化する。
+
+---
+
+## 4. 現在の最優先: World Map / 複数Area基盤
+
+### #81 World Map
+
+複数Areaを追加できる入口を作る。
+
+初期スコープ:
+
+- `/world`にArea Select
+- TitleのSTART RUN → World Map
+- JavaScript KingdomをAVAILABLE表示
+- Area CLEAR状態を表示
+- TypeScript FrontierをCOMING SOON表示
+- 未実装Areaは進入不可
+- Area metadataにdescription / availability / entry routeを持たせる
+- Stage Select / Area CLEARからWorld Mapへ戻れる
+- data-drivenなArea表示
+- unit test
 
 重要:
 
-- Skill実行前のtarget previewは出さない
-- 実行後の演出で「実際に誰が対象だったか」を伝える
-- animation中の二重入力を防ぐ
-- `prefers-reduced-motion`へ対応する
-- 長い演出でcode readingのテンポを壊さない
-
-### #63 Audio System
-
-初期対象:
-
-- cursor / select / decide / cancel
-- Skill SELECT / EXECUTE
-- attack / hit / enemy attack / player hit
-- Victory / Defeat jingle
-- Level Up / Skill Unlock / Area CLEAR
-- 将来のfootstep / dialogue / area transition
-
-設計:
-
-- BGMとSEを別channelとして扱える
-- Mute / volumeを持てる
-- browser autoplay制約に対応する
-- Audio再生をBattle Domainへ直接埋め込まない
-- code reading中の邪魔にならない音量・密度にする
-
-音と動きは別Issueで実装するが、最終的には同じBattle event timelineへ同期させる。
+- COMING SOON Areaに架空のBattleやsave dataを作らない
+- JavaScript Kingdomの既存route / save dataを壊さない
+- World MapをBattle Domainへ依存させない
 
 ---
 
-## 6. P1: RPG世界を歩けるようにする
+## 5. 次: 2つ目のArea
 
-RPG最小ループとBattleの基本的な手触りが整った後、Stage Select中心の画面遷移から**トップダウンのField / Hub**へ拡張する。
+World Mapが安定した後、実際の2つ目のAreaを追加する。
 
-### #49 Top-down Field
+第一候補はTypeScript。
 
-最初のスコープ:
-
-- 2D 1画面程度
-- 4方向移動
-- collision
-- interaction
-- Battle入口
-- Area出口
-- Battle終了後にFieldへ復帰
-- Keyboard / Mobile操作
-
-最初から巨大なopen worldや複雑なphysicsは作らない。
-
-### #50 Hub / NPC / Dialogue
-
-- NPC 2〜3人
-- 汎用Dialogue data
-- 進行状態による会話分岐
-- 次の目的の提示
-- 学習ヒント / 復習導線
-
-将来候補:
-
-- Quest
-- Shop
-- 回復施設
-- Story event
-- 装備変更
-
-RPGの世界観はBattleから独立した飾りではなく、学習導線にも利用する。
-
----
-
-## 7. P1: 読解体験の再強化
-
-#31 / #32は重要だが、現在は**RPG最小ループを先に成立させる**ため後ろへ回す。
-
-### #31 同概念のcode variant
-
-`SkillDefinition.codeVariants`の基盤はすでにある。
-
-次に行うこと:
-
-- 同じTargetRuleの複数1行表現
-- `battleId + seed + skillId`から決定的選択
-- 同じseedでは同じコード
-- 新しい未習構文を急に混ぜない
-
-例:
-
-```js
-enemies.find(e => e.hp < 45)
-enemies.find(enemy => enemy.hp < 45)
+```text
+World
+├── JavaScript Kingdom
+├── TypeScript Frontier
+├── SQL Dungeon
+└── React City
 ```
 
-### #32 複数行コード
+名前・順序は固定ではない。
 
-Battle 3から少量導入する。
+TypeScript Areaを実装する場合も、単に問題カテゴリを増やすのではなく、RPG上の地域と学習内容を一致させる。
 
-```js
-const ordered = [...enemies].sort((a, b) => a.hp - b.hp)
-ordered[0]
-```
+候補テーマ:
 
-新しい概念を同時に増やすのではなく、既知の処理を複数行で追う体験から始める。
+- primitive type
+- union type
+- object type
+- optional property
+- narrowing
+- function parameter / return type
+- genericの初歩
+
+一度に新しい概念を増やしすぎず、「コードを読んで対象・結果を判断できるもの」を優先する。
 
 ---
 
-## 8. P2: JavaScript学習コンテンツ拡張
+## 6. JavaScript学習コンテンツの拡張
 
-RPGループとvariant基盤が安定した後、学習内容を広げる。
-
-候補:
+既存Areaを深くする場合の候補:
 
 - `some()` / `every()`
 - object property access
@@ -387,129 +215,145 @@ RPGループとvariant基盤が安定した後、学習内容を広げる。
 - `map()`
 - `reduce()`
 - nested data
-- status / shield等の状態
 - 実行順序
+- shield / status等の状態
 
-構文網羅ではなく、**ゲーム上の判断へ変換しやすい順**に追加する。
+Skill追加時は次を機械的に検証できる状態を維持する。
 
----
-
-## 9. P2: Area拡張
-
-JavaScript Kingdomの次の候補:
-
-```text
-World
-├── JavaScript Kingdom
-├── TypeScript Area
-├── SQL Dungeon
-└── React City
-```
-
-名前や順序は固定ではない。
-
-Area追加時も、単なる問題カテゴリ選択ではなく、RPG世界の進行と学習カリキュラムを一致させる。
+- code variantとTargetRuleの意味が一致する
+- POWERが表示と実ダメージで一致する
+- valid targetが存在する
+- Battleがsolvable
+- 同seedで再現可能
 
 ---
 
-## 10. P3: RPGの深さ
+## 7. RPGの深さ
 
-RPG最小ループとField / NPCが成立してから検討する。
+World / Area構造が安定してから追加を検討する。
 
 候補:
 
+- Quest
+- Shop
+- 回復施設
 - 装備
 - アイテム
 - Gold
-- Shop
-- Quest
+- Treasure
+- Story event
 - Status effect
 - Deck編成
 - Boss固有mechanic
 
-禁止したい方向:
+避ける方向:
 
-- 攻撃力を上げるだけでコードを読まなくてよくなる
+- 攻撃力だけを上げればコードを読まなくてよい
 - Rare装備が既存Skillを完全に無意味にする
 - Grind量だけで全Battleを突破できる
 
-成長は「余裕」を増やし、読解は「正しい行動」を決める役割にする。
+RPG要素はコード読解の代替ではなく、読解を使う場面を増やすために利用する。
 
 ---
 
-## 11. P4: サービス化
+## 8. Field / Hubの拡張
 
-必要性が出てから導入する。
+現在のJavaScript Kingdomは1画面Hubなので、必要性が確認できたら次を追加する。
+
+- 複数map
+- Area transition
+- 宝箱
+- Quest NPC
+- Shop / Inn
+- Story event
+- field BGM / environment sound
+- footstep
+- Gamepad
+
+最初から巨大なopen worldや複雑なphysicsへ拡張しない。
+
+---
+
+## 9. Audio / Presentation改善
+
+Audio基盤は実装済みだが、実機で聞こえ方を継続確認する。
+
+候補:
+
+- Title / World / Field BGM
+- Battle BGMのmix調整
+- BGM曲数の追加
+- Areaごとのmotif
+- 環境音
+- footstep
+- dialogue開始音
+- transition音
+
+ブラウザautoplay制約を守り、最初のユーザー操作後にAudioを有効化する。
+
+既存作品の音源・メロディ・効果音はコピーしない。
+
+---
+
+## 10. サービス化
+
+必要性が出てからbackendを追加する。
 
 トリガー:
 
 - 複数端末同期
-- ログイン
+- Login
 - Cloud Save
 - Ranking
 - Shared Challenge
-- 教員 / 管理者向け機能
+- 教員 / 管理者機能
 
-候補技術:
+候補:
 
 - Cloudflare Workers / D1 / KV / R2
 - Supabase
 - その他BaaS
 
-Cloudflareでfrontendをhostingしていることだけを理由にbackendをCloudflareへ固定しない。
+frontendをCloudflareでhostingしていることだけを理由にbackendをCloudflareへ固定しない。
 
 ---
 
-## 12. 長期候補
-
-必要性を検証してから着手する。
+## 11. 長期候補
 
 - Daily Challenge
 - Seed共有
-- 学習履歴分析
 - Achievement
 - Cosmetic
-- BGM曲数 / 環境音 / 音響variationの拡張
-- Gamepad
+- 学習履歴分析
 - PWA / Offline
 - 多言語化
 - AIによる補助的な問題作成
 
-AIに問題を作らせる場合も、表示コード / TargetRule / solvabilityを機械的に検証できる構造を前提とする。
+AIで問題を生成する場合も、表示コード / TargetRule / solvabilityを機械的に検証できる構造を前提にする。
 
 ---
 
-## 13. 優先順位まとめ
+## 12. 優先順位まとめ
 
 ```text
 [実装済み]
 Battle MVP
-→ seeded RNG / constrained generation / solvability
-→ SkillDefinition / codeVariants foundation
-→ CI / Cloudflare deployment
+→ seeded generation / solvability
+→ PlayerProgress / Stage / EXP / LocalStorage / Area CLEAR
+→ Battle animation / Audio
+→ Top-down Field / NPC / Dialogue
+→ code variants / multi-line code
 
-[次: RPG最小ループ]
-#43 PlayerProgress
-→ #44 Stage Select
-→ #45 EXP / CLEAR / unlock
-→ #46 Level growth
-→ #47 LocalStorage
-→ #48 Boss / Area CLEAR
+[現在]
+#81 World Map / Area Select
 
-[Battleの手触り]
-#64 Battle animation / motion
-→ #63 Audio system
+[次]
+2つ目のArea
+→ 学習コンテンツ拡張
+→ Quest / Shop / 装備等のRPG深化
 
-[RPG世界]
-#49 Top-down Field
-→ #50 Hub / NPC / Dialogue
-
-[読解強化]
-#31 code variants
-→ #32 multi-line code
-
-[その後]
-新Area / 装備 / Quest / Backend等
+[必要になってから]
+Backend / Login / Cloud Save / Ranking
 ```
 
-優先順位は変更可能だが、**Battleだけを増やしてRPGの外側が無い状態を長く続けない**こと、そしてRPG最小ループ成立後は**音と動きで操作結果の手応えを作る**ことを現在の方針とする。
+**Battleだけを増やしてRPGの外側が無い状態へ戻さないこと**、そして新しいRPG要素も常にコード読解の意思決定へつなげることを基本方針とする。

@@ -19,7 +19,7 @@
 - seed付き乱数とURLの`seed` queryによる盤面再現
 - seedに基づく敵HP・敵順・Skill順の制約付き可変Battle
 - 生成盤面の学習条件・有効対象・solvability検証
-- `SkillDefinition` / `codeVariants`によるコード表現拡張の基盤
+- 同じ概念の複数code variantとBattle 3の複数行コード
 - PlayerProgress / EXP / Level導出
 - JavaScript Kingdom Stage Select
 - 過去Stageへの再挑戦
@@ -33,10 +33,21 @@
 - Fieldから入ったBattleの勝利・敗北後にFieldへ戻る導線
 - 3人のNPC / 汎用Dialogueデータ / 進行状態による会話分岐
 - 次の目的・コード読解ヒント・復習導線をField内会話から確認
+- Battle motion / damage feedback / reduced motion対応
+- SE / Battle BGM / Mute / SE・BGM別音量のAudio基盤
 - Vitest / ESLint / Prettier / GitHub Actions CI
 
-まだ`main`には入っていない主なRPG機能:
+このbranchではさらに、複数Areaへ拡張する入口としてWorld Mapを追加しています。
 
+- `/world`にArea Select
+- JavaScript KingdomをAVAILABLEとして表示
+- JavaScript Kingdom CLEAR状態をWorld Mapへ反映
+- TypeScript FrontierをCOMING SOONとして表示し、未実装の進行データは作らない
+- Area metadataからdata-drivenに表示・進入可否を決定
+
+まだ入っていない主なRPG機能:
+
+- TypeScript / SQL / Reactなど次Areaの実コンテンツ
 - 装備 / アイテム
 - Quest / Shop / 回復施設などの拠点機能
 - Backend / Database / Authentication
@@ -46,6 +57,10 @@
 現在のRPGループは次の形です。
 
 ```text
+World Map
+↓
+Areaを選ぶ
+↓
 JavaScript Kingdom Hub / Field
 ↓
 NPCと話して目的・ヒントを確認
@@ -67,7 +82,21 @@ Fieldへ戻る / 次のBattleへ進む
 
 ただしLevelはコード読解を不要にするためのものではありません。**育成で戦える余裕を増やし、勝ち方はコード読解と戦略で決める**ことを基本原則とします。
 
-Stage Selectは進行確認・再挑戦用として残し、通常の冒険導線はトップダウンFieldからNPCと会話し、Battle Gateへ向かう形へ移行しています。
+Stage Selectは進行確認・再挑戦用として残し、通常の冒険導線はWorld Map → Field → Battle Gateへ向かう形へ拡張しています。
+
+## World Map / Area progression
+
+`/world`は複数Areaを選ぶ入口です。
+
+- Titleの`START RUN`からWorld Mapへ入る
+- JavaScript Kingdomは`AVAILABLE`
+- CLEAR済みなら`AREA CLEAR`を表示
+- 未実装Areaは`COMING SOON`で進入不可
+- Areaの表示名・説明・availability・entry routeは`src/game/areas.ts`へ集約
+- 未実装Areaには架空のBattleやsave dataを作らない
+- Stage Select / Area CLEAR画面からWorld Mapへ戻れる
+
+Area追加時はWorld Mapの条件分岐を増やすのではなく、Area metadataを追加して拡張する方針です。
 
 ## Field exploration
 
@@ -113,19 +142,6 @@ RPG進行はブラウザのLocalStorageへversion付きschemaで保存します�
 - Battle中のターンや敵残HPなど、一時的な戦闘状態は保存しない
 - Stage Selectから進行をリセット可能
 
-## Area progression
-
-現在はJavaScript Kingdomを最初のAreaとして定義しています。
-
-- 各Battleは`areaId`を持つ
-- Battle 3は`isBoss: true`
-- Boss初回勝利で`clearedAreaIds`へ`javascript`を記録
-- Stage Selectに`AREA CLEAR`状態を表示
-- Area CLEAR画面からField / Stage Selectへ戻る / Bossを再戦できる
-- CLEAR後も過去Stageはそのまま再挑戦可能
-
-Area定義とBattleの所属を分離しているため、将来はTypeScript / SQL / Reactなど複数Areaを追加できる構造です。
-
 ## Docs
 
 - [ロードマップ](./docs/ROADMAP.md) — 実装済み基盤、次の優先順位、長期展望
@@ -152,6 +168,7 @@ Area定義とBattleの所属を分離しているため、将来はTypeScript / 
 TanStack Routerで画面遷移とBattle URLを管理しています。
 
 - `/` - スタート画面
+- `/world` - World Map / Area Select
 - `/javascript/field` - JavaScript Kingdom / Top-down Hub & Field
 - `/javascript` - JavaScript Kingdom / Stage Select
 - `/javascript/battle/$battleId?seed=...&returnTo=...` - JavaScript編の各Battle
@@ -182,6 +199,7 @@ npm run build
 - TypeScript
 - TanStack Router
 - CSS
+- Web Audio API
 - Node.js 24
 - Vitest
 - ESLint / Prettier

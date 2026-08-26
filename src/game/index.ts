@@ -1,4 +1,10 @@
-export { areaById, areas, JAVASCRIPT_AREA_ID } from './areas'
+export {
+  areaById,
+  areas,
+  availableAreas,
+  JAVASCRIPT_AREA_ID,
+  TYPESCRIPT_AREA_ID,
+} from './areas'
 export { battles } from './battles'
 export { generateBattle } from './generator'
 export { skillDefinitionById, skillDefinitions } from './skillDefinitions'
@@ -6,7 +12,7 @@ export { getSkillCardForBattle, getSkillCardsForBattle, skills } from './skills'
 export { createSeededRandom } from './random'
 export { hasInitialValidTarget, isBattleSolvable } from './solvability'
 export { getTargets } from './targeting'
-export type { AreaDefinition } from './areas'
+export type { AreaAvailability, AreaDefinition } from './areas'
 export type { CodeVariant, SkillDefinition } from './skillDefinitions'
 export type { Seed, SeededRandom } from './random'
 export type { Battle, Enemy, SkillCard, TargetRule } from './types'

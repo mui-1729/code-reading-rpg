@@ -1,0 +1,147 @@
+.world-shell {
+  padding-top: 22px;
+  padding-bottom: 90px;
+}
+
+.world-panel {
+  padding: 26px;
+  background: radial-gradient(circle at 72% 18%, rgba(79, 140, 255, .13), transparent 28%), #080812;
+}
+
+.world-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.world-header h1 {
+  margin: 8px 0 6px;
+  font-size: clamp(28px, 5vw, 48px);
+  letter-spacing: -.05em;
+}
+
+.world-header p,
+.world-card p,
+.world-footer span {
+  color: #aaa7bf;
+  line-height: 1.7;
+}
+
+.world-player {
+  min-width: 160px;
+  padding: 12px;
+  display: grid;
+  gap: 5px;
+  text-align: right;
+}
+
+.world-player span,
+.world-player em {
+  color: #8f8ca3;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.world-player strong {
+  color: var(--green);
+  font-size: 20px;
+}
+
+.world-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.world-card {
+  position: relative;
+  min-height: 330px;
+  padding: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.world-card-index {
+  position: absolute;
+  right: 14px;
+  top: 8px;
+  color: rgba(255, 255, 255, .05);
+  font-size: 72px;
+  font-weight: 900;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.world-card-topline {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.world-card-topline span { color: var(--blue); }
+.world-card-topline strong { color: var(--gold); }
+
+.world-card.is-cleared .world-card-topline strong { color: var(--green); }
+.world-card.is-coming-soon { opacity: .66; filter: saturate(.55); }
+
+.world-landmark {
+  height: 112px;
+  display: grid;
+  place-items: center;
+  margin: 18px 0 8px;
+  background:
+    linear-gradient(135deg, transparent 42%, rgba(79,140,255,.18) 43% 57%, transparent 58%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 2px, transparent 2px 8px);
+  border: 2px solid #34344b;
+}
+
+.world-landmark span {
+  color: var(--purple);
+  font-size: 48px;
+  text-shadow: 5px 5px 0 #111121;
+}
+
+.world-card.is-cleared .world-landmark span { color: var(--green); }
+.world-card.is-coming-soon .world-landmark span { color: #767492; }
+
+.world-card h2 {
+  margin: 8px 0 4px;
+  color: #fff;
+  font-size: clamp(20px, 3vw, 30px);
+}
+
+.world-card p {
+  flex: 1;
+  margin: 6px 0 18px;
+  font-size: 12px;
+}
+
+.world-enter { width: 100%; }
+
+.world-footer {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  border-top: 2px solid #33334a;
+  padding-top: 16px;
+  font-size: 10px;
+}
+
+@media (max-width: 700px) {
+  .world-panel { padding: 18px 12px; }
+  .world-header { flex-direction: column; }
+  .world-player { width: 100%; text-align: left; grid-template-columns: 1fr auto auto; align-items: center; }
+  .world-grid { grid-template-columns: 1fr; }
+  .world-card { min-height: 300px; }
+  .world-footer { flex-direction: column; align-items: stretch; }
+}
