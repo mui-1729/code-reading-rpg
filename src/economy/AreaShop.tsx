@@ -4,18 +4,15 @@ import { gameAudio } from '../audio/gameAudio'
 import { useProgress } from '../progression'
 import { PATCH_KIT_HEAL, PATCH_KIT_PRICE, purchasePatchKit } from './economy'
 
-const AREA_PATHS = new Set(['/javascript', '/typescript'])
+const FIELD_PATHS = new Set(['/javascript/field', '/typescript/field'])
 
 export function AreaShop() {
   const { progress, setProgress } = useProgress()
   const [open, setOpen] = useState(false)
   const [, setRevision] = useState(0)
-  const isAreaPage = typeof window !== 'undefined' && AREA_PATHS.has(window.location.pathname)
-  const progressPanel = isAreaPage
-    ? document.querySelector<HTMLElement>('.player-progress-panel')
-    : null
-  const headerActions = isAreaPage
-    ? document.querySelector<HTMLElement>('.area-header-actions')
+  const isFieldPage = typeof window !== 'undefined' && FIELD_PATHS.has(window.location.pathname)
+  const fieldControls = isFieldPage
+    ? document.querySelector<HTMLElement>('.field-controls')
     : null
 
   useEffect(() => {
@@ -49,7 +46,7 @@ export function AreaShop() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [open])
 
-  if (!isAreaPage) return null
+  if (!isFieldPage) return null
 
   const handlePurchase = () => {
     const result = purchasePatchKit(progress)
@@ -69,15 +66,7 @@ export function AreaShop() {
 
   return (
     <>
-      {progressPanel && createPortal(
-        <div className="progress-stat economy-progress-stat">
-          <span>GOLD</span>
-          <strong>{progress.gold} G</strong>
-        </div>,
-        progressPanel,
-      )}
-
-      {headerActions && createPortal(
+      {fieldControls && createPortal(
         <button
           type="button"
           className="secondary-button area-shop-button"
@@ -85,9 +74,9 @@ export function AreaShop() {
           aria-haspopup="dialog"
           aria-expanded={open}
         >
-          SHOP
+          SHOP · {progress.gold} G
         </button>,
-        headerActions,
+        fieldControls,
       )}
 
       {open && (
@@ -107,20 +96,15 @@ export function AreaShop() {
             >
               ×
             </button>
-            <div className="eyebrow">AREA SHOP</div>
-            <h2>SUPPORT ITEMS</h2>
-
-            <div className="shop-wallet pixel-inner-window">
-              <span>GOLD</span>
-              <strong>{progress.gold} G</strong>
-            </div>
+            <div className="eyebrow">SHOP</div>
+            <h2>PATCH KIT</h2>
 
             <article className="shop-item pixel-inner-window">
               <div>
                 <span className="shop-item-name">PATCH KIT</span>
                 <strong>{PATCH_KIT_PRICE} G</strong>
               </div>
-              <p>Battle中にHPを最大{PATCH_KIT_HEAL}回復。1Battleにつき1回使用可能。</p>
+              <p>HPを最大{PATCH_KIT_HEAL}回復 · 1Battle 1回</p>
               <div className="shop-stock">OWNED ×{progress.inventory.patchKit}</div>
               <button
                 type="button"
