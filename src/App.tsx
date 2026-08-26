@@ -29,12 +29,13 @@ type LogEntry = {
 type AppProps = {
   battleId: number
   seed: Seed
+  returnTo?: '/javascript/field'
 }
 
 const cloneEnemies = (enemies: Enemy[]) => enemies.map((enemy) => ({ ...enemy }))
 const spriteClassName = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
 
-function App({ battleId, seed }: AppProps) {
+function App({ battleId, seed, returnTo }: AppProps) {
   const navigate = useNavigate()
   const { progress, setProgress } = useProgress()
   const playerStats = getPlayerStats(progress.exp)
@@ -174,11 +175,18 @@ function App({ battleId, seed }: AppProps) {
     navigate({
       to: '/javascript/battle/$battleId',
       params: { battleId: String(nextBattle.id) },
-      search: { seed: String(seed) },
+      search: { seed: String(seed), returnTo },
     })
   }
 
-  const goStageSelect = () => navigate({ to: '/javascript' })
+  const goReturnDestination = () => {
+    if (returnTo === '/javascript/field') {
+      navigate({ to: '/javascript/field' })
+      return
+    }
+    navigate({ to: '/javascript' })
+  }
+
   const unlockedSkill = victoryReward?.unlockedSkillId
     ? skills[victoryReward.unlockedSkillId]
     : null
@@ -360,8 +368,8 @@ function App({ battleId, seed }: AppProps) {
               <button className="primary-button" onClick={goNextBattle}>
                 {nextBattle ? '▶ NEXT STAGE' : '▶ AREA CLEAR'}
               </button>
-              <button className="secondary-button" onClick={goStageSelect}>
-                ◀ STAGE SELECT
+              <button className="secondary-button" onClick={goReturnDestination}>
+                {returnTo === '/javascript/field' ? '◀ RETURN TO FIELD' : '◀ STAGE SELECT'}
               </button>
             </div>
           </section>
@@ -378,8 +386,8 @@ function App({ battleId, seed }: AppProps) {
               <button className="primary-button" onClick={resetBattle}>
                 ▶ RETRY
               </button>
-              <button className="secondary-button" onClick={goStageSelect}>
-                ◀ STAGE SELECT
+              <button className="secondary-button" onClick={goReturnDestination}>
+                {returnTo === '/javascript/field' ? '◀ RETURN TO FIELD' : '◀ STAGE SELECT'}
               </button>
               <button
                 className="secondary-button"
