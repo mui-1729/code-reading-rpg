@@ -8,6 +8,12 @@ export type Enemy = {
   glyph: string
 }
 
+export type EnemyInspectionValue = {
+  key: string
+  expression: string
+  value: string | number | boolean | null
+}
+
 export type TargetRule =
   | { kind: 'firstBelow'; hp: number }
   | { kind: 'allBelow'; hp: number }
@@ -24,11 +30,16 @@ export type SkillCard = {
   id: string
   name: string
   code: string
+  codeVariantId?: string
   power: number
   rule: TargetRule
   concept: string
   explanation: string
   codeHelpLines?: readonly string[]
+  inspectEnemy?: (
+    enemy: Enemy,
+    enemies: readonly Enemy[],
+  ) => readonly EnemyInspectionValue[]
 }
 
 export type Battle = {
