@@ -82,21 +82,21 @@ export const skillDefinitions: readonly SkillDefinition[] = [
     rule: { kind: 'allBelowAndAttackAtLeast', hp: 100, attackDamage: 8 },
     concept: '&&',
     explanation:
-      '&& は左右の条件が両方trueのときだけtrueになります。このカードはHPが100未満かつ攻撃力が8以上の敵全員を対象にします。',
+      '&& は左右の条件が両方trueのときだけtrueになります。このカードは生存中で、HPが100未満かつ攻撃力が8以上の敵全員を対象にします。',
     codeVariants: [
       {
         id: 'short',
-        code: 'enemies.filter(e => e.hp < 100 && e.attackDamage >= 8)',
+        code: 'enemies.filter(e => e.hp > 0 && e.hp < 100 && e.attackDamage >= 8)',
         lineMode: 'single',
       },
       {
         id: 'enemy',
-        code: 'enemies.filter(enemy => enemy.hp < 100 && enemy.attackDamage >= 8)',
+        code: 'enemies.filter(enemy => enemy.hp > 0 && enemy.hp < 100 && enemy.attackDamage >= 8)',
         lineMode: 'single',
       },
       {
         id: 'target',
-        code: 'enemies.filter(target => target.hp < 100 && target.attackDamage >= 8)',
+        code: 'enemies.filter(target => target.hp > 0 && target.hp < 100 && target.attackDamage >= 8)',
         lineMode: 'single',
       },
     ],
@@ -108,21 +108,21 @@ export const skillDefinitions: readonly SkillDefinition[] = [
     rule: { kind: 'firstAttackAtLeastOrAbove', hp: 120, attackDamage: 14 },
     concept: '||',
     explanation:
-      '|| は左右のどちらか一方でもtrueならtrueになります。このカードは攻撃力が14以上、またはHPが120より大きい最初の敵1体を対象にします。',
+      '|| は左右のどちらか一方でもtrueならtrueになります。このカードは生存中で、攻撃力が14以上またはHPが120より大きい最初の敵1体を対象にします。',
     codeVariants: [
       {
         id: 'short',
-        code: 'enemies.find(e => e.attackDamage >= 14 || e.hp > 120)',
+        code: 'enemies.find(e => e.hp > 0 && (e.attackDamage >= 14 || e.hp > 120))',
         lineMode: 'single',
       },
       {
         id: 'enemy',
-        code: 'enemies.find(enemy => enemy.attackDamage >= 14 || enemy.hp > 120)',
+        code: 'enemies.find(enemy => enemy.hp > 0 && (enemy.attackDamage >= 14 || enemy.hp > 120))',
         lineMode: 'single',
       },
       {
         id: 'target',
-        code: 'enemies.find(target => target.attackDamage >= 14 || target.hp > 120)',
+        code: 'enemies.find(target => target.hp > 0 && (target.attackDamage >= 14 || target.hp > 120))',
         lineMode: 'single',
       },
     ],
