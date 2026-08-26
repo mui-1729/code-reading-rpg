@@ -2,9 +2,7 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
-      - chore/70-remove-vercel-config
+    branches: [main]
   pull_request:
 
 jobs:
