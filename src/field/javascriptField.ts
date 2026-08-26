@@ -22,13 +22,9 @@ export const javascriptField: FieldDefinition = {
   width,
   height,
   start: { x: 5, y: 7 },
-  blockedTiles: [
-    ...borderTiles(width, height),
-    { x: 3, y: 4 },
-    { x: 4, y: 4 },
-    { x: 7, y: 5 },
-    { x: 8, y: 5 },
-  ],
+  // Interactable objects are already solid tiles. Keep the interior floor open so the
+  // player always has a visible route from the entrance toward the three Battle Gates.
+  blockedTiles: borderTiles(width, height),
   interactions: [
     {
       id: 'stage-1-gate',
@@ -78,8 +74,8 @@ export const javascriptField: FieldDefinition = {
     {
       id: 'field-sign',
       kind: 'sign',
-      x: 5,
-      y: 6,
+      x: 6,
+      y: 7,
       message: '矢印キー / WASDで移動。門・NPC・看板の手前でENTERまたはINTERACT。',
     },
     {
@@ -92,7 +88,7 @@ export const javascriptField: FieldDefinition = {
     {
       id: 'filter-sign',
       kind: 'sign',
-      x: 5,
+      x: 4,
       y: 4,
       learningHintId: 'js-filter',
     },
