@@ -16,27 +16,36 @@ describe('area definitions', () => {
     }
   })
 
-  it('available Areaだけが進入routeを持つ', () => {
+  it('available Areaだけが実routeを持つ', () => {
     expect(availableAreas.map((area) => area.id)).toEqual([JAVASCRIPT_AREA_ID])
 
     for (const area of areas) {
+      const routes = Object.values(area.routes)
       if (area.availability === 'available') {
-        expect(area.entryPath).not.toBeNull()
+        expect(routes.every((route) => route !== null)).toBe(true)
       } else {
-        expect(area.entryPath).toBeNull()
+        expect(routes.every((route) => route === null)).toBe(true)
       }
     }
   })
 
-  it('JavaScript Kingdomは進入可能でTypeScriptはCOMING SOON', () => {
+  it('JavaScript既存routeを維持しTypeScriptはCOMING SOON', () => {
     expect(areaById[JAVASCRIPT_AREA_ID]).toMatchObject({
       availability: 'available',
-      entryPath: '/javascript/field',
+      routes: {
+        stageSelect: '/javascript',
+        field: '/javascript/field',
+        complete: '/javascript/complete',
+      },
       bossBattleId: 3,
     })
     expect(areaById[TYPESCRIPT_AREA_ID]).toMatchObject({
       availability: 'comingSoon',
-      entryPath: null,
+      routes: {
+        stageSelect: null,
+        field: null,
+        complete: null,
+      },
     })
   })
 })
