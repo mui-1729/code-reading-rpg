@@ -1,6 +1,6 @@
 .code-codex {
   position: fixed;
-  left: 14px;
+  right: 14px;
   bottom: 14px;
   z-index: 35;
   font-family: "Courier New", ui-monospace, monospace;
@@ -209,7 +209,7 @@
 
 @media (max-width: 720px) {
   .code-codex {
-    left: 8px;
+    right: 8px;
     bottom: 8px;
   }
 
