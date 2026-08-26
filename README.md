@@ -17,6 +17,7 @@
 - Field上の任意学習看板
 - Code CodexによるJavaScript / TypeScript概念一覧
 - Main Quest / Quest Tracker / FieldのNEXT・! marker
+- Main Quest完了後の再攻略Side Quest
 - Battle勝利後のQuest更新feedback
 - コードカードを1回押して選択、同じカードを2回目に押して実行
 - 表示コードが攻撃対象を決定し、POWERがダメージを決定
@@ -37,7 +38,6 @@
 
 - SQL / Reactなど3つ目以降のArea
 - 装備 / Item / Gold / Shop / Inn
-- Side Quest
 - Backend / Database / Authentication / Cloud Save
 
 ## Learning content
@@ -126,6 +126,8 @@ Boss
 ↓
 Area CLEAR
 ↓
+Side Questで過去Stageを再攻略
+↓
 World Map
 ```
 
@@ -173,6 +175,15 @@ TypeScript Frontier: 4 → 5 → 6 (Boss)
 
 JavaScript KingdomとTypeScript Frontierに進行連動NPCを配置しています。Dialogueは`src/dialogue/`へ分離し、Stage CLEAR / Area CLEARなどで会話を切り替えられます。
 
+## Quest
+
+Main QuestはStage / Area CLEARから導出します。Area CLEAR後はQuest Log内に再攻略Side Questが現れます。
+
+- JavaScript: `SECOND PASS` — FIRST READを再攻略、+40 EXP
+- TypeScript: `TYPE RECHECK` — TYPED ENTRYを再攻略、+50 EXP
+- Side Quest報酬は各Questにつき1回だけ
+- Side QuestはQuest Log内だけに表示し、常設UIは増やさない
+
 ## Code Codex
 
 World Map / Area Select / Fieldで`C`または`CODEX`から開きます。Battle中は非表示です。
@@ -204,12 +215,13 @@ RPG進行はLocalStorageへversion付きschemaで保存します。
 - EXP
 - Stage CLEAR
 - Area CLEAR
+- Side Quest完了ID
 - Stage unlock
 - Skill unlock
 
-Main Questの状態はStage / Area CLEARから導出し、同じ進行状態を重複保存しません。
+Main Questの状態はStage / Area CLEARから導出します。Side Questは一度だけ報酬を受け取る必要があるため、完了IDだけを保存します。
 
-Level / 最大HP / POWER倍率はEXPから導出し、重複保存しません。旧saveはクリア情報を保ったまま復元し、現在の各Area入口Stageとbaseline Skillを不足分だけ追加します。壊れたJSONや未知schema versionは初期状態へ安全にfallbackします。
+Level / 最大HP / POWER倍率はEXPから導出し、重複保存しません。旧saveはクリア情報を保ったまま復元し、現在の各Area入口Stageとbaseline Skillを不足分だけ追加します。v1 / v2 saveからv3へmigrationし、Side Questは未完了から開始します。壊れたJSONや未知schema versionは初期状態へ安全にfallbackします。
 
 Battle中のturn / Enemy残HPなど一時的な戦闘状態は保存しません。
 
@@ -239,6 +251,7 @@ TanStack Routerで画面遷移とBattle URLを管理しています。
 - [ロードマップ](./docs/ROADMAP.md)
 - [ゲーム設計](./docs/GAME_DESIGN.md)
 - [RPG成長ループ](./docs/RPG_PROGRESSION.md)
+- [Quest](./docs/QUEST_SYSTEM.md)
 - [アーキテクチャ](./docs/ARCHITECTURE.md)
 - [コンテンツ作成ガイド](./docs/CONTENT_GUIDE.md)
 - [Code Codex](./docs/CODE_CODEX.md)
