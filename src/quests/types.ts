@@ -7,10 +7,16 @@ export type QuestCondition =
   | { kind: 'stageCleared'; stageId: number }
   | { kind: 'areaCleared'; areaId: string }
 
+export type QuestFieldTarget = {
+  kind: 'battle'
+  stageId: number
+}
+
 export type QuestStep = {
   id: string
   label: string
   condition: QuestCondition
+  fieldTarget?: QuestFieldTarget
 }
 
 export type QuestDefinition = {
@@ -18,6 +24,7 @@ export type QuestDefinition = {
   areaId: string
   title: string
   description: string
+  guideNpcId?: string
   unlockWhen?: QuestCondition
   steps: QuestStep[]
 }
@@ -30,4 +37,9 @@ export type QuestProgress = {
   completedSteps: number
   totalSteps: number
   nextStep?: QuestStep
+}
+
+export type QuestFieldFocus = {
+  stageId?: number
+  guideNpcId?: string
 }
