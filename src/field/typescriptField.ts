@@ -88,7 +88,7 @@ export const typescriptField: FieldDefinition = {
     {
       id: 'ts-literal-sign',
       kind: 'sign',
-      x: 9,
+      x: 1,
       y: 6,
       learningHintId: 'ts-string-literal',
     },
