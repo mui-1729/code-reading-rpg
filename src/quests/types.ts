@@ -1,3 +1,5 @@
+import type { PlayerProgress } from '../progression/types'
+
 export type QuestProgressSnapshot = {
   clearedStageIds: number[]
   clearedAreaIds: string[]
@@ -80,11 +82,7 @@ export type SideQuestVictoryReward = {
 }
 
 export type SideQuestVictoryResult = {
-  progress: SideQuestProgressSnapshot & {
-    exp: number
-    unlockedStageIds: number[]
-    unlockedSkillIds: string[]
-  }
+  progress: PlayerProgress
   reward: SideQuestVictoryReward | null
 }
 
