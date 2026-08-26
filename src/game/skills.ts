@@ -5,7 +5,7 @@ import {
   type CodeVariant,
   type SkillDefinition,
 } from './skillDefinitions'
-import type { SkillCard } from './types'
+import type { Battle, SkillCard } from './types'
 
 function createSkillCard(definition: SkillDefinition, variant: CodeVariant): SkillCard {
   return {
@@ -29,15 +29,36 @@ export function getSkillCardForBattle(
   skillId: string,
   battleId: number,
   seed: Seed,
+  lineMode: CodeVariant['lineMode'] = 'single',
 ): SkillCard {
   const definition = skillDefinitionById[skillId]
   if (!definition) throw new Error(`Unknown skill: ${skillId}`)
 
+  const eligibleVariants = definition.codeVariants.filter(
+    (variant) => variant.lineMode === lineMode,
+  )
+  if (eligibleVariants.length === 0) {
+    throw new Error(`Skill ${skillId} has no ${lineMode} code variant`)
+  }
+
   const random = createSeededRandom(`${battleId}:${String(seed)}:${skillId}:code-variant`)
-  const variant = definition.codeVariants[random.int(0, definition.codeVariants.length - 1)]
+  const variant = eligibleVariants[random.int(0, eligibleVariants.length - 1)]
   if (!variant) throw new Error(`Skill ${skillId} has no code variant`)
 
   return createSkillCard(definition, variant)
+}
+
+export function getSkillCardsForBattle(battle: Battle, seed: Seed): SkillCard[] {
+  const multiLineSkillIds = new Set(battle.multiLineSkillIds ?? [])
+
+  return battle.skillIds.map((skillId) =>
+    getSkillCardForBattle(
+      skillId,
+      battle.id,
+      seed,
+      multiLineSkillIds.has(skillId) ? 'multi' : 'single',
+    ),
+  )
 }
 
 export const skills: Record<string, SkillCard> = Object.fromEntries(

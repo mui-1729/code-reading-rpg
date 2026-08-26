@@ -113,6 +113,16 @@ export const skillDefinitions: readonly SkillDefinition[] = [
         code: '[...enemies].sort((first, second) => first.hp - second.hp)[0]',
         lineMode: 'single',
       },
+      {
+        id: 'ordered-short',
+        code: 'const ordered = [...enemies].sort((a, b) => a.hp - b.hp)\nordered[0]',
+        lineMode: 'multi',
+      },
+      {
+        id: 'ordered-named',
+        code: 'const ordered = [...enemies].sort((left, right) => left.hp - right.hp)\nordered[0]',
+        lineMode: 'multi',
+      },
     ],
   },
 ]

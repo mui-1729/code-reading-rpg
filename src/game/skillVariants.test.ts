@@ -11,9 +11,10 @@ describe('seeded skill code variants', () => {
 
     for (const skillId of usedSkillIds) {
       const variants = skillDefinitionById[skillId].codeVariants
-      expect(variants.length).toBeGreaterThanOrEqual(2)
-      expect(variants.every((variant) => variant.lineMode === 'single')).toBe(true)
-      expect(variants.every((variant) => !variant.code.includes('\n'))).toBe(true)
+      const singleLineVariants = variants.filter((variant) => variant.lineMode === 'single')
+
+      expect(singleLineVariants.length).toBeGreaterThanOrEqual(2)
+      expect(singleLineVariants.every((variant) => !variant.code.includes('\n'))).toBe(true)
       expect(new Set(variants.map((variant) => variant.code)).size).toBe(variants.length)
     }
   })

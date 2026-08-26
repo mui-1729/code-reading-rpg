@@ -57,5 +57,6 @@ export const battles: Battle[] = [
       enemy('boss-c', 'Boss', 156, 'Meteor', 12, '◆'),
     ],
     skillIds: ['trace', 'pulse', 'nova', 'viper', 'moon-edge'],
+    multiLineSkillIds: ['moon-edge'],
   },
 ]
