@@ -13,6 +13,7 @@ export type ConsumePatchKitResult = {
   consumed: boolean
   hp: number
   healed: number
+  usedThisBattle: boolean
 }
 
 export function purchasePatchKit(progress: PlayerProgress): PurchaseResult {
@@ -37,12 +38,23 @@ export function consumePatchKit(
   progress: PlayerProgress,
   hp: number,
   maxHp: number,
+  usedThisBattle = false,
 ): ConsumePatchKitResult {
   const normalizedMaxHp = Math.max(1, Math.floor(maxHp))
   const normalizedHp = Math.max(0, Math.min(normalizedMaxHp, Math.floor(hp)))
 
-  if (progress.inventory.patchKit <= 0 || normalizedHp >= normalizedMaxHp) {
-    return { progress, consumed: false, hp: normalizedHp, healed: 0 }
+  if (
+    usedThisBattle ||
+    progress.inventory.patchKit <= 0 ||
+    normalizedHp >= normalizedMaxHp
+  ) {
+    return {
+      progress,
+      consumed: false,
+      hp: normalizedHp,
+      healed: 0,
+      usedThisBattle,
+    }
   }
 
   const nextHp = Math.min(normalizedMaxHp, normalizedHp + PATCH_KIT_HEAL)
@@ -51,6 +63,7 @@ export function consumePatchKit(
     consumed: true,
     hp: nextHp,
     healed: nextHp - normalizedHp,
+    usedThisBattle: true,
     progress: {
       ...progress,
       inventory: {
