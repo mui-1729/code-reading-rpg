@@ -16,14 +16,12 @@ export type MessageSignInteraction = FieldPosition & {
   id: string
   kind: 'sign'
   message: string
-  learningHintId?: never
 }
 
 export type LearningSignInteraction = FieldPosition & {
   id: string
   kind: 'sign'
   learningHintId: string
-  message?: never
 }
 
 export type SignInteraction = MessageSignInteraction | LearningSignInteraction
