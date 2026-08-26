@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, feat/101-main-quest-tracker]
+    branches: [main]
   pull_request:
 
 jobs:
