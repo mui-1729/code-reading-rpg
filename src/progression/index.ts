@@ -17,8 +17,16 @@ export {
   getSkillPowerForLevel,
   getTotalExpForLevel,
 } from './progression'
+export {
+  migrateStoredPlayerProgress,
+  PLAYER_PROGRESS_SCHEMA_VERSION,
+  PLAYER_PROGRESS_STORAGE_KEY,
+  restorePlayerProgress,
+  serializePlayerProgress,
+} from './storage'
 export { ProgressProvider } from './ProgressProvider'
 export { useProgress } from './useProgress'
+export type { StoredPlayerProgressV1 } from './storage'
 export type {
   BattleVictoryInput,
   BattleVictoryResult,
