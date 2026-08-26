@@ -204,6 +204,17 @@ export const typescriptSkillDefinitions: readonly SkillDefinition[] = [
           'numberになったscoreを比較し、最も攻撃力の高いEnemyへ戻す。',
         ],
       },
+      {
+        id: 'generic-scored',
+        code: 'type Scored<T> = { value: T; score?: number }\nconst candidates: Scored<Enemy>[] = enemies.filter(({ hp }) => hp > 0).map(enemy => ({ value: enemy, score: enemy.attackDamage }))\nconst ready = candidates.filter((candidate): candidate is Scored<Enemy> & { score: number } => candidate.score !== undefined)\nready.reduce((best, candidate) => candidate.score > best.score ? candidate : best).value',
+        lineMode: 'multi',
+        codeHelpLines: [
+          'Scored<T>はvalueの型をあとから指定できるgeneric。scoreはoptional。',
+          'TへEnemyを入れ、生存Enemyをscore付きScored<Enemy>へ変換する。',
+          'type predicateでscoreがnumberの候補だけへnarrowingする。',
+          'reduce()で最大scoreを残し、valueから元のEnemyを取り出す。',
+        ],
+      },
     ],
   },
   {
@@ -245,6 +256,17 @@ export const typescriptSkillDefinitions: readonly SkillDefinition[] = [
           '撃破済みを除いてaliveを作る。',
           'indexed accessでleft.hp / right.hpを読み、昇順へsortする。',
           '先頭が現在HPの最も低いEnemyになる。',
+        ],
+      },
+      {
+        id: 'pick-hp',
+        code: 'type HpView = Pick<Enemy, "hp">\nconst alive: Enemy[] = enemies.filter(({ hp }) => hp > 0)\nconst readHp = (enemy: HpView): number => enemy.hp\n[...alive].sort((a, b) => readHp(a) - readHp(b))[0]',
+        lineMode: 'multi',
+        codeHelpLines: [
+          'Pick<Enemy, "hp">でEnemyからhpだけを見るHpView型を作る。',
+          '分割代入でhpを読み、生存Enemyだけをaliveへ残す。',
+          'HpViewを受け取ってhpを返すreadHpを定義する。',
+          'readHpの値でHP昇順へ並べ、先頭のEnemyを選ぶ。',
         ],
       },
     ],
