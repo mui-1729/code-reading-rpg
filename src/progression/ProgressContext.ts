@@ -5,6 +5,7 @@ export type ProgressContextValue = {
   progress: PlayerProgress
   stats: PlayerStats
   setProgress: Dispatch<SetStateAction<PlayerProgress>>
+  resetProgress: () => void
 }
 
 export const ProgressContext = createContext<ProgressContextValue | null>(null)
