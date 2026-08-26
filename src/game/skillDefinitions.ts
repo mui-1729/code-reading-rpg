@@ -186,6 +186,16 @@ export const skillDefinitions: readonly SkillDefinition[] = [
           'ordered[0]は並べ替え後の先頭なので、HPが最も低いEnemyになる。',
         ],
       },
+      {
+        id: 'nested-safe',
+        code: 'const alive = enemies.filter(({ hp }) => hp > 0)\nconst wrapped = alive.map(enemy => ({ enemy, stats: { hp: enemy.hp } }))\nwrapped.sort((a, b) => (a.stats?.hp ?? Infinity) - (b.stats?.hp ?? Infinity))[0].enemy',
+        lineMode: 'multi',
+        codeHelpLines: [
+          '分割代入でhpを取り出し、生存Enemyだけをaliveへ残す。',
+          'map()でEnemyとnestedなstats.hpを持つ一時objectへ変換する。',
+          '?.でhpを読み、なければ??でInfinityを使う。HP昇順の先頭から元のenemyを取り出す。',
+        ],
+      },
     ],
   },
   {
@@ -230,6 +240,16 @@ export const skillDefinitions: readonly SkillDefinition[] = [
           'まずfilter()で撃破済みEnemyを除いてaliveを作る。',
           'some()は条件に合う要素そのものではなくbooleanを返す。',
           '三項演算子でbooleanに応じてtarget配列を切り替える。',
+        ],
+      },
+      {
+        id: 'every-destructured',
+        code: 'const alive = enemies.filter(({ hp }) => hp > 0)\nconst allStable = alive.every(({ hp }) => hp >= 50)\nallStable ? [] : alive',
+        lineMode: 'multi',
+        codeHelpLines: [
+          '分割代入でhpを読み、生存Enemyだけをaliveへ残す。',
+          'every()でalive全員がHP50以上かを調べる。',
+          '全員が50以上なら空配列。1体でも50未満ならalive全員を対象にする。',
         ],
       },
     ],

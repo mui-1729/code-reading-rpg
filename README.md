@@ -2,7 +2,7 @@
 
 コードを「書く」のではなく、**読んで意味を判断して戦う**コードリーディングRPGです。
 
-現在はWorld Mapから2つのAreaを選び、Fieldで必要な構文を任意に確認し、Battleでコードの結果を読んで攻略するRPGループを実装しています。
+現在はWorld Mapから2つのAreaを選び、Fieldを探索し、必要ならNPC・看板・Codexで確認しながらBattleのコードを読んで攻略するRPGループを実装しています。
 
 ## Current main
 
@@ -13,11 +13,13 @@
 - TypeScript Frontier: Battle 4〜6 + Compiler Boss
 - 各AreaのStage Select / Top-down Field / Battle Gate / Area CLEAR
 - Arrow / WASD、Mobile D-Pad + INTERACT
-- JavaScript FieldのNPC / Dialogue
+- JavaScript / TypeScript FieldのNPC / Dialogue
 - Field上の任意学習看板
+- Code CodexによるJavaScript / TypeScript概念一覧
+- Main Quest / Quest Tracker / FieldのNEXT・! marker
+- Battle勝利後のQuest更新feedback
 - コードカードを1回押して選択、同じカードを2回目に押して実行
 - 表示コードが攻撃対象を決定し、POWERがダメージを決定
-- 対象プレビューなし
 - 敵のHP / NEXT行動を見た戦略判断
 - seeded generation / URL `seed`による盤面再現
 - Enemy HP・Enemy順・Skill順・code variantの制約付きvariation
@@ -28,39 +30,51 @@
 - version付きLocalStorage保存 / migration / reset
 - Battle motion / damage feedback / `prefers-reduced-motion`
 - menu / field / battle BGM、SE、Mute、SE・BGM別音量
+- 必要時だけ開くSound Settings
 - Vitest / ESLint / Prettier / GitHub Actions / Cloudflare Workers Builds
 
 まだ入っていない主なRPG機能:
 
 - SQL / Reactなど3つ目以降のArea
-- 装備 / Item / Gold
-- Quest / Shop / Inn
+- 装備 / Item / Gold / Shop / Inn
+- Side Quest
 - Backend / Database / Authentication / Cloud Save
 
 ## Learning content
 
 ### JavaScript Kingdom
 
-単体概念をFieldの看板で確認し、後半Battleで組み合わせます。
+Fieldの主要看板とCodexで概念を確認し、後半Battleで組み合わせます。
+
+基礎〜中級:
 
 - property access / 比較演算子
 - `find()` / `filter()` / `map()` / `sort()`
 - `&&` / `||`
-- `some()` / `reduce()`
+- `some()` / `every()` / `reduce()`
 - 三項演算子
 - 中間変数 / object / 複数行code
+
+発展:
+
+- destructuring
+- optional chaining `?.`
+- nullish coalescing `??`
+- nested object
 
 Bossでは例として次のような処理順を追います。
 
 ```js
-const alive = enemies.filter((enemy) => enemy.hp > 0)
-const scored = alive.map((enemy) => ({ enemy, score: enemy.attackDamage }))
-scored.reduce((best, candidate) => candidate.score > best.score ? candidate : best).enemy
+const alive = enemies.filter(({ hp }) => hp > 0)
+const wrapped = alive.map(enemy => ({ enemy, stats: { hp: enemy.hp } }))
+wrapped.sort((a, b) => (a.stats?.hp ?? Infinity) - (b.stats?.hp ?? Infinity))[0].enemy
 ```
 
 ### TypeScript Frontier
 
 JavaScriptで身につけた「上から中間値を追う」読み方に、型情報を追加します。
+
+基礎〜中級:
 
 - primitive / type annotation
 - function parameter / return type
@@ -71,7 +85,13 @@ JavaScriptで身につけた「上から中間値を追う」読み方に、型�
 - intersectionの初歩
 - `keyof` / indexed access
 
-Stage 4は型注釈など単体の型情報、Stage 5はunion / optional、Stage 6 Bossはnarrowingや`keyof`をJavaScriptの配列処理と組み合わせた複数行codeを扱います。
+発展:
+
+- generic
+- `Pick<T, K>`
+- destructuringや配列methodと型情報を組み合わせる複合読解
+
+Stage 4は型注釈など単体の型情報、Stage 5はunion / optional、Stage 6 Bossはnarrowing・`keyof`・generic・utility typeをJavaScriptの配列処理と組み合わせた複数行codeを扱います。
 
 TypeScriptの型注釈をruntimeで`eval()`することはありません。表示コードの意味と、安全な内部`TargetRule`を対応させます。
 
@@ -86,7 +106,9 @@ Areaを選ぶ
 ↓
 Field
 ↓
-必要なら学習看板 / NPCで確認
+Main Quest / markerで次の目的を確認
+↓
+必要なら看板 / NPC / Codex
 ↓
 Battle Gate
 ↓
@@ -96,7 +118,7 @@ Skillを選ぶ
 ↓
 Battle結果
 ↓
-EXP / Level / Stage CLEAR / Skill unlock
+EXP / Level / Stage CLEAR / Skill unlock / Quest更新
 ↓
 Fieldへ復帰 or 次Stage
 ↓
@@ -107,7 +129,7 @@ Area CLEAR
 World Map
 ```
 
-学習看板は補助であり必須ではありません。知っているPlayerはそのままBattleへ進み、知らないPlayerはFieldで確認できます。
+学習看板は補助であり必須ではありません。構文数が増えてもFieldを看板で埋めず、発展概念はCodexでも確認できます。
 
 Levelはコード読解を不要にするためのものではありません。**育成で戦える余裕を増やし、勝ち方はコード読解と戦略で決める**ことを基本原則とします。EnemyはPlayer Levelへ自動追従して弱体化しません。
 
@@ -137,6 +159,8 @@ TypeScript Frontier: 4 → 5 → 6 (Boss)
 - Enter / Space / `INTERACT`で正面を調べる
 - Battle GateはPlayerProgressのunlock状態を参照
 - CLEAR済みGateは表示で区別
+- 次のMain Quest Gateには`NEXT` marker
+- Objective Guide NPCには`!` marker
 - Stage Selectへの出口
 - Mobile D-Pad + INTERACT
 - Battleへ`returnTo`を渡し、終了後に元のFieldへ戻れる
@@ -147,13 +171,16 @@ TypeScript Frontier: 4 → 5 → 6 (Boss)
 
 ## NPC / Dialogue
 
-JavaScript Kingdom Hubには3人のNPCがいます。
+JavaScript KingdomとTypeScript Frontierに進行連動NPCを配置しています。Dialogueは`src/dialogue/`へ分離し、Stage CLEAR / Area CLEARなどで会話を切り替えられます。
 
-- `ARCHIVIST ADA` — 次に向かうStage / Boss
-- `LAMBDA SAGE` — JavaScript読解ヒント
-- `BYTE SCOUT` — 再挑戦 / seed違いの復習導線
+## Code Codex
 
-Dialogueは`src/dialogue/`へ分離し、Level / Stage CLEAR / Area CLEARで会話を切り替えられます。
+World Map / Area Select / Fieldで`C`または`CODEX`から開きます。Battle中は非表示です。
+
+- JavaScript / TypeScript tab
+- 概念ごとのsummary / code例 / note
+- Field看板と同じhint dataをsource of truthとして利用
+- 発展構文はFieldへ看板を増やさなくてもCodexへ追加可能
 
 ## Audio
 
@@ -164,7 +191,7 @@ Web Audio APIで外部音源に依存しない8-bit風Audioを生成します。
 - 各Area Field: field BGM
 - Battle: battle BGM
 - SE / BGM別channel
-- SOUND ON/OFF、SE / BGM音量
+- Sound Settings内でMute、SE / BGM音量を変更
 
 ブラウザのautoplay制約上、ページ表示だけでは音を開始せず、最初のユーザー操作後に再生します。
 
@@ -179,6 +206,8 @@ RPG進行はLocalStorageへversion付きschemaで保存します。
 - Area CLEAR
 - Stage unlock
 - Skill unlock
+
+Main Questの状態はStage / Area CLEARから導出し、同じ進行状態を重複保存しません。
 
 Level / 最大HP / POWER倍率はEXPから導出し、重複保存しません。旧saveはクリア情報を保ったまま復元し、現在の各Area入口Stageとbaseline Skillを不足分だけ追加します。壊れたJSONや未知schema versionは初期状態へ安全にfallbackします。
 
@@ -212,6 +241,8 @@ TanStack Routerで画面遷移とBattle URLを管理しています。
 - [RPG成長ループ](./docs/RPG_PROGRESSION.md)
 - [アーキテクチャ](./docs/ARCHITECTURE.md)
 - [コンテンツ作成ガイド](./docs/CONTENT_GUIDE.md)
+- [Code Codex](./docs/CODE_CODEX.md)
+- [UIガイド](./docs/UI_GUIDE.md)
 - [テスト方針](./docs/TESTING.md)
 - [開発フロー](./docs/DEVELOPMENT_WORKFLOW.md)
 - [PR前チェック](./docs/PRE_PR_CHECKS.md)

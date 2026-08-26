@@ -2,35 +2,32 @@
 
 ## 目的
 
-`Code Codex`は、Fieldへ学習看板を増やし続けなくても、既習・未習のコード概念を任意に確認できる学習アーカイブです。
+`Code Codex`は、Fieldへ学習看板を増やし続けなくてもJavaScript / TypeScriptの概念を確認できる学習アーカイブ。
 
-FieldはRPGとして歩く場所、Codexは概念をまとめて調べる場所として役割を分けます。
+Fieldは探索と重要な少数の看板、Codexは概念一覧を担当する。
 
 ```text
 Field
-├─ その場所で重要な少数の看板
-└─ Gate / NPC / 探索
+├─ 重要な少数の看板
+├─ Gate
+└─ NPC
 
 Code Codex
-└─ JavaScript / TypeScriptの学習メモを一覧で確認
+└─ JavaScript / TypeScriptの概念一覧
 ```
-
-これにより、学習コンテンツを増やしてもMain Routeを看板で埋めないことを優先します。
 
 ## 開き方
 
-World Map / Area Select / Fieldで利用できます。
+World Map / Area Select / Fieldで利用する。
 
 - Keyboard: `C` = OPEN / CLOSE
 - `Esc` = CLOSE
-- Mobile: 画面右下の`CODE CODEX`ボタン
+- Mobile: 右下の`CODEX`ボタン
 - Battle中: 非表示
 
-Battle中はコードカードと戦況を読むことへ集中させるため、Codexを表示しません。必要な解説はBattle側の`CODE HELP`を使います。
+Battle中の解説は`CODE HELP`を使う。
 
 ## Source of truth
-
-Codex専用の説明データは作りません。
 
 JavaScript:
 
@@ -44,9 +41,9 @@ TypeScript:
 src/learning/typescriptLearningHints.ts
 ```
 
-Fieldの学習看板とCodexは同じhint dataを使用します。
+Fieldの学習看板とCodexは同じhint dataを参照する。
 
-各hintは次を持ちます。
+各hint:
 
 - `id`
 - `concept`
@@ -55,50 +52,99 @@ Fieldの学習看板とCodexは同じhint dataを使用します。
 - `codeLines`
 - `notes`
 
-新しい概念を追加するとCodexへ自動的に反映されます。
-
 ## Field看板との使い分け
 
-すべての構文をFieldへ物理配置しません。
+すべての構文をFieldへ物理配置しない。
 
 Fieldへ看板を置く条件:
 
-1. 近くのBattleで特に重要な概念である
-2. 初見Playerがその場で確認できる価値が高い
+1. 近くのBattleで特に重要
+2. 初見Playerがその場で確認する価値が高い
 3. Main RouteやGateへの通路を塞がない
 4. reachability testを維持できる
 
-それ以外はCodexだけに登録しても構いません。
+それ以外はCodexだけに登録してよい。
 
-## 今後増やす候補
+## 現在のJavaScript Codex
 
-JavaScript:
+基礎:
+
+- `find()` / `filter()` / `map()` / `sort()`
+- 比較演算子
+- `&&` / `||`
+- `some()` / `reduce()`
+
+発展:
 
 - `every()`
+- destructuring
 - optional chaining `?.`
 - nullish coalescing `??`
-- destructuring
 - nested object
-- callback内の複数条件
-- 4〜5行の実行順序
 
-TypeScript:
+Battle 3では発展構文を単体で問わず、既存の配列処理と組み合わせた複数行variantとして使う。
+
+例:
+
+```js
+const alive = enemies.filter(({ hp }) => hp > 0)
+const wrapped = alive.map(enemy => ({ enemy, stats: { hp: enemy.hp } }))
+wrapped.sort((a, b) => (a.stats?.hp ?? Infinity) - (b.stats?.hp ?? Infinity))[0].enemy
+```
+
+## 現在のTypeScript Codex
+
+基礎〜中級:
+
+- type annotation
+- parameter / return type
+- array type
+- string literal
+- union type
+- optional property
+- narrowing
+- `keyof` / indexed access
+
+発展:
+
+- generic
+- `Pick<T, K>`
+
+Battle 6ではJavaScriptの配列method・destructuringと型情報を組み合わせる。
+
+例:
+
+```ts
+type Scored<T> = { value: T; score?: number }
+const candidates: Scored<Enemy>[] = enemies.map(enemy => ({
+  value: enemy,
+  score: enemy.attackDamage,
+}))
+```
+
+```ts
+type HpView = Pick<Enemy, 'hp'>
+const readHp = (enemy: HpView): number => enemy.hp
+```
+
+## 今後の候補
 
 - discriminated unionの発展
-- genericの初歩
-- utility typeの初歩
 - nested object type
-- genericと配列methodを組み合わせた読解
+- generic function
+- `Record` / `Partial`など別utility type
+- 4〜5行以上の実行順序
 
-構文網羅そのものを目的にせず、Battleでgame decisionが変わる概念を優先します。
+構文網羅を目的にせず、Battleの判断へ意味が出るものを優先する。
 
 ## テスト方針
-
-Codexの表示品質をdata側で最低限固定します。
 
 - JavaScript / TypeScriptを横断してhint IDが重複しない
 - concept / title / summaryが空でない
 - code lineが1行以上あり、空行だけではない
 - noteが1件以上あり、空文字ではない
+- Bossの発展variantが対応する構文を含む
+- `codeHelpLines`数と物理行数が一致する
+- 発展variantを序盤Battleへ混ぜない
 
-Fieldの看板配置については従来どおりreachability testを使用します。
+Field配置はreachability testで確認する。

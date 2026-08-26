@@ -22,7 +22,7 @@ describe('composite code battle', () => {
     }
     for (const variant of sweep) {
       expect(variant.code).toContain('.filter(')
-      expect(variant.code).toContain('.some(')
+      expect(variant.code.includes('.some(') || variant.code.includes('.every(')).toBe(true)
       expect(variant.code).toContain('?')
       expect(variant.code).toContain(':')
     }
