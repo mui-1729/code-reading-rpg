@@ -55,11 +55,32 @@ export const javascriptField: FieldDefinition = {
       y: 2,
     },
     {
+      id: 'archivist-npc',
+      kind: 'npc',
+      npcId: 'archivist',
+      x: 2,
+      y: 6,
+    },
+    {
+      id: 'lambda-sage-npc',
+      kind: 'npc',
+      npcId: 'lambda-sage',
+      x: 8,
+      y: 6,
+    },
+    {
+      id: 'byte-scout-npc',
+      kind: 'npc',
+      npcId: 'byte-scout',
+      x: 7,
+      y: 3,
+    },
+    {
       id: 'field-sign',
       kind: 'sign',
       x: 5,
       y: 6,
-      message: '矢印キー / WASDで移動。門や看板の手前でENTERまたはINTERACT。',
+      message: '矢印キー / WASDで移動。門・NPC・看板の手前でENTERまたはINTERACT。',
     },
     {
       id: 'stage-select-exit',
