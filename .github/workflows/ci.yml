@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/gold-shop-patch-kit]
   pull_request:
 
 jobs:
