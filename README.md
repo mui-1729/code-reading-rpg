@@ -2,7 +2,7 @@
 
 コードを「書く」のではなく、**読んで意味を判断して戦う**コードリーディングRPGです。
 
-現在の`main`はBattle中心のMVPから、**育成・再挑戦・探索を含むRPGそのもの**へ外側のループを拡張している段階です。
+現在の`main`はBattle中心のMVPから、**育成・再挑戦・探索・会話を含むRPGそのもの**へ外側のループを拡張している段階です。
 
 ## Current main
 
@@ -31,12 +31,14 @@
 - 4方向移動 / collision / interactable object / Battle Gate / Area出口
 - Keyboard / Mobile操作
 - Fieldから入ったBattleの勝利・敗北後にFieldへ戻る導線
+- 3人のNPC / 汎用Dialogueデータ / 進行状態による会話分岐
+- 次の目的・コード読解ヒント・復習導線をField内会話から確認
 - Vitest / ESLint / Prettier / GitHub Actions CI
 
 まだ`main`には入っていない主なRPG機能:
 
-- NPC / 会話 / 拠点
 - 装備 / アイテム
+- Quest / Shop / 回復施設などの拠点機能
 - Backend / Database / Authentication
 
 ## Product direction
@@ -44,7 +46,9 @@
 現在のRPGループは次の形です。
 
 ```text
-JavaScript Kingdom Field
+JavaScript Kingdom Hub / Field
+↓
+NPCと話して目的・ヒントを確認
 ↓
 歩いてBattle Gateを探す
 ↓
@@ -63,7 +67,7 @@ Fieldへ戻る / 次のBattleへ進む
 
 ただしLevelはコード読解を不要にするためのものではありません。**育成で戦える余裕を増やし、勝ち方はコード読解と戦略で決める**ことを基本原則とします。
 
-Stage Selectは進行確認・再挑戦用として残し、通常の冒険導線はトップダウンFieldからBattle Gateへ向かう形へ移行しています。
+Stage Selectは進行確認・再挑戦用として残し、通常の冒険導線はトップダウンFieldからNPCと会話し、Battle Gateへ向かう形へ移行しています。
 
 ## Field exploration
 
@@ -79,6 +83,24 @@ Stage Selectは進行確認・再挑戦用として残し、通常の冒険導�
 - FieldからBattleへ入ると`returnTo=/javascript/field`を渡し、終了後にFieldへ戻れる
 
 Fieldの座標・collision・interaction判定は`src/field/`の純粋ロジックへ分離し、Battle Domainへ混ぜていません。
+
+## NPC / Dialogue
+
+JavaScript Kingdom Hubには3人のNPCがいます。
+
+- `ARCHIVIST ADA` — 次に向かうStage / Bossを案内
+- `LAMBDA SAGE` — `find()` / `filter()` / `sort()`などの読解ヒント
+- `BYTE SCOUT` — 過去Stage再挑戦、seed違いの復習導線
+
+Dialogueは`src/dialogue/`へ分離しています。
+
+- NPCと会話本文をデータとして追加できる
+- `always` / `minLevel` / `stageCleared` / `areaCleared`条件を持てる
+- Player Level / Stage CLEAR / Area CLEARに応じて会話を切り替える
+- BattleロジックはDialogueの条件評価や表示を知らない
+- Enter / Spaceまたは`NEXT`で会話を進める
+
+これにより、次の目的と学習ヒントをメニュー外のRPG世界から確認できます。
 
 ## Progress persistence
 
@@ -130,7 +152,7 @@ Area定義とBattleの所属を分離しているため、将来はTypeScript / 
 TanStack Routerで画面遷移とBattle URLを管理しています。
 
 - `/` - スタート画面
-- `/javascript/field` - JavaScript Kingdom / Top-down Field
+- `/javascript/field` - JavaScript Kingdom / Top-down Hub & Field
 - `/javascript` - JavaScript Kingdom / Stage Select
 - `/javascript/battle/$battleId?seed=...&returnTo=...` - JavaScript編の各Battle
 - `/javascript/complete` - JavaScript KingdomのArea CLEAR / status画面

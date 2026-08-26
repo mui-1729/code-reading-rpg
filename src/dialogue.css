@@ -1,0 +1,130 @@
+.field-object-npc {
+  background: #2b6034;
+}
+
+.field-npc {
+  position: relative;
+  z-index: 2;
+  width: 48%;
+  aspect-ratio: .78;
+  display: grid;
+  place-items: start center;
+  padding-top: 13%;
+  border: 3px solid #222235;
+  background: #7f5ac8;
+  box-shadow:
+    inset 0 35% 0 #e9b277,
+    inset 0 -24% 0 #3c3277,
+    4px 4px 0 rgba(0, 0, 0, .48);
+}
+
+.field-npc > span {
+  color: #17131e;
+  font-size: clamp(7px, 1vw, 10px);
+  font-weight: 900;
+}
+
+.field-npc-archivist {
+  background: #9b63ff;
+  box-shadow:
+    inset 0 35% 0 #e9b277,
+    inset 0 -24% 0 #4a2b70,
+    4px 4px 0 rgba(0, 0, 0, .48);
+}
+
+.field-npc-lambda-sage {
+  background: #4f8cff;
+  box-shadow:
+    inset 0 35% 0 #e9b277,
+    inset 0 -24% 0 #234d8a,
+    4px 4px 0 rgba(0, 0, 0, .48);
+}
+
+.field-npc-byte-scout {
+  background: #8ddb52;
+  box-shadow:
+    inset 0 35% 0 #e9b277,
+    inset 0 -24% 0 #35651f,
+    4px 4px 0 rgba(0, 0, 0, .48);
+}
+
+.dialogue-window {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-color: var(--gold);
+  background: #090911;
+  box-shadow: inset 0 0 0 3px #211a08;
+}
+
+.dialogue-speaker {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+  padding-bottom: 10px;
+  border-bottom: 2px dashed #48415d;
+}
+
+.dialogue-speaker > div {
+  display: grid;
+  gap: 4px;
+}
+
+.dialogue-speaker span {
+  color: var(--purple);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .1em;
+}
+
+.dialogue-speaker strong {
+  color: var(--gold);
+  font-size: 15px;
+  letter-spacing: .04em;
+}
+
+.dialogue-speaker .dialogue-progress {
+  color: var(--muted);
+}
+
+.dialogue-window p {
+  min-height: 3.2em;
+  margin: 14px 0;
+  color: #f1edf8;
+  line-height: 1.7;
+  font-weight: 700;
+}
+
+.dialogue-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.dialogue-actions > span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.dialogue-actions .primary-button {
+  min-width: 120px;
+  justify-content: center;
+}
+
+@media (max-width: 520px) {
+  .dialogue-speaker,
+  .dialogue-actions {
+    align-items: stretch;
+  }
+
+  .dialogue-actions {
+    display: grid;
+  }
+
+  .dialogue-actions .primary-button {
+    width: 100%;
+  }
+}
