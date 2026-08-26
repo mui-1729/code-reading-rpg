@@ -103,6 +103,20 @@ export const learningHints: LearningHint[] = [
     ],
   },
   {
+    id: 'js-every',
+    concept: 'every()',
+    title: '全部が条件を満たすか確かめる',
+    summary: 'every()は、配列のすべての要素が条件を満たすときだけtrueを返す。',
+    codeLines: [
+      'const alive = enemies.filter(({ hp }) => hp > 0)',
+      'const allStable = alive.every(({ hp }) => hp >= 50)',
+    ],
+    notes: [
+      'some()が「1つでも」なのに対し、every()は「全部」を確認する。',
+      '!every(...)の形なら「条件を満たさない要素が1つ以上ある」と読み替えられる。',
+    ],
+  },
+  {
     id: 'js-reduce',
     concept: 'reduce()',
     title: '配列を1つの結果へまとめる',
@@ -115,6 +129,48 @@ export const learningHints: LearningHint[] = [
     notes: [
       'bestには「ここまでで残っている候補」が入る。',
       '今回は攻撃力を比べ、より大きい方を次のbestとして残していく。',
+    ],
+  },
+  {
+    id: 'js-destructuring',
+    concept: 'destructuring',
+    title: 'objectから必要な値を取り出す',
+    summary: '分割代入を使うと、objectのpropertyを同名の変数として取り出せる。callbackの引数でも使える。',
+    codeLines: [
+      'const { hp, attackDamage } = enemy',
+      'enemies.filter(({ hp }) => hp > 0)',
+    ],
+    notes: [
+      '({ hp }) => ... は callback の引数からhpだけを取り出している。',
+      'enemy.hpとhpのどちらで書いても、同じpropertyを読んでいる場合がある。',
+    ],
+  },
+  {
+    id: 'js-optional-nullish',
+    concept: '?. / ??',
+    title: '値がない場合の読み方を決める',
+    summary: 'optional chaining ?. は途中がnull / undefinedならそこで止まり、?? はnull / undefinedのときだけ代替値を使う。',
+    codeLines: [
+      'const hp = entry.stats?.hp ?? Infinity',
+      'const score = entry.meta?.score ?? 0',
+    ],
+    notes: [
+      '?.でpropertyが安全に読めなければ結果はundefinedになる。',
+      '??は0やfalseではなく、null / undefinedだけをfallback対象にする。',
+    ],
+  },
+  {
+    id: 'js-nested-object',
+    concept: 'nested object',
+    title: '入れ子のobjectを順にたどる',
+    summary: 'objectの中にobjectがある場合は、左からpropertyを1段ずつたどって現在値を読む。',
+    codeLines: [
+      'const entry = { enemy, stats: { hp: enemy.hp } }',
+      'entry.stats.hp',
+    ],
+    notes: [
+      'entry.statsが内側のobjectで、その中のhpを最後に読む。',
+      '複合コードではmap()でこうした一時objectを作ることがある。',
     ],
   },
 ]
