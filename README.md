@@ -2,7 +2,7 @@
 
 コードを「書く」のではなく、**読んで意味を判断して戦う**コードリーディングRPGです。
 
-現在の`main`はBattle中心のMVPです。MVPの戦闘体験は成立しており、次の開発では「RPG風の戦闘画面」から、**育成・再挑戦・探索を含むRPGそのもの**へ外側のループを拡張します。
+現在の`main`はBattle中心のMVPから、**育成・再挑戦・探索を含むRPGそのもの**へ外側のループを拡張している段階です。
 
 ## Current main
 
@@ -20,13 +20,15 @@
 - seedに基づく敵HP・敵順・Skill順の制約付き可変Battle
 - 生成盤面の学習条件・有効対象・solvability検証
 - `SkillDefinition` / `codeVariants`によるコード表現拡張の基盤
+- PlayerProgress / EXP / Level導出
+- JavaScript Kingdom Stage Select
+- 過去Stageへの再挑戦
+- Battle勝利によるEXP / Stage CLEAR / 次Stage / Skill解放
 - Vitest / ESLint / Prettier / GitHub Actions CI
 
 まだ`main`には入っていない主なRPG機能:
 
-- Player Level / EXP
-- Stage Select
-- 過去Stageでの育成・再挑戦ループ
+- Level成長のBattle反映（最大HP / POWER倍率）
 - LocalStorage進行保存
 - Boss / Area CLEAR
 - トップダウンフィールド
@@ -79,20 +81,18 @@ Stage Selectはこのループを早く成立させるための暫定UIです。
 - Production branch: `main`
 - PR / branch: Cloudflare Workers Builds Preview
 - `main` merge: Cloudflare Workers Production Build
-
-VercelのGit連携は解除済みで、自動deployも`vercel.json`で無効化しています。現在の開発フローではVercelをPreview / Productionの必須条件にしません。
+- deploy設定のsource of truth: `wrangler.jsonc`
 
 ## Routes
 
 TanStack Routerで画面遷移とBattle URLを管理しています。
 
 - `/` - スタート画面
+- `/javascript` - JavaScript Kingdom / Stage Select
 - `/javascript/battle/$battleId?seed=...` - JavaScript編の各Battle
 - `/javascript/complete` - 現MVPのChapterクリア画面
 
 同じBattle IDとseedなら同じ可変盤面を再現できます。
-
-Stage Select導入後は`/javascript`をJavaScript Kingdomの入口として追加する予定です。
 
 ## Run
 
