@@ -180,6 +180,14 @@
   padding-top: 18px;
   border-top: 2px dashed #3e3e61;
   font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.area-reset {
+  flex: 0 0 auto;
 }
 
 @media (max-width: 820px) {
@@ -227,5 +235,10 @@
 
   .stage-meta {
     grid-template-columns: 1fr;
+  }
+
+  .area-footer {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
