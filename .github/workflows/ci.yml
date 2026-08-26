@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, feat/107-code-codex]
+    branches: [main]
   pull_request:
 
 jobs:
