@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { gameAudio, type AudioSettings } from './gameAudio'
 
 function toPercent(value: number) {
@@ -7,6 +7,25 @@ function toPercent(value: number) {
 
 export function AudioControls() {
   const [settings, setSettings] = useState<AudioSettings>(() => gameAudio.getSettings())
+
+  useEffect(() => {
+    const removeUnlockListeners = () => {
+      window.removeEventListener('pointerdown', unlockFromGesture, true)
+      window.removeEventListener('touchstart', unlockFromGesture, true)
+      window.removeEventListener('keydown', unlockFromGesture, true)
+    }
+
+    const unlockFromGesture = () => {
+      removeUnlockListeners()
+      void gameAudio.unlock().catch(() => undefined)
+    }
+
+    window.addEventListener('pointerdown', unlockFromGesture, { capture: true, once: true })
+    window.addEventListener('touchstart', unlockFromGesture, { capture: true, once: true, passive: true })
+    window.addEventListener('keydown', unlockFromGesture, { capture: true, once: true })
+
+    return removeUnlockListeners
+  }, [])
 
   const update = (next: AudioSettings) => {
     const normalized = gameAudio.setSettings(next)
