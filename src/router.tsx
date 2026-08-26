@@ -1,6 +1,7 @@
 import { Outlet, createRootRoute, createRoute, createRouter } from '@tanstack/react-router'
 import { JavaScriptFieldPage } from './field/JavaScriptFieldPage'
 import { BattleRoutePage, CompletePage, HomePage, JavaScriptAreaPage } from './routeComponents'
+import { WorldPage } from './world/WorldPage'
 
 const rootRoute = createRootRoute({
   component: Outlet,
@@ -10,6 +11,12 @@ const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
   component: HomePage,
+})
+
+const worldRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'world',
+  component: WorldPage,
 })
 
 const javascriptRoute = createRoute({
@@ -42,6 +49,7 @@ const completeRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
+  worldRoute,
   javascriptRoute,
   fieldRoute,
   battleRoute,
