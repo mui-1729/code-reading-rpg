@@ -128,9 +128,9 @@ export const typescriptField: FieldDefinition = {
       learningHintId: 'ts-keyof',
     },
     {
-      id: 'typescript-stage-select-exit',
+      id: 'typescript-world-map-exit',
       kind: 'exit',
-      label: 'STAGE SELECT',
+      label: 'WORLD MAP',
       x: 10,
       y: 7,
     },
