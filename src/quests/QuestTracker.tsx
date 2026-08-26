@@ -77,18 +77,15 @@ export function QuestTracker() {
         aria-controls="main-quest-panel"
         onClick={() => setOpen((current) => !current)}
       >
-        <span>MAIN QUEST</span>
-        <strong>{completeCount}/{questProgress.length} CLEAR</strong>
-        <em>{open ? 'CLOSE' : 'OPEN · Q'}</em>
+        <span>QUEST</span>
+        <strong>{completeCount}/{questProgress.length}</strong>
+        <em>Q</em>
       </button>
 
       {open && (
         <section id="main-quest-panel" className="quest-panel pixel-window">
           <header className="quest-panel-header">
-            <div>
-              <span>QUEST LOG</span>
-              <h2>MAIN OBJECTIVES</h2>
-            </div>
+            <h2>MAIN QUEST</h2>
             <button type="button" aria-label="Close quest log" onClick={() => setOpen(false)}>
               ×
             </button>
@@ -144,8 +141,6 @@ export function QuestTracker() {
               )
             })}
           </div>
-
-          <footer>Q = OPEN / CLOSE · Esc = CLOSE</footer>
         </section>
       )}
     </aside>
