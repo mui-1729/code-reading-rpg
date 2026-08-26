@@ -1,14 +1,14 @@
 import { Outlet } from '@tanstack/react-router'
 import { CodeCodex } from './learning/CodeCodex'
 import { PauseMenu } from './ui/PauseMenu'
-import { QuestVictoryFeedback } from './quests/QuestVictoryFeedback'
+import { WorldProgressFeedback } from './world/WorldProgressFeedback'
 
 export function RootLayout() {
   return (
     <>
       <Outlet />
       <PauseMenu />
-      <QuestVictoryFeedback />
+      <WorldProgressFeedback />
       <CodeCodex />
     </>
   )

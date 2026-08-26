@@ -9,6 +9,7 @@ import {
   useRpg,
   type EquipmentSlot,
 } from '../rpg'
+import { getWorldObjectives } from '../world/worldObjective'
 
 type PauseTab = 'status' | 'items' | 'equipment' | 'party' | 'system'
 
@@ -29,6 +30,7 @@ export function PauseMenu() {
   const [resetArmed, setResetArmed] = useState(false)
   const combatStats = getCombatStats(stats, rpgState)
   const nextLevelExp = getTotalExpForLevel(stats.level + 1)
+  const worldObjectives = getWorldObjectives(progress)
 
   useEffect(() => {
     if (typeof document === 'undefined') return
@@ -130,6 +132,21 @@ export function PauseMenu() {
                     <div><span>MAX HP</span><strong>{combatStats.maxHp}</strong></div>
                     <div><span>ATTACK</span><strong>{combatStats.attack}</strong></div>
                     <div><span>DEFENSE</span><strong>{combatStats.defense}</strong></div>
+                  </div>
+
+                  <div className="world-objective-list" aria-label="World objectives">
+                    {worldObjectives.map((objective) => (
+                      <article
+                        className={`world-objective-row pixel-inner-window is-${objective.status}`}
+                        key={objective.region}
+                      >
+                        <header>
+                          <span>{objective.label}</span>
+                          <strong>{objective.clearedBattles} / {objective.totalBattles}</strong>
+                        </header>
+                        <p>{objective.status === 'clear' ? 'AREA CLEAR' : `NEXT → ${objective.next}`}</p>
+                      </article>
+                    ))}
                   </div>
                 </section>
               )}

@@ -1,5 +1,4 @@
 import { RouterProvider } from '@tanstack/react-router'
-import { AreaShop } from './economy'
 import { BattleCodeData } from './inspector'
 import { ProgressProvider } from './progression'
 import { BattleResultSequence } from './results/BattleResultSequence'
@@ -16,7 +15,6 @@ export function AppRouter() {
           <TutorialPrompt />
           <BattleCodeData />
           <BattleResultSequence />
-          <AreaShop />
         </TutorialProvider>
       </RpgProvider>
     </ProgressProvider>

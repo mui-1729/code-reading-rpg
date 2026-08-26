@@ -18,11 +18,9 @@ import {
 import { BATTLE_MOTION, getNewlyDefeatedIds } from './motion/battleMotion'
 import {
   applyBattleVictory,
-  getPlayerStats,
   useProgress,
   type BattleVictoryReward,
 } from './progression'
-import { applySideQuestVictory } from './quests/quests'
 import {
   getCombatStats,
   getIncomingDamage,
@@ -134,12 +132,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
       unlockSkillId: battle.unlockSkillId,
       clearAreaId: battle.isBoss ? battle.areaId : undefined,
     })
-    const sideQuestResult = applySideQuestVictory(battleResult.progress, battle.id)
-    const reward: BattleVictoryReward = {
-      ...battleResult.reward,
-      expGained: battleResult.reward.expGained + (sideQuestResult.reward?.expGained ?? 0),
-      newLevel: getPlayerStats(sideQuestResult.progress.exp).level,
-    }
+    const reward: BattleVictoryReward = battleResult.reward
 
     gameAudio.stopBgm()
     gameAudio.playSe('victory')
@@ -153,7 +146,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
       setTimeout(() => gameAudio.playSe('skillUnlock'), 1040)
     }
 
-    setProgress(sideQuestResult.progress)
+    setProgress(battleResult.progress)
     setVictoryReward(reward)
     setIsResolving(false)
     setPhase('victory')

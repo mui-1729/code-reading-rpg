@@ -28,17 +28,48 @@ describe('buildResultSequence', () => {
     ])).toHaveLength(2)
   })
 
-  it('Area ClearとQuest更新を独立イベントとして扱う', () => {
+  it('World progressがある場合は内部Stage更新を重複表示しない', () => {
+    expect(buildResultSequence([
+      { text: 'STAGE CLEAR RECORDED' },
+      { text: 'STAGE 2 UNLOCKED' },
+      { text: 'SKILL UNLOCKED: FILTER' },
+      { text: 'WORLD PROGRESS: JAVASCRIPT GRASSLAND · 1 / 3 · NEXT → 草むらで次のJavaScript Battle' },
+    ])).toEqual([
+      { id: 'skill-2', title: 'SKILL UNLOCKED', detail: 'FILTER', tone: 'unlock' },
+      {
+        id: 'world-progress-3',
+        title: 'WORLD PROGRESS',
+        detail: 'JAVASCRIPT GRASSLAND · 1 / 3 · NEXT → 草むらで次のJavaScript Battle',
+        tone: 'progress',
+      },
+    ])
+  })
+
+  it('Boss解放を独立したWorld progress eventとして扱う', () => {
+    expect(buildResultSequence([
+      { text: 'STAGE CLEAR RECORDED' },
+      { text: 'STAGE 3 UNLOCKED' },
+      { text: 'BOSS UNLOCKED: JAVASCRIPT GRASSLAND · 2 / 3 · NEXT → 西のBOSSへ' },
+    ])).toEqual([
+      {
+        id: 'boss-unlocked-2',
+        title: 'BOSS UNLOCKED',
+        detail: 'JAVASCRIPT GRASSLAND · 2 / 3 · NEXT → 西のBOSSへ',
+        tone: 'progress',
+      },
+    ])
+  })
+
+  it('Area ClearとWorld Completeを1つの関連イベントへまとめる', () => {
     expect(buildResultSequence([
       { text: 'AREA CLEAR: JAVASCRIPT KINGDOM' },
-      { text: 'QUEST UPDATED: 王国のコード門を突破せよ · NEXT → ONE OR MANY' },
+      { text: 'WORLD COMPLETE: JAVASCRIPT GRASSLAND · 3 / 3' },
     ])).toEqual([
-      { id: 'area-0', title: 'AREA CLEAR', detail: 'JAVASCRIPT KINGDOM', tone: 'clear' },
       {
-        id: 'quest-1',
-        title: 'QUEST UPDATED',
-        detail: '王国のコード門を突破せよ · NEXT → ONE OR MANY',
-        tone: 'quest',
+        id: 'area-0',
+        title: 'AREA CLEAR',
+        detail: 'JAVASCRIPT KINGDOM · JAVASCRIPT GRASSLAND · 3 / 3',
+        tone: 'clear',
       },
     ])
   })
