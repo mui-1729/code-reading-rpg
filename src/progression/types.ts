@@ -22,7 +22,7 @@ export type PlayerStats = {
 export type BattleVictoryInput = {
   stageId: number
   expReward: number
-  goldReward: number
+  goldReward?: number
   nextStageId?: number
   unlockSkillId?: string
   clearAreaId?: string
