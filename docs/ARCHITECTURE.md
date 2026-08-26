@@ -1,143 +1,160 @@
 # CODE//READ RPG アーキテクチャ
 
-## 1. この文書の役割
+## 1. 目的
 
-この文書は、現在の技術構成・責務・データフローと、RPG拡張後の構成方針をまとめる。
+この文書は、現在の責務分割と今後Areaを増やすときの境界を定義する。
 
-重要なのは「将来使うかもしれない構造を先に完成させる」ことではなく、**現在の責務を分けたまま、RPGの外側のループを段階的に足せること**。
+原則は、**コード読解のGame Domain、RPG進行、Field / Dialogue、Audio / Motion、Routingを必要以上に密結合させない**こと。
 
 ---
 
 ## 2. 現在の全体構成
 
-現在の`main`はクライアント完結のVite SPA。
-
 ```text
 Browser
   ↓
-React 19
-  ↓
-TanStack Router
-  ↓
-Battle UI / Local State
-  ↓
+React 19 + TanStack Router
+  ├── World / Route UI
+  ├── Field / Dialogue UI
+  ├── Battle UI
+  └── Audio / Motion presentation
+        ↓
 Game Domain
-  ├── Battle base definitions
-  ├── SkillDefinition / SkillCard
-  ├── Targeting Rules
-  ├── Seeded Random
-  ├── Battle Generator
+  ├── Area metadata
+  ├── Battle definitions
+  ├── SkillDefinition / codeVariants
+  ├── TargetRule
+  ├── Seeded generator
   └── Solvability
+        ↓
+Progression
+  ├── EXP / Level
+  ├── Stage / Area CLEAR
+  └── Skill unlock
+        ↓
+LocalStorage persistence
 ```
 
-技術スタック:
-
-- Vite
-- React 19
-- TypeScript
-- TanStack Router
-- CSS
-- Node.js 24
-- Vitest
-- ESLint
-- Prettier
-- GitHub Actions
-- Cloudflare Workers Static Assets
-- Cloudflare Workers Builds
-
-現在の`main`には以下を持たない。
-
-- PlayerProgress / Level / EXP
-- Stage Select
-- LocalStorage進行保存
-- 専用Audio layer
-- 整理されたBattle animation layer
-- Backend API
-- Database
-- Authentication
-- Server state
-- 専用global state library
+FrontendはVite SPAとしてCloudflare Workers Static Assetsへdeployする。
 
 ---
 
-## 3. 現在の主要構成
-
-概念上の主な構造:
+## 3. 主なディレクトリ
 
 ```text
 src/
-├── main.tsx
+├── App.tsx                    # Battle runtime / UI
 ├── AppRouter.tsx
-├── router.tsx
-├── routeComponents.tsx
-├── App.tsx
+├── router.tsx                 # route tree
+├── routeComponents.tsx        # Title / Stage Select / Complete
+├── world/
+│   └── WorldPage.tsx
+├── field/
+│   ├── JavaScriptFieldPage.tsx
+│   ├── JavaScriptFieldRoute.tsx
+│   └── field.ts               # movement / collision / interaction
+├── dialogue/
+│   ├── dialogue.ts
+│   ├── npcs.ts
+│   └── types.ts
 ├── game/
-│   ├── index.ts
-│   ├── types.ts
+│   ├── areas.ts               # Area metadata / route metadata
+│   ├── areaProgression.ts     # Area ↔ Battle lookup
 │   ├── battles.ts
+│   ├── generator.ts
 │   ├── skillDefinitions.ts
 │   ├── skills.ts
 │   ├── targeting.ts
 │   ├── random.ts
-│   ├── generator.ts
 │   └── solvability.ts
-└── *.css
+├── progression/
+│   ├── progression.ts
+│   ├── storage.ts
+│   ├── ProgressProvider.tsx
+│   └── types.ts
+├── audio/
+│   ├── gameAudio.ts
+│   ├── AudioControls.tsx
+│   └── useBgm.ts
+└── motion/
+    └── battleMotion.ts
 ```
-
-テストはGame Domainの各責務に合わせて配置している。
 
 ---
 
 ## 4. Routing
 
-現在のroute:
+現在の公開route:
 
 ```text
 /
-/javascript/battle/$battleId?seed=...
+/world
+/javascript
+/javascript/field
+/javascript/battle/$battleId?seed=...&returnTo=...
 /javascript/complete
 ```
 
-`battleId`はpath、`seed`はsearch paramとして扱う。
+JavaScript KingdomのURLは既存save / bookmark / deep link互換のため維持する。
 
-同じBattle IDとseedから同じ可変盤面を再現できる。
+### Area route metadata
 
-RPG最小ループ導入後は次を追加する予定。
+Area固有の画面遷移先は`src/game/areas.ts`へ集約する。
 
-```text
-/javascript                 # JavaScript Kingdom / Stage Select
-/javascript/battle/$battleId
-/javascript/complete        # Area Clearとして整理
+```ts
+AreaDefinition = {
+  id,
+  label,
+  title,
+  description,
+  availability,
+  routes: {
+    stageSelect,
+    field,
+    complete,
+  },
+  bossBattleId,
+}
 ```
 
-Stage Selectは最終的な世界UIではない。将来トップダウンフィールドへ置き換えるときも、Battle route自体は再利用できるように保つ。
+`comingSoon` Areaはrouteを`null`にする。未実装Areaのために空のFieldや架空Battleを作らない。
+
+次Areaを実装するときは、既存JavaScript routeを変更せず、そのAreaのrouteを追加する。
 
 ---
 
-## 5. Game Domain
+## 5. Area / Battle関係
 
-`src/game/`はUIから独立したゲームデータと純粋ロジックを担当する。
+Battleは`areaId`を持つ。UIが毎回独自に`filter()`やBoss検索をせず、`src/game/areaProgression.ts`を使う。
 
-### `types.ts`
+```text
+getBattlesForArea(areaId)
+getAreaForBattle(battleId)
+getBossBattleForArea(areaId)
+```
 
-現在の主な型:
+守る条件:
 
-- `Enemy`
-- `SkillCard`
-- `Battle`
-- `TargetRule`
+- すべてのBattleの`areaId`は実在Areaを参照する
+- `bossBattleId`は同じAreaのBoss Battleを参照する
+- COMING SOON AreaにはBattleを先に作らない
+- JavaScript routeから別AreaのBattleを開かない
 
-### `battles.ts`
+これらはUnit Testで検証する。
 
-固定された**世界側の基準Battle**を持つ。
+---
 
-現在はBattle 1〜3の基準Enemy / Skill構成を定義する。
+## 6. Game Domain
 
-ここで定義される基準HPや攻撃力は、将来Player Levelが入ってもcurrent Playerに合わせてruntimeで弱体化しない。
+`src/game/`はUIから独立したゲーム定義と純粋ロジックを担当する。
 
-### `skillDefinitions.ts`
+### Battle
 
-Skillのsource definition。
+基準Enemy / Skill / reward / Area所属を持つ。
+
+Player Levelに合わせてEnemyをruntimeで自動弱体化しない。
+
+### SkillDefinition
 
 ```ts
 SkillDefinition = {
@@ -151,93 +168,23 @@ SkillDefinition = {
 }
 ```
 
-`codeVariants`は、同じSkill / TargetRule / 学習概念を保ったまま表示コードを切り替えるための基盤。
+同じSkillのcode variantはTargetRule・POWER・学習概念を変えない。
 
-現在は各Skillにdefault variantが1つ。今後#31でseed付きvariant選択を追加し、#32で一部multi-line variantへ拡張する。
+### Targeting
 
-### `skills.ts`
+表示コード自体を`eval()`しない。安全な内部`TargetRule`を評価する。
 
-現在のBattle UIが使う`SkillCard`へ`SkillDefinition`を変換する。
+### Seeded generator
 
-現時点では先頭のdefault code variantを使用する。
+Battle ID + seedから敵HP・敵順・Skill順・code variantを決定的に再現する。
 
-### `targeting.ts`
-
-表示コードの意味に対応した安全な内部`TargetRule`を評価する。
-
-表示コード自体を`eval()`しない。
-
-### `random.ts`
-
-seedから決定的な乱数を作る。
-
-用途:
-
-- 敵HP
-- 敵順
-- Skill順
-- 将来のcode variant選択
-
-### `generator.ts`
-
-現在の可変Battle生成を担当する。
-
-```text
-Battle base definition
-+ seed
-↓
-HP倍率を85〜115%で生成
-敵順をshuffle
-Skill順をshuffle
-↓
-validation
-  - initial valid target
-  - base Battleで意味があったSkillのtargetを維持
-  - solvability
-↓
-validなら採用
-```
-
-最大32回試行し、成立しなければ基準Battleのcloneへfallbackする。
-
-これは「Playerが弱いから敵を自動で弱くする」仕組みではない。**学習意図を壊さない盤面variationを生成する仕組み**。
-
-### `solvability.ts`
-
-生成されたBattleに勝ち筋があるかを検証する。
-
-現在のBattle MVPでは固定Player条件を前提にgenerator validationでも利用している。
-
-Level導入後は、current Player Levelに合わせて敵を弱体化するためには使わない。Battleごとの**基準 / 推奨Player stats**で設計・生成品質を検証する方向へ整理する。
+生成時にvalid target / learning constraint / solvabilityを検証する。
 
 ---
 
-## 6. ProblemTemplateを採用しない決定
+## 7. Battle Runtime
 
-一度、問題生成のために`ProblemTemplate`という独立抽象を導入したが、現在は削除済み。
-
-理由:
-
-- 現在のSkill / TargetRuleと責務が重複しやすい
-- 問題種類ごとの大きなテンプレート階層を先に作る必要がない
-- コードvariantはSkillの意味と密接なので`SkillDefinition`に置く方が単純
-
-現在の方針:
-
-```text
-Battle base definition
-+ SkillDefinition
-+ seed
-+ generator constraints
-```
-
-必要な責務が実際に増えるまで、別の「問題テンプレート層」は作らない。
-
----
-
-## 7. Battle中の状態
-
-現在のBattle実行中stateはReact local stateが中心。
+Battle中だけ必要な状態は`App.tsx`のlocal stateを中心に扱う。
 
 例:
 
@@ -245,393 +192,205 @@ Battle base definition
 - playerHp
 - enemies
 - selectedSkillId
-- explainedSkill
 - logs
 - turn
-- animatingIds
-- isResolving
+- animation state
 
-Battle中だけ必要な一時状態は、将来も進行保存データへ混ぜない。
+これらをPlayerProgressやLocalStorageへ保存しない。
 
-`animatingIds`や`isResolving`のようなpresentation都合のstateは存在するが、今後の演出拡張ではGame Domainの勝敗・damage計算そのものと分離して整理する。
+Battle勝利時だけProgressionへrewardを渡す。
 
 ---
 
-## 8. RPG進行の次期構成
+## 8. Progression
 
-次に追加するのはBattleをまたいで共有するPlayer進行。
-
-予定する責務:
-
-```text
-src/
-├── progression/
-│   ├── types.ts
-│   ├── constants.ts
-│   ├── progression.ts
-│   └── index.ts
-├── features/
-│   └── stage-select/
-└── persistence/
-```
-
-初期PlayerProgress候補:
+`src/progression/`はBattleをまたぐ長期進行を担当する。
 
 ```ts
-{
+PlayerProgress = {
   exp,
   clearedStageIds,
+  clearedAreaIds,
   unlockedStageIds,
   unlockedSkillIds,
 }
 ```
 
-LevelはEXPから導出し、二重管理を避ける。
-
-Battle transient stateとPlayerProgressは明確に分ける。
-
----
-
-## 9. RPGデータフロー
-
-RPG最小ループ完成時のイメージ:
+Level / maxHP / POWER倍率はEXPから導出し、二重保存しない。
 
 ```text
-PlayerProgress
+Battle Victory
 ↓
-Stage Select
+applyBattleVictory()
 ↓
-Stage / seedを選ぶ
+EXP / CLEAR / unlock
 ↓
-Battle
-↓
-Victory Reward
-  - EXP
-  - Stage CLEAR
-  - Skill unlock
-  - Next Stage unlock
-↓
-PlayerProgress更新
-↓
-Stage Selectへ戻る / 次へ
-```
-
-Level成長がBattleへ影響する場合も、Player statsをBattle開始時に入力として渡す。
-
-```text
-PlayerProgress
-↓
-PlayerStats
-  - level
-  - maxHp
-  - powerMultiplier
-↓
-Battle Runtime
-```
-
-Enemy base statsはPlayerStatsを参照して書き換えない。
-
----
-
-## 10. Persistence
-
-第一段階はLocalStorage。
-
-```text
-React / Progress Provider
-↓
-Progress Repository
+ProgressProvider
 ↓
 LocalStorage
 ```
 
-保存するもの:
+Stage IDは現在globalなnumberとして扱う。次Area追加時に既存IDを再採番しない。
 
-- schema version
+---
+
+## 9. Persistence
+
+LocalStorageはversion付きschemaを使う。
+
+保存対象:
+
 - EXP
-- cleared Stage
-- unlocked Stage
-- unlocked Skill
-- Area CLEAR等の長期進行
+- Stage CLEAR / unlock
+- Area CLEAR
+- Skill unlock
 
-保存しないもの:
+保存しない:
 
-- 現在ターン
-- Battle中の敵残HP
+- Battle中HP
+- turn
+- selected Skill
 - animation state
-- selected card
+- BGMの再生位置
 
-壊れたdata / 未知schema versionでは安全に初期状態へfallbackする。
-
----
-
-## 11. Stage SelectからFieldへ
-
-Stage SelectはRPG進行を先に成立させるための暫定UI。
-
-最終的なRPG世界は次を目指す。
-
-```text
-Top-down Field / Hub
-├── Player movement
-├── Collision
-├── Interactable objects
-├── NPC / Dialogue
-├── Battle entrance
-└── Area exit
-```
-
-Battle終了後はFieldへ戻り、進行状態に応じてNPC会話・入口・Area状態が変わる。
-
-重要なのは、Field rendering / movement / DialogueをBattle Domainへ混ぜないこと。
+壊れたJSONや未知versionは安全に初期状態へfallbackする。
 
 ---
 
-## 12. Audio / Animation presentation layer
+## 10. Field / Dialogue
 
-#63 / #64では、音と動きをGame Domainのロジックそのものへ埋め込まず、**状態変化をプレイヤーへ返すpresentation layer**として扱う。
+Fieldのmovement / collision / interaction判定は純粋ロジックへ分離する。
 
-概念上の流れ:
+DialogueはPlayerProgressの必要な一部だけを読み、Battle targetingやdamage計算を知らない。
 
 ```text
-Player Input
-↓
-Battle Runtime / Game Domain
-↓
-Battle Result / Presentation Event
-├── damage target
-├── damage amount
-├── defeated enemy
-├── player hit
-├── victory / defeat
-└── reward / level up
-↓
-Presentation Layer
-├── Animation
-├── SFX
-└── UI update
+Field UI
+├── movement
+├── interaction
+├── NPC dialogue
+└── Battle Gate
+       ↓
+Battle route
 ```
 
-### Animation
+次Areaでも同じ境界を維持し、JavaScript Fieldコンポーネントを巨大なArea分岐へ変えない。
 
-候補責務:
+---
 
-- Skill executeの予備動作
-- target hit flash / shake
-- damage number
-- enemy defeat
-- player hit
-- victory / defeat
-- reward / level up
+## 11. Audio / Motion
 
-重要:
-
-- CSS animationの終了そのものをGame Domainの正しさへ依存させない
-- animation durationは散在させず、必要なら定数またはtimeline定義へ寄せる
-- animation中の入力lockはUI / Battle controller側で扱う
-- `prefers-reduced-motion`時もBattle stateは同じ結果になる
+AudioとMotionはpresentation layer。
 
 ### Audio
 
-候補構成:
+- `menu` / `field` / `battle` BGM
+- SE channel
+- BGM / SE別GainNode
+- Mute / volume
+- 最初のpointer / touch / key操作でAudioContextをunlock
+- `useBgm()`で画面ごとのBGM lifecycleを管理
 
-```text
-Audio Layer
-├── BGM channel
-├── SE channel
-└── Settings
-    ├── master volume
-    ├── bgm volume
-    ├── se volume
-    └── mute
-```
+BGMやSEの有無でGame Domainの勝敗を変えない。
 
-Audio再生は、
+### Motion
 
-```text
-onSkillExecute
-onHit
-onEnemyDefeat
-onPlayerHit
-onVictory
-onLevelUp
-```
+- Skill windup
+- hit flash / shake
+- damage number
+- defeat
+- victory / defeat
+- reward animation
+- `prefers-reduced-motion`
 
-のようなpresentation eventから行える構造を目指す。
-
-Battleのtargeting / damage / victory判定関数の中で直接`audio.play()`しない。
-
-ブラウザのautoplay policyに合わせ、最初の明示的なユーザー操作後にAudioContext等を有効化する。
-
-### 音と動きの同期
-
-最終的には、同じBattle eventに対してanimationとSEを同期させる。
-
-例:
-
-```text
-HIT event
-├── Enemy flash
-├── Enemy shake
-├── Hit SE
-├── Damage number
-└── HP update
-```
-
-ただし「演出が終了しないとGame Domain上のdamageが存在しない」という構造にはしない。
-
-### Accessibility
-
-- `prefers-reduced-motion`で大きなmotionを減らす
-- Muteでも情報を失わない
-- motion / sound / colorのどれか1つだけに重要stateを依存させない
-- code reading中に不要なloop animationや過密なSEを鳴らさない
+Animation timerをTargetRuleやdamage式のsource of truthにしない。
 
 ---
 
-## 13. Backendの展望
+## 12. World Mapと複数Area
 
-Cloudflareへdeployしたが、backend選定は未決定。
+World MapはArea metadataとPlayerProgressのArea CLEARだけを参照する。
 
-現在はbackend不要。
+```text
+World Map
+↓
+AreaDefinition.availability
+├── available → routes.fieldへ進入
+└── comingSoon → disabled
+```
 
-必要になるトリガー:
+World MapはBattle生成、Enemy stats、Skill targetingを知らない。
 
+Areaを追加するときの基本手順:
+
+1. Area metadataを追加
+2. そのAreaのrouteをRouterへ追加
+3. Battleを一意なStage IDで追加
+4. `areaId` / Boss整合性testを通す
+5. Field / Stage Select / Completeを必要な範囲で実装
+6. Progression / save migrationが必要か判断する
+
+---
+
+## 13. Backend
+
+現在は不要。
+
+導入トリガー:
+
+- Login
+- Cloud Save
 - 複数端末同期
-- アカウント
-- クラウドセーブ
-- ランキング
-- 共有Challengeの永続保存
-- 管理画面
+- Ranking
+- Shared Challenge
+- 管理者機能
 
-候補:
-
-```text
-Cloudflare Workers + D1 / KV / R2
-Supabase
-その他のBaaS / API
-```
-
-選定時もtargeting、generator、solvability、progression計算などは可能な限り純粋Domainとして保つ。
+候補はCloudflare D1等やSupabaseを要件で比較する。FrontendがCloudflareだからという理由だけでbackendを固定しない。
 
 ---
 
-## 14. テスト構造
+## 14. 品質保証
 
-現在のCI:
+PR作成前に必ず:
 
 ```text
 npm ci
-↓
 npm run lint
-↓
 npm test
-↓
 npm run build
 ```
 
-Unitの主対象:
+PR後:
+
+```text
+GitHub Actions CI
+Cloudflare Preview
+Self Review
+Squash Merge
+main CI
+Cloudflare Production
+```
+
+Unit Testの主対象:
 
 - targeting
 - seeded random
-- Battle generator
-- SkillDefinition
-- solvability
-- 将来のprogression / persistence
-
-将来のComponent:
-
-- card select / execute
-- victory / defeat
-- Stage Select状態
-- EXP / Level表示
-- animation中のinput lock
-- reduced motion時の状態遷移
-- audio setting UI
-
-将来のE2E:
-
-- Stage Select → Battle → Reward → Unlock
-- reload → Progress復元
-- Field → Battle → Field復帰
-- Battle操作がanimation追加後も進行不能にならない
-
-Audioそのものの波形や音質を自動テストすることを目的にせず、event発火・設定・mute等のlogicをテストする。
+- generator / solvability
+- SkillDefinition / code variants
+- progression / persistence
+- Field movement / interaction
+- Dialogue条件
+- Area metadata / Area-Battle整合性
+- Audio settings / BGM lifecycle helper
 
 ---
 
-## 15. デプロイ構成
+## 15. 設計原則
 
-```text
-PR / Branch
-├─ GitHub Actions CI
-└─ Cloudflare Workers Preview Build
-
-main merge
-├─ GitHub Actions CI
-└─ Cloudflare Workers Production Build
-```
-
-正式Production:
-
-```text
-https://code-reading-rpg.profuse-comb.workers.dev
-```
-
-Vercelは現在のdeploy pathに含めない。
-
-詳細は[`DEPLOYMENT.md`](./DEPLOYMENT.md)を参照する。
-
----
-
-## 16. 将来構成イメージ
-
-責務が実際に増えた段階で必要な部分から拡張する。
-
-```text
-src/
-├── app/
-│   ├── routes/
-│   └── providers/
-├── game/
-│   ├── battles.ts
-│   ├── skillDefinitions.ts
-│   ├── targeting.ts
-│   ├── random.ts
-│   ├── generator.ts
-│   └── solvability.ts
-├── progression/
-├── persistence/
-├── audio/
-│   ├── audioManager.ts
-│   └── settings.ts
-├── features/
-│   ├── battle/
-│   │   └── presentation/
-│   ├── stage-select/
-│   ├── field/
-│   └── dialogue/
-├── components/
-└── styles/
-```
-
-これは設計イメージであり、このdirectory treeを先に作らない。
-
-#63 / #64を実装する時点で必要な最小責務だけ追加する。
-
----
-
-## 17. 更新タイミング
-
-次の変更が入ったらこの文書も更新する。
-
-- Game Domainの責務を変更
-- SkillDefinition / generator方式を変更
-- PlayerProgressを導入
-- routing方式を変更
-- LocalStorageを導入
-- Audio / Animation layerを導入
-- Field / Dialogueを追加
-- backend / databaseを追加
-- test layerを追加
-- Production構成を変更
+1. 表示コードを`eval()`しない
+2. Player成長でコード読解を不要にしない
+3. Enemyをcurrent Levelへ自動追従させない
+4. Battle transient stateをsaveへ混ぜない
+5. World / Field / Dialogue / AudioをBattle Domainへ混ぜない
+6. COMING SOONの機能を架空実装しない
+7. 既存route / save互換を壊す変更は明示的migrationなしに行わない
+8. コンテンツ追加時もUnit Test可能なdata-driven構造を優先する
