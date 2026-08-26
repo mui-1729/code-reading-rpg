@@ -15,6 +15,7 @@ import './code-help.css'
 import './quests.css'
 import './quest-markers.css'
 import './codex.css'
+import './economy.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
