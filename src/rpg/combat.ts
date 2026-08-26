@@ -1,6 +1,6 @@
 import type { PlayerStats } from '../progression'
 import { getEquipmentBonuses } from './equipment'
-import type { RpgState } from './RpgState'
+import type { RpgState } from './state'
 
 export type CombatStats = PlayerStats & {
   attack: number

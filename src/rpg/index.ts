@@ -16,5 +16,14 @@ export { getCombatStats, getIncomingDamage, getSkillDamage } from './combat'
 export type { CombatStats } from './combat'
 export { getPartyFollowUpDamage, partyMemberById, partyMembers } from './party'
 export type { PartyMemberDefinition } from './party'
-export { createInitialRpgState, emptyPartyEquipment, RpgProvider, useRpg } from './RpgState'
-export type { RpgState, WorldPosition } from './RpgState'
+export { RpgProvider } from './RpgProvider'
+export { useRpg } from './useRpg'
+export {
+  createInitialRpgState,
+  emptyPartyEquipment,
+  restoreRpgState,
+  RPG_STATE_SCHEMA_VERSION,
+  RPG_STORAGE_KEY,
+  serializeRpgState,
+} from './state'
+export type { RpgState, StoredRpgState, WorldPosition } from './state'

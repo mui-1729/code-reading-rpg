@@ -3,7 +3,7 @@ import {
   createInitialRpgState,
   restoreRpgState,
   serializeRpgState,
-} from './RpgState'
+} from './state'
 
 describe('RPG state storage', () => {
   it('装備・仲間・World座標・Encounter状態を保存して復元する', () => {

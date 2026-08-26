@@ -50,11 +50,6 @@ export function PauseMenu() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [open])
 
-  useEffect(() => {
-    setOpen(false)
-    setResetArmed(false)
-  }, [location.pathname])
-
   const ownedEquipment = useMemo(
     () => equipmentDefinitions.filter((item) => rpgState.ownedEquipmentIds.includes(item.id)),
     [rpgState.ownedEquipmentIds],
@@ -76,6 +71,11 @@ export function PauseMenu() {
     }))
   }
 
+  const closeMenu = () => {
+    setOpen(false)
+    setResetArmed(false)
+  }
+
   return (
     <>
       <button
@@ -88,7 +88,7 @@ export function PauseMenu() {
       </button>
 
       {open && (
-        <div className="pause-overlay" role="presentation" onClick={() => setOpen(false)}>
+        <div className="pause-overlay" role="presentation" onClick={closeMenu}>
           <section
             className="pause-menu pixel-window"
             role="dialog"
@@ -101,7 +101,7 @@ export function PauseMenu() {
                 <span className="eyebrow">PAUSE</span>
                 <h2>CODE KNIGHT</h2>
               </div>
-              <button className="close-button" type="button" onClick={() => setOpen(false)}>×</button>
+              <button className="close-button" type="button" onClick={closeMenu}>×</button>
             </header>
 
             <nav className="pause-tabs" aria-label="Pause menu sections">
@@ -218,8 +218,7 @@ export function PauseMenu() {
                         return
                       }
                       resetProgress()
-                      setOpen(false)
-                      setResetArmed(false)
+                      closeMenu()
                     }}
                   >
                     {resetArmed ? 'CONFIRM RESET PROGRESS' : 'RESET PROGRESS'}
