@@ -11,6 +11,8 @@ type ProgressProviderProps = {
   children: ReactNode
 }
 
+const PROGRESS_RESET_EVENT = 'code-reading-rpg:progress-reset'
+
 function loadInitialProgress() {
   if (typeof window === 'undefined') return createInitialPlayerProgress()
 
@@ -45,6 +47,7 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
       } catch {
         // Ignore storage failures; resetting in-memory state still works.
       }
+      window.dispatchEvent(new Event(PROGRESS_RESET_EVENT))
     }
 
     setProgress(createInitialPlayerProgress())
