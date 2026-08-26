@@ -97,6 +97,13 @@ export const javascriptField: FieldDefinition = {
       learningHintId: 'js-filter',
     },
     {
+      id: 'map-sign',
+      kind: 'sign',
+      x: 1,
+      y: 5,
+      learningHintId: 'js-map',
+    },
+    {
       id: 'comparison-sign',
       kind: 'sign',
       x: 6,
