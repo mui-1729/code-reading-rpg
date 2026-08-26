@@ -65,17 +65,21 @@ Codexは内容自体が説明なので、外側の説明文を増やさない。
 
 常設toggleは小さくし、詳細は開いた時だけ表示する。
 
-## Main Quest
+## Quest
 
-Quest内容・step・progressは維持する。
+常設部分は従来の`QUEST` toggleだけにする。
 
-常設部分では、
+Quest Logを開いた時:
 
-- `QUEST`
-- clear数
-- shortcut
+- Main Quest
+- 解放済みSide Quest
+- status / objective / reward
 
-程度に抑える。Panelを開いた時にQuest本文とstepを表示する。
+を表示する。
+
+Side QuestはLOCKED中はpanelにも出さず、Area CLEAR後だけ表示する。Side Quest追加のたびに新しい常設toggleやField markerを増やさない。
+
+Battle中はQuest Trackerを表示しない。Quest完了時だけ短いfeedbackを一時表示する。
 
 ## Sound Settings
 
