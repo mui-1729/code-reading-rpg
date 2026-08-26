@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import { getDialogueForNpc } from '../dialogue/dialogue'
+import { npcById } from '../dialogue/npcs'
+import type { DialogueEntry, NpcDefinition } from '../dialogue/types'
 import { battles } from '../game'
 import { useProgress } from '../progression'
 import { getInteractionInFront, movePlayer, samePosition } from './field'
@@ -15,24 +18,44 @@ const directionGlyph: Record<Direction, string> = {
   right: '▶',
 }
 
+type ActiveDialogue = {
+  npc: NpcDefinition
+  dialogue: DialogueEntry
+  lineIndex: number
+}
+
 export function JavaScriptFieldPage() {
   const navigate = useNavigate()
   const { progress, stats } = useProgress()
   const [position, setPosition] = useState<FieldPosition>(javascriptField.start)
   const [facing, setFacing] = useState<Direction>('up')
   const [message, setMessage] = useState(
-    '王国を歩いてBattle Gateを探そう。門の手前でENTER / INTERACT。',
+    '王国を歩き、NPCと話して次の目的を確認しよう。門の手前ではINTERACTでBattleへ入れる。',
   )
+  const [activeDialogue, setActiveDialogue] = useState<ActiveDialogue | null>(null)
 
   const battleByStageId = useMemo(
     () => new Map(battles.map((battle) => [battle.id, battle])),
     [],
   )
 
+  const dialogueProgress = useMemo(
+    () => ({
+      level: stats.level,
+      clearedStageIds: progress.clearedStageIds,
+      clearedAreaIds: progress.clearedAreaIds,
+    }),
+    [progress.clearedAreaIds, progress.clearedStageIds, stats.level],
+  )
+
   const describeInteraction = useCallback(
     (interaction: FieldInteraction) => {
       if (interaction.kind === 'sign') return '看板がある。ENTER / INTERACTで読む。'
       if (interaction.kind === 'exit') return `${interaction.label}への出口。ENTER / INTERACTで移動。`
+      if (interaction.kind === 'npc') {
+        const npc = npcById[interaction.npcId]
+        return npc ? `${npc.name}がいる。ENTER / INTERACTで話す。` : '誰かがいる。'
+      }
 
       const unlocked = progress.unlockedStageIds.includes(interaction.stageId)
       const battle = battleByStageId.get(interaction.stageId)
@@ -44,6 +67,8 @@ export function JavaScriptFieldPage() {
 
   const handleMove = useCallback(
     (direction: Direction) => {
+      if (activeDialogue) return
+
       setFacing(direction)
       const next = movePlayer(javascriptField, position, direction)
 
@@ -51,15 +76,32 @@ export function JavaScriptFieldPage() {
         const interaction = getInteractionInFront(javascriptField, position, direction)
         setMessage(interaction ? describeInteraction(interaction) : 'そこには進めない。')
       } else {
-        setMessage('移動中… 門・看板・出口の手前でINTERACT。')
+        setMessage('移動中… Gate・NPC・看板・出口の手前でINTERACT。')
       }
 
       setPosition(next)
     },
-    [describeInteraction, position],
+    [activeDialogue, describeInteraction, position],
   )
 
+  const advanceDialogue = useCallback(() => {
+    if (!activeDialogue) return
+
+    if (activeDialogue.lineIndex < activeDialogue.dialogue.lines.length - 1) {
+      setActiveDialogue({ ...activeDialogue, lineIndex: activeDialogue.lineIndex + 1 })
+      return
+    }
+
+    setMessage(`${activeDialogue.npc.name}との会話を終えた。`)
+    setActiveDialogue(null)
+  }, [activeDialogue])
+
   const handleInteract = useCallback(() => {
+    if (activeDialogue) {
+      advanceDialogue()
+      return
+    }
+
     const interaction = getInteractionInFront(javascriptField, position, facing)
 
     if (!interaction) {
@@ -69,6 +111,21 @@ export function JavaScriptFieldPage() {
 
     if (interaction.kind === 'sign') {
       setMessage(interaction.message)
+      return
+    }
+
+    if (interaction.kind === 'npc') {
+      const npc = npcById[interaction.npcId]
+      if (!npc) {
+        setMessage('このNPCの会話データが見つからない。')
+        return
+      }
+
+      setActiveDialogue({
+        npc,
+        dialogue: getDialogueForNpc(npc, dialogueProgress),
+        lineIndex: 0,
+      })
       return
     }
 
@@ -87,10 +144,23 @@ export function JavaScriptFieldPage() {
       params: { battleId: String(interaction.stageId) },
       search: { seed: createRunSeed(), returnTo: '/javascript/field' },
     })
-  }, [facing, navigate, position, progress.unlockedStageIds])
+  }, [activeDialogue, advanceDialogue, dialogueProgress, facing, navigate, position, progress.unlockedStageIds])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (activeDialogue) {
+        if (event.key === 'Escape') {
+          event.preventDefault()
+          setActiveDialogue(null)
+          return
+        }
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          advanceDialogue()
+        }
+        return
+      }
+
       const movement: Partial<Record<string, Direction>> = {
         ArrowUp: 'up',
         w: 'up',
@@ -121,7 +191,7 @@ export function JavaScriptFieldPage() {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [handleInteract, handleMove])
+  }, [activeDialogue, advanceDialogue, handleInteract, handleMove])
 
   const cells = Array.from({ length: javascriptField.width * javascriptField.height }, (_, index) => ({
     x: index % javascriptField.width,
@@ -134,8 +204,8 @@ export function JavaScriptFieldPage() {
         <header className="field-header">
           <div>
             <div className="eyebrow">WORLD 01 // JAVASCRIPT KINGDOM</div>
-            <h1>Kingdom Field</h1>
-            <p>歩いてBattle Gateを探し、コードリーディングの戦場へ入ろう。</p>
+            <h1>Kingdom Hub</h1>
+            <p>Gateへ向かう前にNPCと話し、目的やコード読解のヒントを確認できる。</p>
           </div>
           <div className="field-player-summary pixel-inner-window">
             <span>LV {stats.level}</span>
@@ -154,6 +224,7 @@ export function JavaScriptFieldPage() {
             const interaction = javascriptField.interactions.find((item) => samePosition(item, cell))
             const isPlayer = samePosition(position, cell)
             const battle = interaction?.kind === 'battle' ? battleByStageId.get(interaction.stageId) : undefined
+            const npc = interaction?.kind === 'npc' ? npcById[interaction.npcId] : undefined
             const unlocked = interaction?.kind === 'battle'
               ? progress.unlockedStageIds.includes(interaction.stageId)
               : true
@@ -171,6 +242,11 @@ export function JavaScriptFieldPage() {
                     {battle?.isBoss ? 'BOSS' : `ST${interaction.stageId}`}
                   </span>
                 )}
+                {interaction?.kind === 'npc' && (
+                  <span className={`field-npc field-npc-${interaction.npcId}`} aria-label={npc?.name ?? 'NPC'}>
+                    <span>{npc?.name.slice(0, 1) ?? 'N'}</span>
+                  </span>
+                )}
                 {interaction?.kind === 'sign' && <span className="field-object-glyph">?</span>}
                 {interaction?.kind === 'exit' && <span className="field-object-glyph">↩</span>}
                 {isPlayer && (
@@ -183,28 +259,49 @@ export function JavaScriptFieldPage() {
           })}
         </div>
 
-        <section className="field-message pixel-inner-window" aria-live="polite">
-          <span>FIELD LOG</span>
-          <p>{message}</p>
-        </section>
+        {activeDialogue ? (
+          <section className="dialogue-window pixel-inner-window" aria-live="polite" aria-label="NPC dialogue">
+            <div className="dialogue-speaker">
+              <div>
+                <span>{activeDialogue.npc.role}</span>
+                <strong>{activeDialogue.npc.name}</strong>
+              </div>
+              <span className="dialogue-progress">
+                {activeDialogue.lineIndex + 1}/{activeDialogue.dialogue.lines.length}
+              </span>
+            </div>
+            <p>{activeDialogue.dialogue.lines[activeDialogue.lineIndex]}</p>
+            <div className="dialogue-actions">
+              <span>Enter / Space</span>
+              <button className="primary-button" onClick={advanceDialogue}>
+                {activeDialogue.lineIndex < activeDialogue.dialogue.lines.length - 1 ? '▶ NEXT' : '■ CLOSE'}
+              </button>
+            </div>
+          </section>
+        ) : (
+          <section className="field-message pixel-inner-window" aria-live="polite">
+            <span>FIELD LOG</span>
+            <p>{message}</p>
+          </section>
+        )}
 
         <div className="field-controls" aria-label="Field controls">
           <div className="field-dpad">
-            <button aria-label="Move up" onClick={() => handleMove('up')}>▲</button>
-            <button aria-label="Move left" onClick={() => handleMove('left')}>◀</button>
-            <button aria-label="Move down" onClick={() => handleMove('down')}>▼</button>
-            <button aria-label="Move right" onClick={() => handleMove('right')}>▶</button>
+            <button aria-label="Move up" disabled={Boolean(activeDialogue)} onClick={() => handleMove('up')}>▲</button>
+            <button aria-label="Move left" disabled={Boolean(activeDialogue)} onClick={() => handleMove('left')}>◀</button>
+            <button aria-label="Move down" disabled={Boolean(activeDialogue)} onClick={() => handleMove('down')}>▼</button>
+            <button aria-label="Move right" disabled={Boolean(activeDialogue)} onClick={() => handleMove('right')}>▶</button>
           </div>
           <button className="primary-button field-interact" onClick={handleInteract}>
-            INTERACT
+            {activeDialogue ? 'NEXT' : 'INTERACT'}
           </button>
-          <button className="secondary-button" onClick={() => navigate({ to: '/javascript' })}>
+          <button className="secondary-button" disabled={Boolean(activeDialogue)} onClick={() => navigate({ to: '/javascript' })}>
             STAGE SELECT
           </button>
         </div>
 
         <footer className="field-help">
-          Keyboard: Arrow / WASD = MOVE · Enter / Space = INTERACT · Mobile: D-PAD + INTERACT
+          Keyboard: Arrow / WASD = MOVE · Enter / Space = INTERACT / NEXT · Mobile: D-PAD + INTERACT
         </footer>
       </section>
     </main>
