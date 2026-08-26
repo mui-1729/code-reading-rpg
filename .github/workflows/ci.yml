@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, docs/open-world-design-alignment]
+    branches: [main]
   pull_request:
 
 jobs:
