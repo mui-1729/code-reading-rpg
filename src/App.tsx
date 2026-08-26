@@ -22,6 +22,7 @@ import {
   useProgress,
   type BattleVictoryReward,
 } from './progression'
+import { applySideQuestVictory } from './quests/quests'
 
 type Phase = 'battle' | 'victory' | 'defeat'
 
@@ -113,28 +114,34 @@ function App({ battleId, seed, returnTo }: AppProps) {
   }
 
   const completeVictory = () => {
-    const result = applyBattleVictory(progress, {
+    const battleResult = applyBattleVictory(progress, {
       stageId: battle.id,
       expReward: battle.expReward,
       nextStageId: nextBattle?.id,
       unlockSkillId: battle.unlockSkillId,
       clearAreaId: battle.isBoss ? battle.areaId : undefined,
     })
+    const sideQuestResult = applySideQuestVictory(battleResult.progress, battle.id)
+    const reward: BattleVictoryReward = {
+      ...battleResult.reward,
+      expGained: battleResult.reward.expGained + (sideQuestResult.reward?.expGained ?? 0),
+      newLevel: getPlayerStats(sideQuestResult.progress.exp).level,
+    }
 
     gameAudio.stopBgm()
     gameAudio.playSe('victory')
-    if (result.reward.newLevel > result.reward.previousLevel) {
+    if (reward.newLevel > reward.previousLevel) {
       setTimeout(() => gameAudio.playSe('levelUp'), 420)
     }
-    if (result.reward.firstClear) {
+    if (reward.firstClear) {
       setTimeout(() => gameAudio.playSe('stageClear'), 720)
     }
-    if (result.reward.unlockedSkillId) {
+    if (reward.unlockedSkillId) {
       setTimeout(() => gameAudio.playSe('skillUnlock'), 1040)
     }
 
-    setProgress(result.progress)
-    setVictoryReward(result.reward)
+    setProgress(sideQuestResult.progress)
+    setVictoryReward(reward)
     setIsResolving(false)
     setPhase('victory')
   }

@@ -80,10 +80,22 @@
   cursor: pointer;
 }
 
+.quest-section-label {
+  margin-top: 13px;
+  color: var(--purple);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+
 .quest-list {
   display: grid;
   gap: 10px;
   margin-top: 12px;
+}
+
+.quest-side-list {
+  margin-top: 7px;
 }
 
 .quest-card {
@@ -200,6 +212,39 @@
 }
 
 .quest-steps li.is-complete > span {
+  color: var(--green);
+}
+
+.side-quest-objective {
+  display: grid;
+  grid-template-columns: 18px 1fr auto;
+  gap: 7px;
+  align-items: center;
+  margin-top: 10px;
+  padding: 7px;
+  color: #e4dfed;
+  background: #0a0a12;
+}
+
+.side-quest-objective > span {
+  color: var(--gold);
+  font-weight: 900;
+}
+
+.side-quest-objective > p {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.side-quest-objective > strong {
+  color: var(--gold);
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.quest-card-complete .side-quest-objective > span,
+.quest-card-complete .side-quest-objective > strong {
   color: var(--green);
 }
 

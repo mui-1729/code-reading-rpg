@@ -1,3 +1,5 @@
+import type { PlayerProgress } from '../progression/types'
+
 export type QuestProgressSnapshot = {
   clearedStageIds: number[]
   clearedAreaIds: string[]
@@ -51,4 +53,43 @@ export type QuestVictoryFeedback = {
   questTitle: string
   completedStepLabel: string
   nextStepLabel?: string
+}
+
+export type SideQuestProgressSnapshot = QuestProgressSnapshot & {
+  completedSideQuestIds: string[]
+}
+
+export type SideQuestDefinition = {
+  id: string
+  areaId: string
+  title: string
+  objective: string
+  unlockWhen: QuestCondition
+  targetBattleId: number
+  expReward: number
+}
+
+export type SideQuestProgress = {
+  quest: SideQuestDefinition
+  status: QuestStatus
+}
+
+export type SideQuestVictoryReward = {
+  questId: string
+  questTitle: string
+  areaId: string
+  expGained: number
+}
+
+export type SideQuestVictoryResult = {
+  progress: PlayerProgress
+  reward: SideQuestVictoryReward | null
+}
+
+export type SideQuestVictoryFeedback = {
+  kind: 'sideCompleted'
+  questId: string
+  areaId: string
+  questTitle: string
+  expGained: number
 }

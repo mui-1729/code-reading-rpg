@@ -18,6 +18,7 @@ export function createInitialPlayerProgress(): PlayerProgress {
     exp: 0,
     clearedStageIds: [],
     clearedAreaIds: [],
+    completedSideQuestIds: [],
     unlockedStageIds: [...DEFAULT_INITIAL_STAGE_IDS],
     unlockedSkillIds: [...DEFAULT_INITIAL_SKILL_IDS],
   }

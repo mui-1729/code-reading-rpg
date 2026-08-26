@@ -1,13 +1,18 @@
 import { useState } from 'react'
 import { useRouterState } from '@tanstack/react-router'
 import { useProgress, type PlayerProgress } from '../progression'
-import { getQuestVictoryFeedback } from './quests'
-import type { QuestVictoryFeedback as QuestVictoryFeedbackData } from './types'
+import { getQuestVictoryFeedback, getSideQuestVictoryFeedback } from './quests'
+import type {
+  QuestVictoryFeedback as QuestVictoryFeedbackData,
+  SideQuestVictoryFeedback,
+} from './types'
+
+type FeedbackData = QuestVictoryFeedbackData | SideQuestVictoryFeedback
 
 type FeedbackViewState = {
   pathname: string
   progress: PlayerProgress
-  feedback: QuestVictoryFeedbackData | null
+  feedback: FeedbackData | null
 }
 
 export function QuestVictoryFeedback() {
@@ -26,13 +31,28 @@ export function QuestVictoryFeedback() {
       progress,
       feedback: routeChanged
         ? null
-        : getQuestVictoryFeedback(viewState.progress, progress),
+        : getQuestVictoryFeedback(viewState.progress, progress) ??
+          getSideQuestVictoryFeedback(viewState.progress, progress),
     })
   }
 
   const feedback = viewState.feedback
   const inBattle = pathname.includes('/battle/')
   if (!inBattle || !feedback) return null
+
+  if (feedback.kind === 'sideCompleted') {
+    return (
+      <section
+        className="quest-victory-feedback pixel-window is-complete"
+        role="status"
+        aria-live="polite"
+      >
+        <span>SIDE QUEST COMPLETE</span>
+        <strong>{feedback.questTitle}</strong>
+        <em>+{feedback.expGained} EXP</em>
+      </section>
+    )
+  }
 
   const completed = feedback.kind === 'completed'
 

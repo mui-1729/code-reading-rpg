@@ -1,4 +1,5 @@
 import { JAVASCRIPT_AREA_ID, TYPESCRIPT_AREA_ID } from '../game/areas'
+import { addExp, type PlayerProgress } from '../progression'
 import type {
   QuestCondition,
   QuestDefinition,
@@ -6,6 +7,11 @@ import type {
   QuestProgress,
   QuestProgressSnapshot,
   QuestVictoryFeedback,
+  SideQuestDefinition,
+  SideQuestProgress,
+  SideQuestProgressSnapshot,
+  SideQuestVictoryFeedback,
+  SideQuestVictoryResult,
 } from './types'
 
 export const mainQuests: readonly QuestDefinition[] = [
@@ -65,6 +71,27 @@ export const mainQuests: readonly QuestDefinition[] = [
   },
 ]
 
+export const sideQuests: readonly SideQuestDefinition[] = [
+  {
+    id: 'javascript-second-pass',
+    areaId: JAVASCRIPT_AREA_ID,
+    title: 'SECOND PASS',
+    objective: 'FIRST READを再攻略する',
+    unlockWhen: { kind: 'areaCleared', areaId: JAVASCRIPT_AREA_ID },
+    targetBattleId: 1,
+    expReward: 40,
+  },
+  {
+    id: 'typescript-type-recheck',
+    areaId: TYPESCRIPT_AREA_ID,
+    title: 'TYPE RECHECK',
+    objective: 'TYPED ENTRYを再攻略する',
+    unlockWhen: { kind: 'areaCleared', areaId: TYPESCRIPT_AREA_ID },
+    targetBattleId: 4,
+    expReward: 50,
+  },
+]
+
 export function matchesQuestCondition(
   condition: QuestCondition,
   progress: QuestProgressSnapshot,
@@ -106,6 +133,55 @@ export function getQuestProgress(
 
 export function getMainQuestProgress(progress: QuestProgressSnapshot): QuestProgress[] {
   return mainQuests.map((quest) => getQuestProgress(quest, progress))
+}
+
+export function getSideQuestProgress(
+  quest: SideQuestDefinition,
+  progress: SideQuestProgressSnapshot,
+): SideQuestProgress {
+  if (progress.completedSideQuestIds.includes(quest.id)) {
+    return { quest, status: 'complete' }
+  }
+
+  if (!matchesQuestCondition(quest.unlockWhen, progress)) {
+    return { quest, status: 'locked' }
+  }
+
+  return { quest, status: 'active' }
+}
+
+export function getSideQuestProgressList(
+  progress: SideQuestProgressSnapshot,
+): SideQuestProgress[] {
+  return sideQuests.map((quest) => getSideQuestProgress(quest, progress))
+}
+
+export function applySideQuestVictory(
+  progress: PlayerProgress,
+  battleId: number,
+): SideQuestVictoryResult {
+  const quest = sideQuests.find(
+    (candidate) =>
+      candidate.targetBattleId === battleId &&
+      getSideQuestProgress(candidate, progress).status === 'active',
+  )
+
+  if (!quest) {
+    return { progress, reward: null }
+  }
+
+  const next = addExp(progress, quest.expReward)
+  next.completedSideQuestIds = [...next.completedSideQuestIds, quest.id]
+
+  return {
+    progress: next,
+    reward: {
+      questId: quest.id,
+      questTitle: quest.title,
+      areaId: quest.areaId,
+      expGained: quest.expReward,
+    },
+  }
 }
 
 export function getActiveQuestFieldFocus(
@@ -151,4 +227,25 @@ export function getQuestVictoryFeedback(
   }
 
   return null
+}
+
+export function getSideQuestVictoryFeedback(
+  before: SideQuestProgressSnapshot,
+  after: SideQuestProgressSnapshot,
+): SideQuestVictoryFeedback | null {
+  const completedQuest = sideQuests.find(
+    (quest) =>
+      !before.completedSideQuestIds.includes(quest.id) &&
+      after.completedSideQuestIds.includes(quest.id),
+  )
+
+  if (!completedQuest) return null
+
+  return {
+    kind: 'sideCompleted',
+    questId: completedQuest.id,
+    areaId: completedQuest.areaId,
+    questTitle: completedQuest.title,
+    expGained: completedQuest.expReward,
+  }
 }

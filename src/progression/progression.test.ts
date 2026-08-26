@@ -19,6 +19,7 @@ describe('player progression', () => {
       exp: 0,
       clearedStageIds: [],
       clearedAreaIds: [],
+      completedSideQuestIds: [],
       unlockedStageIds: [1, 4],
       unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
     })
@@ -103,6 +104,7 @@ describe('player progression', () => {
       exp: 40,
       clearedStageIds: [1],
       clearedAreaIds: [],
+      completedSideQuestIds: [],
       unlockedStageIds: [1, 4, 2],
       unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label', 'viper'],
     })
@@ -135,6 +137,7 @@ describe('player progression', () => {
     expect(replay.progress.exp).toBe(80)
     expect(replay.progress.clearedStageIds).toEqual([1])
     expect(replay.progress.clearedAreaIds).toEqual([])
+    expect(replay.progress.completedSideQuestIds).toEqual([])
     expect(replay.progress.unlockedStageIds).toEqual([1, 4, 2])
     expect(replay.progress.unlockedSkillIds).toEqual([
       'trace',
@@ -161,6 +164,7 @@ describe('player progression', () => {
       exp: 120,
       clearedStageIds: [1, 2],
       clearedAreaIds: [],
+      completedSideQuestIds: [],
       unlockedStageIds: [1, 2, 3],
       unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper', 'moon-edge'],
     }
@@ -173,6 +177,7 @@ describe('player progression', () => {
     expect(result.progress.exp).toBe(220)
     expect(result.progress.clearedStageIds).toEqual([1, 2, 3])
     expect(result.progress.clearedAreaIds).toEqual(['javascript'])
+    expect(result.progress.completedSideQuestIds).toEqual([])
     expect(result.progress.unlockedStageIds).toEqual([1, 2, 3])
     expect(result.reward.clearedAreaId).toBe('javascript')
     expect(progress.clearedAreaIds).toEqual([])
@@ -183,6 +188,7 @@ describe('player progression', () => {
       exp: 220,
       clearedStageIds: [1, 2, 3],
       clearedAreaIds: ['javascript'],
+      completedSideQuestIds: [],
       unlockedStageIds: [1, 2, 3],
       unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper', 'moon-edge'],
     }
@@ -194,6 +200,7 @@ describe('player progression', () => {
 
     expect(result.progress.exp).toBe(320)
     expect(result.progress.clearedAreaIds).toEqual(['javascript'])
+    expect(result.progress.completedSideQuestIds).toEqual([])
     expect(result.reward.firstClear).toBe(false)
     expect(result.reward.clearedAreaId).toBeUndefined()
   })
@@ -203,6 +210,7 @@ describe('player progression', () => {
       exp: 360,
       clearedStageIds: [4, 5],
       clearedAreaIds: [],
+      completedSideQuestIds: [],
       unlockedStageIds: [1, 4, 5, 6],
       unlockedSkillIds: ['ts-scan', 'ts-guard', 'ts-label', 'ts-union', 'ts-optional', 'ts-narrow'],
     }
@@ -214,6 +222,7 @@ describe('player progression', () => {
 
     expect(result.progress.clearedStageIds).toEqual([4, 5, 6])
     expect(result.progress.clearedAreaIds).toEqual(['typescript'])
+    expect(result.progress.completedSideQuestIds).toEqual([])
     expect(result.reward.clearedAreaId).toBe('typescript')
   })
 })

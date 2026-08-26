@@ -2,7 +2,7 @@ import { createInitialPlayerProgress } from './progression'
 import type { PlayerProgress } from './types'
 
 export const PLAYER_PROGRESS_STORAGE_KEY = 'code-reading-rpg:player-progress'
-export const PLAYER_PROGRESS_SCHEMA_VERSION = 2
+export const PLAYER_PROGRESS_SCHEMA_VERSION = 3
 
 const V1_JAVASCRIPT_BOSS_STAGE_ID = 3
 const V1_JAVASCRIPT_AREA_ID = 'javascript'
@@ -18,6 +18,17 @@ export type StoredPlayerProgressV1 = {
 }
 
 export type StoredPlayerProgressV2 = {
+  version: 2
+  progress: {
+    exp: number
+    clearedStageIds: number[]
+    clearedAreaIds: string[]
+    unlockedStageIds: number[]
+    unlockedSkillIds: string[]
+  }
+}
+
+export type StoredPlayerProgressV3 = {
   version: typeof PLAYER_PROGRESS_SCHEMA_VERSION
   progress: PlayerProgress
 }
@@ -59,6 +70,25 @@ function parsePlayerProgressV2(value: unknown): PlayerProgress | null {
   return {
     ...common,
     clearedAreaIds: [...value.clearedAreaIds],
+    completedSideQuestIds: [],
+  }
+}
+
+function parsePlayerProgressV3(value: unknown): PlayerProgress | null {
+  const common = parseCommonProgressFields(value)
+  if (
+    !common ||
+    !isRecord(value) ||
+    !isStringIdArray(value.clearedAreaIds) ||
+    !isStringIdArray(value.completedSideQuestIds)
+  ) {
+    return null
+  }
+
+  return {
+    ...common,
+    clearedAreaIds: [...value.clearedAreaIds],
+    completedSideQuestIds: [...value.completedSideQuestIds],
   }
 }
 
@@ -66,8 +96,6 @@ function migrateV1Progress(value: unknown): PlayerProgress | null {
   const common = parseCommonProgressFields(value)
   if (!common) return null
 
-  // Schema v1 had no Area field. A cleared Stage 3 already meant the JavaScript Boss
-  // had been defeated, so preserve that achievement when adding Area progress in v2.
   const clearedAreaIds = common.clearedStageIds.includes(V1_JAVASCRIPT_BOSS_STAGE_ID)
     ? [V1_JAVASCRIPT_AREA_ID]
     : []
@@ -75,6 +103,7 @@ function migrateV1Progress(value: unknown): PlayerProgress | null {
   return {
     ...common,
     clearedAreaIds,
+    completedSideQuestIds: [],
   }
 }
 
@@ -84,20 +113,23 @@ export function migrateStoredPlayerProgress(value: unknown): PlayerProgress | nu
   switch (value.version) {
     case 1:
       return migrateV1Progress(value.progress)
-    case PLAYER_PROGRESS_SCHEMA_VERSION:
+    case 2:
       return parsePlayerProgressV2(value.progress)
+    case PLAYER_PROGRESS_SCHEMA_VERSION:
+      return parsePlayerProgressV3(value.progress)
     default:
       return null
   }
 }
 
 export function serializePlayerProgress(progress: PlayerProgress): string {
-  const stored: StoredPlayerProgressV2 = {
+  const stored: StoredPlayerProgressV3 = {
     version: PLAYER_PROGRESS_SCHEMA_VERSION,
     progress: {
       exp: progress.exp,
       clearedStageIds: [...progress.clearedStageIds],
       clearedAreaIds: [...progress.clearedAreaIds],
+      completedSideQuestIds: [...progress.completedSideQuestIds],
       unlockedStageIds: [...progress.unlockedStageIds],
       unlockedSkillIds: [...progress.unlockedSkillIds],
     },

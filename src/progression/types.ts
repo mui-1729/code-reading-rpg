@@ -2,6 +2,7 @@ export type PlayerProgress = {
   exp: number
   clearedStageIds: number[]
   clearedAreaIds: string[]
+  completedSideQuestIds: string[]
   unlockedStageIds: number[]
   unlockedSkillIds: string[]
 }
