@@ -16,6 +16,8 @@ import type {
 export function createInitialPlayerProgress(): PlayerProgress {
   return {
     exp: 0,
+    gold: 0,
+    inventory: { patchKit: 0 },
     clearedStageIds: [],
     clearedAreaIds: [],
     completedSideQuestIds: [],
@@ -73,8 +75,13 @@ export function applyBattleVictory(
 ): BattleVictoryResult {
   const previousLevel = getLevelForExp(progress.exp)
   const expGained = Math.max(0, input.expReward)
+  const goldGained = Math.max(0, input.goldReward)
   const firstClear = !progress.clearedStageIds.includes(input.stageId)
-  const next = addExp(progress, expGained)
+  const next = {
+    ...addExp(progress, expGained),
+    gold: progress.gold + goldGained,
+    inventory: { ...progress.inventory },
+  }
 
   let unlockedStageId: number | undefined
   let unlockedSkillId: string | undefined
@@ -103,6 +110,7 @@ export function applyBattleVictory(
     progress: next,
     reward: {
       expGained,
+      goldGained,
       previousLevel,
       newLevel: getLevelForExp(next.exp),
       firstClear,
