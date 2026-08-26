@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/87-learning-signs]
   pull_request:
 
 jobs:
