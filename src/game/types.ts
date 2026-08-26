@@ -28,6 +28,7 @@ export type SkillCard = {
 
 export type Battle = {
   id: number
+  areaId: string
   label: string
   title: string
   subtitle: string
