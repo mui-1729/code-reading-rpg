@@ -20,13 +20,13 @@ const isSkillIdArray = (value: unknown): value is string[] =>
 
 function parsePlayerProgress(value: unknown): PlayerProgress | null {
   if (!isRecord(value)) return null
-  if (!Number.isInteger(value.exp) || (value.exp as number) < 0) return null
+  if (typeof value.exp !== 'number' || !Number.isInteger(value.exp) || value.exp < 0) return null
   if (!isStageIdArray(value.clearedStageIds)) return null
   if (!isStageIdArray(value.unlockedStageIds)) return null
   if (!isSkillIdArray(value.unlockedSkillIds)) return null
 
   return {
-    exp: value.exp as number,
+    exp: value.exp,
     clearedStageIds: [...value.clearedStageIds],
     unlockedStageIds: [...value.unlockedStageIds],
     unlockedSkillIds: [...value.unlockedSkillIds],
