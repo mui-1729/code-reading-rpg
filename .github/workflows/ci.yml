@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/46-level-battle-scaling]
   pull_request:
 
 jobs:
