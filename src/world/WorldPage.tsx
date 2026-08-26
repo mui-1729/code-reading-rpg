@@ -1,11 +1,13 @@
 import { useNavigate } from '@tanstack/react-router'
 import { gameAudio } from '../audio/gameAudio'
+import { useBgm } from '../audio/useBgm'
 import { areas } from '../game'
 import { useProgress } from '../progression'
 
 export function WorldPage() {
   const navigate = useNavigate()
   const { progress, stats } = useProgress()
+  useBgm('menu')
 
   const enterArea = (entryPath: '/javascript/field' | null) => {
     if (!entryPath) return
