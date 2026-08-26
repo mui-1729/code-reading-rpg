@@ -1,27 +1,88 @@
 .audio-controls {
   position: fixed;
-  left: 16px;
-  bottom: 16px;
-  z-index: 35;
-  width: min(250px, calc(100vw - 84px));
-  display: grid;
-  grid-template-columns: auto 1fr 1fr;
+  left: 14px;
+  bottom: 14px;
+  z-index: 36;
+  font-family: "Courier New", ui-monospace, monospace;
+}
+
+.audio-settings-toggle {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px;
+  gap: 7px;
+  padding: 8px 10px;
+  border-color: #55556f;
   background: rgba(7, 7, 14, .94);
+  color: #fff;
+  cursor: pointer;
+}
+
+.audio-settings-toggle > span {
+  color: var(--blue);
+  font-size: 13px;
+}
+
+.audio-settings-toggle > strong {
+  color: #d3d0df;
+  font-size: 9px;
+  letter-spacing: .08em;
+}
+
+.audio-settings-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 75;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(3, 4, 8, .78);
+}
+
+.audio-settings-panel {
+  width: min(360px, 100%);
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border-color: #5d5a7b;
+  background: #0b0b14;
+}
+
+.audio-settings-panel > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 2px dashed #37354d;
+}
+
+.audio-settings-panel h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 18px;
+  letter-spacing: .08em;
+}
+
+.audio-settings-panel header button {
+  width: 34px;
+  height: 34px;
+  border: 2px solid #6f6b88;
+  background: #151522;
+  color: #fff;
+  font: 900 18px/1 monospace;
+  cursor: pointer;
 }
 
 .audio-toggle {
   appearance: none;
+  width: 100%;
   border: 2px solid #78789a;
   background: #10101c;
   color: var(--green);
-  padding: 7px 8px;
-  font: 900 9px/1 "Courier New", ui-monospace, monospace;
+  padding: 10px;
+  font: 900 10px/1 "Courier New", ui-monospace, monospace;
   letter-spacing: .04em;
   cursor: pointer;
-  white-space: nowrap;
 }
 
 .audio-toggle.muted {
@@ -31,9 +92,9 @@
 .audio-slider {
   min-width: 0;
   display: grid;
-  gap: 3px;
+  gap: 7px;
   color: #aaa7bf;
-  font: 900 8px/1 "Courier New", ui-monospace, monospace;
+  font: 900 9px/1 "Courier New", ui-monospace, monospace;
 }
 
 .audio-slider input {
@@ -46,13 +107,17 @@
   .audio-controls {
     left: 8px;
     bottom: 8px;
-    width: min(235px, calc(100vw - 70px));
-    gap: 6px;
-    padding: 6px;
   }
 
-  .audio-toggle {
-    padding: 6px;
-    font-size: 8px;
+  .audio-settings-toggle {
+    padding: 7px 9px;
+  }
+
+  .audio-settings-overlay {
+    padding: 8px;
+  }
+
+  .audio-settings-panel {
+    padding: 13px;
   }
 }
