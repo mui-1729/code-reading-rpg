@@ -22,7 +22,8 @@ export const typescriptField: FieldDefinition = {
   width,
   height,
   start: { x: 5, y: 7 },
-  // 学習看板はsolid tileとして扱われるため、内側の床は塞がずに奥までの通路を維持する。
+  // Interactable objects are solid tiles. Keep the interior floor open so every Gate,
+  // learning sign, and NPC always has a reachable adjacent interaction tile.
   blockedTiles: borderTiles(width, height),
   interactions: [
     {
@@ -48,6 +49,27 @@ export const typescriptField: FieldDefinition = {
       label: 'COMPILER BOSS GATE',
       x: 9,
       y: 2,
+    },
+    {
+      id: 'type-warden-npc',
+      kind: 'npc',
+      npcId: 'type-warden',
+      x: 2,
+      y: 7,
+    },
+    {
+      id: 'narrowing-scholar-npc',
+      kind: 'npc',
+      npcId: 'narrowing-scholar',
+      x: 8,
+      y: 7,
+    },
+    {
+      id: 'compiler-scout-npc',
+      kind: 'npc',
+      npcId: 'compiler-scout',
+      x: 7,
+      y: 3,
     },
     {
       id: 'ts-type-sign',
