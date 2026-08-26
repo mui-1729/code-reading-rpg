@@ -2,68 +2,83 @@
 
 ## 1. この文書の役割
 
-この文書は、新しいBattle、Skill、code variant、解説を追加するときの作成ルールを定義する。
+この文書は、新しいBattle、Skill、code variant、Field学習ヒントを追加するときの基準を定義する。
 
-目的は、コンテンツが増えても、
+コンテンツが増えても、次を崩さないことを目的とする。
 
 - 学習意図
-- JavaScript上の意味
+- JavaScript / TypeScript上の意味
 - Battleとしての戦略
 - seed再現性
 - RPG進行
-
-を揃えたまま追加できること。
+- display codeと内部効果の一致
 
 ---
 
-## 2. Battleを作る前に決める
+## 2. 基本原則
 
-最低限:
+新しい要素は「構文を増やしたい」だけで追加しない。
 
-1. 今回学ばせる概念
+実装前に最低限決める。
+
+1. 何を読めるようにしたいか
 2. 既習として扱うsyntax
-3. Playerに比較させたい選択肢
-4. 盤面のどの情報を見る必要があるか
-5. 起こり得る読み間違い
-6. 読み間違いがgame resultへどう現れるか
-7. 基準 / 推奨Player stats
-8. 合理的な勝ち筋
-9. EXP / unlock等のStage報酬が必要か
+3. Playerが盤面のどの情報を見るか
+4. 読み間違えると何が起こるか
+5. 正しく読んだ結果がどのgame decisionへつながるか
+6. Stage内での難易度と役割
+7. TargetRule / effectで安全に表現できるか
 
-「新しいEnemyを出したい」からではなく、学習themeとRPG上の役割から逆算する。
+構文の意味がゲーム結果に現れないなら、Battleへ入れる優先度は低い。
 
 ---
 
-## 3. 1 Battleの学習theme
+## 3. 学習の役割分担
 
-新規概念は原則1つ、多くても強く関連する2つ程度。
+### Field学習看板
 
-良い例:
+単体概念を短く確認する場所。
 
-- `find()`が最初の1要素を返す
-- `find()`と`filter()`の違い
-- `sort()`後の先頭要素
+例:
 
-避ける例:
+- `find()`
+- `filter()`
+- `sort()`
+- 比較演算子
+- `&&`
+- `||`
+- `some()`
+- `reduce()`
 
-- `map()`、分割代入、optional chaining、`reduce()`を同時に初出
+看板は任意。読まなくても進行できる。
 
-難易度は未習syntax数ではなく、既習知識を使うstateの複雑さで上げる。
+### Battle
+
+構文を盤面へ当てはめて結果を判断する場所。
+
+### 後半Battle / Boss
+
+既習構文を複数組み合わせ、実行順序や中間値を追う場所。
+
+```text
+看板 = 単体概念
+Battle = 適用
+Boss = 複合読解
+```
 
 ---
 
 ## 4. 現在のコンテンツ構造
 
-現在は独立した`ProblemTemplate`を使わない。
-
-役割を次のように分ける。
-
 ```text
 Battle definition
-  = 世界側の基準Enemy / Skill構成
+  = Enemy / Skill構成 / reward / area
 
 SkillDefinition
   = Skillの意味 / TargetRule / codeVariants / explanation
+
+LearningHint
+  = Fieldで読む任意の構文解説
 
 Seeded Generator
   = 同じ学習意図を保った盤面variation
@@ -72,13 +87,13 @@ Solvability
   = 生成 / 設計品質の検証
 ```
 
-必要な責務が実際に増えるまでは、別のProblemTemplate階層を追加しない。
+責務が実際に必要になるまで、別の巨大なProblemTemplate層は追加しない。
 
 ---
 
 ## 5. SkillDefinition
 
-Skillのsource definitionは概念上次。
+概念上の形:
 
 ```ts
 {
@@ -100,20 +115,11 @@ Skillのsource definitionは概念上次。
 
 ### `id`
 
-- stable identifier
-- lower-case
-- kebab-case可
-- display name変更で変えない
-
-### `name`
-
-game内で短く識別できる名前。
+stable identifier。display name変更では変えない。
 
 ### `power`
 
-base damage。
-
-Player Levelによる小幅倍率が将来入っても、SkillDefinitionのbase POWERは別に保つ。
+base damage。Player LevelによるPOWER倍率とは分ける。
 
 ### `rule`
 
@@ -121,17 +127,15 @@ display codeの意味に対応する内部TargetRule。
 
 ### `concept`
 
-explanation / learning recordで使う学習概念。
+CODE HELPや学習内容を示す短い名前。
 
 ### `explanation`
 
-一般的なsyntaxの意味と、このSkillが何をtargetにするかを書く。
+1. 構文が一般に何をするか
+2. このSkillでは何を見るか
+3. 似た構文との違い
 
-### `codeVariants`
-
-同じSkillの意味を保ったdisplay code候補。
-
-現在はdefault variantが1つずつ。#31でseed付き選択、#32でmulti-lineを追加予定。
+をできるだけ短く説明する。
 
 ---
 
@@ -141,24 +145,27 @@ explanation / learning recordで使う学習概念。
 
 ```ts
 {
-  id: string,
-  code: string,
-  lineMode: 'single' | 'multi',
+  id: string
+  code: string
+  lineMode: 'single' | 'multi'
 }
 ```
 
-variantを増やすときに変えてよい:
+同じSkillには複数variantを持たせる。
 
-- callback variable name
-- 既習範囲の同義的な書き方
-- line break / intermediate variable
+変えてよいもの:
 
-変えてはいけない:
+- callback variable名
+- 既習範囲の同義表現
+- line break
+- intermediate variable
+
+変えてはいけないもの:
 
 - TargetRuleの意味
 - base POWER
-- concept
-- explanationの本質
+- conceptの本質
+- target集合
 
 例:
 
@@ -167,365 +174,321 @@ enemies.find(e => e.hp < 45)
 enemies.find(enemy => enemy.hp < 45)
 ```
 
-未習の分割代入等をvariantだけで突然出さない。
+見た目だけを暗記して攻略できないようにする。
 
 ---
 
-## 7. Display codeと内部効果を一致させる
+## 7. Display codeと内部効果
 
 最重要ルール。
 
-例えば、
-
 ```js
-enemies.find(e => e.hp < 45)
+enemies.filter(e => e.hp < 100 && e.attackDamage >= 8)
 ```
 
-なら、内部ruleも、
+なら、TargetRuleも、
 
-> 生存Enemyを配列順に見て、current HPが45未満の最初の1体
+> HPが100未満 **かつ** attackDamageが8以上の生存Enemy全員
 
 でなければならない。
 
-避けるずれ:
+確認するずれ:
 
-- `<` vs `<=`
-- `find` vs `filter`
-- current HP vs max HP
-- array order vs HP order
+- `<` と `<=`
+- `>` と `>=`
+- `&&` と `||`
+- `find()` と `filter()`
+- current HPとmax HP
+- array orderとHP order
 - dead Enemyの扱い
-- `sort()`のascending / descending
+- `sort()`の昇順 / 降順
+- `some()`が返すbooleanとtarget配列
+- `reduce()`のtie時の挙動
 
 Display code自体を`eval()`してgame logicとして使わない。
 
 ---
 
-## 8. Battle base definition
+## 8. 現在扱うJavaScript概念
 
-`battles.ts`のBattleは世界側の基準値。
+基礎:
 
-現在のBattle 1〜3は、
+- property access
+- comparison operators
+- `find()`
+- `filter()`
+- `sort()`
 
-- base Enemy HP
-- attack
-- composition
-- available Skills
-- unlock Skill
+追加:
 
-を持つ。
+- `&&`
+- `||`
+- `some()`
+- `reduce()`
+- 三項演算子 `? :`
+- intermediate variable
+- multi-line code
 
-将来はさらに、
+今後候補:
 
-- recommendedLevel
-- expReward
-- isBoss
+- `every()`
+- `map()`
+- optional chaining `?.`
+- nullish coalescing `??`
+- destructuring
+- nested object
+- status / shield property
 
-を持たせる予定。
-
-これらはcurrent Player Levelに合わせてruntimeで下げる値ではない。
+新構文はField看板で単体説明し、Battleで利用する順を基本とする。
 
 ---
 
-## 9. 現在のseed付きGenerator
+## 9. 複数条件
+
+`&&` / `||`は境界値まで含めて読む。
+
+```js
+enemy.hp < 100 && enemy.attackDamage >= 8
+```
+
+は両方必要。
+
+```js
+enemy.attackDamage >= 14 || enemy.hp > 120
+```
+
+はどちらか一方でよい。
+
+Battleでは、同じEnemyが両条件を満たす場合だけでなく、条件ごとに別のEnemyが該当する盤面も用意し、暗記を避ける。
+
+---
+
+## 10. `some()` / `reduce()`
+
+### `some()`
+
+booleanを返すAPIなので、Battle内では「条件成立時にtarget集合を切り替える」ようなeffectと相性がよい。
+
+例:
+
+```js
+const alive = enemies.filter(e => e.hp > 0)
+alive.some(e => e.hp < 50) ? alive : []
+```
+
+### `reduce()`
+
+1つの値・候補へ集約する処理と相性がよい。
+
+例:
+
+```js
+const alive = enemies.filter(e => e.hp > 0)
+alive.reduce((best, enemy) =>
+  enemy.attackDamage > best.attackDamage ? enemy : best,
+)
+```
+
+`reduce()`は「何をaccumulatorとして残しているか」をCODE HELPで説明する。
+
+---
+
+## 11. Multi-line / 複合code
+
+複数行は長さを増やすためではなく、**中間結果を追わせるため**に使う。
+
+良い例:
+
+```js
+const wounded = enemies.filter(enemy => enemy.hp < 40)
+const target = wounded.sort((a, b) => a.hp - b.hp)[0]
+```
+
+Playerが、
+
+1. 1行目の結果
+2. 2行目の変化
+3. 最終target
+
+を順に追えること。
+
+未習構文を3つ以上まとめて初出させない。
+
+---
+
+## 12. LearningHint
+
+Field学習ヒントはdata-drivenに管理する。
+
+最低限:
+
+```ts
+{
+  id,
+  concept,
+  title,
+  summary,
+  codeLines,
+  notes,
+}
+```
+
+ルール:
+
+- 1看板1概念を基本にする
+- summaryは短くする
+- code例はBattleで出る形に近づける
+- notesで読み間違いやすい点を補足する
+- 読まなくても進行できる
+- Field上の`learningHintId`はunit testで存在確認する
+
+---
+
+## 13. Seeded Generator
 
 現在は基準Battleへ制約付きvariationを加える。
 
-### HP
-
-Enemy base maxHPへ85〜115%の倍率をかける。
-
-```text
-hp = round(baseMaxHp * multiplier)
-```
-
-### Order
-
-- Enemy順をshuffle
-- Skill順をshuffle
-
-### Validation
+- Enemy HP: base maxHPの85〜115%
+- Enemy順shuffle
+- Skill順shuffle
 
 候補盤面は、
 
 1. initial valid targetがある
-2. base Battleで初期targetがあったSkillが、生成後も初期targetを持つ
+2. base Battleで初期targetがあったSkillが生成後もtargetを持つ
 3. `isBattleSolvable()`を満たす
 
-場合のみ採用。
+場合のみ採用する。
 
-最大32回生成し、成立しない場合はbase Battleのcloneへfallbackする。
+最大32回試し、成立しなければbase Battle cloneへfallbackする。
 
 ---
 
-## 10. GeneratorとRPG Levelを混ぜない
+## 14. GeneratorとRPG Levelを混ぜない
 
-seed generationは「同じStage内の盤面variation」。
-
-Player Levelに合わせたauto difficulty scalerではない。
-
-避ける実装:
-
-```text
-Player Levelが低い
-→ generatorがHP倍率を下げる
-→ 自動で勝てる盤面にする
-```
-
-正しいRPG loop:
+seed generationは同じStage内のvariation。
 
 ```text
 Player Levelが低い
 → 過去Stageへ戻る
 → EXPを得る
 → Level Up
-→ 同じStageへ再挑戦
+→ 再挑戦
 ```
 
-Stageの基準難易度とseed variationを分ける。
+とする。
+
+Enemy HPをPlayer Levelへ自動追従させない。
 
 ---
 
-## 11. HP設計
+## 15. Battle balance
 
-HPはcode conditionとstrategyの両方に影響する。
-
-確認:
+確認する。
 
 - threshold上下にEnemyがいる
-- 全Enemyが同じ結果になっていない
-- attack後にtarget条件が変わる余地がある
-- POWERとの組み合わせで即死 / 詰みがない
-- seed variation後もlearning targetが残る
-
-将来Level導入後は、Stageのrecommended statsでbalanceを確認する。
-
----
-
-## 12. POWER設計
-
-POWERはtargetを読んだあとにどのSkillを使うか考える材料。
-
-方針:
-
-- single targetは比較的高POWERでもよい
-- multi targetは低めでもよい
-- narrow conditionへ価値を持たせてもよい
-- 常に1枚が完全上位互換にならない
-
-避ける:
-
-- max POWERだけ選べば勝てる
-- Level倍率でtargetingを無視できる
-- 1枚で全Stageを解決できる
+- すべてのSkillが同じtargetにならない
+- NEXTを見る意味がある
+- HP変化でtarget条件が変わる余地がある
+- highest POWERだけで解けない
+- multi-targetが完全上位互換にならない
+- recommended Levelで合理的な勝ち筋がある
 
 ---
 
-## 13. NEXT / Enemy attack
-
-NEXTはstrategyを生む情報。
-
-一部のBattleでは、倒す順番で被damageが変わるようにする。
-
-確認:
-
-- dangerous Enemyをcodeで狙えるか
-- NEXTを見る意味があるか
-- Playerのrecommended maxHPとturn数が整合するか
-
-Enemy attackはcurrent Player Levelを参照して自動調整しない。
-
----
-
-## 14. Solvability
-
-現在はgenerated candidateの検証にも使う。
+## 16. Solvability
 
 目的:
 
 - 理不尽な詰みを防ぐ
-- 学習用Battleとして成立させる
-- CI regressionを防ぐ
+- generator regressionを防ぐ
+- content追加時の安全網にする
 
-Level導入後は**current Playerが必ず勝てること**を保証するために使わない。
+`isBattleSolvable()`は「すべてのPlayerが必ず勝てる」保証ではない。
 
-Stageの基準 / recommended Player statsで勝ち筋があるかを検証する。
-
-推奨Level未満で敗北すること自体は許容する。
+Stage基準値で勝ち筋が存在することを確認する。
 
 ---
 
-## 15. 最適解を1つに固定しない
+## 17. RPG reward
 
-JavaScriptの実行結果は一意でも、戦略は複数あってよい。
+新Skill / Stage追加時は、
 
-例:
-
-- Enemy数を減らす
-- dangerous Enemyへhigh POWER
-- 次turnのcondition変化を狙う
-
-ただし学習themeを一度も使わず簡単に突破できる場合は見直す。
-
----
-
-## 16. Skill unlock / RPG reward
-
-新Skillをunlockするとき:
-
-- 新しい読み方を増やす
-- 後続Stageで実際に使う
-- 既存Skillを完全に置き換えない
-
-RPG最小loopではBattle rewardとして、
-
-- EXP
-- Skill unlock
 - Stage CLEAR
-- next Stage unlock
+- EXP
+- next Stage
+- Skill unlock
+- Area CLEAR
 
-を使う予定。
+の整合性を確認する。
 
-Rewardの数値がlearning decisionを上書きしないようにする。
-
----
-
-## 17. Explanation
-
-良いexplanationは3層。
-
-1. JavaScriptとして何をしているか
-2. このSkillではどのconditionを見るか
-3. 似たsyntaxとの違い
-
-固定盤面だけに依存した説明を避ける。
-
-悪い例:
-
-> このカードはSlimeを攻撃する
-
-良い例:
-
-> `find()`は条件に一致した最初の要素を返す。このSkillはcurrent HPが45未満のEnemyを先頭から探す。
-
-seed variationでも成立する説明を書く。
+RPG rewardがコード読解を上書きしないようにする。
 
 ---
 
-## 18. Battle title / subtitle
+## 18. Test
 
-Battle nameはgameとして覚えやすく、subtitleはlearning themeが分かるものにする。
+最低限:
 
-例:
+- Skill ID重複なし
+- code variant存在
+- code variantでTargetRule / POWER不変
+- TargetRule単体test
+- display codeと内部ruleの対応test
+- generated battleのvalid target
+- solvability
+- seed再現性
+- LearningHint参照整合性
+- route / Area整合性
 
-```text
-First Read
-コードが選ぶ「対象」を読む
+PR前は必ず次を成功させる。
+
+```bash
+npm ci
+npm run lint
+npm test
+npm run build
 ```
 
-```text
-One or Many
-find と filter の違いを戦況で使い分ける
-```
-
-Stage Select導入後はrecommended Level / EXP / Boss等のRPG情報と学習themeを分けて表示する。
+PR CIはこの確認の代替ではなく二重確認。
 
 ---
 
-## 19. 同概念variantの追加順
-
-#31ではまず1行の安全な差から始める。
-
-例:
-
-```js
-enemies.find(e => e.hp < 45)
-enemies.find(enemy => enemy.hp < 45)
-```
-
-その後、既習syntaxが増えたら、
-
-```js
-enemies.find(({ hp }) => hp < 45)
-```
-
-等を追加できる。
-
-Chapterの学習順を無視してvariantを増やさない。
-
----
-
-## 20. Multi-line code
-
-#32ではBattle 3から2行程度を導入する予定。
-
-例:
-
-```js
-const ordered = [...enemies].sort((a, b) => a.hp - b.hp)
-ordered[0]
-```
-
-目的は新syntaxを大量追加することではなく、**実行順序と中間値を追う**体験へ広げること。
-
----
-
-## 21. 新しいJavaScript概念
-
-追加条件:
-
-- game内判断へ自然に変換できる
-- current dataを見る意味がある
-- 既存Skillとの差がgame resultに出る
-
-候補:
-
-- `some()`
-- `every()`
-- `map()`
-- `reduce()`
-- object access
-- nested data
-- status / shield
-
-構文網羅のためだけには追加しない。
-
----
-
-## 22. Battle追加チェック
+## 19. 追加チェックリスト
 
 実装前:
 
-- [ ] learning theme明確
-- [ ] 未習syntaxを突然混ぜない
-- [ ] codeを読む意味がある
-- [ ] NEXTを見る意味がある
-- [ ] recommended Player statsを決めた
-- [ ] 想定勝ち筋がある
+- [ ] learning themeが1文で説明できる
+- [ ] 未習syntaxを詰め込みすぎていない
+- [ ] game resultへ意味が出る
+- [ ] TargetRule / effectで安全に表せる
+- [ ] Field看板が必要か判断した
 
 実装後:
 
-- [ ] SkillDefinitionとTargetRule一致
+- [ ] display codeと内部効果一致
+- [ ] code variant複数
+- [ ] valid target
 - [ ] seed再現性
-- [ ] generation constraint維持
 - [ ] solvability
-- [ ] POWER / HP balance
-- [ ] unlock / reward整合
-- [ ] Unit Test
+- [ ] Field学習ヒント整合
+- [ ] unit test
+- [ ] docs更新
+- [ ] PR前lint / test / build
 - [ ] Cloudflare Preview
 
 ---
 
-## 23. コンテンツ追加の優先
-
-現在は新Battleを大量に追加するより、先にRPG最小loopを完成させる。
+## 20. 現在の優先順位
 
 ```text
-PlayerProgress
-→ Stage Select
-→ EXP / Level / Reward
-→ Persistence
-→ Boss / Area
-→ Field / NPC
+JavaScript単体構文の幅を広げる
+↓
+複数構文・複数行を読むBattle
+↓
+TypeScript Frontier
+↓
+追加Area / RPG深化
 ```
 
-その後、codeVariants / multi-line / 新JavaScript概念を増やし、RPG progressionとlearning progressionを一体化していく。
+新しい構文を増やすこと自体ではなく、**実際のコードを段階的に追えるPlayerを増やすこと**を最終目的とする。

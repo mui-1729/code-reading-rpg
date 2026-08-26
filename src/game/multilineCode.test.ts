@@ -16,7 +16,7 @@ describe('Battle 3 multiline code', () => {
     }
   })
 
-  it('Battle 3はどのseedでも少なくとも1枚を複数行にする', () => {
+  it('Battle 3はsort / some / reduceを複数行で表示する', () => {
     for (let index = 0; index < 24; index += 1) {
       const seed = `multi-${index}`
       const battle = generateBattle(3, seed)
@@ -24,7 +24,9 @@ describe('Battle 3 multiline code', () => {
       if (!battle) continue
 
       const cards = getSkillCardsForBattle(battle, seed)
-      expect(cards.some((card) => card.code.includes('\n'))).toBe(true)
+      const multiLineIds = cards.filter((card) => card.code.includes('\n')).map((card) => card.id)
+
+      expect(multiLineIds).toEqual(expect.arrayContaining(['moon-edge', 'sweep', 'judge']))
     }
   })
 
@@ -33,12 +35,13 @@ describe('Battle 3 multiline code', () => {
     expect(battle).toBeDefined()
     if (!battle) return
 
-    expect(battle.multiLineSkillIds?.length).toBeGreaterThan(0)
+    expect(battle.multiLineSkillIds).toEqual(expect.arrayContaining(['moon-edge', 'sweep', 'judge']))
     for (const skillId of battle.multiLineSkillIds ?? []) {
       expect(battle.skillIds).toContain(skillId)
-      expect(
-        skillDefinitionById[skillId].codeVariants.some((variant) => variant.lineMode === 'multi'),
-      ).toBe(true)
+      const multiVariants = skillDefinitionById[skillId].codeVariants.filter(
+        (variant) => variant.lineMode === 'multi',
+      )
+      expect(multiVariants.length).toBeGreaterThanOrEqual(2)
     }
   })
 
@@ -69,13 +72,13 @@ describe('Battle 3 multiline code', () => {
   })
 
   it('複数行variantは改行をコード文字列として保持する', () => {
-    const multiVariants = skillDefinitionById['moon-edge'].codeVariants.filter(
-      (variant) => variant.lineMode === 'multi',
-    )
+    for (const skillId of ['moon-edge', 'sweep', 'judge']) {
+      const multiVariants = skillDefinitionById[skillId].codeVariants.filter(
+        (variant) => variant.lineMode === 'multi',
+      )
 
-    expect(multiVariants.length).toBeGreaterThanOrEqual(2)
-    expect(multiVariants.every((variant) => variant.code.split('\n').length === 2)).toBe(true)
-    expect(multiVariants.every((variant) => variant.code.startsWith('const ordered = '))).toBe(true)
-    expect(multiVariants.every((variant) => variant.code.endsWith('ordered[0]'))).toBe(true)
+      expect(multiVariants.length).toBeGreaterThanOrEqual(2)
+      expect(multiVariants.every((variant) => variant.code.split('\n').length === 2)).toBe(true)
+    }
   })
 })

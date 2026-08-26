@@ -45,4 +45,44 @@ describe('skill definitions', () => {
       ],
     })
   })
+
+  it('追加構文Skillがcodeと対応するTargetRuleを持つ', () => {
+    expect({
+      lock: [skills.lock.code, skills.lock.rule, skills.lock.concept],
+      alert: [skills.alert.code, skills.alert.rule, skills.alert.concept],
+      sweep: [skills.sweep.code, skills.sweep.rule, skills.sweep.concept],
+      judge: [skills.judge.code, skills.judge.rule, skills.judge.concept],
+    }).toEqual({
+      lock: [
+        'enemies.filter(e => e.hp > 0 && e.hp < 100 && e.attackDamage >= 8)',
+        { kind: 'allBelowAndAttackAtLeast', hp: 100, attackDamage: 8 },
+        '&&',
+      ],
+      alert: [
+        'enemies.find(e => e.hp > 0 && (e.attackDamage >= 14 || e.hp > 120))',
+        { kind: 'firstAttackAtLeastOrAbove', hp: 120, attackDamage: 14 },
+        '||',
+      ],
+      sweep: [
+        'enemies.some(e => e.hp > 0 && e.hp < 50) ? enemies.filter(e => e.hp > 0) : []',
+        { kind: 'allIfAnyBelow', hp: 50 },
+        'some() + ? :',
+      ],
+      judge: [
+        'enemies.filter(e => e.hp > 0).reduce((best, e) => e.attackDamage > best.attackDamage ? e : best)',
+        { kind: 'highestAttack' },
+        'reduce() + ? :',
+      ],
+    })
+  })
+
+  it('追加構文Skillは暗記回避用に複数code variantを持つ', () => {
+    for (const skillId of ['lock', 'alert', 'sweep', 'judge']) {
+      const definition = skillDefinitionById[skillId]
+      expect(definition.codeVariants.length).toBeGreaterThanOrEqual(3)
+      expect(new Set(definition.codeVariants.map((variant) => variant.code)).size).toBe(
+        definition.codeVariants.length,
+      )
+    }
+  })
 })
