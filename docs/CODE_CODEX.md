@@ -23,7 +23,7 @@ World Map / Area Select / Fieldで利用できます。
 
 - Keyboard: `C` = OPEN / CLOSE
 - `Esc` = CLOSE
-- Mobile: 画面左下の`CODE CODEX`ボタン
+- Mobile: 画面右下の`CODE CODEX`ボタン
 - Battle中: 非表示
 
 Battle中はコードカードと戦況を読むことへ集中させるため、Codexを表示しません。必要な解説はBattle側の`CODE HELP`を使います。
