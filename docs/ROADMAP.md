@@ -4,7 +4,7 @@
 
 `CODE//READ RPG`を、コードを読む行為がそのままゲーム上の判断になるRPGとして拡張する。
 
-現在はJavaScript Kingdom / TypeScript Frontierの2 Area、Field探索、NPC、学習看板、Code Codex、Main Quest、RPG進行、複数行・複合codeまで実装済み。
+現在はJavaScript Kingdom / TypeScript Frontierの2 Area、Field探索、NPC、学習看板、Code Codex、Main Quest、Side Quest、RPG進行、複数行・複合codeまで実装済み。
 
 守ること:
 
@@ -78,6 +78,9 @@
 - Quest Tracker
 - Fieldの`NEXT` / `!` marker
 - Battle勝利後のQuest更新feedback
+- JavaScript / TypeScriptの再攻略Side Quest
+- Side Quest一回限りbonus EXP
+- save schema v3 / v1・v2 migration
 
 Enemyはcurrent Player Levelへ自動追従させない。
 
@@ -142,6 +145,8 @@ Boss
 ↓
 Area CLEAR
 ↓
+Side Quest / 過去Stage再攻略
+↓
 World Map
 ```
 
@@ -165,6 +170,14 @@ wrapped.sort((a, b) => (a.stats?.hp ?? Infinity) - (b.stats?.hp ?? Infinity))[0]
 const alive = enemies.filter(({ hp }) => hp > 0)
 const allStable = alive.every(({ hp }) => hp >= 50)
 allStable ? [] : alive
+```
+
+Side Quest:
+
+```text
+SECOND PASS
+→ FIRST READ replay
+→ +40 EXP
 ```
 
 今後候補:
@@ -194,18 +207,12 @@ JavaScript配列処理 + narrowing / type predicate / keyof / indexed access
 
 TypeScriptは型用語だけを問わず、runtimeで最終的にどのEnemyが対象になるかまで読む。
 
-発展例:
+Side Quest:
 
-```ts
-type Scored<T> = { value: T; score?: number }
-const candidates: Scored<Enemy>[] = enemies
-  .filter(({ hp }) => hp > 0)
-  .map(enemy => ({ value: enemy, score: enemy.attackDamage }))
-```
-
-```ts
-type HpView = Pick<Enemy, 'hp'>
-const readHp = (enemy: HpView): number => enemy.hp
+```text
+TYPE RECHECK
+→ TYPED ENTRY replay
+→ +50 EXP
 ```
 
 今後候補:
@@ -217,17 +224,18 @@ const readHp = (enemy: HpView): number => enemy.hp
 
 ---
 
-## 6. 次のコンテンツ拡張
+## 6. 次のRPG拡張
 
-2 Areaの基礎学習とMain Quest loopが成立したため、次は同じBattleを増やすだけでなくRPG側の意味を増やす。
+Main Quest / Side Questまで成立したため、次は報酬を使う場所を作る。
 
 優先候補:
 
-1. Side Quest
-2. Gold / Shop / Itemの最小loop
-3. 3つ目のArea（SQL / React候補）
-4. Boss固有mechanic
-5. Field複数screen / camera追従
+1. Gold / Shop / Itemの最小loop
+2. 3つ目のArea（SQL / React候補）
+3. Boss固有mechanic
+4. Field複数screen / camera追従
+
+Gold / Itemを入れる場合も、読解を飛ばせる単純な攻撃力inflationにはしない。
 
 追加条件:
 
@@ -238,22 +246,33 @@ const readHp = (enemy: HpView): number => enemy.hp
 
 ---
 
-## 7. RPGの深さ
+## 7. Gold / Shop / Item候補
 
-次に検討する:
+最小loop候補:
 
-- Side Quest
-- Gold
-- Shop
-- Item
-- Inn / 回復
-- 装備
-- Treasure
-- Status effect
-- Deck編成
-- Boss固有mechanic
+```text
+Battle / Quest
+↓
+Gold
+↓
+Shop
+↓
+少数Item
+↓
+Battleで限定的に使用
+```
 
-RPG要素はコード読解の代替ではなく、コードを読む理由を増やすために使う。
+候補Item:
+
+- 1 Battle 1回だけHPを少量回復
+- 次のEnemy attackを少量軽減
+- CODE HELPを開くこと自体へのcostは付けない
+
+避けること:
+
+- Itemだけでtarget判断を無視できる
+- 常設Shop panelを増やす
+- 複雑なinventoryを最初から作る
 
 ---
 
@@ -306,9 +325,10 @@ Battle MVP
 → Code Codex
 → UI常設情報の整理
 → JavaScript / TypeScript発展構文・Boss複合variant
+→ 再攻略Side Quest / bonus EXP / save v3
 
 [次]
-RPG深化: Side Quest / Gold・Shop・Itemの最小loop
+Gold / Shop / Itemの最小loop
 or
 3つ目のArea
 
