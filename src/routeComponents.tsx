@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getRouteApi, useNavigate } from '@tanstack/react-router'
 import App from './App'
+import { useBgm } from './audio/useBgm'
 import { areaById, battles, JAVASCRIPT_AREA_ID } from './game'
 import { getTotalExpForLevel, useProgress } from './progression'
 
@@ -9,6 +10,7 @@ const createRunSeed = () => crypto.randomUUID()
 
 export function HomePage() {
   const navigate = useNavigate()
+  useBgm('menu')
 
   return (
     <main className="app-shell intro-shell title-screen">
@@ -66,6 +68,7 @@ export function HomePage() {
 export function JavaScriptAreaPage() {
   const navigate = useNavigate()
   const { progress, stats, resetProgress } = useProgress()
+  useBgm('menu')
   const area = areaById[JAVASCRIPT_AREA_ID]
   const areaCleared = progress.clearedAreaIds.includes(area.id)
   const areaBattles = battles.filter((battle) => battle.areaId === area.id)
@@ -220,6 +223,7 @@ export function BattleRoutePage() {
 export function CompletePage() {
   const navigate = useNavigate()
   const { progress } = useProgress()
+  useBgm('menu')
   const area = areaById[JAVASCRIPT_AREA_ID]
   const areaCleared = progress.clearedAreaIds.includes(area.id)
   const boss = battles.find((battle) => battle.id === area.bossBattleId)
@@ -266,6 +270,7 @@ export function CompletePage() {
 
 function NotFoundBattle() {
   const navigate = useNavigate()
+  useBgm('menu')
 
   return (
     <main className="app-shell center-shell title-screen">

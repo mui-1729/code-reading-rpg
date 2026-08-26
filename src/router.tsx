@@ -1,5 +1,5 @@
 import { Outlet, createRootRoute, createRoute, createRouter } from '@tanstack/react-router'
-import { JavaScriptFieldPage } from './field/JavaScriptFieldPage'
+import { JavaScriptFieldRoute } from './field/JavaScriptFieldRoute'
 import { BattleRoutePage, CompletePage, HomePage, JavaScriptAreaPage } from './routeComponents'
 import { WorldPage } from './world/WorldPage'
 
@@ -28,7 +28,7 @@ const javascriptRoute = createRoute({
 const fieldRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'javascript/field',
-  component: JavaScriptFieldPage,
+  component: JavaScriptFieldRoute,
 })
 
 const battleRoute = createRoute({
