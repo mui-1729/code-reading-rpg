@@ -11,6 +11,7 @@ import './dialogue.css'
 import './motion.css'
 import './audio.css'
 import './world.css'
+import './code-help.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
