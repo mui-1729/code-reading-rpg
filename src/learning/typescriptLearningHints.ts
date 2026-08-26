@@ -108,6 +108,34 @@ export const typescriptLearningHints: LearningHint[] = [
       'Battleではkey="hp"なのでindexed accessはHP読解になる。',
     ],
   },
+  {
+    id: 'ts-generic',
+    concept: 'generic',
+    title: '型をあとから当てはめる箱として読む',
+    summary: 'genericの<T>は、同じ構造を複数の型で使えるようにする型parameter。Scored<Enemy>ならTへEnemyを入れて読む。',
+    codeLines: [
+      'type Scored<T> = { value: T; score?: number }',
+      'const item: Scored<Enemy> = { value: enemy, score: enemy.attackDamage }',
+    ],
+    notes: [
+      'Tそのものが実行時の値ではない。',
+      'Scored<Enemy>ではvalueの型がEnemyに決まる。',
+    ],
+  },
+  {
+    id: 'ts-utility-pick',
+    concept: 'Pick<T, K>',
+    title: '必要なpropertyだけの型を作る',
+    summary: 'Pick<T, K>は、Tの中からKで指定したpropertyだけを持つ新しい型を作るutility type。',
+    codeLines: [
+      "type HpView = Pick<Enemy, 'hp'>",
+      'const readHp = (enemy: HpView): number => enemy.hp',
+    ],
+    notes: [
+      'Pickはobjectそのものを変更せず、型として見せるpropertyを絞る。',
+      'Pick<Enemy, "hp">でも実際に読む値はenemy.hp。',
+    ],
+  },
 ]
 
 export const typescriptLearningHintById = Object.fromEntries(
