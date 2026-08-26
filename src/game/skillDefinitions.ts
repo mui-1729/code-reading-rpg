@@ -4,9 +4,10 @@ export type CodeVariant = {
   id: string
   code: string
   lineMode: 'single' | 'multi'
+  codeHelpLines?: readonly string[]
 }
 
-export type SkillDefinition = Omit<SkillCard, 'code'> & {
+export type SkillDefinition = Omit<SkillCard, 'code' | 'codeHelpLines'> & {
   codeVariants: readonly CodeVariant[]
 }
 
@@ -146,9 +147,9 @@ export const skillDefinitions: readonly SkillDefinition[] = [
     name: 'MOON EDGE',
     power: 72,
     rule: { kind: 'lowestHp' },
-    concept: 'sort()',
+    concept: 'filter() + sort() + [0]',
     explanation:
-      'sort((a, b) => a.hp - b.hp) はHPの小さい順に並べます。[0] を取るため、現在HPが最も低い敵1体が対象です。',
+      '生存Enemyをfilter()で残し、sort((a, b) => a.hp - b.hp)でHPの小さい順に並べ、[0]で先頭を取ります。複数行では中間変数を上から追うと対象が分かります。',
     codeVariants: [
       {
         id: 'short',
@@ -166,14 +167,24 @@ export const skillDefinitions: readonly SkillDefinition[] = [
         lineMode: 'single',
       },
       {
-        id: 'ordered-short',
-        code: 'const ordered = [...enemies].sort((a, b) => a.hp - b.hp)\nordered[0]',
+        id: 'alive-ordered-short',
+        code: 'const alive = enemies.filter(e => e.hp > 0)\nconst ordered = [...alive].sort((a, b) => a.hp - b.hp)\nordered[0]',
         lineMode: 'multi',
+        codeHelpLines: [
+          'filter()でHPが0より大きい生存Enemyだけをaliveへ残す。',
+          'aliveをコピーして、sort()でHPの小さい順に並べた配列をorderedへ入れる。',
+          '[0]でorderedの先頭、つまり現在HPが最も低いEnemyを選ぶ。',
+        ],
       },
       {
-        id: 'ordered-named',
-        code: 'const ordered = [...enemies].sort((left, right) => left.hp - right.hp)\nordered[0]',
+        id: 'alive-ordered-named',
+        code: 'const alive = enemies.filter(enemy => enemy.hp > 0)\nconst ordered = [...alive].sort((left, right) => left.hp - right.hp)\nordered[0]',
         lineMode: 'multi',
+        codeHelpLines: [
+          'filter()で撃破済みを除き、生存Enemyをaliveへ集める。',
+          'sort()のleft.hp - right.hpはHP昇順。結果をorderedへ保存する。',
+          'ordered[0]は並べ替え後の先頭なので、HPが最も低いEnemyになる。',
+        ],
       },
     ],
   },
@@ -182,9 +193,9 @@ export const skillDefinitions: readonly SkillDefinition[] = [
     name: 'SWEEP',
     power: 18,
     rule: { kind: 'allIfAnyBelow', hp: 50 },
-    concept: 'some() + ? :',
+    concept: 'filter() + some() + ? :',
     explanation:
-      'some() は条件に合う要素が1つでもあればtrueを返します。このカードは生存中のHP50未満の敵が1体でもいれば、生存敵全員を対象にします。? : は条件によって返す値を切り替える三項演算子です。',
+      '生存Enemyをfilter()したあと、some()でHP50未満が1体でもいるかをbooleanで確認し、三項演算子 ? : で生存敵全員か空配列を返します。',
     codeVariants: [
       {
         id: 'short',
@@ -202,14 +213,24 @@ export const skillDefinitions: readonly SkillDefinition[] = [
         lineMode: 'single',
       },
       {
-        id: 'alive-short',
-        code: 'const alive = enemies.filter(e => e.hp > 0)\nalive.some(e => e.hp < 50) ? alive : []',
+        id: 'alive-wounded-short',
+        code: 'const alive = enemies.filter(e => e.hp > 0)\nconst hasWounded = alive.some(e => e.hp < 50)\nhasWounded ? alive : []',
         lineMode: 'multi',
+        codeHelpLines: [
+          'filter()で生存Enemyだけをaliveへ残す。',
+          'some()でaliveの中にHP50未満が1体でもいるか調べ、true / falseをhasWoundedへ入れる。',
+          'hasWoundedがtrueならalive全員、falseなら空配列[]を返す。',
+        ],
       },
       {
-        id: 'alive-enemy',
-        code: 'const alive = enemies.filter(enemy => enemy.hp > 0)\nalive.some(enemy => enemy.hp < 50) ? alive : []',
+        id: 'alive-wounded-enemy',
+        code: 'const alive = enemies.filter(enemy => enemy.hp > 0)\nconst hasWounded = alive.some(enemy => enemy.hp < 50)\nhasWounded ? alive : []',
         lineMode: 'multi',
+        codeHelpLines: [
+          'まずfilter()で撃破済みEnemyを除いてaliveを作る。',
+          'some()は条件に合う要素そのものではなくbooleanを返す。',
+          '三項演算子でbooleanに応じてtarget配列を切り替える。',
+        ],
       },
     ],
   },
@@ -218,9 +239,9 @@ export const skillDefinitions: readonly SkillDefinition[] = [
     name: 'JUDGE',
     power: 52,
     rule: { kind: 'highestAttack' },
-    concept: 'reduce() + ? :',
+    concept: 'filter() + map() + reduce()',
     explanation:
-      'reduce() は配列を1つの値へまとめます。このカードでは生存敵を順に比較し、攻撃力が最も高い敵1体を残します。比較結果を選ぶために三項演算子 ? : を使います。',
+      '生存Enemyをfilter()し、map()でEnemyとscoreを持つobjectへ変換し、reduce()でscore最大の候補を1つに絞ります。最後の.enemyで元のEnemyを取り出します。',
     codeVariants: [
       {
         id: 'short',
@@ -238,14 +259,24 @@ export const skillDefinitions: readonly SkillDefinition[] = [
         lineMode: 'single',
       },
       {
-        id: 'alive-short',
-        code: 'const alive = enemies.filter(e => e.hp > 0)\nalive.reduce((best, e) => e.attackDamage > best.attackDamage ? e : best)',
+        id: 'scored-short',
+        code: 'const alive = enemies.filter(e => e.hp > 0)\nconst scored = alive.map(e => ({ enemy: e, score: e.attackDamage }))\nscored.reduce((best, e) => e.score > best.score ? e : best).enemy',
         lineMode: 'multi',
+        codeHelpLines: [
+          'filter()で生存Enemyだけをaliveへ残す。',
+          'map()で各Enemyを{ enemy, score }のobjectへ変換し、attackDamageをscoreとして持たせる。',
+          'reduce()でscoreが最大のobjectを残し、.enemyで元のEnemyを取り出す。',
+        ],
       },
       {
-        id: 'alive-enemy',
-        code: 'const alive = enemies.filter(enemy => enemy.hp > 0)\nalive.reduce((best, enemy) => enemy.attackDamage > best.attackDamage ? enemy : best)',
+        id: 'scored-enemy',
+        code: 'const alive = enemies.filter(enemy => enemy.hp > 0)\nconst scored = alive.map(enemy => ({ enemy, score: enemy.attackDamage }))\nscored.reduce((best, candidate) => candidate.score > best.score ? candidate : best).enemy',
         lineMode: 'multi',
+        codeHelpLines: [
+          '最初にfilter()でalive配列を作る。',
+          'map()は要素数を保ったまま、各Enemyをscore付きobjectへ変換する。',
+          'reduce()で最もscoreが高い候補を1つにし、最後にenemy propertyを読む。',
+        ],
       },
     ],
   },
