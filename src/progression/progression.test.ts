@@ -7,6 +7,7 @@ import {
   getMaxHpForLevel,
   getPlayerStats,
   getPowerMultiplierForLevel,
+  getSkillPowerForLevel,
   getTotalExpForLevel,
 } from './progression'
 
@@ -52,6 +53,17 @@ describe('player progression', () => {
     expect(getPowerMultiplierForLevel(1)).toBe(1)
     expect(getPowerMultiplierForLevel(2)).toBeCloseTo(1.02)
     expect(getPowerMultiplierForLevel(3)).toBeCloseTo(1.04)
+  })
+
+  it('Skill POWERはLevel倍率を適用して実ダメージ用の整数へ丸める', () => {
+    expect(getSkillPowerForLevel(34, 1)).toBe(34)
+    expect(getSkillPowerForLevel(34, 2)).toBe(35)
+    expect(getSkillPowerForLevel(62, 2)).toBe(63)
+    expect(getSkillPowerForLevel(72, 3)).toBe(75)
+  })
+
+  it('Skill POWERは負値を0へ正規化する', () => {
+    expect(getSkillPowerForLevel(-10, 5)).toBe(0)
   })
 
   it('EXP追加は元の進行データを変更しない', () => {
