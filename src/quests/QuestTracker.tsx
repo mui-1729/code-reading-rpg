@@ -2,7 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouterState } from '@tanstack/react-router'
 import { JAVASCRIPT_AREA_ID, TYPESCRIPT_AREA_ID } from '../game/areas'
 import { useProgress } from '../progression'
-import { getMainQuestProgress, matchesQuestCondition } from './quests'
+import {
+  getMainQuestProgress,
+  getSideQuestProgressList,
+  matchesQuestCondition,
+} from './quests'
 
 const visiblePaths = new Set([
   '/world',
@@ -23,17 +27,17 @@ export function QuestTracker() {
   const [open, setOpen] = useState(false)
   const visible = visiblePaths.has(pathname)
 
+  const preferredAreaId = pathname.startsWith('/typescript')
+    ? TYPESCRIPT_AREA_ID
+    : pathname.startsWith('/javascript')
+      ? JAVASCRIPT_AREA_ID
+      : null
+
   const questProgress = useMemo(() => {
     const quests = getMainQuestProgress({
       clearedStageIds: progress.clearedStageIds,
       clearedAreaIds: progress.clearedAreaIds,
     })
-
-    const preferredAreaId = pathname.startsWith('/typescript')
-      ? TYPESCRIPT_AREA_ID
-      : pathname.startsWith('/javascript')
-        ? JAVASCRIPT_AREA_ID
-        : null
 
     if (!preferredAreaId) return quests
 
@@ -42,7 +46,28 @@ export function QuestTracker() {
       if (right.quest.areaId === preferredAreaId) return 1
       return 0
     })
-  }, [pathname, progress.clearedAreaIds, progress.clearedStageIds])
+  }, [preferredAreaId, progress.clearedAreaIds, progress.clearedStageIds])
+
+  const visibleSideQuests = useMemo(() => {
+    const quests = getSideQuestProgressList({
+      clearedStageIds: progress.clearedStageIds,
+      clearedAreaIds: progress.clearedAreaIds,
+      completedSideQuestIds: progress.completedSideQuestIds,
+    }).filter((entry) => entry.status !== 'locked')
+
+    if (!preferredAreaId) return quests
+
+    return [...quests].sort((left, right) => {
+      if (left.quest.areaId === preferredAreaId) return -1
+      if (right.quest.areaId === preferredAreaId) return 1
+      return 0
+    })
+  }, [
+    preferredAreaId,
+    progress.clearedAreaIds,
+    progress.clearedStageIds,
+    progress.completedSideQuestIds,
+  ])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -69,12 +94,12 @@ export function QuestTracker() {
   const completeCount = questProgress.filter((quest) => quest.status === 'complete').length
 
   return (
-    <aside className="quest-tracker" aria-label="Main quest tracker">
+    <aside className="quest-tracker" aria-label="Quest tracker">
       <button
         className="quest-toggle pixel-window"
         type="button"
         aria-expanded={open}
-        aria-controls="main-quest-panel"
+        aria-controls="quest-panel"
         onClick={() => setOpen((current) => !current)}
       >
         <span>QUEST</span>
@@ -83,14 +108,15 @@ export function QuestTracker() {
       </button>
 
       {open && (
-        <section id="main-quest-panel" className="quest-panel pixel-window">
+        <section id="quest-panel" className="quest-panel pixel-window">
           <header className="quest-panel-header">
-            <h2>MAIN QUEST</h2>
+            <h2>QUEST LOG</h2>
             <button type="button" aria-label="Close quest log" onClick={() => setOpen(false)}>
               ×
             </button>
           </header>
 
+          <div className="quest-section-label">MAIN</div>
           <div className="quest-list">
             {questProgress.map((entry) => {
               const nextStepId = entry.nextStep?.id
@@ -141,6 +167,33 @@ export function QuestTracker() {
               )
             })}
           </div>
+
+          {visibleSideQuests.length > 0 && (
+            <>
+              <div className="quest-section-label">SIDE</div>
+              <div className="quest-list quest-side-list">
+                {visibleSideQuests.map((entry) => (
+                  <article
+                    className={`quest-card quest-card-${entry.status}`}
+                    key={entry.quest.id}
+                  >
+                    <div className="quest-card-heading">
+                      <div>
+                        <span>{entry.quest.areaId.toUpperCase()}</span>
+                        <h3>{entry.quest.title}</h3>
+                      </div>
+                      <strong>{entry.status.toUpperCase()}</strong>
+                    </div>
+                    <div className="side-quest-objective">
+                      <span>{entry.status === 'complete' ? '✓' : '▶'}</span>
+                      <p>{entry.quest.objective}</p>
+                      <strong>+{entry.quest.expReward} EXP</strong>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </>
+          )}
         </section>
       )}
     </aside>
