@@ -31,6 +31,10 @@ const isStageIdArray = (value: unknown): value is number[] =>
 const isStringIdArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every((item) => typeof item === 'string' && item.length > 0)
 
+const mergeUnique = <T,>(baseline: readonly T[], stored: readonly T[]): T[] => [
+  ...new Set([...baseline, ...stored]),
+]
+
 function parseCommonProgressFields(value: unknown) {
   if (!isRecord(value)) return null
   if (typeof value.exp !== 'number' || !Number.isInteger(value.exp) || value.exp < 0) return null
@@ -38,11 +42,13 @@ function parseCommonProgressFields(value: unknown) {
   if (!isStageIdArray(value.unlockedStageIds)) return null
   if (!isStringIdArray(value.unlockedSkillIds)) return null
 
+  const baseline = createInitialPlayerProgress()
+
   return {
     exp: value.exp,
     clearedStageIds: [...value.clearedStageIds],
-    unlockedStageIds: [...value.unlockedStageIds],
-    unlockedSkillIds: [...value.unlockedSkillIds],
+    unlockedStageIds: mergeUnique(baseline.unlockedStageIds, value.unlockedStageIds),
+    unlockedSkillIds: mergeUnique(baseline.unlockedSkillIds, value.unlockedSkillIds),
   }
 }
 
