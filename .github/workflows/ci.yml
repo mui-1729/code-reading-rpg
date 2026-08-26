@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, feat/90-typescript-frontier]
+    branches: [main]
   pull_request:
 
 jobs:
