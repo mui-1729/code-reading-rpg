@@ -65,12 +65,20 @@ export function HomePage() {
 
 export function JavaScriptAreaPage() {
   const navigate = useNavigate()
-  const { progress, stats } = useProgress()
+  const { progress, stats, resetProgress } = useProgress()
   const levelStartExp = getTotalExpForLevel(stats.level)
   const nextLevelExp = getTotalExpForLevel(stats.level + 1)
   const expInLevel = progress.exp - levelStartExp
   const expRange = Math.max(1, nextLevelExp - levelStartExp)
   const expPercent = Math.max(0, Math.min(100, (expInLevel / expRange) * 100))
+
+  const handleResetProgress = () => {
+    const confirmed = window.confirm(
+      '進行状況を初期化します。EXP・Stage CLEAR・Skill解放は元に戻せません。',
+    )
+    if (!confirmed) return
+    resetProgress()
+  }
 
   return (
     <main className="app-shell area-shell title-screen">
@@ -154,7 +162,12 @@ export function JavaScriptAreaPage() {
         </section>
 
         <footer className="area-footer">
-          解放済みStageには何度でも挑戦できる。勝てない敵が現れたら、前のStageで力をつけて戻ってこよう。
+          <span>
+            解放済みStageには何度でも挑戦できる。勝てない敵が現れたら、前のStageで力をつけて戻ってこよう。
+          </span>
+          <button type="button" className="secondary-button area-reset" onClick={handleResetProgress}>
+            RESET PROGRESS
+          </button>
         </footer>
       </section>
     </main>
