@@ -29,13 +29,13 @@ export function getSkillCardForBattle(
   skillId: string,
   battleId: number,
   seed: Seed,
-): SkillCard | undefined {
+): SkillCard {
   const definition = skillDefinitionById[skillId]
-  if (!definition) return undefined
+  if (!definition) throw new Error(`Unknown skill: ${skillId}`)
 
   const random = createSeededRandom(`${battleId}:${String(seed)}:${skillId}:code-variant`)
   const variant = definition.codeVariants[random.int(0, definition.codeVariants.length - 1)]
-  if (!variant) return undefined
+  if (!variant) throw new Error(`Skill ${skillId} has no code variant`)
 
   return createSkillCard(definition, variant)
 }
