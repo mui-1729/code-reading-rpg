@@ -3,7 +3,13 @@ export const TYPESCRIPT_AREA_ID = 'typescript'
 
 export type AreaAvailability = 'available' | 'comingSoon'
 
-export type AreaRoutePath = '/javascript' | '/javascript/field' | '/javascript/complete'
+export type AreaRoutePath =
+  | '/javascript'
+  | '/javascript/field'
+  | '/javascript/complete'
+  | '/typescript'
+  | '/typescript/field'
+  | '/typescript/complete'
 
 export type AreaRoutes = {
   stageSelect: AreaRoutePath | null
@@ -39,13 +45,14 @@ export const areas: AreaDefinition[] = [
     id: TYPESCRIPT_AREA_ID,
     label: 'WORLD 02',
     title: 'TypeScript Frontier',
-    description: '型を手がかりにコードの意味を追う、次の冒険候補地。',
-    availability: 'comingSoon',
+    description: '型注釈・union・narrowingを手がかりに、実行結果まで追う辺境地。',
+    availability: 'available',
     routes: {
-      stageSelect: null,
-      field: null,
-      complete: null,
+      stageSelect: '/typescript',
+      field: '/typescript/field',
+      complete: '/typescript/complete',
     },
+    bossBattleId: 6,
   },
 ]
 
