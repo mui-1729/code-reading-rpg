@@ -1,6 +1,7 @@
 export type PlayerProgress = {
   exp: number
   clearedStageIds: number[]
+  clearedAreaIds: string[]
   unlockedStageIds: number[]
   unlockedSkillIds: string[]
 }
@@ -16,6 +17,7 @@ export type BattleVictoryInput = {
   expReward: number
   nextStageId?: number
   unlockSkillId?: string
+  clearAreaId?: string
 }
 
 export type BattleVictoryReward = {
@@ -25,6 +27,7 @@ export type BattleVictoryReward = {
   firstClear: boolean
   unlockedStageId?: number
   unlockedSkillId?: string
+  clearedAreaId?: string
 }
 
 export type BattleVictoryResult = {
