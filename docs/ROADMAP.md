@@ -1,19 +1,20 @@
 # CODE//READ RPG ロードマップ
 
-## 1. この文書の目的
+## 1. 目的
 
-`CODE//READ RPG`を、コードを読む行為がそのままゲーム上の判断になるRPGとして拡張していく順序を定義する。
+`CODE//READ RPG`を、コードを読む行為がそのままゲーム上の判断になるRPGとして拡張する。
 
-2026-08-26時点で、**JavaScript KingdomとTypeScript Frontierの2つのPlayable Area**、World Map、Field探索、学習看板、RPG進行、複数構文・複数行codeまで実装済み。
+現在はJavaScript Kingdom / TypeScript Frontierの2 Area、Field探索、NPC、学習看板、Code Codex、Main Quest、RPG進行、複数行・複合codeまで実装済み。
 
-常に次を守る。
+守ること:
 
-1. コードを読まないと正しい行動を選びにくいこと
-2. 同じ手順の暗記だけで攻略できないこと
-3. 読んだ結果がゲーム内の意思決定へつながること
-4. LevelやPOWERだけで読解を不要にしないこと
-5. コンテンツを増やしても自動テストできる構造を維持すること
-6. 学習オブジェクトを増やしてもFieldの進行経路を塞がないこと
+1. コードを読まないと正しい行動を選びにくい
+2. 同じ手順の暗記だけで攻略できない
+3. 読んだ結果がゲーム内の意思決定へつながる
+4. LevelやPOWERだけで読解を不要にしない
+5. コンテンツを増やしても自動テストできる
+6. 学習オブジェクトを増やしてもFieldの進行経路を塞がない
+7. UIから分かることを説明文で重ねない
 
 ---
 
@@ -24,25 +25,30 @@
 - JavaScript Kingdom: Battle 1〜3
 - TypeScript Frontier: Battle 4〜6
 - Skill SELECT → EXECUTE
-- Target Previewなし
 - seeded generation / solvability
 - SkillDefinition / TargetRule
 - 同一効果の複数code variant
 - 3行以上の複合code
 - 行別CODE HELP
 - Battle motion / damage feedback
+- Battle Log
 
 ### JavaScript学習
 
 - property access / 比較
 - `find()` / `filter()` / `map()` / `sort()`
 - `&&` / `||`
-- `some()` / `reduce()`
+- `some()` / `every()` / `reduce()`
 - 三項演算子
+- destructuring
+- optional chaining `?.`
+- nullish coalescing `??`
+- nested object
 - object / 中間変数
 - `filter() → sort() → [0]`
-- `filter() → some() → ? :`
+- `filter() → some() / every() → ? :`
 - `filter() → map() → reduce()`
+- Bossで複数の上記概念を組み合わせるvariant
 
 ### TypeScript学習
 
@@ -54,7 +60,9 @@
 - narrowing / type predicate
 - intersectionの初歩
 - `keyof` / indexed access
-- JavaScriptの配列処理と型情報を組み合わせるBoss読解
+- genericの初歩
+- `Pick<T, K>`
+- JavaScriptの配列処理 / destructuringと型情報を組み合わせるBoss読解
 
 ### RPG進行
 
@@ -66,30 +74,35 @@
 - 再挑戦
 - LocalStorage / migration / reset
 - Boss / Area CLEAR
-- 旧saveを維持しつつ新Area入口Stage / baseline Skillを不足分だけ補完
+- Main Quest
+- Quest Tracker
+- Fieldの`NEXT` / `!` marker
+- Battle勝利後のQuest更新feedback
 
 Enemyはcurrent Player Levelへ自動追従させない。
 
 ### Field / World
 
 - World Map
-- JavaScript Kingdom AVAILABLE / AREA CLEAR
-- TypeScript Frontier AVAILABLE / AREA CLEAR
+- JavaScript Kingdom / TypeScript Frontier
 - 両AreaのStage Select / Field / Battle / Complete route
 - 4方向移動 / collision
 - Keyboard / Mobile操作
 - Battle Gate / Battle後のField復帰
-- JavaScript NPC / Dialogue
-- JavaScript / TypeScriptの任意学習看板
+- JavaScript / TypeScript NPC / Dialogue
+- 任意学習看板
+- Code Codex
 - Field到達可能性test
 - Area metadataによるdata-driven表示
 - Area ↔ Battle / Boss lookup helper
 
-### Audio / 品質
+### Audio / UI / 品質
 
 - menu / field / battle BGM
 - SE / mute / BGM・SE別volume
+- Sound Settings modal
 - Web Audio API / autoplay制約対応
+- 不要な常設説明文を減らすUI方針
 - `prefers-reduced-motion`
 - Node.js 24
 - Vitest
@@ -105,11 +118,13 @@ Enemyはcurrent Player Levelへ自動追従させない。
 ```text
 World Map
 ↓
-JavaScript / TypeScript Area
+Area
 ↓
 Field
 ↓
-必要ならNPC / 学習看板
+Main Quest / markerで目的を確認
+↓
+必要ならNPC / 看板 / Codex
 ↓
 Battle Gate
 ↓
@@ -119,7 +134,7 @@ Skillを選ぶ
 ↓
 Battle結果
 ↓
-EXP / Level / Stage CLEAR / Skill unlock
+EXP / Level / Stage CLEAR / Skill unlock / Quest更新
 ↓
 Fieldへ復帰 or 次Stage
 ↓
@@ -130,7 +145,7 @@ Area CLEAR
 World Map
 ```
 
-学習看板は補助であり必須ではない。知っているPlayerはそのままBattleへ進み、知らないPlayerはFieldで確認できる構造を維持する。
+Field看板は補助であり必須ではない。構文追加のたびに看板を増やさず、発展概念はCodexへ寄せられる。
 
 ---
 
@@ -138,38 +153,32 @@ World Map
 
 Battle 1〜2では単体〜少数概念、Battle 3 Bossでは中間結果を追う複合読解へ進む。
 
-例:
+発展例:
 
 ```js
-const alive = enemies.filter((enemy) => enemy.hp > 0)
-const ordered = [...alive].sort((a, b) => a.hp - b.hp)
-ordered[0]
+const alive = enemies.filter(({ hp }) => hp > 0)
+const wrapped = alive.map(enemy => ({ enemy, stats: { hp: enemy.hp } }))
+wrapped.sort((a, b) => (a.stats?.hp ?? Infinity) - (b.stats?.hp ?? Infinity))[0].enemy
 ```
 
 ```js
-const alive = enemies.filter((enemy) => enemy.hp > 0)
-const scored = alive.map((enemy) => ({ enemy, score: enemy.attackDamage }))
-scored.reduce((best, candidate) => candidate.score > best.score ? candidate : best).enemy
+const alive = enemies.filter(({ hp }) => hp > 0)
+const allStable = alive.every(({ hp }) => hp >= 50)
+allStable ? [] : alive
 ```
 
 今後候補:
 
-- `every()`
-- optional chaining `?.`
-- nullish coalescing `??`
-- destructuring
-- nested object
-- callback内の複数条件
+- callback内のさらに複雑な条件
 - status / shield property
-- 4〜5行の実行順序
+- 4〜5行以上の実行順序
+- object / arrayの変換をまたぐ追跡
 
 構文網羅のためだけには追加せず、game decisionが変わるものを優先する。
 
 ---
 
 ## 5. TypeScript Frontier
-
-#90で2つ目の実Areaとして追加。
 
 ```text
 Battle 4: Typed Entry
@@ -180,64 +189,65 @@ union / optional property / narrowing
 
 Battle 6: Frontier Compiler (Boss)
 JavaScript配列処理 + narrowing / type predicate / keyof / indexed access
++ generic / Pick<T, K>
 ```
 
-Fieldには次の任意学習看板を置く。
+TypeScriptは型用語だけを問わず、runtimeで最終的にどのEnemyが対象になるかまで読む。
 
-- type annotation
-- union type
-- optional property
-- narrowing
-- `keyof` / indexed access
+発展例:
 
-JavaScript Kingdomで身につけた、
-
-```text
-対象を絞る
-→ 中間値を作る
-→ 条件を読む
-→ 最終結果を判断する
+```ts
+type Scored<T> = { value: T; score?: number }
+const candidates: Scored<Enemy>[] = enemies
+  .filter(({ hp }) => hp > 0)
+  .map(enemy => ({ value: enemy, score: enemy.attackDamage }))
 ```
 
-という読み方へ型情報を追加する。
+```ts
+type HpView = Pick<Enemy, 'hp'>
+const readHp = (enemy: HpView): number => enemy.hp
+```
 
-TypeScript構文自体をruntimeで`eval()`しない。display codeと内部TargetRuleを対応させ、Battle engine / generator / solvabilityはArea間で共有する。
+今後候補:
+
+- discriminated unionの発展
+- generic function
+- `Record` / `Partial`など別utility type
+- nested object type
 
 ---
 
 ## 6. 次のコンテンツ拡張
 
-2 Areaが成立した後は、量を増やす前に「読解の種類」と「RPGとしての理由」を増やす。
+2 Areaの基礎学習とMain Quest loopが成立したため、次は同じBattleを増やすだけでなくRPG側の意味を増やす。
 
-候補:
+優先候補:
 
-- JavaScript追加構文
-- TypeScriptのgeneric / utility typeの初歩
-- nested object / discriminated union
-- 3つ目のArea（SQL / Reactなど）
-- Boss固有mechanic
-- Fieldの複数screen / camera追従
-- AreaごとのNPC / Quest
+1. Side Quest
+2. Gold / Shop / Itemの最小loop
+3. 3つ目のArea（SQL / React候補）
+4. Boss固有mechanic
+5. Field複数screen / camera追従
 
-優先条件:
+追加条件:
 
-1. 現在のBattleと違う読み方が必要
-2. Fieldで事前確認できる
-3. game decisionへ影響する
-4. unit test / solvabilityで品質を固定できる
+- 現在のBattleと違う読み方またはRPG上の理由がある
+- game decisionへ影響する
+- 読解をLevel / Itemで不要にしない
+- unit test / solvability / reachabilityで品質を固定できる
 
 ---
 
 ## 7. RPGの深さ
 
-候補:
+次に検討する:
 
-- Quest
-- Shop
-- Inn / 回復
+- Side Quest
 - Gold
-- 装備
+- Shop
 - Item
+- Inn / 回復
+- 装備
 - Treasure
 - Status effect
 - Deck編成
@@ -254,10 +264,11 @@ RPG要素はコード読解の代替ではなく、コードを読む理由を�
 守ること:
 
 - Main routeを学習看板で塞がない
-- すべてのGate / 看板 / Exitへ到達可能にする
+- すべてのGate / 看板 / NPC / Exitへ到達可能にする
 - layout変更時にreachability testを通す
+- 新概念を追加するだけならCodexを優先し、Field objectを無制限に増やさない
 
-将来、看板・NPC・施設が増えて1画面が窮屈になったら、RPGのような**複数screen / camera追従型Field**へ移行する。単純に1画面へobjectを詰め込む方向にはしない。
+看板・NPC・施設が増えて1画面が窮屈になったら、RPGのような複数screen / camera追従型Fieldへ移行する。
 
 ---
 
@@ -289,17 +300,21 @@ Battle MVP
 → World Map / 複数Area routing
 → Field学習看板
 → JavaScript構文拡張
-→ 複数構文・3行code / 行別CODE HELP (#89)
-→ TypeScript Frontier / Battle 4〜6 (#90)
+→ 複数構文・3行code / 行別CODE HELP
+→ TypeScript Frontier / Battle 4〜6
+→ Main Quest / Quest Tracker / marker / victory feedback
+→ Code Codex
+→ UI常設情報の整理
+→ JavaScript / TypeScript発展構文・Boss複合variant
 
 [次]
-追加JavaScript / TypeScript読解
+RPG深化: Side Quest / Gold・Shop・Itemの最小loop
 or
-Field・QuestなどRPG深化
+3つ目のArea
 
 [その後]
-3つ目のArea
-→ 複数screen Field / Boss mechanic
+Boss固有mechanic
+→ 複数screen Field
 
 [必要になってから]
 Backend / Login / Cloud Save / Ranking
