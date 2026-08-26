@@ -2,7 +2,7 @@
 
 ## 1. 目的
 
-コード読解ロジック、盤面生成、RPG進行、Quest、主要ユーザーフローを壊しにくくする。
+コード読解ロジック、盤面生成、RPG進行、Economy、Quest、主要ユーザーフローを壊しにくくする。
 
 ## 2. CI
 
@@ -28,31 +28,46 @@ PR前にも同じ4項目をfeature branchで成功させる。PR CIは代替で�
 - code variant / multiline CODE HELP
 - solvability
 - JavaScript / TypeScript発展構文
+- CODE DATA resolver
 
 ### Progression
 
 - initial PlayerProgress
 - EXP / Level境界
 - maxHP / POWER倍率
-- victory reward
+- victory EXP / Gold reward
 - first clear / replay
 - Stage / Skill / Area unlock
 - immutability
 
+### Economy
+
+- Goldを消費してPATCH KIT購入
+- Gold不足では購入不可
+- 購入でInventory増加
+- PATCH KITを1個消費
+- 最大24 HP回復
+- 最大HPを超えない
+- HP満タンでは消費しない
+- 未所持では消費しない
+- 同じBattleで2回使えない
+- purchase / consumeが元のPlayerProgressをmutationしない
+
 ### Persistence
 
-現行schemaはv3。
+現行schemaはv4。
 
-- serialize / restore
+- Gold / Inventoryを含むserialize / restore
 - invalid JSON
 - unknown version
-- missing / invalid field
+- missing / invalid economy field
 - baseline Stage / Skill補完
-- v1 → v3 migration
-- v2 → v3 migration
+- v1 → v4 migration
+- v2 → v4 migration
+- v3 → v4 migration
 - `completedSideQuestIds`保存
 
-旧saveのEXP / Stage CLEAR / Area CLEAR / unlockを失わないことを優先する。
+旧saveのEXP / Stage CLEAR / Area CLEAR / Side Quest / unlockを失わず、旧schemaからのEconomyは`gold = 0` / `patchKit = 0`で開始する。
 
 ### Quest
 
@@ -117,9 +132,11 @@ seed variationは次を守る。
 
 保証しないこと:
 
-- current Player Levelで必ず勝てる
+- current Player LevelやItem所持で必ず勝てる
 - Playerが弱いときEnemyを自動弱体化する
 - 常に最適解が1つ
+
+Economy追加後もgenerator / solvabilityはGoldやInventoryを参照しない。
 
 ## 5. Content Test
 
@@ -141,9 +158,11 @@ Component Test候補:
 - Skill SELECT → EXECUTE
 - resolving中の追加入力不可
 - Victory / Defeat
+- Gold表示
+- Shop open / close / purchase
+- PATCH KIT action enable / disable
 - Quest Log open / close
-- Side Quest unlock表示
-- Sound Settings / Codex modal
+- Sound Settings / Codex / CODE DATA modal
 - Tutorial promptのroute / selected Skill連動
 
 E2E候補:
@@ -154,27 +173,18 @@ Title
 → Field
 → Battle
 → Victory
-→ Quest更新
-→ Field復帰
-```
-
-Tutorial:
-
-```text
-Field MOVE
-→ interaction objectの前でINTERACT
-→ Battle SELECT
-→ EXECUTE
-→ promptが消える
-→ reloadして再表示されない
+→ Gold獲得
+→ Area SHOP
+→ PATCH KIT購入
+→ 次Battleで回復
 ```
 
 Persistence:
 
 ```text
-CLEAR / Side Quest COMPLETE
+Gold獲得 / PATCH KIT購入
 → reload
-→ EXP / CLEAR / Quest完了を保持
+→ Gold / Inventory / CLEAR / Quest完了を保持
 ```
 
 ## 7. Cloudflare Preview
@@ -184,9 +194,11 @@ PR / branchで最低限確認する。
 - `Workers Builds: code-reading-rpg` success
 - Preview URL発行
 - 変更routeが開く
+- Area headerにSHOP導線
+- Shop購入後にGold / Inventory表示更新
+- BattleでPATCH KIT使用後にHP / stock更新
 - UI変更ならDesktop / Mobileで崩れない
 - persistence変更ならreload互換
-- Tutorial変更ならMOVE / INTERACT / SELECT / EXECUTE / SKIP / RESETを確認
 
 ## 8. Production
 
@@ -208,8 +220,8 @@ bug fix時は原因に対応するtestを残す。
 - variant追加で旧testが固定構文を仮定 → semantic invariantへ修正
 - save migrationで起動不能 → old schema migration
 - replay報酬が重複 → one-time Side Quest reward
-- Tutorialが壁入力で進む → Player tileの実移動を完了条件にする
-- TutorialがSELECT後reloadでEXECUTEを要求 → selected SkillはBattle DOMから導出する
+- PATCH KITを同Battleで複数使用 → economy one-use test
+- Gold不足でも購入できる → purchase test
 
 ## 10. PR最低条件
 
