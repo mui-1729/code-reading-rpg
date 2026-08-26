@@ -47,6 +47,14 @@
   color: var(--gold);
 }
 
+.area-clear-reward {
+  border-color: var(--gold);
+  background: #1d1809;
+  color: var(--gold);
+  font-size: 13px;
+  text-align: center;
+}
+
 .result-actions {
   display: flex;
   gap: 10px;

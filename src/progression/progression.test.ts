@@ -18,6 +18,7 @@ describe('player progression', () => {
     expect(progress).toEqual({
       exp: 0,
       clearedStageIds: [],
+      clearedAreaIds: [],
       unlockedStageIds: [1],
       unlockedSkillIds: ['trace', 'pulse', 'nova'],
     })
@@ -101,6 +102,7 @@ describe('player progression', () => {
     expect(result.progress).toEqual({
       exp: 40,
       clearedStageIds: [1],
+      clearedAreaIds: [],
       unlockedStageIds: [1, 2],
       unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper'],
     })
@@ -111,6 +113,7 @@ describe('player progression', () => {
       firstClear: true,
       unlockedStageId: 2,
       unlockedSkillId: 'viper',
+      clearedAreaId: undefined,
     })
     expect(initial).toEqual(createInitialPlayerProgress())
   })
@@ -131,6 +134,7 @@ describe('player progression', () => {
 
     expect(replay.progress.exp).toBe(80)
     expect(replay.progress.clearedStageIds).toEqual([1])
+    expect(replay.progress.clearedAreaIds).toEqual([])
     expect(replay.progress.unlockedStageIds).toEqual([1, 2])
     expect(replay.progress.unlockedSkillIds).toEqual(['trace', 'pulse', 'nova', 'viper'])
     expect(replay.reward).toEqual({
@@ -140,24 +144,49 @@ describe('player progression', () => {
       firstClear: false,
       unlockedStageId: undefined,
       unlockedSkillId: undefined,
+      clearedAreaId: undefined,
     })
   })
 
-  it('次のStageがないBossでもEXPとCLEARを更新できる', () => {
+  it('Boss初回クリアでArea CLEARを記録する', () => {
     const progress = {
       exp: 120,
       clearedStageIds: [1, 2],
+      clearedAreaIds: [],
       unlockedStageIds: [1, 2, 3],
       unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper', 'moon-edge'],
     }
     const result = applyBattleVictory(progress, {
       stageId: 3,
       expReward: 100,
+      clearAreaId: 'javascript',
     })
 
     expect(result.progress.exp).toBe(220)
     expect(result.progress.clearedStageIds).toEqual([1, 2, 3])
+    expect(result.progress.clearedAreaIds).toEqual(['javascript'])
     expect(result.progress.unlockedStageIds).toEqual([1, 2, 3])
-    expect(result.reward.unlockedStageId).toBeUndefined()
+    expect(result.reward.clearedAreaId).toBe('javascript')
+    expect(progress.clearedAreaIds).toEqual([])
+  })
+
+  it('Boss再クリアではArea CLEARを重複させない', () => {
+    const progress = {
+      exp: 220,
+      clearedStageIds: [1, 2, 3],
+      clearedAreaIds: ['javascript'],
+      unlockedStageIds: [1, 2, 3],
+      unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper', 'moon-edge'],
+    }
+    const result = applyBattleVictory(progress, {
+      stageId: 3,
+      expReward: 100,
+      clearAreaId: 'javascript',
+    })
+
+    expect(result.progress.exp).toBe(320)
+    expect(result.progress.clearedAreaIds).toEqual(['javascript'])
+    expect(result.reward.firstClear).toBe(false)
+    expect(result.reward.clearedAreaId).toBeUndefined()
   })
 })

@@ -26,11 +26,11 @@
 - Battle勝利によるEXP / Stage CLEAR / 次Stage / Skill解放
 - Level成長のBattle反映（最大HP / POWER倍率）
 - version付きLocalStorage進行保存 / 安全な復元 / リセット
+- Boss属性 / JavaScript Kingdom Area CLEAR / CLEAR後の再挑戦
 - Vitest / ESLint / Prettier / GitHub Actions CI
 
 まだ`main`には入っていない主なRPG機能:
 
-- Boss / Area CLEAR
 - トップダウンフィールド
 - NPC / 会話 / 拠点
 - 装備 / アイテム
@@ -66,11 +66,25 @@ Stage Selectはこのループを早く成立させるための暫定UIです。
 
 RPG進行はブラウザのLocalStorageへversion付きschemaで保存します。
 
-- 保存対象: EXP / Stage CLEAR / Stage解放 / Skill解放
+- 保存対象: EXP / Stage CLEAR / Area CLEAR / Stage解放 / Skill解放
 - Level / 最大HP / POWER倍率はEXPから導出し、重複保存しない
+- schema v1 → v2 migrationで既存のBoss CLEARもArea CLEARへ引き継ぐ
 - 壊れたJSONや未知schema versionは初期状態へ安全にfallback
 - Battle中のターンや敵残HPなど、一時的な戦闘状態は保存しない
 - Stage Selectから進行をリセット可能
+
+## Area progression
+
+現在はJavaScript Kingdomを最初のAreaとして定義しています。
+
+- 各Battleは`areaId`を持つ
+- Battle 3は`isBoss: true`
+- Boss初回勝利で`clearedAreaIds`へ`javascript`を記録
+- Stage Selectに`AREA CLEAR`状態を表示
+- Area CLEAR画面からStage Selectへ戻る / Bossを再戦できる
+- CLEAR後も過去Stageはそのまま再挑戦可能
+
+Area定義とBattleの所属を分離しているため、将来はTypeScript / SQL / Reactなど複数Areaを追加できる構造です。
 
 ## Docs
 
@@ -100,7 +114,7 @@ TanStack Routerで画面遷移とBattle URLを管理しています。
 - `/` - スタート画面
 - `/javascript` - JavaScript Kingdom / Stage Select
 - `/javascript/battle/$battleId?seed=...` - JavaScript編の各Battle
-- `/javascript/complete` - 現MVPのChapterクリア画面
+- `/javascript/complete` - JavaScript KingdomのArea CLEAR / status画面
 
 同じBattle IDとseedなら同じ可変盤面を再現できます。
 

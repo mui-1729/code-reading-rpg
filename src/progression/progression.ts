@@ -17,6 +17,7 @@ export function createInitialPlayerProgress(): PlayerProgress {
   return {
     exp: 0,
     clearedStageIds: [],
+    clearedAreaIds: [],
     unlockedStageIds: [...DEFAULT_INITIAL_STAGE_IDS],
     unlockedSkillIds: [...DEFAULT_INITIAL_SKILL_IDS],
   }
@@ -76,6 +77,7 @@ export function applyBattleVictory(
 
   let unlockedStageId: number | undefined
   let unlockedSkillId: string | undefined
+  let clearedAreaId: string | undefined
 
   if (firstClear && input.nextStageId && !next.unlockedStageIds.includes(input.nextStageId)) {
     next.unlockedStageIds = [...next.unlockedStageIds, input.nextStageId]
@@ -85,6 +87,11 @@ export function applyBattleVictory(
   if (firstClear && input.unlockSkillId && !next.unlockedSkillIds.includes(input.unlockSkillId)) {
     next.unlockedSkillIds = [...next.unlockedSkillIds, input.unlockSkillId]
     unlockedSkillId = input.unlockSkillId
+  }
+
+  if (firstClear && input.clearAreaId && !next.clearedAreaIds.includes(input.clearAreaId)) {
+    next.clearedAreaIds = [...next.clearedAreaIds, input.clearAreaId]
+    clearedAreaId = input.clearAreaId
   }
 
   if (firstClear) {
@@ -100,6 +107,7 @@ export function applyBattleVictory(
       firstClear,
       unlockedStageId,
       unlockedSkillId,
+      clearedAreaId,
     },
   }
 }

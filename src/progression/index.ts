@@ -26,7 +26,7 @@ export {
 } from './storage'
 export { ProgressProvider } from './ProgressProvider'
 export { useProgress } from './useProgress'
-export type { StoredPlayerProgressV1 } from './storage'
+export type { StoredPlayerProgressV1, StoredPlayerProgressV2 } from './storage'
 export type {
   BattleVictoryInput,
   BattleVictoryResult,

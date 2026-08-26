@@ -31,6 +31,19 @@
   line-height: 1.7;
 }
 
+.area-clear-badge {
+  width: fit-content;
+  margin-top: 12px;
+  padding: 7px 10px;
+  border: 2px solid var(--green);
+  background: #0d1a0d;
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .12em;
+  box-shadow: 3px 3px 0 #000;
+}
+
 .area-back {
   flex: 0 0 auto;
 }
@@ -105,6 +118,10 @@
 .stage-node.is-locked {
   opacity: .52;
   filter: grayscale(.55);
+}
+
+.stage-node.is-boss:not(.is-cleared) {
+  border-color: var(--gold);
 }
 
 .stage-node.is-cleared {

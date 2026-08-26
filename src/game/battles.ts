@@ -1,3 +1,4 @@
+import { JAVASCRIPT_AREA_ID } from './areas'
 import type { Battle, Enemy } from './types'
 
 const enemy = (
@@ -12,6 +13,7 @@ const enemy = (
 export const battles: Battle[] = [
   {
     id: 1,
+    areaId: JAVASCRIPT_AREA_ID,
     label: 'BATTLE 01',
     title: 'First Read',
     subtitle: 'コードが選ぶ「対象」を読む',
@@ -26,6 +28,7 @@ export const battles: Battle[] = [
   },
   {
     id: 2,
+    areaId: JAVASCRIPT_AREA_ID,
     label: 'BATTLE 02',
     title: 'One or Many',
     subtitle: 'find と filter の違いを戦況で使い分ける',
@@ -41,6 +44,7 @@ export const battles: Battle[] = [
   },
   {
     id: 3,
+    areaId: JAVASCRIPT_AREA_ID,
     label: 'BATTLE 03',
     title: 'Priority Queue',
     subtitle: '次の攻撃とコードを読み、倒す順番を決める',
