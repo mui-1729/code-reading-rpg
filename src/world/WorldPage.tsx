@@ -22,7 +22,7 @@ export function WorldPage() {
           <div>
             <div className="eyebrow">WORLD MAP // AREA SELECT</div>
             <h1>Choose the next region.</h1>
-            <p>攻略済みAreaへ戻るか、次に解放される世界を確認できる。</p>
+            <p>学びたいAreaを選び、攻略済みの世界にもいつでも戻れる。</p>
           </div>
           <div className="world-player pixel-inner-window">
             <span>CODE KNIGHT</span>
@@ -66,7 +66,7 @@ export function WorldPage() {
         </section>
 
         <footer className="world-footer">
-          <span>各Areaは独立した学習テーマとBossを持つ。未実装Areaに進行データは作らない。</span>
+          <span>各Areaは独立した学習テーマ・Field・Battle・Bossを持ち、進行は共通saveへ保存する。</span>
           <button
             type="button"
             className="secondary-button"
