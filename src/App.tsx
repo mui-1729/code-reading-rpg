@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import { gameAudio } from './audio/gameAudio'
 import {
   areaById,
   battles,
@@ -71,6 +72,11 @@ function App({ battleId, seed, returnTo }: AppProps) {
     [battle],
   )
 
+  useEffect(() => {
+    gameAudio.requestBgm('battle')
+    return () => gameAudio.stopBgm()
+  }, [battleId])
+
   const addLog = (tone: LogEntry['tone'], text: string) => {
     setLogs((current) => [...current.slice(-4), { id: Date.now() + Math.random(), tone, text }])
   }
@@ -86,6 +92,8 @@ function App({ battleId, seed, returnTo }: AppProps) {
   }
 
   const resetBattle = () => {
+    gameAudio.playSe('confirm')
+    gameAudio.requestBgm('battle')
     setPlayerHp(playerStats.maxHp)
     setEnemies(cloneEnemies(battle.enemies))
     setSelectedSkillId(null)
@@ -107,6 +115,18 @@ function App({ battleId, seed, returnTo }: AppProps) {
       clearAreaId: battle.isBoss ? battle.areaId : undefined,
     })
 
+    gameAudio.stopBgm()
+    gameAudio.playSe('victory')
+    if (result.reward.newLevel > result.reward.previousLevel) {
+      setTimeout(() => gameAudio.playSe('levelUp'), 420)
+    }
+    if (result.reward.firstClear) {
+      setTimeout(() => gameAudio.playSe('stageClear'), 720)
+    }
+    if (result.reward.unlockedSkillId) {
+      setTimeout(() => gameAudio.playSe('skillUnlock'), 1040)
+    }
+
     setProgress(result.progress)
     setVictoryReward(result.reward)
     setIsResolving(false)
@@ -124,6 +144,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
     const totalDamage = survivors.reduce((total, enemy) => total + enemy.attackDamage, 0)
     const nextPlayerHp = Math.max(0, playerHp - totalDamage)
     setEnemyTurnActive(true)
+    gameAudio.playSe('enemyAttack')
 
     setTimeout(() => {
       survivors.forEach((enemy, index) => {
@@ -133,6 +154,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
         )
       })
 
+      gameAudio.playSe('playerHit')
       setPlayerHit(true)
       setPlayerDamagePopup(totalDamage)
       setPlayerHp(nextPlayerHp)
@@ -143,7 +165,11 @@ function App({ battleId, seed, returnTo }: AppProps) {
         setEnemyTurnActive(false)
 
         if (nextPlayerHp === 0) {
-          setTimeout(() => setPhase('defeat'), BATTLE_MOTION.resultDelayMs)
+          setTimeout(() => {
+            gameAudio.stopBgm()
+            gameAudio.playSe('defeat')
+            setPhase('defeat')
+          }, BATTLE_MOTION.resultDelayMs)
         } else {
           setTurn((currentTurn) => currentTurn + 1)
           setIsResolving(false)
@@ -165,6 +191,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
 
       if (targets.length === 0) {
         addLog('player', `${skill.name} → NO TARGET`)
+        gameAudio.playSe('cancel')
         runEnemyTurn(enemies)
         return
       }
@@ -177,6 +204,10 @@ function App({ battleId, seed, returnTo }: AppProps) {
       )
       const newlyDefeatedIds = getNewlyDefeatedIds(enemies, nextEnemies)
 
+      gameAudio.playSe('enemyHit')
+      if (newlyDefeatedIds.length > 0) {
+        setTimeout(() => gameAudio.playSe('enemyDefeat'), 100)
+      }
       setAnimatingIds(targetIds)
       setDefeatingIds(newlyDefeatedIds)
       setDamagePopups(Object.fromEntries(targetIds.map((id) => [id, skillPower])))
@@ -200,14 +231,17 @@ function App({ battleId, seed, returnTo }: AppProps) {
     if (phase !== 'battle' || isResolving) return
 
     if (selectedSkillId === skill.id) {
+      gameAudio.playSe('execute')
       activateSkill(skill)
       return
     }
 
+    gameAudio.playSe('select')
     setSelectedSkillId(skill.id)
   }
 
   const goNextBattle = () => {
+    gameAudio.playSe('confirm')
     if (!nextBattle) {
       navigate({ to: '/javascript/complete' })
       return
@@ -221,11 +255,22 @@ function App({ battleId, seed, returnTo }: AppProps) {
   }
 
   const goReturnDestination = () => {
+    gameAudio.playSe('confirm')
     if (returnTo === '/javascript/field') {
       navigate({ to: '/javascript/field' })
       return
     }
     navigate({ to: '/javascript' })
+  }
+
+  const openCodeHelp = (skill: SkillCard) => {
+    gameAudio.playSe('confirm')
+    setExplainedSkill(skill)
+  }
+
+  const closeCodeHelp = () => {
+    gameAudio.playSe('cancel')
+    setExplainedSkill(null)
   }
 
   const unlockedSkill = victoryReward?.unlockedSkillId
@@ -441,7 +486,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
               </button>
               <button
                 className="secondary-button"
-                onClick={() => setExplainedSkill(availableSkills[0])}
+                onClick={() => openCodeHelp(availableSkills[0])}
               >
                 CODE HELP
               </button>
@@ -451,9 +496,9 @@ function App({ battleId, seed, returnTo }: AppProps) {
       )}
 
       {explainedSkill && (
-        <div className="overlay modal-overlay" onClick={() => setExplainedSkill(null)}>
+        <div className="overlay modal-overlay" onClick={closeCodeHelp}>
           <section className="explain-modal pixel-window" onClick={(event) => event.stopPropagation()}>
-            <button className="close-button" onClick={() => setExplainedSkill(null)}>
+            <button className="close-button" onClick={closeCodeHelp}>
               ×
             </button>
             <div className="eyebrow">CODE EXPLANATION</div>
@@ -464,7 +509,13 @@ function App({ battleId, seed, returnTo }: AppProps) {
             <p>{explainedSkill.explanation}</p>
             <div className="explain-switcher">
               {availableSkills.map((skill) => (
-                <button key={skill.id} onClick={() => setExplainedSkill(skill)}>
+                <button
+                  key={skill.id}
+                  onClick={() => {
+                    gameAudio.playSe('select')
+                    setExplainedSkill(skill)
+                  }}
+                >
                   {skill.name}
                 </button>
               ))}
@@ -476,7 +527,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
       {phase === 'battle' && (
         <button
           className="floating-help"
-          onClick={() => setExplainedSkill(availableSkills[0])}
+          onClick={() => openCodeHelp(availableSkills[0])}
           aria-label="コード解説を開く"
           disabled={isResolving}
         >
