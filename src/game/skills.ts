@@ -16,6 +16,7 @@ function createSkillCard(definition: SkillDefinition, variant: CodeVariant): Ski
     rule: definition.rule,
     concept: definition.concept,
     explanation: definition.explanation,
+    codeHelpLines: variant.codeHelpLines,
   }
 }
 
