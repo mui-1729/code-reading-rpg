@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { npcById } from '../dialogue/npcs'
 import { getPositionInDirection, isBlocked } from './field'
 import { typescriptField } from './typescriptField'
 import type { Direction, FieldPosition } from './types'
@@ -40,7 +41,7 @@ describe('TypeScript field layout', () => {
     }
   })
 
-  it('すべてのGate・看板・Exitの手前まで到達できる', () => {
+  it('すべてのGate・NPC・看板・Exitの手前まで到達できる', () => {
     const reachable = getReachablePositions()
 
     for (const interaction of typescriptField.interactions) {
@@ -50,6 +51,18 @@ describe('TypeScript field layout', () => {
       })
 
       expect(hasReachableAdjacentTile, interaction.id).toBe(true)
+    }
+  })
+
+  it('配置されたNPCはすべてDialogue定義を参照する', () => {
+    const npcInteractions = typescriptField.interactions.filter(
+      (interaction) => interaction.kind === 'npc',
+    )
+
+    expect(npcInteractions).toHaveLength(3)
+    for (const interaction of npcInteractions) {
+      if (interaction.kind !== 'npc') continue
+      expect(npcById[interaction.npcId], interaction.npcId).toBeDefined()
     }
   })
 })
