@@ -1,4 +1,4 @@
-import { JAVASCRIPT_AREA_ID } from './areas'
+import { JAVASCRIPT_AREA_ID, TYPESCRIPT_AREA_ID } from './areas'
 import type { Battle, Enemy } from './types'
 
 const enemy = (
@@ -68,5 +68,62 @@ export const battles: Battle[] = [
       'judge',
     ],
     multiLineSkillIds: ['moon-edge', 'sweep', 'judge'],
+  },
+  {
+    id: 4,
+    areaId: TYPESCRIPT_AREA_ID,
+    label: 'BATTLE 04',
+    title: 'Typed Entry',
+    subtitle: '型注釈を読み、値を調べる条件そのものは変わらないと見抜く',
+    recommendedLevel: 1,
+    expReward: 50,
+    enemies: [
+      enemy('slime-ts-a', 'Slime', 46, 'Type Ping', 4, '●'),
+      enemy('goblin-ts-a', 'Goblin', 72, 'Strict Slash', 8, '▲'),
+    ],
+    skillIds: ['ts-scan', 'ts-guard', 'ts-label'],
+    unlockSkillId: 'ts-union',
+  },
+  {
+    id: 5,
+    areaId: TYPESCRIPT_AREA_ID,
+    label: 'BATTLE 05',
+    title: 'Maybe Value',
+    subtitle: 'unionとoptional propertyを追い、narrowing後の条件を読む',
+    recommendedLevel: 2,
+    expReward: 70,
+    enemies: [
+      enemy('slime-ts-b', 'Slime', 44, 'Undefined Bite', 4, '●'),
+      enemy('goblin-ts-b', 'Goblin', 74, 'Union Slash', 8, '▲'),
+      enemy('golem-ts-b', 'Golem', 104, 'Object Fist', 10, '■'),
+    ],
+    skillIds: ['ts-scan', 'ts-guard', 'ts-label', 'ts-union', 'ts-optional'],
+    multiLineSkillIds: ['ts-union', 'ts-optional'],
+    unlockSkillId: 'ts-narrow',
+  },
+  {
+    id: 6,
+    areaId: TYPESCRIPT_AREA_ID,
+    label: 'BATTLE 06',
+    title: 'Frontier Compiler',
+    subtitle: '型の絞り込みとproperty keyを複合コードで追う',
+    recommendedLevel: 3,
+    expReward: 120,
+    isBoss: true,
+    enemies: [
+      enemy('slime-ts-c', 'Slime', 46, 'Literal Spark', 3, '●'),
+      enemy('goblin-ts-c', 'Goblin', 82, 'Narrow Edge', 7, '▲'),
+      enemy('boss-ts-c', 'Boss', 132, 'Compiler Crash', 10, '◆'),
+    ],
+    skillIds: [
+      'ts-scan',
+      'ts-guard',
+      'ts-label',
+      'ts-union',
+      'ts-optional',
+      'ts-narrow',
+      'ts-keyof',
+    ],
+    multiLineSkillIds: ['ts-union', 'ts-optional', 'ts-narrow', 'ts-keyof'],
   },
 ]
