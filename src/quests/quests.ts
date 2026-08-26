@@ -2,6 +2,7 @@ import { JAVASCRIPT_AREA_ID, TYPESCRIPT_AREA_ID } from '../game/areas'
 import type {
   QuestCondition,
   QuestDefinition,
+  QuestFieldFocus,
   QuestProgress,
   QuestProgressSnapshot,
 } from './types'
@@ -12,21 +13,25 @@ export const mainQuests: readonly QuestDefinition[] = [
     areaId: JAVASCRIPT_AREA_ID,
     title: '王国のコード門を突破せよ',
     description: 'JavaScriptの配列処理を読み、3つのGateを越えてBossを倒す。',
+    guideNpcId: 'archivist',
     steps: [
       {
         id: 'javascript-stage-1',
         label: 'FIRST READ GATEをCLEARする',
         condition: { kind: 'stageCleared', stageId: 1 },
+        fieldTarget: { kind: 'battle', stageId: 1 },
       },
       {
         id: 'javascript-stage-2',
         label: 'ONE OR MANY GATEをCLEARする',
         condition: { kind: 'stageCleared', stageId: 2 },
+        fieldTarget: { kind: 'battle', stageId: 2 },
       },
       {
         id: 'javascript-area-clear',
         label: 'Bossを倒してJavaScript KingdomをAREA CLEARする',
         condition: { kind: 'areaCleared', areaId: JAVASCRIPT_AREA_ID },
+        fieldTarget: { kind: 'battle', stageId: 3 },
       },
     ],
   },
@@ -35,21 +40,25 @@ export const mainQuests: readonly QuestDefinition[] = [
     areaId: TYPESCRIPT_AREA_ID,
     title: 'Frontier Compilerを停止せよ',
     description: '型情報と実行時の条件を分けて読み、TypeScript Frontierを攻略する。',
+    guideNpcId: 'type-warden',
     steps: [
       {
         id: 'typescript-stage-4',
         label: 'TYPED ENTRY GATEをCLEARする',
         condition: { kind: 'stageCleared', stageId: 4 },
+        fieldTarget: { kind: 'battle', stageId: 4 },
       },
       {
         id: 'typescript-stage-5',
         label: 'MAYBE VALUE GATEをCLEARする',
         condition: { kind: 'stageCleared', stageId: 5 },
+        fieldTarget: { kind: 'battle', stageId: 5 },
       },
       {
         id: 'typescript-area-clear',
         label: 'Frontier Compilerを倒してTypeScript FrontierをAREA CLEARする',
         condition: { kind: 'areaCleared', areaId: TYPESCRIPT_AREA_ID },
+        fieldTarget: { kind: 'battle', stageId: 6 },
       },
     ],
   },
@@ -96,4 +105,20 @@ export function getQuestProgress(
 
 export function getMainQuestProgress(progress: QuestProgressSnapshot): QuestProgress[] {
   return mainQuests.map((quest) => getQuestProgress(quest, progress))
+}
+
+export function getActiveQuestFieldFocus(
+  areaId: string,
+  progress: QuestProgressSnapshot,
+): QuestFieldFocus | null {
+  const quest = mainQuests.find((candidate) => candidate.areaId === areaId)
+  if (!quest) return null
+
+  const questProgress = getQuestProgress(quest, progress)
+  if (questProgress.status !== 'active') return null
+
+  return {
+    stageId: questProgress.nextStep?.fieldTarget?.stageId,
+    guideNpcId: quest.guideNpcId,
+  }
 }

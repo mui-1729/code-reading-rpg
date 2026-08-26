@@ -3,10 +3,11 @@ import { useNavigate } from '@tanstack/react-router'
 import { getDialogueForNpc } from '../dialogue/dialogue'
 import { npcById } from '../dialogue/npcs'
 import type { DialogueEntry, NpcDefinition } from '../dialogue/types'
-import { battles } from '../game'
+import { battles, TYPESCRIPT_AREA_ID } from '../game'
 import { typescriptLearningHintById } from '../learning/typescriptLearningHints'
 import type { LearningHint } from '../learning/learningHints'
 import { useProgress } from '../progression'
+import { getActiveQuestFieldFocus } from '../quests/quests'
 import { getInteractionInFront, movePlayer, samePosition } from './field'
 import { typescriptField } from './typescriptField'
 import type { Direction, FieldInteraction, FieldPosition } from './types'
@@ -50,6 +51,15 @@ export function TypeScriptFieldPage() {
       clearedAreaIds: progress.clearedAreaIds,
     }),
     [progress.clearedAreaIds, progress.clearedStageIds, stats.level],
+  )
+
+  const questFocus = useMemo(
+    () =>
+      getActiveQuestFieldFocus(TYPESCRIPT_AREA_ID, {
+        clearedStageIds: progress.clearedStageIds,
+        clearedAreaIds: progress.clearedAreaIds,
+      }),
+    [progress.clearedAreaIds, progress.clearedStageIds],
   )
 
   const describeInteraction = useCallback(
@@ -290,12 +300,22 @@ export function TypeScriptFieldPage() {
               interaction?.kind === 'battle'
                 ? progress.clearedStageIds.includes(interaction.stageId)
                 : false
+            const questMarked = interaction?.kind === 'battle'
+              ? interaction.stageId === questFocus?.stageId
+              : interaction?.kind === 'npc'
+                ? interaction.npcId === questFocus?.guideNpcId
+                : false
 
             return (
               <div
                 key={`${cell.x}:${cell.y}`}
-                className={`field-tile ${blocked ? (border ? 'field-wall' : 'field-rock') : ''} ${interaction ? `field-object field-object-${interaction.kind}` : ''} ${interaction?.kind === 'battle' && !unlocked ? 'is-locked' : ''} ${cleared ? 'is-cleared' : ''}`}
+                className={`field-tile ${blocked ? (border ? 'field-wall' : 'field-rock') : ''} ${interaction ? `field-object field-object-${interaction.kind}` : ''} ${interaction?.kind === 'battle' && !unlocked ? 'is-locked' : ''} ${cleared ? 'is-cleared' : ''} ${questMarked ? 'has-quest-marker' : ''}`}
               >
+                {questMarked && (
+                  <span className={`field-quest-marker ${interaction?.kind === 'battle' ? 'is-gate' : 'is-guide'}`}>
+                    {interaction?.kind === 'battle' ? 'NEXT' : '!'}
+                  </span>
+                )}
                 {interaction?.kind === 'battle' && (
                   <span className="field-gate-label">
                     {battle?.isBoss ? 'BOSS' : `ST${interaction.stageId}`}

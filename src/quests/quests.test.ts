@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { getMainQuestProgress, getQuestProgress, matchesQuestCondition } from './quests'
+import {
+  getActiveQuestFieldFocus,
+  getMainQuestProgress,
+  getQuestProgress,
+  matchesQuestCondition,
+} from './quests'
 import type { QuestDefinition, QuestProgressSnapshot } from './types'
 
 const emptyProgress: QuestProgressSnapshot = {
@@ -79,5 +84,40 @@ describe('quest progression', () => {
     expect(
       getQuestProgress(lockedQuest, { ...emptyProgress, clearedStageIds: [9] }).status,
     ).toBe('active')
+  })
+
+  it('Field focusはJavaScriptの次GateとObjective Guideを進行に合わせて返す', () => {
+    expect(getActiveQuestFieldFocus('javascript', emptyProgress)).toEqual({
+      stageId: 1,
+      guideNpcId: 'archivist',
+    })
+    expect(
+      getActiveQuestFieldFocus('javascript', { ...emptyProgress, clearedStageIds: [1] }),
+    ).toEqual({ stageId: 2, guideNpcId: 'archivist' })
+    expect(
+      getActiveQuestFieldFocus('javascript', { ...emptyProgress, clearedStageIds: [1, 2] }),
+    ).toEqual({ stageId: 3, guideNpcId: 'archivist' })
+    expect(
+      getActiveQuestFieldFocus('javascript', {
+        clearedStageIds: [1, 2, 3],
+        clearedAreaIds: ['javascript'],
+      }),
+    ).toBeNull()
+  })
+
+  it('Field focusはTypeScriptでもStage 4→5→6へ切り替わる', () => {
+    expect(getActiveQuestFieldFocus('typescript', emptyProgress)?.stageId).toBe(4)
+    expect(
+      getActiveQuestFieldFocus('typescript', { ...emptyProgress, clearedStageIds: [4] })?.stageId,
+    ).toBe(5)
+    expect(
+      getActiveQuestFieldFocus('typescript', { ...emptyProgress, clearedStageIds: [4, 5] })?.stageId,
+    ).toBe(6)
+    expect(
+      getActiveQuestFieldFocus('typescript', {
+        clearedStageIds: [4, 5, 6],
+        clearedAreaIds: ['typescript'],
+      }),
+    ).toBeNull()
   })
 })
