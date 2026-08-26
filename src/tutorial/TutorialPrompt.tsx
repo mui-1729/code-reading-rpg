@@ -112,7 +112,11 @@ export function TutorialPrompt() {
       })
     })
 
-    observer.observe(document.body, { childList: true, subtree: true })
+    observer.observe(document.body, {
+      childList: true,
+      characterData: true,
+      subtree: true,
+    })
     return () => {
       observer.disconnect()
       if (frame !== 0) window.cancelAnimationFrame(frame)
