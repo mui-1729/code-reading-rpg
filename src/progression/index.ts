@@ -8,6 +8,7 @@ export {
 } from './constants'
 export {
   addExp,
+  applyBattleVictory,
   createInitialPlayerProgress,
   getLevelForExp,
   getMaxHpForLevel,
@@ -17,4 +18,10 @@ export {
 } from './progression'
 export { ProgressProvider } from './ProgressProvider'
 export { useProgress } from './useProgress'
-export type { PlayerProgress, PlayerStats } from './types'
+export type {
+  BattleVictoryInput,
+  BattleVictoryResult,
+  BattleVictoryReward,
+  PlayerProgress,
+  PlayerStats,
+} from './types'
