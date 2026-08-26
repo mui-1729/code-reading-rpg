@@ -21,6 +21,7 @@ function createSkillCard(definition: SkillDefinition, variant: CodeVariant): Ski
     id: definition.id,
     name: definition.name,
     code: variant.code,
+    codeVariantId: variant.id,
     power: definition.power,
     rule: definition.rule,
     concept: definition.concept,
