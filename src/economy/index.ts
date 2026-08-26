@@ -1,3 +1,4 @@
+export { AreaShop } from './AreaShop'
 export {
   consumePatchKit,
   PATCH_KIT_HEAL,
