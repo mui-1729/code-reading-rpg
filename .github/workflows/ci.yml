@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/31-code-variants]
   pull_request:
 
 jobs:
