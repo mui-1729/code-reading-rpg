@@ -11,9 +11,18 @@ describe('learning hints', () => {
     }
   })
 
-  it('JavaScript Kingdomの基礎4概念を持つ', () => {
+  it('JavaScript Kingdomの基礎と追加構文を持つ', () => {
     expect(learningHints.map((hint) => hint.id)).toEqual(
-      expect.arrayContaining(['js-find', 'js-filter', 'js-sort', 'js-comparison']),
+      expect.arrayContaining([
+        'js-find',
+        'js-filter',
+        'js-sort',
+        'js-comparison',
+        'js-and',
+        'js-or',
+        'js-some',
+        'js-reduce',
+      ]),
     )
   })
 
@@ -31,10 +40,19 @@ describe('learning hints', () => {
       (interaction) => interaction.kind === 'sign' && 'learningHintId' in interaction,
     )
 
-    expect(learningSigns).toHaveLength(4)
+    expect(learningSigns).toHaveLength(8)
     for (const sign of learningSigns) {
       if (sign.kind !== 'sign' || !('learningHintId' in sign)) continue
       expect(learningHintById[sign.learningHintId]).toBeDefined()
     }
+  })
+
+  it('Field上の学習看板は同じ位置に重複しない', () => {
+    const learningSigns = javascriptField.interactions.filter(
+      (interaction) => interaction.kind === 'sign' && 'learningHintId' in interaction,
+    )
+    const positions = learningSigns.map((sign) => `${sign.x}:${sign.y}`)
+
+    expect(new Set(positions).size).toBe(positions.length)
   })
 })
