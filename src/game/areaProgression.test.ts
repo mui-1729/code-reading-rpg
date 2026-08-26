@@ -11,9 +11,9 @@ describe('area progression lookup', () => {
     }
   })
 
-  it('JavaScript KingdomのBattleを順序どおり取得する', () => {
+  it('各AreaのBattleを順序どおり取得する', () => {
     expect(getBattlesForArea(JAVASCRIPT_AREA_ID).map((battle) => battle.id)).toEqual([1, 2, 3])
-    expect(getBattlesForArea(TYPESCRIPT_AREA_ID)).toEqual([])
+    expect(getBattlesForArea(TYPESCRIPT_AREA_ID).map((battle) => battle.id)).toEqual([4, 5, 6])
   })
 
   it('AreaのBossは同じAreaに所属するBattleを参照する', () => {
