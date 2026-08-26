@@ -18,13 +18,19 @@ export type SignInteraction = FieldPosition & {
   message: string
 }
 
+export type NpcInteraction = FieldPosition & {
+  id: string
+  kind: 'npc'
+  npcId: string
+}
+
 export type AreaExit = FieldPosition & {
   id: string
   kind: 'exit'
   label: string
 }
 
-export type FieldInteraction = BattleEntrance | SignInteraction | AreaExit
+export type FieldInteraction = BattleEntrance | SignInteraction | NpcInteraction | AreaExit
 
 export type FieldDefinition = {
   id: string
