@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, feat/88-js-syntax-expansion]
+    branches: [main]
   pull_request:
 
 jobs:
