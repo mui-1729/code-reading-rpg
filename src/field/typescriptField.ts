@@ -22,12 +22,8 @@ export const typescriptField: FieldDefinition = {
   width,
   height,
   start: { x: 5, y: 7 },
-  blockedTiles: [
-    ...borderTiles(width, height),
-    { x: 3, y: 4 },
-    { x: 7, y: 4 },
-    { x: 8, y: 6 },
-  ],
+  // 学習看板はsolid tileとして扱われるため、内側の床は塞がずに奥までの通路を維持する。
+  blockedTiles: borderTiles(width, height),
   interactions: [
     {
       id: 'ts-stage-4-gate',
