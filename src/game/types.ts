@@ -28,6 +28,7 @@ export type SkillCard = {
   rule: TargetRule
   concept: string
   explanation: string
+  codeHelpLines?: readonly string[]
 }
 
 export type Battle = {
