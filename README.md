@@ -1,106 +1,102 @@
 # CODE//READ RPG
 
-コードを「書く」のではなく、**読んで意味を判断して戦う**コードリーディングRPGです。
+コードを「書く」のではなく、**表示されたコードを読んで戦う2D RPG**です。
 
-UIや補助機能を増やしすぎず、`Field → Battle → Boss` の流れとコード読解そのものを中心にしています。
+普通のRPGらしい探索・成長・装備・仲間を持たせつつ、誰を攻撃するかの判断はコード読解から外さないことを中心にしています。
 
 ## Current game flow
 
 ```text
 Title
 ↓
-World Map
+1つの大きなWorldを上下左右に探索
+├─ 左: JavaScript Grassland / 草むら
+├─ 中央: Hub / Shop / NPC
+└─ 右: TypeScript Forest / 森
 ↓
-Area
-↓
-Field
-↓
-Battle Gate
+草むら・森でRandom Encounter
 ↓
 コードを読む
 ↓
 SkillをSELECT → 同じSkillをもう一度押してEXECUTE
 ↓
-Victory resultを1項目ずつ確認
+EXP / Gold / Level Up等を段階表示
 ↓
-Fieldへ戻る / 次Battle
+元のWorld座標へ戻る
 ↓
-Boss
-↓
-Area Clear
-↓
-World Map
+地域のBossへ到達
 ```
 
-独立したStage Select画面・Complete画面・常設Quest Trackerは使いません。旧URL `/javascript`、`/typescript`、各`/complete`は安全にWorld Mapへ戻します。
+Stage SelectやArea Selectへ戻って進行する構造ではありません。旧Area / Field URLは`/world`へredirectします。
 
 ## Implemented
 
-### Area / Field
+### Open World
 
-- JavaScript Kingdom: Battle 1〜3、Battle 3がBoss
-- TypeScript Frontier: Battle 4〜6、Battle 6がCompiler Boss
-- World MapからAreaのFieldへ直接入る
-- 4方向移動 / collision
-- Arrow / WASD、Mobile D-Pad + INTERACT
-- NPC / Dialogue
-- 任意の学習看板
-- Battle Gate / CLEAR状態 / 次のGateを示す最小marker
-- Field tileは12×9の正方形gridとして固定
+- 40×28の連続World
+- 11×9 viewport / Player追従camera
+- 上下左右の画面外へ移動可能
+- tileは固定正方形
+- JavaScript region = 草原 / 草むら
+- TypeScript region = 森
+- Central Hub / Road / Water / Mountain
+- 固定Boss地点
+- HubのShop / 仲間NPC BYTE
+- World座標をLocalStorage保存
+- Desktop: Arrow / WASD、Mobile: D-Pad + INTERACT
+
+### Random Encounter
+
+- JavaScriptの草むらでBattle 1 / 2
+- TypeScriptの森でBattle 4 / 5
+- 最低5歩のcooldown
+- terrainごとの遭遇率
+- Road / Hubは安全地帯
+- Battle後は元のWorld位置へ復帰
+- Boss Battle 3 / 6は固定地点
 
 ### Battle / code reading
 
-- コードカードを1回押してSELECT、同じカードを2回目に押してEXECUTE
-- 表示コードが攻撃対象を決定し、POWERがdamageを決定
+- 1回目SELECT、同じcardの2回目EXECUTE
+- 表示コードと安全な内部`TargetRule`を対応
 - Enemy HP / NEXT行動
-- CODE HELP
-- CODE DATAでEnemyの実値と読解に必要なruntime中間値を確認
-- seeded generation / URL `seed`で盤面再現
-- Enemy HP・順番・Skill順・code variantのvariation
-- valid target / solvability検証
-- 複数行code / 行別CODE HELP
+- CODE HELP / CODE DATA
+- seeded generation / solvability
+- code variants / multi-line code / 行別HELP
+- Battle + seedごとに表示コードを固有化し、別Battleで同じ文字列を再利用しない
+- 既存の1行 / 3行読解構造は維持
+
+### RPG progression
+
+- EXP / Level
+- Max HP / Attack / Defense
+- Gold
+- Weapon / Armor / Accessory
+- 装備bonusをdamage / defenseへ反映
+- PATCH KIT
+- Boss clearで上位装備を入手
+- 仲間BYTE
+- BYTEはコードが選んだ**同じtarget**へ追撃し、読解を自動化しない
+
+既存のPlayerProgress schemaとは別にRPG stateを保存し、旧saveを壊さずWorld位置・装備・仲間を追加します。
+
+### Pause menu
+
+通常画面へ情報を詰め込まず、`MENU`から確認します。
+
+- STATUS: Level / EXP / Gold / Max HP / Attack / Defense
+- ITEMS: PATCH KIT
+- EQUIPMENT: Weapon / Armor / Accessory
+- PARTY: 主人公 / 仲間
+- SYSTEM: reset等
 
 ### Result presentation
 
-Battle勝利後の結果を一気に並べず、基本的に1イベントずつ表示します。
-
-例:
-
-```text
-EXP
-↓
-Gold
-↓
-LEVEL UP
-↓
-SKILL UNLOCK
-↓
-STAGE CLEAR / NEXT STAGE UNLOCK
-↓
-QUEST UPDATE
-```
-
-関連の強い内容は同じイベントにまとめます。click / tapで次へ進め、一定時間後の自動進行とSKIPにも対応します。`prefers-reduced-motion`も尊重します。
-
-### Progression / economy
-
-- EXP / Level
-- Levelによる最大HP / POWER倍率
-- Stage CLEAR / next Battle unlock
-- Skill unlock
-- Boss / Area CLEAR
-- Battle Gold reward
-- Field内の簡易SHOP
-- PATCH KIT: 30 G / 最大24 HP回復 / 1Battle 1回
-- LocalStorage save schema v4
-- v1 / v2 / v3 migration
-- reset
-
-Side Quest layerはゲーム導線を単純化するため無効化しています。旧saveの`completedSideQuestIds`はmigration互換のため保持します。
+Battle勝利後の結果は一気に並べず、EXP / Gold / Level Up / Unlock / Clear等を基本1イベントずつ表示します。関連項目だけ同じeventへまとめ、click / tap / auto advance / skipと`prefers-reduced-motion`に対応します。
 
 ## Tutorial
 
-初回だけ、既存UIを実際に操作しながら次を案内します。
+初回だけ既存UIを実際に操作して案内します。
 
 ```text
 MOVE
@@ -112,11 +108,11 @@ SELECT
 EXECUTE
 ```
 
-タイトル画面の常設`HOW TO PLAY`は置きません。Tutorialは答えとなるSkillやEnemy targetを教えず、操作だけを案内します。SKIP / RESETに対応します。
+World camera追従後も実World座標の変化でMOVE成功を判定します。タイトル画面に常設HOW TO PLAYは置きません。
 
 ## Learning content
 
-### JavaScript Kingdom
+### JavaScript Grassland
 
 - property access / 比較
 - `find()` / `filter()` / `map()` / `sort()`
@@ -124,69 +120,56 @@ EXECUTE
 - `some()` / `every()` / `reduce()`
 - 三項演算子
 - destructuring
-- optional chaining `?.`
-- nullish coalescing `??`
-- nested object
-- 中間変数 / object / 複数行code
+- optional chaining / nullish coalescing
+- nested object / 中間変数 / 複数行code
 
-### TypeScript Frontier
+### TypeScript Forest
 
 - primitive / type annotation
 - function parameter / return type
-- literal / union type
-- object type
-- optional property
+- literal / union
+- object / optional property
 - narrowing / type predicate
-- intersectionの初歩
+- intersection
 - `keyof` / indexed access
-- genericの初歩
-- `Pick<T, K>`
-- JavaScript配列処理と型情報を組み合わせる複合読解
+- generic / `Pick<T, K>`
+- JavaScript配列処理 + 型情報の複合読解
 
-TypeScriptの表示コードをruntimeで`eval()`することはありません。表示コードの意味と安全な内部`TargetRule`を対応させます。
+TypeScript表示コードをruntimeで`eval()`することはありません。
 
 ## UI direction
 
 - 1画面へ情報やbuttonを詰め込みすぎない
-- Tutorialと重複する常設操作説明を置かない
-- 同じ目的のnavigationを複数並べない
-- 学習補助は必要時だけ開く
-- RPG機能数よりコード読解Battleの分かりやすさを優先する
-- 読解に必要な値は確認できるようにするが、targetや正解Skillは先に表示しない
+- status / inventory / equipmentはPauseへ集約
+- Stage Select / Area Selectを増やさない
+- Tutorialと重複する説明を常設しない
+- 読解に必要な値は確認可能、targetや正解Skillは先に表示しない
+- RPG成長でコード読解自体を不要にしない
 
 ## Routes
 
 ```text
 /
 /world
-/javascript/field
-/javascript/battle/$battleId?seed=...&returnTo=...
-/typescript/field
-/typescript/battle/$battleId?seed=...&returnTo=...
+/javascript/battle/$battleId?seed=...&returnTo=/world
+/typescript/battle/$battleId?seed=...&returnTo=/world
 ```
 
 Legacy redirect:
 
 ```text
-/javascript          → /world
-/javascript/complete → /world
-/typescript          → /world
-/typescript/complete → /world
+/javascript
+/javascript/field
+/javascript/complete
+/typescript
+/typescript/field
+/typescript/complete
+→ /world
 ```
 
-## Production
+## Quality gate
 
-Cloudflare Workers Static Assetsで配信します。
-
-- Production: https://code-reading-rpg.profuse-comb.workers.dev
-- Production branch: `main`
-- branch / PR: Cloudflare Workers Preview
-- `main` merge: Cloudflare Workers Production Build
-- deploy設定: `wrangler.jsonc`
-
-## Quality checks
-
-PR前に必ず実行します。
+PR前に必ず以下を通します。
 
 ```bash
 npm ci
@@ -195,27 +178,6 @@ npm test
 npm run build
 ```
 
-## Tech
+## Production
 
-- Vite
-- React 19
-- TypeScript
-- TanStack Router
-- CSS
-- Web Audio API
-- Node.js 24
-- Vitest
-- ESLint / Prettier
-- GitHub Actions
-- Cloudflare Workers
-
-## Docs
-
-- [ロードマップ](./docs/ROADMAP.md)
-- [ゲーム設計](./docs/GAME_DESIGN.md)
-- [RPG成長ループ](./docs/RPG_PROGRESSION.md)
-- [Economy](./docs/ECONOMY.md)
-- [アーキテクチャ](./docs/ARCHITECTURE.md)
-- [UIガイド](./docs/UI_GUIDE.md)
-- [テスト方針](./docs/TESTING.md)
-- [デプロイ運用](./docs/DEPLOYMENT.md)
+Cloudflare Workers Static Assetsで配信します。

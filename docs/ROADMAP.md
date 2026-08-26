@@ -2,139 +2,153 @@
 
 ## 目的
 
-`CODE//READ RPG`を、**コードを読む行為がそのままゲーム上の判断になるRPG**として育てる。
+`CODE//READ RPG`を、**普通の2D RPGを遊びながらコードを読むゲーム**として育てる。
 
-機能数を増やすこと自体を目的にしない。現在は一度増えた補助画面・常設UIを整理し、次のコア導線を基準にする。
+探索・成長・装備・仲間はRPGとして楽しめるようにする。一方で、Battleで誰を対象にするかは表示コードを読まないと判断しにくい状態を守る。
+
+## 現在のコア導線
 
 ```text
 Title
 ↓
-World Map
+Open World
+├─ JavaScript Grassland
+├─ Central Hub
+└─ TypeScript Forest
 ↓
-Field
+Random Encounter / 固定Boss
 ↓
-Battle
+Code Reading Battle
 ↓
-次Battle
-↓
-Boss
-↓
-Area Clear
+Worldへ復帰
 ```
+
+Stage Select / Area Selectは使わない。
 
 ## 守る原則
 
 1. コードを読まないと正しい行動を選びにくい
-2. 同じ手順の暗記だけで攻略できない
-3. 読んだ結果がゲーム内の意思決定へつながる
-4. Level / Itemだけでコード読解を不要にしない
-5. 1画面へ情報・説明・buttonを詰め込みすぎない
-6. 同じ役割の画面やnavigationを重複させない
-7. Tutorialで教えた操作説明を常設しない
-8. 読解に必要な実値は確認できるようにするが、正解targetは先に見せない
-9. Fieldの進行経路とtile geometryを安定させる
-10. コンテンツを増やしても自動テストできる
+2. 同じ表示コードの丸暗記だけで攻略できない
+3. Level / Equipment / Partyだけで読解を不要にしない
+4. Worldは上下左右へ探索でき、画面外にも続く
+5. terrainから学習地域が直感的に分かる
+6. 1画面へ情報・説明・buttonを詰め込みすぎない
+7. EXP / Gold / Items / Equipment / PartyはPauseへ集約する
+8. Tutorialで教えた操作説明を常設しない
+9. 読解に必要な実値は確認できるが、正解targetは先に見せない
+10. World / Battle / saveの重要ロジックは自動テストする
 
 ## 実装済み
 
-### Battle / 読解
+### Open World / encounter
 
-- JavaScript Kingdom: Battle 1〜3
-- TypeScript Frontier: Battle 4〜6
+- 40×28 World
+- 11×9 camera viewport
+- 上下左右探索
+- JavaScript = 草原 / 草むら
+- TypeScript = 森
+- Hub / Road / Mountain / Water
+- 草むら / 森のRandom Encounter
+- encounter cooldown
+- 固定Boss地点
+- World位置save
+
+### Battle / learning
+
+- JavaScript Battle 1〜3
+- TypeScript Battle 4〜6
 - SELECT → EXECUTE
 - seeded generation / solvability
 - code variants / multi-line code
-- CODE HELP
-- CODE DATA / runtime中間値
-- Battle motion / damage feedback
+- Battle + seed固有の表示code
+- duplicate code test
+- CODE HELP / CODE DATA
+- Battle motion / result sequence
 
-### RPG loop
+### RPG system
 
-- World Map
-- AreaごとのField
-- Battle Gate
-- Boss / Area Clear
-- EXP / Level / 最大HP / POWER倍率
-- Gold
-- PATCH KIT
-- Field内の簡易SHOP
-- Skill / Battle unlock
-- LocalStorage schema v4 / migration / reset
+- EXP / Level / Gold
+- Max HP / Attack / Defense
+- Weapon / Armor / Accessory
+- Equipment bonus
+- PATCH KIT / Hub Shop
+- Party member BYTE
+- 仲間follow-up attack
+- Boss clear equipment reward
+- Pause: STATUS / ITEMS / EQUIPMENT / PARTY / SYSTEM
+- RPG state LocalStorage
 
-### Field / learning
-
-- Keyboard / Mobile移動
-- collision / interaction
-- NPC / Dialogue
-- 任意学習看板
-- Code Codex
-- 次のGateを示す最小marker
-- reachability test
-- 12×9の固定正方形tile
-
-### Onboarding / result UI
+### UI / onboarding
 
 - 初回Tutorial: MOVE → INTERACT → SELECT → EXECUTE
-- Titleの常設HOW TO PLAYを廃止
-- Battle結果をEXP / Gold / Level Up / Unlock / Clear等の順に段階表示
-- click / tap / auto advance / skip
-- `prefers-reduced-motion`
+- World cameraでもWorld座標でMOVE判定
+- Title HOW TO PLAY廃止
+- Stage Select / Complete専用画面廃止
+- 常設Quest Tracker廃止
+- Battle結果の段階表示
+- fixed square tile
+- reduced motion
 
-## 削除・無効化したもの
+## 次に拡張するなら
 
-単純な導線を優先するため、次を通常ゲームから外す。
+### 1. World content density
 
-- 独立Stage Select画面
-- 独立Complete画面
-- 常設Quest Tracker
-- 再攻略Side Quest / bonus EXP
-- Tutorialと重複するField常設操作説明
+Open World基盤を増やすより、今あるWorldへ意味のある場所を足す。
 
-Legacy URLや旧save dataは壊さず、安全にredirect / restoreする。
+候補:
+- 小さな町 / Inn
+- 宝箱
+- 装備Shop
+- 回復地点
+- 仲間イベント
+- landmark
 
-## 現在のArea
+ただし空間を埋めるためだけのUIやNPCは増やさない。
 
-```text
-JavaScript Kingdom
-Battle 1 → Battle 2 → Battle 3 Boss
+### 2. 3つ目のlearning region
 
-TypeScript Frontier
-Battle 4 → Battle 5 → Battle 6 Boss
-```
+SQL / Reactなどを同一Worldの別regionとして追加する。
 
-## 次に増やす場合の優先順位
+例:
+- SQL = 洞窟 / 地下遺跡
+- React = 町 / 工房
 
-### 1. 3つ目のArea
+Area Selectは作らず、Worldを歩いてregionへ入る。
 
-SQL / Reactなどを候補にする。
+### 3. Party depth
 
-追加条件:
+必要になった段階で:
+- 2人目以降の仲間
+- heal / support
+- party equipment
+- member固有skill
 
-- 既存2Areaと違う「読み方」が必要
-- Battle上の判断が変わる
-- 新Areaのためだけに大量の補助UIを増やさない
+自動戦闘でcode readingを代替しない。
 
-### 2. Boss固有mechanic
+### 4. Equipment / item depth
 
-Bossだけに意味のある読解・戦略要素を検討する。ただし説明量を増やしすぎない。
+必要性があるものだけ追加する。
 
-### 3. Field拡張
+- equipment shop
+- treasure drop
+- recovery item variation
+- accessory特性
 
-1画面が本当に窮屈になった場合だけ複数screen / camera追従を検討する。
+単純なAttack inflationだけにしない。
+
+### 5. Boss-specific mechanic
+
+Bossだけの読解パターンや戦略を追加する。説明を増やしすぎず、表示コードからルールを読み取れる形を優先する。
 
 ## 当面増やさないもの
 
-必要性が明確になるまで追加しない。
-
-- 装備system
-- Inn
-- 大量のsupport item
-- Side Quest layer
+- Stage Select
+- Area Select
 - 複雑なQuest Log
-- 独立Stage Select
+- 大量の常設HUD
 - Backend / Login / Cloud Save / Ranking
 
-Backendは複数端末同期や共有機能が必要になった時点で検討する。
+Backendは複数端末同期や共有Challengeが必要になった時点で検討する。
 
 ## Quality gate
 
