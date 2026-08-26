@@ -12,6 +12,11 @@
   padding: 14px 16px;
 }
 
+.tutorial-prompt-battle {
+  top: max(92px, calc(env(safe-area-inset-top) + 76px));
+  bottom: auto;
+}
+
 .tutorial-prompt-copy {
   display: grid;
   gap: 4px;
@@ -74,7 +79,8 @@
   }
 
   .tutorial-prompt-battle {
-    bottom: max(10px, env(safe-area-inset-bottom));
+    top: max(72px, calc(env(safe-area-inset-top) + 58px));
+    bottom: auto;
   }
 }
 
