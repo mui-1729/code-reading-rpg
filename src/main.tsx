@@ -7,6 +7,7 @@ import './stage-select.css'
 import './reward.css'
 import './field.css'
 import './dialogue.css'
+import './motion.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

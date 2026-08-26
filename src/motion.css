@@ -1,0 +1,228 @@
+.battle-stage,
+.enemy-card,
+.player-panel,
+.damage-number,
+.result-overlay,
+.result-card-enter,
+.motion-reward {
+  will-change: transform, opacity;
+}
+
+.turn-pill.enemy-turn-active {
+  border-color: var(--red);
+  color: var(--red);
+  animation: enemy-turn-pulse .5s steps(2, end) infinite;
+}
+
+.battle-stage.skill-windup::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(79, 140, 255, .16), transparent 42%);
+  animation: skill-stage-flash .14s steps(2, end);
+}
+
+.battle-stage.skill-windup .player-sprite {
+  animation: skill-windup .14s steps(2, end);
+}
+
+.player-panel,
+.enemy-card {
+  position: relative;
+}
+
+.player-panel.player-hit {
+  border-color: var(--red);
+  animation: player-hit .36s steps(2, end);
+}
+
+.player-panel.player-hit .player-sprite {
+  animation: player-sprite-hit .36s steps(2, end);
+}
+
+.enemy-card.hit {
+  z-index: 3;
+}
+
+.enemy-card.hit::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: rgba(255, 255, 255, .28);
+  animation: impact-flash .36s steps(2, end);
+}
+
+.enemy-card.hit.is-boss-enemy {
+  animation: boss-hit .36s steps(3, end);
+  border-color: var(--gold);
+}
+
+.enemy-card.defeating {
+  animation: enemy-defeat .42s steps(4, end) forwards;
+}
+
+.damage-number {
+  position: absolute;
+  z-index: 6;
+  color: #fff7c0;
+  font-size: clamp(18px, 3vw, 30px);
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 3px 3px 0 #6f1717, -1px -1px 0 #111;
+  pointer-events: none;
+  animation: damage-pop .36s steps(4, end) forwards;
+}
+
+.enemy-damage-number {
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.player-damage-number {
+  top: 18px;
+  right: 14px;
+}
+
+.result-overlay {
+  animation: result-overlay-in .22s steps(3, end) both;
+}
+
+.victory-overlay {
+  box-shadow: inset 0 0 90px rgba(141, 219, 82, .12);
+}
+
+.defeat-overlay {
+  box-shadow: inset 0 0 90px rgba(255, 103, 103, .12);
+}
+
+.result-card-enter {
+  animation: result-card-in .28s steps(4, end) both;
+}
+
+.motion-reward {
+  animation: reward-pop .34s steps(3, end) both;
+}
+
+.motion-reward:nth-of-type(3) { animation-delay: .05s; }
+.motion-reward:nth-of-type(4) { animation-delay: .1s; }
+.motion-reward:nth-of-type(5) { animation-delay: .15s; }
+.motion-reward:nth-of-type(6) { animation-delay: .2s; }
+
+@keyframes skill-windup {
+  0% { transform: translateX(0); filter: brightness(1); }
+  50% { transform: translateX(7px); filter: brightness(1.45); }
+  100% { transform: translateX(11px); filter: brightness(1.8); }
+}
+
+@keyframes skill-stage-flash {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes impact-flash {
+  0%, 100% { opacity: 0; }
+  25%, 55% { opacity: 1; }
+}
+
+@keyframes boss-hit {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-10px, -2px); }
+  40% { transform: translate(10px, 2px); filter: brightness(2); }
+  60% { transform: translate(-8px, 1px); }
+  80% { transform: translate(7px, -1px); }
+}
+
+@keyframes enemy-defeat {
+  0% { opacity: 1; transform: translateY(0) scale(1); filter: brightness(1.8); }
+  35% { opacity: .9; transform: translateY(-5px) scale(1.03); }
+  70% { opacity: .45; transform: translateY(4px) scale(.96); filter: grayscale(.7); }
+  100% { opacity: .22; transform: translateY(8px) scale(.9); filter: grayscale(1); }
+}
+
+@keyframes player-hit {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); background: rgba(75, 12, 18, .94); }
+  45% { transform: translateX(6px); }
+  70% { transform: translateX(-4px); background: rgba(7, 7, 14, .92); }
+}
+
+@keyframes player-sprite-hit {
+  0%, 100% { filter: drop-shadow(5px 5px 0 rgba(0,0,0,.5)); }
+  35% { filter: brightness(2.1) drop-shadow(5px 5px 0 rgba(0,0,0,.5)); }
+}
+
+@keyframes damage-pop {
+  0% { opacity: 0; transform: translate(-50%, 8px) scale(.7); }
+  20% { opacity: 1; transform: translate(-50%, -5px) scale(1.15); }
+  70% { opacity: 1; transform: translate(-50%, -16px) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -24px) scale(.9); }
+}
+
+.player-damage-number {
+  animation-name: player-damage-pop;
+}
+
+@keyframes player-damage-pop {
+  0% { opacity: 0; transform: translateY(8px) scale(.7); }
+  20% { opacity: 1; transform: translateY(-5px) scale(1.15); }
+  70% { opacity: 1; transform: translateY(-16px) scale(1); }
+  100% { opacity: 0; transform: translateY(-24px) scale(.9); }
+}
+
+@keyframes enemy-turn-pulse {
+  50% { transform: translateY(-2px); box-shadow: 0 0 0 2px rgba(255, 103, 103, .25); }
+}
+
+@keyframes result-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes result-card-in {
+  0% { opacity: 0; transform: translateY(16px) scale(.97); }
+  60% { opacity: 1; transform: translateY(-3px) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes reward-pop {
+  0% { opacity: 0; transform: translateY(6px); }
+  65% { opacity: 1; transform: translateY(-2px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .battle-stage,
+  .enemy-card,
+  .enemy-card.hit,
+  .enemy-card.hit.is-boss-enemy,
+  .enemy-card.defeating,
+  .player-panel,
+  .player-panel.player-hit,
+  .player-panel.player-hit .player-sprite,
+  .battle-stage.skill-windup .player-sprite,
+  .battle-stage.skill-windup::after,
+  .damage-number,
+  .result-overlay,
+  .result-card-enter,
+  .motion-reward,
+  .turn-pill.enemy-turn-active,
+  .hp-fill {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+
+  .enemy-card.hit::after {
+    animation: none !important;
+    opacity: .18;
+  }
+
+  .damage-number {
+    opacity: 1;
+  }
+}
