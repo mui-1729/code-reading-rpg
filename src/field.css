@@ -233,6 +233,13 @@
   line-height: 1.6;
 }
 
+.area-header-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 @media (max-width: 700px) {
   .field-header {
     display: grid;
@@ -257,6 +264,10 @@
     flex: 1 1 160px;
     justify-content: center;
   }
+
+  .area-header-actions {
+    justify-content: flex-start;
+  }
 }
 
 @media (max-width: 460px) {
@@ -278,5 +289,9 @@
 
   .field-dpad {
     margin: 0 auto;
+  }
+
+  .area-header-actions {
+    display: grid;
   }
 }
