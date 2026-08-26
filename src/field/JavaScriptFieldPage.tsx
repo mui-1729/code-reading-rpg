@@ -4,6 +4,7 @@ import { getDialogueForNpc } from '../dialogue/dialogue'
 import { npcById } from '../dialogue/npcs'
 import type { DialogueEntry, NpcDefinition } from '../dialogue/types'
 import { battles } from '../game'
+import { learningHintById, type LearningHint } from '../learning/learningHints'
 import { useProgress } from '../progression'
 import { getInteractionInFront, movePlayer, samePosition } from './field'
 import { javascriptField } from './javascriptField'
@@ -33,6 +34,8 @@ export function JavaScriptFieldPage() {
     '王国を歩き、NPCと話して次の目的を確認しよう。門の手前ではINTERACTでBattleへ入れる。',
   )
   const [activeDialogue, setActiveDialogue] = useState<ActiveDialogue | null>(null)
+  const [activeLearningHint, setActiveLearningHint] = useState<LearningHint | null>(null)
+  const overlayOpen = Boolean(activeDialogue || activeLearningHint)
 
   const battleByStageId = useMemo(
     () => new Map(battles.map((battle) => [battle.id, battle])),
@@ -50,7 +53,15 @@ export function JavaScriptFieldPage() {
 
   const describeInteraction = useCallback(
     (interaction: FieldInteraction) => {
-      if (interaction.kind === 'sign') return '看板がある。ENTER / INTERACTで読む。'
+      if (interaction.kind === 'sign') {
+        if ('learningHintId' in interaction) {
+          const hint = learningHintById[interaction.learningHintId]
+          return hint
+            ? `${hint.concept}の学習看板がある。ENTER / INTERACTで読む。`
+            : '学習看板がある。'
+        }
+        return '看板がある。ENTER / INTERACTで読む。'
+      }
       if (interaction.kind === 'exit') return `${interaction.label}への出口。ENTER / INTERACTで移動。`
       if (interaction.kind === 'npc') {
         const npc = npcById[interaction.npcId]
@@ -67,7 +78,7 @@ export function JavaScriptFieldPage() {
 
   const handleMove = useCallback(
     (direction: Direction) => {
-      if (activeDialogue) return
+      if (overlayOpen) return
 
       setFacing(direction)
       const next = movePlayer(javascriptField, position, direction)
@@ -81,7 +92,7 @@ export function JavaScriptFieldPage() {
 
       setPosition(next)
     },
-    [activeDialogue, describeInteraction, position],
+    [describeInteraction, overlayOpen, position],
   )
 
   const advanceDialogue = useCallback(() => {
@@ -96,9 +107,20 @@ export function JavaScriptFieldPage() {
     setActiveDialogue(null)
   }, [activeDialogue])
 
+  const closeLearningHint = useCallback(() => {
+    if (!activeLearningHint) return
+    setMessage(`${activeLearningHint.concept}の説明を閉じた。必要なら何度でも看板を調べられる。`)
+    setActiveLearningHint(null)
+  }, [activeLearningHint])
+
   const handleInteract = useCallback(() => {
     if (activeDialogue) {
       advanceDialogue()
+      return
+    }
+
+    if (activeLearningHint) {
+      closeLearningHint()
       return
     }
 
@@ -110,6 +132,15 @@ export function JavaScriptFieldPage() {
     }
 
     if (interaction.kind === 'sign') {
+      if ('learningHintId' in interaction) {
+        const hint = learningHintById[interaction.learningHintId]
+        if (!hint) {
+          setMessage('この学習看板のデータが見つからない。')
+          return
+        }
+        setActiveLearningHint(hint)
+        return
+      }
       setMessage(interaction.message)
       return
     }
@@ -144,7 +175,17 @@ export function JavaScriptFieldPage() {
       params: { battleId: String(interaction.stageId) },
       search: { seed: createRunSeed(), returnTo: '/javascript/field' },
     })
-  }, [activeDialogue, advanceDialogue, dialogueProgress, facing, navigate, position, progress.unlockedStageIds])
+  }, [
+    activeDialogue,
+    activeLearningHint,
+    advanceDialogue,
+    closeLearningHint,
+    dialogueProgress,
+    facing,
+    navigate,
+    position,
+    progress.unlockedStageIds,
+  ])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -157,6 +198,14 @@ export function JavaScriptFieldPage() {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault()
           advanceDialogue()
+        }
+        return
+      }
+
+      if (activeLearningHint) {
+        if (event.key === 'Escape' || event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          closeLearningHint()
         }
         return
       }
@@ -191,7 +240,7 @@ export function JavaScriptFieldPage() {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [activeDialogue, advanceDialogue, handleInteract, handleMove])
+  }, [activeDialogue, activeLearningHint, advanceDialogue, closeLearningHint, handleInteract, handleMove])
 
   const cells = Array.from({ length: javascriptField.width * javascriptField.height }, (_, index) => ({
     x: index % javascriptField.width,
@@ -205,7 +254,7 @@ export function JavaScriptFieldPage() {
           <div>
             <div className="eyebrow">WORLD 01 // JAVASCRIPT KINGDOM</div>
             <h1>Kingdom Hub</h1>
-            <p>Gateへ向かう前にNPCと話し、目的やコード読解のヒントを確認できる。</p>
+            <p>Gateへ向かう前にNPCや看板から、目的とコード読解のヒントを任意に確認できる。</p>
           </div>
           <div className="field-player-summary pixel-inner-window">
             <span>LV {stats.level}</span>
@@ -247,7 +296,11 @@ export function JavaScriptFieldPage() {
                     <span>{npc?.name.slice(0, 1) ?? 'N'}</span>
                   </span>
                 )}
-                {interaction?.kind === 'sign' && <span className="field-object-glyph">?</span>}
+                {interaction?.kind === 'sign' && (
+                  <span className="field-object-glyph">
+                    {'learningHintId' in interaction ? 'JS' : '?'}
+                  </span>
+                )}
                 {interaction?.kind === 'exit' && <span className="field-object-glyph">↩</span>}
                 {isPlayer && (
                   <span className="field-player" aria-label={`Player facing ${facing}`}>
@@ -278,6 +331,25 @@ export function JavaScriptFieldPage() {
               </button>
             </div>
           </section>
+        ) : activeLearningHint ? (
+          <section className="learning-hint-window pixel-inner-window" aria-live="polite" aria-label="Learning hint">
+            <div className="learning-hint-heading">
+              <div>
+                <span>FIELD NOTE // {activeLearningHint.concept}</span>
+                <strong>{activeLearningHint.title}</strong>
+              </div>
+              <em>OPTIONAL HINT</em>
+            </div>
+            <p className="learning-hint-summary">{activeLearningHint.summary}</p>
+            <pre className="learning-hint-code"><code>{activeLearningHint.codeLines.join('\n')}</code></pre>
+            <div className="learning-hint-notes">
+              {activeLearningHint.notes.map((note) => <p key={note}>• {note}</p>)}
+            </div>
+            <div className="learning-hint-actions">
+              <span>Enter / Space / Esc</span>
+              <button className="primary-button" onClick={closeLearningHint}>■ CLOSE</button>
+            </div>
+          </section>
         ) : (
           <section className="field-message pixel-inner-window" aria-live="polite">
             <span>FIELD LOG</span>
@@ -287,15 +359,15 @@ export function JavaScriptFieldPage() {
 
         <div className="field-controls" aria-label="Field controls">
           <div className="field-dpad">
-            <button aria-label="Move up" disabled={Boolean(activeDialogue)} onClick={() => handleMove('up')}>▲</button>
-            <button aria-label="Move left" disabled={Boolean(activeDialogue)} onClick={() => handleMove('left')}>◀</button>
-            <button aria-label="Move down" disabled={Boolean(activeDialogue)} onClick={() => handleMove('down')}>▼</button>
-            <button aria-label="Move right" disabled={Boolean(activeDialogue)} onClick={() => handleMove('right')}>▶</button>
+            <button aria-label="Move up" disabled={overlayOpen} onClick={() => handleMove('up')}>▲</button>
+            <button aria-label="Move left" disabled={overlayOpen} onClick={() => handleMove('left')}>◀</button>
+            <button aria-label="Move down" disabled={overlayOpen} onClick={() => handleMove('down')}>▼</button>
+            <button aria-label="Move right" disabled={overlayOpen} onClick={() => handleMove('right')}>▶</button>
           </div>
           <button className="primary-button field-interact" onClick={handleInteract}>
-            {activeDialogue ? 'NEXT' : 'INTERACT'}
+            {activeDialogue ? 'NEXT' : activeLearningHint ? 'CLOSE' : 'INTERACT'}
           </button>
-          <button className="secondary-button" disabled={Boolean(activeDialogue)} onClick={() => navigate({ to: '/javascript' })}>
+          <button className="secondary-button" disabled={overlayOpen} onClick={() => navigate({ to: '/javascript' })}>
             STAGE SELECT
           </button>
         </div>
