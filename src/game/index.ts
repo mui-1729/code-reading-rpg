@@ -9,7 +9,17 @@ export { getAreaForBattle, getBattlesForArea, getBossBattleForArea } from './are
 export { battles } from './battles'
 export { generateBattle } from './generator'
 export { skillDefinitionById, skillDefinitions } from './skillDefinitions'
-export { getSkillCardForBattle, getSkillCardsForBattle, skills } from './skills'
+export {
+  allSkillDefinitionById,
+  allSkillDefinitions,
+  getSkillCardForBattle,
+  getSkillCardsForBattle,
+  skills,
+} from './skills'
+export {
+  typescriptSkillDefinitionById,
+  typescriptSkillDefinitions,
+} from './typescriptSkillDefinitions'
 export { createSeededRandom } from './random'
 export { hasInitialValidTarget, isBattleSolvable } from './solvability'
 export { getTargets } from './targeting'
