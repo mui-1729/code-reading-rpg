@@ -17,6 +17,8 @@ describe('player progression', () => {
 
     expect(progress).toEqual({
       exp: 0,
+      gold: 0,
+      inventory: { patchKit: 0 },
       clearedStageIds: [],
       clearedAreaIds: [],
       completedSideQuestIds: [],
@@ -91,17 +93,20 @@ describe('player progression', () => {
     expect(getPowerMultiplierForLevel(0)).toBe(1)
   })
 
-  it('Stage初回クリアでEXP・CLEAR・次Stage・Skillをまとめて更新する', () => {
+  it('Stage初回クリアでEXP・Gold・CLEAR・次Stage・Skillをまとめて更新する', () => {
     const initial = createInitialPlayerProgress()
     const result = applyBattleVictory(initial, {
       stageId: 1,
       expReward: 40,
+      goldReward: 20,
       nextStageId: 2,
       unlockSkillId: 'viper',
     })
 
     expect(result.progress).toEqual({
       exp: 40,
+      gold: 20,
+      inventory: { patchKit: 0 },
       clearedStageIds: [1],
       clearedAreaIds: [],
       completedSideQuestIds: [],
@@ -110,6 +115,7 @@ describe('player progression', () => {
     })
     expect(result.reward).toEqual({
       expGained: 40,
+      goldGained: 20,
       previousLevel: 1,
       newLevel: 2,
       firstClear: true,
@@ -120,21 +126,24 @@ describe('player progression', () => {
     expect(initial).toEqual(createInitialPlayerProgress())
   })
 
-  it('再クリアではEXPだけを再獲得し、CLEARやunlockを重複させない', () => {
+  it('再クリアでもEXPとGoldを再獲得し、CLEARやunlockを重複させない', () => {
     const first = applyBattleVictory(createInitialPlayerProgress(), {
       stageId: 1,
       expReward: 40,
+      goldReward: 20,
       nextStageId: 2,
       unlockSkillId: 'viper',
     })
     const replay = applyBattleVictory(first.progress, {
       stageId: 1,
       expReward: 40,
+      goldReward: 20,
       nextStageId: 2,
       unlockSkillId: 'viper',
     })
 
     expect(replay.progress.exp).toBe(80)
+    expect(replay.progress.gold).toBe(40)
     expect(replay.progress.clearedStageIds).toEqual([1])
     expect(replay.progress.clearedAreaIds).toEqual([])
     expect(replay.progress.completedSideQuestIds).toEqual([])
@@ -150,6 +159,7 @@ describe('player progression', () => {
     ])
     expect(replay.reward).toEqual({
       expGained: 40,
+      goldGained: 20,
       previousLevel: 2,
       newLevel: 2,
       firstClear: false,
@@ -161,10 +171,9 @@ describe('player progression', () => {
 
   it('Boss初回クリアでArea CLEARを記録する', () => {
     const progress = {
+      ...createInitialPlayerProgress(),
       exp: 120,
       clearedStageIds: [1, 2],
-      clearedAreaIds: [],
-      completedSideQuestIds: [],
       unlockedStageIds: [1, 2, 3],
       unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper', 'moon-edge'],
     }
@@ -185,10 +194,10 @@ describe('player progression', () => {
 
   it('Boss再クリアではArea CLEARを重複させない', () => {
     const progress = {
+      ...createInitialPlayerProgress(),
       exp: 220,
       clearedStageIds: [1, 2, 3],
       clearedAreaIds: ['javascript'],
-      completedSideQuestIds: [],
       unlockedStageIds: [1, 2, 3],
       unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper', 'moon-edge'],
     }
@@ -207,10 +216,9 @@ describe('player progression', () => {
 
   it('TypeScript Boss初回クリアでTypeScript Area CLEARを記録する', () => {
     const progress = {
+      ...createInitialPlayerProgress(),
       exp: 360,
       clearedStageIds: [4, 5],
-      clearedAreaIds: [],
-      completedSideQuestIds: [],
       unlockedStageIds: [1, 4, 5, 6],
       unlockedSkillIds: ['ts-scan', 'ts-guard', 'ts-label', 'ts-union', 'ts-optional', 'ts-narrow'],
     }
