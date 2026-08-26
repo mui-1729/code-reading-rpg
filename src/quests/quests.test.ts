@@ -3,6 +3,7 @@ import {
   getActiveQuestFieldFocus,
   getMainQuestProgress,
   getQuestProgress,
+  getQuestVictoryFeedback,
   matchesQuestCondition,
 } from './quests'
 import type { QuestDefinition, QuestProgressSnapshot } from './types'
@@ -119,5 +120,56 @@ describe('quest progression', () => {
         clearedAreaIds: ['typescript'],
       }),
     ).toBeNull()
+  })
+
+  it('初回Stage CLEARではQUEST UPDATEDと次の目的を返す', () => {
+    expect(
+      getQuestVictoryFeedback(emptyProgress, {
+        ...emptyProgress,
+        clearedStageIds: [1],
+      }),
+    ).toEqual({
+      kind: 'updated',
+      questId: 'javascript-main',
+      areaId: 'javascript',
+      questTitle: '王国のコード門を突破せよ',
+      completedStepLabel: 'FIRST READ GATEをCLEARする',
+      nextStepLabel: 'ONE OR MANY GATEをCLEARする',
+    })
+  })
+
+  it('Boss CLEARでMAIN QUEST COMPLETEを返す', () => {
+    expect(
+      getQuestVictoryFeedback(
+        { clearedStageIds: [1, 2], clearedAreaIds: [] },
+        { clearedStageIds: [1, 2, 3], clearedAreaIds: ['javascript'] },
+      ),
+    ).toEqual({
+      kind: 'completed',
+      questId: 'javascript-main',
+      areaId: 'javascript',
+      questTitle: '王国のコード門を突破せよ',
+      completedStepLabel: 'Bossを倒してJavaScript KingdomをAREA CLEARする',
+      nextStepLabel: undefined,
+    })
+  })
+
+  it('TypeScript Stage CLEARでも次の目的を返す', () => {
+    expect(
+      getQuestVictoryFeedback(
+        { clearedStageIds: [1, 2, 3], clearedAreaIds: ['javascript'] },
+        { clearedStageIds: [1, 2, 3, 4], clearedAreaIds: ['javascript'] },
+      ),
+    ).toMatchObject({
+      kind: 'updated',
+      questId: 'typescript-main',
+      nextStepLabel: 'MAYBE VALUE GATEをCLEARする',
+    })
+  })
+
+  it('replay勝利のようにQuest条件が変化しなければfeedbackを返さない', () => {
+    const before = { clearedStageIds: [1], clearedAreaIds: [] }
+    const after = { clearedStageIds: [1], clearedAreaIds: [] }
+    expect(getQuestVictoryFeedback(before, after)).toBeNull()
   })
 })
