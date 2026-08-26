@@ -6,7 +6,12 @@ import {
   HP_PER_LEVEL,
   POWER_MULTIPLIER_PER_LEVEL,
 } from './constants'
-import type { PlayerProgress, PlayerStats } from './types'
+import type {
+  BattleVictoryInput,
+  BattleVictoryResult,
+  PlayerProgress,
+  PlayerStats,
+} from './types'
 
 export function createInitialPlayerProgress(): PlayerProgress {
   return {
@@ -52,5 +57,44 @@ export function addExp(progress: PlayerProgress, amount: number): PlayerProgress
   return {
     ...progress,
     exp: Math.max(0, progress.exp + Math.max(0, amount)),
+  }
+}
+
+export function applyBattleVictory(
+  progress: PlayerProgress,
+  input: BattleVictoryInput,
+): BattleVictoryResult {
+  const previousLevel = getLevelForExp(progress.exp)
+  const expGained = Math.max(0, input.expReward)
+  const firstClear = !progress.clearedStageIds.includes(input.stageId)
+  const next = addExp(progress, expGained)
+
+  let unlockedStageId: number | undefined
+  let unlockedSkillId: string | undefined
+
+  if (firstClear && input.nextStageId && !next.unlockedStageIds.includes(input.nextStageId)) {
+    next.unlockedStageIds = [...next.unlockedStageIds, input.nextStageId]
+    unlockedStageId = input.nextStageId
+  }
+
+  if (firstClear && input.unlockSkillId && !next.unlockedSkillIds.includes(input.unlockSkillId)) {
+    next.unlockedSkillIds = [...next.unlockedSkillIds, input.unlockSkillId]
+    unlockedSkillId = input.unlockSkillId
+  }
+
+  if (firstClear) {
+    next.clearedStageIds = [...next.clearedStageIds, input.stageId]
+  }
+
+  return {
+    progress: next,
+    reward: {
+      expGained,
+      previousLevel,
+      newLevel: getLevelForExp(next.exp),
+      firstClear,
+      unlockedStageId,
+      unlockedSkillId,
+    },
   }
 }

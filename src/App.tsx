@@ -9,8 +9,9 @@ import {
   type Seed,
   type SkillCard,
 } from './game'
+import { applyBattleVictory, useProgress, type BattleVictoryReward } from './progression'
 
-type Phase = 'battle' | 'unlock' | 'victory' | 'defeat'
+type Phase = 'battle' | 'victory' | 'defeat'
 
 type LogEntry = {
   id: number
@@ -28,7 +29,9 @@ const spriteClassName = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+
 
 function App({ battleId, seed }: AppProps) {
   const navigate = useNavigate()
+  const { progress, setProgress } = useProgress()
   const battleIndex = battles.findIndex((candidate) => candidate.id === battleId)
+  const nextBattle = battles[battleIndex + 1]
   const battle = useMemo(() => {
     const generated = generateBattle(battleId, seed)
     if (!generated) throw new Error(`Unknown battle: ${battleId}`)
@@ -44,6 +47,7 @@ function App({ battleId, seed }: AppProps) {
   const [turn, setTurn] = useState(1)
   const [animatingIds, setAnimatingIds] = useState<string[]>([])
   const [isResolving, setIsResolving] = useState(false)
+  const [victoryReward, setVictoryReward] = useState<BattleVictoryReward | null>(null)
 
   const availableSkills = useMemo(
     () => battle.skillIds.map((id) => skills[id]),
@@ -63,7 +67,22 @@ function App({ battleId, seed }: AppProps) {
     setAnimatingIds([])
     setExplainedSkill(null)
     setIsResolving(false)
+    setVictoryReward(null)
     setPhase('battle')
+  }
+
+  const completeVictory = () => {
+    const result = applyBattleVictory(progress, {
+      stageId: battle.id,
+      expReward: battle.expReward,
+      nextStageId: nextBattle?.id,
+      unlockSkillId: battle.unlockSkillId,
+    })
+
+    setProgress(result.progress)
+    setVictoryReward(result.reward)
+    setIsResolving(false)
+    setPhase('victory')
   }
 
   const runEnemyTurn = (nextEnemies: Enemy[]) => {
@@ -71,7 +90,7 @@ function App({ battleId, seed }: AppProps) {
     const totalDamage = survivors.reduce((total, enemy) => total + enemy.attackDamage, 0)
 
     if (survivors.length === 0) {
-      setPhase('victory')
+      completeVictory()
       return
     }
 
@@ -135,18 +154,7 @@ function App({ battleId, seed }: AppProps) {
     setSelectedSkillId(skill.id)
   }
 
-  const continueAfterVictory = () => {
-    if (battle.unlockSkillId) {
-      setPhase('unlock')
-      return
-    }
-
-    navigate({ to: '/javascript/complete' })
-  }
-
   const goNextBattle = () => {
-    const nextBattle = battles[battleIndex + 1]
-
     if (!nextBattle) {
       navigate({ to: '/javascript/complete' })
       return
@@ -159,31 +167,10 @@ function App({ battleId, seed }: AppProps) {
     })
   }
 
-  if (phase === 'unlock') {
-    const unlocked = battle.unlockSkillId ? skills[battle.unlockSkillId] : null
-    if (!unlocked) return null
-
-    return (
-      <main className="app-shell center-shell title-screen">
-        <section className="result-card unlock-card pixel-window">
-          <div className="eyebrow">SKILL UNLOCKED</div>
-          <div className="unlock-icon">＋</div>
-          <h2>{unlocked.name}</h2>
-          <pre>
-            <code>{unlocked.code}</code>
-          </pre>
-          <div className="power-line">
-            <span>POWER</span>
-            <strong>{unlocked.power}</strong>
-          </div>
-          <p>{unlocked.explanation}</p>
-          <button className="primary-button" onClick={goNextBattle}>
-            ▶ NEXT BATTLE
-          </button>
-        </section>
-      </main>
-    )
-  }
+  const goStageSelect = () => navigate({ to: '/javascript' })
+  const unlockedSkill = victoryReward?.unlockedSkillId
+    ? skills[victoryReward.unlockedSkillId]
+    : null
 
   return (
     <main className="app-shell battle-screen">
@@ -316,13 +303,46 @@ function App({ battleId, seed }: AppProps) {
 
       {phase === 'victory' && (
         <div className="overlay">
-          <section className="result-card pixel-window">
+          <section className="result-card victory-card pixel-window">
             <div className="eyebrow">VICTORY</div>
             <h2>{battle.title} cleared.</h2>
-            <p>評価はなし。倒せたらクリア。</p>
-            <button className="primary-button" onClick={continueAfterVictory}>
-              ▶ CONTINUE
-            </button>
+            {victoryReward && (
+              <div className="reward-summary pixel-inner-window">
+                <div className="reward-stat">
+                  <span>EXP GAINED</span>
+                  <strong>+{victoryReward.expGained}</strong>
+                </div>
+                <div className="reward-stat">
+                  <span>LEVEL</span>
+                  <strong>
+                    {victoryReward.previousLevel}
+                    {victoryReward.newLevel > victoryReward.previousLevel
+                      ? ` → ${victoryReward.newLevel}`
+                      : ''}
+                  </strong>
+                </div>
+                {victoryReward.newLevel > victoryReward.previousLevel && (
+                  <div className="reward-unlock level-up-reward">LEVEL UP!</div>
+                )}
+                {victoryReward.firstClear && (
+                  <div className="reward-unlock">STAGE CLEAR RECORDED</div>
+                )}
+                {victoryReward.unlockedStageId && (
+                  <div className="reward-unlock">STAGE {victoryReward.unlockedStageId} UNLOCKED</div>
+                )}
+                {unlockedSkill && (
+                  <div className="reward-unlock">SKILL UNLOCKED: {unlockedSkill.name}</div>
+                )}
+              </div>
+            )}
+            <div className="result-actions">
+              <button className="primary-button" onClick={goNextBattle}>
+                {nextBattle ? '▶ NEXT STAGE' : '▶ AREA CLEAR'}
+              </button>
+              <button className="secondary-button" onClick={goStageSelect}>
+                ◀ STAGE SELECT
+              </button>
+            </div>
           </section>
         </div>
       )}
@@ -332,10 +352,13 @@ function App({ battleId, seed }: AppProps) {
           <section className="result-card defeat-card pixel-window">
             <div className="eyebrow">DEFEAT</div>
             <h2>コードを読み直して再戦</h2>
-            <p>必要ならカードの解説を確認してからリトライできる。</p>
+            <p>必要ならカードの解説を確認するか、前のStageへ戻って再挑戦できる。</p>
             <div className="defeat-actions">
               <button className="primary-button" onClick={resetBattle}>
                 ▶ RETRY
+              </button>
+              <button className="secondary-button" onClick={goStageSelect}>
+                ◀ STAGE SELECT
               </button>
               <button
                 className="secondary-button"

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   addExp,
+  applyBattleVictory,
   createInitialPlayerProgress,
   getLevelForExp,
   getMaxHpForLevel,
@@ -74,5 +75,77 @@ describe('player progression', () => {
     expect(getTotalExpForLevel(-3)).toBe(0)
     expect(getMaxHpForLevel(0)).toBe(100)
     expect(getPowerMultiplierForLevel(0)).toBe(1)
+  })
+
+  it('Stage初回クリアでEXP・CLEAR・次Stage・Skillをまとめて更新する', () => {
+    const initial = createInitialPlayerProgress()
+    const result = applyBattleVictory(initial, {
+      stageId: 1,
+      expReward: 40,
+      nextStageId: 2,
+      unlockSkillId: 'viper',
+    })
+
+    expect(result.progress).toEqual({
+      exp: 40,
+      clearedStageIds: [1],
+      unlockedStageIds: [1, 2],
+      unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper'],
+    })
+    expect(result.reward).toEqual({
+      expGained: 40,
+      previousLevel: 1,
+      newLevel: 2,
+      firstClear: true,
+      unlockedStageId: 2,
+      unlockedSkillId: 'viper',
+    })
+    expect(initial).toEqual(createInitialPlayerProgress())
+  })
+
+  it('再クリアではEXPだけを再獲得し、CLEARやunlockを重複させない', () => {
+    const first = applyBattleVictory(createInitialPlayerProgress(), {
+      stageId: 1,
+      expReward: 40,
+      nextStageId: 2,
+      unlockSkillId: 'viper',
+    })
+    const replay = applyBattleVictory(first.progress, {
+      stageId: 1,
+      expReward: 40,
+      nextStageId: 2,
+      unlockSkillId: 'viper',
+    })
+
+    expect(replay.progress.exp).toBe(80)
+    expect(replay.progress.clearedStageIds).toEqual([1])
+    expect(replay.progress.unlockedStageIds).toEqual([1, 2])
+    expect(replay.progress.unlockedSkillIds).toEqual(['trace', 'pulse', 'nova', 'viper'])
+    expect(replay.reward).toEqual({
+      expGained: 40,
+      previousLevel: 2,
+      newLevel: 2,
+      firstClear: false,
+      unlockedStageId: undefined,
+      unlockedSkillId: undefined,
+    })
+  })
+
+  it('次のStageがないBossでもEXPとCLEARを更新できる', () => {
+    const progress = {
+      exp: 120,
+      clearedStageIds: [1, 2],
+      unlockedStageIds: [1, 2, 3],
+      unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper', 'moon-edge'],
+    }
+    const result = applyBattleVictory(progress, {
+      stageId: 3,
+      expReward: 100,
+    })
+
+    expect(result.progress.exp).toBe(220)
+    expect(result.progress.clearedStageIds).toEqual([1, 2, 3])
+    expect(result.progress.unlockedStageIds).toEqual([1, 2, 3])
+    expect(result.reward.unlockedStageId).toBeUndefined()
   })
 })
