@@ -16,11 +16,11 @@ Cloudflareの同一ログインユーザーに複数Accountが存在しても、
 
 ---
 
-## 2. なぜCloudflareへ移行したか
+## 2. Cloudflareを採用している理由
 
-Vercel Hobbyのdeployment rate limitにより、細かいbranch pushが多い開発フローでPreview deploymentが止まることがあったため、2026-08にCloudflareへ移行した。
+現在の構成では、Vite SPAをCloudflare Workers Static Assetsで配信し、Workers BuildsのGitHub連携でPreview / Productionを管理する。
 
-Cloudflareを選んだ理由:
+主な理由:
 
 - Vite SPAをWorkers Static Assetsでそのまま配信できる
 - GitHub連携でProduction / non-production branch buildを分けられる
@@ -28,9 +28,9 @@ Cloudflareを選んだ理由:
 - SPA fallbackを設定でき、TanStack Routerのdeep linkを維持できる
 - 将来Workers / D1 / KV / R2等を検討しやすい
 
-ただし、Cloudflareへ移行したことは**将来backendをCloudflare製品へ固定する決定ではない**。認証・DB・同期要件が発生した時点で、Cloudflare Workers/D1/KV/R2、Supabase等を要件ベースで比較する。
+ただし、Cloudflareでfrontendを配信していることは**将来backendをCloudflare製品へ固定する決定ではない**。認証・DB・同期要件が発生した時点で、Cloudflare Workers/D1/KV/R2、Supabase等を要件ベースで比較する。
 
-またCloudflare側にもbuild利用量の上限はあるため、「無制限だから細かくpushしてよい」という運用にはしない。
+Cloudflare側にもbuild利用量の上限はあるため、「無制限だから細かくpushしてよい」という運用にはしない。
 
 ---
 
@@ -142,25 +142,20 @@ merge後は最低限、merge commitに対して次を確認する。
 
 ---
 
-## 7. Vercelの扱い
+## 7. 現在のデプロイ設定
 
-Vercelは正式なdeploy基盤から外した。
+repo内で有効なデプロイ設定はCloudflare用の`wrangler.jsonc`のみとする。
 
-現在の決定:
-
-- Vercel Git repository接続はDisconnect済み
-- Vercel Previewをmerge条件にしない
-- Vercel Productionを完了条件にしない
-- `vercel.json`では`git.deploymentEnabled = false`を設定し、自動Git deployを停止している
-- 旧Vercel Project / URLが残っていても、現在のProduction source of truthではない
-
-`vercel.json`は現時点では再接続時の誤deployを防ぐsafety lockとして残す。完全削除する場合は別Issueで、Vercel Project / config / docsをまとめて整理する。
+- Preview / ProductionともCloudflare Workers Buildsを使用する
+- deploy provider固有の設定ファイルを複数並存させない
+- GitHub上のIssue / PR / Definition of DoneもCloudflare Preview / Productionを基準にする
+- Production URLとbranchの対応はこの文書とREADMEをsource of truthとして扱う
 
 ---
 
 ## 8. push回数の考え方
 
-Cloudflare移行後も、意味のない小commitを連続pushしない。
+意味のない小commitを連続pushしない。
 
 基本方針:
 
