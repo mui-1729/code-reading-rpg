@@ -363,7 +363,6 @@ function App({ battleId, seed, returnTo }: AppProps) {
             <div className="hp-track player-track">
               <div className="hp-fill" style={{ width: `${playerHpPercent}%` }} />
             </div>
-            <div className="player-command">READ → SELECT → EXECUTE</div>
           </div>
         </aside>
 
@@ -407,14 +406,6 @@ function App({ battleId, seed, returnTo }: AppProps) {
       </section>
 
       <section className="battle-console pixel-window">
-        <div className="console-head">
-          <div>
-            <div className="eyebrow">SELECT CODE SKILL</div>
-            <h2>コードを読む → カードを選ぶ → 同じカードをもう一度押す</h2>
-          </div>
-          <span className="no-preview">TARGET PREVIEW: OFF</span>
-        </div>
-
         <div className="skill-grid">
           {availableSkills.map((skill) => {
             const selected = selectedSkillId === skill.id
@@ -434,28 +425,24 @@ function App({ battleId, seed, returnTo }: AppProps) {
                 <pre>
                   <code>{skill.code}</code>
                 </pre>
-                <div className="skill-card-foot">
-                  <span>{selected ? '▶ PRESS AGAIN TO EXECUTE' : '▷ SELECT'}</span>
-                </div>
+                {selected && <div className="skill-card-foot">▶ EXECUTE</div>}
               </button>
             )
           })}
         </div>
 
-        <div className="log-panel pixel-inner-window">
-          <div className="log-title">BATTLE LOG</div>
-          <div className="log-list">
-            {logs.length === 0 ? (
-              <span className="log-empty">&gt; The battle begins. Read the code.</span>
-            ) : (
-              logs.map((log) => (
+        {logs.length > 0 && (
+          <div className="log-panel pixel-inner-window">
+            <div className="log-title">BATTLE LOG</div>
+            <div className="log-list">
+              {logs.map((log) => (
                 <span key={log.id} className={`log-${log.tone}`}>
                   &gt; {log.text}
                 </span>
-              ))
-            )}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </section>
 
       {phase === 'victory' && (
@@ -513,8 +500,6 @@ function App({ battleId, seed, returnTo }: AppProps) {
         <div className="overlay result-overlay defeat-overlay">
           <section className="result-card defeat-card pixel-window result-card-enter">
             <div className="eyebrow">DEFEAT</div>
-            <h2>コードを読み直して再戦</h2>
-            <p>必要ならカードの解説を確認するか、前のStageへ戻って再挑戦できる。</p>
             <div className="defeat-actions">
               <button className="primary-button" onClick={resetBattle}>
                 ▶ RETRY
