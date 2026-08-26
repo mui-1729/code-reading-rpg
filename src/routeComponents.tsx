@@ -4,7 +4,6 @@ import App from './App'
 import { useBgm } from './audio/useBgm'
 import {
   areaById,
-  battles,
   getAreaForBattle,
   getBattlesForArea,
   getBossBattleForArea,
