@@ -54,12 +54,12 @@ describe('skill definitions', () => {
       judge: [skills.judge.code, skills.judge.rule, skills.judge.concept],
     }).toEqual({
       lock: [
-        'enemies.filter(e => e.hp < 100 && e.attackDamage >= 8)',
+        'enemies.filter(e => e.hp > 0 && e.hp < 100 && e.attackDamage >= 8)',
         { kind: 'allBelowAndAttackAtLeast', hp: 100, attackDamage: 8 },
         '&&',
       ],
       alert: [
-        'enemies.find(e => e.attackDamage >= 14 || e.hp > 120)',
+        'enemies.find(e => e.hp > 0 && (e.attackDamage >= 14 || e.hp > 120))',
         { kind: 'firstAttackAtLeastOrAbove', hp: 120, attackDamage: 14 },
         '||',
       ],
