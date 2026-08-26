@@ -1,6 +1,7 @@
-import { Outlet, createRootRoute, createRoute, createRouter } from '@tanstack/react-router'
+import { createRootRoute, createRoute, createRouter } from '@tanstack/react-router'
 import { JavaScriptFieldRoute } from './field/JavaScriptFieldRoute'
 import { TypeScriptFieldRoute } from './field/TypeScriptFieldRoute'
+import { RootLayout } from './RootLayout'
 import {
   BattleRoutePage,
   CompletePage,
@@ -13,7 +14,7 @@ import {
 import { WorldPage } from './world/WorldPage'
 
 const rootRoute = createRootRoute({
-  component: Outlet,
+  component: RootLayout,
 })
 
 const indexRoute = createRoute({

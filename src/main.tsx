@@ -12,6 +12,7 @@ import './motion.css'
 import './audio.css'
 import './world.css'
 import './code-help.css'
+import './quests.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
