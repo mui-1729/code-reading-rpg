@@ -2,127 +2,171 @@
 
 ## 1. 目的
 
-Battleだけで完結せず、探索・成長・報酬利用・再挑戦までを1つのRPG loopとして扱う。
+Open World探索・Battle・成長・装備・仲間を1つのRPG loopとして扱う。
 
 ```text
-World Map
+Open World
 ↓
-Area / Field
+Random Encounter / Fixed Boss
 ↓
-Quest / NPC / Gate
-↓
-Battle
+Code Reading Battle
 ↓
 EXP / Gold / CLEAR / unlock
 ↓
-必要ならSHOPでsupport item購入
+Worldへreturn
 ↓
-Fieldへ戻る
+Pauseで成長 / Item / Equipment / Party確認
 ↓
-Boss / Area CLEAR
-↓
-Side Quest / 再攻略
+再探索
 ```
 
-## 2. PlayerProgress
+## 2. 永続stateは2系統
 
-現行schema:
+### PlayerProgress v4
 
 ```ts
-PlayerProgress = {
-  exp: number
-  gold: number
-  inventory: {
-    patchKit: number
-  }
-  clearedStageIds: number[]
-  clearedAreaIds: string[]
-  completedSideQuestIds: string[]
-  unlockedStageIds: number[]
-  unlockedSkillIds: string[]
+{
+  exp,
+  gold,
+  inventory: { patchKit },
+  clearedStageIds,
+  clearedAreaIds,
+  completedSideQuestIds,
+  unlockedStageIds,
+  unlockedSkillIds,
 }
 ```
 
-Level / maxHP / POWER倍率はEXPから導出し、保存しない。
+`completedSideQuestIds`はlegacy save互換のため保持する。現在Side Quest definitionは空。
 
-初期状態:
+### RpgState v1
 
-```text
-EXP 0
-Gold 0
-PATCH KIT 0
-Lv1
-maxHP 100
-Stage 1 / 4 unlocked
-JavaScript / TypeScript baseline Skills unlocked
+```ts
+{
+  equipment,
+  ownedEquipmentIds,
+  partyMemberIds,
+  partyEquipment,
+  worldPosition,
+  stepsSinceEncounter,
+  encounterCount,
+}
 ```
+
+PlayerProgressへWorld座標やEquipmentを混ぜない。
 
 ## 3. Level / EXP
 
 ```text
 累計必要EXP = 20 * level * (level - 1)
-maxHP = 100 + (level - 1) * 8
-powerMultiplier = 1 + (level - 1) * 0.02
+base maxHP = 100 + (level - 1) * 8
+base powerMultiplier = 1 + (level - 1) * 0.02
 ```
 
-例:
+Level / base statsはEXPから導出し、保存しない。
 
-- Lv1: 0 EXP
-- Lv2: 40 EXP
-- Lv3: 120 EXP
-- Lv4: 240 EXP
+Equipment bonusを加えた最終値をCombatStatsとしてBattleへ渡す。
 
-Skill damage:
+## 4. Battle progression
+
+JavaScript:
 
 ```text
-Math.round(basePower * powerMultiplier)
+Battle 1 → Battle 2 → Battle 3 Boss
 ```
 
-## 4. Battleと成長の分離
-
-Enemyはcurrent Player Levelへ追従させない。
+TypeScript:
 
 ```text
-世界側
-= Enemy HP / attack / composition / learning theme
-
-Player側
-= Level / maxHP / POWER倍率 / unlock / support item
+Battle 4 → Battle 5 → Battle 6 Boss
 ```
 
-LevelやItemはコード読解を不要にするためではなく、戦える余裕を少し増やすために使う。
+ただしPlayerはStage Selectから選ばない。
 
-## 5. Stage / Area / Gold
-
-```text
-JavaScript Kingdom
-1 → 2 → 3 Boss
-
-TypeScript Frontier
-4 → 5 → 6 Boss
-```
+- JS tall-grass encounterが1 / 2へ進行
+- TS forest encounterが4 / 5へ進行
+- 3 / 6はWorld上の固定Boss
 
 初回CLEAR:
 
 - EXP
 - Gold
-- Stage CLEAR
-- next Stage unlock
+- clear state
+- next Battle unlock
 - Skill unlock
-- BossならArea CLEAR
+- BossならArea clear
 
 replay:
 
-- Battle EXP / Goldは再獲得可能
-- CLEAR / unlockは重複しない
+- EXP / Goldは再獲得可能
+- clear / unlockは重複しない
 
-Gold rewardはBattle dataの`goldReward`がsource of truth。
+## 5. World / Encounter
 
-## 6. Shop / PATCH KIT
+現在:
 
-Area画面のheaderから必要時だけ`SHOP`を開く。
+- JS terrain encounter chance: tall-grass 0.18
+- TS terrain encounter chance: forest 0.16
+- encounter後は最低5歩cooldown
+- Hub / roadはsafe
 
-現在の商品:
+進行中の未clear Battleを優先してencounterする。
+
+例:
+
+```text
+JS Stage 1未clear → Battle 1
+Stage 1 clear / Stage 2未clear → Battle 2
+両方clear → Battle 1 / 2をrandom replay
+```
+
+Bossはrandom encounterに混ぜない。
+
+## 6. Equipment
+
+slots:
+
+```text
+weapon
+armor
+accessory
+```
+
+EquipmentはRpgStateへ保存する。
+
+Battleへの影響:
+
+- Attack → Skill damage補正
+- Defense → incoming damage軽減
+- maxHP → Battle開始HP上限
+
+EquipmentはTargetRuleを変更しない。
+
+Boss clear rewardとして上位Equipmentを取得できる。
+
+## 7. Party
+
+現在のmember:
+
+```text
+BYTE
+```
+
+加入:
+
+- Hub付近のBYTEへINTERACT
+- RpgStateへ保存
+
+Battle:
+
+- Playerがコードからtargetを決定
+- BYTEは同じtargetへfollow-up
+
+Party自身が別targetを判断してコード読解を代替してはいけない。
+
+## 8. Economy / PATCH KIT
+
+Hub上のSHOP objectへINTERACTして購入する。
 
 ```text
 PATCH KIT
@@ -132,137 +176,84 @@ heal: max 24 HP
 
 Battle中:
 
-- 所持している時だけcompact actionを表示
-- HP満タンなら使用不可
-- 1Battleにつき1回だけ
+- 所持時だけ表示
+- 1 Battle 1回
 - 1個消費
-- 最大HPを超えて回復しない
+- maxHPを超えない
 
-PATCH KITはTargetRule / Skill POWER / generator / solvabilityへ影響しない。
+## 9. World Objective
 
-## 7. 再攻略
+Stage Selectを廃止したため、PlayerProgressから次の目的をpureにderiveする。
 
-強い敵に負けた場合:
-
-```text
-前Stageへ戻る
-↓
-別seedで再攻略
-↓
-EXP / Gold
-↓
-Level Up / 必要ならPATCH KIT購入
-↓
-再挑戦
-```
-
-Area CLEAR後も過去Stageへ戻れる。
-
-Side Questはこの再攻略へRPG上の目的を追加する。
-
-### JavaScript
+予定:
 
 ```text
-AREA CLEAR
-→ SECOND PASS
-→ Stage 1 replay
-→ +40 bonus EXP
+JS 0/3 → tall-grass encounter
+JS 1/3 → 次のtall-grass encounter
+JS 2/3 → west Boss
+JS 3/3 → clear
+
+TSも同様
 ```
 
-### TypeScript
+表示はPause STATUSを基本とし、Battle後は短い一時feedbackだけ表示する。
 
-```text
-AREA CLEAR
-→ TYPE RECHECK
-→ Stage 4 replay
-→ +50 bonus EXP
-```
+旧Gate表現のQuest Trackerは復活させない。
 
-bonusはSide Questごとに1回だけ。
+## 10. Reset
 
-## 8. QuestとProgress
+`RESET PROGRESS`で:
 
-Main Quest:
+- PlayerProgress
+- RpgState
+- TutorialState
 
-- Stage / Area CLEARから導出
-- 専用save stateなし
+を同時に初期化する。
 
-Side Quest:
+各Providerは共通reset eventを受け、自分のstateだけをresetする。
 
-- Area CLEARでunlock
-- 対象Battle replayでcomplete
-- 一度だけの報酬保証のため`completedSideQuestIds`だけ保存
+## 11. LocalStorage
 
-Quest UIはBattle中へ常設しない。
+### PlayerProgress
 
-## 9. LocalStorage
+schema v4。
 
-schema version: `4`
+旧v1 / v2 / v3からmigrationし、既存EXP / clear / unlockを保持する。
 
-保存:
+### RpgState
 
-- EXP
-- Gold
-- PATCH KIT所持数
-- Stage CLEAR
-- Area CLEAR
-- Side Quest complete ID
-- Stage unlock
-- Skill unlock
+schema v1。
 
-保存しない:
+invalid JSON / unknown versionは初期状態へfallbackする。
 
-- Level / maxHP / POWER倍率
-- Battle turn
-- Enemy current HP
-- selected Skill
-- PATCH KITのBattle内使用済みstate
-- animation state
+今後:
 
-migration:
+- World bounds
+- known Equipment ID
+- known Party ID
 
-- v1 → 既存進行を復元しEconomyは0から開始
-- v2 → Area進行を維持しEconomyは0から開始
-- v3 → Side Quest進行を維持しEconomyは0から開始
-- v4 → current schema
-- 不正data / 未知version → 初期状態へfallback
+のvalidationを強化する。
 
-## 10. Field / World
+## 12. 再攻略
 
-現在:
+負けた場合はWorldへ戻るかRETRYする。
 
-- World Map
-- Area Select
-- JavaScript / TypeScript Field
-- 4方向移動 / collision
-- NPC / Dialogue
-- Battle Gate
-- Main Quest marker
-- 学習看板
-- Code Codex
-- Area SHOP
+Worldで通常Encounterを繰り返すとEXP / Goldを得られる。
 
-Field objectを増やしすぎない。新しい学習概念はCodexを優先し、施設やNPCが増えて1画面が窮屈になったら複数screen / camera追従へ移行する。
+ただしgrindだけで読解を不要にしないため:
 
-## 11. 今後のRPG拡張
+- EnemyをLevel連動で弱くしない
+- Equipmentを極端に強くしない
+- Partyがtargetを自動決定しない
 
-優先候補:
+## 13. 今後
 
-```text
-Side Quest（実装済み）
-↓
-Gold / Shop / PATCH KIT（実装済み）
-↓
-3つ目のArea
-↓
-Boss固有mechanic
-↓
-複数screen Field
-```
+優先:
 
-避けること:
-
-- 装備やItemだけでコードを読まず勝てる
-- Rare Itemが全Skillの上位互換
-- Grind量だけで攻略が決まる
-- Player Levelに合わせてEnemyを自動弱体化する
+1. World Objective
+2. legacy Quest runtime cleanup
+3. World action resolver
+4. RpgState validation
+5. recovery point / treasure等のWorld content
+6. Boss-specific mechanic
+7. third learning region

@@ -2,11 +2,11 @@
 
 ## 1. 目的
 
-コード読解ロジック、盤面生成、RPG進行、Economy、Quest、主要ユーザーフローを壊しにくくする。
+コード読解ロジックだけでなく、Open World探索・RPG state・進行導線を壊しにくくする。
 
 ## 2. CI
 
-GitHub ActionsはNode.js 24で必ず次を実行する。
+Node.js 24で必ず:
 
 ```bash
 npm ci
@@ -15,223 +15,230 @@ npm test
 npm run build
 ```
 
-PR前にも同じ4項目をfeature branchで成功させる。PR CIは代替ではなく二重確認。
+PR前にも同じ4項目を実行する。PR CIは二重確認。
 
-## 3. 現在のUnit Test
+## 3. Unit Test
 
 ### Game Domain
 
 - TargetRule / targeting
-- Battle / Area定義整合性
+- Battle定義整合性
 - seeded random / generator
 - SkillDefinition
 - code variant / multiline CODE HELP
 - solvability
-- JavaScript / TypeScript発展構文
+- JavaScript / TypeScript構文
+- Battle + seed code uniqueness
 - CODE DATA resolver
 
-### Progression
+### World Domain
+
+- World bounds
+- region判定
+- terrain判定
+- walkable / encounter terrain
+- viewport clipping
+- adjacency
+- encounter chance helper
+- progressに応じたencounter Battle選択
+
+今後World action resolverを追加したら:
+
+- move成功 / blocked
+- encounter cooldown
+- encounter intent
+- Boss / Shop / NPC interaction intent
+- state transitionのimmutability
+
+### Player Progression
 
 - initial PlayerProgress
 - EXP / Level境界
 - maxHP / POWER倍率
-- victory EXP / Gold reward
+- victory EXP / Gold
 - first clear / replay
 - Stage / Skill / Area unlock
-- immutability
+- legacy save migration
 
-### Economy
+### RPG State
 
-- Goldを消費してPATCH KIT購入
-- Gold不足では購入不可
-- 購入でInventory増加
-- PATCH KITを1個消費
-- 最大24 HP回復
-- 最大HPを超えない
-- HP満タンでは消費しない
-- 未所持では消費しない
-- 同じBattleで2回使えない
-- purchase / consumeが元のPlayerProgressをmutationしない
+- initial RpgState
+- serialize / restore
+- invalid JSON / unknown version fallback
+- Equipment persistence
+- Party persistence
+- World position persistence
+- encounter counters
+- reset event連携
 
-### Persistence
+今後validation強化時:
 
-現行schemaはv4。
+- out-of-bounds World position
+- unknown Equipment ID
+- unknown Party ID
+- invalid loadout
 
-- Gold / Inventoryを含むserialize / restore
-- invalid JSON
-- unknown version
-- missing / invalid economy field
-- baseline Stage / Skill補完
-- v1 → v4 migration
-- v2 → v4 migration
-- v3 → v4 migration
-- `completedSideQuestIds`保存
+### Economy / Equipment / Party
 
-旧saveのEXP / Stage CLEAR / Area CLEAR / Side Quest / unlockを失わず、旧schemaからのEconomyは`gold = 0` / `patchKit = 0`で開始する。
+Economy:
 
-### Quest
+- PATCH KIT purchase / insufficient Gold
+- consume / heal cap / one-use
 
-Main Quest:
+Equipment:
 
-- Stage CLEARでnext step更新
-- Area CLEARでCOMPLETE
-- JavaScript / TypeScript独立
-- Field `NEXT` / `!` focus
-- replayで更新feedbackなし
+- equip / unequip
+- Attack / Defense / maxHP bonus
 
-Side Quest:
+Party:
 
-- Area CLEAR前LOCKED
-- Area CLEAR後ACTIVE
-- 指定Battle再攻略でCOMPLETE
-- 対象外Battleでは進行しない
-- bonus EXPは一度だけ
-- JavaScript / TypeScript独立
-- completion feedback差分
+- joined member
+- follow-up damage
+- codeが選んだ同じtarget以外へ攻撃しない設計境界
 
-### Field / Learning / Dialogue
+### World Objective
 
-- movement / collision
-- Gate / 看板 / NPC / Exit reachability
-- LearningHint参照
-- JavaScript / TypeScript Field定義
-- Dialogue進行条件
+導入後:
+
+- JS / TS各progress状態
+- first encounter → next encounter → Boss → CLEAR
+- Boss unlock時のobjective
+- replayでobjectiveを巻き戻さない
+- all clear状態
 
 ### Tutorial
 
-- `field-move → field-interact → battle → completed`状態遷移
-- Battle direct entryでField stepを飛ばす
-- SKIP / completed後に状態が進まない
-- Tutorial state serialize / restore
-- completed / skipped保持
-- missing storage fallback
-- broken JSON fallback
-- unknown schema / status / phase fallback
+- `field-move → field-interact → battle → completed`の内部phase互換
+- World実座標変化でMOVE UIが進む
+- World object隣接でINTERACT UI
+- direct Battle entry
+- SKIP / RESET
+- persistence fallback
 
-Tutorial UIは既存Field / Battle DOMの実操作を観測するため、pure state / persistenceはUnit Testで固定し、表示位置と実操作連携はCloudflare PreviewでManual QAする。
+内部phase名はlegacy field由来でも、UI testではcurrent `/world`を基準にする。
 
-### Audio / Motion
+### Audio / Motion / Result
 
 - audio settings normalization
 - BGM track / release
 - motion helper
+- result sequence grouping / order
 - reduced-motionをpresentationだけに閉じ込める
 
 ## 4. Generator / Solvability
 
-seed variationは次を守る。
+保証する:
 
 - 同じBattle ID + seedで同じ盤面
-- Enemy数維持
-- HPが許容variation内
-- Enemy / Skill / code variant variation
 - initial valid target
-- base Battleの意味あるtargetを消さない
 - solvability
-- 生成失敗時fallback
+- code variantのsemantic invariant
+- Battle固有codeにしても行数 / CODE HELP対応を壊さない
 
-保証しないこと:
+保証しない:
 
-- current Player LevelやItem所持で必ず勝てる
-- Playerが弱いときEnemyを自動弱体化する
+- current Player Levelで必ず勝てる
+- Equipmentに合わせてEnemyを自動弱体化する
 - 常に最適解が1つ
-
-Economy追加後もgenerator / solvabilityはGoldやInventoryを参照しない。
 
 ## 5. Content Test
 
-新しいSkill / code variantでは、動作だけでなく意味を確認する。
+新Skill / code variantでは:
 
 - codeが正しいJavaScript / TypeScript
-- display codeとTargetRuleが同じ結果
+- display codeとTargetRuleが一致
 - variantでPOWER / rule / conceptを変えない
-- multi codeの物理行数とCODE HELP数一致
-- seed variation後も学習theme維持
+- multi-line codeとCODE HELP行数一致
+- Battle間の表示code重複を避ける
 - 序盤へ発展構文を突然混ぜない
 
-## 6. UI Testの考え方
+## 6. Component / E2E方針
 
-現時点はpure/domain testを優先する。React Testing LibraryやPlaywrightは、壊れやすい画面横断stateが増えた時点で導入する。
+Open World化により、pure testだけではroute横断loopの回帰を拾いにくくなった。
 
-Component Test候補:
-
-- Skill SELECT → EXECUTE
-- resolving中の追加入力不可
-- Victory / Defeat
-- Gold表示
-- Shop open / close / purchase
-- PATCH KIT action enable / disable
-- Quest Log open / close
-- Sound Settings / Codex / CODE DATA modal
-- Tutorial promptのroute / selected Skill連動
-
-E2E候補:
+優先E2E:
 
 ```text
 Title
 → World
-→ Field
+→ move
+→ Random Encounter
+→ Battle victory
+→ Worldへreturn
+→ position保持
+```
+
+次:
+
+```text
+World
+→ BYTE join
+→ Pause PARTY
 → Battle
-→ Victory
-→ Gold獲得
-→ Area SHOP
-→ PATCH KIT購入
-→ 次Battleで回復
+→ follow-up確認
+```
+
+次:
+
+```text
+Boss clear
+→ Equipment reward
+→ Pause EQUIPMENT
+→ equip
+→ Battle stats反映
 ```
 
 Persistence:
 
 ```text
-Gold獲得 / PATCH KIT購入
+World位置 / Gold / Equipment / Party
 → reload
-→ Gold / Inventory / CLEAR / Quest完了を保持
+→ state保持
 ```
 
 ## 7. Cloudflare Preview
 
-PR / branchで最低限確認する。
+PRごとに最低限:
 
-- `Workers Builds: code-reading-rpg` success
+- Workers Build success
 - Preview URL発行
 - 変更routeが開く
-- Area headerにSHOP導線
-- Shop購入後にGold / Inventory表示更新
-- BattleでPATCH KIT使用後にHP / stock更新
-- UI変更ならDesktop / Mobileで崩れない
-- persistence変更ならreload互換
+- World movementを妨げない
+- Pauseが開閉できる
+- Battle→World returnが壊れていない
+- MobileでD-Pad / INTERACT / MENUが重ならない
+- persistence変更ならreload確認
 
 ## 8. Production
 
 main merge後:
 
 - GitHub Actions success
-- Cloudflare Production Build success
+- Cloudflare Production success
 - 変更範囲に応じたsmoke check
-
-毎回すべてのBattleを手動完全攻略する必要はない。
 
 ## 9. Regression Test
 
-bug fix時は原因に対応するtestを残す。
+bug fixでは原因に対応するtestを残す。
 
 例:
 
-- Field objectで奥へ進めない → reachability
-- variant追加で旧testが固定構文を仮定 → semantic invariantへ修正
-- save migrationで起動不能 → old schema migration
-- replay報酬が重複 → one-time Side Quest reward
-- PATCH KITを同Battleで複数使用 → economy one-use test
-- Gold不足でも購入できる → purchase test
+- cameraでTutorial MOVEが進まない → World座標検出test
+- code固有化で1行/3行仕様破壊 → multiline regression
+- invalid World saveでmap外へ出る → RpgState validation
+- objectiveが旧Gate文言を出す → World Objective derivation
+- Partyが別targetへ攻撃 → follow-up target invariant
 
 ## 10. PR最低条件
 
 - [ ] 必要なUnit Test追加
-- [ ] `npm ci` success
-- [ ] `npm run lint` success
-- [ ] `npm test` success
-- [ ] `npm run build` success
-- [ ] GitHub Actions CI success
-- [ ] Cloudflare Preview success
-- [ ] 自己レビュー
-- [ ] merge後main CI success
-- [ ] Cloudflare Production success
+- [ ] `npm ci`
+- [ ] `npm run lint`
+- [ ] `npm test`
+- [ ] `npm run build`
+- [ ] GitHub Actions
+- [ ] Cloudflare Preview
+- [ ] Self Review
+- [ ] Squash Merge
+- [ ] main CI
+- [ ] Cloudflare Production

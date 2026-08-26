@@ -2,45 +2,43 @@
 
 ## 目的
 
-初回Playerが既存UIを実際に操作しながら、最低限のゲーム操作だけを短時間で理解できるようにする。
+初回Playerが**現在のOpen World UIとBattle UIを実際に操作しながら**最低限の操作を理解できるようにする。
 
-Tutorialは構文学習そのものを担当しない。JavaScript / TypeScriptの概念はFieldの看板・NPC・Code Codex・CODE HELPへ任せる。
+Tutorialは構文学習そのものを担当しない。JavaScript / TypeScriptの概念はCode Codex / CODE HELP / CODE DATAへ任せる。
 
 ## 原則
 
-- 初回だけ表示する
-- 全画面overlayで操作を止めない
-- 説明を読んでNEXTを押す形式にしない
-- 実際の操作成功をstep完了条件にする
-- Battleのtargetや正解Skillを教えない
-- Tutorial都合のstateをBattle Domain / PlayerProgressへ混ぜない
-- Desktop / Mobileの既存操作をそのまま使う
-- `SKIP`後は再表示しない
-- `RESET PROGRESS`時はTutorialも初期状態へ戻す
+- 初回だけ
+- overlayで操作を止めない
+- NEXTを読むだけのTutorialにしない
+- 実操作成功を完了条件にする
+- target / 正解Skillを教えない
+- Tutorial stateをPlayerProgress / RpgState / Battle Domainへ混ぜない
+- Desktop / Mobileの既存操作を使う
+- SKIP後は再表示しない
+- RESET PROGRESSでTutorialも初期状態へ戻す
 
 ## Flow
 
 ```text
-Fieldへ入る
+Open World
 ↓
 MOVE
-↓ 実際に1tile以上移動
+↓ World実座標が変化
 INTERACT
-↓ 正面にinteraction objectがある状態で操作
+↓ interaction object隣接時に操作
 Battle
 ↓
 SELECT
 ↓ Skill cardを1回押す
 EXECUTE
-↓ 選択中Skillをもう1回押す
-Tutorial COMPLETE
+↓ selected Skillをもう1回押す
+COMPLETE
 ```
 
-Stage SelectやbookmarkからBattleへ直接入った場合は、Field stepを飛ばしてBattle Tutorialへ進む。
+Battle URLへdirect entryした場合はWorld stepを飛ばしてBattle Tutorialへ進める。
 
-## Field Tutorial
-
-### MOVE
+## MOVE
 
 Desktop:
 
@@ -56,11 +54,20 @@ MOVE
 D-Padで歩いてみよう
 ```
 
-壁へ入力して座標が変化しなかった場合は完了しない。
+camera追従でPlayerがviewport中央に見え続けても、Tutorialはvisible tile indexではなく`data-world-x / data-world-y`の**実World座標変化**を観測する。
 
-### INTERACT
+blocked terrainへ入力し座標が変わらなければ完了しない。
 
-Playerの正面にBattle Gate / NPC / Sign / Exitのいずれかが存在する時だけ表示する。
+## INTERACT
+
+現在のWorldでinteraction対象になりうるもの:
+
+- BYTE NPC
+- Hub SHOP
+- JavaScript Boss
+- TypeScript Boss
+
+隣接した状態でのみINTERACT promptを表示する。
 
 Desktop:
 
@@ -76,23 +83,21 @@ INTERACT
 INTERACTを押して調べる
 ```
 
-特定objectを「正解」として強く囲わず、操作buttonだけを軽く強調する。
+特定objectを「正解」として強調しない。
 
 ## Battle Tutorial
 
-Tutorial側で`battle-select` / `battle-execute`を永続化しない。
+Tutorial側でbattle-select / battle-executeを永続化しない。
 
-Battle runtimeの既存DOM状態から、選択中Skillがあるかを判断する。
+Battle DOMからselected Skillを判定する。
 
 ```text
-.skill-card.selected がない
-→ SELECT prompt
+.skill-card.selected なし
+→ SELECT
 
-.skill-card.selected がある
-→ EXECUTE prompt
+.skill-card.selected あり
+→ EXECUTE
 ```
-
-これによりSELECT後にreloadしても、選択状態が消えたBattle UIとTutorial stateが矛盾しない。
 
 ### SELECT
 
@@ -101,7 +106,7 @@ SELECT
 コードを読んで、Skillを1枚選ぼう
 ```
 
-特定SkillやEnemyはhighlightしない。
+正解SkillやEnemyはhighlightしない。
 
 ### EXECUTE
 
@@ -110,94 +115,81 @@ EXECUTE
 選んだSkillをもう一度押して実行
 ```
 
-別Skillへ選び直した場合は、新しく選択されたSkillに対して引き続きEXECUTEを案内する。
-
-最初のSkill実行開始でTutorialを完了する。targetの有無、damage、victory / defeatは完了条件にしない。
+最初のSkill実行開始でTutorial COMPLETE。target有無 / damage / victoryは条件にしない。
 
 ## CODE HELP
 
-Battle Tutorial中に次だけ補助表示する。
+Battle Tutorial中に必要なら短く:
 
 ```text
-困ったら右下の ? から CODE HELP を確認できる
+困ったら右下の ? から CODE HELP
 ```
 
-CODE HELPを開くことは必須にしない。
+CODE HELP使用は必須にしない。
 
 ## Persistence
 
-PlayerProgressとは別keyへ保存する。
+PlayerProgress / RpgStateとは別key。
 
 ```text
 code-reading-rpg:tutorial
 ```
 
-schema:
+schema v1:
 
 ```ts
 type TutorialStatus = 'active' | 'completed' | 'skipped'
 type TutorialPhase = 'field-move' | 'field-interact' | 'battle'
-
-type TutorialState = {
-  version: 1
-  status: TutorialStatus
-  phase: TutorialPhase
-}
 ```
 
-壊れたJSON、未知version、未知status / phaseは初期状態へfallbackする。
+`field-*`という内部phase名は旧実装由来。current UIは`/world`を対象にする。schema migrationの必要が生じるまで名前だけを理由に変更しない。
+
+invalid JSON / unknown version / unknown status / phaseはinitialへfallbackする。
 
 ## Architecture
 
 ```text
 src/tutorial/
-├── tutorial.ts              # pure state transition
-├── storage.ts               # LocalStorage schema / restore
+├── tutorial.ts
+├── storage.ts
 ├── TutorialContext.ts
 ├── TutorialProvider.tsx
-├── TutorialPrompt.tsx       # existing UI operation observation / prompt
+├── TutorialPrompt.tsx
 ├── useTutorial.ts
 └── *.test.ts
 ```
 
-TutorialPromptは既存Field / BattleのDOMを観測し、Tutorial専用の分岐をBattle Domainへ追加しない。
+TutorialPromptは既存World / Battle DOMを観測し、Tutorial専用分岐をWorld Domain / Battle Domainへ入れない。
 
-FieldではPlayer tileの実移動、正面interaction object、既存INTERACT操作を観測する。Battleでは既存`.skill-card` / `.selected`を観測する。
-
-`RESET PROGRESS`はProgressionから汎用reset eventをdispatchし、TutorialProviderが受け取ってTutorial stateをresetする。ProgressionはTutorial moduleをimportしない。
+RESETはProgressionの共通reset eventを受けてTutorialProvider自身が行う。
 
 ## Accessibility / Motion
 
-- promptは`aria-live="polite"`
+- `aria-live="polite"`
 - keyboard操作を塞がない
-- Mobile D-Pad / INTERACT / Skill cardをpromptで覆わない
-- highlightは色だけでなくoutlineを使用する
-- `prefers-reduced-motion: reduce`ではpulse animationを停止する
+- Mobile D-Pad / INTERACT / Skill cardを覆わない
+- highlightはoutlineも使う
+- reduced motionではpulseを停止する
 
 ## Test
 
-Unit Test:
+Unit:
 
-- `field-move → field-interact → battle → completed`
-- Battle direct entry
-- SKIP後に遷移しない
-- completed後に遷移しない
+- phase transition
+- direct Battle entry
+- SKIP / completed後の停止
 - serialize / restore
-- completed / skipped保持
-- missing storage fallback
-- broken JSON fallback
-- unknown version fallback
-- unknown status / phase fallback
+- broken storage fallback
 
-Manual QA:
+Manual / E2E:
 
-- JavaScript Field Desktop
-- JavaScript Field Mobile
-- TypeScript Fieldから初回開始
-- Stage SelectからBattleへdirect entry
+- `/world` Desktop MOVE
+- `/world` Mobile MOVE
+- BYTE / SHOP / Boss隣接INTERACT
+- camera端でのMOVE
+- Battle SELECT / EXECUTE
 - Skill選び直し
-- SELECT後reload
-- CODE HELP open / close
+- direct Battle entry
 - SKIP
-- RESET PROGRESS後の再表示
+- RESET後の再表示
 - reduced motion

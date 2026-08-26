@@ -2,9 +2,11 @@
 
 ## 目的
 
-`CODE//READ RPG`を、**普通の2D RPGを遊びながらコードを読むゲーム**として育てる。
+`CODE//READ RPG`を、**1つの2D Worldを探索しながらコードを読むRPG**として育てる。
 
-探索・成長・装備・仲間はRPGとして楽しめるようにする。一方で、Battleで誰を対象にするかは表示コードを読まないと判断しにくい状態を守る。
+機能を増やす前に、Open World化後の責務と導線を安定させる。
+
+詳細設計は`docs/OPEN_WORLD_DESIGN.md`をsource of truthとする。
 
 ## 現在のコア導線
 
@@ -16,41 +18,41 @@ Open World
 ├─ Central Hub
 └─ TypeScript Forest
 ↓
-Random Encounter / 固定Boss
+Random Encounter / Fixed Boss
 ↓
 Code Reading Battle
 ↓
 Worldへ復帰
 ```
 
-Stage Select / Area Selectは使わない。
+Stage Select / Area Selectは通常導線に使わない。
 
 ## 守る原則
 
-1. コードを読まないと正しい行動を選びにくい
+1. コードを読まないと正しいtargetを選びにくい
 2. 同じ表示コードの丸暗記だけで攻略できない
-3. Level / Equipment / Partyだけで読解を不要にしない
-4. Worldは上下左右へ探索でき、画面外にも続く
-5. terrainから学習地域が直感的に分かる
-6. 1画面へ情報・説明・buttonを詰め込みすぎない
-7. EXP / Gold / Items / Equipment / PartyはPauseへ集約する
-8. Tutorialで教えた操作説明を常設しない
-9. 読解に必要な実値は確認できるが、正解targetは先に見せない
-10. World / Battle / saveの重要ロジックは自動テストする
+3. Level / Equipment / Partyで読解を不要にしない
+4. Worldは上下左右へ探索できる
+5. terrainから学習regionが直感的に分かる
+6. RPG詳細はPauseへ集約する
+7. 常設Quest Trackerを復活させない
+8. legacy save互換とcurrent featureを分ける
+9. World UIへ分岐を増やす前にpure resolverを検討する
+10. 主要loopを自動テストできる形へ寄せる
 
 ## 実装済み
 
-### Open World / encounter
+### Open World
 
 - 40×28 World
 - 11×9 camera viewport
 - 上下左右探索
-- JavaScript = 草原 / 草むら
-- TypeScript = 森
-- Hub / Road / Mountain / Water
-- 草むら / 森のRandom Encounter
+- JavaScript Grassland / tall-grass
+- TypeScript Forest
+- Central Hub / road / mountain / water
+- Random Encounter
 - encounter cooldown
-- 固定Boss地点
+- fixed Boss
 - World位置save
 
 ### Battle / learning
@@ -59,13 +61,12 @@ Stage Select / Area Selectは使わない。
 - TypeScript Battle 4〜6
 - SELECT → EXECUTE
 - seeded generation / solvability
-- code variants / multi-line code
-- Battle + seed固有の表示code
-- duplicate code test
+- code variants / multiline
+- Battle + seed固有表示code
 - CODE HELP / CODE DATA
-- Battle motion / result sequence
+- result sequence
 
-### RPG system
+### RPG
 
 - EXP / Level / Gold
 - Max HP / Attack / Defense
@@ -73,72 +74,133 @@ Stage Select / Area Selectは使わない。
 - Equipment bonus
 - PATCH KIT / Hub Shop
 - Party member BYTE
-- 仲間follow-up attack
+- follow-up attack
 - Boss clear equipment reward
 - Pause: STATUS / ITEMS / EQUIPMENT / PARTY / SYSTEM
-- RPG state LocalStorage
+- PlayerProgress v4
+- RpgState v1
 
 ### UI / onboarding
 
-- 初回Tutorial: MOVE → INTERACT → SELECT → EXECUTE
-- World cameraでもWorld座標でMOVE判定
-- Title HOW TO PLAY廃止
-- Stage Select / Complete専用画面廃止
-- 常設Quest Tracker廃止
+- MOVE → INTERACT → SELECT → EXECUTE Tutorial
+- World座標ベースMOVE判定
+- Stage Select / Complete画面を通常導線から削除
 - Battle結果の段階表示
-- fixed square tile
 - reduced motion
 
-## 次に拡張するなら
+## P0: 現行Open Worldの設計整合性
 
-### 1. World content density
+### 1. World Objective / Progress Feedback
 
-Open World基盤を増やすより、今あるWorldへ意味のある場所を足す。
+Stage Selectをなくしたため、次に何をすれば進むかをPauseから確認できるようにする。
+
+要件:
+
+- PlayerProgressからpureにderive
+- JavaScript / TypeScriptごとのprogress
+- Pause STATUSへ表示
+- Battle勝利時に短い一時feedback
+- Boss unlockを明確にする
+- 常設HUDは増やさない
+
+### 2. Legacy Quest runtime cleanup
+
+World Objective導入後:
+
+- 旧Gate文言のMain Quest feedbackを置換
+- inactive Side Quest victory処理を通常Battle runtimeから外す
+- QuestVictoryFeedbackをWorld progress feedbackへ置換
+- legacy `completedSideQuestIds`はsave互換のため保持
+- old Field focusは通常runtimeから外す
+
+### 3. stale Area / Field wording cleanup
+
+新しいfeatureやdocsでArea Select / Field Gateをcurrent flowとして扱わない。
+
+## P1: World基盤
+
+### 1. World action resolver
+
+現在`WorldPage.tsx`にあるmovement / encounter / interactionの条件分岐をpure resolverへ分離する。
+
+目的:
+
+- object追加時のUI肥大化を防ぐ
+- encounter testを強くする
+- navigation intentとstate updateを分ける
+
+### 2. RpgState validation
+
+restore時に次を検証する。
+
+- World bounds
+- known Equipment ID
+- known Party ID
+- loadout consistency
+
+### 3. Open World E2E
+
+主要flow:
+
+```text
+Title
+→ World move
+→ Encounter
+→ Victory
+→ World return
+→ Pause
+→ BYTE join
+→ Equipment
+→ Battle
+```
+
+をbrowser E2Eで固定する。
+
+## P1: World content density
+
+地図をさらに広げる前に意味のある地点を増やす。
 
 候補:
-- 小さな町 / Inn
-- 宝箱
-- 装備Shop
-- 回復地点
-- 仲間イベント
-- landmark
 
-ただし空間を埋めるためだけのUIやNPCは増やさない。
-
-### 2. 3つ目のlearning region
-
-SQL / Reactなどを同一Worldの別regionとして追加する。
-
-例:
-- SQL = 洞窟 / 地下遺跡
-- React = 町 / 工房
-
-Area Selectは作らず、Worldを歩いてregionへ入る。
-
-### 3. Party depth
-
-必要になった段階で:
-- 2人目以降の仲間
-- heal / support
-- party equipment
-- member固有skill
-
-自動戦闘でcode readingを代替しない。
-
-### 4. Equipment / item depth
-
-必要性があるものだけ追加する。
-
+- recovery point / Inn
+- treasure
 - equipment shop
-- treasure drop
-- recovery item variation
-- accessory特性
+- landmark
+- companion event
+
+空間を埋めるだけのNPC / Signは追加しない。
+
+## P2: Battle / learning depth
+
+### Boss-specific mechanic
+
+Bossだけの読解パターンを追加する。
+
+条件:
+
+- 表示コードから理解できる
+- 新しい常設説明panelを必要としない
+- TargetRule / solvabilityをtestできる
+
+### Third learning region
+
+候補:
+
+- SQL = cave / ruins
+- React = town / workshop
+
+Area Selectは作らずWorldへ接続する。
+
+## P2: Party / Equipment depth
+
+必要性が確認できたら追加する。
+
+- 2人目の仲間
+- support / heal role
+- party equipment利用
+- equipment特性
 
 単純なAttack inflationだけにしない。
-
-### 5. Boss-specific mechanic
-
-Bossだけの読解パターンや戦略を追加する。説明を増やしすぎず、表示コードからルールを読み取れる形を優先する。
 
 ## 当面増やさないもの
 
@@ -146,13 +208,14 @@ Bossだけの読解パターンや戦略を追加する。説明を増やしす�
 - Area Select
 - 複雑なQuest Log
 - 大量の常設HUD
+- 大量のsupport item
 - Backend / Login / Cloud Save / Ranking
 
 Backendは複数端末同期や共有Challengeが必要になった時点で検討する。
 
 ## Quality gate
 
-PR前に必ず次を通す。
+PR前:
 
 ```bash
 npm ci
@@ -161,4 +224,13 @@ npm test
 npm run build
 ```
 
-その後、Cloudflare Preview・self-review・merge・main CI・Productionを確認する。
+PR後:
+
+```text
+GitHub Actions
+Cloudflare Preview
+Self Review
+Squash Merge
+main CI
+Cloudflare Production
+```

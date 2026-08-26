@@ -2,148 +2,228 @@
 
 ## 目的
 
-UIは、RPGの探索とコード読解に必要な情報を優先し、説明のための説明や常設パネルで画面を埋めない。
+UIは、**Open World探索とコード読解に必要な情報を優先し、常設panelや説明文で画面を埋めない**。
+
+全体設計は`docs/OPEN_WORLD_DESIGN.md`に従う。
 
 ## 基本原則
 
-- その画面で行動判断に必要な情報だけを常時表示する
-- 操作しなくても分かる内容を文章で重ねて説明しない
-- 見出し・sub heading・説明文が同じ意味を繰り返す場合は削る
-- 設定 / Shop / Codex / CODE DATAは常設panelにせず必要時だけ開く
-- Battleではコード・Enemy・Player状態を最優先する
-- Mobileでは固定UIを最小化し、Field操作やBattle操作を塞がない
+- その瞬間の判断に必要な情報だけを常時表示する
+- EXP / Gold / Equipment / Partyなどの詳細はPauseへ寄せる
+- Tutorialと同じ操作説明を常設しない
+- UIから明らかな内容を文章で重ねない
+- 正解target / 正解Skill / damage previewを表示しない
+- Mobileでは固定UIを最小化する
+- 状態変化は短い一時feedbackを優先する
 
-## World Map
+## Open World
 
-常時必要なもの:
+常時表示してよいもの:
 
-- Area名
-- availability / clear状態
-- Areaの学習themeが分かる短い説明
-- ENTER / REVISIT
-- Player Level / EXP
-- TITLEへ戻る操作
+- 現在region
+- 11×9 viewport
+- terrainから分かる探索context
+- short FIELD LOG
+- D-Pad / INTERACT
+- 小さいMENU / CODEX / SOUND導線
 
-不要なもの:
+常時表示しないもの:
 
-- 操作を言い換えただけの文
-- UIから明らかな説明
-- saveや内部システムの説明
+- Level / EXP / Gold
+- Equipment一覧
+- Party詳細
+- 長いQuest Tracker
+- encounter確率
+- 「草むらを歩くと敵が出ます」のような繰り返し説明
 
-## Area / Shop
-
-Area画面ではPlayer summaryにGoldを含める。
-
-Shop導線:
-
-- Area header actionに短い`SHOP` button
-- JavaScript / TypeScriptで同じUIを使う
-- Gold額をbutton文言へ重複表示しない
-- Shopはmodalとして必要時だけ開く
-- `Esc` / close / backdropで閉じられる
-
-Shop modalでは現在Gold、商品名、価格、所持数、購入可否だけを優先する。
-
-現在の商品:
+terrain自体で学習regionを理解できることを優先する。
 
 ```text
-PATCH KIT
-30 G
-最大24 HP回復
-1 Battle 1回
+JavaScript = grass / tall-grass
+TypeScript = forest
+Hub / road = safe zone
 ```
 
-長いRPG説明やItem loreは初回実装では追加しない。
+Boss / Shop / NPCはtile上のobjectとして短く識別できればよい。
+
+## World Progress
+
+Open WorldではStage Selectがないため、進行方向は必要。ただし常設Quest HUDへ戻さない。
+
+方針:
+
+- Pause STATUSにWorld Objectiveを表示
+- Battle victory時のみ短いprogress feedback
+- Boss解放時は分かりやすく伝える
+- 具体的な正解code / targetは教えない
+
+例:
+
+```text
+JAVASCRIPT GRASSLAND 2 / 3
+NEXT: 西のBOSSへ
+```
+
+## Pause
+
+PauseはRPG情報の主な確認場所。
+
+Tabs:
+
+```text
+STATUS
+ITEMS
+EQUIPMENT
+PARTY
+SYSTEM
+```
+
+### STATUS
+
+- Level
+- EXP / next level
+- Gold
+- Max HP
+- Attack
+- Defense
+- World Objective（導入後）
+
+### ITEMS
+
+所持数と用途を短く表示する。
+
+### EQUIPMENT
+
+- current loadout
+- owned equipment
+- bonus
+- equip / unequip
+
+装備比較のためだけにWorld HUDへAttack/Defenseを出さない。
+
+### PARTY
+
+- Leader
+- joined member
+- member role / base stats
+
+Partyが正解targetを自動で示すような説明はしない。
+
+### SYSTEM
+
+- Reset Progress
+- 設定への最小案内
 
 ## Battle
 
 常時必要なもの:
 
-- Battle / Stage情報
+- Battle情報
 - Player HP / Level
-- Enemy HP / NEXT行動
+- Enemy HP / NEXT
 - Skill名 / POWER / code
-- 選択中Skillの`EXECUTE`状態
-- 実際に発生したBattle Log
+- SELECT / EXECUTE状態
+- 実際に起きたBattle Log
 
-PATCH KITは所持時だけcompact actionとして表示する。
+Equipment / Partyの効果:
 
-- `PATCH KIT ×N · +24 HP`
-- HP満タン / resolving中 / 使用済みならdisabled
-- 使用後は短い`USED THIS BATTLE`
-- Item未所持なら空のItem欄自体を出さない
+- POWER表示にはPlayer側damage補正を反映してよい
+- Enemy NEXTにはDefense反映後の被damageを表示してよい
+- Party follow-upは小さい補助行で表示する
 
-表示しないもの:
+ただしTargetRuleの答えを先に見せない。
 
-- 操作見出しや常設手順説明
-- target / correct / damage preview
-- 空Logへのtutorial文
-- Itemによる正解Enemyの示唆
+## PATCH KIT
 
-操作説明が必要な場合も、現在状態に直接ひもづく短いfeedbackを優先する。
+Battle中、所持時だけcompact actionとして表示する。
+
+```text
+PATCH KIT ×N · +24 HP
+```
+
+- full HP / resolving / usedならdisabled
+- 未所持なら空欄を出さない
+- target判断へ影響する情報は付けない
+
+## Result Sequence
+
+Victory結果は一気に並べない。
+
+基本順序:
+
+```text
+EXP
+Gold
+Level Up
+Skill Unlock
+Stage / Area Progress
+World Objective Update
+```
+
+click / tap / auto advance / skipを維持する。
+
+関連の強い情報だけgroup化する。
 
 ## CODE DATA
 
-コードを読むために必要なruntime dataを確認する補助UI。
+コード読解に必要なruntime dataだけを確認できる。
 
-- `enemies`などsource data
-- code内で作られる中間値
-- Enemy objectの現在値
+- source data
+- intermediate value
+- selected Enemy object
 
-を確認できるが、最終target / correctは表示しない。
+最終target / correctは表示しない。
 
-詳細は`docs/CODE_DATA.md`をsource of truthとする。
+詳細は`docs/CODE_DATA.md`。
 
 ## Code Codex
 
-Codexは内容自体が説明なので、外側の説明文を増やさない。
+Codex自体が説明UIなので外側の説明を増やさない。
 
 - JavaScript / TypeScript tabs
-- concept / summary / code / note
-- 常設toggleは小さくする
+- concept / summary / code / notes
 
-## Quest
+## Shop
 
-常設部分は`QUEST` toggleだけにする。
+現在の通常ShopはHub上のSHOP objectとのinteraction。
 
-Quest Logを開いた時:
+購入時に必要な情報:
 
-- Main Quest
-- 解放済みSide Quest
-- status / objective / reward
+- current Gold
+- item name
+- price
+- owned count
+- purchase success / failure
 
-を表示する。
-
-Side QuestはLOCKED中はpanelにも出さない。Battle中はQuest Trackerを表示せず、完了時だけ短いfeedbackを一時表示する。
-
-## Sound Settings
-
-BGM / SE slidersを常時表示しない。
-
-通常時は小さい`SOUND` buttonだけを表示し、押した時だけMute / SE volume / BGM volumeを開く。
+旧Area header Shop modalはlegacy UIとして新機能の基準にしない。
 
 ## Tutorial
 
-Tutorialは初回Playerが操作を始めるための一時UIであり、常設説明の代替として使う。
+初回だけ:
 
-- 初回だけ
-- MOVE / INTERACT / SELECT / EXECUTEの必要な瞬間だけ
-- 既存UIの実操作で進む
-- 全画面backdropで操作を塞がない
+```text
+MOVE
+INTERACT
+SELECT
+EXECUTE
+```
+
+- World実座標の移動でMOVE完了
+- World object隣接時のINTERACTを案内
+- Battleではselected Skill DOMを観測
+- 正解Skill / Enemyはhighlightしない
 - SKIP可能
-- 正解Skill / Enemyをhighlightしない
-- Mobile操作を覆わない
-- 完了後は説明を残さない
+- RESET PROGRESSで初期化
 
-詳細仕様は`docs/TUTORIAL.md`をsource of truthとする。
+詳細は`docs/TUTORIAL.md`。
 
-## 文言を追加する基準
+## 文言追加の基準
 
-新しい文言は、次のどれかに当てはまる場合だけ追加する。
+新しい文言は次のどれかに当てはまる場合だけ追加する。
 
-1. Playerが次の操作を判断できない
+1. 次の操作・目的を判断できない
 2. 学習上の誤解を防ぐ
 3. RPG上の状態変化を伝える
 4. Accessibility上必要
 
-単に機能を説明するだけの文は、UIから理解できるなら追加しない。
+単に機能を説明するだけなら追加しない。

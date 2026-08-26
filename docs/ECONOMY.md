@@ -2,140 +2,142 @@
 
 ## 目的
 
-Battleで得た報酬を次のBattleの余裕へ変換する、最小のRPG economy loopを定義する。
+Battle報酬を次のBattleの余裕へ変換する最小economy loopを定義する。
 
 ```text
-Battle victory
-  ↓
+Battle Victory
+↓
 Gold
-  ↓
-Area SHOP
-  ↓
+↓
+Open World Hub SHOP
+↓
 PATCH KIT
-  ↓
+↓
 Battle中のHP回復
 ```
 
-このloopはコード読解を代替しない。攻撃力、TargetRule、Skill選択、generator、solvabilityには影響させない。
+このloopはコード読解を代替しない。
 
 ## Gold
 
-各Battleは`goldReward`を持つ。
+各Battleの`goldReward`がsource of truth。
 
-- Battle 01: 20 G
-- Battle 02: 30 G
+- Battle 1: 20 G
+- Battle 2: 30 G
 - JavaScript Boss: 50 G
-- Battle 04: 25 G
-- Battle 05: 35 G
+- Battle 4: 25 G
+- Battle 5: 35 G
 - TypeScript Boss: 60 G
 
-再攻略でもGoldは獲得できる。Stage CLEAR / unlockは従来どおり初回のみ記録する。
-
-Victory resultでは`GOLD GAINED`を表示する。
+replayでもGoldは獲得できる。CLEAR / unlockは初回だけ。
 
 ## Shop
 
-JavaScript / TypeScript Area画面のheaderから`SHOP`を開く。
+current flowではCentral Hubの`SHOP` objectへ隣接してINTERACTする。
 
-Shopは常設panelにせず、必要時だけmodalとして表示する。
+現在の商品:
 
-現在の商品は1種類のみ。
+```text
+PATCH KIT
+30 G
+最大24 HP回復
+```
 
-### PATCH KIT
+購入時:
 
-- 価格: 30 G
-- 回復量: 最大24 HP
-- 購入数はInventoryへ保存
-- Gold不足時は購入不可
+- Gold不足なら購入不可
+- 成功時Gold -30
+- Inventory +1
+- short FIELD LOGで結果を伝える
+
+旧Area header modalの`AreaShop.tsx`はlegacy UI。新しいShop featureの基準にしない。
 
 ## Battle Item
 
-PATCH KITを1個以上所持している場合だけBattle consoleへcompact actionを表示する。
+PATCH KITを所持している時だけBattle consoleへcompact actionを出す。
 
-使用条件:
+条件:
 
-- Battle中である
-- そのBattleでまだ使っていない
-- HPが最大HP未満
-- PATCH KITを1個以上所持している
+- Battle中
+- resolving中ではない
+- 同Battleで未使用
+- HP < maxHP
+- stock > 0
 
-使用すると:
+使用:
 
-- 最大24 HP回復する
-- 最大HPを超えない
-- PATCH KITを1個消費する
-- 同じBattleでは2個目を使えない
-
-Item使用自体はEnemy targetやSkill damageを変更しない。
+- 最大24 HP回復
+- maxHPを超えない
+- stock -1
+- 同Battle2回目不可
 
 ## PlayerProgress
 
-```ts
-type PlayerInventory = {
-  patchKit: number
-}
+Gold / consumableはPlayerProgress v4へ保存する。
 
-type PlayerProgress = {
-  exp: number
-  gold: number
-  inventory: PlayerInventory
-  // existing progression fields...
+```ts
+inventory: {
+  patchKit: number
 }
 ```
 
-## Save schema
-
-Player progress schemaはv4。
-
-v1 / v2 / v3からrestoreする場合:
-
-- EXP / CLEAR / unlock / Side Questなど既存進行は維持する
-- `gold = 0`
-- `inventory.patchKit = 0`
-
-v4ではGoldとInventoryもLocalStorageへ保存する。
+Equipment / Party / World positionはEconomyではなくRpgStateの責務。
 
 ## Architecture
 
 ```text
 src/economy/
-├── AreaShop.tsx
 ├── economy.ts
 ├── economy.test.ts
+├── AreaShop.tsx   # legacy Area modal
 └── index.ts
 ```
 
-`economy.ts`は購入と消費をpure functionとして扱う。
+`economy.ts`のpure functions:
 
-`AreaShop.tsx`はArea UIとの接続だけを担当する。
+- `purchasePatchKit(progress)`
+- `consumePatchKit(progress, hp, maxHp, usedThisBattle)`
 
-Battle側は現在HPとBattle内の使用済みstateを管理し、消費結果をPlayerProgressへ反映する。
+World UIはpurchase結果をPlayerProgressへ反映するだけ。
+
+Battle UIはconsume結果とBattle内used stateを管理する。
 
 ## Boundaries
 
 Economyが変更してはいけないもの:
 
-- `TargetRule`
-- Skill POWER計算
+- TargetRule
 - code variant
-- Battle generator
-- solvability verification
-- correct target判定
+- generator
+- solvability
+- correct target
+- Party target
 
-PATCH KITは「間違えても少し耐えられる」余裕を増やすだけで、コードを読まずに勝てる機能にはしない。
+PATCH KITは「間違えても少し耐えられる」余裕だけを作る。
+
+## Save
+
+PlayerProgress schema v4。
+
+v1 / v2 / v3 migrationでは既存進行を維持し、Economy fieldが存在しないsaveは:
+
+```text
+gold = 0
+patchKit = 0
+```
+
+から開始する。
 
 ## Tests
 
-固定するもの:
-
-- Goldを消費して購入できる
-- Gold不足では購入できない
-- PATCH KITを1個消費する
-- 最大24 HP回復する
-- 最大HPを超えない
-- HP満タンでは消費しない
-- 未所持では消費しない
-- 同一Battleで2回使えない
-- Battle勝利でGoldを得る
-- v1 / v2 / v3 → v4 migration
+- purchase success
+- insufficient Gold
+- Inventory増加
+- consume
+- heal cap
+- full HP no consume
+- no stock
+- one-use per Battle
+- victory Gold
+- v1 / v2 / v3 → v4
 - v4 serialize / restore

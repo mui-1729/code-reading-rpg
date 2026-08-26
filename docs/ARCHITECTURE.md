@@ -2,71 +2,64 @@
 
 ## 1. 目的
 
-現在の責務分割と、Areaや学習コンテンツを増やすときの境界を定義する。
+Open World化後の責務境界を定義する。詳細な設計判断と今後の優先順位は`docs/OPEN_WORLD_DESIGN.md`をsource of truthとする。
 
-原則は、**コード読解のGame Domain、RPG進行、Economy、Quest、Field / Dialogue、Audio / Motion、Routingを必要以上に密結合させない**こと。
+原則は、**Game Domain / World / Player Progression / RPG state / Tutorial / Presentationを必要以上に密結合させない**こと。
 
----
-
-## 2. 現在の全体構成
+## 2. 全体構成
 
 ```text
 Browser
   ↓
 React 19 + TanStack Router
-  ├── World / Area UI
-  ├── Field / Dialogue UI
-  ├── Quest / Codex UI
-  ├── Shop UI
-  ├── Battle UI / CODE DATA
-  └── Audio / Motion presentation
+  ├── Open World UI
+  ├── Pause / Codex / Tutorial
+  ├── Battle UI / CODE DATA / Result Sequence
+  └── Audio / Motion
         ↓
 Game Domain
-  ├── Area metadata
-  ├── Battle definitions / Gold reward
-  ├── JavaScript / TypeScript SkillDefinition
-  ├── TargetRule
-  ├── Seeded generator
-  └── Solvability
+  ├── Battle definitions
+  ├── SkillDefinition / TargetRule
+  ├── seeded generator
+  └── solvability
         ↓
-Progression / Economy / Quest
-  ├── EXP / Level
-  ├── Gold / Inventory
-  ├── Stage / Area CLEAR
-  ├── Skill unlock
-  ├── Main Quest derivation
-  └── Side Quest reward state
+World Domain
+  ├── terrain / region
+  ├── viewport
+  └── encounter candidate selection
+        ↓
+Player Domains
+  ├── PlayerProgress: EXP / Gold / clear / unlock / consumable
+  └── RpgState: World position / Equipment / Party / encounter pacing
         ↓
 LocalStorage persistence
 ```
 
-FrontendはVite SPAとしてCloudflare Workers Static Assetsへdeployする。
-
----
+Vite SPAとしてCloudflare Workers Static Assetsへdeployする。
 
 ## 3. 主なディレクトリ
 
 ```text
 src/
-├── App.tsx                       # Area共通Battle runtime / UI
+├── App.tsx                     # 共通Battle runtime
 ├── AppRouter.tsx
 ├── RootLayout.tsx
 ├── router.tsx
-├── routeComponents.tsx
 ├── world/
-├── field/
-├── dialogue/
-├── learning/
-├── inspector/                    # Battle CODE DATA
-├── economy/
-│   ├── economy.ts                # purchase / consume pure domain
-│   ├── economy.test.ts
-│   ├── AreaShop.tsx
-│   └── index.ts
-├── quests/
+│   ├── WorldPage.tsx           # World UI + current orchestration
+│   ├── worldMap.ts             # pure terrain / viewport / encounter helpers
+│   └── worldMap.test.ts
+├── rpg/
+│   ├── state.ts                # RpgState schema / persistence
+│   ├── equipment.ts
+│   ├── party.ts
+│   ├── combat.ts
+│   └── RpgProvider.tsx
+├── progression/
+│   ├── progression.ts
+│   ├── storage.ts              # PlayerProgress schema v4
+│   └── ProgressProvider.tsx
 ├── game/
-│   ├── areas.ts
-│   ├── areaProgression.ts
 │   ├── battles.ts
 │   ├── generator.ts
 │   ├── skillDefinitions.ts
@@ -74,229 +67,215 @@ src/
 │   ├── skills.ts
 │   ├── targeting.ts
 │   └── solvability.ts
-├── progression/
-│   ├── progression.ts
-│   ├── storage.ts
-│   ├── ProgressProvider.tsx
-│   └── types.ts
+├── inspector/
+├── results/
+├── tutorial/
+├── learning/
+├── economy/
+├── quests/                     # legacy/main progress helpers。通常導線は縮小方針
 ├── audio/
 └── motion/
 ```
 
----
+旧`field/`やArea関連codeはlegacy route / 過去仕様互換のため残る場合があるが、新しいWorld featureのsource of truthにはしない。
 
 ## 4. Routing
 
-公開route:
+通常route:
 
 ```text
 /
 /world
-/javascript
-/javascript/field
-/javascript/battle/$battleId?seed=...&returnTo=...
-/javascript/complete
-/typescript
-/typescript/field
-/typescript/battle/$battleId?seed=...&returnTo=...
-/typescript/complete
+/javascript/battle/$battleId?seed=...&returnTo=/world
+/typescript/battle/$battleId?seed=...&returnTo=/world
 ```
 
-Shopは新routeを増やさずArea画面上の必要時modalとして提供する。
-
-Area固有の遷移先は`src/game/areas.ts`へ集約する。`comingSoon` Areaは実routeを持たせない。
-
----
-
-## 5. Area / Battle関係
-
-Battleはglobalに一意なnumber IDと`areaId`を持つ。
+Legacy redirect:
 
 ```text
-JavaScript Kingdom: 1, 2, 3
-TypeScript Frontier: 4, 5, 6
+/javascript          → /world
+/javascript/field    → /world
+/javascript/complete → /world
+/typescript          → /world
+/typescript/field    → /world
+/typescript/complete → /world
 ```
 
-Battle definitionはEXP rewardに加えて`goldReward`を持つ。Gold額はProgression側で推測せずBattle dataをsource of truthとする。
+通常導線へStage Select / Area Selectを再導入しない。
 
-守る条件:
+## 5. World Domain
 
-- 全Battleの`areaId`は実在Area
-- Battle IDはAreaを跨いでも一意
-- `bossBattleId`は同じAreaのBoss
-- routeは別AreaのBattleを受け付けない
-- next Battleは同じArea内だけ
+`src/world/worldMap.ts`が現在のpure logicを持つ。
 
----
+- World size / viewport size
+- region判定
+- terrain判定
+- walkable / encounter terrain
+- encounter chance
+- progressに応じたBattle candidate選択
+- adjacency
 
-## 6. Game Domain / Skill definitions
+現在`WorldPage.tsx`がmovement・random roll・interaction・route transitionをまとめてorchestrateする。
 
-`src/game/`はUIから独立したコード読解定義と純粋ロジックを担当する。
+World objectが増える場合は、`WorldPage.tsx`へif文を積み続けず次のようなpure resolverへ分離する。
 
-TypeScriptのために別Battle engineを作らない。
+```text
+current world state + player progress + input
+↓
+resolve world action
+↓
+next state / interaction / encounter intent
+↓
+UIがstate更新・navigate・SEを実行
+```
 
-表示JavaScript / TypeScriptをruntimeで`eval()`せず、安全な内部TargetRuleと対応させる。
+## 6. Game Domain / Battle
 
-Economyはこの境界へ入れない。PATCH KIT使用で次を変更してはいけない。
+`src/game/`はコード読解ルールと盤面生成を担当する。
+
+表示JavaScript / TypeScriptをruntimeで`eval()`しない。表示コードの意味と安全な内部`TargetRule`を対応させる。
+
+Battle ID + seedからEnemy / Skill order / code variantを決定的に生成する。
+
+Battle + seedごとに表示code文字列を固有化するが、次は維持する。
 
 - TargetRule
-- Skill POWER
-- code variant
-- generator
+- POWER
+- concept
+- code行数
+- CODE HELP行対応
 - solvability
-- correct target判定
 
----
-
-## 7. Seeded Generator / Solvability
-
-Battle ID + seedからEnemy HP / Enemy順 / Skill順 / code variantを決定的に再現する。
-
-JavaScript / TypeScriptとも同じgeneratorとsolvabilityを使用する。Quest / Level / Gold / Itemを追加しても、generatorの世界側難易度をcurrent Player Progressへ自動追従させない。
-
----
-
-## 8. Battle Runtime
+## 7. Battle Runtime
 
 `App.tsx`はArea共通Battle runtime。
 
-一時state:
+Battle transient state:
 
 - phase
 - playerHp
 - enemies
 - selectedSkillId
+- turn
 - logs
-- turn
-- PATCH KIT使用済みstate
-- animation state
+- PATCH KIT used
+- motion state
 
-これらのうちBattle固有stateはPlayerProgressへ保存しない。
+保存しない。
 
-Victory時の順序:
-
-```text
-Battle result
-↓
-applyBattleVictory()  // EXP + Gold + CLEAR / unlock
-↓
-applySideQuestVictory()
-↓
-ProgressProvider更新
-↓
-Victory / Quest feedback
-```
-
-PATCH KIT使用時:
+Player側補正:
 
 ```text
-current PlayerProgress + current HP + maxHP
-↓
-consumePatchKit()
-↓
-Inventory -1 / HP回復
-↓
-Battle内used state = true
+base PlayerStats(EXP)
++ Equipment bonus
+→ CombatStats
 ```
 
-Item使用はEnemy turnやtargetingロジックのsource of truthにしない。
+Party follow-upはコードが決めた同じtargetにだけ追加damageを与える。Partyが独自に正解targetを選んではいけない。
 
----
+## 8. State ownership
 
-## 9. Progression / Economy / Persistence
+### PlayerProgress v4
 
-```ts
-PlayerProgress = {
-  exp,
-  gold,
-  inventory: { patchKit },
-  clearedStageIds,
-  clearedAreaIds,
-  completedSideQuestIds,
-  unlockedStageIds,
-  unlockedSkillIds,
-}
-```
+担当:
 
-Level / maxHP / POWER倍率はEXPから導出する。
+- EXP / Gold
+- PATCH KIT
+- Battle / Area clear
+- Stage / Skill unlock
+- legacy `completedSideQuestIds`
 
-Economy domainは`src/economy/economy.ts`のpure functionをsource of truthにする。
+### RpgState v1
 
-- `purchasePatchKit(progress)`
-- `consumePatchKit(progress, hp, maxHp, usedThisBattle)`
+担当:
 
-LocalStorage schemaはv4。
+- Equipment / owned equipment
+- Party / party equipment
+- World position
+- encounter steps / count
 
-```text
-v1 → 既存進行を復元 + Gold 0 / PATCH KIT 0
-v2 → Area進行を維持 + Gold 0 / PATCH KIT 0
-v3 → Side Quest進行を維持 + Gold 0 / PATCH KIT 0
-v4 → current PlayerProgress
-```
+### TutorialState v1
 
-各Playable Areaの入口Stageとbaseline Skillは初期progressへ含める。旧save復元時は既存CLEAR / EXP / unlockを保持したまま不足baselineだけ追加する。
+Tutorial専用。Battle/World domainへ混ぜない。
 
-保存しないもの:
+## 9. Reset
 
-- Battle中HP
-- turn
-- selected Skill
-- PATCH KITのBattle内使用済みstate
-- animation state
-- BGM再生位置
-- Main Questの導出可能なstatus
+`ProgressProvider.resetProgress()`が汎用event `code-reading-rpg:progress-reset`をdispatchする。
 
----
+- ProgressProvider → PlayerProgress reset
+- RpgProvider → RpgState reset
+- TutorialProvider → Tutorial reset
 
-## 10. Quest
+各providerが他moduleを直接importしてresetしない。
 
-`src/quests/quests.ts`をMain / Side Quest definitionと判定のsource of truthにする。
+## 10. Economy / Equipment / Party
 
-Main QuestはStage / Area CLEARからpureに導出する。Side QuestはArea CLEARでunlockし、指定Battleの再攻略で一度だけbonus EXPを付与する。
+Economy:
 
-Battle側は「どのSide Questか」を知らず、勝利したBattle IDだけをQuest domainへ渡す。
+- `purchasePatchKit()`
+- `consumePatchKit()`
 
-EconomyとSide Quest bonusは別責務とし、現在のSide Quest bonusはEXPのみ。
+Equipment:
 
----
+- loadout = weapon / armor / accessory
+- CombatStatsへbonusを反映
 
-## 11. Field / Learning / Dialogue
+Party:
 
-movement / collision / interaction判定はFieldの純粋ロジック。
+- 現在BYTE 1人
+- follow-up attackのみ
 
-学習看板はsolid tile。BFS reachability testでGate / 看板 / NPC / Exitへ到達できることを確認する。
+これらはTargetRule / generator / solvabilityを変更しない。
 
-新しい学習概念だけを理由にField objectを増やさず、Codexへ寄せる。
+## 11. Progress guidance / Quest
 
----
+Open WorldではStage Gateを直接選ばないため、旧Quest文言は現在の導線と一致しない。
 
-## 12. World Map / UI補助機能
+今後はPlayerProgressから**World Objective**をpureに導出し、Pause STATUSとBattle後の短いfeedbackへ使用する。
 
-World MapはArea metadataとArea CLEARを参照するだけで、Battle生成やSkill targetingを知らない。
+Side Quest definitionsは現在空。`completedSideQuestIds`はsave互換のため残すが、現行runtime featureとして扱わない。
 
-Quest Tracker / Code Codex / Sound Settings / Shop / CODE DATAは長い常設詳細panelにせず必要時だけ開く。Areaでは`SHOP`をheader actionへ置き、Battleではコード・Enemy・Player状態を優先する。
+World Objective導入後、旧Quest feedback / Side Quest victory処理 / Field focus依存を通常runtimeから外す。
 
----
+## 12. UI / Presentation
 
-## 13. Audio / Motion
+常設表示は現在の判断に必要なものだけにする。
 
-Audio / Motionはpresentation layer。
+World:
 
-presentation状態をTargetRuleやdamage式のsource of truthにしない。
+- region / terrain
+- map viewport
+- short field log
+- D-Pad / INTERACT
 
----
+Battle:
+
+- Player HP / Level
+- Enemy HP / NEXT
+- Skill code / POWER
+- selected state
+
+EXP / Gold / Equipment / Party詳細はPauseへ集約する。
+
+Audio / Motionはpresentationでありdomainのsource of truthにしない。
+
+## 13. Persistence
+
+PlayerProgressとRpgStateは別schema。
+
+PlayerProgress schema v4は旧v1/v2/v3からmigrationする。
+
+RpgState schema v1は未知version / invalid JSONでinitial stateへfallbackする。今後validationを強化し、World boundsやknown IDも検証する。
 
 ## 14. Backend
 
-現在は不要。Login / Cloud Save / Ranking / Shared Challenge等が必要になった時点で比較して導入する。
+現在不要。Login / Cloud Save / Ranking / Shared Challenge等が必要になった時点で検討する。
 
----
+## 15. Quality gate
 
-## 15. 品質保証
+PR前:
 
-PR作成前:
-
-```text
+```bash
 npm ci
 npm run lint
 npm test
@@ -306,7 +285,7 @@ npm run build
 PR後:
 
 ```text
-GitHub Actions CI
+GitHub Actions
 Cloudflare Preview
 Self Review
 Squash Merge
@@ -314,34 +293,15 @@ main CI
 Cloudflare Production
 ```
 
-主なUnit Test対象:
-
-- targeting
-- seeded random / generator / solvability
-- JavaScript / TypeScript SkillDefinition
-- code variants / multiline help
-- CODE DATA resolver
-- progression / Gold reward
-- Economy purchase / consume / heal cap / one-use
-- save v1 / v2 / v3 → v4 migration
-- Main / Side Quest
-- Field movement / reachability
-- LearningHint / Dialogue
-- Area metadata / Area-Battle整合性
-- Audio helpers
-
----
-
 ## 16. 設計原則
 
 1. 表示コードを`eval()`しない
-2. Player成長やItemでコード読解を不要にしない
-3. Enemyをcurrent Levelへ自動追従させない
-4. Battle transient stateをsaveへ混ぜない
-5. World / Field / Dialogue / Quest / Economy / AudioをBattle Domainへ密結合させない
-6. COMING SOONの機能を架空実装しない
-7. 既存route / save互換をmigrationなしに壊さない
+2. Player成長でコード読解を不要にしない
+3. EnemyをPlayer Levelへ自動追従させない
+4. World / Battle transient stateをPlayerProgressへ混ぜない
+5. PlayerProgressとRpgStateの責務を分ける
+6. legacy save互換とcurrent featureを分ける
+7. World UIへ分岐を増やす前にpure resolverを検討する
 8. Area追加でBattle engineを複製しない
-9. 学習object追加でFieldの進行を塞がない
-10. UIから分かる説明文を常設しない
-11. data-drivenでUnit Testできる境界を優先する
+9. 常設HUDを増やしすぎない
+10. data-drivenでUnit Testできる境界を優先する
