@@ -43,3 +43,12 @@ export type QuestFieldFocus = {
   stageId?: number
   guideNpcId?: string
 }
+
+export type QuestVictoryFeedback = {
+  kind: 'updated' | 'completed'
+  questId: string
+  areaId: string
+  questTitle: string
+  completedStepLabel: string
+  nextStepLabel?: string
+}
