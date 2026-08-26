@@ -52,3 +52,46 @@ export type QuestVictoryFeedback = {
   completedStepLabel: string
   nextStepLabel?: string
 }
+
+export type SideQuestProgressSnapshot = QuestProgressSnapshot & {
+  completedSideQuestIds: string[]
+}
+
+export type SideQuestDefinition = {
+  id: string
+  areaId: string
+  title: string
+  objective: string
+  unlockWhen: QuestCondition
+  targetBattleId: number
+  expReward: number
+}
+
+export type SideQuestProgress = {
+  quest: SideQuestDefinition
+  status: QuestStatus
+}
+
+export type SideQuestVictoryReward = {
+  questId: string
+  questTitle: string
+  areaId: string
+  expGained: number
+}
+
+export type SideQuestVictoryResult = {
+  progress: SideQuestProgressSnapshot & {
+    exp: number
+    unlockedStageIds: number[]
+    unlockedSkillIds: string[]
+  }
+  reward: SideQuestVictoryReward | null
+}
+
+export type SideQuestVictoryFeedback = {
+  kind: 'sideCompleted'
+  questId: string
+  areaId: string
+  questTitle: string
+  expGained: number
+}
