@@ -1,18 +1,12 @@
 # CODE//READ RPG テスト方針
 
-## 1. この文書の役割
+## 1. 目的
 
-この文書は、現在どこまでをUnit / CI / Preview / smoke testで保証し、RPG拡張後にどのtest layerを追加するかを定義する。
+コード読解ロジック、盤面生成、RPG進行、Quest、主要ユーザーフローを壊しにくくする。
 
-目的はtest数を増やすことではなく、**コード読解ロジック・盤面生成・RPG進行・主要ユーザーフローを壊しにくくすること**。
+## 2. CI
 
----
-
-## 2. 現在の自動確認
-
-Vitestは導入済み。
-
-GitHub Actions CIはNode.js 24で次を実行する。
+GitHub ActionsはNode.js 24で必ず次を実行する。
 
 ```bash
 npm ci
@@ -21,394 +15,183 @@ npm test
 npm run build
 ```
 
-現在のUnit Testは主にGame Domainを対象にしている。
+PR前にも同じ4項目をfeature branchで成功させる。PR CIは代替ではなく二重確認。
+
+## 3. 現在のUnit Test
+
+### Game Domain
 
 - TargetRule / targeting
-- Battle定義の整合性
-- seeded random
-- generator
+- Battle / Area定義整合性
+- seeded random / generator
 - SkillDefinition
+- code variant / multiline CODE HELP
 - solvability
+- JavaScript / TypeScript発展構文
 
-「自動test frameworkは未導入」「`npm install && npm run build`だけ」という旧状態ではない。
+### Progression
 
----
+- initial PlayerProgress
+- EXP / Level境界
+- maxHP / POWER倍率
+- victory reward
+- first clear / replay
+- Stage / Skill / Area unlock
+- immutability
 
-## 3. PRの確認レイヤー
+### Persistence
 
-現在の標準:
+現行schemaはv3。
 
-```text
-Unit / Lint / Build
-↓
-GitHub Actions CI
-↓
-Cloudflare Workers Preview
-↓
-自己レビュー
-↓
-merge
-↓
-Cloudflare Production
-```
+- serialize / restore
+- invalid JSON
+- unknown version
+- missing / invalid field
+- baseline Stage / Skill補完
+- v1 → v3 migration
+- v2 → v3 migration
+- `completedSideQuestIds`保存
 
-Vercel Preview / Productionは現在のtest / merge条件ではない。
+旧saveのEXP / Stage CLEAR / Area CLEAR / unlockを失わないことを優先する。
 
----
+### Quest
 
-## 4. Unit Test
+Main Quest:
 
-純粋Domain logicを優先する。
+- Stage CLEARでnext step更新
+- Area CLEARでCOMPLETE
+- JavaScript / TypeScript独立
+- Field `NEXT` / `!` focus
+- replayで更新feedbackなし
 
-### Targeting
+Side Quest:
 
-最低限:
+- Area CLEAR前LOCKED
+- Area CLEAR後ACTIVE
+- 指定Battle再攻略でCOMPLETE
+- 対象外Battleでは進行しない
+- bonus EXPは一度だけ
+- JavaScript / TypeScript独立
+- completion feedback差分
 
-- `firstBelow`
-- `allBelow`
-- `firstAbove`
-- `allAbove`
-- `named`
-- `lowestHp`
-- dead Enemyを対象外
-- no targetで空配列
-- 同HP時の順序
+### Field / Learning / Dialogue
 
-### Seeded Random
+- movement / collision
+- Gate / 看板 / NPC / Exit reachability
+- LearningHint参照
+- JavaScript / TypeScript Field定義
+- Dialogue進行条件
 
-- 同じseedで同じ出力
-- 別seedでvariationが出る
-- shuffleが決定的
-- range外の値を出さない
+### Audio / Motion
 
-### Battle Generator
+- audio settings normalization
+- BGM track / release
+- motion helper
+- reduced-motionをpresentationだけに閉じ込める
 
-現在のgeneratorで見るもの:
+## 4. Generator / Solvability
+
+seed variationは次を守る。
 
 - 同じBattle ID + seedで同じ盤面
-- Enemy数を維持
-- HPが基準値の許容variation内
-- Enemy / Skill順variation
-- base Battleで意味があるtargetを消さない
-- initial valid targetがある
-- solvabilityを満たす
-- generation失敗時に安全なfallback
+- Enemy数維持
+- HPが許容variation内
+- Enemy / Skill / code variant variation
+- initial valid target
+- base Battleの意味あるtargetを消さない
+- solvability
+- 生成失敗時fallback
 
-### SkillDefinition
-
-- `codeVariants`が最低1つある
-- default variantからSkillCardを作れる
-- code / TargetRule / conceptの対応が壊れていない
-
-#31導入後:
-
-- 同じseedで同じvariant
-- 複数seedで複数variant
-- variantがTargetRule / POWER / explanationを変えない
-
-#32導入後:
-
-- `lineMode: multi`の表示
-- 改行維持
-- multi-line codeとTargetRuleの意味一致
-
----
-
-## 5. Solvability Test
-
-可変Battleでは重要度が高い。
-
-現在は生成候補の勝ち筋検証にも利用する。
-
-Level導入後は意味を明確に分ける。
-
-### 保証すること
-
-- Stage設計上の基準 / 推奨Player statsで合理的な勝ち筋がある
-- seed variationが理不尽な詰みを作らない
-- 学習用Battleとして成立する
-
-### 保証しないこと
+保証しないこと:
 
 - current Player Levelで必ず勝てる
 - Playerが弱いときEnemyを自動弱体化する
-- 常に戦略的最適解が1つ
+- 常に最適解が1つ
 
-将来はStageごとのreference statsをtest inputへ入れる。
+## 5. Content Test
 
----
+新しいSkill / code variantでは、動作だけでなく意味を確認する。
 
-## 6. Progression Unit Test
+- codeが正しいJavaScript / TypeScript
+- display codeとTargetRuleが同じ結果
+- variantでPOWER / rule / conceptを変えない
+- multi codeの物理行数とCODE HELP数一致
+- seed variation後も学習theme維持
+- 序盤へ発展構文を突然混ぜない
 
-#43以降で追加する。
+## 6. UI Testの考え方
 
-対象:
+現時点はpure/domain testを優先する。React Testing LibraryやPlaywrightは、壊れやすい画面横断stateが増えた時点で導入する。
 
-- initial PlayerProgress
-- EXP → Level境界
-- Level → maxHP
-- Level → powerMultiplier
-- EXP加算のimmutability
-- clearedStageIds重複防止
-- unlockedStageIds
-- unlockedSkillIds
-- victory reward適用
-- first clear / replayの差
+Component Test候補:
 
-初期境界:
+- Skill SELECT → EXECUTE
+- resolving中の追加入力不可
+- Victory / Defeat
+- Quest Log open / close
+- Side Quest unlock表示
+- Sound Settings / Codex modal
 
-```text
-Lv1: 0 EXP
-Lv2: 40 EXP
-Lv3: 120 EXP
-Lv4: 240 EXP
-```
-
----
-
-## 7. Persistence Test
-
-#47でLocalStorage layerを追加したら、UIから独立してtestする。
-
-最低限:
-
-- save / load
-- schema version
-- invalid JSON
-- unknown version
-- missing fields
-- reset
-- migration
-
-Battle transient stateを永続化しないことも確認する。
-
----
-
-## 8. Component Test
-
-React Testing Library等は、RPG UIのstate分岐が増えた段階で導入する。
-
-優先候補:
-
-### Battle
-
-- 1回目tapでSELECT
-- 同じSkill 2回目でEXECUTE
-- 別SkillでSELECT変更
-- resolving中は追加入力不可
-- damage後にHP更新
-- victory / defeat
-- explanation modal
-
-### Stage Select
-
-- READY / LOCKED / CLEAR表示
-- unlocked Stageだけ開始可能
-- Level / EXP表示
-- replay可能
-
-### Reward
-
-- EXP表示
-- Level Up表示
-- Skill / Stage unlock表示
-
-全部のcomponentを機械的にtestせず、壊れるとユーザーフローが止まるstate transitionを優先する。
-
----
-
-## 9. Timerを使うUI
-
-Battle演出で`setTimeout`等を使う場合、Component Testでは実時間待機を避ける。
-
-- fake timers
-- timerを進めてstate transition確認
-
-420ms等の実時間にtestを依存させない。
-
----
-
-## 10. E2E Test
-
-Playwright等はRPG最小ループが入った段階で価値が高くなる。
-
-優先フロー:
+E2E候補:
 
 ```text
 Title
-↓
-Stage Select
-↓
-Battle
-↓
-Victory
-↓
-EXP / Unlock
-↓
-Stage Select
-↓
-Next Stage
+→ World
+→ Field
+→ Battle
+→ Victory
+→ Quest更新
+→ Field復帰
 ```
 
-Persistence導入後:
+Persistence:
 
 ```text
-Stage Select
-↓
-Battle CLEAR
-↓
-reload
-↓
-CLEAR / EXPが保持
+CLEAR / Side Quest COMPLETE
+→ reload
+→ EXP / CLEAR / Quest完了を保持
 ```
 
-Field導入後:
+## 7. Cloudflare Preview
 
-```text
-Field
-↓
-Battle entrance
-↓
-Battle
-↓
-Victory
-↓
-Fieldへ復帰
-```
-
-細かいTargetRule境界値はE2EではなくUnitで守る。
-
----
-
-## 11. Cloudflare Preview確認
-
-PR / branch pushではCloudflare Workers Previewを確認する。
-
-最低限:
+PR / branchで最低限確認する。
 
 - `Workers Builds: code-reading-rpg` success
 - Preview URL発行
-- 対象routeが開く
-- UI変更ならDesktop / Mobile
-- code表示が読める
-- route追加なら直URL / reload
+- 変更routeが開く
+- UI変更ならDesktop / Mobileで崩れない
+- persistence変更ならreload互換
 
-seed関連変更:
+## 8. Production
 
-- 同じPreview URLで同じseedを再読込して盤面再現
+main merge後:
 
-Stage Select / persistence導入後:
+- GitHub Actions success
+- Cloudflare Production Build success
+- 変更範囲に応じたsmoke check
 
-- navigation
-- reload
-- browser storage
+毎回すべてのBattleを手動完全攻略する必要はない。
 
-も確認する。
+## 9. Regression Test
 
----
-
-## 12. Production smoke test
-
-`main` merge後、Cloudflare Production Build successを確認する。
-
-必要に応じて、変更範囲だけ軽くsmoke testする。
-
-毎回全Battleを完全攻略する必要はない。
+bug fix時は原因に対応するtestを残す。
 
 例:
 
-- route変更 → direct URL
-- generator変更 → seed URL
-- Stage Select変更 → Stage開始
-- persistence変更 → reload
+- Field objectで奥へ進めない → reachability
+- variant追加で旧testが固定構文を仮定 → semantic invariantへ修正
+- save migrationで起動不能 → old schema migration
+- replay報酬が重複 → one-time Side Quest reward
 
----
-
-## 13. Visual / Accessibility
-
-専用visual regression toolは現時点では必須にしない。
-
-UI変更時に見るもの:
-
-- Desktop
-- Mobile
-- Enemy HP / NEXT
-- Skill code
-- 複数Skill表示
-- modal
-- focus
-- 色だけで状態を表していないか
-- reduced motionを悪化させていないか
-
-Field導入時はmobile controlsとcollision UIも対象にする。
-
----
-
-## 14. Content Test
-
-Battle / Skill追加時はprogramが動くだけでなく、学習コンテンツとして検証する。
-
-- codeが正しいJavaScript
-- codeとTargetRuleが同じ意味
-- 学習themeが明確
-- seed variation後もtheme維持
-- reference statsで勝ち筋
-- 未習syntaxを突然混ぜない
-- POWERだけで選択が決まらない
-- NEXTを見る意味がある
-
-詳細は[`CONTENT_GUIDE.md`](./CONTENT_GUIDE.md)。
-
----
-
-## 15. Regression Test
-
-bug fix時は再発防止testを検討する。
-
-例:
-
-- Battle 3でSkillが減る → cumulative Skill test
-- seedで盤面が再現しない → deterministic generator test
-- generated Battleが詰む → solvability regression
-- Level境界がずれる → progression boundary test
-- LocalStorage migrationで起動不能 → invalid data test
-
----
-
-## 16. すべてのPRの最低条件
+## 10. PR最低条件
 
 - [ ] 必要なUnit Test追加
+- [ ] `npm ci` success
 - [ ] `npm run lint` success
 - [ ] `npm test` success
 - [ ] `npm run build` success
 - [ ] GitHub Actions CI success
 - [ ] Cloudflare Preview success
 - [ ] 自己レビュー
-- [ ] merge後Cloudflare Production success
-
-Vercelは確認項目に含めない。
-
----
-
-## 17. 次のtest優先順位
-
-```text
-[現在]
-Vitest / seeded random / generator / solvability / SkillDefinition
-
-[次]
-Progression Unit
-→ Reward Unit
-→ Persistence Unit
-
-[RPG UIが増えたら]
-Component Test
-
-[主要画面横断が増えたら]
-E2E
-
-[Fieldが増えたら]
-movement / collision / Battle復帰のtest
-```
-
-ツールを先に増やすのではなく、守るべき挙動が増えた時点で追加する。
+- [ ] merge後main CI success
+- [ ] Cloudflare Production success
