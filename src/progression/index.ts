@@ -30,11 +30,13 @@ export type {
   StoredPlayerProgressV1,
   StoredPlayerProgressV2,
   StoredPlayerProgressV3,
+  StoredPlayerProgressV4,
 } from './storage'
 export type {
   BattleVictoryInput,
   BattleVictoryResult,
   BattleVictoryReward,
+  PlayerInventory,
   PlayerProgress,
   PlayerStats,
 } from './types'
