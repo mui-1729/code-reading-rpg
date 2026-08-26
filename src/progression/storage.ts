@@ -4,6 +4,9 @@ import type { PlayerProgress } from './types'
 export const PLAYER_PROGRESS_STORAGE_KEY = 'code-reading-rpg:player-progress'
 export const PLAYER_PROGRESS_SCHEMA_VERSION = 2
 
+const V1_JAVASCRIPT_BOSS_STAGE_ID = 3
+const V1_JAVASCRIPT_AREA_ID = 'javascript'
+
 export type StoredPlayerProgressV1 = {
   version: 1
   progress: {
@@ -57,9 +60,15 @@ function migrateV1Progress(value: unknown): PlayerProgress | null {
   const common = parseCommonProgressFields(value)
   if (!common) return null
 
+  // Schema v1 had no Area field. A cleared Stage 3 already meant the JavaScript Boss
+  // had been defeated, so preserve that achievement when adding Area progress in v2.
+  const clearedAreaIds = common.clearedStageIds.includes(V1_JAVASCRIPT_BOSS_STAGE_ID)
+    ? [V1_JAVASCRIPT_AREA_ID]
+    : []
+
   return {
     ...common,
-    clearedAreaIds: [],
+    clearedAreaIds,
   }
 }
 
