@@ -1,0 +1,237 @@
+.code-codex {
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  z-index: 35;
+  font-family: "Courier New", ui-monospace, monospace;
+}
+
+.codex-toggle {
+  min-width: 164px;
+  display: grid;
+  gap: 3px;
+  padding: 9px 11px;
+  border-color: #4f8e78;
+  background: rgba(8, 20, 18, .95);
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.codex-toggle > span {
+  color: var(--green);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .1em;
+}
+
+.codex-toggle > strong {
+  color: var(--gold);
+  font-size: 10px;
+}
+
+.codex-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(3, 4, 8, .82);
+}
+
+.codex-panel {
+  width: min(980px, 100%);
+  max-height: min(88vh, 820px);
+  overflow: auto;
+  padding: clamp(16px, 2.5vw, 28px);
+  border-color: #4f8e78;
+  background: #0b1012;
+}
+
+.codex-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 18px;
+  padding-bottom: 14px;
+  border-bottom: 2px dashed #355149;
+}
+
+.codex-header > div {
+  display: grid;
+  gap: 5px;
+}
+
+.codex-header span {
+  color: var(--green);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .1em;
+}
+
+.codex-header h2 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(24px, 4vw, 38px);
+}
+
+.codex-header p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.codex-header > button {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  border: 2px solid #58736b;
+  background: #11191a;
+  color: #fff;
+  font: 900 18px/1 monospace;
+  cursor: pointer;
+}
+
+.codex-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.codex-tabs button {
+  flex: 1;
+  padding: 10px 12px;
+  border: 2px solid #3e4b4b;
+  background: #101617;
+  color: #aaaeb1;
+  font-weight: 900;
+  letter-spacing: .08em;
+  cursor: pointer;
+}
+
+.codex-tabs button.is-active {
+  border-color: var(--green);
+  background: #102119;
+  color: var(--green);
+}
+
+.codex-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 14px 0 10px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.codex-summary strong {
+  color: var(--gold);
+}
+
+.codex-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.codex-entry {
+  padding: 13px;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  background: #101517;
+  border-color: #334944;
+}
+
+.codex-entry-heading {
+  display: grid;
+  gap: 4px;
+}
+
+.codex-entry-heading span {
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .06em;
+}
+
+.codex-entry-heading strong {
+  color: #fff;
+  font-size: 14px;
+}
+
+.codex-entry > p,
+.codex-notes p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.codex-entry > p {
+  color: #d5d2df;
+  font-size: 11px;
+}
+
+.codex-entry pre {
+  margin: 0;
+  padding: 10px 11px;
+  overflow-x: auto;
+  border: 2px solid #293437;
+  background: #070a0c;
+  color: #f2df9a;
+  line-height: 1.55;
+  white-space: pre;
+}
+
+.codex-entry code {
+  font: inherit;
+}
+
+.codex-notes {
+  display: grid;
+  gap: 4px;
+}
+
+.codex-notes p {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.codex-panel > footer {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 2px dashed #355149;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+@media (max-width: 720px) {
+  .code-codex {
+    right: 8px;
+    bottom: 8px;
+  }
+
+  .codex-toggle {
+    min-width: 142px;
+    padding: 7px 9px;
+  }
+
+  .codex-overlay {
+    padding: 8px;
+  }
+
+  .codex-panel {
+    max-height: 92vh;
+    padding: 13px;
+  }
+
+  .codex-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .codex-header {
+    gap: 10px;
+  }
+}
