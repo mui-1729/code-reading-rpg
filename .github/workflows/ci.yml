@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, refactor/simplify-ui-result-flow]
   pull_request:
 
 jobs:
