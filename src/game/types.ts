@@ -37,5 +37,6 @@ export type Battle = {
   isBoss?: boolean
   enemies: Enemy[]
   skillIds: string[]
+  multiLineSkillIds?: string[]
   unlockSkillId?: string
 }
