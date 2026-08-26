@@ -1,21 +1,11 @@
-import { createRootRoute, createRoute, createRouter } from '@tanstack/react-router'
+import { createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router'
 import { JavaScriptFieldRoute } from './field/JavaScriptFieldRoute'
 import { TypeScriptFieldRoute } from './field/TypeScriptFieldRoute'
 import { RootLayout } from './RootLayout'
-import {
-  BattleRoutePage,
-  CompletePage,
-  HomePage,
-  JavaScriptAreaPage,
-  TypeScriptAreaPage,
-  TypeScriptBattleRoutePage,
-  TypeScriptCompletePage,
-} from './routeComponents'
+import { BattleRoutePage, HomePage, TypeScriptBattleRoutePage } from './routeComponents'
 import { WorldPage } from './world/WorldPage'
 
-const rootRoute = createRootRoute({
-  component: RootLayout,
-})
+const rootRoute = createRootRoute({ component: RootLayout })
 
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -32,7 +22,9 @@ const worldRoute = createRoute({
 const javascriptRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'javascript',
-  component: JavaScriptAreaPage,
+  beforeLoad: () => {
+    throw redirect({ to: '/world' })
+  },
 })
 
 const javascriptFieldRoute = createRoute({
@@ -54,13 +46,17 @@ const javascriptBattleRoute = createRoute({
 const javascriptCompleteRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'javascript/complete',
-  component: CompletePage,
+  beforeLoad: () => {
+    throw redirect({ to: '/world' })
+  },
 })
 
 const typescriptRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'typescript',
-  component: TypeScriptAreaPage,
+  beforeLoad: () => {
+    throw redirect({ to: '/world' })
+  },
 })
 
 const typescriptFieldRoute = createRoute({
@@ -82,7 +78,9 @@ const typescriptBattleRoute = createRoute({
 const typescriptCompleteRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'typescript/complete',
-  component: TypeScriptCompletePage,
+  beforeLoad: () => {
+    throw redirect({ to: '/world' })
+  },
 })
 
 const routeTree = rootRoute.addChildren([
