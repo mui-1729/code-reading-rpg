@@ -5,23 +5,24 @@ import { buildResultSequence, type RawResultItem, type ResultSequenceItem } from
 const AUTO_ADVANCE_MS = 1100
 
 const readRewardItems = (summary: HTMLElement): RawResultItem[] => {
-  const items = Array.from(summary.children).flatMap((element) => {
-    if (!(element instanceof HTMLElement)) return []
-    if (element.classList.contains('result-sequence-panel')) return []
+  const items: RawResultItem[] = []
+
+  for (const element of Array.from(summary.children)) {
+    if (!(element instanceof HTMLElement)) continue
+    if (element.classList.contains('result-sequence-panel')) continue
 
     if (element.classList.contains('reward-stat')) {
-      return [{
+      items.push({
         label: element.querySelector('span')?.textContent ?? undefined,
         value: element.querySelector('strong')?.textContent ?? undefined,
-      }]
+      })
+      continue
     }
 
     if (element.classList.contains('reward-unlock')) {
-      return [{ text: element.textContent ?? undefined }]
+      items.push({ text: element.textContent ?? undefined })
     }
-
-    return []
-  })
+  }
 
   const questFeedback = document.querySelector<HTMLElement>('.quest-victory-feedback')
   if (questFeedback) {
