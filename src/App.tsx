@@ -5,6 +5,7 @@ import {
   areaById,
   battles,
   generateBattle,
+  getSkillCardForBattle,
   getTargets,
   skills,
   type Enemy,
@@ -68,8 +69,8 @@ function App({ battleId, seed, returnTo }: AppProps) {
   const [victoryReward, setVictoryReward] = useState<BattleVictoryReward | null>(null)
 
   const availableSkills = useMemo(
-    () => battle.skillIds.map((id) => skills[id]),
-    [battle],
+    () => battle.skillIds.map((id) => getSkillCardForBattle(id, battle.id, seed)),
+    [battle, seed],
   )
 
   useEffect(() => {
