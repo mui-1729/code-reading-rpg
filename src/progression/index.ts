@@ -14,6 +14,7 @@ export {
   getMaxHpForLevel,
   getPlayerStats,
   getPowerMultiplierForLevel,
+  getSkillPowerForLevel,
   getTotalExpForLevel,
 } from './progression'
 export { ProgressProvider } from './ProgressProvider'

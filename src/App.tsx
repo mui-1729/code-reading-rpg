@@ -9,7 +9,13 @@ import {
   type Seed,
   type SkillCard,
 } from './game'
-import { applyBattleVictory, useProgress, type BattleVictoryReward } from './progression'
+import {
+  applyBattleVictory,
+  getPlayerStats,
+  getSkillPowerForLevel,
+  useProgress,
+  type BattleVictoryReward,
+} from './progression'
 
 type Phase = 'battle' | 'victory' | 'defeat'
 
@@ -30,6 +36,7 @@ const spriteClassName = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+
 function App({ battleId, seed }: AppProps) {
   const navigate = useNavigate()
   const { progress, setProgress } = useProgress()
+  const playerStats = getPlayerStats(progress.exp)
   const battleIndex = battles.findIndex((candidate) => candidate.id === battleId)
   const nextBattle = battles[battleIndex + 1]
   const battle = useMemo(() => {
@@ -39,7 +46,7 @@ function App({ battleId, seed }: AppProps) {
   }, [battleId, seed])
 
   const [phase, setPhase] = useState<Phase>('battle')
-  const [playerHp, setPlayerHp] = useState(100)
+  const [playerHp, setPlayerHp] = useState(() => playerStats.maxHp)
   const [enemies, setEnemies] = useState<Enemy[]>(cloneEnemies(battle.enemies))
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null)
   const [explainedSkill, setExplainedSkill] = useState<SkillCard | null>(null)
@@ -59,7 +66,7 @@ function App({ battleId, seed }: AppProps) {
   }
 
   const resetBattle = () => {
-    setPlayerHp(100)
+    setPlayerHp(playerStats.maxHp)
     setEnemies(cloneEnemies(battle.enemies))
     setSelectedSkillId(null)
     setLogs([])
@@ -117,6 +124,7 @@ function App({ battleId, seed }: AppProps) {
   const activateSkill = (skill: SkillCard) => {
     setIsResolving(true)
     const targets = getTargets(enemies, skill.rule)
+    const skillPower = getSkillPowerForLevel(skill.power, playerStats.level)
     setSelectedSkillId(null)
 
     if (targets.length === 0) {
@@ -129,12 +137,12 @@ function App({ battleId, seed }: AppProps) {
     setAnimatingIds(targetIds)
     addLog(
       'player',
-      `${skill.name} → ${targets.map((target) => target.name).join(' / ')} · ${skill.power} DMG`,
+      `${skill.name} → ${targets.map((target) => target.name).join(' / ')} · ${skillPower} DMG`,
     )
 
     const nextEnemies = enemies.map((enemy) =>
       targetIds.includes(enemy.id)
-        ? { ...enemy, hp: Math.max(0, enemy.hp - skill.power) }
+        ? { ...enemy, hp: Math.max(0, enemy.hp - skillPower) }
         : enemy,
     )
 
@@ -171,6 +179,7 @@ function App({ battleId, seed }: AppProps) {
   const unlockedSkill = victoryReward?.unlockedSkillId
     ? skills[victoryReward.unlockedSkillId]
     : null
+  const playerHpPercent = Math.max(0, Math.min(100, (playerHp / playerStats.maxHp) * 100))
 
   return (
     <main className="app-shell battle-screen">
@@ -200,16 +209,16 @@ function App({ battleId, seed }: AppProps) {
             <span />
           </div>
           <div className="player-stats">
-            <div className="status-title">CODE KNIGHT</div>
+            <div className="status-title">CODE KNIGHT · LV {playerStats.level}</div>
             <div className="status-label-row">
               <span>HP</span>
               <strong>
                 {playerHp}
-                <em>/100</em>
+                <em>/{playerStats.maxHp}</em>
               </strong>
             </div>
             <div className="hp-track player-track">
-              <div className="hp-fill" style={{ width: `${playerHp}%` }} />
+              <div className="hp-fill" style={{ width: `${playerHpPercent}%` }} />
             </div>
             <div className="player-command">READ → SELECT → EXECUTE</div>
           </div>
@@ -262,6 +271,7 @@ function App({ battleId, seed }: AppProps) {
         <div className="skill-grid">
           {availableSkills.map((skill) => {
             const selected = selectedSkillId === skill.id
+            const skillPower = getSkillPowerForLevel(skill.power, playerStats.level)
             return (
               <button
                 type="button"
@@ -272,7 +282,7 @@ function App({ battleId, seed }: AppProps) {
               >
                 <div className="skill-card-head">
                   <span>{skill.name}</span>
-                  <strong>POWER {skill.power}</strong>
+                  <strong>POWER {skillPower}</strong>
                 </div>
                 <pre>
                   <code>{skill.code}</code>
