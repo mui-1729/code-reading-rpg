@@ -31,6 +31,27 @@ UIは、RPGの探索とコード読解に必要な情報を優先し、説明の
 - 「Areaを選べる」「攻略済みに戻れる」などUIから明らかな説明
 - saveや内部システムの説明
 
+## Battle
+
+常時必要なもの:
+
+- Battle / Stage情報
+- Player HP / Level
+- Enemy HP / NEXT行動
+- Skill名 / POWER / code
+- 選択中Skillの`EXECUTE`状態
+- 実際に発生したBattle Log
+
+表示しないもの:
+
+- `SELECT CODE SKILL`のような操作見出し
+- `READ → SELECT → EXECUTE`のような操作手順の常設説明
+- `TARGET PREVIEW: OFF`のような「存在しない機能」の状態表示
+- Battle開始前の空Logへ入れるチュートリアル文
+- DEFEAT画面でボタンから分かる再挑戦手順の説明
+
+操作説明が必要な場合も常設文章を増やさず、選択中カードの`EXECUTE`など現在状態に直接ひもづく短いfeedbackを優先する。
+
 ## Code Codex
 
 Codexは内容自体が説明なので、外側の説明文を増やさない。
