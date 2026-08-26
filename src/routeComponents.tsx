@@ -8,11 +8,27 @@ import {
   getBattlesForArea,
   getBossBattleForArea,
   JAVASCRIPT_AREA_ID,
+  TYPESCRIPT_AREA_ID,
 } from './game'
 import { getTotalExpForLevel, useProgress } from './progression'
 
-const battleRouteApi = getRouteApi('/javascript/battle/$battleId')
+const javascriptBattleRouteApi = getRouteApi('/javascript/battle/$battleId')
+const typescriptBattleRouteApi = getRouteApi('/typescript/battle/$battleId')
 const createRunSeed = () => crypto.randomUUID()
+
+type SupportedAreaId = typeof JAVASCRIPT_AREA_ID | typeof TYPESCRIPT_AREA_ID
+
+type AreaStageSelectProps = {
+  areaId: SupportedAreaId
+  eyebrow: string
+  intro: string
+  onEnterBattle: (battleId: number) => void
+}
+
+type AreaCompleteProps = {
+  areaId: SupportedAreaId
+  onReplayBoss: (bossId: number) => void
+}
 
 export function HomePage() {
   const navigate = useNavigate()
@@ -22,7 +38,7 @@ export function HomePage() {
     <main className="app-shell intro-shell title-screen">
       <section className="hero-panel pixel-window title-window">
         <div className="title-stars" aria-hidden="true">✦ · ✧ · ✦</div>
-        <div className="eyebrow">JAVASCRIPT // CHAPTER 01</div>
+        <div className="eyebrow">JAVASCRIPT + TYPESCRIPT // CODE READING</div>
         <h1>
           CODE<span>//</span>READ <em>RPG</em>
         </h1>
@@ -57,11 +73,11 @@ export function HomePage() {
           </div>
           <div>
             <strong>02</strong>
-            <span>敵とNEXT行動、コードから対象を読む</span>
+            <span>看板で構文を確認し、Battleではコードから対象を読む</span>
           </div>
           <div>
             <strong>03</strong>
-            <span>勝利して成長し、次の門へ進む</span>
+            <span>勝利して成長し、複数行・複数概念のBossへ進む</span>
           </div>
         </div>
 
@@ -71,11 +87,12 @@ export function HomePage() {
   )
 }
 
-export function JavaScriptAreaPage() {
+function AreaStageSelectPage({ areaId, eyebrow, intro, onEnterBattle }: AreaStageSelectProps) {
   const navigate = useNavigate()
   const { progress, stats, resetProgress } = useProgress()
   useBgm('menu')
-  const area = areaById[JAVASCRIPT_AREA_ID]
+
+  const area = areaById[areaId]
   const areaCleared = progress.clearedAreaIds.includes(area.id)
   const areaBattles = getBattlesForArea(area.id)
   const levelStartExp = getTotalExpForLevel(stats.level)
@@ -97,9 +114,9 @@ export function JavaScriptAreaPage() {
       <section className="pixel-window area-panel">
         <header className="area-header">
           <div>
-            <div className="eyebrow">{area.label} // JAVASCRIPT KINGDOM</div>
+            <div className="eyebrow">{area.label} // {eyebrow}</div>
             <h1>{area.title}</h1>
-            <p>コードを読み、敵を倒して王国の奥へ進め。</p>
+            <p>{intro}</p>
             {areaCleared && <div className="area-clear-badge">✓ AREA CLEAR</div>}
           </div>
           <div className="area-header-actions">
@@ -137,7 +154,7 @@ export function JavaScriptAreaPage() {
         </section>
 
         <div className="area-route-label">SELECT STAGE</div>
-        <section className="stage-path" aria-label="JavaScript stages">
+        <section className="stage-path" aria-label={`${area.title} stages`}>
           {areaBattles.map((battle) => {
             const unlocked = progress.unlockedStageIds.includes(battle.id)
             const cleared = progress.clearedStageIds.includes(battle.id)
@@ -168,13 +185,7 @@ export function JavaScriptAreaPage() {
                 <button
                   className="primary-button stage-enter"
                   disabled={!unlocked}
-                  onClick={() =>
-                    navigate({
-                      to: '/javascript/battle/$battleId',
-                      params: { battleId: String(battle.id) },
-                      search: { seed: createRunSeed(), returnTo: undefined },
-                    })
-                  }
+                  onClick={() => onEnterBattle(battle.id)}
                 >
                   {unlocked ? (cleared ? '▶ REPLAY' : '▶ ENTER') : '■ LOCKED'}
                 </button>
@@ -196,9 +207,47 @@ export function JavaScriptAreaPage() {
   )
 }
 
+export function JavaScriptAreaPage() {
+  const navigate = useNavigate()
+
+  return (
+    <AreaStageSelectPage
+      areaId={JAVASCRIPT_AREA_ID}
+      eyebrow="JAVASCRIPT KINGDOM"
+      intro="コードを読み、敵を倒して王国の奥へ進め。"
+      onEnterBattle={(battleId) =>
+        navigate({
+          to: '/javascript/battle/$battleId',
+          params: { battleId: String(battleId) },
+          search: { seed: createRunSeed(), returnTo: undefined },
+        })
+      }
+    />
+  )
+}
+
+export function TypeScriptAreaPage() {
+  const navigate = useNavigate()
+
+  return (
+    <AreaStageSelectPage
+      areaId={TYPESCRIPT_AREA_ID}
+      eyebrow="TYPESCRIPT FRONTIER"
+      intro="型情報を手がかりにコードを追い、辺境のCompiler Bossへ進め。"
+      onEnterBattle={(battleId) =>
+        navigate({
+          to: '/typescript/battle/$battleId',
+          params: { battleId: String(battleId) },
+          search: { seed: createRunSeed(), returnTo: undefined },
+        })
+      }
+    />
+  )
+}
+
 export function BattleRoutePage() {
-  const { battleId } = battleRouteApi.useParams()
-  const { seed: searchSeed, returnTo } = battleRouteApi.useSearch()
+  const { battleId } = javascriptBattleRouteApi.useParams()
+  const { seed: searchSeed, returnTo } = javascriptBattleRouteApi.useSearch()
   const navigate = useNavigate()
   const [fallbackSeed] = useState(createRunSeed)
   const seed = searchSeed ?? fallbackSeed
@@ -217,9 +266,7 @@ export function BattleRoutePage() {
     })
   }, [battleId, exists, navigate, returnTo, searchSeed, seed])
 
-  if (!exists) {
-    return <NotFoundBattle />
-  }
+  if (!exists) return <NotFoundBattle areaId={JAVASCRIPT_AREA_ID} />
 
   return (
     <App
@@ -231,24 +278,49 @@ export function BattleRoutePage() {
   )
 }
 
-export function CompletePage() {
+export function TypeScriptBattleRoutePage() {
+  const { battleId } = typescriptBattleRouteApi.useParams()
+  const { seed: searchSeed, returnTo } = typescriptBattleRouteApi.useSearch()
+  const navigate = useNavigate()
+  const [fallbackSeed] = useState(createRunSeed)
+  const seed = searchSeed ?? fallbackSeed
+  const numericBattleId = Number(battleId)
+  const battleArea = getAreaForBattle(numericBattleId)
+  const exists = battleArea?.id === TYPESCRIPT_AREA_ID
+
+  useEffect(() => {
+    if (searchSeed || !exists) return
+
+    navigate({
+      to: '/typescript/battle/$battleId',
+      params: { battleId },
+      search: { seed, returnTo },
+      replace: true,
+    })
+  }, [battleId, exists, navigate, returnTo, searchSeed, seed])
+
+  if (!exists) return <NotFoundBattle areaId={TYPESCRIPT_AREA_ID} />
+
+  return (
+    <App
+      key={`${battleId}:${seed}`}
+      battleId={numericBattleId}
+      seed={seed}
+      returnTo={returnTo}
+    />
+  )
+}
+
+function AreaCompletePage({ areaId, onReplayBoss }: AreaCompleteProps) {
   const navigate = useNavigate()
   const { progress } = useProgress()
   useBgm('menu')
-  const area = areaById[JAVASCRIPT_AREA_ID]
+
+  const area = areaById[areaId]
   const areaCleared = progress.clearedAreaIds.includes(area.id)
   const boss = getBossBattleForArea(area.id)
   const fieldPath = area.routes.field
   const stageSelectPath = area.routes.stageSelect
-
-  const replayBoss = () => {
-    if (!boss || fieldPath !== '/javascript/field') return
-    navigate({
-      to: '/javascript/battle/$battleId',
-      params: { battleId: String(boss.id) },
-      search: { seed: createRunSeed(), returnTo: fieldPath },
-    })
-  }
 
   return (
     <main className="app-shell center-shell title-screen">
@@ -257,8 +329,8 @@ export function CompletePage() {
         <h2>{areaCleared ? `${area.title} CLEAR` : 'BOSS NOT CLEARED'}</h2>
         <p>
           {areaCleared
-            ? '王国のBossを倒した。World Mapへ戻るか、フィールドやStage Selectから過去Battleへ再挑戦できる。'
-            : 'この画面はBoss初回クリア後に解放される。フィールドへ戻って王国を攻略しよう。'}
+            ? `${area.title}のBossを倒した。World Mapへ戻るか、フィールドやStage Selectから過去Battleへ再挑戦できる。`
+            : `この画面はBoss初回クリア後に解放される。フィールドへ戻って${area.title}を攻略しよう。`}
         </p>
         <div className="result-actions">
           <button className="primary-button" onClick={() => navigate({ to: '/world' })}>
@@ -279,7 +351,7 @@ export function CompletePage() {
             STAGE SELECT
           </button>
           {areaCleared && boss && (
-            <button className="secondary-button" onClick={replayBoss}>
+            <button className="secondary-button" onClick={() => onReplayBoss(boss.id)}>
               ▶ REPLAY BOSS
             </button>
           )}
@@ -289,10 +361,44 @@ export function CompletePage() {
   )
 }
 
-function NotFoundBattle() {
+export function CompletePage() {
+  const navigate = useNavigate()
+
+  return (
+    <AreaCompletePage
+      areaId={JAVASCRIPT_AREA_ID}
+      onReplayBoss={(bossId) =>
+        navigate({
+          to: '/javascript/battle/$battleId',
+          params: { battleId: String(bossId) },
+          search: { seed: createRunSeed(), returnTo: '/javascript/field' },
+        })
+      }
+    />
+  )
+}
+
+export function TypeScriptCompletePage() {
+  const navigate = useNavigate()
+
+  return (
+    <AreaCompletePage
+      areaId={TYPESCRIPT_AREA_ID}
+      onReplayBoss={(bossId) =>
+        navigate({
+          to: '/typescript/battle/$battleId',
+          params: { battleId: String(bossId) },
+          search: { seed: createRunSeed(), returnTo: '/typescript/field' },
+        })
+      }
+    />
+  )
+}
+
+function NotFoundBattle({ areaId }: { areaId: SupportedAreaId }) {
   const navigate = useNavigate()
   useBgm('menu')
-  const area = areaById[JAVASCRIPT_AREA_ID]
+  const area = areaById[areaId]
   const fieldPath = area.routes.field
 
   return (
@@ -300,7 +406,7 @@ function NotFoundBattle() {
       <section className="result-card defeat-card pixel-window">
         <div className="eyebrow">ROUTE ERROR</div>
         <h2>そのBattleはこのAreaに存在しない</h2>
-        <p>JavaScript KingdomのBattle URLを指定してください。</p>
+        <p>{area.title}のBattle URLを指定してください。</p>
         <button
           className="primary-button"
           disabled={!fieldPath}
