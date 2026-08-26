@@ -75,7 +75,7 @@ export function applyBattleVictory(
 ): BattleVictoryResult {
   const previousLevel = getLevelForExp(progress.exp)
   const expGained = Math.max(0, input.expReward)
-  const goldGained = Math.max(0, input.goldReward)
+  const goldGained = Math.max(0, input.goldReward ?? 0)
   const firstClear = !progress.clearedStageIds.includes(input.stageId)
   const next = {
     ...addExp(progress, expGained),
