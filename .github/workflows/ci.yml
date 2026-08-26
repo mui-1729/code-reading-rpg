@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, feat/50-hub-npc-dialogue]
+    branches: [main]
   pull_request:
 
 jobs:
