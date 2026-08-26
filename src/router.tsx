@@ -1,6 +1,4 @@
 import { createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router'
-import { JavaScriptFieldRoute } from './field/JavaScriptFieldRoute'
-import { TypeScriptFieldRoute } from './field/TypeScriptFieldRoute'
 import { RootLayout } from './RootLayout'
 import { BattleRoutePage, HomePage, TypeScriptBattleRoutePage } from './routeComponents'
 import { WorldPage } from './world/WorldPage'
@@ -22,15 +20,13 @@ const worldRoute = createRoute({
 const javascriptRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'javascript',
-  beforeLoad: () => {
-    throw redirect({ to: '/world' })
-  },
+  beforeLoad: () => { throw redirect({ to: '/world' }) },
 })
 
 const javascriptFieldRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'javascript/field',
-  component: JavaScriptFieldRoute,
+  beforeLoad: () => { throw redirect({ to: '/world' }) },
 })
 
 const javascriptBattleRoute = createRoute({
@@ -38,7 +34,12 @@ const javascriptBattleRoute = createRoute({
   path: 'javascript/battle/$battleId',
   validateSearch: (search: Record<string, unknown>) => ({
     seed: typeof search.seed === 'string' && search.seed.length > 0 ? search.seed : undefined,
-    returnTo: search.returnTo === '/javascript/field' ? '/javascript/field' as const : undefined,
+    returnTo:
+      search.returnTo === '/world'
+        ? '/world' as const
+        : search.returnTo === '/javascript/field'
+          ? '/javascript/field' as const
+          : undefined,
   }),
   component: BattleRoutePage,
 })
@@ -46,23 +47,19 @@ const javascriptBattleRoute = createRoute({
 const javascriptCompleteRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'javascript/complete',
-  beforeLoad: () => {
-    throw redirect({ to: '/world' })
-  },
+  beforeLoad: () => { throw redirect({ to: '/world' }) },
 })
 
 const typescriptRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'typescript',
-  beforeLoad: () => {
-    throw redirect({ to: '/world' })
-  },
+  beforeLoad: () => { throw redirect({ to: '/world' }) },
 })
 
 const typescriptFieldRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'typescript/field',
-  component: TypeScriptFieldRoute,
+  beforeLoad: () => { throw redirect({ to: '/world' }) },
 })
 
 const typescriptBattleRoute = createRoute({
@@ -70,7 +67,12 @@ const typescriptBattleRoute = createRoute({
   path: 'typescript/battle/$battleId',
   validateSearch: (search: Record<string, unknown>) => ({
     seed: typeof search.seed === 'string' && search.seed.length > 0 ? search.seed : undefined,
-    returnTo: search.returnTo === '/typescript/field' ? '/typescript/field' as const : undefined,
+    returnTo:
+      search.returnTo === '/world'
+        ? '/world' as const
+        : search.returnTo === '/typescript/field'
+          ? '/typescript/field' as const
+          : undefined,
   }),
   component: TypeScriptBattleRoutePage,
 })
@@ -78,9 +80,7 @@ const typescriptBattleRoute = createRoute({
 const typescriptCompleteRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'typescript/complete',
-  beforeLoad: () => {
-    throw redirect({ to: '/world' })
-  },
+  beforeLoad: () => { throw redirect({ to: '/world' }) },
 })
 
 const routeTree = rootRoute.addChildren([

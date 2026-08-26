@@ -19,11 +19,18 @@ import { BATTLE_MOTION, getNewlyDefeatedIds } from './motion/battleMotion'
 import {
   applyBattleVictory,
   getPlayerStats,
-  getSkillPowerForLevel,
   useProgress,
   type BattleVictoryReward,
 } from './progression'
 import { applySideQuestVictory } from './quests/quests'
+import {
+  getCombatStats,
+  getIncomingDamage,
+  getPartyFollowUpDamage,
+  getSkillDamage,
+  partyMemberById,
+  useRpg,
+} from './rpg'
 
 type Phase = 'battle' | 'victory' | 'defeat'
 
@@ -33,7 +40,7 @@ type LogEntry = {
   text: string
 }
 
-type BattleReturnPath = '/javascript/field' | '/typescript/field'
+type BattleReturnPath = '/world' | '/javascript/field' | '/typescript/field'
 
 type AppProps = {
   battleId: number
@@ -46,8 +53,10 @@ const spriteClassName = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+
 
 function App({ battleId, seed, returnTo }: AppProps) {
   const navigate = useNavigate()
-  const { progress, setProgress } = useProgress()
-  const playerStats = getPlayerStats(progress.exp)
+  const { progress, stats: baseStats, setProgress } = useProgress()
+  const { rpgState } = useRpg()
+  const playerStats = getCombatStats(baseStats, rpgState)
+  const partyFollowUpDamage = getPartyFollowUpDamage(rpgState.partyMemberIds, playerStats.level)
   const battle = useMemo(() => {
     const generated = generateBattle(battleId, seed)
     if (!generated) throw new Error(`Unknown battle: ${battleId}`)
@@ -158,7 +167,8 @@ function App({ battleId, seed, returnTo }: AppProps) {
       return
     }
 
-    const totalDamage = survivors.reduce((total, enemy) => total + enemy.attackDamage, 0)
+    const damages = survivors.map((enemy) => getIncomingDamage(enemy.attackDamage, playerStats.defense))
+    const totalDamage = damages.reduce((total, damage) => total + damage, 0)
     const nextPlayerHp = Math.max(0, playerHp - totalDamage)
     setEnemyTurnActive(true)
     gameAudio.playSe('enemyAttack')
@@ -166,7 +176,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
     setTimeout(() => {
       survivors.forEach((enemy, index) => {
         setTimeout(
-          () => addLog('enemy', `${enemy.name} / ${enemy.attackName} → ${enemy.attackDamage} DMG`),
+          () => addLog('enemy', `${enemy.name} / ${enemy.attackName} → ${damages[index] ?? 1} DMG`),
           index * 90,
         )
       })
@@ -201,7 +211,8 @@ function App({ battleId, seed, returnTo }: AppProps) {
     setSelectedSkillId(null)
 
     const targets = getTargets(enemies, skill.rule)
-    const skillPower = getSkillPowerForLevel(skill.power, playerStats.level)
+    const skillPower = getSkillDamage(skill.power, playerStats)
+    const totalPower = skillPower + partyFollowUpDamage
 
     setTimeout(() => {
       setSkillWindup(false)
@@ -216,7 +227,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
       const targetIds = targets.map((target) => target.id)
       const nextEnemies = enemies.map((enemy) =>
         targetIds.includes(enemy.id)
-          ? { ...enemy, hp: Math.max(0, enemy.hp - skillPower) }
+          ? { ...enemy, hp: Math.max(0, enemy.hp - totalPower) }
           : enemy,
       )
       const newlyDefeatedIds = getNewlyDefeatedIds(enemies, nextEnemies)
@@ -227,12 +238,19 @@ function App({ battleId, seed, returnTo }: AppProps) {
       }
       setAnimatingIds(targetIds)
       setDefeatingIds(newlyDefeatedIds)
-      setDamagePopups(Object.fromEntries(targetIds.map((id) => [id, skillPower])))
+      setDamagePopups(Object.fromEntries(targetIds.map((id) => [id, totalPower])))
       setEnemies(nextEnemies)
       addLog(
         'player',
         `${skill.name} → ${targets.map((target) => target.name).join(' / ')} · ${skillPower} DMG`,
       )
+      if (partyFollowUpDamage > 0) {
+        const allies = rpgState.partyMemberIds
+          .map((id) => partyMemberById[id]?.name)
+          .filter(Boolean)
+          .join(' + ')
+        addLog('system', `${allies} FOLLOW-UP → +${partyFollowUpDamage} DMG`)
+      }
 
       setTimeout(() => {
         setAnimatingIds([])
@@ -273,12 +291,13 @@ function App({ battleId, seed, returnTo }: AppProps) {
   const goNextBattle = () => {
     gameAudio.playSe('confirm')
 
+    if (returnTo === '/world') {
+      navigate({ to: '/world' })
+      return
+    }
+
     if (!nextBattle) {
-      if (battle.areaId === TYPESCRIPT_AREA_ID) {
-        navigate({ to: '/typescript/complete' })
-      } else {
-        navigate({ to: '/javascript/complete' })
-      }
+      navigate({ to: '/world' })
       return
     }
 
@@ -307,19 +326,19 @@ function App({ battleId, seed, returnTo }: AppProps) {
   const goReturnDestination = () => {
     gameAudio.playSe('confirm')
 
+    if (returnTo === '/world') {
+      navigate({ to: '/world' })
+      return
+    }
     if (returnTo === '/typescript/field') {
-      navigate({ to: '/typescript/field' })
+      navigate({ to: '/world' })
       return
     }
     if (returnTo === '/javascript/field') {
-      navigate({ to: '/javascript/field' })
+      navigate({ to: '/world' })
       return
     }
-    if (battle.areaId === TYPESCRIPT_AREA_ID) {
-      navigate({ to: '/typescript' })
-      return
-    }
-    navigate({ to: '/javascript' })
+    navigate({ to: '/world' })
   }
 
   const openCodeHelp = (skill: SkillCard) => {
@@ -349,9 +368,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
         <div>
           <div className="eyebrow">{areaLabel} // {battle.label}</div>
           <h1>CODE//READ RPG</h1>
-          <p>
-            {battle.title} — {battle.subtitle}
-          </p>
+          <p>{battle.title} — {battle.subtitle}</p>
         </div>
         <div className={`turn-pill ${enemyTurnActive ? 'enemy-turn-active' : ''}`}>
           {enemyTurnActive ? 'ENEMY TURN' : `TURN ${String(turn).padStart(2, '0')}`}
@@ -372,21 +389,21 @@ function App({ battleId, seed, returnTo }: AppProps) {
           {playerDamagePopup !== null && (
             <span className="damage-number player-damage-number">-{playerDamagePopup}</span>
           )}
-          <div className="player-sprite" aria-hidden="true">
-            <span />
-          </div>
+          <div className="player-sprite" aria-hidden="true"><span /></div>
           <div className="player-stats">
             <div className="status-title">CODE KNIGHT · LV {playerStats.level}</div>
             <div className="status-label-row">
               <span>HP</span>
-              <strong>
-                {playerHp}
-                <em>/{playerStats.maxHp}</em>
-              </strong>
+              <strong>{playerHp}<em>/{playerStats.maxHp}</em></strong>
             </div>
             <div className="hp-track player-track">
               <div className="hp-fill" style={{ width: `${playerHpPercent}%` }} />
             </div>
+            {rpgState.partyMemberIds.length > 0 && (
+              <div className="party-battle-line">
+                ALLY {rpgState.partyMemberIds.map((id) => partyMemberById[id]?.name ?? id).join(' + ')} · FOLLOW-UP {partyFollowUpDamage}
+              </div>
+            )}
           </div>
         </aside>
 
@@ -409,9 +426,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
                 </div>
                 <div className="enemy-name-row">
                   <h2>{enemy.name}</h2>
-                  <span>
-                    {enemy.hp}/{enemy.maxHp}
-                  </span>
+                  <span>{enemy.hp}/{enemy.maxHp}</span>
                 </div>
                 <div className="hp-track enemy-track">
                   <div className="hp-fill" style={{ width: `${hpPercent}%` }} />
@@ -419,13 +434,12 @@ function App({ battleId, seed, returnTo }: AppProps) {
                 <div className="intent-box">
                   <span>NEXT</span>
                   <strong>{defeated ? '—' : enemy.attackName}</strong>
-                  <em>{defeated ? 'DEFEATED' : `${enemy.attackDamage} DMG`}</em>
+                  <em>{defeated ? 'DEFEATED' : `${getIncomingDamage(enemy.attackDamage, playerStats.defense)} DMG`}</em>
                 </div>
               </article>
             )
           })}
         </section>
-
         <div className="stage-ground" aria-hidden="true" />
       </section>
 
@@ -447,7 +461,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
         <div className="skill-grid">
           {availableSkills.map((skill) => {
             const selected = selectedSkillId === skill.id
-            const skillPower = getSkillPowerForLevel(skill.power, playerStats.level)
+            const skillPower = getSkillDamage(skill.power, playerStats)
             return (
               <button
                 type="button"
@@ -460,9 +474,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
                   <span>{skill.name}</span>
                   <strong>POWER {skillPower}</strong>
                 </div>
-                <pre>
-                  <code>{skill.code}</code>
-                </pre>
+                <pre><code>{skill.code}</code></pre>
                 {selected && <div className="skill-card-foot">▶ EXECUTE</div>}
               </button>
             )
@@ -474,9 +486,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
             <div className="log-title">BATTLE LOG</div>
             <div className="log-list">
               {logs.map((log) => (
-                <span key={log.id} className={`log-${log.tone}`}>
-                  &gt; {log.text}
-                </span>
+                <span key={log.id} className={`log-${log.tone}`}>&gt; {log.text}</span>
               ))}
             </div>
           </div>
@@ -490,22 +500,11 @@ function App({ battleId, seed, returnTo }: AppProps) {
             <h2>{battle.title} cleared.</h2>
             {victoryReward && (
               <div className="reward-summary pixel-inner-window">
-                <div className="reward-stat">
-                  <span>EXP GAINED</span>
-                  <strong>+{victoryReward.expGained}</strong>
-                </div>
-                <div className="reward-stat">
-                  <span>GOLD GAINED</span>
-                  <strong>+{victoryReward.goldGained} G</strong>
-                </div>
+                <div className="reward-stat"><span>EXP GAINED</span><strong>+{victoryReward.expGained}</strong></div>
+                <div className="reward-stat"><span>GOLD GAINED</span><strong>+{victoryReward.goldGained} G</strong></div>
                 <div className="reward-stat">
                   <span>LEVEL</span>
-                  <strong>
-                    {victoryReward.previousLevel}
-                    {victoryReward.newLevel > victoryReward.previousLevel
-                      ? ` → ${victoryReward.newLevel}`
-                      : ''}
-                  </strong>
+                  <strong>{victoryReward.previousLevel}{victoryReward.newLevel > victoryReward.previousLevel ? ` → ${victoryReward.newLevel}` : ''}</strong>
                 </div>
                 {victoryReward.newLevel > victoryReward.previousLevel && (
                   <div className="reward-unlock level-up-reward motion-reward">LEVEL UP!</div>
@@ -528,11 +527,11 @@ function App({ battleId, seed, returnTo }: AppProps) {
             )}
             <div className="result-actions">
               <button className="primary-button" onClick={goNextBattle}>
-                {nextBattle ? '▶ NEXT STAGE' : '▶ AREA CLEAR'}
+                {returnTo === '/world' ? '▶ RETURN TO WORLD' : nextBattle ? '▶ NEXT STAGE' : '▶ WORLD'}
               </button>
-              <button className="secondary-button" onClick={goReturnDestination}>
-                {returnTo ? '◀ RETURN TO FIELD' : '◀ STAGE SELECT'}
-              </button>
+              {returnTo !== '/world' && (
+                <button className="secondary-button" onClick={goReturnDestination}>◀ WORLD</button>
+              )}
             </div>
           </section>
         </div>
@@ -543,18 +542,9 @@ function App({ battleId, seed, returnTo }: AppProps) {
           <section className="result-card defeat-card pixel-window result-card-enter">
             <div className="eyebrow">DEFEAT</div>
             <div className="defeat-actions">
-              <button className="primary-button" onClick={resetBattle}>
-                ▶ RETRY
-              </button>
-              <button className="secondary-button" onClick={goReturnDestination}>
-                {returnTo ? '◀ RETURN TO FIELD' : '◀ STAGE SELECT'}
-              </button>
-              <button
-                className="secondary-button"
-                onClick={() => openCodeHelp(availableSkills[0])}
-              >
-                CODE HELP
-              </button>
+              <button className="primary-button" onClick={resetBattle}>▶ RETRY</button>
+              <button className="secondary-button" onClick={goReturnDestination}>◀ RETURN TO WORLD</button>
+              <button className="secondary-button" onClick={() => openCodeHelp(availableSkills[0])}>CODE HELP</button>
             </div>
           </section>
         </div>
@@ -563,14 +553,10 @@ function App({ battleId, seed, returnTo }: AppProps) {
       {explainedSkill && (
         <div className="overlay modal-overlay" onClick={closeCodeHelp}>
           <section className="explain-modal pixel-window" onClick={(event) => event.stopPropagation()}>
-            <button className="close-button" onClick={closeCodeHelp}>
-              ×
-            </button>
+            <button className="close-button" onClick={closeCodeHelp}>×</button>
             <div className="eyebrow">CODE EXPLANATION</div>
             <h2>{explainedSkill.concept}</h2>
-            <pre>
-              <code>{explainedSkill.code}</code>
-            </pre>
+            <pre><code>{explainedSkill.code}</code></pre>
             {explainedSkill.codeHelpLines && explainedSkill.codeHelpLines.length > 0 && (
               <div className="code-help-steps" aria-label="コードを1行ずつ読む">
                 {explainedSkill.code.split('\n').map((line, index) => (
@@ -585,13 +571,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
             <p>{explainedSkill.explanation}</p>
             <div className="explain-switcher">
               {availableSkills.map((skill) => (
-                <button
-                  key={skill.id}
-                  onClick={() => {
-                    gameAudio.playSe('select')
-                    setExplainedSkill(skill)
-                  }}
-                >
+                <button key={skill.id} onClick={() => { gameAudio.playSe('select'); setExplainedSkill(skill) }}>
                   {skill.name}
                 </button>
               ))}

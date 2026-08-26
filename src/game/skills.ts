@@ -35,6 +35,31 @@ function getDefaultVariant(definition: SkillDefinition): CodeVariant {
   return defaultVariant
 }
 
+function shortHash(value: string): string {
+  let hash = 2166136261
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index)
+    hash = Math.imul(hash, 16777619)
+  }
+  return (hash >>> 0).toString(36)
+}
+
+function makeBattleUniqueVariant(
+  variant: CodeVariant,
+  battleId: number,
+  seed: Seed,
+): CodeVariant {
+  const fingerprint = `B${battleId}-${shortHash(String(seed)).slice(0, 5)}`
+  const lines = variant.code.split('\n')
+  const lastIndex = lines.length - 1
+  lines[lastIndex] = `${lines[lastIndex] ?? ''} /* ${fingerprint} */`
+
+  return {
+    ...variant,
+    code: lines.join('\n'),
+  }
+}
+
 export function getSkillCardForBattle(
   skillId: string,
   battleId: number,
@@ -52,10 +77,10 @@ export function getSkillCardForBattle(
   }
 
   const random = createSeededRandom(`${battleId}:${String(seed)}:${skillId}:code-variant`)
-  const variant = eligibleVariants[random.int(0, eligibleVariants.length - 1)]
-  if (!variant) throw new Error(`Skill ${skillId} has no code variant`)
+  const selected = eligibleVariants[random.int(0, eligibleVariants.length - 1)]
+  if (!selected) throw new Error(`Skill ${skillId} has no code variant`)
 
-  return createSkillCard(definition, variant)
+  return createSkillCard(definition, makeBattleUniqueVariant(selected, battleId, seed))
 }
 
 export function getSkillCardsForBattle(battle: Battle, seed: Seed): SkillCard[] {
