@@ -1,0 +1,58 @@
+.audio-controls {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 35;
+  width: min(250px, calc(100vw - 84px));
+  display: grid;
+  grid-template-columns: auto 1fr 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: rgba(7, 7, 14, .94);
+}
+
+.audio-toggle {
+  appearance: none;
+  border: 2px solid #78789a;
+  background: #10101c;
+  color: var(--green);
+  padding: 7px 8px;
+  font: 900 9px/1 "Courier New", ui-monospace, monospace;
+  letter-spacing: .04em;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.audio-toggle.muted {
+  color: #8f8ca3;
+}
+
+.audio-slider {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+  color: #aaa7bf;
+  font: 900 8px/1 "Courier New", ui-monospace, monospace;
+}
+
+.audio-slider input {
+  width: 100%;
+  accent-color: var(--blue);
+  cursor: pointer;
+}
+
+@media (max-width: 700px) {
+  .audio-controls {
+    left: 8px;
+    bottom: 8px;
+    width: min(235px, calc(100vw - 70px));
+    gap: 6px;
+    padding: 6px;
+  }
+
+  .audio-toggle {
+    padding: 6px;
+    font-size: 8px;
+  }
+}
