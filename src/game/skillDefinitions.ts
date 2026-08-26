@@ -76,6 +76,58 @@ export const skillDefinitions: readonly SkillDefinition[] = [
     ],
   },
   {
+    id: 'lock',
+    name: 'LOCK',
+    power: 24,
+    rule: { kind: 'allBelowAndAttackAtLeast', hp: 100, attackDamage: 8 },
+    concept: '&&',
+    explanation:
+      '&& は左右の条件が両方trueのときだけtrueになります。このカードはHPが100未満かつ攻撃力が8以上の敵全員を対象にします。',
+    codeVariants: [
+      {
+        id: 'short',
+        code: 'enemies.filter(e => e.hp < 100 && e.attackDamage >= 8)',
+        lineMode: 'single',
+      },
+      {
+        id: 'enemy',
+        code: 'enemies.filter(enemy => enemy.hp < 100 && enemy.attackDamage >= 8)',
+        lineMode: 'single',
+      },
+      {
+        id: 'target',
+        code: 'enemies.filter(target => target.hp < 100 && target.attackDamage >= 8)',
+        lineMode: 'single',
+      },
+    ],
+  },
+  {
+    id: 'alert',
+    name: 'ALERT',
+    power: 40,
+    rule: { kind: 'firstAttackAtLeastOrAbove', hp: 120, attackDamage: 14 },
+    concept: '||',
+    explanation:
+      '|| は左右のどちらか一方でもtrueならtrueになります。このカードは攻撃力が14以上、またはHPが120より大きい最初の敵1体を対象にします。',
+    codeVariants: [
+      {
+        id: 'short',
+        code: 'enemies.find(e => e.attackDamage >= 14 || e.hp > 120)',
+        lineMode: 'single',
+      },
+      {
+        id: 'enemy',
+        code: 'enemies.find(enemy => enemy.attackDamage >= 14 || enemy.hp > 120)',
+        lineMode: 'single',
+      },
+      {
+        id: 'target',
+        code: 'enemies.find(target => target.attackDamage >= 14 || target.hp > 120)',
+        lineMode: 'single',
+      },
+    ],
+  },
+  {
     id: 'echo',
     name: 'ECHO',
     power: 26,
@@ -122,6 +174,58 @@ export const skillDefinitions: readonly SkillDefinition[] = [
         id: 'ordered-named',
         code: 'const ordered = [...enemies].sort((left, right) => left.hp - right.hp)\nordered[0]',
         lineMode: 'multi',
+      },
+    ],
+  },
+  {
+    id: 'sweep',
+    name: 'SWEEP',
+    power: 18,
+    rule: { kind: 'allIfAnyBelow', hp: 50 },
+    concept: 'some() + ? :',
+    explanation:
+      'some() は条件に合う要素が1つでもあればtrueを返します。このカードは生存中のHP50未満の敵が1体でもいれば、生存敵全員を対象にします。? : は条件によって返す値を切り替える三項演算子です。',
+    codeVariants: [
+      {
+        id: 'short',
+        code: 'enemies.some(e => e.hp > 0 && e.hp < 50) ? enemies.filter(e => e.hp > 0) : []',
+        lineMode: 'single',
+      },
+      {
+        id: 'enemy',
+        code: 'enemies.some(enemy => enemy.hp > 0 && enemy.hp < 50) ? enemies.filter(enemy => enemy.hp > 0) : []',
+        lineMode: 'single',
+      },
+      {
+        id: 'target',
+        code: 'enemies.some(target => target.hp > 0 && target.hp < 50) ? enemies.filter(target => target.hp > 0) : []',
+        lineMode: 'single',
+      },
+    ],
+  },
+  {
+    id: 'judge',
+    name: 'JUDGE',
+    power: 52,
+    rule: { kind: 'highestAttack' },
+    concept: 'reduce() + ? :',
+    explanation:
+      'reduce() は配列を1つの値へまとめます。このカードでは生存敵を順に比較し、攻撃力が最も高い敵1体を残します。比較結果を選ぶために三項演算子 ? : を使います。',
+    codeVariants: [
+      {
+        id: 'short',
+        code: 'enemies.filter(e => e.hp > 0).reduce((best, e) => e.attackDamage > best.attackDamage ? e : best)',
+        lineMode: 'single',
+      },
+      {
+        id: 'enemy',
+        code: 'enemies.filter(enemy => enemy.hp > 0).reduce((best, enemy) => enemy.attackDamage > best.attackDamage ? enemy : best)',
+        lineMode: 'single',
+      },
+      {
+        id: 'candidate',
+        code: 'enemies.filter(candidate => candidate.hp > 0).reduce((best, candidate) => candidate.attackDamage > best.attackDamage ? candidate : best)',
+        lineMode: 'single',
       },
     ],
   },
