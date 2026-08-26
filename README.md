@@ -2,7 +2,7 @@
 
 コードを「書く」のではなく、**読んで意味を判断して戦う**コードリーディングRPGです。
 
-現在の`main`はBattle中心のMVPから、**育成・再挑戦・探索・会話を含むRPGそのもの**へ外側のループを拡張している段階です。
+現在の`main`はBattle中心のMVPから、**育成・再挑戦・探索・会話・複数Area導線を含むRPGそのもの**へ外側のループを拡張している段階です。
 
 ## Current main
 
@@ -34,16 +34,13 @@
 - 3人のNPC / 汎用Dialogueデータ / 進行状態による会話分岐
 - 次の目的・コード読解ヒント・復習導線をField内会話から確認
 - Battle motion / damage feedback / reduced motion対応
-- SE / Battle BGM / Mute / SE・BGM別音量のAudio基盤
+- menu / field / battle BGM、SE、Mute、SE・BGM別音量のAudio基盤
+- World Map / Area Select
+- JavaScript KingdomのAVAILABLE / AREA CLEAR表示
+- TypeScript FrontierのCOMING SOON表示
+- Area metadataによるroute / availability管理
+- AreaとBattle所属を共通lookupするhelper
 - Vitest / ESLint / Prettier / GitHub Actions CI
-
-このbranchではさらに、複数Areaへ拡張する入口としてWorld Mapを追加しています。
-
-- `/world`にArea Select
-- JavaScript KingdomをAVAILABLEとして表示
-- JavaScript Kingdom CLEAR状態をWorld Mapへ反映
-- TypeScript FrontierをCOMING SOONとして表示し、未実装の進行データは作らない
-- Area metadataからdata-drivenに表示・進入可否を決定
 
 まだ入っていない主なRPG機能:
 
@@ -92,11 +89,31 @@ Stage Selectは進行確認・再挑戦用として残し、通常の冒険導�
 - JavaScript Kingdomは`AVAILABLE`
 - CLEAR済みなら`AREA CLEAR`を表示
 - 未実装Areaは`COMING SOON`で進入不可
-- Areaの表示名・説明・availability・entry routeは`src/game/areas.ts`へ集約
 - 未実装Areaには架空のBattleやsave dataを作らない
 - Stage Select / Area CLEAR画面からWorld Mapへ戻れる
 
-Area追加時はWorld Mapの条件分岐を増やすのではなく、Area metadataを追加して拡張する方針です。
+Areaの表示名・説明・availability・routeは`src/game/areas.ts`へ集約します。
+
+```text
+AreaDefinition
+├── id / label / title / description
+├── availability
+├── routes
+│   ├── field
+│   ├── stageSelect
+│   └── complete
+└── bossBattleId
+```
+
+`src/game/areaProgression.ts`はAreaとBattleの関係をUIから分離して扱います。
+
+- `getBattlesForArea(areaId)`
+- `getAreaForBattle(battleId)`
+- `getBossBattleForArea(areaId)`
+
+これにより、次Area追加時にWorld MapやStage SelectへArea固有の`filter()` / Boss検索を増やさず、Area metadataとBattleの`areaId`をsource of truthとして拡張します。
+
+JavaScript Kingdomの既存URLは互換性のため維持します。TypeScript Frontierは実コンテンツを追加するまでrouteを`null`のまま持ち、COMING SOONから進入できません。
 
 ## Field exploration
 
@@ -130,6 +147,19 @@ Dialogueは`src/dialogue/`へ分離しています。
 - Enter / Spaceまたは`NEXT`で会話を進める
 
 これにより、次の目的と学習ヒントをメニュー外のRPG世界から確認できます。
+
+## Audio
+
+Web Audio APIで外部音源に依存しないオリジナル8-bit風Audioを生成します。
+
+- 最初のpointer / touch / key操作でAudioContextをunlock
+- Title / World Map / Stage Selectはmenu BGM
+- JavaScript Kingdom Fieldはfield BGM
+- Battleはbattle BGM
+- SE / BGMは別channel
+- SOUND ON/OFF、SE音量、BGM音量を個別操作可能
+
+ブラウザのautoplay制約上、ページ表示だけでは音を開始せず、最初のユーザー操作後に再生を開始します。
 
 ## Progress persistence
 
@@ -175,6 +205,8 @@ TanStack Routerで画面遷移とBattle URLを管理しています。
 - `/javascript/complete` - JavaScript KingdomのArea CLEAR / status画面
 
 同じBattle IDとseedなら同じ可変盤面を再現できます。`returnTo`は現在FieldからBattleへ入った場合の戻り先だけを許可しています。
+
+2つ目以降のAreaを追加するときは、既存JavaScript URLを変更せず、Area metadataへ新しいrouteを追加して拡張します。
 
 ## Run
 

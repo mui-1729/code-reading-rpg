@@ -3,13 +3,21 @@ export const TYPESCRIPT_AREA_ID = 'typescript'
 
 export type AreaAvailability = 'available' | 'comingSoon'
 
+export type AreaRoutePath = '/javascript' | '/javascript/field' | '/javascript/complete'
+
+export type AreaRoutes = {
+  stageSelect: AreaRoutePath | null
+  field: AreaRoutePath | null
+  complete: AreaRoutePath | null
+}
+
 export type AreaDefinition = {
   id: string
   label: string
   title: string
   description: string
   availability: AreaAvailability
-  entryPath: '/javascript/field' | null
+  routes: AreaRoutes
   bossBattleId?: number
 }
 
@@ -20,7 +28,11 @@ export const areas: AreaDefinition[] = [
     title: 'JavaScript Kingdom',
     description: '配列操作のコードを読み、敵の対象と優先順位を見抜く王国。',
     availability: 'available',
-    entryPath: '/javascript/field',
+    routes: {
+      stageSelect: '/javascript',
+      field: '/javascript/field',
+      complete: '/javascript/complete',
+    },
     bossBattleId: 3,
   },
   {
@@ -29,7 +41,11 @@ export const areas: AreaDefinition[] = [
     title: 'TypeScript Frontier',
     description: '型を手がかりにコードの意味を追う、次の冒険候補地。',
     availability: 'comingSoon',
-    entryPath: null,
+    routes: {
+      stageSelect: null,
+      field: null,
+      complete: null,
+    },
   },
 ]
 

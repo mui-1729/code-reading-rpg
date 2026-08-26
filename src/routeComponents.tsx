@@ -2,7 +2,13 @@ import { useEffect, useState } from 'react'
 import { getRouteApi, useNavigate } from '@tanstack/react-router'
 import App from './App'
 import { useBgm } from './audio/useBgm'
-import { areaById, battles, JAVASCRIPT_AREA_ID } from './game'
+import {
+  areaById,
+  getAreaForBattle,
+  getBattlesForArea,
+  getBossBattleForArea,
+  JAVASCRIPT_AREA_ID,
+} from './game'
 import { getTotalExpForLevel, useProgress } from './progression'
 
 const battleRouteApi = getRouteApi('/javascript/battle/$battleId')
@@ -71,7 +77,7 @@ export function JavaScriptAreaPage() {
   useBgm('menu')
   const area = areaById[JAVASCRIPT_AREA_ID]
   const areaCleared = progress.clearedAreaIds.includes(area.id)
-  const areaBattles = battles.filter((battle) => battle.areaId === area.id)
+  const areaBattles = getBattlesForArea(area.id)
   const levelStartExp = getTotalExpForLevel(stats.level)
   const nextLevelExp = getTotalExpForLevel(stats.level + 1)
   const expInLevel = progress.exp - levelStartExp
@@ -97,7 +103,11 @@ export function JavaScriptAreaPage() {
             {areaCleared && <div className="area-clear-badge">✓ AREA CLEAR</div>}
           </div>
           <div className="area-header-actions">
-            <button className="primary-button area-back" onClick={() => navigate({ to: '/javascript/field' })}>
+            <button
+              className="primary-button area-back"
+              disabled={!area.routes.field}
+              onClick={() => area.routes.field && navigate({ to: area.routes.field })}
+            >
               ▶ EXPLORE FIELD
             </button>
             <button className="secondary-button area-back" onClick={() => navigate({ to: '/world' })}>
@@ -193,7 +203,8 @@ export function BattleRoutePage() {
   const [fallbackSeed] = useState(createRunSeed)
   const seed = searchSeed ?? fallbackSeed
   const numericBattleId = Number(battleId)
-  const exists = battles.some((battle) => battle.id === numericBattleId)
+  const battleArea = getAreaForBattle(numericBattleId)
+  const exists = battleArea?.id === JAVASCRIPT_AREA_ID
 
   useEffect(() => {
     if (searchSeed || !exists) return
@@ -226,14 +237,16 @@ export function CompletePage() {
   useBgm('menu')
   const area = areaById[JAVASCRIPT_AREA_ID]
   const areaCleared = progress.clearedAreaIds.includes(area.id)
-  const boss = battles.find((battle) => battle.id === area.bossBattleId)
+  const boss = getBossBattleForArea(area.id)
+  const fieldPath = area.routes.field
+  const stageSelectPath = area.routes.stageSelect
 
   const replayBoss = () => {
-    if (!boss) return
+    if (!boss || fieldPath !== '/javascript/field') return
     navigate({
       to: '/javascript/battle/$battleId',
       params: { battleId: String(boss.id) },
-      search: { seed: createRunSeed(), returnTo: '/javascript/field' },
+      search: { seed: createRunSeed(), returnTo: fieldPath },
     })
   }
 
@@ -251,10 +264,18 @@ export function CompletePage() {
           <button className="primary-button" onClick={() => navigate({ to: '/world' })}>
             ◀ WORLD MAP
           </button>
-          <button className="secondary-button" onClick={() => navigate({ to: '/javascript/field' })}>
+          <button
+            className="secondary-button"
+            disabled={!fieldPath}
+            onClick={() => fieldPath && navigate({ to: fieldPath })}
+          >
             RETURN TO FIELD
           </button>
-          <button className="secondary-button" onClick={() => navigate({ to: '/javascript' })}>
+          <button
+            className="secondary-button"
+            disabled={!stageSelectPath}
+            onClick={() => stageSelectPath && navigate({ to: stageSelectPath })}
+          >
             STAGE SELECT
           </button>
           {areaCleared && boss && (
@@ -271,14 +292,20 @@ export function CompletePage() {
 function NotFoundBattle() {
   const navigate = useNavigate()
   useBgm('menu')
+  const area = areaById[JAVASCRIPT_AREA_ID]
+  const fieldPath = area.routes.field
 
   return (
     <main className="app-shell center-shell title-screen">
       <section className="result-card defeat-card pixel-window">
         <div className="eyebrow">ROUTE ERROR</div>
-        <h2>そのBattleは存在しない</h2>
-        <p>Battle 1〜3のURLを指定してください。</p>
-        <button className="primary-button" onClick={() => navigate({ to: '/javascript/field' })}>
+        <h2>そのBattleはこのAreaに存在しない</h2>
+        <p>JavaScript KingdomのBattle URLを指定してください。</p>
+        <button
+          className="primary-button"
+          disabled={!fieldPath}
+          onClick={() => fieldPath && navigate({ to: fieldPath })}
+        >
           ◀ RETURN TO FIELD
         </button>
       </section>

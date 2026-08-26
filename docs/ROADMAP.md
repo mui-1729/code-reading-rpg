@@ -2,9 +2,9 @@
 
 ## 1. この文書の目的
 
-この文書は、`CODE//READ RPG`をどの順序で拡張するかを定義する。
+この文書は`CODE//READ RPG`をどの順序で拡張するかを定義する。
 
-2026-08-26時点では、Battleだけを増やす段階から、**育成・探索・会話・Area移動を含むRPG世界を拡張する段階**へ進んでいる。
+2026-08-26時点では、JavaScript KingdomのRPGループが成立し、**World Mapから2つ目以降のAreaへ拡張する段階**に入っている。
 
 ゲームの中心は常にコードリーディングとする。
 
@@ -16,118 +16,100 @@
 
 ---
 
-## 2. 現在地
+## 2. 実装済み
 
-### Battle / 読解基盤: 実装済み
+### Battle / 読解基盤
 
 - JavaScript編 3 Battles
 - Skill SELECT → EXECUTE
 - `find()` / `filter()` / 比較 / `sort()`
-- HP / NEXT行動を見た戦略判断
-- Skill実行前のTarget Previewなし
-- 任意のCODE HELP
-- seed付き決定的乱数
-- 敵HP・敵順・Skill順の制約付きvariation
-- generator validation / solvability検証
-- `SkillDefinition` / `TargetRule`
+- HP / NEXT行動による戦略判断
+- Target Previewなし
+- CODE HELP
+- seeded generation / solvability
+- SkillDefinition / TargetRule
 - 同一概念の複数code variant
-- Battle 3の複数行code variant
+- Battle 3の複数行code
 
-表示コードを`eval()`してBattleを実行せず、表示内容と安全な内部TargetRuleを対応させる構造を維持する。
+### RPG進行
 
-### RPG最小ループ: 実装済み
-
-#43〜#48で次を実装済み。
+#43〜#48で実装済み。
 
 - PlayerProgress
-- EXP / Level導出
+- EXP / Level
 - 最大HP / POWER倍率
 - Stage Select
 - Stage CLEAR / unlock
 - Skill unlock
-- 過去Battleへの再挑戦
-- 敗北後の育成と再挑戦
-- LocalStorage保存 / migration / reset
-- Boss属性
-- JavaScript Kingdom Area CLEAR
-- CLEAR後の再戦
+- 再挑戦
+- LocalStorage / migration / reset
+- Boss / Area CLEAR
 
-敵はcurrent Player Levelに合わせてruntimeで弱体化しない。
+Enemyはcurrent Player Levelへ自動追従させない。
 
-```text
-強敵に負ける
-↓
-過去Stageへ戻る
-↓
-EXPを獲得
-↓
-Playerが成長
-↓
-同じ世界へ再挑戦
-```
+### Field / NPC
 
-育成は「余裕」を増やし、読解は「正しい行動」を決める役割にする。
+#49 / #50で実装済み。
 
-### RPG世界: 実装済み
-
-#49 / #50でJavaScript KingdomのHub / Fieldを実装済み。
-
-- 1画面トップダウンField
-- 4方向移動
-- collision
+- JavaScript Kingdom Field
+- 4方向移動 / collision
 - Keyboard / Mobile操作
 - Battle Gate
-- Stage Select出口
-- Battle後にFieldへ復帰
+- Battle後のField復帰
 - NPC 3人
-- 汎用Dialogue data
-- 進行状態による会話分岐
-- 次の目的 / 学習ヒント / 復習導線
+- Dialogue data / 進行分岐
 
-Stage Selectは進行確認・再挑戦用として残し、通常の冒険はFieldを歩いてGateへ向かう。
+### Battle presentation
 
-### Battleの手触り: 実装済み
+#64 / #63 / #83で実装済み。
 
-#64 / #63でBattle presentationを追加済み。
+- hit / shake / damage / defeat motion
+- Victory / Defeat / reward motion
+- `prefers-reduced-motion`
+- SE
+- menu / field / battle BGM
+- Mute / SE・BGM別volume
+- 最初のユーザー操作によるWeb Audio unlock
 
-- Skill予備動作
-- 被弾flash / shake
-- damage表示
-- Enemy撃破演出
-- Player被弾演出
-- Victory / Defeat / Level Up等の短い演出
-- `prefers-reduced-motion`対応
-- SE / BGM channel
-- Mute / SE音量 / BGM音量
-- Web Audio APIによるオリジナル8-bit風音響
+### 読解variation
 
-Audio / MotionはBattleのTargetRuleやdamage計算とは分離する。
+#31 / #32で実装済み。
 
-### 品質・デプロイ: 実装済み
+- seed付き1行code variant
+- Battle 3の複数行variant
+- TargetRule / POWER / solvability不変test
+
+### World Map
+
+#81で実装済み。
+
+- `/world`
+- JavaScript Kingdom AVAILABLE / AREA CLEAR
+- TypeScript Frontier COMING SOON
+- Area metadataによるdata-driven表示
+- 未実装Areaへの進入禁止
+
+### 品質 / Deploy
 
 - Node.js 24
 - Vitest
-- ESLint
-- Prettier
+- ESLint / Prettier
 - PR前 `npm ci` / `lint` / `test` / `build`
-- GitHub Actions CI
-- Cloudflare Workers Static Assets
-- Cloudflare Workers Builds Preview / Production
-
-Vercelは現在の自動deploy経路から除外済み。
+- GitHub Actions
+- Cloudflare Workers Preview / Production
 
 ---
 
 ## 3. 現在のRPGループ
 
 ```text
-World Map / Area Select
+World Map
 ↓
-Areaへ入る
+Area
 ↓
-Hub / Fieldを探索
+Hub / Field
 ↓
-NPCから目的・ヒントを得る
+NPC
 ↓
 Battle Gate
 ↓
@@ -135,49 +117,42 @@ Battle Gate
 ↓
 EXP / Skill / Stage CLEAR
 ↓
-Fieldへ戻る
+Fieldへ復帰
 ↓
-Boss撃破でArea CLEAR
+Boss
 ↓
-World Mapへ戻る
+Area CLEAR
+↓
+World Map
 ```
 
-この循環を今後のAreaにも共通化する。
+このループを次Areaにも再利用する。
 
 ---
 
-## 4. 現在の最優先: World Map / 複数Area基盤
+## 4. 現在: #85 複数Area routing基盤
 
-### #81 World Map
+World Mapはできたが、JavaScriptの進行routeはまだJavaScript固有URLへ強く結びついている。
 
-複数Areaを追加できる入口を作る。
+#85では次Areaを実装する前に責務を整理する。
 
-初期スコープ:
+- Area metadataへField / Stage Select / Complete routeを集約
+- Area ↔ Battle lookup helper
+- Battle `areaId`の整合性test
+- Bossが同Areaへ所属することをtest
+- COMING SOON Areaはrouteなし
+- JavaScript既存URLを完全維持
+- LocalStorage schema / Stage IDを変更しない
 
-- `/world`にArea Select
-- TitleのSTART RUN → World Map
-- JavaScript KingdomをAVAILABLE表示
-- Area CLEAR状態を表示
-- TypeScript FrontierをCOMING SOON表示
-- 未実装Areaは進入不可
-- Area metadataにdescription / availability / entry routeを持たせる
-- Stage Select / Area CLEARからWorld Mapへ戻れる
-- data-drivenなArea表示
-- unit test
-
-重要:
-
-- COMING SOON Areaに架空のBattleやsave dataを作らない
-- JavaScript Kingdomの既存route / save dataを壊さない
-- World MapをBattle Domainへ依存させない
+これにより、次Area追加時の大規模な条件分岐を避ける。
 
 ---
 
-## 5. 次: 2つ目のArea
+## 5. 次: TypeScript Frontier
 
-World Mapが安定した後、実際の2つ目のAreaを追加する。
+#85完了後、2つ目の実Areaを追加する。
 
-第一候補はTypeScript。
+第一候補:
 
 ```text
 World
@@ -187,11 +162,9 @@ World
 └── React City
 ```
 
-名前・順序は固定ではない。
+TypeScript Frontierでは、単にTypeScriptの問題集を置くのではなく、**型情報を読んでゲーム上の結果を予測する**体験にする。
 
-TypeScript Areaを実装する場合も、単に問題カテゴリを増やすのではなく、RPG上の地域と学習内容を一致させる。
-
-候補テーマ:
+初期テーマ候補:
 
 - primitive type
 - union type
@@ -199,15 +172,23 @@ TypeScript Areaを実装する場合も、単に問題カテゴリを増やす�
 - optional property
 - narrowing
 - function parameter / return type
-- genericの初歩
 
-一度に新しい概念を増やしすぎず、「コードを読んで対象・結果を判断できるもの」を優先する。
+初回Areaは3 Battles程度を基本にするが、学習概念を一気に増やしすぎない。
+
+TypeScript Battle追加時に必要な検討:
+
+- Stage IDをJavaScriptと重複させない
+- TypeScript専用Skill / code variant
+- TargetRuleで安全に意味を表現できるか
+- generator / solvabilityを再利用できるか
+- TypeScript FieldをJavaScript Fieldの巨大分岐として作らない
+- JavaScript save dataをmigrationなしで維持できるか
 
 ---
 
-## 6. JavaScript学習コンテンツの拡張
+## 6. JavaScript Kingdomの追加学習候補
 
-既存Areaを深くする場合の候補:
+2つ目Areaと並行せず、優先順位を見て追加する。
 
 - `some()` / `every()`
 - object property access
@@ -216,27 +197,25 @@ TypeScript Areaを実装する場合も、単に問題カテゴリを増やす�
 - `reduce()`
 - nested data
 - 実行順序
-- shield / status等の状態
+- shield / status
 
-Skill追加時は次を機械的に検証できる状態を維持する。
+Skill追加時は次を機械的に検証する。
 
-- code variantとTargetRuleの意味が一致する
-- POWERが表示と実ダメージで一致する
-- valid targetが存在する
-- Battleがsolvable
-- 同seedで再現可能
+- codeとTargetRuleの意味一致
+- POWER表示と実ダメージ一致
+- valid target
+- solvability
+- seed再現性
 
 ---
 
 ## 7. RPGの深さ
 
-World / Area構造が安定してから追加を検討する。
-
-候補:
+複数Area構造が安定してから検討する。
 
 - Quest
 - Shop
-- 回復施設
+- Inn / 回復
 - 装備
 - アイテム
 - Gold
@@ -246,19 +225,19 @@ World / Area構造が安定してから追加を検討する。
 - Deck編成
 - Boss固有mechanic
 
-避ける方向:
+禁止したい方向:
 
-- 攻撃力だけを上げればコードを読まなくてよい
-- Rare装備が既存Skillを完全に無意味にする
+- 攻撃力だけでコードを読まなくてよい
+- Rare装備がSkillの意味を消す
 - Grind量だけで全Battleを突破できる
 
-RPG要素はコード読解の代替ではなく、読解を使う場面を増やすために利用する。
+RPG要素はコード読解の代替ではなく、読解を使う意思決定を増やすために使う。
 
 ---
 
-## 8. Field / Hubの拡張
+## 8. Field / Hub拡張
 
-現在のJavaScript Kingdomは1画面Hubなので、必要性が確認できたら次を追加する。
+必要性が確認できたら追加する。
 
 - 複数map
 - Area transition
@@ -266,44 +245,41 @@ RPG要素はコード読解の代替ではなく、読解を使う場面を増�
 - Quest NPC
 - Shop / Inn
 - Story event
-- field BGM / environment sound
+- environment sound
 - footstep
 - Gamepad
 
-最初から巨大なopen worldや複雑なphysicsへ拡張しない。
+巨大open worldや複雑なphysicsは先に作らない。
 
 ---
 
 ## 9. Audio / Presentation改善
 
-Audio基盤は実装済みだが、実機で聞こえ方を継続確認する。
+BGMの基本経路は実装済み。実機確認を続ける。
 
-候補:
+今後候補:
 
-- Title / World / Field BGM
-- Battle BGMのmix調整
-- BGM曲数の追加
-- Areaごとのmotif
-- 環境音
-- footstep
-- dialogue開始音
+- AreaごとのBGM motif
+- BGM曲数追加
 - transition音
+- dialogue音
+- footstep
+- environment sound
+- mix調整
 
-ブラウザautoplay制約を守り、最初のユーザー操作後にAudioを有効化する。
-
-既存作品の音源・メロディ・効果音はコピーしない。
+ブラウザautoplay制約を守り、既存作品の音源・メロディ・効果音をコピーしない。
 
 ---
 
-## 10. サービス化
+## 10. Backend / サービス化
 
-必要性が出てからbackendを追加する。
+必要性が出てから導入する。
 
 トリガー:
 
-- 複数端末同期
 - Login
 - Cloud Save
+- 複数端末同期
 - Ranking
 - Shared Challenge
 - 教員 / 管理者機能
@@ -314,7 +290,7 @@ Audio基盤は実装済みだが、実機で聞こえ方を継続確認する。
 - Supabase
 - その他BaaS
 
-frontendをCloudflareでhostingしていることだけを理由にbackendをCloudflareへ固定しない。
+FrontendがCloudflareだからという理由だけでbackendを固定しない。
 
 ---
 
@@ -329,7 +305,7 @@ frontendをCloudflareでhostingしていることだけを理由にbackendをClo
 - 多言語化
 - AIによる補助的な問題作成
 
-AIで問題を生成する場合も、表示コード / TargetRule / solvabilityを機械的に検証できる構造を前提にする。
+AIで問題を作る場合も、code / TargetRule / solvabilityを機械的に検証できる構造を前提にする。
 
 ---
 
@@ -339,21 +315,25 @@ AIで問題を生成する場合も、表示コード / TargetRule / solvability
 [実装済み]
 Battle MVP
 → seeded generation / solvability
-→ PlayerProgress / Stage / EXP / LocalStorage / Area CLEAR
-→ Battle animation / Audio
-→ Top-down Field / NPC / Dialogue
-→ code variants / multi-line code
+→ RPG Progression / LocalStorage / Area CLEAR
+→ Field / NPC / Dialogue
+→ Battle Motion / Audio
+→ code variants / multi-line
+→ World Map
 
 [現在]
-#81 World Map / Area Select
+#85 複数Area routing / lookup基盤
 
 [次]
-2つ目のArea
-→ 学習コンテンツ拡張
-→ Quest / Shop / 装備等のRPG深化
+TypeScript Frontier
+→ TypeScript Battles / Field / Boss
+→ 必要に応じJavaScript学習拡張
+
+[その後]
+Quest / Shop / 装備等のRPG深化
 
 [必要になってから]
 Backend / Login / Cloud Save / Ranking
 ```
 
-**Battleだけを増やしてRPGの外側が無い状態へ戻さないこと**、そして新しいRPG要素も常にコード読解の意思決定へつなげることを基本方針とする。
+**Battleだけを増やしてRPGの外側が無い状態へ戻さないこと**、そして新しいAreaでもコード読解をゲーム上の意思決定にすることを基本方針とする。
