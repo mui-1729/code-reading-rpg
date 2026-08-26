@@ -16,39 +16,30 @@ describe('area definitions', () => {
     }
   })
 
-  it('available Areaだけが実routeを持つ', () => {
+  it('available AreaだけがField入口を持つ', () => {
     expect(availableAreas.map((area) => area.id)).toEqual([
       JAVASCRIPT_AREA_ID,
       TYPESCRIPT_AREA_ID,
     ])
 
     for (const area of areas) {
-      const routes = Object.values(area.routes)
       if (area.availability === 'available') {
-        expect(routes.every((route) => route !== null)).toBe(true)
+        expect(area.routes.field).not.toBeNull()
       } else {
-        expect(routes.every((route) => route === null)).toBe(true)
+        expect(area.routes.field).toBeNull()
       }
     }
   })
 
-  it('JavaScript既存routeを維持しTypeScript FrontierをAVAILABLEにする', () => {
+  it('Area選択から直接Fieldへ入る', () => {
     expect(areaById[JAVASCRIPT_AREA_ID]).toMatchObject({
       availability: 'available',
-      routes: {
-        stageSelect: '/javascript',
-        field: '/javascript/field',
-        complete: '/javascript/complete',
-      },
+      routes: { field: '/javascript/field' },
       bossBattleId: 3,
     })
     expect(areaById[TYPESCRIPT_AREA_ID]).toMatchObject({
       availability: 'available',
-      routes: {
-        stageSelect: '/typescript',
-        field: '/typescript/field',
-        complete: '/typescript/complete',
-      },
+      routes: { field: '/typescript/field' },
       bossBattleId: 6,
     })
   })
