@@ -1,5 +1,11 @@
+export type PlayerInventory = {
+  patchKit: number
+}
+
 export type PlayerProgress = {
   exp: number
+  gold: number
+  inventory: PlayerInventory
   clearedStageIds: number[]
   clearedAreaIds: string[]
   completedSideQuestIds: string[]
@@ -16,6 +22,7 @@ export type PlayerStats = {
 export type BattleVictoryInput = {
   stageId: number
   expReward: number
+  goldReward?: number
   nextStageId?: number
   unlockSkillId?: string
   clearAreaId?: string
@@ -23,6 +30,7 @@ export type BattleVictoryInput = {
 
 export type BattleVictoryReward = {
   expGained: number
+  goldGained: number
   previousLevel: number
   newLevel: number
   firstClear: boolean

@@ -8,11 +8,18 @@ import {
 } from './storage'
 
 const initialSkills = ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label']
+const emptyEconomy = {
+  gold: 0,
+  inventory: { patchKit: 0 },
+}
 
 describe('player progress storage', () => {
-  it('version付きschemaで複数AreaとSide Quest進行をserialize / restoreできる', () => {
+  it('v4 schemaでGold・Inventoryを含む進行をserialize / restoreできる', () => {
     const progress = {
+      ...createInitialPlayerProgress(),
       exp: 520,
+      gold: 75,
+      inventory: { patchKit: 2 },
       clearedStageIds: [1, 2, 3, 4, 5, 6],
       clearedAreaIds: ['javascript', 'typescript'],
       completedSideQuestIds: ['javascript-second-pass'],
@@ -35,7 +42,7 @@ describe('player progress storage', () => {
     expect(restorePlayerProgress(raw)).toEqual(progress)
   })
 
-  it('schema v1の保存データをArea未クリア・Side Quest未完了の現行progressへmigrationする', () => {
+  it('schema v1をv4へmigrationし、既存進行を維持してEconomyは0から始める', () => {
     const raw = JSON.stringify({
       version: 1,
       progress: {
@@ -48,6 +55,7 @@ describe('player progress storage', () => {
 
     expect(restorePlayerProgress(raw)).toEqual({
       exp: 120,
+      ...emptyEconomy,
       clearedStageIds: [1, 2],
       clearedAreaIds: [],
       completedSideQuestIds: [],
@@ -56,7 +64,7 @@ describe('player progress storage', () => {
     })
   })
 
-  it('schema v1ですでにBossを倒していた場合はJavaScript Area CLEARを引き継ぐ', () => {
+  it('schema v1でBoss撃破済みならJavaScript Area CLEARを引き継ぐ', () => {
     const raw = JSON.stringify({
       version: 1,
       progress: {
@@ -70,9 +78,11 @@ describe('player progress storage', () => {
     const restored = restorePlayerProgress(raw)
     expect(restored.clearedAreaIds).toEqual(['javascript'])
     expect(restored.completedSideQuestIds).toEqual([])
+    expect(restored.gold).toBe(0)
+    expect(restored.inventory.patchKit).toBe(0)
   })
 
-  it('schema v2のsaveをSide Quest未完了のv3へmigrationする', () => {
+  it('schema v2をv4へmigrationし、Area進行を維持してEconomyは0から始める', () => {
     const raw = JSON.stringify({
       version: 2,
       progress: {
@@ -88,8 +98,31 @@ describe('player progress storage', () => {
     expect(restored.clearedStageIds).toEqual([1, 2, 3])
     expect(restored.clearedAreaIds).toEqual(['javascript'])
     expect(restored.completedSideQuestIds).toEqual([])
+    expect(restored.gold).toBe(0)
+    expect(restored.inventory.patchKit).toBe(0)
     expect(restored.unlockedStageIds).toEqual([1, 4, 2, 3])
     expect(restored.unlockedSkillIds).toEqual([...initialSkills, 'viper', 'moon-edge'])
+  })
+
+  it('schema v3をv4へmigrationし、Side Quest進行を維持してEconomyは0から始める', () => {
+    const raw = JSON.stringify({
+      version: 3,
+      progress: {
+        exp: 320,
+        clearedStageIds: [1, 2, 3],
+        clearedAreaIds: ['javascript'],
+        completedSideQuestIds: ['javascript-second-pass'],
+        unlockedStageIds: [1, 2, 3],
+        unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper', 'moon-edge'],
+      },
+    })
+
+    const restored = restorePlayerProgress(raw)
+    expect(restored.exp).toBe(320)
+    expect(restored.clearedAreaIds).toEqual(['javascript'])
+    expect(restored.completedSideQuestIds).toEqual(['javascript-second-pass'])
+    expect(restored.gold).toBe(0)
+    expect(restored.inventory.patchKit).toBe(0)
   })
 
   it('保存データがない場合は初期状態へfallbackする', () => {
@@ -105,6 +138,8 @@ describe('player progress storage', () => {
       version: 999,
       progress: {
         exp: 120,
+        gold: 10,
+        inventory: { patchKit: 1 },
         clearedStageIds: [1, 2],
         clearedAreaIds: [],
         completedSideQuestIds: [],
@@ -116,11 +151,13 @@ describe('player progress storage', () => {
     expect(restorePlayerProgress(raw)).toEqual(createInitialPlayerProgress())
   })
 
-  it('不正なPlayerProgress構造では初期状態へfallbackする', () => {
+  it('不正なv4 PlayerProgress構造では初期状態へfallbackする', () => {
     const raw = JSON.stringify({
       version: PLAYER_PROGRESS_SCHEMA_VERSION,
       progress: {
         exp: -1,
+        gold: -1,
+        inventory: { patchKit: -1 },
         clearedStageIds: ['1'],
         clearedAreaIds: ['javascript'],
         completedSideQuestIds: [],
@@ -132,11 +169,13 @@ describe('player progress storage', () => {
     expect(restorePlayerProgress(raw)).toEqual(createInitialPlayerProgress())
   })
 
-  it('現行schemaはSide Quest進行を含む有効なPlayerProgressだけを受け入れる', () => {
+  it('現行schemaはGold・Inventoryを含む有効なPlayerProgressだけを受け入れる', () => {
     const stored = {
       version: PLAYER_PROGRESS_SCHEMA_VERSION,
       progress: {
         exp: 40,
+        gold: 35,
+        inventory: { patchKit: 1 },
         clearedStageIds: [1],
         clearedAreaIds: [],
         completedSideQuestIds: [],
@@ -159,18 +198,19 @@ describe('player progress storage', () => {
     expect(
       migrateStoredPlayerProgress({
         ...stored,
-        progress: { ...stored.progress, clearedAreaIds: [1] },
+        progress: { ...stored.progress, inventory: { patchKit: -1 } },
       }),
     ).toBeNull()
   })
 
-  it('現行schemaでSide Quest fieldが欠けていれば安全にfallbackする', () => {
+  it('現行schemaでEconomy fieldが欠けていれば安全にfallbackする', () => {
     const raw = JSON.stringify({
       version: PLAYER_PROGRESS_SCHEMA_VERSION,
       progress: {
         exp: 220,
         clearedStageIds: [1, 2, 3],
         clearedAreaIds: ['javascript'],
+        completedSideQuestIds: [],
         unlockedStageIds: [1, 2, 3],
         unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper'],
       },

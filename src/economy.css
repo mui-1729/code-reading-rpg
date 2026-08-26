@@ -1,0 +1,98 @@
+.area-shop-button {
+  min-width: 92px;
+}
+
+.shop-overlay {
+  z-index: 90;
+}
+
+.shop-panel {
+  position: relative;
+  width: min(460px, calc(100vw - 32px));
+  padding: 20px;
+}
+
+.shop-panel h2 {
+  margin: 8px 0 16px;
+}
+
+.shop-wallet {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px;
+}
+
+.shop-wallet span,
+.shop-stock {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  opacity: 0.72;
+}
+
+.shop-wallet strong {
+  color: #f5d742;
+}
+
+.shop-item {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 14px;
+}
+
+.shop-item > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.shop-item-name {
+  font-weight: 900;
+}
+
+.shop-item p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  opacity: 0.78;
+}
+
+.economy-progress-stat strong {
+  color: #f5d742;
+}
+
+.battle-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.battle-item-row > span {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  opacity: 0.64;
+}
+
+.patch-kit-action {
+  min-height: 36px;
+  padding: 7px 10px;
+  font-size: 0.72rem;
+}
+
+@media (max-width: 720px) {
+  .shop-panel {
+    width: min(420px, calc(100vw - 20px));
+    max-height: 82vh;
+    overflow: auto;
+  }
+
+  .battle-item-row {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}

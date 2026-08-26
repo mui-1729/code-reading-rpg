@@ -2,7 +2,7 @@
 
 ## 1. 目的
 
-Battleだけで完結せず、探索・成長・再挑戦までを1つのRPG loopとして扱う。
+Battleだけで完結せず、探索・成長・報酬利用・再挑戦までを1つのRPG loopとして扱う。
 
 ```text
 World Map
@@ -13,7 +13,9 @@ Quest / NPC / Gate
 ↓
 Battle
 ↓
-EXP / CLEAR / unlock
+EXP / Gold / CLEAR / unlock
+↓
+必要ならSHOPでsupport item購入
 ↓
 Fieldへ戻る
 ↓
@@ -29,6 +31,10 @@ Side Quest / 再攻略
 ```ts
 PlayerProgress = {
   exp: number
+  gold: number
+  inventory: {
+    patchKit: number
+  }
   clearedStageIds: number[]
   clearedAreaIds: string[]
   completedSideQuestIds: string[]
@@ -43,6 +49,8 @@ Level / maxHP / POWER倍率はEXPから導出し、保存しない。
 
 ```text
 EXP 0
+Gold 0
+PATCH KIT 0
 Lv1
 maxHP 100
 Stage 1 / 4 unlocked
@@ -79,12 +87,12 @@ Enemyはcurrent Player Levelへ追従させない。
 = Enemy HP / attack / composition / learning theme
 
 Player側
-= Level / maxHP / POWER倍率 / unlock
+= Level / maxHP / POWER倍率 / unlock / support item
 ```
 
-Levelはコード読解を不要にするためではなく、戦える余裕を少し増やすために使う。
+LevelやItemはコード読解を不要にするためではなく、戦える余裕を少し増やすために使う。
 
-## 5. Stage / Area
+## 5. Stage / Area / Gold
 
 ```text
 JavaScript Kingdom
@@ -97,6 +105,7 @@ TypeScript Frontier
 初回CLEAR:
 
 - EXP
+- Gold
 - Stage CLEAR
 - next Stage unlock
 - Skill unlock
@@ -104,10 +113,34 @@ TypeScript Frontier
 
 replay:
 
-- Battle EXPは再獲得可能
+- Battle EXP / Goldは再獲得可能
 - CLEAR / unlockは重複しない
 
-## 6. 再攻略
+Gold rewardはBattle dataの`goldReward`がsource of truth。
+
+## 6. Shop / PATCH KIT
+
+Area画面のheaderから必要時だけ`SHOP`を開く。
+
+現在の商品:
+
+```text
+PATCH KIT
+price: 30 G
+heal: max 24 HP
+```
+
+Battle中:
+
+- 所持している時だけcompact actionを表示
+- HP満タンなら使用不可
+- 1Battleにつき1回だけ
+- 1個消費
+- 最大HPを超えて回復しない
+
+PATCH KITはTargetRule / Skill POWER / generator / solvabilityへ影響しない。
+
+## 7. 再攻略
 
 強い敵に負けた場合:
 
@@ -116,9 +149,9 @@ replay:
 ↓
 別seedで再攻略
 ↓
-EXP
+EXP / Gold
 ↓
-Level Up
+Level Up / 必要ならPATCH KIT購入
 ↓
 再挑戦
 ```
@@ -147,7 +180,7 @@ AREA CLEAR
 
 bonusはSide Questごとに1回だけ。
 
-## 7. QuestとProgress
+## 8. QuestとProgress
 
 Main Quest:
 
@@ -162,13 +195,15 @@ Side Quest:
 
 Quest UIはBattle中へ常設しない。
 
-## 8. LocalStorage
+## 9. LocalStorage
 
-schema version: `3`
+schema version: `4`
 
 保存:
 
 - EXP
+- Gold
+- PATCH KIT所持数
 - Stage CLEAR
 - Area CLEAR
 - Side Quest complete ID
@@ -181,16 +216,18 @@ schema version: `3`
 - Battle turn
 - Enemy current HP
 - selected Skill
+- PATCH KITのBattle内使用済みstate
 - animation state
 
 migration:
 
-- v1 → Area CLEARを復元しSide Questは未完了
-- v2 → Area進行を維持しSide Questは未完了
-- v3 → current schema
+- v1 → 既存進行を復元しEconomyは0から開始
+- v2 → Area進行を維持しEconomyは0から開始
+- v3 → Side Quest進行を維持しEconomyは0から開始
+- v4 → current schema
 - 不正data / 未知version → 初期状態へfallback
 
-## 9. Field / World
+## 10. Field / World
 
 現在:
 
@@ -203,17 +240,18 @@ migration:
 - Main Quest marker
 - 学習看板
 - Code Codex
+- Area SHOP
 
 Field objectを増やしすぎない。新しい学習概念はCodexを優先し、施設やNPCが増えて1画面が窮屈になったら複数screen / camera追従へ移行する。
 
-## 10. 今後のRPG拡張
+## 11. 今後のRPG拡張
 
 優先候補:
 
 ```text
 Side Quest（実装済み）
 ↓
-Gold / Shop / Itemの最小loop
+Gold / Shop / PATCH KIT（実装済み）
 ↓
 3つ目のArea
 ↓
@@ -224,7 +262,7 @@ Boss固有mechanic
 
 避けること:
 
-- 装備だけでコードを読まず勝てる
+- 装備やItemだけでコードを読まず勝てる
 - Rare Itemが全Skillの上位互換
 - Grind量だけで攻略が決まる
 - Player Levelに合わせてEnemyを自動弱体化する

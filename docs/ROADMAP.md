@@ -4,14 +4,14 @@
 
 `CODE//READ RPG`を、コードを読む行為がそのままゲーム上の判断になるRPGとして拡張する。
 
-現在はJavaScript Kingdom / TypeScript Frontierの2 Area、Field探索、NPC、学習看板、Code Codex、Main Quest、Side Quest、RPG進行、複数行・複合codeまで実装済み。
+現在はJavaScript Kingdom / TypeScript Frontierの2 Area、Field探索、NPC、学習看板、Code Codex、Main Quest、Side Quest、RPG進行、CODE DATA、Gold / Shop / PATCH KIT、複数行・複合codeまで実装済み。
 
 守ること:
 
 1. コードを読まないと正しい行動を選びにくい
 2. 同じ手順の暗記だけで攻略できない
 3. 読んだ結果がゲーム内の意思決定へつながる
-4. LevelやPOWERだけで読解を不要にしない
+4. Level / POWER / Itemだけで読解を不要にしない
 5. コンテンツを増やしても自動テストできる
 6. 学習オブジェクトを増やしてもFieldの進行経路を塞がない
 7. UIから分かることを説明文で重ねない
@@ -30,6 +30,7 @@
 - 同一効果の複数code variant
 - 3行以上の複合code
 - 行別CODE HELP
+- CODE DATA / Enemy runtime data / 中間値確認
 - Battle motion / damage feedback
 - Battle Log
 
@@ -45,10 +46,7 @@
 - nullish coalescing `??`
 - nested object
 - object / 中間変数
-- `filter() → sort() → [0]`
-- `filter() → some() / every() → ? :`
-- `filter() → map() → reduce()`
-- Bossで複数の上記概念を組み合わせるvariant
+- 複数methodをまたぐBoss読解
 
 ### TypeScript学習
 
@@ -62,7 +60,7 @@
 - `keyof` / indexed access
 - genericの初歩
 - `Pick<T, K>`
-- JavaScriptの配列処理 / destructuringと型情報を組み合わせるBoss読解
+- JavaScript配列処理と型情報を組み合わせるBoss読解
 
 ### RPG進行
 
@@ -72,17 +70,18 @@
 - Stage CLEAR / next Stage unlock
 - Skill unlock
 - 再挑戦
-- LocalStorage / migration / reset
 - Boss / Area CLEAR
-- Main Quest
-- Quest Tracker
-- Fieldの`NEXT` / `!` marker
-- Battle勝利後のQuest更新feedback
-- JavaScript / TypeScriptの再攻略Side Quest
+- Main Quest / Quest Tracker / marker
+- JavaScript / TypeScript再攻略Side Quest
 - Side Quest一回限りbonus EXP
-- save schema v3 / v1・v2 migration
+- Battle Gold reward
+- Area SHOP
+- PATCH KIT購入 / Battle中回復 / 1Battle 1回制限
+- save schema v4
+- v1 / v2 / v3 migration
+- LocalStorage / reset
 
-Enemyはcurrent Player Levelへ自動追従させない。
+Enemyはcurrent Player Levelへ自動追従させない。PATCH KITもTargetRule / Skill POWER / generator / solvabilityを変更しない。
 
 ### Field / World
 
@@ -105,7 +104,7 @@ Enemyはcurrent Player Levelへ自動追従させない。
 - SE / mute / BGM・SE別volume
 - Sound Settings modal
 - Web Audio API / autoplay制約対応
-- 不要な常設説明文を減らすUI方針
+- 必要時だけ開くShop / Settings / Codex / CODE DATA
 - `prefers-reduced-motion`
 - Node.js 24
 - Vitest
@@ -137,7 +136,9 @@ Skillを選ぶ
 ↓
 Battle結果
 ↓
-EXP / Level / Stage CLEAR / Skill unlock / Quest更新
+EXP / Gold / Level / CLEAR / unlock / Quest更新
+↓
+必要ならArea SHOPでPATCH KIT購入
 ↓
 Fieldへ復帰 or 次Stage
 ↓
@@ -157,20 +158,6 @@ Field看板は補助であり必須ではない。構文追加のたびに看板
 ## 4. JavaScript Kingdom
 
 Battle 1〜2では単体〜少数概念、Battle 3 Bossでは中間結果を追う複合読解へ進む。
-
-発展例:
-
-```js
-const alive = enemies.filter(({ hp }) => hp > 0)
-const wrapped = alive.map(enemy => ({ enemy, stats: { hp: enemy.hp } }))
-wrapped.sort((a, b) => (a.stats?.hp ?? Infinity) - (b.stats?.hp ?? Infinity))[0].enemy
-```
-
-```js
-const alive = enemies.filter(({ hp }) => hp > 0)
-const allStable = alive.every(({ hp }) => hp >= 50)
-allStable ? [] : alive
-```
 
 Side Quest:
 
@@ -224,18 +211,42 @@ TYPE RECHECK
 
 ---
 
-## 6. 次のRPG拡張
+## 6. Gold / Shop / PATCH KIT
 
-Main Quest / Side Questまで成立したため、次は報酬を使う場所を作る。
+最小economy loopは実装済み。
 
-優先候補:
+```text
+Battle
+↓
+Gold
+↓
+Area SHOP
+↓
+PATCH KIT
+↓
+Battleで限定的にHP回復
+```
 
-1. Gold / Shop / Itemの最小loop
-2. 3つ目のArea（SQL / React候補）
-3. Boss固有mechanic
-4. Field複数screen / camera追従
+現在のPATCH KIT:
 
-Gold / Itemを入れる場合も、読解を飛ばせる単純な攻撃力inflationにはしない。
+- 30 G
+- 最大24 HP回復
+- 1Battle 1回
+- 所持数を1個消費
+- HP満タンでは使用不可
+
+今後Itemを追加する場合も、コード読解を飛ばせる攻撃力inflationにはしない。詳細は`docs/ECONOMY.md`をsource of truthとする。
+
+---
+
+## 7. 次のRPG拡張
+
+Economyまで成立したため、次の優先候補:
+
+1. 3つ目のArea（SQL / React候補）
+2. Boss固有mechanic
+3. Field複数screen / camera追従
+4. 必要性が明確になった場合のみ追加support item
 
 追加条件:
 
@@ -243,36 +254,6 @@ Gold / Itemを入れる場合も、読解を飛ばせる単純な攻撃力inflat
 - game decisionへ影響する
 - 読解をLevel / Itemで不要にしない
 - unit test / solvability / reachabilityで品質を固定できる
-
----
-
-## 7. Gold / Shop / Item候補
-
-最小loop候補:
-
-```text
-Battle / Quest
-↓
-Gold
-↓
-Shop
-↓
-少数Item
-↓
-Battleで限定的に使用
-```
-
-候補Item:
-
-- 1 Battle 1回だけHPを少量回復
-- 次のEnemy attackを少量軽減
-- CODE HELPを開くこと自体へのcostは付けない
-
-避けること:
-
-- Itemだけでtarget判断を無視できる
-- 常設Shop panelを増やす
-- 複雑なinventoryを最初から作る
 
 ---
 
@@ -319,22 +300,21 @@ Battle MVP
 → World Map / 複数Area routing
 → Field学習看板
 → JavaScript構文拡張
-→ 複数構文・3行code / 行別CODE HELP
 → TypeScript Frontier / Battle 4〜6
 → Main Quest / Quest Tracker / marker / victory feedback
 → Code Codex
-→ UI常設情報の整理
 → JavaScript / TypeScript発展構文・Boss複合variant
 → 再攻略Side Quest / bonus EXP / save v3
+→ Runtime CODE DATA
+→ Gold / Shop / PATCH KIT / save v4
 
 [次]
-Gold / Shop / Itemの最小loop
-or
 3つ目のArea
+or
+Boss固有mechanic
 
 [その後]
-Boss固有mechanic
-→ 複数screen Field
+複数screen Field
 
 [必要になってから]
 Backend / Login / Cloud Save / Ranking

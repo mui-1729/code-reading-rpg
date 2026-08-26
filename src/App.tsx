@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { gameAudio } from './audio/gameAudio'
+import { consumePatchKit, PATCH_KIT_HEAL } from './economy'
 import {
   areaById,
   battles,
@@ -72,6 +73,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
   const [skillWindup, setSkillWindup] = useState(false)
   const [enemyTurnActive, setEnemyTurnActive] = useState(false)
   const [isResolving, setIsResolving] = useState(false)
+  const [patchKitUsed, setPatchKitUsed] = useState(false)
   const [victoryReward, setVictoryReward] = useState<BattleVictoryReward | null>(null)
 
   const availableSkills = useMemo(
@@ -109,6 +111,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
     clearMotionState()
     setExplainedSkill(null)
     setIsResolving(false)
+    setPatchKitUsed(false)
     setVictoryReward(null)
     setPhase('battle')
   }
@@ -117,6 +120,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
     const battleResult = applyBattleVictory(progress, {
       stageId: battle.id,
       expReward: battle.expReward,
+      goldReward: battle.goldReward,
       nextStageId: nextBattle?.id,
       unlockSkillId: battle.unlockSkillId,
       clearAreaId: battle.isBoss ? battle.areaId : undefined,
@@ -251,6 +255,19 @@ function App({ battleId, seed, returnTo }: AppProps) {
 
     gameAudio.playSe('select')
     setSelectedSkillId(skill.id)
+  }
+
+  const handlePatchKit = () => {
+    if (phase !== 'battle' || isResolving || patchKitUsed) return
+
+    const result = consumePatchKit(progress, playerHp, playerStats.maxHp)
+    if (!result.consumed) return
+
+    gameAudio.playSe('confirm')
+    setProgress(result.progress)
+    setPlayerHp(result.hp)
+    setPatchKitUsed(true)
+    addLog('system', `PATCH KIT → +${result.healed} HP`)
   }
 
   const goNextBattle = () => {
@@ -413,6 +430,20 @@ function App({ battleId, seed, returnTo }: AppProps) {
       </section>
 
       <section className="battle-console pixel-window">
+        {progress.inventory.patchKit > 0 && (
+          <div className="battle-item-row">
+            <button
+              type="button"
+              className="secondary-button patch-kit-action"
+              onClick={handlePatchKit}
+              disabled={isResolving || patchKitUsed || playerHp >= playerStats.maxHp}
+            >
+              PATCH KIT ×{progress.inventory.patchKit} · +{PATCH_KIT_HEAL} HP
+            </button>
+            {patchKitUsed && <span>USED THIS BATTLE</span>}
+          </div>
+        )}
+
         <div className="skill-grid">
           {availableSkills.map((skill) => {
             const selected = selectedSkillId === skill.id
@@ -462,6 +493,10 @@ function App({ battleId, seed, returnTo }: AppProps) {
                 <div className="reward-stat">
                   <span>EXP GAINED</span>
                   <strong>+{victoryReward.expGained}</strong>
+                </div>
+                <div className="reward-stat">
+                  <span>GOLD GAINED</span>
+                  <strong>+{victoryReward.goldGained} G</strong>
                 </div>
                 <div className="reward-stat">
                   <span>LEVEL</span>

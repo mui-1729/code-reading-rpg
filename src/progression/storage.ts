@@ -2,33 +2,42 @@ import { createInitialPlayerProgress } from './progression'
 import type { PlayerProgress } from './types'
 
 export const PLAYER_PROGRESS_STORAGE_KEY = 'code-reading-rpg:player-progress'
-export const PLAYER_PROGRESS_SCHEMA_VERSION = 3
+export const PLAYER_PROGRESS_SCHEMA_VERSION = 4
 
 const V1_JAVASCRIPT_BOSS_STAGE_ID = 3
 const V1_JAVASCRIPT_AREA_ID = 'javascript'
 
+type LegacyProgressV1 = {
+  exp: number
+  clearedStageIds: number[]
+  unlockedStageIds: number[]
+  unlockedSkillIds: string[]
+}
+
+type LegacyProgressV2 = LegacyProgressV1 & {
+  clearedAreaIds: string[]
+}
+
+type LegacyProgressV3 = LegacyProgressV2 & {
+  completedSideQuestIds: string[]
+}
+
 export type StoredPlayerProgressV1 = {
   version: 1
-  progress: {
-    exp: number
-    clearedStageIds: number[]
-    unlockedStageIds: number[]
-    unlockedSkillIds: string[]
-  }
+  progress: LegacyProgressV1
 }
 
 export type StoredPlayerProgressV2 = {
   version: 2
-  progress: {
-    exp: number
-    clearedStageIds: number[]
-    clearedAreaIds: string[]
-    unlockedStageIds: number[]
-    unlockedSkillIds: string[]
-  }
+  progress: LegacyProgressV2
 }
 
 export type StoredPlayerProgressV3 = {
+  version: 3
+  progress: LegacyProgressV3
+}
+
+export type StoredPlayerProgressV4 = {
   version: typeof PLAYER_PROGRESS_SCHEMA_VERSION
   progress: PlayerProgress
 }
@@ -42,13 +51,16 @@ const isStageIdArray = (value: unknown): value is number[] =>
 const isStringIdArray = (value: unknown): value is string[] =>
   Array.isArray(value) && value.every((item) => typeof item === 'string' && item.length > 0)
 
+const isNonNegativeInteger = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isInteger(value) && value >= 0
+
 const mergeUnique = <T,>(baseline: readonly T[], stored: readonly T[]): T[] => [
   ...new Set([...baseline, ...stored]),
 ]
 
 function parseCommonProgressFields(value: unknown) {
   if (!isRecord(value)) return null
-  if (typeof value.exp !== 'number' || !Number.isInteger(value.exp) || value.exp < 0) return null
+  if (!isNonNegativeInteger(value.exp)) return null
   if (!isStageIdArray(value.clearedStageIds)) return null
   if (!isStageIdArray(value.unlockedStageIds)) return null
   if (!isStringIdArray(value.unlockedSkillIds)) return null
@@ -63,15 +75,23 @@ function parseCommonProgressFields(value: unknown) {
   }
 }
 
+function withEmptyEconomy(progress: Omit<PlayerProgress, 'gold' | 'inventory'>): PlayerProgress {
+  return {
+    ...progress,
+    gold: 0,
+    inventory: { patchKit: 0 },
+  }
+}
+
 function parsePlayerProgressV2(value: unknown): PlayerProgress | null {
   const common = parseCommonProgressFields(value)
   if (!common || !isRecord(value) || !isStringIdArray(value.clearedAreaIds)) return null
 
-  return {
+  return withEmptyEconomy({
     ...common,
     clearedAreaIds: [...value.clearedAreaIds],
     completedSideQuestIds: [],
-  }
+  })
 }
 
 function parsePlayerProgressV3(value: unknown): PlayerProgress | null {
@@ -85,10 +105,22 @@ function parsePlayerProgressV3(value: unknown): PlayerProgress | null {
     return null
   }
 
-  return {
+  return withEmptyEconomy({
     ...common,
     clearedAreaIds: [...value.clearedAreaIds],
     completedSideQuestIds: [...value.completedSideQuestIds],
+  })
+}
+
+function parsePlayerProgressV4(value: unknown): PlayerProgress | null {
+  const legacy = parsePlayerProgressV3(value)
+  if (!legacy || !isRecord(value) || !isNonNegativeInteger(value.gold)) return null
+  if (!isRecord(value.inventory) || !isNonNegativeInteger(value.inventory.patchKit)) return null
+
+  return {
+    ...legacy,
+    gold: value.gold,
+    inventory: { patchKit: value.inventory.patchKit },
   }
 }
 
@@ -100,11 +132,11 @@ function migrateV1Progress(value: unknown): PlayerProgress | null {
     ? [V1_JAVASCRIPT_AREA_ID]
     : []
 
-  return {
+  return withEmptyEconomy({
     ...common,
     clearedAreaIds,
     completedSideQuestIds: [],
-  }
+  })
 }
 
 export function migrateStoredPlayerProgress(value: unknown): PlayerProgress | null {
@@ -115,18 +147,22 @@ export function migrateStoredPlayerProgress(value: unknown): PlayerProgress | nu
       return migrateV1Progress(value.progress)
     case 2:
       return parsePlayerProgressV2(value.progress)
-    case PLAYER_PROGRESS_SCHEMA_VERSION:
+    case 3:
       return parsePlayerProgressV3(value.progress)
+    case PLAYER_PROGRESS_SCHEMA_VERSION:
+      return parsePlayerProgressV4(value.progress)
     default:
       return null
   }
 }
 
 export function serializePlayerProgress(progress: PlayerProgress): string {
-  const stored: StoredPlayerProgressV3 = {
+  const stored: StoredPlayerProgressV4 = {
     version: PLAYER_PROGRESS_SCHEMA_VERSION,
     progress: {
       exp: progress.exp,
+      gold: progress.gold,
+      inventory: { patchKit: progress.inventory.patchKit },
       clearedStageIds: [...progress.clearedStageIds],
       clearedAreaIds: [...progress.clearedAreaIds],
       completedSideQuestIds: [...progress.completedSideQuestIds],
