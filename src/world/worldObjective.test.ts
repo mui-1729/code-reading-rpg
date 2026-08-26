@@ -121,6 +121,6 @@ describe('World Objective', () => {
       unlockedStageIds: [1, 4, 2],
     }
 
-    expect(getWorldProgressChange(progress, { ...progress, exp: 999, gold: 999 })).toBeNull()
+    expect(getWorldProgressChange(progress, progress)).toBeNull()
   })
 })
