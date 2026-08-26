@@ -35,6 +35,43 @@ function getDefaultVariant(definition: SkillDefinition): CodeVariant {
   return defaultVariant
 }
 
+function shortHash(value: string): string {
+  let hash = 2166136261
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index)
+    hash = Math.imul(hash, 16777619)
+  }
+  return (hash >>> 0).toString(36)
+}
+
+function makeBattleUniqueVariant(
+  variant: CodeVariant,
+  battleId: number,
+  seed: Seed,
+  skillId: string,
+): CodeVariant {
+  const aliases = ['foes', 'roster', 'units', 'opponents', 'targets']
+  const random = createSeededRandom(`${battleId}:${String(seed)}:${skillId}:alias`)
+  const base = aliases[random.int(0, aliases.length - 1)] ?? 'foes'
+  const alias = `${base}_${battleId}_${shortHash(String(seed)).slice(0, 5)}`
+  const originalLines = variant.code.split('\n')
+  const rewritten = variant.code.replace(/\benemies\b/g, alias)
+  const generatedHelp = originalLines.map((_, index) =>
+    index === originalLines.length - 1
+      ? 'この行が最終的にどのEnemyを返すかを読む。'
+      : 'この中間処理が次の行へ渡す値を確認する。',
+  )
+
+  return {
+    ...variant,
+    code: `const ${alias} = enemies\n${rewritten}`,
+    codeHelpLines: [
+      `${alias} はこのBattle時点のEnemy一覧。Battleごとに別名になる。`,
+      ...(variant.codeHelpLines ?? generatedHelp),
+    ],
+  }
+}
+
 export function getSkillCardForBattle(
   skillId: string,
   battleId: number,
@@ -52,10 +89,13 @@ export function getSkillCardForBattle(
   }
 
   const random = createSeededRandom(`${battleId}:${String(seed)}:${skillId}:code-variant`)
-  const variant = eligibleVariants[random.int(0, eligibleVariants.length - 1)]
-  if (!variant) throw new Error(`Skill ${skillId} has no code variant`)
+  const selected = eligibleVariants[random.int(0, eligibleVariants.length - 1)]
+  if (!selected) throw new Error(`Skill ${skillId} has no code variant`)
 
-  return createSkillCard(definition, variant)
+  return createSkillCard(
+    definition,
+    makeBattleUniqueVariant(selected, battleId, seed, skillId),
+  )
 }
 
 export function getSkillCardsForBattle(battle: Battle, seed: Seed): SkillCard[] {

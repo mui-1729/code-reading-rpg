@@ -18,6 +18,7 @@ import './tutorial.css'
 import './inspector.css'
 import './economy.css'
 import './simplify.css'
+import './pause.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

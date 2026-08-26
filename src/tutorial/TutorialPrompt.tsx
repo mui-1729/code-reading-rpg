@@ -10,7 +10,7 @@ type TutorialCopy = {
   className: string
 }
 
-const FIELD_PATHS = ['/javascript/field', '/typescript/field']
+const FIELD_PATHS = ['/world', '/javascript/field', '/typescript/field']
 const BATTLE_PATH_PATTERN = /^\/(javascript|typescript)\/battle\/[^/]+$/
 
 function getRouteKind(): RouteKind {
@@ -21,25 +21,40 @@ function getRouteKind(): RouteKind {
 }
 
 function getFieldMap() {
-  return document.querySelector<HTMLElement>('.field-map')
+  return document.querySelector<HTMLElement>('.world-viewport, .field-map')
 }
 
 function getFieldTiles() {
   const map = getFieldMap()
   if (!map) return []
   return Array.from(map.children).filter((child): child is HTMLElement =>
-    child instanceof HTMLElement && child.classList.contains('field-tile'),
+    child instanceof HTMLElement &&
+    (child.classList.contains('field-tile') || child.classList.contains('world-tile')),
   )
 }
 
 function getPlayerTileIndex() {
   const tiles = getFieldTiles()
-  return tiles.findIndex((tile) => tile.querySelector('.field-player'))
+  return tiles.findIndex((tile) => tile.querySelector('.field-player, .world-player-sprite'))
+}
+
+function getPlayerPositionToken(): string | number | null {
+  const worldPlayer = document.querySelector('.world-player-sprite')
+  const worldTile = worldPlayer?.parentElement
+  if (worldTile) {
+    const x = worldTile.dataset.worldX
+    const y = worldTile.dataset.worldY
+    if (x !== undefined && y !== undefined) return `${x}:${y}`
+  }
+
+  const index = getPlayerTileIndex()
+  return index >= 0 ? index : null
 }
 
 function getFieldWidth() {
   const map = getFieldMap()
   if (!map) return null
+  if (map.classList.contains('world-viewport')) return 11
   const match = map.style.gridTemplateColumns.match(/repeat\((\d+)/)
   return match ? Number(match[1]) : null
 }
@@ -53,24 +68,34 @@ function getFacingOffset(width: number) {
   return null
 }
 
-function hasInteractionInFront() {
+function hasInteractionNearby() {
   if (getRouteKind() !== 'field') return false
   if (document.querySelector('.dialogue-window, .learning-hint-window')) return false
 
+  const map = getFieldMap()
   const width = getFieldWidth()
   const tiles = getFieldTiles()
   const playerIndex = getPlayerTileIndex()
-  if (!width || playerIndex < 0) return false
+  if (!map || !width || playerIndex < 0) return false
+
+  if (map.classList.contains('world-viewport')) {
+    const offsets = [-width, width, -1, 1]
+    return offsets.some((offset) => {
+      if (offset === -1 && playerIndex % width === 0) return false
+      if (offset === 1 && playerIndex % width === width - 1) return false
+      const targetIndex = playerIndex + offset
+      return targetIndex >= 0 &&
+        targetIndex < tiles.length &&
+        Boolean(tiles[targetIndex]?.querySelector('.world-object'))
+    })
+  }
 
   const offset = getFacingOffset(width)
   if (offset === null) return false
-
   const targetIndex = playerIndex + offset
   if (targetIndex < 0 || targetIndex >= tiles.length) return false
-
   if (offset === -1 && playerIndex % width === 0) return false
   if (offset === 1 && playerIndex % width === width - 1) return false
-
   return tiles[targetIndex]?.classList.contains('field-object') ?? false
 }
 
@@ -90,9 +115,10 @@ export function TutorialPrompt() {
     skip,
   } = useTutorial()
   const [, setRevision] = useState(0)
-  const initialPlayerTileRef = useRef<number | null>(null)
+  const initialPlayerPositionRef = useRef<string | number | null>(null)
   const routeKind = typeof window === 'undefined' ? 'other' : getRouteKind()
-  const interactionReady = routeKind === 'field' && hasInteractionInFront()
+  const worldRoute = typeof window !== 'undefined' && window.location.pathname === '/world'
+  const interactionReady = routeKind === 'field' && hasInteractionNearby()
   const selectedSkill =
     routeKind === 'battle'
       ? document.querySelector<HTMLButtonElement>('.skill-card.selected')
@@ -112,11 +138,7 @@ export function TutorialPrompt() {
       })
     })
 
-    observer.observe(document.body, {
-      childList: true,
-      characterData: true,
-      subtree: true,
-    })
+    observer.observe(document.body, { childList: true, characterData: true, subtree: true })
     return () => {
       observer.disconnect()
       if (frame !== 0) window.cancelAnimationFrame(frame)
@@ -130,21 +152,19 @@ export function TutorialPrompt() {
 
   useEffect(() => {
     if (state.status !== 'active' || state.phase !== 'field-move' || routeKind !== 'field') {
-      initialPlayerTileRef.current = null
+      initialPlayerPositionRef.current = null
       return
     }
 
-    const currentIndex = getPlayerTileIndex()
-    if (currentIndex < 0) return
-
-    if (initialPlayerTileRef.current === null) {
-      initialPlayerTileRef.current = currentIndex
+    const currentPosition = getPlayerPositionToken()
+    if (currentPosition === null) return
+    if (initialPlayerPositionRef.current === null) {
+      initialPlayerPositionRef.current = currentPosition
       return
     }
-
-    if (currentIndex !== initialPlayerTileRef.current) {
+    if (currentPosition !== initialPlayerPositionRef.current) {
       completeFieldMove()
-      initialPlayerTileRef.current = null
+      initialPlayerPositionRef.current = null
     }
   }, [completeFieldMove, routeKind, state.phase, state.status])
 
@@ -156,8 +176,8 @@ export function TutorialPrompt() {
 
       if (
         state.phase === 'field-interact' &&
-        target.closest('.field-interact') &&
-        hasInteractionInFront()
+        target.closest('.field-interact, .world-interact') &&
+        hasInteractionNearby()
       ) {
         completeFieldInteraction()
         return
@@ -166,14 +186,10 @@ export function TutorialPrompt() {
       if (state.phase !== 'battle') return
       const skillButton = target.closest<HTMLButtonElement>('.skill-card')
       if (!skillButton || skillButton.disabled) return
-
-      // Capture phaseでReactのonClickより先に現在の選択状態を読む。
-      // これにより1回目のclickをSELECT、選択済みcardの2回目だけをEXECUTEとして扱える。
       if (skillButton.classList.contains('selected')) {
         completeBattle()
         return
       }
-
       window.requestAnimationFrame(() => setRevision((current) => current + 1))
     }
 
@@ -182,7 +198,7 @@ export function TutorialPrompt() {
         state.status === 'active' &&
         state.phase === 'field-interact' &&
         (event.key === 'Enter' || event.key === ' ') &&
-        hasInteractionInFront()
+        hasInteractionNearby()
       ) {
         completeFieldInteraction()
       }
@@ -201,14 +217,15 @@ export function TutorialPrompt() {
     if (state.status !== 'active') return clearHighlights
 
     if (state.phase === 'field-move' && routeKind === 'field') {
-      document.querySelector('.field-dpad')?.classList.add('tutorial-highlight')
-      document.querySelector('.field-player')?.classList.add('tutorial-highlight-soft')
-    } else if (
-      state.phase === 'field-interact' &&
-      routeKind === 'field' &&
-      interactionReady
-    ) {
-      document.querySelector('.field-interact')?.classList.add('tutorial-highlight')
+      document.querySelector('.field-dpad, .world-dpad')?.classList.add('tutorial-highlight')
+      document.querySelector('.field-player, .world-player-sprite')?.classList.add('tutorial-highlight-soft')
+    } else if (state.phase === 'field-interact' && routeKind === 'field') {
+      if (interactionReady) {
+        document.querySelector('.field-interact, .world-interact')?.classList.add('tutorial-highlight')
+      }
+      if (worldRoute) {
+        document.querySelector('.world-object')?.classList.add('tutorial-highlight-soft')
+      }
     } else if (state.phase === 'battle' && routeKind === 'battle' && battleReady) {
       if (selectedSkill) selectedSkill.classList.add('tutorial-highlight')
       else document.querySelector('.skill-grid')?.classList.add('tutorial-highlight')
@@ -216,13 +233,11 @@ export function TutorialPrompt() {
     }
 
     return clearHighlights
-  }, [battleReady, interactionReady, routeKind, selectedSkill, state.phase, state.status])
+  }, [battleReady, interactionReady, routeKind, selectedSkill, state.phase, state.status, worldRoute])
 
   if (state.status !== 'active') return null
 
-  const coarsePointer =
-    typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
-
+  const coarsePointer = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
   let copy: TutorialCopy | null = null
 
   if (state.phase === 'field-move' && routeKind === 'field') {
@@ -231,12 +246,19 @@ export function TutorialPrompt() {
       title: coarsePointer ? 'D-Padで歩いてみよう' : 'WASD / Arrowで歩いてみよう',
       className: 'tutorial-prompt-field',
     }
-  } else if (state.phase === 'field-interact' && routeKind === 'field' && interactionReady) {
-    copy = {
-      label: 'INTERACT',
-      title: coarsePointer ? 'INTERACTを押して調べる' : 'Enter / Spaceで調べる',
-      className: 'tutorial-prompt-field',
-    }
+  } else if (state.phase === 'field-interact' && routeKind === 'field') {
+    copy = interactionReady
+      ? {
+          label: 'INTERACT',
+          title: coarsePointer ? 'INTERACTを押して調べる' : 'Enter / Spaceで調べる',
+          className: 'tutorial-prompt-field',
+        }
+      : {
+          label: 'INTERACT',
+          title: worldRoute ? 'BYTE / SHOP / BOSSの隣まで歩こう' : '調べられるものの前まで歩こう',
+          detail: '隣まで来るとINTERACTできる',
+          className: 'tutorial-prompt-field',
+        }
   } else if (state.phase === 'battle' && routeKind === 'battle' && battleReady) {
     copy = selectedSkill
       ? {
@@ -262,9 +284,7 @@ export function TutorialPrompt() {
         <strong>{copy.title}</strong>
         {copy.detail && <small>{copy.detail}</small>}
       </div>
-      <button type="button" className="tutorial-skip" onClick={skip}>
-        SKIP
-      </button>
+      <button type="button" className="tutorial-skip" onClick={skip}>SKIP</button>
     </aside>
   )
 }
