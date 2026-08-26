@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import {
+  areaById,
   battles,
   generateBattle,
   getTargets,
@@ -37,13 +38,14 @@ function App({ battleId, seed }: AppProps) {
   const navigate = useNavigate()
   const { progress, setProgress } = useProgress()
   const playerStats = getPlayerStats(progress.exp)
-  const battleIndex = battles.findIndex((candidate) => candidate.id === battleId)
-  const nextBattle = battles[battleIndex + 1]
   const battle = useMemo(() => {
     const generated = generateBattle(battleId, seed)
     if (!generated) throw new Error(`Unknown battle: ${battleId}`)
     return generated
   }, [battleId, seed])
+  const battleIndex = battles.findIndex((candidate) => candidate.id === battleId)
+  const nextBattleCandidate = battles[battleIndex + 1]
+  const nextBattle = nextBattleCandidate?.areaId === battle.areaId ? nextBattleCandidate : undefined
 
   const [phase, setPhase] = useState<Phase>('battle')
   const [playerHp, setPlayerHp] = useState(() => playerStats.maxHp)
@@ -84,6 +86,7 @@ function App({ battleId, seed }: AppProps) {
       expReward: battle.expReward,
       nextStageId: nextBattle?.id,
       unlockSkillId: battle.unlockSkillId,
+      clearAreaId: battle.isBoss ? battle.areaId : undefined,
     })
 
     setProgress(result.progress)
@@ -178,6 +181,9 @@ function App({ battleId, seed }: AppProps) {
   const goStageSelect = () => navigate({ to: '/javascript' })
   const unlockedSkill = victoryReward?.unlockedSkillId
     ? skills[victoryReward.unlockedSkillId]
+    : null
+  const clearedArea = victoryReward?.clearedAreaId
+    ? areaById[victoryReward.clearedAreaId]
     : null
   const playerHpPercent = Math.max(0, Math.min(100, (playerHp / playerStats.maxHp) * 100))
 
@@ -342,6 +348,11 @@ function App({ battleId, seed }: AppProps) {
                 )}
                 {unlockedSkill && (
                   <div className="reward-unlock">SKILL UNLOCKED: {unlockedSkill.name}</div>
+                )}
+                {clearedArea && (
+                  <div className="reward-unlock area-clear-reward">
+                    AREA CLEAR: {clearedArea.title.toUpperCase()}
+                  </div>
                 )}
               </div>
             )}
