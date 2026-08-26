@@ -24,7 +24,9 @@ const readRewardItems = (summary: HTMLElement): RawResultItem[] => {
     }
   }
 
-  const questFeedback = document.querySelector<HTMLElement>('.quest-victory-feedback')
+  const questFeedback = document.querySelector<HTMLElement>(
+    '.quest-victory-feedback:not(.result-sequence-consumed)',
+  )
   if (questFeedback) {
     const status = questFeedback.querySelector('span')?.textContent?.trim()
     const title = questFeedback.querySelector('strong')?.textContent?.trim()
@@ -49,9 +51,24 @@ export function BattleResultSequence() {
   useEffect(() => {
     let collectFrame = 0
 
+    const collect = (summary: HTMLElement) => {
+      if (collectFrame !== 0) return
+      collectFrame = window.requestAnimationFrame(() => {
+        collectFrame = 0
+        setItems(buildResultSequence(readRewardItems(summary)))
+      })
+    }
+
     const scan = () => {
       const nextTarget = document.querySelector<HTMLElement>('.victory-card .reward-summary')
-      if (nextTarget === activeTarget.current) return
+
+      if (nextTarget === activeTarget.current) {
+        const pendingQuest = document.querySelector(
+          '.quest-victory-feedback:not(.result-sequence-consumed)',
+        )
+        if (nextTarget && pendingQuest) collect(nextTarget)
+        return
+      }
 
       if (activeTarget.current) {
         activeTarget.current.classList.remove('result-sequence-active')
@@ -74,10 +91,7 @@ export function BattleResultSequence() {
 
       nextTarget.classList.add('result-sequence-active')
       nextTarget.closest<HTMLElement>('.victory-card')?.classList.add('result-sequence-host')
-
-      collectFrame = window.requestAnimationFrame(() => {
-        setItems(buildResultSequence(readRewardItems(nextTarget)))
-      })
+      collect(nextTarget)
     }
 
     scan()
