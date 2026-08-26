@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { battles } from '../game'
-import {
-  typescriptLearningHintById,
-  typeScriptLearningHintPlaceholder,
-} from '../learning/typescriptLearningHints'
+import { typescriptLearningHintById } from '../learning/typescriptLearningHints'
 import type { LearningHint } from '../learning/learningHints'
 import { useProgress } from '../progression'
 import { getInteractionInFront, movePlayer, samePosition } from './field'
@@ -21,7 +18,6 @@ const directionGlyph: Record<Direction, string> = {
 }
 
 export function TypeScriptFieldPage() {
-  void typeScriptLearningHintPlaceholder
   const navigate = useNavigate()
   const { progress, stats } = useProgress()
   const [position, setPosition] = useState<FieldPosition>(typescriptField.start)
