@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, refactor/85-area-routing]
+    branches: [main]
   pull_request:
 
 jobs:
