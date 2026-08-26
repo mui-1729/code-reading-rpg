@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { generateBattle } from './generator'
 import { hasInitialValidTarget, isBattleSolvable } from './solvability'
 
-const battleIds = [1, 2, 3] as const
+const battleIds = [1, 2, 3, 4, 5, 6] as const
 const seeds = Array.from({ length: 100 }, (_, index) => `solvability-${index}`)
 
 const requiredBattle = (battleId: number, seed: string) => {
@@ -41,7 +41,7 @@ describe('variable battle validation', () => {
     }
   })
 
-  it('Battle 1〜3の全検証seedに勝ち筋がある', () => {
+  it('Battle 1〜6の全検証seedに勝ち筋がある', () => {
     for (const battleId of battleIds) {
       for (const seed of seeds) {
         const battle = requiredBattle(battleId, seed)

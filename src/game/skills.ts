@@ -1,11 +1,20 @@
 import { createSeededRandom, type Seed } from './random'
 import {
-  skillDefinitionById,
-  skillDefinitions,
+  skillDefinitions as javascriptSkillDefinitions,
   type CodeVariant,
   type SkillDefinition,
 } from './skillDefinitions'
+import { typescriptSkillDefinitions } from './typescriptSkillDefinitions'
 import type { Battle, SkillCard } from './types'
+
+export const allSkillDefinitions: readonly SkillDefinition[] = [
+  ...javascriptSkillDefinitions,
+  ...typescriptSkillDefinitions,
+]
+
+export const allSkillDefinitionById: Record<string, SkillDefinition> = Object.fromEntries(
+  allSkillDefinitions.map((definition) => [definition.id, definition]),
+)
 
 function createSkillCard(definition: SkillDefinition, variant: CodeVariant): SkillCard {
   return {
@@ -32,7 +41,7 @@ export function getSkillCardForBattle(
   seed: Seed,
   lineMode: CodeVariant['lineMode'] = 'single',
 ): SkillCard {
-  const definition = skillDefinitionById[skillId]
+  const definition = allSkillDefinitionById[skillId]
   if (!definition) throw new Error(`Unknown skill: ${skillId}`)
 
   const eligibleVariants = definition.codeVariants.filter(
@@ -63,7 +72,7 @@ export function getSkillCardsForBattle(battle: Battle, seed: Seed): SkillCard[] 
 }
 
 export const skills: Record<string, SkillCard> = Object.fromEntries(
-  skillDefinitions.map((definition) => [
+  allSkillDefinitions.map((definition) => [
     definition.id,
     createSkillCard(definition, getDefaultVariant(definition)),
   ]),

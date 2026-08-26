@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { battles, getTargets, type Enemy, type TargetRule } from './game'
+import {
+  battles,
+  getBattlesForArea,
+  getTargets,
+  JAVASCRIPT_AREA_ID,
+  TYPESCRIPT_AREA_ID,
+  type Enemy,
+  type TargetRule,
+} from './game'
 
 const enemy = (id: string, name: string, hp: number, attackDamage = 1): Enemy => ({
   id,
@@ -82,11 +90,25 @@ describe('getTargets', () => {
 })
 
 describe('battle skill progression', () => {
-  it('Battle 1→2→3で既習Skillを維持しつつ新構文Skillが累積する', () => {
-    expect(battles.map((battle) => battle.skillIds.length)).toEqual([3, 6, 9])
-    expect(battles[1].skillIds).toEqual(expect.arrayContaining(battles[0].skillIds))
-    expect(battles[2].skillIds).toEqual(expect.arrayContaining(battles[1].skillIds))
-    expect(battles[1].skillIds).toEqual(expect.arrayContaining(['lock', 'alert']))
-    expect(battles[2].skillIds).toEqual(expect.arrayContaining(['sweep', 'judge']))
+  it('JavaScript Battle 1→2→3で既習Skillを維持しつつ新構文Skillが累積する', () => {
+    const javascriptBattles = getBattlesForArea(JAVASCRIPT_AREA_ID)
+    expect(javascriptBattles.map((battle) => battle.skillIds.length)).toEqual([3, 6, 9])
+    expect(javascriptBattles[1].skillIds).toEqual(expect.arrayContaining(javascriptBattles[0].skillIds))
+    expect(javascriptBattles[2].skillIds).toEqual(expect.arrayContaining(javascriptBattles[1].skillIds))
+    expect(javascriptBattles[1].skillIds).toEqual(expect.arrayContaining(['lock', 'alert']))
+    expect(javascriptBattles[2].skillIds).toEqual(expect.arrayContaining(['sweep', 'judge']))
+  })
+
+  it('TypeScript Battle 4→5→6でも既習Skillを維持して型概念を追加する', () => {
+    const typescriptBattles = getBattlesForArea(TYPESCRIPT_AREA_ID)
+    expect(typescriptBattles.map((battle) => battle.skillIds.length)).toEqual([3, 5, 7])
+    expect(typescriptBattles[1].skillIds).toEqual(expect.arrayContaining(typescriptBattles[0].skillIds))
+    expect(typescriptBattles[2].skillIds).toEqual(expect.arrayContaining(typescriptBattles[1].skillIds))
+    expect(typescriptBattles[1].skillIds).toEqual(expect.arrayContaining(['ts-union', 'ts-optional']))
+    expect(typescriptBattles[2].skillIds).toEqual(expect.arrayContaining(['ts-narrow', 'ts-keyof']))
+  })
+
+  it('Battle IDはAreaを跨いでも一意', () => {
+    expect(new Set(battles.map((battle) => battle.id)).size).toBe(battles.length)
   })
 })

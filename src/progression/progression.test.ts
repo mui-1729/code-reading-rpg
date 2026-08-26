@@ -12,15 +12,15 @@ import {
 } from './progression'
 
 describe('player progression', () => {
-  it('初期進行はLv1相当でStage 1と初期Skillだけを解放する', () => {
+  it('初期進行はLv1相当で各Areaの入口Stageと初期Skillだけを解放する', () => {
     const progress = createInitialPlayerProgress()
 
     expect(progress).toEqual({
       exp: 0,
       clearedStageIds: [],
       clearedAreaIds: [],
-      unlockedStageIds: [1],
-      unlockedSkillIds: ['trace', 'pulse', 'nova'],
+      unlockedStageIds: [1, 4],
+      unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
     })
     expect(getPlayerStats(progress.exp)).toEqual({
       level: 1,
@@ -103,8 +103,8 @@ describe('player progression', () => {
       exp: 40,
       clearedStageIds: [1],
       clearedAreaIds: [],
-      unlockedStageIds: [1, 2],
-      unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper'],
+      unlockedStageIds: [1, 4, 2],
+      unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label', 'viper'],
     })
     expect(result.reward).toEqual({
       expGained: 40,
@@ -135,8 +135,16 @@ describe('player progression', () => {
     expect(replay.progress.exp).toBe(80)
     expect(replay.progress.clearedStageIds).toEqual([1])
     expect(replay.progress.clearedAreaIds).toEqual([])
-    expect(replay.progress.unlockedStageIds).toEqual([1, 2])
-    expect(replay.progress.unlockedSkillIds).toEqual(['trace', 'pulse', 'nova', 'viper'])
+    expect(replay.progress.unlockedStageIds).toEqual([1, 4, 2])
+    expect(replay.progress.unlockedSkillIds).toEqual([
+      'trace',
+      'pulse',
+      'nova',
+      'ts-scan',
+      'ts-guard',
+      'ts-label',
+      'viper',
+    ])
     expect(replay.reward).toEqual({
       expGained: 40,
       previousLevel: 2,
@@ -188,5 +196,24 @@ describe('player progression', () => {
     expect(result.progress.clearedAreaIds).toEqual(['javascript'])
     expect(result.reward.firstClear).toBe(false)
     expect(result.reward.clearedAreaId).toBeUndefined()
+  })
+
+  it('TypeScript Boss初回クリアでTypeScript Area CLEARを記録する', () => {
+    const progress = {
+      exp: 360,
+      clearedStageIds: [4, 5],
+      clearedAreaIds: [],
+      unlockedStageIds: [1, 4, 5, 6],
+      unlockedSkillIds: ['ts-scan', 'ts-guard', 'ts-label', 'ts-union', 'ts-optional', 'ts-narrow'],
+    }
+    const result = applyBattleVictory(progress, {
+      stageId: 6,
+      expReward: 120,
+      clearAreaId: 'typescript',
+    })
+
+    expect(result.progress.clearedStageIds).toEqual([4, 5, 6])
+    expect(result.progress.clearedAreaIds).toEqual(['typescript'])
+    expect(result.reward.clearedAreaId).toBe('typescript')
   })
 })

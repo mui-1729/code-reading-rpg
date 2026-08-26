@@ -2,7 +2,7 @@
 
 ## 1. 目的
 
-この文書は、現在の責務分割と今後Areaを増やすときの境界を定義する。
+現在の責務分割と、Areaや学習コンテンツを増やすときの境界を定義する。
 
 原則は、**コード読解のGame Domain、RPG進行、Field / Dialogue、Audio / Motion、Routingを必要以上に密結合させない**こと。
 
@@ -14,7 +14,7 @@
 Browser
   ↓
 React 19 + TanStack Router
-  ├── World / Route UI
+  ├── World / Area UI
   ├── Field / Dialogue UI
   ├── Battle UI
   └── Audio / Motion presentation
@@ -22,7 +22,7 @@ React 19 + TanStack Router
 Game Domain
   ├── Area metadata
   ├── Battle definitions
-  ├── SkillDefinition / codeVariants
+  ├── JavaScript / TypeScript SkillDefinition
   ├── TargetRule
   ├── Seeded generator
   └── Solvability
@@ -43,27 +43,35 @@ FrontendはVite SPAとしてCloudflare Workers Static Assetsへdeployする。
 
 ```text
 src/
-├── App.tsx                    # Battle runtime / UI
+├── App.tsx                       # Area共通Battle runtime / UI
 ├── AppRouter.tsx
-├── router.tsx                 # route tree
-├── routeComponents.tsx        # Title / Stage Select / Complete
+├── router.tsx                    # JavaScript / TypeScript route tree
+├── routeComponents.tsx           # Title / Area Stage Select / Complete
 ├── world/
 │   └── WorldPage.tsx
 ├── field/
+│   ├── field.ts                  # movement / collision / interaction
 │   ├── JavaScriptFieldPage.tsx
 │   ├── JavaScriptFieldRoute.tsx
-│   └── field.ts               # movement / collision / interaction
+│   ├── javascriptField.ts
+│   ├── TypeScriptFieldPage.tsx
+│   ├── TypeScriptFieldRoute.tsx
+│   └── typescriptField.ts
 ├── dialogue/
 │   ├── dialogue.ts
 │   ├── npcs.ts
 │   └── types.ts
+├── learning/
+│   ├── learningHints.ts
+│   └── typescriptLearningHints.ts
 ├── game/
-│   ├── areas.ts               # Area metadata / route metadata
-│   ├── areaProgression.ts     # Area ↔ Battle lookup
+│   ├── areas.ts
+│   ├── areaProgression.ts
 │   ├── battles.ts
 │   ├── generator.ts
-│   ├── skillDefinitions.ts
-│   ├── skills.ts
+│   ├── skillDefinitions.ts       # JavaScript Skill
+│   ├── typescriptSkillDefinitions.ts
+│   ├── skills.ts                 # Area別definitionを統合
 │   ├── targeting.ts
 │   ├── random.ts
 │   └── solvability.ts
@@ -73,33 +81,35 @@ src/
 │   ├── ProgressProvider.tsx
 │   └── types.ts
 ├── audio/
-│   ├── gameAudio.ts
-│   ├── AudioControls.tsx
-│   └── useBgm.ts
 └── motion/
-    └── battleMotion.ts
 ```
 
 ---
 
 ## 4. Routing
 
-現在の公開route:
+公開route:
 
 ```text
 /
 /world
+
 /javascript
 /javascript/field
 /javascript/battle/$battleId?seed=...&returnTo=...
 /javascript/complete
+
+/typescript
+/typescript/field
+/typescript/battle/$battleId?seed=...&returnTo=...
+/typescript/complete
 ```
 
-JavaScript KingdomのURLは既存save / bookmark / deep link互換のため維持する。
+JavaScript Kingdomの既存URLはbookmark / deep link互換のため維持する。TypeScript Frontierは別prefixで追加し、JavaScript routeからTypeScript Battleを開かない。
 
 ### Area route metadata
 
-Area固有の画面遷移先は`src/game/areas.ts`へ集約する。
+Area固有の遷移先は`src/game/areas.ts`へ集約する。
 
 ```ts
 AreaDefinition = {
@@ -117,15 +127,20 @@ AreaDefinition = {
 }
 ```
 
-`comingSoon` Areaはrouteを`null`にする。未実装Areaのために空のFieldや架空Battleを作らない。
-
-次Areaを実装するときは、既存JavaScript routeを変更せず、そのAreaのrouteを追加する。
+`comingSoon` Areaはrouteを`null`にし、空Fieldや架空Battleを先に作らない。
 
 ---
 
 ## 5. Area / Battle関係
 
-Battleは`areaId`を持つ。UIが毎回独自に`filter()`やBoss検索をせず、`src/game/areaProgression.ts`を使う。
+Battleはglobalに一意なnumber IDと`areaId`を持つ。
+
+```text
+JavaScript Kingdom: 1, 2, 3
+TypeScript Frontier: 4, 5, 6
+```
+
+UIが独自にArea判定を持たず、次を使う。
 
 ```text
 getBattlesForArea(areaId)
@@ -135,26 +150,31 @@ getBossBattleForArea(areaId)
 
 守る条件:
 
-- すべてのBattleの`areaId`は実在Areaを参照する
-- `bossBattleId`は同じAreaのBoss Battleを参照する
-- COMING SOON AreaにはBattleを先に作らない
-- JavaScript routeから別AreaのBattleを開かない
+- 全Battleの`areaId`は実在Area
+- Battle IDはAreaを跨いでも一意
+- `bossBattleId`は同じAreaのBoss
+- routeは別AreaのBattleを受け付けない
+- next Battleは同じArea内だけ
 
-これらはUnit Testで検証する。
+Unit Testで固定する。
 
 ---
 
-## 6. Game Domain
+## 6. Game Domain / Skill definitions
 
-`src/game/`はUIから独立したゲーム定義と純粋ロジックを担当する。
+`src/game/`はUIから独立した定義と純粋ロジックを担当する。
 
-### Battle
+JavaScriptとTypeScriptの表示コンテンツはdefinition fileを分離するが、Battle engineからは統合したSkill registryとして扱う。
 
-基準Enemy / Skill / reward / Area所属を持つ。
+```text
+skillDefinitions.ts
+          ┐
+          ├→ skills.ts → allSkillDefinitions / skills
+          │
+typescriptSkillDefinitions.ts
+```
 
-Player Levelに合わせてEnemyをruntimeで自動弱体化しない。
-
-### SkillDefinition
+これによりTypeScriptのために別Battle engineを作らない。
 
 ```ts
 SkillDefinition = {
@@ -168,25 +188,30 @@ SkillDefinition = {
 }
 ```
 
-同じSkillのcode variantはTargetRule・POWER・学習概念を変えない。
-
-### Targeting
-
-表示コード自体を`eval()`しない。安全な内部`TargetRule`を評価する。
-
-### Seeded generator
-
-Battle ID + seedから敵HP・敵順・Skill順・code variantを決定的に再現する。
-
-生成時にvalid target / learning constraint / solvabilityを検証する。
+TypeScript codeもruntimeで評価しない。型注釈を含むdisplay codeと、安全な内部TargetRuleを対応させる。
 
 ---
 
-## 7. Battle Runtime
+## 7. Seeded Generator / Solvability
 
-Battle中だけ必要な状態は`App.tsx`のlocal stateを中心に扱う。
+Battle ID + seedから、
 
-例:
+- Enemy HP
+- Enemy順
+- Skill順
+- code variant
+
+を決定的に再現する。
+
+JavaScript / TypeScriptとも同じgeneratorとsolvabilityを使用する。生成時にvalid target / learning constraint / solvabilityを検証する。
+
+---
+
+## 8. Battle Runtime
+
+`App.tsx`はArea共通Battle runtime。
+
+一時state:
 
 - phase
 - playerHp
@@ -198,13 +223,11 @@ Battle中だけ必要な状態は`App.tsx`のlocal stateを中心に扱う。
 
 これらをPlayerProgressやLocalStorageへ保存しない。
 
-Battle勝利時だけProgressionへrewardを渡す。
+Battle自身の`areaId`から、次Battle / Area Complete / return先を決める。Area固有のdamage engineは作らない。
 
 ---
 
-## 8. Progression
-
-`src/progression/`はBattleをまたぐ長期進行を担当する。
+## 9. Progression / Persistence
 
 ```ts
 PlayerProgress = {
@@ -216,7 +239,7 @@ PlayerProgress = {
 }
 ```
 
-Level / maxHP / POWER倍率はEXPから導出し、二重保存しない。
+Level / maxHP / POWER倍率はEXPから導出する。
 
 ```text
 Battle Victory
@@ -230,83 +253,42 @@ ProgressProvider
 LocalStorage
 ```
 
-Stage IDは現在globalなnumberとして扱う。次Area追加時に既存IDを再採番しない。
+各Playable Areaの入口Stageとbaseline Skillは初期progressへ含める。旧save復元時は、既存CLEAR / EXP / unlockを保持したまま不足しているbaselineだけを追加する。
 
----
-
-## 9. Persistence
-
-LocalStorageはversion付きschemaを使う。
-
-保存対象:
-
-- EXP
-- Stage CLEAR / unlock
-- Area CLEAR
-- Skill unlock
-
-保存しない:
+保存しないもの:
 
 - Battle中HP
 - turn
 - selected Skill
 - animation state
-- BGMの再生位置
-
-壊れたJSONや未知versionは安全に初期状態へfallbackする。
+- BGM再生位置
 
 ---
 
-## 10. Field / Dialogue
+## 10. Field / Learning / Dialogue
 
-Fieldのmovement / collision / interaction判定は純粋ロジックへ分離する。
-
-DialogueはPlayerProgressの必要な一部だけを読み、Battle targetingやdamage計算を知らない。
+movement / collision / interaction判定は`field.ts`の純粋ロジック。
 
 ```text
-Field UI
+Area Field UI
 ├── movement
 ├── interaction
-├── NPC dialogue
+├── LearningHint
+├── optional NPC / Dialogue
 └── Battle Gate
        ↓
 Battle route
 ```
 
-次Areaでも同じ境界を維持し、JavaScript Fieldコンポーネントを巨大なArea分岐へ変えない。
+JavaScriptとTypeScriptはField definition / Pageを分離し、1つの巨大Area分岐へしない。
+
+学習看板はinteraction tileなのでsolid。看板追加によってMain routeを塞がないよう、各FieldにBFS reachability testを持ち、全Gate / 看板 / Exitの隣接tileへ到達可能であることを確認する。
+
+DialogueはPlayerProgressの必要部分だけを読み、Battle targetingやdamage計算を知らない。
 
 ---
 
-## 11. Audio / Motion
-
-AudioとMotionはpresentation layer。
-
-### Audio
-
-- `menu` / `field` / `battle` BGM
-- SE channel
-- BGM / SE別GainNode
-- Mute / volume
-- 最初のpointer / touch / key操作でAudioContextをunlock
-- `useBgm()`で画面ごとのBGM lifecycleを管理
-
-BGMやSEの有無でGame Domainの勝敗を変えない。
-
-### Motion
-
-- Skill windup
-- hit flash / shake
-- damage number
-- defeat
-- victory / defeat
-- reward animation
-- `prefers-reduced-motion`
-
-Animation timerをTargetRuleやdamage式のsource of truthにしない。
-
----
-
-## 12. World Mapと複数Area
+## 11. World Map
 
 World MapはArea metadataとPlayerProgressのArea CLEARだけを参照する。
 
@@ -314,43 +296,57 @@ World MapはArea metadataとPlayerProgressのArea CLEARだけを参照する。
 World Map
 ↓
 AreaDefinition.availability
-├── available → routes.fieldへ進入
+├── available → routes.field
 └── comingSoon → disabled
 ```
 
 World MapはBattle生成、Enemy stats、Skill targetingを知らない。
 
-Areaを追加するときの基本手順:
+Area追加手順:
 
-1. Area metadataを追加
-2. そのAreaのrouteをRouterへ追加
-3. Battleを一意なStage IDで追加
-4. `areaId` / Boss整合性testを通す
-5. Field / Stage Select / Completeを必要な範囲で実装
-6. Progression / save migrationが必要か判断する
+1. Area metadata
+2. globalに一意なBattle ID
+3. Skill / LearningHint
+4. Router
+5. Field / Stage Select / Complete
+6. Progression baseline / old save compatibility
+7. Area / Battle / Field reachability / solvability test
+
+---
+
+## 12. Audio / Motion
+
+Audio / Motionはpresentation layer。
+
+Audio:
+
+- `menu` / `field` / `battle` BGM
+- SE channel
+- BGM / SE別GainNode
+- Mute / volume
+- user gestureでAudioContext unlock
+- `useBgm()`でlifecycle管理
+
+Motion:
+
+- Skill windup
+- hit / damage / defeat
+- victory / defeat / reward
+- `prefers-reduced-motion`
+
+presentation状態をTargetRuleやdamage式のsource of truthにしない。
 
 ---
 
 ## 13. Backend
 
-現在は不要。
-
-導入トリガー:
-
-- Login
-- Cloud Save
-- 複数端末同期
-- Ranking
-- Shared Challenge
-- 管理者機能
-
-候補はCloudflare D1等やSupabaseを要件で比較する。FrontendがCloudflareだからという理由だけでbackendを固定しない。
+現在は不要。Login / Cloud Save / Ranking / Shared Challenge等が必要になった時点で比較して導入する。
 
 ---
 
 ## 14. 品質保証
 
-PR作成前に必ず:
+PR作成前:
 
 ```text
 npm ci
@@ -370,17 +366,18 @@ main CI
 Cloudflare Production
 ```
 
-Unit Testの主対象:
+主なUnit Test対象:
 
 - targeting
-- seeded random
-- generator / solvability
-- SkillDefinition / code variants
-- progression / persistence
-- Field movement / interaction
+- seeded random / generator / solvability
+- JavaScript / TypeScript SkillDefinition
+- code variants / multiline help
+- progression / old save compatibility
+- Field movement / reachability
+- LearningHint参照
 - Dialogue条件
 - Area metadata / Area-Battle整合性
-- Audio settings / BGM lifecycle helper
+- Audio helpers
 
 ---
 
@@ -392,5 +389,7 @@ Unit Testの主対象:
 4. Battle transient stateをsaveへ混ぜない
 5. World / Field / Dialogue / AudioをBattle Domainへ混ぜない
 6. COMING SOONの機能を架空実装しない
-7. 既存route / save互換を壊す変更は明示的migrationなしに行わない
-8. コンテンツ追加時もUnit Test可能なdata-driven構造を優先する
+7. 既存route / save互換を壊す変更はmigrationなしに行わない
+8. Area追加でBattle engineを複製しない
+9. 学習object追加でFieldの進行を塞がない
+10. data-drivenでUnit Testできる境界を優先する

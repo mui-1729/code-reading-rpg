@@ -1,6 +1,15 @@
 import { Outlet, createRootRoute, createRoute, createRouter } from '@tanstack/react-router'
 import { JavaScriptFieldRoute } from './field/JavaScriptFieldRoute'
-import { BattleRoutePage, CompletePage, HomePage, JavaScriptAreaPage } from './routeComponents'
+import { TypeScriptFieldRoute } from './field/TypeScriptFieldRoute'
+import {
+  BattleRoutePage,
+  CompletePage,
+  HomePage,
+  JavaScriptAreaPage,
+  TypeScriptAreaPage,
+  TypeScriptBattleRoutePage,
+  TypeScriptCompletePage,
+} from './routeComponents'
 import { WorldPage } from './world/WorldPage'
 
 const rootRoute = createRootRoute({
@@ -25,13 +34,13 @@ const javascriptRoute = createRoute({
   component: JavaScriptAreaPage,
 })
 
-const fieldRoute = createRoute({
+const javascriptFieldRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'javascript/field',
   component: JavaScriptFieldRoute,
 })
 
-const battleRoute = createRoute({
+const javascriptBattleRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'javascript/battle/$battleId',
   validateSearch: (search: Record<string, unknown>) => ({
@@ -41,19 +50,51 @@ const battleRoute = createRoute({
   component: BattleRoutePage,
 })
 
-const completeRoute = createRoute({
+const javascriptCompleteRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'javascript/complete',
   component: CompletePage,
+})
+
+const typescriptRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'typescript',
+  component: TypeScriptAreaPage,
+})
+
+const typescriptFieldRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'typescript/field',
+  component: TypeScriptFieldRoute,
+})
+
+const typescriptBattleRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'typescript/battle/$battleId',
+  validateSearch: (search: Record<string, unknown>) => ({
+    seed: typeof search.seed === 'string' && search.seed.length > 0 ? search.seed : undefined,
+    returnTo: search.returnTo === '/typescript/field' ? '/typescript/field' as const : undefined,
+  }),
+  component: TypeScriptBattleRoutePage,
+})
+
+const typescriptCompleteRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'typescript/complete',
+  component: TypeScriptCompletePage,
 })
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
   worldRoute,
   javascriptRoute,
-  fieldRoute,
-  battleRoute,
-  completeRoute,
+  javascriptFieldRoute,
+  javascriptBattleRoute,
+  javascriptCompleteRoute,
+  typescriptRoute,
+  typescriptFieldRoute,
+  typescriptBattleRoute,
+  typescriptCompleteRoute,
 ])
 
 export const router = createRouter({

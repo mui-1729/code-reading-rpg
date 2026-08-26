@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { battles } from './battles'
 import { generateBattle } from './generator'
-import { skillDefinitionById } from './skillDefinitions'
-import { getSkillCardForBattle, skills } from './skills'
+import { allSkillDefinitionById, getSkillCardForBattle, skills } from './skills'
 import { getTargets } from './targeting'
 
 describe('seeded skill code variants', () => {
@@ -10,7 +9,7 @@ describe('seeded skill code variants', () => {
     const usedSkillIds = new Set(battles.flatMap((battle) => battle.skillIds))
 
     for (const skillId of usedSkillIds) {
-      const variants = skillDefinitionById[skillId].codeVariants
+      const variants = allSkillDefinitionById[skillId].codeVariants
       const singleLineVariants = variants.filter((variant) => variant.lineMode === 'single')
 
       expect(singleLineVariants.length).toBeGreaterThanOrEqual(2)
