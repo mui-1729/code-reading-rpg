@@ -2,17 +2,17 @@
 
 ## 1. この文書の目的
 
-この文書は`CODE//READ RPG`をどの順序で拡張するかを定義する。
+`CODE//READ RPG`を、コードを読む行為がそのままゲーム上の判断になるRPGとして拡張していく順序を定義する。
 
-2026-08-26時点では、JavaScript KingdomのRPGループが成立し、**World Mapから2つ目以降のAreaへ拡張する段階**に入っている。
+2026-08-26時点では、JavaScript KingdomのRPGループ・World Map・複数Area向け基盤まで完成している。次の重点は、**JavaScriptの読解幅を広げたうえで複数構文を組み合わせる問題へ進み、その後TypeScript Frontierを実装すること**。
 
-ゲームの中心は常にコードリーディングとする。
+常に次を守る。
 
-1. コードを読まないと正しい行動を選びにくいか
-2. 同じ手順の暗記だけで攻略できないか
-3. 読んだ結果がゲーム内の意思決定へつながるか
-4. Levelや装備の数値だけで読解を不要にしていないか
-5. コンテンツを増やしても自動テストできる構造か
+1. コードを読まないと正しい行動を選びにくいこと
+2. 同じ手順の暗記だけで攻略できないこと
+3. 読んだ結果がゲーム内の意思決定へつながること
+4. LevelやPOWERだけで読解を不要にしないこと
+5. コンテンツを増やしても自動テストできる構造を維持すること
 
 ---
 
@@ -20,26 +20,26 @@
 
 ### Battle / 読解基盤
 
-- JavaScript編 3 Battles
+- JavaScript Kingdom 3 Battles
 - Skill SELECT → EXECUTE
 - `find()` / `filter()` / 比較 / `sort()`
+- `&&` / `||` / `some()` / `reduce()` / 三項演算子
 - HP / NEXT行動による戦略判断
 - Target Previewなし
 - CODE HELP
 - seeded generation / solvability
 - SkillDefinition / TargetRule
-- 同一概念の複数code variant
+- 同一効果の複数code variant
 - Battle 3の複数行code
+- Field上の任意学習看板
 
 ### RPG進行
 
-#43〜#48で実装済み。
-
 - PlayerProgress
 - EXP / Level
-- 最大HP / POWER倍率
+- Levelによる最大HP / POWER倍率
 - Stage Select
-- Stage CLEAR / unlock
+- Stage CLEAR / next Stage unlock
 - Skill unlock
 - 再挑戦
 - LocalStorage / migration / reset
@@ -49,73 +49,55 @@ Enemyはcurrent Player Levelへ自動追従させない。
 
 ### Field / NPC
 
-#49 / #50で実装済み。
-
 - JavaScript Kingdom Field
 - 4方向移動 / collision
 - Keyboard / Mobile操作
 - Battle Gate
 - Battle後のField復帰
-- NPC 3人
-- Dialogue data / 進行分岐
+- NPC / Dialogue
+- `find()`等を知らないPlayer向けの学習看板
 
-### Battle presentation
-
-#64 / #63 / #83で実装済み。
-
-- hit / shake / damage / defeat motion
-- Victory / Defeat / reward motion
-- `prefers-reduced-motion`
-- SE
-- menu / field / battle BGM
-- Mute / SE・BGM別volume
-- 最初のユーザー操作によるWeb Audio unlock
-
-### 読解variation
-
-#31 / #32で実装済み。
-
-- seed付き1行code variant
-- Battle 3の複数行variant
-- TargetRule / POWER / solvability不変test
-
-### World Map
-
-#81で実装済み。
+### World / Area
 
 - `/world`
 - JavaScript Kingdom AVAILABLE / AREA CLEAR
 - TypeScript Frontier COMING SOON
 - Area metadataによるdata-driven表示
-- 未実装Areaへの進入禁止
+- Area ↔ Battle / Boss lookup helper
+- 複数Areaを追加できるroute metadata基盤（#85）
 
-### 品質 / Deploy
+### Presentation / Audio / 品質
 
+- Battle motion / Victory / Defeat motion
+- `prefers-reduced-motion`
+- SE / BGM / mute / volume
 - Node.js 24
 - Vitest
 - ESLint / Prettier
-- PR前 `npm ci` / `lint` / `test` / `build`
 - GitHub Actions
 - Cloudflare Workers Preview / Production
+- PR前 `npm ci` / `npm run lint` / `npm test` / `npm run build`
 
 ---
 
-## 3. 現在のRPGループ
+## 3. 現在のゲームループ
 
 ```text
 World Map
 ↓
 Area
 ↓
-Hub / Field
-↓
-NPC
+Field / NPC / 学習看板
 ↓
 Battle Gate
 ↓
-コードを読んでBattle
+コードを読む
 ↓
-EXP / Skill / Stage CLEAR
+Skillを選ぶ
+↓
+Battle結果
+↓
+EXP / Level / Stage CLEAR
 ↓
 Fieldへ復帰
 ↓
@@ -126,45 +108,100 @@ Area CLEAR
 World Map
 ```
 
-このループを次Areaにも再利用する。
+学習看板は補助であり必須ではない。知っているPlayerはそのままBattleへ進み、知らないPlayerはFieldで確認できる構造を維持する。
 
 ---
 
-## 4. 現在: #85 複数Area routing基盤
+## 4. JavaScript Kingdomの現在の学習範囲
 
-World Mapはできたが、JavaScriptの進行routeはまだJavaScript固有URLへ強く結びついている。
+基礎:
 
-#85では次Areaを実装する前に責務を整理する。
+- property access (`enemy.hp`, `enemy.attackDamage`)
+- 比較演算子
+- `find()`
+- `filter()`
+- `sort()`
 
-- Area metadataへField / Stage Select / Complete routeを集約
-- Area ↔ Battle lookup helper
-- Battle `areaId`の整合性test
-- Bossが同Areaへ所属することをtest
-- COMING SOON Areaはrouteなし
-- JavaScript既存URLを完全維持
-- LocalStorage schema / Stage IDを変更しない
+追加済み:
 
-これにより、次Area追加時の大規模な条件分岐を避ける。
+- `&&`
+- `||`
+- `some()`
+- `reduce()`
+- 三項演算子 `? :`
+- 生存敵を絞ってから処理する複数行code
+
+Fieldでは単体概念を短く確認し、Battleでは実際の盤面と照らして読む。
 
 ---
 
-## 5. 次: TypeScript Frontier
+## 5. 次: #89 複数構文を組み合わせたBattle
 
-#85完了後、2つ目の実Areaを追加する。
+単一の構文を見分けるだけでなく、**複数行を上から追って中間結果と最終結果を予測する**体験へ進める。
 
-第一候補:
+難易度は次の順で上げる。
 
 ```text
-World
-├── JavaScript Kingdom
-├── TypeScript Frontier
-├── SQL Dungeon
-└── React City
+Level 1
+2構文の組み合わせ
+
+Level 2
+3構文 + 複数行
+
+Level 3
+中間変数 + nested property + 条件分岐
+
+Boss
+複数候補から最終target / effectを読む
 ```
 
-TypeScript Frontierでは、単にTypeScriptの問題集を置くのではなく、**型情報を読んでゲーム上の結果を予測する**体験にする。
+候補:
 
-初期テーマ候補:
+```ts
+const wounded = enemies.filter((enemy) => enemy.hp < 40)
+const target = wounded.sort((a, b) => a.hp - b.hp)[0]
+```
+
+```ts
+const alive = enemies.filter((enemy) => enemy.hp > 0)
+const danger = alive.reduce((best, enemy) =>
+  enemy.attackDamage > best.attackDamage ? enemy : best,
+)
+```
+
+方針:
+
+- ただ長いだけのcodeにしない
+- 各行の中間値を追えること
+- CODE HELPで行ごとの意味を説明できること
+- 表示codeとTargetRule / effectを必ずtestすること
+- `eval()`しないこと
+
+---
+
+## 6. JavaScriptでさらに増やす候補
+
+#89の複合問題へ自然に必要になったものから追加する。
+
+- `every()`
+- `map()`
+- optional chaining `?.`
+- nullish coalescing `??`
+- destructuring
+- object / nested data
+- callback内の複数条件
+- 実行順序
+- status / shieldに対応するproperty
+
+構文網羅のためだけには追加しない。ゲーム内判断が変わるものを優先する。
+
+---
+
+## 7. その次: #90 TypeScript Frontier
+
+2つ目の実AreaとしてTypeScript Frontierを実装する。
+
+初期テーマ:
 
 - primitive type
 - union type
@@ -172,110 +209,57 @@ TypeScript Frontierでは、単にTypeScriptの問題集を置くのではなく
 - optional property
 - narrowing
 - function parameter / return type
+- `keyof` / indexed accessの初歩
 
-初回Areaは3 Battles程度を基本にするが、学習概念を一気に増やしすぎない。
+構成案:
 
-TypeScript Battle追加時に必要な検討:
+```text
+Stage 1
+型注釈 / primitive
 
-- Stage IDをJavaScriptと重複させない
-- TypeScript専用Skill / code variant
-- TargetRuleで安全に意味を表現できるか
-- generator / solvabilityを再利用できるか
-- TypeScript FieldをJavaScript Fieldの巨大分岐として作らない
-- JavaScript save dataをmigrationなしで維持できるか
+Stage 2
+union / optional property / narrowing
 
----
+Stage 3
+複数の型情報を組み合わせたBoss
+```
 
-## 6. JavaScript Kingdomの追加学習候補
+JavaScriptで身につけた「配列・条件・実行順序を読む」能力を、そのままTypeScriptの型情報へ接続する。
 
-2つ目Areaと並行せず、優先順位を見て追加する。
+必須条件:
 
-- `some()` / `every()`
-- object property access
-- 複数条件
-- `map()`
-- `reduce()`
-- nested data
-- 実行順序
-- shield / status
-
-Skill追加時は次を機械的に検証する。
-
-- codeとTargetRuleの意味一致
-- POWER表示と実ダメージ一致
-- valid target
-- solvability
-- seed再現性
+- JavaScript既存URL / save dataを壊さない
+- Stage IDを重複させない
+- TypeScript専用Field / 学習看板を持つ
+- 巨大なArea別条件分岐を作らない
+- generator / solvabilityを再利用できる構造にする
 
 ---
 
-## 7. RPGの深さ
+## 8. RPGの深さ
 
-複数Area構造が安定してから検討する。
+複数Areaと学習進行が安定してから追加する。
+
+候補:
 
 - Quest
 - Shop
 - Inn / 回復
-- 装備
-- アイテム
 - Gold
+- 装備
+- Item
 - Treasure
-- Story event
 - Status effect
 - Deck編成
 - Boss固有mechanic
 
-禁止したい方向:
-
-- 攻撃力だけでコードを読まなくてよい
-- Rare装備がSkillの意味を消す
-- Grind量だけで全Battleを突破できる
-
-RPG要素はコード読解の代替ではなく、読解を使う意思決定を増やすために使う。
+RPG要素はコード読解の代替ではなく、コードを読む理由を増やすために使う。
 
 ---
 
-## 8. Field / Hub拡張
+## 9. Backend / サービス化
 
-必要性が確認できたら追加する。
-
-- 複数map
-- Area transition
-- 宝箱
-- Quest NPC
-- Shop / Inn
-- Story event
-- environment sound
-- footstep
-- Gamepad
-
-巨大open worldや複雑なphysicsは先に作らない。
-
----
-
-## 9. Audio / Presentation改善
-
-BGMの基本経路は実装済み。実機確認を続ける。
-
-今後候補:
-
-- AreaごとのBGM motif
-- BGM曲数追加
-- transition音
-- dialogue音
-- footstep
-- environment sound
-- mix調整
-
-ブラウザautoplay制約を守り、既存作品の音源・メロディ・効果音をコピーしない。
-
----
-
-## 10. Backend / サービス化
-
-必要性が出てから導入する。
-
-トリガー:
+次の必要性が発生してから導入する。
 
 - Login
 - Cloud Save
@@ -284,32 +268,11 @@ BGMの基本経路は実装済み。実機確認を続ける。
 - Shared Challenge
 - 教員 / 管理者機能
 
-候補:
-
-- Cloudflare Workers / D1 / KV / R2
-- Supabase
-- その他BaaS
-
-FrontendがCloudflareだからという理由だけでbackendを固定しない。
+候補はCloudflare Workers / D1 / KV / R2、Supabase等。Frontendのdeploy先だけを理由に固定しない。
 
 ---
 
-## 11. 長期候補
-
-- Daily Challenge
-- Seed共有
-- Achievement
-- Cosmetic
-- 学習履歴分析
-- PWA / Offline
-- 多言語化
-- AIによる補助的な問題作成
-
-AIで問題を作る場合も、code / TargetRule / solvabilityを機械的に検証できる構造を前提にする。
-
----
-
-## 12. 優先順位まとめ
+## 10. 優先順位
 
 ```text
 [実装済み]
@@ -320,20 +283,22 @@ Battle MVP
 → Battle Motion / Audio
 → code variants / multi-line
 → World Map
-
-[現在]
-#85 複数Area routing / lookup基盤
+→ 複数Area routing基盤
+→ Field学習看板
+→ JavaScript構文拡張（&& / || / some / reduce）
 
 [次]
-TypeScript Frontier
-→ TypeScript Battles / Field / Boss
-→ 必要に応じJavaScript学習拡張
+#89 複数構文・複数行Battle
 
-[その後]
-Quest / Shop / 装備等のRPG深化
+[その次]
+#90 TypeScript Frontier
+
+[以降]
+JavaScript追加構文 / TypeScript拡張
+→ Quest / Shop / 装備等のRPG深化
 
 [必要になってから]
 Backend / Login / Cloud Save / Ranking
 ```
 
-**Battleだけを増やしてRPGの外側が無い状態へ戻さないこと**、そして新しいAreaでもコード読解をゲーム上の意思決定にすることを基本方針とする。
+**Battleだけを増やして問題集へ戻さず、Field・RPG進行・読解判断が1つのループとしてつながる状態を維持する。**
