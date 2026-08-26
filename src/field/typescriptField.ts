@@ -81,7 +81,7 @@ export const typescriptField: FieldDefinition = {
     {
       id: 'ts-array-sign',
       kind: 'sign',
-      x: 5,
+      x: 6,
       y: 6,
       learningHintId: 'ts-array-type',
     },
