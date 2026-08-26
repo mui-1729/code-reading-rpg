@@ -1,0 +1,65 @@
+.field-tile.has-quest-marker {
+  overflow: visible;
+}
+
+.field-quest-marker {
+  position: absolute;
+  z-index: 7;
+  top: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  border: 2px solid #fff2a8;
+  background: #e0b856;
+  color: #17110a;
+  font-size: clamp(8px, 1vw, 10px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: .04em;
+  box-shadow: 2px 2px 0 #000;
+  pointer-events: none;
+  animation: field-quest-bob 900ms steps(2, end) infinite;
+}
+
+.field-quest-marker.is-guide {
+  min-width: 22px;
+  padding: 0;
+  border-radius: 50%;
+  color: #111;
+  font-size: 14px;
+}
+
+.field-quest-marker.is-gate {
+  top: -7px;
+}
+
+@keyframes field-quest-bob {
+  0%, 100% { transform: translate(-50%, 0); }
+  50% { transform: translate(-50%, -4px); }
+}
+
+@media (max-width: 520px) {
+  .field-quest-marker {
+    top: -6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 3px;
+    border-width: 1px;
+    font-size: 7px;
+  }
+
+  .field-quest-marker.is-guide {
+    min-width: 18px;
+    font-size: 11px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .field-quest-marker {
+    animation: none;
+  }
+}
