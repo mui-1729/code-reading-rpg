@@ -28,6 +28,22 @@ export const learningHints: LearningHint[] = [
     notes: ['find()と違い、条件に合う要素を全部集める。', '0件なら空の配列[]になる。'],
   },
   {
+    id: 'js-map',
+    concept: 'map()',
+    title: '各要素を別の形へ変換する',
+    summary: 'map()は、配列の各要素を順番に変換し、同じ要素数の新しい配列を返す。',
+    codeLines: [
+      'const scored = enemies.map((enemy) => ({',
+      '  enemy,',
+      '  score: enemy.attackDamage,',
+      '}))',
+    ],
+    notes: [
+      'filter()のように要素を減らすのではなく、それぞれの形を変える。',
+      'BattleではEnemyにscoreを付けたobjectを作り、その後のreduce()で比較する。',
+    ],
+  },
+  {
     id: 'js-sort',
     concept: 'sort()',
     title: '並び順を変える',
