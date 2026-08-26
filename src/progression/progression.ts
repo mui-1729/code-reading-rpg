@@ -43,6 +43,11 @@ export function getPowerMultiplierForLevel(level: number): number {
   return 1 + (normalizedLevel - 1) * POWER_MULTIPLIER_PER_LEVEL
 }
 
+export function getSkillPowerForLevel(basePower: number, level: number): number {
+  const normalizedPower = Math.max(0, basePower)
+  return Math.round(normalizedPower * getPowerMultiplierForLevel(level))
+}
+
 export function getPlayerStats(exp: number): PlayerStats {
   const level = getLevelForExp(exp)
 
