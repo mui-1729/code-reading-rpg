@@ -35,10 +35,25 @@ describe('economy', () => {
     const result = consumePatchKit(progress, 50, 100)
 
     expect(result.consumed).toBe(true)
+    expect(result.usedThisBattle).toBe(true)
     expect(result.healed).toBe(PATCH_KIT_HEAL)
     expect(result.hp).toBe(50 + PATCH_KIT_HEAL)
     expect(result.progress.inventory.patchKit).toBe(1)
     expect(progress.inventory.patchKit).toBe(2)
+  })
+
+  it('同じBattleですでに使っていれば2個目を消費しない', () => {
+    const progress = {
+      ...createInitialPlayerProgress(),
+      inventory: { patchKit: 2 },
+    }
+    const result = consumePatchKit(progress, 50, 100, true)
+
+    expect(result.consumed).toBe(false)
+    expect(result.usedThisBattle).toBe(true)
+    expect(result.hp).toBe(50)
+    expect(result.progress).toBe(progress)
+    expect(result.progress.inventory.patchKit).toBe(2)
   })
 
   it('最大HPを超えて回復しない', () => {
@@ -61,6 +76,7 @@ describe('economy', () => {
     const result = consumePatchKit(progress, 100, 100)
 
     expect(result.consumed).toBe(false)
+    expect(result.usedThisBattle).toBe(false)
     expect(result.progress).toBe(progress)
     expect(result.progress.inventory.patchKit).toBe(1)
   })
@@ -70,6 +86,7 @@ describe('economy', () => {
     const result = consumePatchKit(progress, 50, 100)
 
     expect(result.consumed).toBe(false)
+    expect(result.usedThisBattle).toBe(false)
     expect(result.hp).toBe(50)
   })
 })
