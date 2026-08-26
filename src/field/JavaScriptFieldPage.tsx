@@ -45,18 +45,18 @@ export function JavaScriptFieldPage() {
   const handleMove = useCallback(
     (direction: Direction) => {
       setFacing(direction)
-      setPosition((current) => {
-        const next = movePlayer(javascriptField, current, direction)
-        if (samePosition(next, current)) {
-          const interaction = getInteractionInFront(javascriptField, current, direction)
-          setMessage(interaction ? describeInteraction(interaction) : 'そこには進めない。')
-        } else {
-          setMessage('移動中… 門・看板・出口の手前でINTERACT。')
-        }
-        return next
-      })
+      const next = movePlayer(javascriptField, position, direction)
+
+      if (samePosition(next, position)) {
+        const interaction = getInteractionInFront(javascriptField, position, direction)
+        setMessage(interaction ? describeInteraction(interaction) : 'そこには進めない。')
+      } else {
+        setMessage('移動中… 門・看板・出口の手前でINTERACT。')
+      }
+
+      setPosition(next)
     },
-    [describeInteraction],
+    [describeInteraction, position],
   )
 
   const handleInteract = useCallback(() => {
