@@ -175,6 +175,14 @@
   color: var(--blue);
 }
 
+.party-battle-line {
+  margin-top: 8px;
+  color: #8f8ca3;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .04em;
+}
+
 .system-section {
   align-content: start;
 }
