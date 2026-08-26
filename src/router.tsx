@@ -1,4 +1,5 @@
 import { Outlet, createRootRoute, createRoute, createRouter } from '@tanstack/react-router'
+import { JavaScriptFieldPage } from './field/JavaScriptFieldPage'
 import { BattleRoutePage, CompletePage, HomePage, JavaScriptAreaPage } from './routeComponents'
 
 const rootRoute = createRootRoute({
@@ -17,11 +18,18 @@ const javascriptRoute = createRoute({
   component: JavaScriptAreaPage,
 })
 
+const fieldRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'javascript/field',
+  component: JavaScriptFieldPage,
+})
+
 const battleRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'javascript/battle/$battleId',
   validateSearch: (search: Record<string, unknown>) => ({
     seed: typeof search.seed === 'string' && search.seed.length > 0 ? search.seed : undefined,
+    returnTo: search.returnTo === '/javascript/field' ? '/javascript/field' as const : undefined,
   }),
   component: BattleRoutePage,
 })
@@ -35,6 +43,7 @@ const completeRoute = createRoute({
 const routeTree = rootRoute.addChildren([
   indexRoute,
   javascriptRoute,
+  fieldRoute,
   battleRoute,
   completeRoute,
 ])

@@ -34,7 +34,7 @@ export function HomePage() {
         </div>
 
         <nav className="title-menu" aria-label="Title menu">
-          <button className="primary-button menu-button" onClick={() => navigate({ to: '/javascript' })}>
+          <button className="primary-button menu-button" onClick={() => navigate({ to: '/javascript/field' })}>
             <span aria-hidden="true">▶</span> START RUN
           </button>
           <a className="secondary-button menu-button" href="#how-to-play">
@@ -45,19 +45,19 @@ export function HomePage() {
         <div className="rule-grid" id="how-to-play">
           <div>
             <strong>01</strong>
-            <span>敵とNEXT行動を見る</span>
+            <span>フィールドを歩いてBattle Gateを探す</span>
           </div>
           <div>
             <strong>02</strong>
-            <span>コードから対象を読む</span>
+            <span>敵とNEXT行動、コードから対象を読む</span>
           </div>
           <div>
             <strong>03</strong>
-            <span>同じカードを2回押して発動</span>
+            <span>勝利して成長し、次の門へ進む</span>
           </div>
         </div>
 
-        <div className="title-footer">8-BIT CODE READING SYSTEM // MVP</div>
+        <div className="title-footer">8-BIT CODE READING SYSTEM // RPG LOOP</div>
       </section>
     </main>
   )
@@ -93,9 +93,14 @@ export function JavaScriptAreaPage() {
             <p>コードを読み、敵を倒して王国の奥へ進め。</p>
             {areaCleared && <div className="area-clear-badge">✓ AREA CLEAR</div>}
           </div>
-          <button className="secondary-button area-back" onClick={() => navigate({ to: '/' })}>
-            ◀ TITLE
-          </button>
+          <div className="area-header-actions">
+            <button className="primary-button area-back" onClick={() => navigate({ to: '/javascript/field' })}>
+              ▶ EXPLORE FIELD
+            </button>
+            <button className="secondary-button area-back" onClick={() => navigate({ to: '/' })}>
+              ◀ TITLE
+            </button>
+          </div>
         </header>
 
         <section className="player-progress-panel pixel-inner-window" aria-label="Player progress">
@@ -154,7 +159,7 @@ export function JavaScriptAreaPage() {
                     navigate({
                       to: '/javascript/battle/$battleId',
                       params: { battleId: String(battle.id) },
-                      search: { seed: createRunSeed() },
+                      search: { seed: createRunSeed(), returnTo: undefined },
                     })
                   }
                 >
@@ -167,7 +172,7 @@ export function JavaScriptAreaPage() {
 
         <footer className="area-footer">
           <span>
-            解放済みStageには何度でも挑戦できる。勝てない敵が現れたら、前のStageで力をつけて戻ってこよう。
+            Stage Selectは進行確認・再挑戦用。通常の冒険はFIELDからBattle Gateへ向かえる。
           </span>
           <button type="button" className="secondary-button area-reset" onClick={handleResetProgress}>
             RESET PROGRESS
@@ -180,7 +185,7 @@ export function JavaScriptAreaPage() {
 
 export function BattleRoutePage() {
   const { battleId } = battleRouteApi.useParams()
-  const { seed: searchSeed } = battleRouteApi.useSearch()
+  const { seed: searchSeed, returnTo } = battleRouteApi.useSearch()
   const navigate = useNavigate()
   const [fallbackSeed] = useState(createRunSeed)
   const seed = searchSeed ?? fallbackSeed
@@ -193,16 +198,23 @@ export function BattleRoutePage() {
     navigate({
       to: '/javascript/battle/$battleId',
       params: { battleId },
-      search: { seed },
+      search: { seed, returnTo },
       replace: true,
     })
-  }, [battleId, exists, navigate, searchSeed, seed])
+  }, [battleId, exists, navigate, returnTo, searchSeed, seed])
 
   if (!exists) {
     return <NotFoundBattle />
   }
 
-  return <App key={`${battleId}:${seed}`} battleId={numericBattleId} seed={seed} />
+  return (
+    <App
+      key={`${battleId}:${seed}`}
+      battleId={numericBattleId}
+      seed={seed}
+      returnTo={returnTo}
+    />
+  )
 }
 
 export function CompletePage() {
@@ -217,7 +229,7 @@ export function CompletePage() {
     navigate({
       to: '/javascript/battle/$battleId',
       params: { battleId: String(boss.id) },
-      search: { seed: createRunSeed() },
+      search: { seed: createRunSeed(), returnTo: '/javascript/field' },
     })
   }
 
@@ -228,12 +240,15 @@ export function CompletePage() {
         <h2>{areaCleared ? `${area.title} CLEAR` : 'BOSS NOT CLEARED'}</h2>
         <p>
           {areaCleared
-            ? '王国のBossを倒した。CLEAR後もStage Selectへ戻り、過去StageやBossへ何度でも再挑戦できる。'
-            : 'この画面はBoss初回クリア後に解放される。Stage Selectへ戻って王国を攻略しよう。'}
+            ? '王国のBossを倒した。フィールドへ戻って探索するか、Stage Selectから過去Battleへ再挑戦できる。'
+            : 'この画面はBoss初回クリア後に解放される。フィールドへ戻って王国を攻略しよう。'}
         </p>
         <div className="result-actions">
-          <button className="primary-button" onClick={() => navigate({ to: '/javascript' })}>
-            ◀ BACK TO KINGDOM
+          <button className="primary-button" onClick={() => navigate({ to: '/javascript/field' })}>
+            ◀ RETURN TO FIELD
+          </button>
+          <button className="secondary-button" onClick={() => navigate({ to: '/javascript' })}>
+            STAGE SELECT
           </button>
           {areaCleared && boss && (
             <button className="secondary-button" onClick={replayBoss}>
@@ -255,8 +270,8 @@ function NotFoundBattle() {
         <div className="eyebrow">ROUTE ERROR</div>
         <h2>そのBattleは存在しない</h2>
         <p>Battle 1〜3のURLを指定してください。</p>
-        <button className="primary-button" onClick={() => navigate({ to: '/javascript' })}>
-          ◀ BACK TO KINGDOM
+        <button className="primary-button" onClick={() => navigate({ to: '/javascript/field' })}>
+          ◀ RETURN TO FIELD
         </button>
       </section>
     </main>

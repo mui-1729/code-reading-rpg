@@ -27,23 +27,26 @@
 - Level成長のBattle反映（最大HP / POWER倍率）
 - version付きLocalStorage進行保存 / 安全な復元 / リセット
 - Boss属性 / JavaScript Kingdom Area CLEAR / CLEAR後の再挑戦
+- JavaScript KingdomのトップダウンField
+- 4方向移動 / collision / interactable object / Battle Gate / Area出口
+- Keyboard / Mobile操作
+- Fieldから入ったBattleの勝利・敗北後にFieldへ戻る導線
 - Vitest / ESLint / Prettier / GitHub Actions CI
 
 まだ`main`には入っていない主なRPG機能:
 
-- トップダウンフィールド
 - NPC / 会話 / 拠点
 - 装備 / アイテム
 - Backend / Database / Authentication
 
 ## Product direction
 
-次の優先は、Battleの種類を増やすことより先にRPGの外側の循環を作ることです。
+現在のRPGループは次の形です。
 
 ```text
-Stage Select / 将来のフィールド・拠点
+JavaScript Kingdom Field
 ↓
-行き先を選ぶ
+歩いてBattle Gateを探す
 ↓
 Battle
 ↓
@@ -51,16 +54,31 @@ EXP・Skill・CLEAR報酬
 ↓
 Playerが成長
 ↓
-前のStageへ戻って育成・復習もできる
+Fieldへ戻る / 次のBattleへ進む
 ↓
-強敵へ再挑戦
+必要ならStage Selectから過去Stageへ再挑戦
 ```
 
 敵はPlayer Levelに合わせてruntimeで弱体化しません。強い敵に勝てない場合は、過去Stageへ戻り、EXPを稼いでPlayer側を成長させて再挑戦します。
 
 ただしLevelはコード読解を不要にするためのものではありません。**育成で戦える余裕を増やし、勝ち方はコード読解と戦略で決める**ことを基本原則とします。
 
-Stage Selectはこのループを早く成立させるための暫定UIです。RPG最小ループ完成後は、プレイヤーが歩いてBattle入口・NPC・拠点へ移動するトップダウンフィールドへ発展させます。
+Stage Selectは進行確認・再挑戦用として残し、通常の冒険導線はトップダウンFieldからBattle Gateへ向かう形へ移行しています。
+
+## Field exploration
+
+`/javascript/field`にJavaScript Kingdomの1画面Fieldがあります。
+
+- Arrow / WASDで4方向移動
+- wall / rock / interactable tileとのcollision
+- Enter / Spaceまたは画面上の`INTERACT`で正面を調べる
+- Stage 1〜3のBattle GateはPlayerProgressのunlock状態を参照
+- CLEAR済みGateは見た目でも区別
+- Stage Selectへの出口あり
+- Mobile向けD-Pad + INTERACTあり
+- FieldからBattleへ入ると`returnTo=/javascript/field`を渡し、終了後にFieldへ戻れる
+
+Fieldの座標・collision・interaction判定は`src/field/`の純粋ロジックへ分離し、Battle Domainへ混ぜていません。
 
 ## Progress persistence
 
@@ -81,7 +99,7 @@ RPG進行はブラウザのLocalStorageへversion付きschemaで保存します�
 - Battle 3は`isBoss: true`
 - Boss初回勝利で`clearedAreaIds`へ`javascript`を記録
 - Stage Selectに`AREA CLEAR`状態を表示
-- Area CLEAR画面からStage Selectへ戻る / Bossを再戦できる
+- Area CLEAR画面からField / Stage Selectへ戻る / Bossを再戦できる
 - CLEAR後も過去Stageはそのまま再挑戦可能
 
 Area定義とBattleの所属を分離しているため、将来はTypeScript / SQL / Reactなど複数Areaを追加できる構造です。
@@ -112,11 +130,12 @@ Area定義とBattleの所属を分離しているため、将来はTypeScript / 
 TanStack Routerで画面遷移とBattle URLを管理しています。
 
 - `/` - スタート画面
+- `/javascript/field` - JavaScript Kingdom / Top-down Field
 - `/javascript` - JavaScript Kingdom / Stage Select
-- `/javascript/battle/$battleId?seed=...` - JavaScript編の各Battle
+- `/javascript/battle/$battleId?seed=...&returnTo=...` - JavaScript編の各Battle
 - `/javascript/complete` - JavaScript KingdomのArea CLEAR / status画面
 
-同じBattle IDとseedなら同じ可変盤面を再現できます。
+同じBattle IDとseedなら同じ可変盤面を再現できます。`returnTo`は現在FieldからBattleへ入った場合の戻り先だけを許可しています。
 
 ## Run
 

@@ -5,6 +5,7 @@ import './styles.css'
 import './layout-fixes.css'
 import './stage-select.css'
 import './reward.css'
+import './field.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
