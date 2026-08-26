@@ -1,3 +1,8 @@
-export { EnemyDataInspector } from './EnemyDataInspector'
-export { createEnemyInspectionSnapshot } from './enemyInspection'
-export type { EnemyInspectionSnapshot } from './enemyInspection'
+export { BattleCodeData } from './BattleCodeData'
+export { createCodeDataVariables, createEnemyInspectionSnapshot } from './enemyInspection'
+export type {
+  CodeDataValue,
+  CodeDataVariable,
+  EnemyInspectionSnapshot,
+  RuntimeEnemy,
+} from './enemyInspection'
