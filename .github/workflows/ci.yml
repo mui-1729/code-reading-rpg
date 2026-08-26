@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, feat/109-advanced-syntax]
+    branches: [main]
   pull_request:
 
 jobs:
