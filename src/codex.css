@@ -7,14 +7,13 @@
 }
 
 .codex-toggle {
-  min-width: 164px;
-  display: grid;
-  gap: 3px;
-  padding: 9px 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
   border-color: #4f8e78;
   background: rgba(8, 20, 18, .95);
   color: #fff;
-  text-align: left;
   cursor: pointer;
 }
 
@@ -52,34 +51,16 @@
 .codex-header {
   display: flex;
   justify-content: space-between;
-  align-items: start;
+  align-items: center;
   gap: 18px;
   padding-bottom: 14px;
   border-bottom: 2px dashed #355149;
-}
-
-.codex-header > div {
-  display: grid;
-  gap: 5px;
-}
-
-.codex-header span {
-  color: var(--green);
-  font-size: 9px;
-  font-weight: 900;
-  letter-spacing: .1em;
 }
 
 .codex-header h2 {
   margin: 0;
   color: #fff;
   font-size: clamp(24px, 4vw, 38px);
-}
-
-.codex-header p {
-  margin: 0;
-  color: var(--muted);
-  line-height: 1.6;
 }
 
 .codex-header > button {
@@ -199,14 +180,6 @@
   font-size: 10px;
 }
 
-.codex-panel > footer {
-  margin-top: 14px;
-  padding-top: 10px;
-  border-top: 2px dashed #355149;
-  color: var(--muted);
-  font-size: 9px;
-}
-
 @media (max-width: 720px) {
   .code-codex {
     right: 8px;
@@ -214,7 +187,6 @@
   }
 
   .codex-toggle {
-    min-width: 142px;
     padding: 7px 9px;
   }
 
@@ -229,9 +201,5 @@
 
   .codex-grid {
     grid-template-columns: 1fr;
-  }
-
-  .codex-header {
-    gap: 10px;
   }
 }

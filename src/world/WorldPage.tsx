@@ -20,9 +20,8 @@ export function WorldPage() {
       <section className="pixel-window world-panel">
         <header className="world-header">
           <div>
-            <div className="eyebrow">WORLD MAP // AREA SELECT</div>
-            <h1>Choose the next region.</h1>
-            <p>学びたいAreaを選び、攻略済みの世界にもいつでも戻れる。</p>
+            <div className="eyebrow">WORLD MAP</div>
+            <h1>AREA SELECT</h1>
           </div>
           <div className="world-player pixel-inner-window">
             <span>CODE KNIGHT</span>
@@ -66,7 +65,6 @@ export function WorldPage() {
         </section>
 
         <footer className="world-footer">
-          <span>各Areaは独立した学習テーマ・Field・Battle・Bossを持ち、進行は共通saveへ保存する。</span>
           <button
             type="button"
             className="secondary-button"

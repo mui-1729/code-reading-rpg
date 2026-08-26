@@ -78,8 +78,8 @@ export function CodeCodex() {
         aria-controls="code-codex-panel"
         onClick={toggle}
       >
-        <span>CODE CODEX</span>
-        <strong>{open ? 'CLOSE' : 'OPEN · C'}</strong>
+        <span>CODEX</span>
+        <strong>C</strong>
       </button>
 
       {open && (
@@ -90,11 +90,7 @@ export function CodeCodex() {
             onClick={(event) => event.stopPropagation()}
           >
             <header className="codex-header">
-              <div>
-                <span>LEARNING ARCHIVE</span>
-                <h2>CODE CODEX</h2>
-                <p>Fieldの看板と同じ内容を、場所を移動せずまとめて復習できる。</p>
-              </div>
+              <h2>CODE CODEX</h2>
               <button type="button" aria-label="Close Code Codex" onClick={close}>×</button>
             </header>
 
@@ -139,8 +135,6 @@ export function CodeCodex() {
                 </article>
               ))}
             </div>
-
-            <footer>C = OPEN / CLOSE · Esc = CLOSE · Battle中は非表示</footer>
           </section>
         </div>
       )}
