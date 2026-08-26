@@ -82,6 +82,19 @@ Side Quest:
 - JavaScript / TypeScript Field定義
 - Dialogue進行条件
 
+### Tutorial
+
+- `field-move → field-interact → battle → completed`状態遷移
+- Battle direct entryでField stepを飛ばす
+- SKIP / completed後に状態が進まない
+- Tutorial state serialize / restore
+- completed / skipped保持
+- missing storage fallback
+- broken JSON fallback
+- unknown schema / status / phase fallback
+
+Tutorial UIは既存Field / Battle DOMの実操作を観測するため、pure state / persistenceはUnit Testで固定し、表示位置と実操作連携はCloudflare PreviewでManual QAする。
+
 ### Audio / Motion
 
 - audio settings normalization
@@ -131,6 +144,7 @@ Component Test候補:
 - Quest Log open / close
 - Side Quest unlock表示
 - Sound Settings / Codex modal
+- Tutorial promptのroute / selected Skill連動
 
 E2E候補:
 
@@ -142,6 +156,17 @@ Title
 → Victory
 → Quest更新
 → Field復帰
+```
+
+Tutorial:
+
+```text
+Field MOVE
+→ interaction objectの前でINTERACT
+→ Battle SELECT
+→ EXECUTE
+→ promptが消える
+→ reloadして再表示されない
 ```
 
 Persistence:
@@ -161,6 +186,7 @@ PR / branchで最低限確認する。
 - 変更routeが開く
 - UI変更ならDesktop / Mobileで崩れない
 - persistence変更ならreload互換
+- Tutorial変更ならMOVE / INTERACT / SELECT / EXECUTE / SKIP / RESETを確認
 
 ## 8. Production
 
@@ -182,6 +208,8 @@ bug fix時は原因に対応するtestを残す。
 - variant追加で旧testが固定構文を仮定 → semantic invariantへ修正
 - save migrationで起動不能 → old schema migration
 - replay報酬が重複 → one-time Side Quest reward
+- Tutorialが壁入力で進む → Player tileの実移動を完了条件にする
+- TutorialがSELECT後reloadでEXECUTEを要求 → selected SkillはBattle DOMから導出する
 
 ## 10. PR最低条件
 
