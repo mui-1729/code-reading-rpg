@@ -67,6 +67,6 @@ export const battles: Battle[] = [
       'sweep',
       'judge',
     ],
-    multiLineSkillIds: ['moon-edge'],
+    multiLineSkillIds: ['moon-edge', 'sweep', 'judge'],
   },
 ]
