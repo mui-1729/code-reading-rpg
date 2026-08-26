@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouterState } from '@tanstack/react-router'
 import { gameAudio } from '../audio/gameAudio'
 import { learningHints } from './learningHints'
@@ -29,17 +29,17 @@ export function CodeCodex() {
   const visible = visiblePaths.has(pathname)
   const hints = language === 'typescript' ? typescriptLearningHints : learningHints
 
-  const toggle = () => {
+  const toggle = useCallback(() => {
     gameAudio.playSe(open ? 'cancel' : 'confirm')
     if (!open) setLanguage(getPreferredLanguage(pathname))
     setOpen((current) => !current)
-  }
+  }, [open, pathname])
 
-  const close = () => {
+  const close = useCallback(() => {
     if (!open) return
     gameAudio.playSe('cancel')
     setOpen(false)
-  }
+  }, [open])
 
   const selectLanguage = (nextLanguage: CodexLanguage) => {
     if (nextLanguage === language) return
@@ -65,7 +65,7 @@ export function CodeCodex() {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [open, pathname, visible])
+  }, [close, open, toggle, visible])
 
   if (!visible) return null
 
