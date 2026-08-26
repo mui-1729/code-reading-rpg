@@ -9,10 +9,13 @@ const AREA_PATHS = new Set(['/javascript', '/typescript'])
 export function AreaShop() {
   const { progress, setProgress } = useProgress()
   const [open, setOpen] = useState(false)
-  const [revision, setRevision] = useState(0)
+  const [, setRevision] = useState(0)
   const isAreaPage = typeof window !== 'undefined' && AREA_PATHS.has(window.location.pathname)
   const progressPanel = isAreaPage
     ? document.querySelector<HTMLElement>('.player-progress-panel')
+    : null
+  const headerActions = isAreaPage
+    ? document.querySelector<HTMLElement>('.area-header-actions')
     : null
 
   useEffect(() => {
@@ -67,16 +70,25 @@ export function AreaShop() {
   return (
     <>
       {progressPanel && createPortal(
-        <div className="progress-stat economy-progress-stat" key={revision}>
+        <div className="progress-stat economy-progress-stat">
           <span>GOLD</span>
           <strong>{progress.gold} G</strong>
         </div>,
         progressPanel,
       )}
 
-      <button type="button" className="area-shop-button secondary-button" onClick={toggleShop}>
-        SHOP · {progress.gold} G
-      </button>
+      {headerActions && createPortal(
+        <button
+          type="button"
+          className="secondary-button area-shop-button"
+          onClick={toggleShop}
+          aria-haspopup="dialog"
+          aria-expanded={open}
+        >
+          SHOP
+        </button>,
+        headerActions,
+      )}
 
       {open && (
         <div className="overlay shop-overlay" onClick={() => setOpen(false)}>
