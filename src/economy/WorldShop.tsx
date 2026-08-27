@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { gameAudio } from '../audio/gameAudio'
 import { useProgress } from '../progression'
-import { equipmentById, useRpg } from '../rpg'
+import { equipmentById, getWeaponVisual, useRpg } from '../rpg'
 import { PATCH_KIT_HEAL } from './economy'
 import { purchaseShopItem, worldShopItems } from './shop'
 
@@ -115,10 +115,14 @@ export function WorldShop({ open, onClose, onMessage }: WorldShopProps) {
             if (!equipment) return null
             const owned = rpgState.ownedEquipmentIds.includes(equipment.id)
             const affordable = progress.gold >= item.price
+            const visual = getWeaponVisual(equipment.id)
             return (
               <article className="shop-item pixel-inner-window" key={item.id}>
                 <div>
-                  <span className="shop-item-name">{equipment.name}</span>
+                  <span className="shop-item-name shop-item-name-with-icon">
+                    {visual && <img className="equipment-pixel-icon" src={visual} alt="" aria-hidden="true" />}
+                    {equipment.name}
+                  </span>
                   <strong>{item.price} G</strong>
                 </div>
                 <p>{equipment.description}</p>
