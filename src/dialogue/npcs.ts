@@ -111,38 +111,38 @@ export const npcDefinitions: NpcDefinition[] = [
   {
     id: 'type-warden',
     name: 'TYPE WARDEN',
-    role: 'FRONTIER GUIDE',
+    role: 'SYSTEM MAINTAINER',
     dialogues: [
       {
         id: 'type-warden-area-clear',
         condition: { kind: 'areaCleared', areaId: TYPESCRIPT_AREA_ID },
         lines: [
-          'Frontier Compilerの停止を確認した。TypeScript FrontierはCLEARだ。',
-          '型情報と実行時の条件を分けて読めたなら、別seedでも同じ考え方で突破できる。',
+          'Shared Contractの整合性を確認した。Frontier Compilerも新旧data shapeを正常に処理している。',
+          '型が保証することと実際の値・条件を分けて追えたから、根本原因まで辿り着けた。incident closeだ。',
         ],
       },
       {
         id: 'type-warden-stage-5',
         condition: { kind: 'stageCleared', stageId: 5 },
         lines: [
-          '次は北東のCOMPILER BOSS GATEだ。narrowingと`keyof`を同時に追うことになる。',
-          '型で何が保証されたか、そのあと実行時にどの値を比較しているかを上から読むんだ。',
+          'optionalとunionの異常が、同じTargetPolicy contractにつながった。',
+          '次は東のFrontier Compilerだ。narrowing、generic、keyofを上から追って共通contractを直す。',
         ],
       },
       {
         id: 'type-warden-stage-4',
         condition: { kind: 'stageCleared', stageId: 4 },
         lines: [
-          'Typed Entryを越えたね。次は北中央のMAYBE VALUE GATEへ。',
-          '`A | B`や`?`を見たら、まず「今この値は何になり得るか」を整理してから条件式を追おう。',
+          '入口の型注釈と実行条件は確認できた。でもAPI更新後の異常はそこだけじゃない。',
+          '次はlimitが複数候補になるログと、値自体が無いログを追う。unionとoptionalを見ていこう。',
         ],
       },
       {
         id: 'type-warden-start',
         condition: { kind: 'always' },
         lines: [
-          'ここはTypeScript Frontier。まず北西のST4 GATEで型注釈から始めよう。',
-          '型は手がかりだが、攻撃対象を決める実行時の条件も忘れずに読むこと。',
+          'Enemy API更新後からTypeScript Frontierのtarget処理がずれている。まず入口の処理を調査してほしい。',
+          '型は手がかりだが、攻撃対象を決めるのは実行時の値と条件だ。両方をつなげて読もう。',
         ],
       },
     ],
@@ -156,8 +156,8 @@ export const npcDefinitions: NpcDefinition[] = [
         id: 'narrowing-scholar-stage-5',
         condition: { kind: 'stageCleared', stageId: 5 },
         lines: [
-          'narrowingでは「条件を通った後に何が確定したか」を読む。type predicateも同じ発想だ。',
-          '`keyof Enemy`が出たら、keyの型だけで止まらず、実際にkeyへ入っているproperty名まで追おう。',
+          'Shared Contractを読むときも、narrowingでは「条件を通った後に何が確定したか」を見る。type predicateも同じだ。',
+          '`keyof Enemy`が出たら型名で止まらず、実際にkeyへ入っているproperty名まで追おう。',
         ],
       },
       {
@@ -165,7 +165,7 @@ export const npcDefinitions: NpcDefinition[] = [
         condition: { kind: 'stageCleared', stageId: 4 },
         lines: [
           '`limit?: number`なら、読む側では`number | undefined`として考える。',
-          'だから値を使う前の`!== undefined`が、後続コードでnumberとして扱える根拠になる。',
+          'APIから値が来ないcaseもある。だから`!== undefined`が後続でnumberとして扱える根拠になる。',
         ],
       },
       {
@@ -173,7 +173,7 @@ export const npcDefinitions: NpcDefinition[] = [
         condition: { kind: 'always' },
         lines: [
           '`const limit: number = 55`の`: number`は実行時に55を変えない。',
-          'TypeScriptでは「型が何を保証するか」と「式が実際に何を返すか」を分けて読むと迷いにくい。',
+          '今回のincidentでも「型が何を保証するか」と「式が実際に何を返すか」を分けるのが最初の一歩だ。',
         ],
       },
     ],
@@ -187,24 +187,24 @@ export const npcDefinitions: NpcDefinition[] = [
         id: 'compiler-scout-area-clear',
         condition: { kind: 'areaCleared', areaId: TYPESCRIPT_AREA_ID },
         lines: [
-          '全TypeScript Gate CLEAR。次はCLEAR済みGateを別seedで再戦してみよう。',
-          '敵HPや順番が変わっても、型と実行順序を読んで同じruleへ辿り着ければ本物だ。',
+          'Frontier Compiler green。Shared Contractの復旧を確認した。',
+          '別seedでも型の保証と現在値を追って同じruleへ辿り着ければ、今回の読解は再現できる。',
         ],
       },
       {
         id: 'compiler-scout-level-3',
         condition: { kind: 'minLevel', level: 3 },
         lines: [
-          'Boss前なら南側の看板も使える。narrowingと`keyof`だけ見直してから挑むのもありだ。',
-          '迷ったらStage Selectへ戻って、ST4やST5を別seedで読み直すといい。',
+          'Finalは複合コードになる。narrowingと`keyof`だけ見直してからCompilerへ向かうのもありだ。',
+          '一気に読むより、候補を絞る行→値を読む行→最後に選ぶ行の順で追え。',
         ],
       },
       {
         id: 'compiler-scout-start',
         condition: { kind: 'always' },
         lines: [
-          'このFrontierもBattleごとにseedで盤面が変わる。答えの位置を覚えても通用しないぞ。',
-          '看板は任意だ。知っている型は飛ばしてGateへ、曖昧な概念だけ確認すればいい。',
+          'incident中でもBattleのseedで盤面は変わる。答えの位置を覚えても通用しないぞ。',
+          '型情報はヒント、最終判断は現在のdata。曖昧な概念だけ看板で確認して調査を進めよう。',
         ],
       },
     ],

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { BattleStoryEvent as BattleStoryEventData } from './javascriptBattleEvents'
+import type { BattleStoryEvent as BattleStoryEventData } from './types'
 
 type BattleStoryEventProps = {
   event: BattleStoryEventData

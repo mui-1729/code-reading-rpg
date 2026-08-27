@@ -51,13 +51,13 @@ const definitions: readonly RegionDefinition[] = [
   },
   {
     region: 'typescript',
-    label: 'TYPESCRIPT FOREST',
+    label: 'TYPESCRIPT FRONTIER',
     stageIds: [4, 5, 6],
     areaId: 'typescript',
-    encounterFirst: '森でTypeScript Battle',
-    encounterNext: '森で次のTypeScript Battle',
-    bossNext: '東のBOSSへ',
-    clearNext: 'AREA CLEAR',
+    encounterFirst: 'API更新後の型ずれを調べる',
+    encounterNext: 'optional / unionのログを追う',
+    bossNext: '東のFrontier Compilerへ向かう',
+    clearNext: 'CONTRACT RESTORED',
   },
 ]
 
