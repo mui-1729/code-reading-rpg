@@ -21,7 +21,8 @@ describe('JavaScript story progression', () => {
       title: 'Production Incident',
       isBoss: true,
     })
-    expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.name === 'Production Bug')).toBe(true)
+    expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.name === 'Boss')).toBe(true)
+    expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.attackName === 'Runtime Collapse')).toBe(true)
   })
 
   it('uses engineering roles and an issue-to-incident quest flow', () => {
