@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, fix/rpg-state-validation]
+    branches: [main]
   pull_request:
 
 jobs:
