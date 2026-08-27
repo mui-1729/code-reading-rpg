@@ -116,7 +116,7 @@ test.describe('Item / Inventory UX', () => {
     await expect(item.getByText('BATTLE ONLY · 1 USE', { exact: true })).toBeVisible()
     await item.getByRole('button', { name: '▶ BUY' }).click()
 
-    let stored = await storedState(page)
+    const stored = await storedState(page)
     expect(stored.progress.progress.gold).toBe(0)
     expect(stored.progress.progress.inventory.patchKit).toBe(1)
 
