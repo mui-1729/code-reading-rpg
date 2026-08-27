@@ -4,7 +4,6 @@ export type EquipmentBonuses = {
   maxHp?: number
   attack?: number
   defense?: number
-  patchKitHeal?: number
 }
 
 export type EquipmentDefinition = {
@@ -74,11 +73,11 @@ export const equipmentDefinitions: readonly EquipmentDefinition[] = [
     bonuses: { attack: 2, defense: 1 },
   },
   {
-    id: 'patch-loop',
-    name: 'Patch Loop',
+    id: 'survival-loop',
+    name: 'Survival Loop',
     slot: 'accessory',
-    description: 'PATCH KITの回復量を増やすBattle補助アクセサリ。',
-    bonuses: { patchKitHeal: 12 },
+    description: '最大HPを増やす代わりにDefenseが少し下がる護符。',
+    bonuses: { maxHp: 14, defense: -1 },
   },
 ]
 
@@ -97,10 +96,9 @@ export function getEquipmentBonuses(loadout: EquipmentLoadout): Required<Equipme
         maxHp: total.maxHp + (item.bonuses.maxHp ?? 0),
         attack: total.attack + (item.bonuses.attack ?? 0),
         defense: total.defense + (item.bonuses.defense ?? 0),
-        patchKitHeal: total.patchKitHeal + (item.bonuses.patchKitHeal ?? 0),
       }
     },
-    { maxHp: 0, attack: 0, defense: 0, patchKitHeal: 0 },
+    { maxHp: 0, attack: 0, defense: 0 },
   )
 }
 
@@ -111,9 +109,6 @@ export function getEquipmentEffectText(item: EquipmentDefinition): string {
   if (item.bonuses.attack) effects.push(`ATK ${signed(item.bonuses.attack)}`)
   if (item.bonuses.defense) effects.push(`DEF ${signed(item.bonuses.defense)}`)
   if (item.bonuses.maxHp) effects.push(`HP ${signed(item.bonuses.maxHp)}`)
-  if (item.bonuses.patchKitHeal) {
-    effects.push(`PATCH KIT ${signed(item.bonuses.patchKitHeal)} HP`)
-  }
   return effects.join(' · ')
 }
 
