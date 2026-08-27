@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, fix/semantic-battle-code-variants]
   pull_request:
 
 jobs:
