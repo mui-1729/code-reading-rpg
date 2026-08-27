@@ -3,13 +3,14 @@ import { createInitialPlayerProgress } from '../progression'
 import { getWorldObjective, getWorldProgressChange } from './worldObjective'
 
 describe('World Objective', () => {
-  it('初期状態ではJS草むらとTS森のEncounterを案内する', () => {
+  it('初期状態ではJSのIssue #101とTS森のEncounterを案内する', () => {
     const progress = createInitialPlayerProgress()
 
     expect(getWorldObjective('javascript', progress)).toMatchObject({
+      label: 'TARGET SELECTOR INCIDENT',
       clearedBattles: 0,
       status: 'encounter',
-      next: '草むらでJavaScript Battle',
+      next: '西の草むらでIssue #101を再現',
       bossUnlocked: false,
     })
     expect(getWorldObjective('typescript', progress)).toMatchObject({
@@ -20,7 +21,7 @@ describe('World Objective', () => {
     })
   })
 
-  it('通常Battleを1つCLEARすると次のEncounterを案内する', () => {
+  it('JS Chapter 1 CLEAR後はQA triageを案内する', () => {
     const progress = {
       ...createInitialPlayerProgress(),
       clearedStageIds: [1],
@@ -30,11 +31,11 @@ describe('World Objective', () => {
     expect(getWorldObjective('javascript', progress)).toMatchObject({
       clearedBattles: 1,
       status: 'encounter',
-      next: '草むらで次のJavaScript Battle',
+      next: '西の草むらでQA triageを続行',
     })
   })
 
-  it('2つ目の通常BattleをCLEARするとBossを案内する', () => {
+  it('JS Chapter 2 CLEAR後はSEV-1 Boss対応を案内する', () => {
     const progress = {
       ...createInitialPlayerProgress(),
       clearedStageIds: [1, 2],
@@ -44,7 +45,7 @@ describe('World Objective', () => {
     expect(getWorldObjective('javascript', progress)).toMatchObject({
       clearedBattles: 2,
       status: 'boss',
-      next: '西のBOSSへ',
+      next: '西のBOSSでSEV-1対応',
       bossUnlocked: true,
     })
   })
@@ -65,7 +66,7 @@ describe('World Objective', () => {
     expect(getWorldObjective('javascript', progress).clearedBattles).toBe(0)
   })
 
-  it('Boss CLEAR後は3/3のAREA CLEARになる', () => {
+  it('JS Boss CLEAR後はpostmortemを示す', () => {
     const progress = {
       ...createInitialPlayerProgress(),
       clearedStageIds: [1, 2, 3],
@@ -76,12 +77,12 @@ describe('World Objective', () => {
     expect(getWorldObjective('javascript', progress)).toMatchObject({
       clearedBattles: 3,
       status: 'clear',
-      next: 'AREA CLEAR',
+      next: 'POSTMORTEM · Root cause: implicit array order',
       bossUnlocked: true,
     })
   })
 
-  it('progress差分から通常進行・Boss解放・Completeを判定する', () => {
+  it('progress差分からIssue進行・SEV-1解放・postmortemを返す', () => {
     const initial = createInitialPlayerProgress()
     const afterFirst = {
       ...initial,
@@ -101,16 +102,21 @@ describe('World Objective', () => {
 
     expect(getWorldProgressChange(initial, afterFirst)).toMatchObject({
       heading: 'WORLD PROGRESS',
+      label: 'TARGET SELECTOR INCIDENT',
       progressLabel: '1 / 3',
+      next: '西の草むらでQA triageを続行',
     })
     expect(getWorldProgressChange(afterFirst, afterSecond)).toMatchObject({
       heading: 'BOSS UNLOCKED',
+      label: 'TARGET SELECTOR INCIDENT',
       progressLabel: '2 / 3',
-      next: '西のBOSSへ',
+      next: '西のBOSSでSEV-1対応',
     })
     expect(getWorldProgressChange(afterSecond, afterBoss)).toMatchObject({
       heading: 'WORLD COMPLETE',
+      label: 'TARGET SELECTOR INCIDENT',
       progressLabel: '3 / 3',
+      next: 'POSTMORTEM · Root cause: implicit array order',
     })
   })
 
