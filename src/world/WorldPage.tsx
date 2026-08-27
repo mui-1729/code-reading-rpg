@@ -36,6 +36,11 @@ const terrainLabels: Record<string, string> = {
   treasure: 'Treasure',
 }
 
+const VIEWPORT_COLUMNS = 11
+const VIEWPORT_ROWS = 9
+
+type Position = { x: number; y: number }
+
 export function WorldPage() {
   const navigate = useNavigate()
   const { progress, stats, setProgress } = useProgress()
@@ -45,7 +50,7 @@ export function WorldPage() {
   useBgm('field')
 
   const position = rpgState.worldPosition
-  const [followerPosition, setFollowerPosition] = useState(() => ({
+  const [followerPosition, setFollowerPosition] = useState<Position>(() => ({
     x: position.x,
     y: position.y + 1,
   }))
@@ -53,6 +58,22 @@ export function WorldPage() {
   const visibleCells = useMemo(() => getVisibleWorldCells(position), [position])
   const combatStats = getCombatStats(stats, rpgState)
   const byteJoined = rpgState.partyMemberIds.includes('byte')
+  const viewportStart = visibleCells[0] ?? position
+
+  const spriteStyle = useCallback(
+    (spritePosition: Position) => ({
+      left: `${((spritePosition.x - viewportStart.x + 0.5) / VIEWPORT_COLUMNS) * 100}%`,
+      top: `${((spritePosition.y - viewportStart.y + 0.5) / VIEWPORT_ROWS) * 100}%`,
+    }),
+    [viewportStart.x, viewportStart.y],
+  )
+
+  const followerVisible =
+    byteJoined &&
+    followerPosition.x >= viewportStart.x &&
+    followerPosition.x < viewportStart.x + VIEWPORT_COLUMNS &&
+    followerPosition.y >= viewportStart.y &&
+    followerPosition.y < viewportStart.y + VIEWPORT_ROWS
 
   useEffect(() => {
     const rewards: string[] = []
@@ -241,12 +262,6 @@ export function WorldPage() {
 
         <div className="world-viewport pixel-inner-window" aria-label="Open world map">
           {visibleCells.map((cell) => {
-            const player = cell.x === position.x && cell.y === position.y
-            const follower =
-              byteJoined &&
-              !player &&
-              cell.x === followerPosition.x &&
-              cell.y === followerPosition.y
             const treasure = cell.terrain === 'treasure' ? getTreasureAtPosition(cell) : undefined
             const treasureOpened = treasure
               ? rpgState.openedTreasureIds.includes(treasure.id)
@@ -275,29 +290,37 @@ export function WorldPage() {
                     {treasureOpened ? 'OPEN' : 'CHEST'}
                   </span>
                 )}
-                {follower && (
-                  <span className="world-follower-sprite" aria-label="BYTE follower">
-                    <img
-                      className="world-follower-pixel"
-                      src={characterVisuals.byte.field}
-                      alt=""
-                      aria-hidden="true"
-                    />
-                  </span>
-                )}
-                {player && (
-                  <span className="world-player-sprite" aria-label="Player">
-                    <img
-                      className="world-player-pixel"
-                      src={characterVisuals.player.field}
-                      alt=""
-                      aria-hidden="true"
-                    />
-                  </span>
-                )}
               </div>
             )
           })}
+
+          {followerVisible && (
+            <span
+              className="world-follower-sprite world-character-overlay"
+              style={spriteStyle(followerPosition)}
+              aria-label="BYTE follower"
+            >
+              <img
+                className="world-follower-pixel"
+                src={characterVisuals.byte.field}
+                alt=""
+                aria-hidden="true"
+              />
+            </span>
+          )}
+
+          <span
+            className="world-player-sprite world-character-overlay"
+            style={spriteStyle(position)}
+            aria-label="Player"
+          >
+            <img
+              className="world-player-pixel"
+              src={characterVisuals.player.field}
+              alt=""
+              aria-hidden="true"
+            />
+          </span>
         </div>
 
         <section className="world-message pixel-inner-window" aria-live="polite">
