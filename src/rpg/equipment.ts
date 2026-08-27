@@ -60,7 +60,7 @@ export const equipmentDefinitions: readonly EquipmentDefinition[] = [
   },
 ]
 
-export const starterEquipmentIds = ['training-blade', 'traveler-coat', 'debug-charm'] as const
+export const starterEquipmentIds = ['training-blade', 'traveler-coat'] as const
 
 export const equipmentById: Record<string, EquipmentDefinition> = Object.fromEntries(
   equipmentDefinitions.map((item) => [item.id, item]),
