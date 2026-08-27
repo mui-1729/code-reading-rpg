@@ -1,153 +1,121 @@
-# Quest System
+# Progress Guidance / Legacy Quest Domain
 
-## 目的
+この文書は、旧Quest systemが現在どう扱われているかを説明する。
 
-QuestはBattle・Field・NPC・Area progressionを1つのRPGループとしてつなぐ。
+**current runtimeの進行案内はQuest TrackerではなくWorld Objectiveがsource of truth**。
+
+## 1. Current progress guidance
 
 ```text
 PlayerProgress
 ↓
-Quest Progress
+worldObjective pure derivation
 ↓
-Quest Tracker / Field Marker / Victory Feedback
+NEXT OBJECTIVE / Pause STATUS / Battle result feedback
 ```
 
-## Main Quest
+現在は、Stage Select / Field Gate / Quest Logを経由せず、Open World上で次の行動を案内する。
 
-Main Questは保存せず、Stage CLEAR / Area CLEARから毎回導出する。
+### JavaScript
 
-### JavaScript Kingdom
+current storyに合わせて、概ね次を案内する。
 
 ```text
-FIRST READ GATE CLEAR
-↓
-ONE OR MANY GATE CLEAR
-↓
-Boss撃破 / AREA CLEAR
+Opening
+→ BYTEと合流
+→ JavaScript Grassland
+→ Chapter 1
+→ Chapter 2
+→ Code Core / Final
+→ clear
 ```
 
-### TypeScript Frontier
+### TypeScript
+
+TypeScript regionもPlayerProgressからEncounter / next Battle / Boss unlock / clearをderiveする。
+
+今後storyを再構成する場合も、objective derivationはWorld側に置く。
+
+## 2. Presentation
+
+current progress presentation:
+
+- World上部の`NEXT OBJECTIVE`
+- Pause > STATUS
+- Battle後のshort progress feedback
+
+旧仕様の次はcurrent runtimeに存在しない。
+
+- persistent Quest Tracker
+- `Q` toggle
+- Field Gate marker `NEXT`
+- Guide NPC `!` marker
+- `QUEST UPDATED` overlay
+- Side Quest bonus EXP runtime
+
+これらを新featureの前提にしない。
+
+## 3. `src/quests/`が残っている理由
+
+`src/quests/quests.ts`等には、旧Main Quest definition / generic helperが残る。
+
+現在の役割は主に:
+
+- story / content regression testのfixture
+- legacy data shapeの背景
+- 過去仕様からの移行履歴
+
+current route / World navigationを制御しない。
+
+今後、testsをcurrent `worldObjective` / story dataへ完全移行できた単位から段階的に削除してよい。
+
+## 4. Side Quest
+
+current active Side Quest definitionは空。
+
+旧saveとの互換のため、PlayerProgressには`completedSideQuestIds`が残る。
 
 ```text
-TYPED ENTRY GATE CLEAR
-↓
-MAYBE VALUE GATE CLEAR
-↓
-Frontier Compiler撃破 / AREA CLEAR
-```
-
-definitionとstep条件は`src/quests/quests.ts`をsource of truthにする。
-
-## Side Quest
-
-Main Quest完了後に、過去Stageを再攻略する目的を追加する。
-
-現在のSide Quest:
-
-```text
-JavaScript AREA CLEAR
-→ SECOND PASS
-→ Stage 1を再攻略
-→ +40 EXP
-```
-
-```text
-TypeScript AREA CLEAR
-→ TYPE RECHECK
-→ Stage 4を再攻略
-→ +50 EXP
-```
-
-Side Questの進行は次のルールにする。
-
-- Area CLEAR前: `LOCKED`
-- Area CLEAR後: `ACTIVE`
-- 対象Battleを再攻略: `COMPLETE`
-- bonus EXPはQuestごとに1回だけ
-- COMPLETE後の再攻略ではbonus EXPを重複付与しない
-
-一度だけの報酬を保証するため、`completedSideQuestIds`だけをPlayerProgressへ保存する。
-
-## Quest Tracker
-
-World Map / Area / Fieldで`Q`から開く。
-
-- 常設toggleは従来の`QUEST`のみ
-- Main Questを表示
-- Side Questは解放後だけ同じpanel内へ表示
-- Battle中は非表示
-- `Esc`で閉じる
-
-Side Questのために常設panelや別toggleは追加しない。
-
-## Field Quest Marker
-
-Main QuestのACTIVE stepだけをField Markerへ使う。
-
-- 次のBattle Gate: `NEXT`
-- Objective Guide NPC: `!`
-- Area CLEAR後: markerなし
-
-Side Questは現在Markerを増やさず、Quest Logから確認する。
-
-## Victory Feedback
-
-Main Quest条件が初めて成立した場合:
-
-```text
-QUEST UPDATED
-```
-
-Main Quest全step完了時:
-
-```text
-MAIN QUEST COMPLETE
-```
-
-Side Quest完了時:
-
-```text
-SIDE QUEST COMPLETE
-+XX EXP
-```
-
-Battle結果画面へ長い説明文を追加せず、状態変化だけを短く通知する。
-
-## Save
-
-schema v3:
-
-```text
-exp
-clearedStageIds
-clearedAreaIds
 completedSideQuestIds
-unlockedStageIds
-unlockedSkillIds
+= legacy save compatibility
+≠ current Side Quest feature
 ```
 
-- Main Quest: Stage / Area進行から導出
-- Side Quest: 完了IDだけ保存
-- v1 / v2 migration: 既存CLEARを維持し、Side Questは未完了から開始
+「fieldがunusedに見える」ことだけを理由にschemaから削除しない。save schema migrationを明示的に設計する場合だけ変更する。
 
-## 実装原則
+## 5. World Objective boundary
 
-- Quest判定は`src/quests/`のpure functionへ置く
-- BattleのTargetRuleへQuest条件を混ぜない
-- Main Questは導出可能な状態を重複保存しない
-- Side Questの永続化は一度だけの報酬に必要な最小情報だけ
-- Quest UIでBattleのコード読解を邪魔しない
-- Side Questを増やしてもField objectを無制限に増やさない
+World Objectiveは次の責務だけを持つ。
 
-## テスト
+- current clear / unlock stateから次の目的をderive
+- presentation用の短いlabelを返す
+- Battle rulesを変更しない
+- RpgStateへquest progressを重複保存しない
 
-最低限:
+Battle target / damage / generator / story scene stateをobjective domainへ混ぜない。
 
-- Main Quest Stage / Area進行
-- Field Marker切替
-- Main Quest replayでfeedbackなし
-- Side Quest LOCKED → ACTIVE → COMPLETE
-- 対象外BattleではSide Questが進まない
-- bonus EXPは一度だけ
-- JavaScript / TypeScript Side Questが独立
-- v1 / v2 → v3 migration
+## 6. Storyとの関係
+
+Story copyとprogress conditionを分ける。
+
+```text
+PlayerProgress condition
+→ objective state
+→ storyに合ったlabel
+```
+
+JavaScript storyの文言を変えても、Stage clear / Area clear等のprogress sourceまで不用意に変更しない。
+
+TypeScript storyを再構成する際も同じ方針を使う。
+
+## 7. Cleanup rule
+
+legacy Quest codeを整理する時は、次を順番に確認する。
+
+1. current runtime importがない
+2. current testsがそのdataをfixtureとして使っていない、または置換済み
+3. PlayerProgress migration互換を壊さない
+4. docsがWorld Objectiveをsource of truthとしている
+5. Unit / E2Eがcurrent flowを固定している
+
+この条件を満たした単位だけ削除する。
