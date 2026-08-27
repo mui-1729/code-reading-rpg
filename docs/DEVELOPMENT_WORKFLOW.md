@@ -1,8 +1,8 @@
 # CODE//READ RPG 開発フロー
 
-## 1. 目的
+この文書を、Issue作成からCloudflare Production確認までの**唯一の開発フローsource of truth**とする。
 
-この文書は、Issue作成からCloudflare Production反映確認までの標準フローを定義する。
+## 1. Standard flow
 
 ```text
 Issue
@@ -11,242 +11,177 @@ Issue
 ↓
 実装
 ↓
-Conventional Commit
+PR前quality checks
 ↓
 Pull Request
 ↓
-自己レビュー
+self-review
 ↓
-GitHub Actions CI / Cloudflare Preview
+GitHub Actions + Cloudflare Preview
 ↓
-必要なら同Branchで修正
+必要なら同Branchで修正して再確認
 ↓
 squash merge to main
 ↓
-Issue close確認
+main CI + Cloudflare Production
 ↓
-Cloudflare Production確認
-↓
-完了
+Issue close / smoke test
 ```
 
-`main`へmergeしただけでは完了としない。Production反映確認までを1つの作業とする。
+`main`へmergeしただけでは完了としない。
 
----
+## 2. Issue / Branch
 
-## 2. 基本原則
+### Issue
 
-### 2.1 1 Issue = 1 Branch = 1 PR
+原則、実装前にIssueを作る。
 
-1つの目的に対して、原則として1本のBranchと1本のPRを作る。
-
-目的:
-
-- 変更理由を追いやすくする
-- レビュー範囲を限定する
-- revertしやすくする
-- Issue / commit / PR / Preview / Productionの対応を明確にする
-
-独立した複数機能を1 Issueへまとめない。ただし、そのIssueを成立させるために不可分な小修正は同じIssue内で扱ってよい。
-
-### 2.2 `main`へ直接commitしない
-
-通常の機能追加、修正、docs更新はIssue / Branch / PR経由とする。
-
-緊急時でも可能な限りhotfix Issue / Branch / PRを作る。
-
-### 2.3 deploy回数を浪費しない
-
-Cloudflareにもbuild資源の上限があるため、意味のない小pushを連続させない。
-
-- 関連する変更はローカルまたはGit object上でまとめてからpushする
-- CIを再実行したいだけのno-op commitを作らない
-- PR内で論理的に必要な複数commitは問題ない
-- `main`へは原則squash merge
-
----
-
-## 3. Issue規約
-
-### 3.1 実装前にIssueを作る
-
-目的・範囲・完了条件を決めてからBranchを作る。
-
-### 3.2 Issueは日本語
-
-タイトルはConventional系typeを付ける。
+タイトル:
 
 ```text
-feat: JavaScriptのStage Selectを追加する
-fix: seed再現時に敵順が変わる問題を修正する
-docs: Cloudflare運用を更新する
+feat: ...
+fix: ...
+refactor: ...
+docs: ...
+test: ...
 ```
 
-### 3.3 推奨本文
+本文には最低限、
 
-```md
-## 概要
-何をするか
+- 背景 / 問題
+- 対応方針
+- Acceptance Criteria
+- 対象外
 
-## 背景 / 問題
-なぜ必要か
+を書く。
 
-## 対応方針
-どう実装するか
-
-## Acceptance Criteria
-- [ ] ユーザーから見た完了条件
-- [ ] GitHub Actions CI成功
-- [ ] Cloudflare Preview成功
-- [ ] 自己レビュー完了
-- [ ] mainへsquash merge
-- [ ] Cloudflare Production成功
-
-## 対象外
-今回やらないこと
-```
-
-Acceptance Criteriaは「コンポーネントを作る」ではなく、検証可能な結果を書く。
-
----
-
-## 4. Branch規約
-
-形式:
+### Branch
 
 ```text
-<type>/<issue番号>-<short-description>
+<type>/<issue-number>-<short-description>
 ```
 
 例:
 
 ```text
-feat/43-player-progression
-feat/44-javascript-stage-select
-docs/60-cloudflare-rpg-direction
-fix/18-preserve-unlocked-skills
+feat/173-typescript-story
+refactor/174-battle-runtime
+fix/175-world-sprite
 ```
 
-ルール:
+`main`へ直接commitしない。
 
-- 英語
-- 小文字
-- kebab-case
-- Issue番号を含める
-- 長すぎる説明を入れない
-
----
-
-## 5. Commit規約
+## 3. Commit
 
 Conventional Commitsを使う。
 
 ```text
-<type>(optional-scope): <summary>
+feat: add ...
+fix(battle): preserve ...
+refactor(world): split ...
+test: cover ...
+docs: update ...
 ```
 
-例:
+`update` / `fix` / `wip`だけの曖昧なcommitを避ける。
 
-```text
-feat: プレイヤー進行モデルを追加
-fix(battle): seed再現時の対象ずれを修正
-test: solvabilityの回帰テストを追加
-docs: Cloudflare運用を更新
+Cloudflare buildを無駄に増やすためのno-op commitは作らない。
+
+## 4. PR前quality checks
+
+**PRを作る前に、作業branchの実コードで確認する。GitHub Actionsを最初のlint/test代わりにしない。**
+
+基本:
+
+```bash
+npm ci
+npm run lint
+npm test
+npm run build
+npm run test:e2e
 ```
 
-避ける例:
+少なくともcode / config / dependencyを変更するPRでは5項目をすべて通す。
 
-```text
-update
-fix
-wip
-again
-```
+純docsだけの変更でE2Eを省略する場合は、PR本文に理由を明記する。
 
-1 commitは1つの論理的変更を目安にする。ただしCloudflare Previewを無駄に増やさないよう、repoへpushする前に関連変更をまとめることを優先する。
+### 失敗した場合
 
----
+- 同じBranchで修正
+- 修正後は関連checkだけで終わらず、原則一式を再実行
+- failing testを削除 / skipして突破しない
 
-## 6. Pull Request規約
+### local executionが使えない作業環境
 
-### 6.1 PRは日本語
+GitHub上の自動作業等でlocal command executionが不可能な場合は、PR前にfeature branch push用CIを**一時的にそのBranchだけ有効化**して同じcommandsを実行してよい。
 
-タイトルはIssueと同じConventional系typeを使う。
+条件:
 
-### 6.2 推奨本文
+- 検証用workflow差分はPR作成前に必ず戻す
+- 最終PR差分に一時triggerを残さない
+- 成功runをPR本文へ記録する
+- PR作成後の通常CIも別に通す
+
+## 5. Pull Request
+
+PRは日本語を基本とし、Issueと同じtypeを使う。
+
+本文例:
 
 ```md
-## 概要
-- 変更1
-- 変更2
-
-## 変更内容
-実装上の要点
-
-## 確認項目
-- [ ] Acceptance Criteriaを満たす
-- [ ] 既存挙動を壊していない
-- [ ] GitHub Actions CI成功
-- [ ] Cloudflare Preview成功
-- [ ] 自己レビュー完了
-
-## 影響範囲
-画面 / ロジック / データ
-
 Closes #123
+
+## 概要
+- ...
+
+## 変更
+- ...
+
+## 削除 / compatibility
+- ...
+
+## Validation
+- npm ci ✅
+- npm run lint ✅
+- npm test ✅
+- npm run build ✅
+- npm run test:e2e ✅
+
+## Preview
+- Cloudflare Preview: ...
 ```
 
-### 6.3 Issueを自動closeする
+PR作成後にdiff全体を自己レビューする。
 
-原則PR本文へ次を含める。
+## 6. Self-review
 
-```text
-Closes #<issue番号>
-```
+最低限確認する。
 
-merge後にIssueが実際にcloseされたことも確認する。
+### General
 
----
+- Issue範囲だけの変更か
+- accidental / debug / dead codeがないか
+- 型を不要に緩めていないか
+- docsがcurrent codeと一致するか
+- migration互換を壊していないか
+- mobile / keyboard / focusを悪化させていないか
 
-## 7. 自己レビュー
+### CODE//READ RPG specific
 
-PRを作ったら、merge前に実差分を読む。
+- displayed codeとinternal ruleの意味が一致するか
+- target preview OFFを壊していないか
+- Skill名 /固定手順の暗記だけで攻略しやすくしていないか
+- Equipment / Party / Levelが読解を代替していないか
+- seed再現性 / solvabilityを壊していないか
+- World UIへad-hoc座標分岐を戻していないか
 
-必須チェック:
+自己レビュー結果はPRへCOMMENTで残してよい。
 
-- 想定したファイルだけが変わっているか
-- Issueの範囲を超えていないか
-- dead code / debug code / console出力がないか
-- 型を不必要に緩めていないか
-- セキュリティ上不要な外部入力実行がないか
-- UI変更でモバイル / keyboard / focusを悪化させていないか
-- 必要なテストを追加したか
-- README / docs更新が必要な仕様変更ではないか
+## 7. GitHub Actions
 
-ゲーム固有チェック:
+current CI:
 
-- 表示コードと内部`TargetRule`が同じ意味か
-- 対象プレビューOFFを壊していないか
-- コードを読まず暗記だけで攻略しやすくしていないか
-- JavaScript上の意味と戦略上の最適解を混同していないか
-- seed再現性を壊していないか
-- 生成盤面の学習条件を壊していないか
-- Player成長を追加しても、敵をcurrent Levelに合わせて自動弱体化していないか
-- Level / 装備の数値だけで読解をスキップできる設計になっていないか
-
-問題なしでもレビューコメントを残す。
-
-```text
-自己レビュー完了。変更範囲、既存ロジックへの影響、CI、Cloudflare Previewを確認し、ブロッカーはありません。
-```
-
-自分自身のPRでは`APPROVE`ではなく`COMMENT`で自己レビューを残してよい。
-
----
-
-## 8. GitHub Actions CI
-
-現在のCIはNode.js 24で次を実行する。
+### build
 
 ```bash
 npm ci
@@ -255,137 +190,87 @@ npm test
 npm run build
 ```
 
-CI失敗時はmergeしない。
+### e2e
 
-- ログを読む
-- 原因を修正
-- 同じBranchへcommit / push
-- CI再実行
-- 差分を再レビュー
-
-CIを一時的に無効化して突破しない。
-
----
-
-## 9. Cloudflare Preview
-
-PR / non-production branch pushではCloudflare Workers BuildsのPreviewを使う。
-
-merge前に確認するもの:
-
-- `Workers Builds: code-reading-rpg` がsuccess
-- Preview URLが発行される
-- 対象画面が開く
-- UI変更ならDesktop / Mobileを確認
-- route追加なら直URLと再読み込みを確認
-- seed関連変更なら同じseedで再現できることを確認
-
-GitHub Actionsだけ成功し、Cloudflare checkがまだ無い場合はPreview完了とは扱わない。
-
-Vercel Previewは現在のmerge条件ではない。
-
----
-
-## 10. Merge規約
-
-### 10.1 原則squash merge
-
-PR内に複数commitがあっても、`main`にはIssue単位の1commitとして取り込む。
-
-### 10.2 merge前条件
-
-- Issue範囲の実装完了
-- 自己レビュー完了
-- blockerなし
-- GitHub Actions CI success
-- Cloudflare Preview success
-- review後にhead SHAが意図せず変わっていない
-
----
-
-## 11. Production規約
-
-正式deploy先:
-
-```text
-Cloudflare Account: Profuse Comb
-Worker: code-reading-rpg
-Production branch: main
-Production URL: https://code-reading-rpg.profuse-comb.workers.dev
+```bash
+npm ci
+npx playwright install --with-deps chromium
+npm run test:e2e
 ```
 
-`main` merge後にCloudflare Workers Production Buildが走る。
+CI failure中はmergeしない。
 
-確認項目:
+## 8. Cloudflare Preview
 
-1. merge commitのGitHub Actionsがsuccess
-2. `Workers Builds: code-reading-rpg`がsuccess
-3. Cloudflare Version IDが発行される
-4. 必要に応じてProduction URLでsmoke test
+PR / non-production branchのPreviewで確認する。
 
-Production失敗時はIssueを完了扱いにしない。必要ならfix Issueを作る。
+最低限:
 
----
+- build success
+- Preview URL発行
+- 対象routeが開く
+- UI変更ならDesktop / Mobile
+- route変更ならdirect URL + reload
+- seed変更なら同seed再現
+- story / interaction変更なら主要flow
 
-## 12. Vercel
+GitHub Actions successだけでPreview確認済みとは扱わない。
 
-Vercel Git連携は解除済みで、自動Git deployは`vercel.json`でも無効化している。
+Vercelはcurrent deployment gateではない。
 
-したがって次は完了条件から外す。
+## 9. Merge / Production
 
-- Vercel Preview
-- Vercel Production
-- Vercel status check
+### Merge
 
-旧Vercel Projectを残していても、通常開発フローからは参照しない。
+原則squash merge。
 
----
+条件:
 
-## 13. Definition of Done
+- Issue scope完了
+- pre-PR checks success
+- GitHub Actions success
+- Cloudflare Preview success
+- self-review blockerなし
 
-通常のIssueは以下を満たして完了。
+### Production
 
-- [ ] Issueがある
-- [ ] Issue専用Branchで作業した
-- [ ] Conventional Commitsになっている
-- [ ] PRが日本語で作成されている
-- [ ] PRがIssueを参照している
-- [ ] 実差分を自己レビューした
-- [ ] 必要なテストを追加・実行した
-- [ ] GitHub Actions CI success
+Production:
+
+```text
+Cloudflare Worker: code-reading-rpg
+Production branch: main
+```
+
+merge後:
+
+1. main GitHub Actions success
+2. Cloudflare Production build success
+3. 必要ならProduction smoke test
+4. Issue close確認
+
+Production failure中は完了扱いにしない。
+
+## 10. Refactor rule
+
+- feature変更と大規模refactorをできるだけ混ぜない
+- 新機能に不可欠な小refactorは同Issueでよい
+- dead code削除では、save migration / regression fixtureとの区別を確認する
+- 将来使うかもしれない抽象化を先に増やさない
+- dependency追加前に標準API / current dependencyで代替できないか確認する
+
+判断基準は変更file数ではなく、**目的が1つか**。
+
+## Definition of Done
+
+- [ ] Issue
+- [ ] Issue branch
+- [ ] Conventional Commits
+- [ ] pre-PR quality checks
+- [ ] PR
+- [ ] self-review
+- [ ] GitHub Actions success
 - [ ] Cloudflare Preview success
-- [ ] squash merge済み
-- [ ] Issue close確認
+- [ ] squash merge
+- [ ] main CI success
 - [ ] Cloudflare Production success
-- [ ] 必要なProduction smoke test完了
-
----
-
-## 14. Issueを分ける判断
-
-別Issueにする例:
-
-- 新機能と無関係な既存バグ
-- UI改善と独立したゲームロジック変更
-- 現Issueに不要な大規模refactor
-- 「ついでに」追加したい別機能
-
-同じIssueでよい例:
-
-- その修正なしではAcceptance Criteriaを満たせない
-- 同じ原因の変更が複数ファイルへまたがる
-- route追加に伴う最小navigation変更
-
-判断基準はファイル数ではなく**目的が1つか**。
-
----
-
-## 15. Refactor / Dependency
-
-- 動作変更と大規模refactorをできるだけ混ぜない
-- 新機能に不可欠な最小refactorは同Issueでよい
-- 将来使うかもしれない抽象化を先に作りすぎない
-- 新しいnpm packageは標準API / 既存依存で代替できないか確認する
-- bundle size / maintenance / license / securityを確認する
-
-特にGame Domainでは、実際に責務が増えてから分割し、抽象化そのものを目的にしない。
+- [ ] Issue close /必要なsmoke test
