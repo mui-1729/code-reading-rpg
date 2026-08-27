@@ -1,15 +1,6 @@
-export type BattleStoryLine = {
-  speaker: string
-  role: string
-  text: string
-}
+import type { BattleStoryEvent } from './types'
 
-export type BattleStoryEvent = {
-  id: string
-  label: string
-  title: string
-  lines: BattleStoryLine[]
-}
+export type { BattleStoryEvent, BattleStoryLine } from './types'
 
 const postBattleEvents: Record<number, BattleStoryEvent> = {
   1: {

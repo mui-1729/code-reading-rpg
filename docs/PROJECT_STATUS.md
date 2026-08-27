@@ -50,11 +50,16 @@ EXP / Gold / Level / Equipment / Story event
   - Chapter 1: 最初のバグ
   - Chapter 2: 広がるバグ
   - Final: 暴走するCode Core
+- TypeScript 3章の一続きのstory
+  - Chapter 1: API契約の食い違い
+  - Chapter 2: 消える設定値
+  - Final: 壊れたShared Contract
+- TypeScriptはEnemy API更新後のincidentを、型注釈 → union / optional → narrowing / generic / keyofの順に追う
 - Chapter間 / Boss前 / clear後のstory event
+- JavaScript / TypeScript共通のbattle story resolver
 - World上のNEXT OBJECTIVE
 - Tutorial: MOVE → INTERACT → SELECT → EXECUTE
 - Tutorial skip / replay
-- TypeScript regionはplayableだが、story presentationはJavaScriptほど統一されていない
 
 ### World
 
@@ -114,13 +119,13 @@ EXP / Gold / Level / Equipment / Story event
 
 ### Legacy code
 
-Open World化前のField / Quest / Area UIの一部がrepositoryに残っています。
+Open World化前のField / Quest / Area UIの一部dataがrepositoryに残っています。
 
 現在の扱い:
 
 - `/javascript/field` / `/typescript/field` routeは`/world`へredirect
 - 旧Fieldのcontent definitionは学習 / story regression testで一部利用
-- 旧FieldのReact page / route componentはcurrent runtimeから未使用
+- 旧FieldのReact page / route componentは削除済み
 - `AreaShop`はWorld Shopへ置換済み
 - `QuestVictoryFeedback`はWorld progress feedbackへ置換済み
 - `completedSideQuestIds`はsave migration互換のため残す
@@ -137,21 +142,32 @@ Open World化前のField / Quest / Area UIの一部がrepositoryに残ってい�
 
 ## 5. 次に実装する優先候補
 
-### P0 — TypeScript編のstory整合
+### P0 — RPG Economy / Equipment loop
 
-JavaScript / TypeScriptはどちらも、**3 Chapterで1つの仕事を追う同じ粒度の学習編**として扱います。
+Equipment / Gold / Shop / Recoveryの基盤はあるが、RPGとしてのloopはまだ薄い。
 
-次はTypeScriptをJavaScriptと同じ品質へ揃えるのが最優先です。
+次は次を1つのsystemとしてまとめる。
+
+```text
+探索 / Battle
+→ Gold・Treasureを得る
+→ Shopで比較して買う
+→ Equipmentを装備する
+→ InnでGoldを使って回復する
+→ 次の探索へ
+```
 
 やること:
 
-- TypeScript 3章を1つの問題へつなぐ
-- Chapterごとの仕事 / bug /原因を明確にする
-- 前章の構文を後章でも累積利用する
-- World Objective / NPC / Battle briefing / result eventの文脈を統一する
-- Bossを「型の情報を読んで解決する総合問題」にする
+- Equipmentをpixel-art icon / cardで画像化し、Shop / Pause / rewardで共通利用する
+- owned / equipped / unavailableを視覚的に分ける
+- inventory / itemの所有と使用場所を分かりやすくする
+- Gold source / sink / price balanceを整理する
+- 無料Recovery PointをInn / Restとして意味のあるGold sinkへ再設計する
+- 回復前後HP / price / 所持Gold不足をUIへ出す
+- save schema互換を壊さずに実装する
 
-新しい機能基盤を増やすより、既存Battleの意味をstoryとして強くする段階です。
+RPGを強くしても、GoldやEquipmentだけでcode readingを無視して攻略できるbalanceにはしない。
 
 ### P1 — Battle runtimeの責務分割
 
@@ -244,9 +260,9 @@ framework固有のruntime / data flow / mental modelが大きいものは別編�
 
 詳細は`ENGINEER_STORY_ROADMAP.md`をsource of truthとします。
 
-### Party / Equipment depth
+### Party depth
 
-必要なら追加:
+RPG Economy loopを整えた後、必要なら追加:
 
 - 2人目のcompanion
 - heal / support role
@@ -269,9 +285,11 @@ Backend / API編は**学習content**として作ります。ゲーム自体へse
 ## 7. 決定済みの大きな方向
 
 - JavaScript / TypeScriptは同じ3 Chapter構造の「〜編」として揃える
+- TypeScript編もJavaScript編と同じく1つのincidentを追うstory structureにする
 - まとめられる基礎概念は仕事単位でまとめる
 - framework固有のmental modelは無理にまとめない
 - 3つ目の新規regionはDatabase編を優先する
 - Databaseの次はBackend / API、その後React / Next.js / TanStackを候補とする
+- 新規learning regionより先にRPG Economy / Equipment loopを完成させる
 
-この方向を前提に、今後は各編のprototypeとstory設計をIssue単位で進めます。
+この方向を前提に、今後は各編のprototypeとRPG基盤をIssue単位で進めます。

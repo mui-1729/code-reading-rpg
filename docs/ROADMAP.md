@@ -55,36 +55,59 @@
 ### Story
 
 - JavaScript Opening
-- Chapter 1 → Chapter 2 → Final Chapterの因果関係
+- JavaScript: Chapter 1 → Chapter 2 → Final Chapter
+- TypeScript: Chapter 1 → Chapter 2 → Final Chapter
 - Battle間story event / Final briefing / ending
 - World NEXT OBJECTIVE
-- JavaScript syntaxの累積学習
+- JavaScript / TypeScriptの累積学習
+- TypeScriptはAPI contract incident → optional / unionの波及 → Shared Contract / Frontier Compilerの根本原因という1つの仕事で接続
 
-以前のRoadmapにあったWorld Objective、legacy runtime cleanup、World resolver、RpgState validation、Open World E2E、Treasure、Equipment Shop、Boss mechanicはすべてbaselineへ移動済み。
+以前のRoadmapにあったWorld Objective、legacy runtime cleanup、World resolver、RpgState validation、Open World E2E、Treasure、Equipment Shop、Boss mechanic、TypeScript story整合はbaselineへ移動済み。
 
-## P0 — TypeScript編をJavaScript編と同じ「編」の品質へ揃える
+## P0 — RPG Economy / Equipment loopを完成させる
 
-JavaScript / TypeScriptは別の仕組みとして扱うのではなく、どちらも**3 Chapterで1つの仕事を追う学習編**として統一する。
+現在はEquipment / Gold / PATCH KIT / Shop / Recoveryの基盤はあるが、**「探索で稼ぐ → 買う / 拾う → 装備する → 宿で整える → 次の探索へ」**というRPG loopとしての完成度が低い。
 
-TypeScript regionはplayableだが、story / objective / character presentationの統一度がJavaScriptより低い。
+次はこの周辺を1つのsystemとしてまとめて詰める。
 
-### Goal
+### Equipment visual
 
-3つのBattleを「型の食い違いを追う1つの仕事」としてつなぐ。
+- Weapon / Armor / Accessoryを文字列だけでなくpixel-art icon / cardとして見せる
+- owned / equipped / unavailableを視覚的に区別する
+- Shop / Pause Equipment / rewardで同じvisual source of truthを使う
+- stat差だけでなく役割が分かる見た目と説明にする
 
-方向:
+### Inventory / items
 
-1. Chapter 1 — 型の食い違いを発見
-2. Chapter 2 — optional / unionを含む複数箇所へ影響が広がる
-3. Final — shared contractの根本原因を止める
+- Equipmentとconsumableの所有状態を分かりやすくする
+- PATCH KIT以外のitem追加は役割が明確な少数に絞る
+- Battle / Worldのどこで使えるかをUI上で明示する
+- 「大量の同種回復薬」を増やしてgrind中心にしない
+
+### Gold economy
+
+- Battle / Boss / TreasureのGold sourceを整理する
+- Shop / Innを主要Gold sinkにする
+- 初回攻略で必要な買い物ができる価格帯にする
+- grindしないと進めないbalanceにしない
+- 所持Gold / price / purchase後残額を同じUIで確認できるようにする
+
+### Inn / recovery
+
+- 現在の無料Recovery Pointを、RPGとして意味のあるInn / Restへ再設計する
+- Goldを払ってfull recoveryする基本loopを作る
+- 所持Gold不足時のfeedbackを用意する
+- 回復前後のHPとpriceを確認できる
+- save / currentHpと一貫する
 
 ### Acceptance direction
 
-- 前Chapterのsyntaxを後Chapterでも使う
-- World Objective / NPC / briefing / result copyを同じ事件へ揃える
-- BossがTypeScriptの型情報を読む総合問題になる
-- JavaScript編と同じ構成品質にするがstory内容はコピーしない
-- Battle engineを複製しない
+- Equipmentがvisual assetを持ちShop / Equipment画面 / rewardで再利用される
+- Shopで比較して購入 → 所有 → 装備まで自然につながる
+- Goldに明確な使い道があり、Battle rewardの意味が出る
+- InnでGoldを使ってHPを回復できる
+- currentHP / Gold / owned Equipmentのsave互換を壊さない
+- RPG要素だけでcode readingを飛ばせるbalanceにはしない
 
 ## P1 — Battle runtimeを小さな責務へ分ける
 
@@ -265,11 +288,11 @@ JavaScript
 → Architecture / Refactoring
 ```
 
-この順序は固定のカリキュラムではなく、各prototypeの結果で調整してよい。
+この順序は学習contentの順序。RPG基盤の改善はcontent追加とは別軸で先に行ってよい。
 
 ## Party / Equipment depth
 
-必要性が出たときだけ追加する。
+RPG Economy loopを完成させた後、必要性が出たときだけ追加する。
 
 候補:
 

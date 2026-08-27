@@ -114,6 +114,10 @@ test.describe('Boss GUARD', () => {
     await seedStorage(page)
     await page.goto('/typescript/battle/6?seed=boss-guard-ts-e2e&returnTo=%2Fworld')
 
+    const briefing = page.getByRole('dialog', { name: 'Frontier Compilerへ' })
+    await expect(briefing).toBeVisible()
+    await briefing.getByRole('button', { name: 'SKIP' }).click()
+
     const boss = page.locator('.enemy-card.is-boss-enemy')
     const goblin = page.locator('.enemy-card').filter({ hasText: 'Goblin' })
     await expect(page.getByLabel('Boss Guard ACTIVE')).toBeVisible()

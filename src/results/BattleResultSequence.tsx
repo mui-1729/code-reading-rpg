@@ -1,22 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { BattleStoryEvent } from '../story/BattleStoryEvent'
-import {
-  getJavaScriptPostBattleEvent,
-  getJavaScriptPreBattleEvent,
-  type BattleStoryEvent as BattleStoryEventData,
-} from '../story/javascriptBattleEvents'
+import { getBattleStoryEvent } from '../story/battleStoryEvents'
+import type { BattleStoryEvent as BattleStoryEventData } from '../story/types'
 import { buildResultSequence, type RawResultItem, type ResultSequenceItem } from './resultSequence'
 
 const AUTO_ADVANCE_MS = 1100
 const WORLD_PROGRESS_SELECTOR =
   '[data-result-feedback="world-progress"]:not(.result-sequence-consumed)'
-const JAVASCRIPT_BATTLE_PATH = /^\/javascript\/battle\/(\d+)$/
-
-const getJavaScriptBattleId = () => {
-  const match = JAVASCRIPT_BATTLE_PATH.exec(window.location.pathname)
-  return match?.[1] ? Number(match[1]) : null
-}
 
 const isFirstClear = (summary: HTMLElement) =>
   Array.from(summary.querySelectorAll<HTMLElement>('.reward-unlock'))
@@ -89,10 +80,9 @@ export function BattleResultSequence() {
       }
 
       const nextTarget = document.querySelector<HTMLElement>('.victory-card .reward-summary')
-      const battleId = getJavaScriptBattleId()
 
-      if (battleId !== null && !nextTarget && !preStoryShown.current) {
-        const preEvent = getJavaScriptPreBattleEvent(battleId)
+      if (!nextTarget && !preStoryShown.current) {
+        const preEvent = getBattleStoryEvent(path, 'pre')
         if (preEvent) {
           preStoryShown.current = true
           setStoryEvent(preEvent)
@@ -128,8 +118,8 @@ export function BattleResultSequence() {
       nextTarget.closest<HTMLElement>('.victory-card')?.classList.add('result-sequence-host')
       collect(nextTarget)
 
-      if (battleId !== null && postStoryTarget.current !== nextTarget && isFirstClear(nextTarget)) {
-        const postEvent = getJavaScriptPostBattleEvent(battleId)
+      if (postStoryTarget.current !== nextTarget && isFirstClear(nextTarget)) {
+        const postEvent = getBattleStoryEvent(path, 'post')
         if (postEvent) {
           postStoryTarget.current = nextTarget
           setStoryEvent(postEvent)
