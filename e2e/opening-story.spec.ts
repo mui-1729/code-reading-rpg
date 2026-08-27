@@ -29,11 +29,13 @@ test('first START plays the JavaScript opening before entering the world', async
 
   await page.getByRole('button', { name: 'NEXT ▶' }).click()
   await expect(page.locator('.opening-kicker')).toHaveText('MISSION START')
-  await expect(page.locator('.opening-copy')).toContainText('プログラマーとしての冒険')
+  await expect(page.locator('.opening-copy')).toContainText('まずHubでBYTEと合流する')
 
   await page.getByRole('button', { name: '▶ 西の草原へ' }).click()
   await expect(page).toHaveURL(/\/world$/)
   await expect(page.getByLabel('Open world map')).toBeVisible()
+  await expect(page.getByLabel('Next objective')).toContainText('BYTEと合流する')
+  await expect(page.getByLabel('Next objective')).toContainText('左か上へ1歩')
 })
 
 test('after the opening is seen, CONTINUE enters the world and opening can be replayed', async ({ page }) => {
