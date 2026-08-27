@@ -5,6 +5,7 @@ import type { RpgState } from './state'
 export type CombatStats = PlayerStats & {
   attack: number
   defense: number
+  patchKitHealBonus: number
 }
 
 export function getCombatStats(baseStats: PlayerStats, rpgState: RpgState): CombatStats {
@@ -14,6 +15,7 @@ export function getCombatStats(baseStats: PlayerStats, rpgState: RpgState): Comb
     maxHp: baseStats.maxHp + bonuses.maxHp,
     attack: 10 + (baseStats.level - 1) * 2 + bonuses.attack,
     defense: 3 + (baseStats.level - 1) + bonuses.defense,
+    patchKitHealBonus: bonuses.patchKitHeal,
   }
 }
 
