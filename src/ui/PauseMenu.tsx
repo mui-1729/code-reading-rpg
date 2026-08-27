@@ -8,7 +8,7 @@ import {
   equipItem,
   equipmentDefinitions,
   getCombatStats,
-  getWeaponVisual,
+  getEquipmentPresentation,
   partyMemberById,
   useRpg,
   type EquipmentSlot,
@@ -190,42 +190,69 @@ export function PauseMenu() {
                   {(['weapon', 'armor', 'accessory'] as EquipmentSlot[]).map((slot) => {
                     const equippedId = rpgState.equipment[slot]
                     return (
-                      <div className="equipment-slot pixel-inner-window" key={slot}>
+                      <div
+                        className="equipment-slot pixel-inner-window"
+                        key={slot}
+                        data-equipment-slot={slot}
+                      >
                         <header>
                           <span>{slot.toUpperCase()}</span>
-                          <strong>{equippedId ? ownedEquipment.find((item) => item.id === equippedId)?.name ?? equippedId : 'EMPTY'}</strong>
+                          <strong>
+                            {equippedId
+                              ? ownedEquipment.find((item) => item.id === equippedId)?.name ?? equippedId
+                              : 'EMPTY'}
+                          </strong>
                         </header>
                         <div className="equipment-options">
                           {ownedEquipment.filter((item) => item.slot === slot).map((item) => {
-                            const visual = getWeaponVisual(item.id)
+                            const presentation = getEquipmentPresentation(item.id, rpgState.equipment)
+                            if (!presentation) return null
+                            const equipped = equippedId === item.id
                             return (
                               <button
                                 type="button"
                                 key={item.id}
-                                className={equippedId === item.id ? 'is-equipped' : ''}
+                                className={equipped ? 'is-equipped' : ''}
                                 onClick={() => equip(item.id)}
+                                disabled={equipped}
+                                data-equipment-id={item.id}
+                                data-equipment-state={equipped ? 'equipped' : 'owned'}
+                                aria-label={`${item.name}${equipped ? ' equipped' : ' を装備'}`}
                               >
                                 <span className="equipment-option-main">
-                                  {visual && (
+                                  {presentation.visual && (
                                     <img
-                                      className="equipment-pixel-icon"
-                                      src={visual}
+                                      className="equipment-pixel-icon equipment-pause-icon"
+                                      src={presentation.visual}
                                       alt=""
                                       aria-hidden="true"
                                     />
                                   )}
-                                  <strong>{item.name}</strong>
+                                  <span className="equipment-option-title">
+                                    <strong>{item.name}</strong>
+                                    <em className={`equipment-state-badge is-${equipped ? 'equipped' : 'owned'}`}>
+                                      {equipped ? 'EQUIPPED' : 'OWNED'}
+                                    </em>
+                                  </span>
                                 </span>
-                                <small>
-                                  {item.bonuses.attack ? `ATK +${item.bonuses.attack} ` : ''}
-                                  {item.bonuses.defense ? `DEF +${item.bonuses.defense} ` : ''}
-                                  {item.bonuses.maxHp ? `HP +${item.bonuses.maxHp}` : ''}
-                                </small>
+                                <small>{presentation.statSummary}</small>
+                                <span className="equipment-comparison">
+                                  {equipped
+                                    ? 'CURRENT LOADOUT'
+                                    : `VS ${presentation.currentEquipmentName} · ${presentation.deltaSummary}`}
+                                </span>
                                 <span className="equipment-description">{item.description}</span>
                               </button>
                             )
                           })}
-                          <button type="button" onClick={() => unequip(slot)}>EMPTY</button>
+                          <button
+                            type="button"
+                            className="equipment-empty-option"
+                            onClick={() => unequip(slot)}
+                            disabled={!equippedId}
+                          >
+                            EMPTY
+                          </button>
                         </div>
                       </div>
                     )
