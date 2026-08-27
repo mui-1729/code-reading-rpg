@@ -3,23 +3,10 @@ import { useNavigate } from '@tanstack/react-router'
 import { gameAudio } from '../audio/gameAudio'
 import { useBgm } from '../audio/useBgm'
 import { PATCH_KIT_PRICE, purchasePatchKit } from '../economy'
-import { createSeededRandom } from '../game'
 import { useProgress } from '../progression'
 import { emptyPartyEquipment, useRpg } from '../rpg'
-import {
-  BYTE_POSITION,
-  getEncounterBattleId,
-  getEncounterChance,
-  getTerrain,
-  getVisibleWorldCells,
-  getWorldRegion,
-  isAdjacent,
-  isEncounterTerrain,
-  isWalkableTerrain,
-  JS_BOSS_POSITION,
-  SHOP_POSITION,
-  TS_BOSS_POSITION,
-} from './worldMap'
+import { resolveWorldInteraction, resolveWorldMove } from './worldActions'
+import { getVisibleWorldCells, getWorldRegion } from './worldMap'
 
 const regionLabels = {
   javascript: 'JAVASCRIPT GRASSLAND',
@@ -64,89 +51,77 @@ export function WorldPage() {
     })
   }, [progress.clearedAreaIds, setRpgState])
 
-  const enterBattle = useCallback((battleId: number, battleRegion: 'javascript' | 'typescript', seed: string) => {
-    gameAudio.playSe('confirm')
-    if (battleRegion === 'javascript') {
+  const enterBattle = useCallback(
+    (battleId: number, battleRegion: 'javascript' | 'typescript', seed: string) => {
+      gameAudio.playSe('confirm')
+      if (battleRegion === 'javascript') {
+        navigate({
+          to: '/javascript/battle/$battleId',
+          params: { battleId: String(battleId) },
+          search: { seed, returnTo: '/world' },
+        })
+        return
+      }
       navigate({
-        to: '/javascript/battle/$battleId',
+        to: '/typescript/battle/$battleId',
         params: { battleId: String(battleId) },
         search: { seed, returnTo: '/world' },
       })
-      return
-    }
-    navigate({
-      to: '/typescript/battle/$battleId',
-      params: { battleId: String(battleId) },
-      search: { seed, returnTo: '/world' },
-    })
-  }, [navigate])
+    },
+    [navigate],
+  )
 
-  const move = useCallback((dx: number, dy: number) => {
-    if (document.body.dataset.rpgPaused === 'true') return
+  const move = useCallback(
+    (dx: number, dy: number) => {
+      if (document.body.dataset.rpgPaused === 'true') return
 
-    const next = { x: position.x + dx, y: position.y + dy }
-    const terrain = getTerrain(next.x, next.y)
-    if (!isWalkableTerrain(terrain)) {
-      gameAudio.playSe('cancel')
-      setMessage(terrain === 'boss' ? 'Bossが道を塞いでいる。隣からINTERACT。' : 'そこへは進めない。')
-      return
-    }
-
-    const nextSteps = rpgState.stepsSinceEncounter + 1
-    const nextRegion = getWorldRegion(next.x)
-    const nextState = {
-      ...rpgState,
-      worldPosition: next,
-      stepsSinceEncounter: nextSteps,
-    }
-
-    if (isEncounterTerrain(terrain) && nextSteps >= 5) {
-      const seedBase = `${rpgState.encounterCount}:${next.x}:${next.y}:${nextSteps}`
-      const random = createSeededRandom(seedBase)
-      if (random.next() < getEncounterChance(terrain)) {
-        const battleId = getEncounterBattleId(
-          nextRegion,
-          progress.unlockedStageIds,
-          progress.clearedStageIds,
-          random.next(),
+      const result = resolveWorldMove({ rpgState, progress, dx, dy })
+      if (result.kind === 'blocked') {
+        gameAudio.playSe('cancel')
+        setMessage(
+          result.terrain === 'boss'
+            ? 'Bossが道を塞いでいる。隣からINTERACT。'
+            : 'そこへは進めない。',
         )
-        if (battleId !== null && nextRegion !== 'hub') {
-          const encounterNumber = rpgState.encounterCount + 1
-          setRpgState({
-            ...nextState,
-            stepsSinceEncounter: 0,
-            encounterCount: encounterNumber,
-          })
-          setMessage('ENCOUNTER!')
-          enterBattle(battleId, nextRegion, `encounter:${encounterNumber}:${next.x}:${next.y}`)
-          return
-        }
+        return
       }
-    }
 
-    setRpgState(nextState)
-    setMessage(terrainLabels[terrain] ?? terrain)
-  }, [enterBattle, position, progress.clearedStageIds, progress.unlockedStageIds, rpgState, setRpgState])
+      setRpgState(result.nextState)
+      if (result.kind === 'encounter') {
+        setMessage('ENCOUNTER!')
+        enterBattle(result.battle.battleId, result.battle.region, result.battle.seed)
+        return
+      }
+
+      setMessage(terrainLabels[result.terrain] ?? result.terrain)
+    },
+    [enterBattle, progress, rpgState, setRpgState],
+  )
 
   const interact = useCallback(() => {
     if (document.body.dataset.rpgPaused === 'true') return
 
-    if (isAdjacent(position, BYTE_POSITION)) {
-      if (rpgState.partyMemberIds.includes('byte')) {
+    const intent = resolveWorldInteraction(rpgState, progress)
+
+    if (intent.kind === 'party') {
+      if (intent.alreadyJoined) {
         setMessage('BYTE: 森の方は型が厳しい。装備を整えて行こう。')
         return
       }
       gameAudio.playSe('skillUnlock')
       setRpgState((current) => ({
         ...current,
-        partyMemberIds: [...current.partyMemberIds, 'byte'],
-        partyEquipment: { ...current.partyEquipment, byte: emptyPartyEquipment() },
+        partyMemberIds: [...current.partyMemberIds, intent.memberId],
+        partyEquipment: {
+          ...current.partyEquipment,
+          [intent.memberId]: emptyPartyEquipment(),
+        },
       }))
       setMessage('BYTE joined the party! Battleで追撃してくれる。')
       return
     }
 
-    if (isAdjacent(position, SHOP_POSITION)) {
+    if (intent.kind === 'shop') {
       const result = purchasePatchKit(progress)
       if (!result.purchased) {
         gameAudio.playSe('cancel')
@@ -159,41 +134,41 @@ export function WorldPage() {
       return
     }
 
-    if (isAdjacent(position, JS_BOSS_POSITION)) {
-      if (!progress.unlockedStageIds.includes(3)) {
-        setMessage('JS Bossへの道はまだ開かない。草むらのEncounterを進めよう。')
+    if (intent.kind === 'boss') {
+      if (!intent.unlocked) {
+        setMessage(
+          intent.region === 'javascript'
+            ? 'JS Bossへの道はまだ開かない。草むらのEncounterを進めよう。'
+            : 'TS Bossへの道はまだ開かない。森のEncounterを進めよう。',
+        )
         return
       }
-      enterBattle(3, 'javascript', `boss:js:${rpgState.encounterCount}`)
-      return
-    }
-
-    if (isAdjacent(position, TS_BOSS_POSITION)) {
-      if (!progress.unlockedStageIds.includes(6)) {
-        setMessage('TS Bossへの道はまだ開かない。森のEncounterを進めよう。')
-        return
-      }
-      enterBattle(6, 'typescript', `boss:ts:${rpgState.encounterCount}`)
+      enterBattle(intent.battleId, intent.region, intent.seed)
       return
     }
 
     setMessage('近くに調べられるものはない。')
-  }, [enterBattle, position, progress, rpgState.encounterCount, rpgState.partyMemberIds, setProgress, setRpgState])
+  }, [enterBattle, progress, rpgState, setProgress, setRpgState])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (document.body.dataset.rpgPaused === 'true') return
       const key = event.key.toLowerCase()
       if (key === 'arrowup' || key === 'w') {
-        event.preventDefault(); move(0, -1)
+        event.preventDefault()
+        move(0, -1)
       } else if (key === 'arrowdown' || key === 's') {
-        event.preventDefault(); move(0, 1)
+        event.preventDefault()
+        move(0, 1)
       } else if (key === 'arrowleft' || key === 'a') {
-        event.preventDefault(); move(-1, 0)
+        event.preventDefault()
+        move(-1, 0)
       } else if (key === 'arrowright' || key === 'd') {
-        event.preventDefault(); move(1, 0)
+        event.preventDefault()
+        move(1, 0)
       } else if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault(); interact()
+        event.preventDefault()
+        interact()
       }
     }
     window.addEventListener('keydown', onKeyDown)
@@ -225,7 +200,11 @@ export function WorldPage() {
                 {cell.terrain === 'boss' && <span className="world-object boss-object">BOSS</span>}
                 {cell.terrain === 'shop' && <span className="world-object shop-object">SHOP</span>}
                 {cell.terrain === 'npc' && <span className="world-object npc-object">B</span>}
-                {player && <span className="world-player-sprite" aria-label="Player">◆</span>}
+                {player && (
+                  <span className="world-player-sprite" aria-label="Player">
+                    ◆
+                  </span>
+                )}
               </div>
             )
           })}
@@ -238,12 +217,22 @@ export function WorldPage() {
 
         <div className="world-controls" aria-label="World controls">
           <div className="world-dpad">
-            <button type="button" aria-label="Move up" onClick={() => move(0, -1)}>▲</button>
-            <button type="button" aria-label="Move left" onClick={() => move(-1, 0)}>◀</button>
-            <button type="button" aria-label="Move down" onClick={() => move(0, 1)}>▼</button>
-            <button type="button" aria-label="Move right" onClick={() => move(1, 0)}>▶</button>
+            <button type="button" aria-label="Move up" onClick={() => move(0, -1)}>
+              ▲
+            </button>
+            <button type="button" aria-label="Move left" onClick={() => move(-1, 0)}>
+              ◀
+            </button>
+            <button type="button" aria-label="Move down" onClick={() => move(0, 1)}>
+              ▼
+            </button>
+            <button type="button" aria-label="Move right" onClick={() => move(1, 0)}>
+              ▶
+            </button>
           </div>
-          <button type="button" className="primary-button world-interact" onClick={interact}>INTERACT</button>
+          <button type="button" className="primary-button world-interact" onClick={interact}>
+            INTERACT
+          </button>
         </div>
       </section>
     </main>
