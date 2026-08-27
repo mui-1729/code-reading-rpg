@@ -15,6 +15,12 @@ import {
   type Seed,
   type SkillCard,
 } from './game'
+import {
+  BOSS_GUARD_CONDITION_CODE,
+  hasBossGuard,
+  isBossGuardActive,
+  resolveBossGuardDamage,
+} from './game/bossGuard'
 import { BATTLE_MOTION, getNewlyDefeatedIds } from './motion/battleMotion'
 import {
   applyBattleVictory,
@@ -88,6 +94,8 @@ function App({ battleId, seed, returnTo }: AppProps) {
     () => getSkillCardsForBattle(battle, seed),
     [battle, seed],
   )
+  const bossGuardEnabled = hasBossGuard(battle)
+  const bossGuardActive = isBossGuardActive(battle, enemies)
 
   useEffect(() => {
     gameAudio.requestBgm('battle')
@@ -199,9 +207,19 @@ function App({ battleId, seed, returnTo }: AppProps) {
       }
 
       const targetIds = targets.map((target) => target.id)
+      const damageByTargetId: Record<string, number> = Object.fromEntries(
+        targets.map((target) => [
+          target.id,
+          resolveBossGuardDamage(battle, enemies, target, totalPower),
+        ]),
+      )
+      const guardedBossTargeted = targets.some(
+        (target) =>
+          target.name === 'Boss' && (damageByTargetId[target.id] ?? totalPower) < totalPower,
+      )
       const nextEnemies = enemies.map((enemy) =>
         targetIds.includes(enemy.id)
-          ? { ...enemy, hp: Math.max(0, enemy.hp - totalPower) }
+          ? { ...enemy, hp: Math.max(0, enemy.hp - (damageByTargetId[enemy.id] ?? 0)) }
           : enemy,
       )
       const newlyDefeatedIds = getNewlyDefeatedIds(enemies, nextEnemies)
@@ -212,7 +230,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
       }
       setAnimatingIds(targetIds)
       setDefeatingIds(newlyDefeatedIds)
-      setDamagePopups(Object.fromEntries(targetIds.map((id) => [id, totalPower])))
+      setDamagePopups(damageByTargetId)
       setEnemies(nextEnemies)
       addLog(
         'player',
@@ -224,6 +242,9 @@ function App({ battleId, seed, returnTo }: AppProps) {
           .filter(Boolean)
           .join(' + ')
         addLog('system', `${allies} FOLLOW-UP → +${partyFollowUpDamage} DMG`)
+      }
+      if (guardedBossTargeted) {
+        addLog('system', 'BOSS GUARD → total damage to Boss capped at 1')
       }
 
       setTimeout(() => {
@@ -405,6 +426,18 @@ function App({ battleId, seed, returnTo }: AppProps) {
                 <div className="hp-track enemy-track">
                   <div className="hp-fill" style={{ width: `${hpPercent}%` }} />
                 </div>
+                {isBossEnemy && bossGuardEnabled && (
+                  <div
+                    className={`boss-guard ${bossGuardActive ? 'active' : 'open'}`}
+                    aria-label={`Boss Guard ${bossGuardActive ? 'ACTIVE' : 'OPEN'}`}
+                  >
+                    <div className="boss-guard-head">
+                      <span>GUARD</span>
+                      <strong>{bossGuardActive ? 'ACTIVE' : 'OPEN'}</strong>
+                    </div>
+                    <code>{BOSS_GUARD_CONDITION_CODE}</code>
+                  </div>
+                )}
                 <div className="intent-box">
                   <span>NEXT</span>
                   <strong>{defeated ? '—' : enemy.attackName}</strong>
