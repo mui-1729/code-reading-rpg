@@ -132,9 +132,9 @@ describe('quest progression', () => {
       kind: 'updated',
       questId: 'javascript-main',
       areaId: 'javascript',
-      questTitle: '新人エンジニアの初仕事',
-      completedStepLabel: 'Issue #101を調査し、誤った対象を選ぶbugの原因を特定する',
-      nextStepLabel: 'QAから届いた複数reportをtriageし、影響範囲を特定する',
+      questTitle: 'Target Selector Incident',
+      completedStepLabel: 'Issue #101を再現し、find()の「最初の一致」と期待する優先対象のズレを特定する',
+      nextStepLabel: 'QA reportをtriageし、filter()/&&/||を使うselector群の影響範囲と共通前提を洗い出す',
     })
   })
 
@@ -148,8 +148,8 @@ describe('quest progression', () => {
       kind: 'completed',
       questId: 'javascript-main',
       areaId: 'javascript',
-      questTitle: '新人エンジニアの初仕事',
-      completedStepLabel: 'SEV-1 Production Incidentの原因を特定し、serviceを復旧する',
+      questTitle: 'Target Selector Incident',
+      completedStepLabel: 'SEV-1を復旧し、配列順への暗黙依存をsort()/reduce()で明示的な優先順位へ置き換える',
       nextStepLabel: undefined,
     })
   })
