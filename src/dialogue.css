@@ -138,6 +138,43 @@
   justify-content: center;
 }
 
+.battle-story-overlay {
+  z-index: 120;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(3, 3, 10, .82);
+}
+
+.battle-story-window {
+  width: min(680px, 100%);
+  margin: 0;
+  box-shadow:
+    inset 0 0 0 3px #211a08,
+    0 18px 0 rgba(0, 0, 0, .35);
+}
+
+.battle-story-heading {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 2px solid #343047;
+  background: #11111d;
+}
+
+.battle-story-heading span {
+  color: var(--green);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+
+.battle-story-heading strong {
+  color: #fff;
+  font-size: clamp(16px, 3vw, 22px);
+}
+
 @media (max-width: 520px) {
   .dialogue-speaker,
   .dialogue-actions {
@@ -150,5 +187,9 @@
 
   .dialogue-actions .primary-button {
     width: 100%;
+  }
+
+  .battle-story-overlay {
+    padding: 12px;
   }
 }
