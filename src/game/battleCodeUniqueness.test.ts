@@ -82,6 +82,20 @@ describe('battle code uniqueness', () => {
     }
   })
 
+  it('12 Encounterすべてでmultiline CODE HELPの行対応を維持する', () => {
+    for (const battle of battles) {
+      for (let encounter = 1; encounter <= 12; encounter += 1) {
+        for (const skill of getSkillCardsForBattle(battle, encounterSeed(encounter))) {
+          if (!skill.codeHelpLines) continue
+          expect(
+            skill.codeHelpLines.length,
+            `${skill.id} CODE HELP mismatch in Battle ${battle.id} encounter ${encounter}`,
+          ).toBe(skill.code.split('\n').length)
+        }
+      }
+    }
+  })
+
   it('同じSkillを別Battleで使う場合はbase variant poolが衝突しない', () => {
     const bySkill = new Map<string, Array<{ battleId: number; code: string }>>()
 
