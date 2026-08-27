@@ -34,7 +34,7 @@ export const battles: Battle[] = [
     title: 'The Missing Patrol',
     subtitle: 'find()を残したままfilter()と複数条件を加え、偵察隊を救出する',
     recommendedLevel: 2,
-    expReward: 60,
+    expReward: 80,
     goldReward: 30,
     enemies: [
       enemy('slime-b', 'Slime', 42, 'Nibble', 6, '●'),
