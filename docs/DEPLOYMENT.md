@@ -30,13 +30,11 @@ Cloudflareの同一ログインユーザーに複数Accountが存在しても、
 
 ただし、Cloudflareでfrontendを配信していることは**将来backendをCloudflare製品へ固定する決定ではない**。認証・DB・同期要件が発生した時点で、Cloudflare Workers/D1/KV/R2、Supabase等を要件ベースで比較する。
 
-Cloudflare側にもbuild利用量の上限はあるため、「無制限だから細かくpushしてよい」という運用にはしない。
-
 ---
 
-## 3. Source of truth
+## 3. Repo側のデプロイ設定
 
-Cloudflareのbuild / assets設定はrepoの`wrangler.jsonc`を正とする。
+Static Assets / SPA fallbackは`wrangler.jsonc`をsource of truthにする。
 
 ```jsonc
 {
@@ -54,30 +52,47 @@ Cloudflareのbuild / assets設定はrepoの`wrangler.jsonc`を正とする。
 
 重要点:
 
-- Viteのbuild成果物は`dist`
-- Wrangler実行前に`npm run build`を実行する
+- Viteの成果物は`dist`
+- `assets.directory`は`./dist`
 - `single-page-application` fallbackで未知pathをSPAの`index.html`へ返す
-- TanStack Routerの`/javascript/battle/:id?seed=...`を直URLから開いても動作する構成にする
+- TanStack Routerのdeep link / reloadを維持する
 
-移行初期にCloudflare DashboardのBuild commandが`None`のままPreview deployされ、`dist`が存在せず失敗したため、**build commandをrepo側のWrangler設定へ持たせる**方針にした。
+`wrangler.jsonc`の`build.command`は、local/manualで`wrangler deploy`する場合のCustom Build設定として残す。
+
+一方、**Cloudflare Workers BuildsのBuild stepはWrangler Custom Build設定をsource of truthにしない**。Production / Preview triggerにはCloudflare側のBuild command設定が存在するため、`wrangler.jsonc`の`build.command`だけを頼りに`dist`生成を保証してはいけない。
+
+このrepoではProduction trigger側のBuild commandが空でもdeploy前に`dist`が存在するよう、`package.json`の`postinstall`で`npm run build`を実行するfallbackを持つ。
+
+```json
+{
+  "scripts": {
+    "build": "tsc -b && vite build",
+    "postinstall": "npm run build"
+  }
+}
+```
+
+これによりWorkers Buildsが依存関係をinstallした時点で`dist`が生成され、その後の`npx wrangler deploy` / `npx wrangler versions upload`がassetsを参照できる。
+
+将来Cloudflare側のProduction / Preview両triggerでBuild commandを明示的に`npm run build`へ統一できた場合は、このfallbackを削除してよい。その場合もPRでPreview / main Productionの両方を確認してから外す。
 
 ---
 
 ## 4. GitHub連携
 
-Cloudflare Workers Buildsで次を設定する。
+Cloudflare Workers Buildsでは次を基準にする。
 
 ```text
 Git repository: mui-1729/code-reading-rpg
 Production branch: main
 Production deploy command: npx wrangler deploy
-Non-production branch builds: ON
+Non-production deploy command: npx wrangler versions upload
 Root directory: /
 ```
 
-Productionでは`npx wrangler deploy`が実行される。
+Productionでは`npx wrangler deploy`、PR / non-production branchでは`npx wrangler versions upload`が使われる。
 
-non-production branch / PRではCloudflare側が`npx wrangler versions upload`を使用し、Worker versionとPreview URLを作成する。Preview側でdeploy commandが`versions upload`と表示されるのは正常。
+Build commandはCloudflare側trigger設定とrepo側fallbackの両方で考える。**`wrangler.jsonc`のCustom BuildだけをWorkers BuildsのBuild stepとして扱わない。**
 
 ---
 
@@ -86,7 +101,7 @@ non-production branch / PRではCloudflare側が`npx wrangler versions upload`�
 通常のPRは次の流れで確認する。
 
 ```text
-branch push
+branch push / PR
 ↓
 GitHub Actions CI
 ↓
@@ -109,7 +124,7 @@ merge前の最低条件:
 - UI変更時は対象画面を確認する
 - route追加・変更時は直URLと再読み込みを確認する
 
-Cloudflare checkがGitHubに現れるまで少し時間差がある場合がある。GitHub Actionsだけ成功していてCloudflare checkがまだ無い場合は、Cloudflare Preview成功とみなさない。
+Cloudflare checkがGitHubに現れるまで時間差がある場合がある。GitHub Actionsだけ成功していてCloudflare checkがまだ無い場合は、Cloudflare Preview成功とみなさない。
 
 ---
 
@@ -136,20 +151,49 @@ merge後は最低限、merge commitに対して次を確認する。
 - GitHub Actions CI success
 - `Workers Builds: code-reading-rpg` success
 - Cloudflare Version IDが発行される
-- 必要に応じてProduction URLでsmoke testする
+- Production URLでsmoke testする
 
 `main`へmergeしただけではIssue完了としない。Cloudflare Production成功まで確認する。
 
 ---
 
-## 7. 現在のデプロイ設定
+## 7. 障害時
 
-repo内で有効なデプロイ設定はCloudflare用の`wrangler.jsonc`のみとする。
+### GitHub Actionsは成功、Cloudflare Productionだけ失敗
 
-- Preview / ProductionともCloudflare Workers Buildsを使用する
-- deploy provider固有の設定ファイルを複数並存させない
-- GitHub上のIssue / PR / Definition of DoneもCloudflare Preview / Productionを基準にする
-- Production URLとbranchの対応はこの文書とREADMEをsource of truthとして扱う
+最初に次を分ける。
+
+1. GitHub Actionsの`npm run build`が失敗している
+2. CloudflareのInstalling / Buildingで`dist`が作られていない
+3. Deploying / Wrangler uploadで失敗している
+4. Cloudflare trigger / token等の外部設定で失敗している
+
+`dist`不足の場合:
+
+- `npm ci`後に`dist`が生成されるか確認
+- `package.json`の`postinstall`が実行されているか確認
+- `wrangler.jsonc`の`assets.directory`が`./dist`か確認
+
+Deployingで失敗する場合:
+
+- Wrangler config読込
+- Static Assets upload
+- Worker名
+- Cloudflare側のBuild token / Production trigger
+
+を確認する。
+
+### Cloudflare Previewが成功し、Productionだけ失敗する
+
+アプリ本体よりもProduction trigger固有設定を疑う。
+
+- Production Build command
+- Production deploy command
+- Production branch
+- Build token
+- Root directory
+
+repo側fallbackを入れてもProductionだけ失敗する場合は、Cloudflare Dashboard / Builds API側の設定修正が必要。
 
 ---
 
@@ -160,45 +204,13 @@ repo内で有効なデプロイ設定はCloudflare用の`wrangler.jsonc`のみ�
 基本方針:
 
 - 1 Issue = 1 branch = 1 PR
-- local / Git object上で関連変更をまとめてからbranchへpushする
-- 論理的に必要な修正commitは許容する
+- 関連変更をまとめてからpushする
 - CI / Previewを回すだけのno-op commitは避ける
-- PR内commit数を無理に1つへ固定しないが、deploy資源を浪費しない
 - `main`へは原則squash merge
 
 ---
 
-## 9. 障害時
-
-### GitHub Actionsは成功、Cloudflareが失敗
-
-Cloudflare Build logを確認する。
-
-特に見るもの:
-
-- Installing
-- Building
-- Deploying
-- Wrangler config読込
-- `dist`生成
-- Static Assets upload
-
-### Cloudflare Previewが発火しない
-
-確認するもの:
-
-- Workers BuildsのGit repository接続
-- non-production branch buildsがONか
-- 対象commitがGitHubへpushされているか
-- Cloudflare GitHub Appがrepoへアクセスできるか
-
-### Productionだけ失敗
-
-merge済みでもIssue完了にしない。原因を切り分け、必要ならfix Issueを作って通常のbranch / PRフローで復旧する。
-
----
-
-## 10. 将来のデプロイ拡張
+## 9. 将来のデプロイ拡張
 
 Backendが必要になった場合も、frontend deployとgame domainの責務を混ぜない。
 
