@@ -80,9 +80,9 @@ party → codeが選んだ同じtargetへの補助
 - seed variationは学習範囲内の同値変換だけを使う
   - callback / base variant
   - 比較式の左右
-  - integer境界の同値表現（`hp < 45` ↔ `hp <= 44`など）
   - dot access / bracket access
   - simple arrow parameter表記
+- threshold値そのものは変えず、Skillの説明と表示コードの条件を一致させる
 - `/* B2-... */`のような意味のない識別commentでunique扱いしない
 - TargetRule / damage / solvabilityは表示variationから独立させる
 - multiline codeは物理行数を変えず、CODE HELPの行対応を維持する
