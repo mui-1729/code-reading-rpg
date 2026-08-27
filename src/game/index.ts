@@ -7,6 +7,7 @@ export {
 } from './areas'
 export { getAreaForBattle, getBattlesForArea, getBossBattleForArea } from './areaProgression'
 export { battles } from './battles'
+export { BOSS_GUARD_CODE, getBossGuardedDamage, isBossGuardActive } from './bossGuard'
 export { generateBattle } from './generator'
 export { skillDefinitionById, skillDefinitions } from './skillDefinitions'
 export {
