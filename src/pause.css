@@ -210,6 +210,19 @@
     padding: 16px 12px;
   }
 
+  .pause-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    overflow: visible;
+    gap: 6px;
+  }
+
+  .pause-tabs button {
+    min-width: 0;
+    padding: 8px 5px;
+    font-size: 8px;
+  }
+
   .pause-stat-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
