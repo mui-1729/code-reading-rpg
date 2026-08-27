@@ -1,7 +1,11 @@
 import { useEffect } from 'react'
 import { gameAudio } from '../audio/gameAudio'
 import { useProgress } from '../progression'
-import { equipmentById, getWeaponVisual, useRpg } from '../rpg'
+import {
+  equipmentById,
+  getEquipmentPresentation,
+  useRpg,
+} from '../rpg'
 import { PATCH_KIT_HEAL } from './economy'
 import { purchaseShopItem, worldShopItems } from './shop'
 
@@ -9,18 +13,6 @@ type WorldShopProps = {
   open: boolean
   onClose: () => void
   onMessage: (message: string) => void
-}
-
-function equipmentStats(equipmentId: string) {
-  const item = equipmentById[equipmentId]
-  if (!item) return ''
-  return [
-    item.bonuses.attack ? `ATK +${item.bonuses.attack}` : null,
-    item.bonuses.defense ? `DEF +${item.bonuses.defense}` : null,
-    item.bonuses.maxHp ? `HP +${item.bonuses.maxHp}` : null,
-  ]
-    .filter(Boolean)
-    .join(' · ')
 }
 
 export function WorldShop({ open, onClose, onMessage }: WorldShopProps) {
@@ -113,27 +105,66 @@ export function WorldShop({ open, onClose, onMessage }: WorldShopProps) {
 
             const equipment = equipmentById[item.equipmentId]
             if (!equipment) return null
+            const presentation = getEquipmentPresentation(equipment.id, rpgState.equipment)
+            if (!presentation) return null
+
+            const equipped = rpgState.equipment[equipment.slot] === equipment.id
             const owned = rpgState.ownedEquipmentIds.includes(equipment.id)
             const affordable = progress.gold >= item.price
-            const visual = getWeaponVisual(equipment.id)
+            const state = equipped
+              ? 'equipped'
+              : owned
+                ? 'owned'
+                : affordable
+                  ? 'available'
+                  : 'unavailable'
+
             return (
-              <article className="shop-item pixel-inner-window" key={item.id}>
-                <div>
+              <article
+                className={`shop-item equipment-shop-item pixel-inner-window is-${state}`}
+                key={item.id}
+                data-equipment-id={equipment.id}
+                data-equipment-state={state}
+              >
+                <div className="equipment-shop-head">
                   <span className="shop-item-name shop-item-name-with-icon">
-                    {visual && <img className="equipment-pixel-icon" src={visual} alt="" aria-hidden="true" />}
-                    {equipment.name}
+                    {presentation.visual && (
+                      <img
+                        className="equipment-pixel-icon equipment-shop-icon"
+                        src={presentation.visual}
+                        alt=""
+                        aria-hidden="true"
+                      />
+                    )}
+                    <span className="equipment-shop-title">
+                      <small>{equipment.slot.toUpperCase()}</small>
+                      <strong>{equipment.name}</strong>
+                    </span>
                   </span>
                   <strong>{item.price} G</strong>
                 </div>
                 <p>{equipment.description}</p>
-                <div className="shop-stock">{equipment.slot.toUpperCase()} · {equipmentStats(equipment.id)}</div>
+                <div className="equipment-stat-line">{presentation.statSummary}</div>
+                <div className="equipment-compare-row">
+                  <span>CURRENT · {presentation.currentEquipmentName}</span>
+                  <strong>{presentation.deltaSummary}</strong>
+                </div>
+                <div className={`equipment-state-badge is-${state}`}>
+                  {state.toUpperCase()}
+                </div>
                 <button
                   type="button"
                   className="primary-button"
                   onClick={() => buy(item.id)}
                   disabled={owned || !affordable}
                 >
-                  {owned ? 'OWNED' : affordable ? '▶ BUY' : 'GOLD SHORTAGE'}
+                  {equipped
+                    ? 'EQUIPPED'
+                    : owned
+                      ? 'OWNED'
+                      : affordable
+                        ? '▶ BUY'
+                        : 'GOLD SHORTAGE'}
                 </button>
               </article>
             )
