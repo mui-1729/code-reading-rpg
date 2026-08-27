@@ -1,7 +1,8 @@
 import type { PlayerProgress } from '../progression'
+import { getBattleItemUseState, patchKitItem } from './items'
 
-export const PATCH_KIT_PRICE = 30
-export const PATCH_KIT_HEAL = 24
+export const PATCH_KIT_PRICE = patchKitItem.price
+export const PATCH_KIT_HEAL = patchKitItem.effect.amount
 
 export type PurchaseResult = {
   progress: PlayerProgress
@@ -17,7 +18,7 @@ export type ConsumePatchKitResult = {
 }
 
 export function purchasePatchKit(progress: PlayerProgress): PurchaseResult {
-  if (progress.gold < PATCH_KIT_PRICE) {
+  if (progress.gold < patchKitItem.price) {
     return { progress, purchased: false }
   }
 
@@ -25,7 +26,7 @@ export function purchasePatchKit(progress: PlayerProgress): PurchaseResult {
     purchased: true,
     progress: {
       ...progress,
-      gold: progress.gold - PATCH_KIT_PRICE,
+      gold: progress.gold - patchKitItem.price,
       inventory: {
         ...progress.inventory,
         patchKit: progress.inventory.patchKit + 1,
@@ -42,12 +43,15 @@ export function consumePatchKit(
 ): ConsumePatchKitResult {
   const normalizedMaxHp = Math.max(1, Math.floor(maxHp))
   const normalizedHp = Math.max(0, Math.min(normalizedMaxHp, Math.floor(hp)))
+  const useState = getBattleItemUseState({
+    progress,
+    itemId: patchKitItem.id,
+    hp: normalizedHp,
+    maxHp: normalizedMaxHp,
+    usedThisBattle,
+  })
 
-  if (
-    usedThisBattle ||
-    progress.inventory.patchKit <= 0 ||
-    normalizedHp >= normalizedMaxHp
-  ) {
+  if (!useState.canUse) {
     return {
       progress,
       consumed: false,
@@ -57,7 +61,7 @@ export function consumePatchKit(
     }
   }
 
-  const nextHp = Math.min(normalizedMaxHp, normalizedHp + PATCH_KIT_HEAL)
+  const nextHp = Math.min(normalizedMaxHp, normalizedHp + patchKitItem.effect.amount)
 
   return {
     consumed: true,
