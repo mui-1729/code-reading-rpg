@@ -9,11 +9,13 @@ Battle報酬を次のBattleの余裕や装備選択へ変換するeconomy loop�
 ```text
 Battle Victory / Treasure
 ↓
-Gold
+Gold / Item / Equipment
 ↓
 Open World Hub SHOP
 ↓
 PATCH KIT / Equipment
+↓
+PauseでInventory / Equipment確認
 ↓
 Battle中の余裕・Player buildの選択
 ```
@@ -54,6 +56,7 @@ Central Hubの`SHOP` objectへ隣接してINTERACTするとcompactなShop UIを�
 - PATCH KIT成功時はGoldを減らしInventory +1
 - Equipment成功時はGoldを減らし`ownedEquipmentIds`へ追加
 - Equipmentは購入時に自動装備しない。Pause > EQUIPMENTで比較して選ぶ
+- PATCH KITはItem catalogのicon / effect / usage ruleをShopでも表示する
 - 結果はshort FIELD LOGへ出す
 - World常設HUDへShop情報を追加しない
 
@@ -78,30 +81,74 @@ Accessory:
 - Debug Charm: Attack + Defenseの小さな複合補助
 - Life Charm: 最大HPだけを伸ばす耐久特化
 
-効果値と短い役割説明はPause > EQUIPMENTで比較できる。
+全既存Equipmentは`getEquipmentVisual()`の共通visual registryを持ち、Shop / Pause / Area-clear Rewardで同じpixel SVGを使う。現在装備との差分も共通presentation helperから表示する。
 
-現在はWeaponのみpixel SVG visual mappingを持つ。Armor / Accessory / Itemまで含む共通visual systemは#180で整備する。
+## Item catalog / Inventory
+
+Itemの名前・価格・visual・effect・usage ruleは`src/economy/items.ts`をsingle source of truthとする。
+
+現在のItem:
+
+```text
+PATCH KIT
+├─ Price: 30 G
+├─ Effect: HP +24
+├─ Usage: BATTLE ONLY
+├─ Limit: 1 USE / BATTLE
+└─ Visual: /pixel-art/items/patch-kit.svg
+```
+
+`PlayerProgress.inventory.patchKit`は保存形式として維持し、UI整理だけのためにgeneric inventoryへmigrationしない。
+
+同じItem definitionを次で共有する。
+
+- Hub Shop
+- Pause > ITEMS
+- Battle Item panel
+- TYPE CACHEのItem reward表示
+
+Pause > ITEMSではicon / owned count / effect / usage / descriptionをItem cardとして確認できる。stock 0でもItem自体は表示し、`NO STOCK`を明示する。
 
 ## Battle Item
 
-PATCH KITを所持している時だけBattle consoleへcompact actionを出す。
+PATCH KITはBattle consoleへ常にcompact Item panelとして表示し、現在使えるかどうかを理由付きで示す。
 
-条件:
+使用条件:
 
 - Battle中
-- resolving中ではない
+- action resolving中ではない
 - 同Battleで未使用
 - HP < maxHP
 - stock > 0
 
-使用:
+UI state:
+
+- `READY · BATTLE ONLY`
+- `NO STOCK`
+- `HP FULL`
+- `USED THIS BATTLE`
+- `ACTION LOCKED`
+
+使用成功時:
 
 - 最大24 HP回復
 - maxHPを超えない
 - stock -1
 - 同Battle2回目不可
+- `RECOVERED +N HP`を表示
 
-Item / Inventory presentationの共通化は#181で扱う。
+Itemの状態判定は`getBattleItemUseState()`、実際のconsumeは`consumePatchKit()`へ分離する。BattleのTargetRule / Skill / target判定には触れない。
+
+## Treasure Item reward
+
+TYPE CACHEは現在:
+
+- +35 G
+- PATCH KIT ×1
+
+を付与する。
+
+Item取得時はShop / Pause / Battleと同じPATCH KIT visual / nameを使って`ITEM ACQUIRED` feedbackを表示する。Shop購入はTreasure rewardとして扱わない。
 
 ## Recovery / Inn
 
@@ -135,12 +182,18 @@ Equipment / Party / World positionはEconomyではなくRpgStateの責務。
 
 ```text
 src/economy/
-├── economy.ts        # PATCH KIT purchase / consume
-├── shop.ts           # Shop inventory / pure purchase resolver
-├── WorldShop.tsx     # Open World Shop UI
+├── items.ts              # Item catalog / visual / usage presentation / use-state
+├── economy.ts            # PATCH KIT purchase / consume
+├── shop.ts               # Shop listing / pure purchase resolver
+├── WorldShop.tsx         # Open World Shop UI
+├── BattleItemPanel.tsx   # Battle Item presentation / Provider adapter
+├── items.test.ts
 ├── economy.test.ts
 ├── shop.test.ts
 └── index.ts
+
+public/pixel-art/items/
+└── patch-kit.svg
 ```
 
 `shop.ts`はPlayerProgress / RpgStateを受け取り、購入後stateをpureに返す。UIはその結果を各Providerへ反映するだけにする。
@@ -149,7 +202,7 @@ paid Inn実装時も同様に、Gold / HPのtransactionはpure resolverへ置き
 
 ## Boundaries
 
-Economy / Equipmentが変更してはいけないもの:
+Economy / Equipment / Itemが変更してはいけないもの:
 
 - TargetRule
 - code variant
@@ -164,18 +217,21 @@ PATCH KITとEquipmentは「間違えても少し耐えられる」「火力か�
 
 PlayerProgress schema v4 / RpgState v3。
 
-Shop / visual metadata / paid Innの追加だけではschema versionを上げない。購入Equipmentは既存`ownedEquipmentIds`へ保存する。
+Shop / visual metadata / Item catalog / paid Innの追加だけではschema versionを上げない。PATCH KITは既存`inventory.patchKit`、購入Equipmentは既存`ownedEquipmentIds`へ保存する。
 
 generic inventory等、保存shape自体を変更する場合のみmigrationとversion bumpを同時に行う。
 
 ## Tests
 
+- PATCH KIT catalog / visual / effect / usage rule
+- Battle Item `READY / NO STOCK / HP FULL / USED / ACTION LOCKED`
 - PATCH KIT purchase success / insufficient Gold
-- Equipment purchase / Gold deduction / ownedEquipmentIds
-- owned Equipment再購入不可
-- Equipment Gold不足
-- slot内のrole差
 - consume / heal cap / full HP / no stock / one-use per Battle
+- existing v4 `inventory.patchKit` compatibility
+- Shop purchase → Pause ITEMS count / shared visual
+- Battle use → HP recovery / stock consume / reload storage
+- TYPE CACHE → PATCH KIT reward / shared visual feedback
+- Equipment purchase / Gold deduction / ownedEquipmentIds
 - World Shop open / purchase / reload persistence / Pause比較
 - paid Inn success / full HP no-charge / insufficient Gold
 - Gold獲得 → purchase → equip → Rest → reloadの統合E2E
