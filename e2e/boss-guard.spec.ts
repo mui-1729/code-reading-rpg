@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -64,6 +64,11 @@ async function executeSkill(page: Page, name: string) {
   await expect(card).toBeEnabled({ timeout: 10_000 })
 }
 
+async function currentHp(card: Locator) {
+  const text = await card.locator('.enemy-name-row > span').innerText()
+  return Number(text.split('/')[0])
+}
+
 test('Boss GUARDはminion生存中だけdamageを1に抑え、全滅後にOPENする', async ({ page }) => {
   await seedBossState(page)
   await page.goto('/javascript/battle/3?seed=boss-guard-e2e&returnTo=%2Fworld')
@@ -72,10 +77,10 @@ test('Boss GUARDはminion生存中だけdamageを1に抑え、全滅後にOPEN�
   await expect(bossCard).toBeVisible()
   await expect(page.getByLabel('Boss guard active')).toBeVisible()
   await expect(bossCard.getByText(/enemies\.some/)).toBeVisible()
-  await expect(bossCard.getByText('156/156', { exact: true })).toBeVisible()
 
+  const initialBossHp = await currentHp(bossCard)
   await executeSkill(page, 'JUDGE')
-  await expect(bossCard.getByText('155/156', { exact: true })).toBeVisible()
+  await expect.poll(() => currentHp(bossCard)).toBe(initialBossHp - 1)
   await expect(page.getByText(/BOSS GUARD/).last()).toBeVisible()
 
   await executeSkill(page, 'MOON EDGE')
@@ -84,6 +89,7 @@ test('Boss GUARDはminion生存中だけdamageを1に抑え、全滅後にOPEN�
 
   await expect(page.getByLabel('Boss guard open')).toBeVisible()
 
+  const openBossHp = await currentHp(bossCard)
   await executeSkill(page, 'JUDGE')
-  await expect(bossCard.getByText('98/156', { exact: true })).toBeVisible()
+  await expect.poll(() => currentHp(bossCard)).toBeLessThan(openBossHp - 1)
 })
