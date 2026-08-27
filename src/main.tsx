@@ -21,6 +21,7 @@ import './economy.css'
 import './simplify.css'
 import './pause.css'
 import './boss-guard.css'
+import './pixel-art.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

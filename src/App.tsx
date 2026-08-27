@@ -28,10 +28,12 @@ import {
   type BattleVictoryReward,
 } from './progression'
 import {
+  characterVisuals,
   getCombatStats,
   getIncomingDamage,
   getPartyFollowUpDamage,
   getSkillDamage,
+  getWeaponVisual,
   partyMemberById,
   useRpg,
 } from './rpg'
@@ -63,6 +65,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
   const playerStats = getCombatStats(baseStats, rpgState)
   const playerHp = Math.max(0, Math.min(playerStats.maxHp, rpgState.currentHp))
   const partyFollowUpDamage = getPartyFollowUpDamage(rpgState.partyMemberIds, playerStats.level)
+  const equippedWeaponVisual = getWeaponVisual(rpgState.equipment.weapon)
   const battle = useMemo(() => {
     const generated = generateBattle(battleId, seed)
     if (!generated) throw new Error(`Unknown battle: ${battleId}`)
@@ -88,6 +91,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
   const [enemyTurnActive, setEnemyTurnActive] = useState(false)
   const [isResolving, setIsResolving] = useState(false)
   const [patchKitUsed, setPatchKitUsed] = useState(false)
+  const [partyFollowUpActive, setPartyFollowUpActive] = useState(false)
   const [victoryReward, setVictoryReward] = useState<BattleVictoryReward | null>(null)
 
   const availableSkills = useMemo(
@@ -241,6 +245,8 @@ function App({ battleId, seed, returnTo }: AppProps) {
           .map((id) => partyMemberById[id]?.name)
           .filter(Boolean)
           .join(' + ')
+        setPartyFollowUpActive(true)
+        setTimeout(() => setPartyFollowUpActive(false), 260)
         addLog('system', `${allies} FOLLOW-UP → +${partyFollowUpDamage} DMG`)
       }
       if (guardedBossTargeted) {
@@ -384,7 +390,16 @@ function App({ battleId, seed, returnTo }: AppProps) {
           {playerDamagePopup !== null && (
             <span className="damage-number player-damage-number">-{playerDamagePopup}</span>
           )}
-          <div className="player-sprite" aria-hidden="true"><span /></div>
+          <div className="player-sprite battle-character-stack" aria-hidden="true">
+            <img
+              className="battle-character-pixel"
+              src={characterVisuals.player.battle}
+              alt=""
+            />
+            {equippedWeaponVisual && (
+              <img className="battle-weapon-pixel" src={equippedWeaponVisual} alt="" />
+            )}
+          </div>
           <div className="player-stats">
             <div className="status-title">CODE KNIGHT · LV {playerStats.level}</div>
             <div className="status-label-row">
@@ -395,9 +410,26 @@ function App({ battleId, seed, returnTo }: AppProps) {
               <div className="hp-fill" style={{ width: `${playerHpPercent}%` }} />
             </div>
             {rpgState.partyMemberIds.length > 0 && (
-              <div className="party-battle-line">
-                ALLY {rpgState.partyMemberIds.map((id) => partyMemberById[id]?.name ?? id).join(' + ')} · FOLLOW-UP {partyFollowUpDamage}
-              </div>
+              <>
+                <div className="party-battle-line">
+                  ALLY {rpgState.partyMemberIds.map((id) => partyMemberById[id]?.name ?? id).join(' + ')} · FOLLOW-UP {partyFollowUpDamage}
+                </div>
+                <div className="battle-party-pixels" aria-label="Battle party">
+                  {rpgState.partyMemberIds.map((memberId) => {
+                    const member = partyMemberById[memberId]
+                    if (!member) return null
+                    return (
+                      <div
+                        className={`battle-party-member ${partyFollowUpActive ? 'is-following-up' : ''}`}
+                        key={memberId}
+                      >
+                        <img src={characterVisuals.byte.battle} alt="" />
+                        <span>{member.name}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </>
             )}
           </div>
         </aside>

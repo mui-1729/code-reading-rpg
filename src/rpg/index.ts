@@ -16,6 +16,7 @@ export { getCombatStats, getIncomingDamage, getSkillDamage } from './combat'
 export type { CombatStats } from './combat'
 export { getPartyFollowUpDamage, partyMemberById, partyMembers } from './party'
 export type { PartyMemberDefinition } from './party'
+export { characterVisuals, getWeaponVisual, weaponVisuals } from './visualAssets'
 export { RpgProvider } from './RpgProvider'
 export { useRpg } from './useRpg'
 export {
