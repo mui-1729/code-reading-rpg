@@ -4,9 +4,10 @@ import { gameAudio } from '../audio/gameAudio'
 import { useBgm } from '../audio/useBgm'
 import { PATCH_KIT_PRICE, purchasePatchKit } from '../economy'
 import { useProgress } from '../progression'
-import { emptyPartyEquipment, getCombatStats, useRpg } from '../rpg'
+import { emptyPartyEquipment, equipmentById, getCombatStats, useRpg } from '../rpg'
+import { openWorldTreasure } from './treasures'
 import { resolveWorldInteraction, resolveWorldMove } from './worldActions'
-import { getVisibleWorldCells, getWorldRegion } from './worldMap'
+import { getTreasureAtPosition, getVisibleWorldCells, getWorldRegion } from './worldMap'
 
 const regionLabels = {
   javascript: 'JAVASCRIPT GRASSLAND',
@@ -26,6 +27,7 @@ const terrainLabels: Record<string, string> = {
   shop: 'Shop',
   npc: 'NPC',
   recovery: 'Recovery Point',
+  treasure: 'Treasure',
 }
 
 export function WorldPage() {
@@ -85,7 +87,9 @@ export function WorldPage() {
             ? 'Bossが道を塞いでいる。隣からINTERACT。'
             : result.terrain === 'recovery'
               ? 'REST地点。隣からINTERACTするとHPを全回復できる。'
-              : 'そこへは進めない。',
+              : result.terrain === 'treasure'
+                ? 'Treasure。隣からINTERACTして調べる。'
+                : 'そこへは進めない。',
         )
         return
       }
@@ -150,6 +154,31 @@ export function WorldPage() {
       return
     }
 
+    if (intent.kind === 'treasure') {
+      const result = openWorldTreasure(progress, rpgState, intent.treasureId)
+      if (!result.opened) {
+        gameAudio.playSe('cancel')
+        setMessage(`${result.definition.name}: すでに空だ。`)
+        return
+      }
+
+      setProgress(result.progress)
+      setRpgState(result.rpgState)
+      gameAudio.playSe(result.equipmentAwarded ? 'skillUnlock' : 'confirm')
+
+      const rewards: string[] = []
+      if (result.definition.reward.gold > 0) rewards.push(`+${result.definition.reward.gold} G`)
+      if (result.definition.reward.patchKit > 0) {
+        rewards.push(`PATCH KIT ×${result.definition.reward.patchKit}`)
+      }
+      const equipmentId = result.definition.reward.equipmentId
+      if (result.equipmentAwarded && equipmentId) {
+        rewards.push(equipmentById[equipmentId]?.name ?? equipmentId)
+      }
+      setMessage(`${result.definition.name} OPEN → ${rewards.join(' / ')}`)
+      return
+    }
+
     if (intent.kind === 'boss') {
       if (!intent.unlocked) {
         setMessage(
@@ -205,6 +234,10 @@ export function WorldPage() {
         <div className="world-viewport pixel-inner-window" aria-label="Open world map">
           {visibleCells.map((cell) => {
             const player = cell.x === position.x && cell.y === position.y
+            const treasure = cell.terrain === 'treasure' ? getTreasureAtPosition(cell) : undefined
+            const treasureOpened = treasure
+              ? rpgState.openedTreasureIds.includes(treasure.id)
+              : false
             return (
               <div
                 key={`${cell.x}:${cell.y}`}
@@ -217,6 +250,14 @@ export function WorldPage() {
                 {cell.terrain === 'shop' && <span className="world-object shop-object">SHOP</span>}
                 {cell.terrain === 'npc' && <span className="world-object npc-object">B</span>}
                 {cell.terrain === 'recovery' && <span className="world-object recovery-object">REST</span>}
+                {treasure && (
+                  <span
+                    className={`world-object treasure-object ${treasureOpened ? 'opened' : ''}`}
+                    aria-label={`${treasure.id} treasure ${treasureOpened ? 'opened' : 'closed'}`}
+                  >
+                    {treasureOpened ? 'OPEN' : 'CHEST'}
+                  </span>
+                )}
                 {player && (
                   <span className="world-player-sprite" aria-label="Player">
                     ◆
