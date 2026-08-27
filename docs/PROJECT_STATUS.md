@@ -15,7 +15,8 @@
 - 「正解ボタンを当てるクイズ」ではなく、読んだ結果がそのままBattleへ反映される
 - 同じSkill名や固定手順の暗記だけで攻略しにくくする
 - 1つのWorldを探索しながら学習contentへ入る
-- 技術名の章ではなく、エンジニアとして問題を解決するstoryへ寄せる
+- 技術名を細かく1つずつ章にせず、同じ仕事・同じ思考でまとめられるものは1つの編にまとめる
+- React / Next.js等、固有のmental modelが大きいframeworkは無理に同じ編へまとめない
 
 ## 2. 現在のプレイ構造
 
@@ -138,7 +139,9 @@ Open World化前のField / Quest / Area UIの一部がrepositoryに残ってい�
 
 ### P0 — TypeScript編のstory整合
 
-JavaScript編だけstoryの密度が一段高くなったため、次はTypeScriptを同じ品質へ揃えるのが最優先候補です。
+JavaScript / TypeScriptはどちらも、**3 Chapterで1つの仕事を追う同じ粒度の学習編**として扱います。
+
+次はTypeScriptをJavaScriptと同じ品質へ揃えるのが最優先です。
 
 やること:
 
@@ -167,6 +170,33 @@ JavaScript編だけstoryの密度が一段高くなったため、次はTypeScri
 - refactor前後でUnit / E2Eが同じ意味を保証する
 - 大きなUI redesignと同時に行わない
 
+### P1 — Database編 prototype
+
+**3つ目のlearning regionはDatabase編を優先します。**
+
+SQLだけを独立させず、DBを扱う仕事として次をまとめます。
+
+- table / row / column
+- SELECT / WHERE
+- AND / OR
+- ORDER BY / LIMIT
+- JOIN
+- NULL
+- GROUP BY / aggregate
+- indexの入口
+- transactionの入口
+
+現在のtarget-selection BattleとSQLは相性がよいため、まず1 Battle prototypeを作って成立を確認します。
+
+prototypeで確認すること:
+
+- queryを読まないと結果rowを判断しにくいか
+- `TargetRule`相当のsafe domainへ落とせるか
+- WHERE → ORDER BY → LIMITをゲーム結果へ自然に反映できるか
+- CODE HELP / CODE DATAをDB向けに一般化できるか
+
+成功後に3 Chapter + World regionへ広げます。
+
 ### P1 — TypeScript固有Boss mechanic
 
 現在のGUARDはJS / TS Bossで共通です。TypeScript側には、型情報を読む意味がもっと直接出る固有mechanicを検討できます。
@@ -179,25 +209,42 @@ JavaScript編だけstoryの密度が一段高くなったため、次はTypeScri
 
 ただし「mechanic専用説明panel」を増やさず、表示コードから理解できることを条件にします。
 
-### P2 — 3つ目のlearning region
+### P2以降 — 長期的な学習編
 
-候補は`React`か`SQL`です。
+現在の方向:
 
-#### Reactを先にする場合
+```text
+JavaScript
+→ TypeScript
+→ Database
+→ Backend / API
+→ React
+→ Next.js
+→ TanStack
+→ Team Development / Delivery
+→ Security
+→ Production / Performance
+→ Architecture / Refactoring
+```
 
-- props / state / render flow / list key / effectの読解へ進める
-- Web frontend学習の流れとしてJS → TS → Reactが自然
-- ただし現在の「Enemy targetをコードで決める」Battle modelへ落とす設計がSQLより難しい
+まとめる例:
 
-#### SQLを先にする場合
+- Database編: SQL + relational data + JOIN + NULL + aggregate + index / transaction入口
+- Backend / API編: HTTP + validation + async + DB access + auth基礎
+- Team Development / Delivery編: Git + PR + Testing + CI/CD
+- Production / Performance編: logs + metrics + incident + performance
 
-- WHERE / AND / OR / ORDER BY / LIMIT / JOINなどが既存のtarget-selection Battleと相性がよい
-- 「どのrowが返るか」をEnemy / data selectionへ対応させやすい
-- JS → TS → SQLは技術学習順としてはReactほど直線的ではない
+分ける例:
 
-新regionを実装する前に、**その技術を現在のBattle loopで本当に学べるかを1 Battle prototypeで検証**するのがよいです。
+- React編
+- Next.js編
+- TanStack編
 
-### P2 — Party / Equipment depth
+framework固有のruntime / data flow / mental modelが大きいものは別編にします。
+
+詳細は`ENGINEER_STORY_ROADMAP.md`をsource of truthとします。
+
+### Party / Equipment depth
 
 必要なら追加:
 
@@ -211,19 +258,20 @@ JavaScript編だけstoryの密度が一段高くなったため、次はTypeScri
 
 - Stage Select / Area Select復活
 - 大量のQuest Log /常設HUD
-- Backend / Login / Cloud Save
+- game infrastructureとしてのLogin / Cloud Save
 - Ranking
 - 読解を飛ばせるauto target / auto battle
 - 数値だけ違うEquipment大量追加
 - Worldを広げるだけのmap expansion
 
-Backendは複数端末同期、共有challenge、account機能等の具体的要件が出てから検討します。
+Backend / API編は**学習content**として作ります。ゲーム自体へserver / loginを導入する意味ではありません。
 
-## 7. 判断が必要な点
+## 7. 決定済みの大きな方向
 
-今後の大きなproduct decisionは次の2つです。
+- JavaScript / TypeScriptは同じ3 Chapter構造の「〜編」として揃える
+- まとめられる基礎概念は仕事単位でまとめる
+- framework固有のmental modelは無理にまとめない
+- 3つ目の新規regionはDatabase編を優先する
+- Databaseの次はBackend / API、その後React / Next.js / TanStackを候補とする
 
-1. **TypeScript storyをJavaScriptと同じ「新人エンジニアの仕事」路線で全面的に揃えるか**
-2. **3つ目のregionをReactとSQLのどちらから始めるか**
-
-この2点以外は、現状のarchitectureを保ったまま段階的に進められます。
+この方向を前提に、今後は各編のprototypeとstory設計をIssue単位で進めます。
