@@ -41,13 +41,13 @@ type RegionDefinition = {
 const definitions: readonly RegionDefinition[] = [
   {
     region: 'javascript',
-    label: 'TARGET SELECTOR INCIDENT',
+    label: 'JAVASCRIPT KINGDOM',
     stageIds: [1, 2, 3],
     areaId: 'javascript',
-    encounterFirst: '西の草むらでIssue #101を再現',
-    encounterNext: '西の草むらでQA triageを続行',
-    bossNext: '西のBOSSでSEV-1対応',
-    clearNext: 'POSTMORTEM · Root cause: implicit array order',
+    encounterFirst: '西の草原の異変を調べる',
+    encounterNext: '黒い結晶の痕跡を追う',
+    bossNext: '西の砦へ向かう',
+    clearNext: '王国に平和が戻った',
   },
   {
     region: 'typescript',
