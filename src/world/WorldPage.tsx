@@ -60,6 +60,19 @@ export function WorldPage() {
   const byteJoined = rpgState.partyMemberIds.includes('byte')
   const viewportStart = visibleCells[0] ?? position
 
+  const javascriptStoryBrief = useMemo(() => {
+    if (progress.clearedAreaIds.includes('javascript') || progress.clearedStageIds.includes(3)) {
+      return 'SYSTEM RESTORED // Code Coreは安定した。JavaScript王国の戦闘システムは正常に戻った。'
+    }
+    if (progress.clearedStageIds.includes(2)) {
+      return 'LEAD ADA // 異常は西のCode Coreにつながっている。Coreへ入り、暴走した共通処理を止めよう。'
+    }
+    if (progress.clearedStageIds.includes(1)) {
+      return 'BYTE // 同じエラーが別の戦闘機能にも出ている。ログを追って共通するコードを探そう。'
+    }
+    return 'LEAD ADA // 新人Code Knightの最初の仕事だ。西の草原で戦闘システムのターゲットバグを直そう。'
+  }, [progress.clearedAreaIds, progress.clearedStageIds])
+
   const spriteStyle = useCallback(
     (spritePosition: Position) => ({
       left: `${((spritePosition.x - viewportStart.x + 0.5) / VIEWPORT_COLUMNS) * 100}%`,
@@ -147,7 +160,15 @@ export function WorldPage() {
 
     if (intent.kind === 'party') {
       if (intent.alreadyJoined) {
-        setMessage('BYTE: 森の方は型が厳しい。装備を整えて行こう。')
+        if (!progress.clearedStageIds.includes(1)) {
+          setMessage('BYTE: 最初のバグを見に行こう。敵のHPと技のコードを順番に見れば読めるよ。')
+        } else if (!progress.clearedStageIds.includes(2)) {
+          setMessage('BYTE: ログに同じエラーが増えてる。西側の戦闘機能をもう少し調べよう。')
+        } else if (!progress.clearedAreaIds.includes('javascript')) {
+          setMessage('BYTE: ログの行き先はCode Coreだ。ここを止めれば全部直せるはず。')
+        } else {
+          setMessage('BYTE: JavaScript側は全部green。次は森のTypeScriptエリアを見に行こう。')
+        }
         return
       }
       gameAudio.playSe('skillUnlock')
@@ -160,7 +181,7 @@ export function WorldPage() {
           [intent.memberId]: emptyPartyEquipment(),
         },
       }))
-      setMessage('BYTE joined the party! Battleで追撃してくれる。')
+      setMessage('BYTE joined the party! デバッグを手伝い、Battleでは追撃してくれる。')
       return
     }
 
@@ -212,7 +233,7 @@ export function WorldPage() {
       if (!intent.unlocked) {
         setMessage(
           intent.region === 'javascript'
-            ? 'JS Bossへの道はまだ開かない。草むらのEncounterを進めよう。'
+            ? 'Code Coreへのアクセスはまだ開かない。西の草むらでバグ調査を進めよう。'
             : 'TS Bossへの道はまだ開かない。森のEncounterを進めよう。',
         )
         return
@@ -256,7 +277,11 @@ export function WorldPage() {
           <div>
             <div className="eyebrow">OPEN WORLD // {regionLabels[region]}</div>
             <h1>CODE WORLD</h1>
-            <p>上下左右へ探索。草むら=JS、森=TS。Bossは固定地点にいる。</p>
+            <p>
+              {region === 'javascript'
+                ? javascriptStoryBrief
+                : '上下左右へ探索。草むら=JS、森=TS。Bossは固定地点にいる。'}
+            </p>
           </div>
         </header>
 
