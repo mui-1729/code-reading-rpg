@@ -34,8 +34,8 @@ export const equipmentDefinitions: readonly EquipmentDefinition[] = [
     id: 'branch-saber',
     name: 'Branch Saber',
     slot: 'weapon',
-    description: '高Attack特化。威力と引き換えにDefenseが少し下がる。',
-    bonuses: { attack: 7, defense: -1 },
+    description: '高Attack特化。コードを読み切った一撃の威力を優先する。',
+    bonuses: { attack: 7 },
   },
   {
     id: 'guard-blade',
@@ -76,8 +76,8 @@ export const equipmentDefinitions: readonly EquipmentDefinition[] = [
     id: 'survival-loop',
     name: 'Survival Loop',
     slot: 'accessory',
-    description: '最大HPを増やす代わりにDefenseが少し下がる護符。',
-    bonuses: { maxHp: 14, defense: -1 },
+    description: '最大HPだけを大きく増やす耐久寄りの護符。',
+    bonuses: { maxHp: 14 },
   },
 ]
 
