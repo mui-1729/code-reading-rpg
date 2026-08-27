@@ -25,7 +25,7 @@ describe('JavaScript story progression', () => {
     expect(javascriptBattles[0]?.subtitle).toContain('新人Code Knight')
     expect(javascriptBattles[1]?.subtitle).toContain('ログ')
     expect(javascriptBattles[2]?.subtitle).toContain('共通処理')
-    expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.name === 'Code Core')).toBe(true)
+    expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.name === 'Boss')).toBe(true)
     expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.attackName === 'Runtime Cascade')).toBe(true)
   })
 
