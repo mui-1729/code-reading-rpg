@@ -1,251 +1,235 @@
 # CODE//READ RPG Open World Design
 
-## 目的
+この文書は、**現在のOpen World設計**だけを扱う。project全体の現状は[`PROJECT_STATUS.md`](./PROJECT_STATUS.md)、今後の優先順位は[`ROADMAP.md`](./ROADMAP.md)を参照する。
 
-現在のCODE//READ RPGは、Area Select / Stage Select中心ではなく、**1つの2D Worldを探索してRandom Encounterと固定Bossへ入るコード読解RPG**である。
+## 1. 目的
 
-この文書を、Open World化後の全体設計と今後の優先順位のsource of truthとする。
-
-## 現在のゲームループ
+Stage Select / Area Selectを繰り返すのではなく、**1つのWorldを歩くこと自体をRPGの進行にする**。
 
 ```text
-Title
+Title / Opening
 ↓
 Open World
 ├─ JavaScript Grassland
 ├─ Central Hub
 └─ TypeScript Forest
 ↓
-探索: Treasure / Shop / Party / Recovery
-または Random Encounter / Fixed Boss
+Explore / Shop / Recovery / Treasure / Party
+または
+Random Encounter / Fixed Boss
 ↓
 Code Reading Battle
 ↓
-EXP / Gold / Unlock / Equipment reward
+Reward / Story / Progress
 ↓
-残HPを保持してWorldへ復帰
-↓
-必要ならHub RESTでfull recovery
+同じWorldへ戻る
 ```
 
-Stage Select / Area Select / 専用Complete画面は通常導線へ戻さない。
+通常導線へStage Select / Area Select /専用Complete画面を戻さない。
 
-## World
+## 2. World layout
 
 現在:
 
 - 40 × 28 tile
 - camera viewport 11 × 9
 - 4方向移動
-- JS = grass / tall-grass
-- TS = forest
+- JavaScript = grass / tall grass
+- TypeScript = forest
 - Hub / road = safe zone
-- Random Encounterは最低5歩cooldown後にterrainごとの確率で発生
-- Battle 3 / 6は固定Boss
-- World座標 / encounter counter / current HP / Treasure開封状態をsave
-- HubにRecovery Pointを配置
-- JS / TSに一度きりのTreasureを1つずつ配置
+- mountain / water等のnon-walkable terrain
+- 8-bit terrain。内部grid境界をvisualとして強調しない
+- Playerはviewport overlayとして常駐し、移動時は座標を更新
+- joined BYTEはPlayerのprevious tileへ追従
 
-責務:
+mapを広げること自体を目的にしない。新しい空間にはlearning / story / RPG上の意味を持たせる。
 
-- `src/world/worldMap.ts`: terrain / region / viewport / encounter候補 / Treasure位置
-- `src/world/worldActions.ts`: movement / encounter / Shop / Party / Recovery / Treasure / Boss interactionのpure resolver
-- `src/world/treasures.ts`: Treasure報酬と一度きり取得のpure domain
-- `WorldPage.tsx`: resolver結果をstate更新・SE・navigateへ接続するUI adapter
+## 3. World domain boundary
 
-World interactionを増やす場合も、`WorldPage.tsx`へ位置条件分岐を戻さずresolver側へ追加する。
+### `worldMap.ts`
 
-### HP / Recovery
+- World size
+- region / terrain
+- walkable
+- viewport
+- Encounter terrain / chance
+- fixed object positions
+- adjacency
 
-BattleごとにHPを全快させず、探索中の消耗をWorldをまたいで保持する。
+### `worldActions.ts`
 
-- Battle開始時は`RpgState.currentHp`を使う
-- enemy damage / PATCH KIT回復はcurrent HPへ保存する
-- Victory後も残HPを保持して元のWorld座標へ戻る
-- Defeat時はHub開始位置へ戻しfull HPにする
-- Hubの`REST`へ隣接してINTERACTすると無料でfull recoveryする
-- current HP / max HPはPause STATUSで確認し、World常設HUDは増やさない
-- Level / Equipment変更でmax HPが変わった場合はcurrent HPを新しい上限へclampする
+UI / Routerへ依存しないpure resolver。
 
-Recovery Pointはコード読解を代替する強化ではなく、探索・装備・消耗品に意味を持たせるRPG loopの基盤とする。
+- movement / blocked
+- steps / Encounter cooldown
+- deterministic Encounter intent
+- BYTE interaction
+- Shop interaction
+- Recovery interaction
+- Treasure interaction
+- JS / TS Boss interaction
 
-### Treasure
+### `treasures.ts`
 
-Worldを歩く理由を少数の意味ある地点で増やす。
+- one-shot reward
+- opened判定
+- current stateへreward適用
 
-- JS `DEBUG CACHE`: 20 G + Debug Charm
-- TS `TYPE CACHE`: 35 G + PATCH KIT ×1
-- Treasure tileへ直接は入らず、隣接INTERACTで開ける
-- 開封後は`CHEST`から`OPEN`表示へ変わり、再取得できない
-- `openedTreasureIds`をsaveしreload後も閉じた状態へ戻らない
-- 旧saveでDebug Charmを既に持つ場合もJS TreasureのGoldは取得できる
-- Boss rewardのBranch Saber / Typed MailはTreasureから先取りさせない
-- Treasureを大量配置してmapを埋めない
+### `WorldPage.tsx`
 
-Treasureは学習の正解情報を与えず、探索・装備・消耗品の選択にだけ影響する。
+resolver結果を
 
-## Battle
+- RpgState update
+- navigation
+- audio
+- short feedback
+- visual rendering
 
-Battleの中心責務は変えない。
+へ接続するadapter。
 
-- 表示コードを読む
-- SkillをSELECT
-- 同じSkillを再度押してEXECUTE
-- TargetRuleで対象を決定
-- POWER + Player側補正でdamageを決定
+新しいobjectを追加する時も`WorldPage.tsx`へ座標`if`を積まない。
 
-装備や仲間は読解結果を置き換えない。
+## 4. Random Encounter
 
-```text
-code reading → target決定
-equipment → damage / defense / max HP補正
-party → codeが選んだ同じtargetへの補助
-```
+- JS tall grass → JavaScript normal Battle
+- TS forest → TypeScript normal Battle
+- road / HubはEncounterなし
+- minimum 5 steps cooldown
+- `encounterCount`をseedへ含める
+- Battle後は元のWorld位置へ戻る
+- fixed Bossとは別intentとして扱う
 
-正解target / 正解Skill / damage previewを先に表示しない。
+同じEncounter seedは再現可能にし、次Encounterではdisplay codeのsemantic variationを変える。
 
-### Encounter code variation
+## 5. Persistent HP / Recovery
 
-「Skill名と答えの対応を一度覚えれば以後読まなくてよい」状態を避ける。
-
-- 通常Encounterは`encounterCount`を含むseedを使う
-- 同じEncounter seedはreload / retryでも同じ表示コードを再現する
-- 次のEncounterでは実コード表現を変える
-- 同じSkillを複数Battleで使う場合はbase variant pool自体をBattleごとに分離する
-- seed variationは学習範囲内の同値変換だけを使う
-  - callback / base variant
-  - 比較式の左右
-  - dot access / bracket access
-  - simple arrow parameter表記
-- threshold値そのものは変えず、Skillの説明と表示コードの条件を一致させる
-- `/* B2-... */`のような意味のない識別commentでunique扱いしない
-- TargetRule / damage / solvabilityは表示variationから独立させる
-- multiline codeは物理行数を変えず、CODE HELPの行対応を維持する
-
-## State ownership
-
-永続stateは責務ごとに分ける。
-
-### PlayerProgress v4
-
-```ts
-{
-  exp,
-  gold,
-  inventory,
-  clearedStageIds,
-  clearedAreaIds,
-  completedSideQuestIds, // legacy save compatibility
-  unlockedStageIds,
-  unlockedSkillIds,
-}
-```
-
-担当:
-
-- EXP / Level元データ
-- Gold / consumable
-- Battle clear / area clear
-- Stage / Skill unlock
-
-### RpgState v3
-
-```ts
-{
-  equipment,
-  ownedEquipmentIds,
-  partyMemberIds,
-  partyEquipment,
-  worldPosition,
-  stepsSinceEncounter,
-  encounterCount,
-  currentHp,
-  openedTreasureIds,
-}
-```
-
-担当:
-
-- World exploration
-- Equipment
-- Party
-- Encounter pacing
-- Battle間current HP
-- 一度きりWorld Treasure
-
-migration:
-
-- v1 → v3: 装備込みmax HPをcurrent HPとして補完し、Treasureは未開封
-- v2 → v3: current HPを維持し、Treasureは未開封
-- v3 restore: World bounds / known Equipment / known Party / slot整合性 / current HP上限 / known Treasure IDだけへ正規化
-- 旧saveで既に所持しているknown Equipmentはstarter構成変更後も保持する
-
-### TutorialState v1
-
-PlayerProgress / RpgStateと分離する。
-
-`RESET PROGRESS`はProgressProviderが汎用reset eventをdispatchし、RpgProvider / TutorialProviderがそれぞれ自分のstateをresetする。Sound設定はユーザー設定として別LocalStorageに保存し、RESET PROGRESSでは保持する。
-
-## Progress guidance
-
-Open Worldでは「次Stageへ移動する」UIがないため、**World Objective**をPlayerProgressからpureに導出する。
+Battle開始HPは毎回full resetしない。
 
 ```text
-JavaScript Grassland
-0/3 → tall-grassでEncounter
-1/3 → tall-grassで次の読解Battle
-2/3 → 西のBossへ
-3/3 → CLEAR
-
-TypeScript Forest
-0/3 → forestでEncounter
-1/3 → forestで次の読解Battle
-2/3 → 東のBossへ
-3/3 → CLEAR
+RpgState.currentHp
+↓
+Battle start
+↓
+damage / PATCH KIT
+↓
+RpgState.currentHpへ反映
+↓
+Victory
+↓
+残HPでWorld return
 ```
 
-表示場所はPause STATUSを基本とし、常設Quest HUDは置かない。Battle victory時は短い`WORLD PROGRESS / BOSS UNLOCKED / WORLD COMPLETE` feedbackだけを出す。
+- Defeat → Hub start + full HP
+- Hub `REST`へ隣接INTERACT → full HP
+- Equipment等でmax HPが変わったらcurrent HPを上限へclamp
+- current / max HPはPause STATUSで確認
+- World常設HUDへHP panelを増やさない
 
-TreasureはMain Objectiveに含めず、探索した人が得られる任意地点として扱う。
-
-## Questの扱い
-
-通常runtimeから旧Quest feedback / Side Quest bonus処理 / legacy Area Shop mountは外している。
-
-`completedSideQuestIds`などのlegacy fieldは旧save互換のため当面保持するが、新機能のsource of truthにはしない。
-
-つまり「save互換」と「現在のゲーム機能」を分ける。
-
-## Legacy Area / Field
-
-旧route `/javascript`, `/typescript`, `/javascript/field`, `/typescript/field`, `*/complete` は互換redirect用途だけにする。
-
-旧Field / Area domain codeを即削除する必要はないが、新機能はそこへ追加しない。通常runtimeから参照されなくなったことを確認できた単位で整理する。
-
-## Equipment / Party
+## 6. Treasure
 
 現在:
 
-- Weapon / Armor / Accessory
-- starter: Training Blade / Traveler Coat
-- JS Treasure: Debug Charm
-- Boss clear equipment reward: Branch Saber / Typed Mail
-- BYTE 1人
-- BYTE follow-up attack
+- JS `DEBUG CACHE`: Gold + Debug Charm
+- TS `TYPE CACHE`: Gold + PATCH KIT
 
-次の拡張では数を増やす前に「選択に意味があるか」を優先する。
+原則:
 
-避ける:
+- adjacent INTERACT
+- one-shot
+- `openedTreasureIds`をsave
+- reloadしても復活しない
+- learning answerは報酬にしない
+- mapを埋めるために大量配置しない
 
-- Attack数値だけ違う大量装備
-- Partyが自動で正解targetを選ぶ
-- Level / Item grindだけでコードを読まず勝つ
+## 7. Shop
 
-## Pause / fixed UI
+Central HubのSHOPはcurrent economy entry point。
 
-通常画面の固定導線は基本的に`MENU`へ集約する。
+- PATCH KIT
+- role差のある少数Equipment
+- current Gold / price / ownedを表示
+- Gold不足 / ownedをresolverで判定
+- 購入したEquipmentはPause EQUIPMENTから変更
+- Areaごとのlegacy Shop UIはcurrent runtimeで使わない
 
-Pause tabs:
+## 8. Party
+
+現在のcompanionはBYTE。
+
+World:
+
+- Hub NPCとしてjoin
+- join後はprevious tile follower
+
+Battle:
+
+- codeが決めた同じtargetへfollow-up
+- Partyがcorrect targetを自動選択しない
+
+Party追加は人数より「読解を壊さない役割差」を優先する。
+
+## 9. Fixed Boss
+
+Battle 3 / 6はWorld上の固定地点。
+
+unlock判定はPlayerProgressからderiveする。
+
+Boss GUARD:
+
+- minion生存中はBoss damageを抑える
+-解除条件codeをBattle UIへ表示
+- minion全滅でOPEN
+- current target ruleを変更しない
+
+将来TypeScript固有mechanicを追加する場合も、World側へBattle ruleを持ち込まない。
+
+## 10. Progress guidance
+
+current guideは**World Objective**。
+
+PlayerProgressからpureにderiveし、次へ使う。
+
+- World上のNEXT OBJECTIVE
+- Pause STATUS
+- Battle後のshort progress feedback
+
+JavaScriptは現在のstoryに合わせて、BYTE join → JavaScript Grassland → Chapter progression → Code Coreへ案内する。
+
+TypeScriptも同じ仕組みを使うが、story copyの統一は今後のcontent task。
+
+常設Quest Trackerを復活させない。
+
+## 11. State ownership
+
+### PlayerProgress v4
+
+- EXP / Gold
+- inventory
+- clear / unlock
+- legacy `completedSideQuestIds`
+
+### RpgState v3
+
+- current HP
+- Equipment / owned Equipment
+- Party / Party Equipment
+- World position
+- Encounter pacing
+- opened Treasure
+
+restore時にbounds / known IDs / slot consistency / HPをnormalizeする。
+
+### TutorialState v1
+
+World / RPG saveと分離。
+
+`RESET PROGRESS`はgeneric reset eventでProgress / RPG / Tutorialをそれぞれresetし、Sound settingsは保持する。
+
+## 12. Pause / fixed UI
+
+Worldで常設するのは現在地理解と操作に必要な最小情報だけ。
+
+詳細はPauseへ集約する。
 
 ```text
 STATUS
@@ -256,106 +240,58 @@ CODEX
 SYSTEM
 ```
 
-- current HP / max HP / EXP / Gold / stats / World ObjectiveはSTATUS
-- 学習参照はCODEX
-- Sound ON/OFF / SE / BGM / Reset ProgressはSYSTEM
-- 独立SOUND / CODEX overlayは通常画面へ戻さない
+独立SOUND / CODEX常設buttonへ戻さない。
 
-## World content
+## 13. Legacy Area / Field
 
-Worldを広げたため、地図サイズではなく**意味のある地点密度**を増やす。
-
-現在:
-
-- Hub Recovery Point
-- JS Debug Cache
-- TS Type Cache
-
-次の候補:
-
-- equipment shop
-- landmark
-- companion event
-
-ただし空間を埋めるだけのNPC・説明看板・Treasure大量配置は追加しない。
-
-## Testing boundary
-
-Unit Testで固定する:
-
-- World terrain / viewport / bounds
-- encounter cooldown / battle selection
-- Recovery / Treasure interaction
-- Treasure一度きり報酬
-- World Objective derivation
-- PlayerProgress / RpgState persistence / v1・v2→v3 migration / HP clamp / Treasure ID正規化
-- Equipment combat stats
-- Party follow-up
-- Battle code variation / Battle間uniqueness / solvability
-- multiline CODE HELP行対応
-- reset propagation
-
-Playwright E2Eで固定する:
+互換redirect:
 
 ```text
-Title
-→ World move
-→ Random Encounter
-→ Battle damage
-→ Victory
-→ 残HPでWorld同座標へreturn
-→ 次Battleへ残HP引き継ぎ
-→ PATCH KIT回復save
-→ Hub REST full recovery / reload persistence
-→ JS Treasure: Debug Charm + Gold / reload / 再取得不可
-→ TS Treasure: PATCH KIT + Gold / reload / 再取得不可
-→ Defeat / Hub full recovery
-→ BYTE join / follow-up
-→ Equipment変更 / Battle反映
-→ Pause CODEX
-→ Pause SYSTEM Sound persistence
+/javascript
+/javascript/field
+/javascript/complete
+/typescript
+/typescript/field
+/typescript/complete
+→ /world
 ```
 
-Unit Testはdomainの意味、E2Eは主要loopの接続を担当し、同じ条件を両方へ重複させすぎない。
+旧Field content definitionは一部test fixtureとして残るが、current runtimeのsource of truthではない。
 
-## 優先順位
+新featureは`world/`へ実装する。
 
-### 完了した基盤
+## 14. Testing
 
-- World Objective / progress feedback
-- 旧Quest / Side Quest runtime cleanup
-- movement / interaction / encounter pure resolver
-- RpgState restore validation
-- Open World主要loop Playwright E2E
-- Sound / CodexのPause集約
-- Encounter code variation強化
-- persistent HP / Hub Recovery Point
-- one-shot Treasure / equipment acquisition
+Unit:
 
-### P1: World content density
+- terrain / bounds / viewport
+- movement / blocked
+- Encounter cooldown / selection
+- Shop / Party / Recovery / Treasure / Boss intent
+- Treasure reward
+- World Objective
+- RpgState migration / normalization
 
-1. equipment shop
-2. landmark / companion event
+E2E:
 
-### P1: RPG選択の深さ
+- Opening / World entry
+- move / interaction
+- Random Encounter → Battle → same position return
+- HP persistence / PATCH KIT / Recovery / Defeat
+- Treasure persistence
+- Shop / Equipment
+- BYTE join / follow-up
+- Tutorial controls
+- Boss flow
 
-1. 装備ごとの差をAttack数値以外にも作る
-2. Partyの役割差をコード読解を代替しない範囲で作る
-3. 回復・消耗品の選択肢を増やしすぎず整理する
+## 15. Expansion rule
 
-### P2: 学習コンテンツ
+新region / landmark / companion等を増やす前に確認する。
 
-1. Boss-specific mechanic
-2. third learning region（SQL / React候補）
-3. 新region追加時も既存Worldへ自然につなぐ
+1. 歩いて到達する意味があるか
+2. code reading contentと結びつくか
+3. WorldPageへad-hoc条件を増やしていないか
+4. Pause / HUDを詰め込みすぎていないか
+5. Unit / E2Eで主要接続を固定できるか
 
-## 守る原則
-
-1. コード読解がtarget判断の中心
-2. RPG成長は読解の代替ではなく余裕を作る
-3. World / Battle / Progression / RPG stateを密結合させない
-4. 常設HUDへ情報を詰め込まない
-5. legacy save互換と現行featureを混同しない
-6. UI条件分岐よりpure functionへ寄せる
-7. 新機能はtest可能な境界を先に作る
-8. 表示コードのvariationは学習上の意味を保ち、見た目だけのfake variationにしない
+World sizeではなく、**意味のある地点と学習contentの密度**を増やす。
