@@ -13,6 +13,7 @@ import {
   useRpg,
   type EquipmentSlot,
 } from '../rpg'
+import { useTutorial } from '../tutorial/useTutorial'
 import { getWorldObjectives } from '../world/worldObjective'
 
 type PauseTab = 'status' | 'items' | 'equipment' | 'party' | 'codex' | 'system'
@@ -32,6 +33,7 @@ export function PauseMenu() {
   const location = useLocation()
   const { progress, stats, resetProgress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
+  const { reset: resetTutorial } = useTutorial()
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<PauseTab>('status')
   const [resetArmed, setResetArmed] = useState(false)
@@ -321,6 +323,20 @@ export function PauseMenu() {
                         aria-label="Background music volume"
                       />
                     </label>
+                  </div>
+
+                  <div className="pause-reset-panel pixel-inner-window">
+                    <p>操作チュートリアルだけを最初からやり直します。進行・装備・仲間はそのままです。</p>
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={() => {
+                        resetTutorial()
+                        closeMenu()
+                      }}
+                    >
+                      REPLAY TUTORIAL
+                    </button>
                   </div>
 
                   <div className="pause-reset-panel pixel-inner-window">
