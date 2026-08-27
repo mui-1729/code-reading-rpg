@@ -2,6 +2,8 @@ export type RawResultItem = {
   label?: string
   value?: string
   text?: string
+  equipmentId?: string
+  equipmentName?: string
 }
 
 export type ResultSequenceTone = 'reward' | 'level' | 'unlock' | 'clear' | 'progress'
@@ -11,6 +13,7 @@ export type ResultSequenceItem = {
   title: string
   detail?: string
   tone: ResultSequenceTone
+  equipmentId?: string
 }
 
 const normalized = (value?: string) => value?.replace(/\s+/g, ' ').trim() ?? ''
@@ -29,6 +32,17 @@ export function buildResultSequence(rawItems: RawResultItem[]): ResultSequenceIt
     const label = normalized(raw.label)
     const value = normalized(raw.value)
     const text = normalized(raw.text)
+
+    if (raw.equipmentId) {
+      items.push({
+        id: `equipment-${index}`,
+        title: 'EQUIPMENT ACQUIRED',
+        detail: normalized(raw.equipmentName) || raw.equipmentId,
+        tone: 'unlock',
+        equipmentId: raw.equipmentId,
+      })
+      continue
+    }
 
     if (label === 'EXP GAINED') {
       items.push({ id: `exp-${index}`, title: 'EXP GAINED', detail: value, tone: 'reward' })
