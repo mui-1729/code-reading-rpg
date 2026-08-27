@@ -31,7 +31,7 @@ test('first START plays the JavaScript opening before entering the world', async
   await expect(page.locator('.opening-kicker')).toHaveText('MISSION START')
   await expect(page.locator('.opening-copy')).toContainText('まずHubでBYTEと合流する')
 
-  await page.getByRole('button', { name: '▶ 西の草原へ' }).click()
+  await page.getByRole('button', { name: '▶ Hubへ出発' }).click()
   await expect(page).toHaveURL(/\/world$/)
   await expect(page.getByLabel('Open world map')).toBeVisible()
   await expect(page.getByLabel('Next objective')).toContainText('BYTEと合流する')
