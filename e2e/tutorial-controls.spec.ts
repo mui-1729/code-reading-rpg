@@ -10,16 +10,18 @@ const seedTutorial = async (page: Parameters<typeof test>[0]['page'], phase: str
   }, { key: TUTORIAL_KEY, phaseValue: phase })
 }
 
-test('mobile TutorialがD-Pad操作を遮らない', async ({ page }) => {
+test('mobile TutorialがD-Pad移動後にINTERACTへ進む', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedTutorial(page, 'field-move')
   await page.goto('/world')
 
-  await expect(page.locator('.tutorial-prompt-field')).toBeVisible()
+  await expect(page.locator('.tutorial-prompt-field')).toContainText('MOVE')
   const player = page.locator('.world-player-sprite')
   const beforeX = await player.evaluate((element) => element.parentElement?.dataset.worldX)
   await page.getByRole('button', { name: 'Move left' }).click()
   await expect.poll(() => player.evaluate((element) => element.parentElement?.dataset.worldX)).not.toBe(beforeX)
+  await expect(page.locator('.tutorial-prompt-field')).toContainText('INTERACT')
+  await expect.poll(async () => page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null')?.phase, TUTORIAL_KEY)).toBe('field-interact')
 })
 
 test('mobile TutorialがBYTE隣接時のINTERACT操作を認識する', async ({ page }) => {
