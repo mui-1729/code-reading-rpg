@@ -7,10 +7,11 @@ import {
 } from './state'
 
 describe('RPG state storage', () => {
-  it('validな装備・仲間・World座標・Encounter状態・current HPを保存して復元する', () => {
+  it('validな装備・仲間・World座標・Encounter状態・current HP・Treasure状態を保存して復元する', () => {
     const initial = createInitialRpgState()
     const state = {
       ...initial,
+      ownedEquipmentIds: [...initial.ownedEquipmentIds, 'debug-charm'],
       partyMemberIds: ['byte'],
       partyEquipment: {
         byte: { weapon: null, armor: null, accessory: 'debug-charm' },
@@ -20,12 +21,13 @@ describe('RPG state storage', () => {
       stepsSinceEncounter: 3,
       encounterCount: 4,
       currentHp: 57,
+      openedTreasureIds: ['js-debug-cache'] as const,
     }
 
     expect(restoreRpgState(serializeRpgState(state))).toEqual(state)
   })
 
-  it('v1 saveは装備込みmax HPでv2へmigrationする', () => {
+  it('v1 saveは装備込みmax HPと未開封Treasureでv3へmigrationする', () => {
     const initial = createInitialRpgState()
     const legacyState = {
       equipment: initial.equipment,
@@ -40,27 +42,44 @@ describe('RPG state storage', () => {
 
     expect(restored.worldPosition).toEqual({ x: 12, y: 14 })
     expect(restored.currentHp).toBe(108)
+    expect(restored.openedTreasureIds).toEqual([])
   })
 
-  it('v2 current HPは0..max HPへclampする', () => {
+  it('v2 saveはcurrent HPを維持しTreasureだけ未開封でv3へmigrationする', () => {
+    const initial = createInitialRpgState()
+    const restored = restoreRpgState(JSON.stringify({
+      version: 2,
+      state: { ...initial, currentHp: 61 },
+    }))
+
+    expect(restored.currentHp).toBe(61)
+    expect(restored.openedTreasureIds).toEqual([])
+  })
+
+  it('v3 current HPは0..max HPへclampし未知Treasure IDを除外する', () => {
     const initial = createInitialRpgState()
     const tooHigh = JSON.stringify({
-      version: 2,
-      state: { ...initial, currentHp: 999 },
+      version: 3,
+      state: {
+        ...initial,
+        currentHp: 999,
+        openedTreasureIds: ['js-debug-cache', 'unknown-cache', 'js-debug-cache'],
+      },
     })
     const negative = JSON.stringify({
-      version: 2,
+      version: 3,
       state: { ...initial, currentHp: -20 },
     })
 
     expect(restoreRpgState(tooHigh).currentHp).toBe(108)
+    expect(restoreRpgState(tooHigh).openedTreasureIds).toEqual(['js-debug-cache'])
     expect(restoreRpgState(negative).currentHp).toBe(0)
   })
 
   it('base max HPが上がったsave restoreでも装備込み上限を使う', () => {
     const initial = createInitialRpgState(116)
     const raw = JSON.stringify({
-      version: 2,
+      version: 3,
       state: { ...initial, currentHp: 999 },
     })
 
@@ -77,7 +96,7 @@ describe('RPG state storage', () => {
   it('World範囲外の座標はHub開始位置へ戻す', () => {
     const state = createInitialRpgState()
     const raw = JSON.stringify({
-      version: 2,
+      version: 3,
       state: { ...state, worldPosition: { x: 999, y: -3 } },
     })
 
@@ -87,7 +106,7 @@ describe('RPG state storage', () => {
   it('World bounds内の端座標は保持する', () => {
     const state = createInitialRpgState()
     const raw = JSON.stringify({
-      version: 2,
+      version: 3,
       state: { ...state, worldPosition: { x: 39, y: 27 } },
     })
 
@@ -97,7 +116,7 @@ describe('RPG state storage', () => {
   it('未知Equipmentを除外しstarter所有を補完・重複排除する', () => {
     const state = createInitialRpgState()
     const raw = JSON.stringify({
-      version: 2,
+      version: 3,
       state: {
         ...state,
         ownedEquipmentIds: ['branch-saber', 'branch-saber', 'unknown-sword'],
@@ -107,15 +126,27 @@ describe('RPG state storage', () => {
     expect(restoreRpgState(raw).ownedEquipmentIds).toEqual([
       'training-blade',
       'traveler-coat',
-      'debug-charm',
       'branch-saber',
     ])
+  })
+
+  it('旧saveで既に所持していたDebug Charmはstarterから外れても保持する', () => {
+    const state = createInitialRpgState()
+    const raw = JSON.stringify({
+      version: 2,
+      state: {
+        ...state,
+        ownedEquipmentIds: ['training-blade', 'traveler-coat', 'debug-charm'],
+      },
+    })
+
+    expect(restoreRpgState(raw).ownedEquipmentIds).toContain('debug-charm')
   })
 
   it('装備中IDはknown・owned・slot一致を満たさなければ外す', () => {
     const state = createInitialRpgState()
     const raw = JSON.stringify({
-      version: 2,
+      version: 3,
       state: {
         ...state,
         ownedEquipmentIds: ['training-blade', 'traveler-coat', 'debug-charm'],
@@ -137,7 +168,7 @@ describe('RPG state storage', () => {
   it('未知Partyを除外しjoined memberだけの装備へ正規化する', () => {
     const state = createInitialRpgState()
     const raw = JSON.stringify({
-      version: 2,
+      version: 3,
       state: {
         ...state,
         partyMemberIds: ['byte', 'ghost', 'byte'],
@@ -158,7 +189,7 @@ describe('RPG state storage', () => {
   it('negative encounter countersは0へclampする', () => {
     const state = createInitialRpgState()
     const raw = JSON.stringify({
-      version: 2,
+      version: 3,
       state: { ...state, stepsSinceEncounter: -8, encounterCount: -3 },
     })
     const restored = restoreRpgState(raw)
