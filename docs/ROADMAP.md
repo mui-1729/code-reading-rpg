@@ -1,6 +1,6 @@
 # CODE//READ RPG ロードマップ
 
-この文書は**次に何を作るか**だけを管理する。現在の実装一覧は[`PROJECT_STATUS.md`](./PROJECT_STATUS.md)、守る設計原則は[`GAME_DESIGN.md`](./GAME_DESIGN.md)を参照する。
+この文書は**次に何を作るか**だけを管理する。現在の実装一覧は[`PROJECT_STATUS.md`](./PROJECT_STATUS.md)、守る設計原則は[`GAME_DESIGN.md`](./GAME_DESIGN.md)、長期的な学習編の構成は[`ENGINEER_STORY_ROADMAP.md`](./ENGINEER_STORY_ROADMAP.md)を参照する。
 
 ## North Star
 
@@ -12,6 +12,7 @@
 2. 既存contentがstory / learningとして一貫しているか
 3. 新機能を足す前にcurrent runtimeを保守できるか
 4. RPG要素が読解を代替していないか
+5. 同じ仕事として自然にまとめられる概念を細かく分割しすぎていないか
 
 ## Baseline — 実装済み
 
@@ -61,7 +62,9 @@
 
 以前のRoadmapにあったWorld Objective、legacy runtime cleanup、World resolver、RpgState validation、Open World E2E、Treasure、Equipment Shop、Boss mechanicはすべてbaselineへ移動済み。
 
-## P0 — TypeScript編を現在のJavaScript品質へ揃える
+## P0 — TypeScript編をJavaScript編と同じ「編」の品質へ揃える
+
+JavaScript / TypeScriptは別の仕組みとして扱うのではなく、どちらも**3 Chapterで1つの仕事を追う学習編**として統一する。
 
 TypeScript regionはplayableだが、story / objective / character presentationの統一度がJavaScriptより低い。
 
@@ -69,18 +72,18 @@ TypeScript regionはplayableだが、story / objective / character presentation�
 
 3つのBattleを「型の食い違いを追う1つの仕事」としてつなぐ。
 
-候補:
+方向:
 
-1. Chapter 1 — API / data contractの型ずれを発見
+1. Chapter 1 — 型の食い違いを発見
 2. Chapter 2 — optional / unionを含む複数箇所へ影響が広がる
-3. Final — shared contract / compiler-side failureの根本原因を止める
+3. Final — shared contractの根本原因を止める
 
 ### Acceptance direction
 
 - 前Chapterのsyntaxを後Chapterでも使う
 - World Objective / NPC / briefing / result copyを同じ事件へ揃える
 - BossがTypeScriptの型情報を読む総合問題になる
-- JavaScript編をコピーしただけのstoryにしない
+- JavaScript編と同じ構成品質にするがstory内容はコピーしない
 - Battle engineを複製しない
 
 ## P1 — Battle runtimeを小さな責務へ分ける
@@ -103,6 +106,50 @@ TypeScript regionはplayableだが、story / objective / character presentation�
 - Unit / E2Eを先に境界として使う
 - 「抽象化すること」自体を目的にしない
 
+## P1 — Database編 prototype
+
+**次に追加する新規learning regionはDatabase編を優先する。**
+
+`SQL編`として狭く切らず、DBを扱う仕事として次を段階的にまとめる。
+
+### Chapter候補
+
+Chapter 1:
+
+- table / row / column
+- `SELECT`
+- `WHERE`
+- `AND` / `OR`
+- `ORDER BY`
+- `LIMIT`
+
+Chapter 2:
+
+- `JOIN`
+- `NULL`
+- `GROUP BY`
+- aggregate
+
+Final:
+
+- indexの入口
+- transaction
+- 複数queryの依存関係
+
+### まず1 Battle prototypeする
+
+SQL / DBは現在のtarget-selection Battleと相性がよいが、いきなり3 Chapterを作らない。
+
+prototypeで確認するもの:
+
+- queryを読まないと結果rowを判断しにくいか
+- 現行`TargetRule`相当のsafe domainへ落とせるか
+- Enemyではなくrowとして見せた方が理解しやすいか
+- `WHERE → ORDER BY → LIMIT`をBattle結果へ自然に反映できるか
+- CODE DATA / CODE HELPをDB用にどう一般化するか
+
+prototype成功後にWorld region / story / 3 Chapter化する。
+
 ## P1 — TypeScript固有Boss mechanic
 
 現在のGUARDはJS / TS Boss共通。TypeScript側では型情報そのものを読む意味が出るmechanicを検討する。
@@ -113,47 +160,114 @@ TypeScript regionはplayableだが、story / objective / character presentation�
 - optional property有無でBoss stateが変わる
 - `keyof` / indexed accessで読む値を切り替える
 
-条件:
+Database prototypeと独立して進められるが、Battle runtime分割と競合する場合はruntime整理を先にする。
 
-- 表示コードから理解できる
-- target / correct previewを出さない
-- 常設説明panelを増やさない
-- pure resolver + testで固定できる
+## P2 — Backend / API編
 
-## P2 — Third learning region prototype
+Database編の次に、request → validation → DB / external API → responseを追う編を作る。
 
-本実装の前に**1 Battleだけprototype**し、現在のcode-reading Battle loopと相性を確認する。
+framework固有ではなく、backend共通の読解をまとめる。
 
-### React候補
+候補:
 
-長所:
+- HTTP method / status
+- request / response
+- JSON / validation
+- async / await
+- error handling
+- DB access
+- timeout / retry
+- authentication / authorization基礎
 
-- JS → TS → ReactのWeb frontend学習順が自然
-- props / state / render flow / derived dataを扱える
+Express / Hono / Nest等はこの編の中心にしない。
 
-難所:
+## P2 — React編
 
-- 現在のtarget-selection Battleへcomponent lifecycle / state問題を自然に写像する設計が必要
+Reactはcomponent / props / state / render flowという固有mental modelがあるため、Backend等とまとめず独立編にする。
 
-### SQL候補
+候補:
 
-長所:
+- props
+- state
+- event handler
+- derived state
+- list key
+- Effect
+- stale state / render loop
 
-- WHERE / AND / OR / ORDER BY / LIMIT / JOINが現在のdata-selection Battleと相性がよい
-- 「どのrowが返るか」をゲーム結果へ対応させやすい
+Database編より後にする。
 
-難所:
+## P3 — framework固有編
 
-- JS → TSの直後の学習順として何をstory上の仕事にするか決める必要がある
+frameworkは無理に1つへまとめない。
 
-prototypeで確認するもの:
+### Next.js編
 
-- コードを読まないと結果を判断しにくいか
-- 現行`TargetRule`相当のsafe domainへ落とせるか
-- 3 Chapterへ難易度を累積できるか
-- Open Worldへregionを増やす価値があるか
+- App Router
+- Server / Client Component
+- data fetching
+- Server Action
+- cache / revalidation
 
-## P2 — Party / Equipment depth
+### TanStack編
+
+- TanStack Router
+- TanStack Query
+- 必要ならTanStack Start
+
+Router / Queryだけなら1編にまとめる。TanStack Startまで含めて大きくなりすぎる場合は将来分離する。
+
+## P3 — 横断的な実務編
+
+細かい技術名ごとに分けず、同じ仕事としてまとめる。
+
+### Team Development / Delivery編
+
+- Git / diff / branch / PR / review
+- Unit / Integration / E2E
+- CI / build / deploy / rollback
+
+### Security編
+
+- authn / authz
+- permission
+- validation
+- trust boundary
+- session / token
+- XSS / injection等の入口
+
+### Production / Performance編
+
+- logs / stack trace
+- metrics / traces
+- latency
+- N+1
+- cache / batching
+- incident response
+
+### Architecture / Refactoring編
+
+最終的な総合編として扱う。
+
+## 推奨する長期順序
+
+```text
+JavaScript
+→ TypeScript
+→ Database
+→ Backend / API
+→ React
+→ Next.js
+→ TanStack
+→ Team Development / Delivery
+→ Security
+→ Production / Performance
+→ Architecture / Refactoring
+```
+
+この順序は固定のカリキュラムではなく、各prototypeの結果で調整してよい。
+
+## Party / Equipment depth
 
 必要性が出たときだけ追加する。
 
@@ -186,9 +300,9 @@ prototypeで確認するもの:
 - 複雑なQuest Log
 - 大量の常設HUD
 - Worldサイズだけを増やすmap expansion
-- Backend / Login / Cloud Save / Ranking
+- Login / Cloud Save / Ranking
 
-Backendは複数端末同期、共有challenge、account等の具体的要件が出た時点で検討する。
+Backend学習編は追加しても、ゲーム自体のbackend infrastructureを即導入する意味ではない。ゲーム側のBackendは複数端末同期、共有challenge、account等の具体的要件が出た時点で検討する。
 
 ## 新機能のQuality gate
 
