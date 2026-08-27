@@ -41,7 +41,7 @@ export const javascriptOpeningScenes: readonly JavaScriptOpeningScene[] = [
     speaker: 'BYTE',
     lines: [
       '僕はBYTE。ログを集めておいた。値はちゃんと入ってるのに、選ばれる敵だけがおかしい。',
-      '一緒に追えばきっと見つかる。まずは西のJavaScript草原へ行こう。',
+      '一緒に追えばきっと見つかる。出発したらHubで僕と合流して、西のJavaScript草原へ行こう。',
     ],
   },
   {
@@ -50,7 +50,7 @@ export const javascriptOpeningScenes: readonly JavaScriptOpeningScene[] = [
     speaker: 'LEAD ADA',
     lines: [
       'コードは嘘をつかない。でも、読み方を間違えれば本当の動きは見えない。',
-      '最初のバグを直しておいで。そこから君のプログラマーとしての冒険が始まる。',
+      'まずHubでBYTEと合流する。そのあと西の草原へ向かい、最初のバグを直しておいで。',
     ],
   },
 ]
