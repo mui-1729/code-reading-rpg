@@ -4,11 +4,11 @@ const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
-const createProgress = (gold: number) => ({
+const progress = {
   version: 4,
   progress: {
     exp: 0,
-    gold,
+    gold: 200,
     inventory: { patchKit: 0 },
     clearedStageIds: [],
     clearedAreaIds: [],
@@ -16,9 +16,9 @@ const createProgress = (gold: number) => ({
     unlockedStageIds: [1, 4],
     unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
   },
-})
+}
 
-const createRpgState = () => ({
+const rpgState = {
   version: 3,
   state: {
     equipment: {
@@ -35,58 +35,27 @@ const createRpgState = () => ({
     currentHp: 108,
     openedTreasureIds: [],
   },
-})
+}
 
 async function seedShopState(page: Page) {
   await page.goto('/')
   await page.evaluate(
-    ({ progressKey, rpgKey, tutorialKey }) => {
+    ({ progressKey, rpgKey, tutorialKey, seededProgress, seededRpgState }) => {
       localStorage.clear()
-      localStorage.setItem(progressKey, JSON.stringify(createProgressForBrowser(200)))
-      localStorage.setItem(rpgKey, JSON.stringify(createRpgStateForBrowser()))
+      localStorage.setItem(progressKey, JSON.stringify(seededProgress))
+      localStorage.setItem(rpgKey, JSON.stringify(seededRpgState))
       localStorage.setItem(
         tutorialKey,
         JSON.stringify({ version: 1, status: 'skipped', phase: 'battle' }),
       )
-
-      function createProgressForBrowser(gold: number) {
-        return {
-          version: 4,
-          progress: {
-            exp: 0,
-            gold,
-            inventory: { patchKit: 0 },
-            clearedStageIds: [],
-            clearedAreaIds: [],
-            completedSideQuestIds: [],
-            unlockedStageIds: [1, 4],
-            unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
-          },
-        }
-      }
-
-      function createRpgStateForBrowser() {
-        return {
-          version: 3,
-          state: {
-            equipment: {
-              weapon: 'training-blade',
-              armor: 'traveler-coat',
-              accessory: null,
-            },
-            ownedEquipmentIds: ['training-blade', 'traveler-coat'],
-            partyMemberIds: [],
-            partyEquipment: {},
-            worldPosition: { x: 20, y: 11 },
-            stepsSinceEncounter: 8,
-            encounterCount: 0,
-            currentHp: 108,
-            openedTreasureIds: [],
-          },
-        }
-      }
     },
-    { progressKey: PROGRESS_KEY, rpgKey: RPG_KEY, tutorialKey: TUTORIAL_KEY },
+    {
+      progressKey: PROGRESS_KEY,
+      rpgKey: RPG_KEY,
+      tutorialKey: TUTORIAL_KEY,
+      seededProgress: progress,
+      seededRpgState: rpgState,
+    },
   )
   await page.reload()
 }
@@ -137,6 +106,3 @@ test('Hub ShopでItem / Equipmentを選んで購入しPauseから装備できる
     'guard-blade',
   )
 })
-
-void createProgress
-void createRpgState
