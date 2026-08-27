@@ -55,7 +55,7 @@ export function BattleItemPanel() {
   const combatStats = getCombatStats(stats, rpgState)
   const hp = Math.max(0, Math.min(combatStats.maxHp, rpgState.currentHp))
   const count = getItemCount(progress, patchKitItem.id)
-  const useState = getBattleItemUseState({
+  const itemUseState = getBattleItemUseState({
     progress,
     itemId: patchKitItem.id,
     hp,
@@ -66,7 +66,7 @@ export function BattleItemPanel() {
   const effectSummary = getItemEffectSummary(patchKitItem)
 
   const usePatchKit = () => {
-    if (!useState.canUse) {
+    if (!itemUseState.canUse) {
       gameAudio.playSe('cancel')
       return
     }
@@ -88,7 +88,7 @@ export function BattleItemPanel() {
     <div
       className="battle-item-row"
       data-item-id={patchKitItem.id}
-      data-item-state={useState.reason}
+      data-item-state={itemUseState.reason}
     >
       <div className="battle-item-card">
         <img
@@ -107,15 +107,15 @@ export function BattleItemPanel() {
         type="button"
         className="secondary-button patch-kit-action"
         onClick={usePatchKit}
-        disabled={!useState.canUse}
+        disabled={!itemUseState.canUse}
         aria-label={`${patchKitItem.name} ×${count} · ${effectSummary}`}
       >
         ▶ USE
       </button>
       <span className="battle-item-state" aria-live="polite">
         {lastHeal !== null && usedThisBattle
-          ? `RECOVERED +${lastHeal} HP · ${useState.reasonLabel}`
-          : useState.reasonLabel}
+          ? `RECOVERED +${lastHeal} HP · ${itemUseState.reasonLabel}`
+          : itemUseState.reasonLabel}
       </span>
     </div>,
     portalTarget,
