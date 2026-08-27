@@ -173,15 +173,24 @@ export function BattleResultSequence() {
     return () => window.clearTimeout(timer)
   }, [done, index, items.length, storyEvent, target])
 
-  const storyOverlay = storyEvent ? (
-    <BattleStoryEvent event={storyEvent} onComplete={() => setStoryEvent(null)} />
-  ) : null
+  if (storyEvent) {
+    return (
+      <BattleStoryEvent
+        event={storyEvent}
+        onComplete={() => setStoryEvent(null)}
+        onSkip={() => {
+          setStoryEvent(null)
+          if (target) setDone(true)
+        }}
+      />
+    )
+  }
 
-  if (!target || items.length === 0) return storyOverlay
+  if (!target || items.length === 0) return null
 
   const current = items[Math.min(index, items.length - 1)]
   const advance = () => {
-    if (done || storyEvent) return
+    if (done) return
     if (index >= items.length - 1) {
       setDone(true)
       return
@@ -189,46 +198,38 @@ export function BattleResultSequence() {
     setIndex((currentIndex) => currentIndex + 1)
   }
 
-  const skip = () => {
-    if (storyEvent) return
-    setDone(true)
-  }
+  const skip = () => setDone(true)
 
-  return (
-    <>
-      {storyOverlay}
-      {createPortal(
-        <div className={`result-sequence-panel ${done ? 'is-summary' : `tone-${current.tone}`}`} aria-live="polite">
-          {done ? (
-            <>
-              <div className="result-sequence-kicker">RESULT</div>
-              <div className="result-sequence-summary">
-                {items.map((item) => (
-                  <div key={item.id}>
-                    <span>{item.title}</span>
-                    {item.detail && <strong>{item.detail}</strong>}
-                  </div>
-                ))}
+  return createPortal(
+    <div className={`result-sequence-panel ${done ? 'is-summary' : `tone-${current.tone}`}`} aria-live="polite">
+      {done ? (
+        <>
+          <div className="result-sequence-kicker">RESULT</div>
+          <div className="result-sequence-summary">
+            {items.map((item) => (
+              <div key={item.id}>
+                <span>{item.title}</span>
+                {item.detail && <strong>{item.detail}</strong>}
               </div>
-            </>
-          ) : (
-            <div className="result-sequence-event" key={`${current.id}:${index}`} onClick={advance}>
-              <div className="result-sequence-kicker">{index + 1} / {items.length}</div>
-              <strong>{current.title}</strong>
-              {current.detail && <span>{current.detail}</span>}
-              <small>Tap / click to continue</small>
-            </div>
-          )}
-
-          {!done && (
-            <div className="result-sequence-controls">
-              <button type="button" className="primary-button" onClick={advance}>NEXT</button>
-              <button type="button" className="secondary-button" onClick={skip}>SKIP</button>
-            </div>
-          )}
-        </div>,
-        target,
+            ))}
+          </div>
+        </>
+      ) : (
+        <div className="result-sequence-event" key={`${current.id}:${index}`} onClick={advance}>
+          <div className="result-sequence-kicker">{index + 1} / {items.length}</div>
+          <strong>{current.title}</strong>
+          {current.detail && <span>{current.detail}</span>}
+          <small>Tap / click to continue</small>
+        </div>
       )}
-    </>
+
+      {!done && (
+        <div className="result-sequence-controls">
+          <button type="button" className="primary-button" onClick={advance}>NEXT</button>
+          <button type="button" className="secondary-button" onClick={skip}>SKIP</button>
+        </div>
+      )}
+    </div>,
+    target,
   )
 }
