@@ -23,7 +23,7 @@
   width: 72%;
   height: auto;
   display: block;
-  transform: scale(1.85);
+  transform: scale(2.0);
   transform-origin: 50% 50%;
 }
 
@@ -35,7 +35,7 @@
   left: 3%;
   top: 30%;
   opacity: .95;
-  transform: scale(1.7);
+  transform: scale(1.82);
   transform-origin: 50% 50%;
 }
 
@@ -49,7 +49,7 @@
   width: 100%;
   height: auto;
   display: block;
-  transform: scale(1.55);
+  transform: scale(1.64);
   transform-origin: 50% 50%;
 }
 
@@ -138,15 +138,15 @@
 
 @media (max-width: 700px) {
   .world-player-pixel {
-    transform: scale(1.75);
+    transform: scale(1.9);
   }
 
   .world-follower-pixel {
-    transform: scale(1.6);
+    transform: scale(1.72);
   }
 
   .npc-object img {
-    transform: scale(1.45);
+    transform: scale(1.55);
   }
 
   .battle-character-stack {
