@@ -22,7 +22,7 @@ const createProgress = (overrides: Record<string, unknown> = {}) => ({
 })
 
 const createRpgState = (overrides: Record<string, unknown> = {}) => ({
-  version: 1,
+  version: 2,
   state: {
     equipment: {
       weapon: 'training-blade',
@@ -35,6 +35,7 @@ const createRpgState = (overrides: Record<string, unknown> = {}) => ({
     worldPosition: { x: 20, y: 14 },
     stepsSinceEncounter: 8,
     encounterCount: 0,
+    currentHp: 108,
     ...overrides,
   },
 })
@@ -86,8 +87,12 @@ async function playerPosition(page: Page) {
   })
 }
 
+async function storedRpgState(page: Page) {
+  return page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), RPG_KEY)
+}
+
 test.describe('Open World RPG loop', () => {
-  test('Title → deterministic Encounter → Battle victory → World returnで位置を保持する', async ({ page }) => {
+  test('Title → deterministic Encounter → Battle victory → World returnで位置と残HPを保持する', async ({ page }) => {
     await seedStorage(page, {
       rpg: createRpgState({
         worldPosition: { x: 10, y: 10 },
@@ -102,7 +107,7 @@ test.describe('Open World RPG loop', () => {
 
     // count=4, next=(10,11), steps=5 はseeded rollがTall Grassの18%を下回る。
     await page.getByRole('button', { name: 'Move down' }).click()
-    await expect(page).toHaveURL(/\/javascript\/battle\/1\?/) 
+    await expect(page).toHaveURL(/\/javascript\/battle\/1\?/)
     await expect(page.getByText('BATTLE 01', { exact: false })).toBeVisible()
 
     await executeSkill(page, 'TRACE')
@@ -122,10 +127,79 @@ test.describe('Open World RPG loop', () => {
     await expect(page).toHaveURL(/\/world$/)
     await expect.poll(() => playerPosition(page)).toEqual({ x: 10, y: 11 })
 
-    const stored = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), RPG_KEY)
+    const stored = await storedRpgState(page)
+    expect(stored.version).toBe(2)
     expect(stored.state.worldPosition).toEqual({ x: 10, y: 11 })
     expect(stored.state.encounterCount).toBe(5)
     expect(stored.state.stepsSinceEncounter).toBe(0)
+    expect(stored.state.currentHp).toBeGreaterThan(0)
+    expect(stored.state.currentHp).toBeLessThan(108)
+
+    // Battle 1 clearでLV2になりmax HPは108→116へ増えるが、残HPは自動回復しない。
+    await page.goto('/javascript/battle/1?seed=hp-carry-e2e&returnTo=%2Fworld')
+    await expect(page.locator('.player-panel .status-label-row strong')).toHaveText(
+      `${stored.state.currentHp}/116`,
+    )
+  })
+
+  test('PATCH KIT回復後のcurrent HPをRpgStateへ保存する', async ({ page }) => {
+    await seedStorage(page, {
+      progress: createProgress({ inventory: { patchKit: 1 } }),
+      rpg: createRpgState({ currentHp: 40 }),
+    })
+
+    await page.goto('/javascript/battle/1?seed=patch-hp-e2e&returnTo=%2Fworld')
+    await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('40/108')
+    await page.getByRole('button', { name: /PATCH KIT ×1/ }).click()
+    await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
+
+    await expect.poll(async () => (await storedRpgState(page)).state.currentHp).toBe(64)
+    const progress = await page.evaluate(
+      (key) => JSON.parse(localStorage.getItem(key) ?? 'null'),
+      PROGRESS_KEY,
+    )
+    expect(progress.progress.inventory.patchKit).toBe(0)
+  })
+
+  test('Hub RESTでfull recoveryしreload後もHPを保持する', async ({ page }) => {
+    await seedStorage(page, {
+      rpg: createRpgState({
+        worldPosition: { x: 20, y: 16 },
+        currentHp: 40,
+      }),
+    })
+
+    await page.goto('/world')
+    await page.getByRole('button', { name: 'Pause menuを開く' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Pause menu' })
+    await expect(dialog.getByText('40 / 108', { exact: true })).toBeVisible()
+    await page.keyboard.press('Escape')
+
+    await page.getByRole('button', { name: 'INTERACT' }).click()
+    await expect(page.getByText(/FULL RECOVERY/)).toBeVisible()
+    await expect.poll(async () => (await storedRpgState(page)).state.currentHp).toBe(108)
+
+    await page.reload()
+    await page.getByRole('button', { name: 'Pause menuを開く' }).click()
+    await expect(page.getByRole('dialog', { name: 'Pause menu' }).getByText('108 / 108', { exact: true })).toBeVisible()
+  })
+
+  test('DefeatするとHubへ戻りfull HPで復帰する', async ({ page }) => {
+    await seedStorage(page, {
+      rpg: createRpgState({
+        worldPosition: { x: 10, y: 11 },
+        currentHp: 1,
+      }),
+    })
+
+    await page.goto('/javascript/battle/1?seed=defeat-hp-e2e&returnTo=%2Fworld')
+    await executeSkill(page, 'TRACE')
+    await expect(page.getByText('DEFEAT', { exact: true })).toBeVisible()
+    await page.getByRole('button', { name: /RETURN TO HUB/ }).click()
+
+    await expect(page).toHaveURL(/\/world$/)
+    await expect.poll(() => playerPosition(page)).toEqual({ x: 20, y: 14 })
+    await expect.poll(async () => (await storedRpgState(page)).state.currentHp).toBe(108)
   })
 
   test('World / Gold / Equipment / Party stateはreload後も保持される', async ({ page }) => {
@@ -150,6 +224,7 @@ test.describe('Open World RPG loop', () => {
         worldPosition: { x: 21, y: 14 },
         stepsSinceEncounter: 6,
         encounterCount: 9,
+        currentHp: 72,
       }),
     })
 
@@ -161,6 +236,7 @@ test.describe('Open World RPG loop', () => {
     await page.getByRole('button', { name: 'Pause menuを開く' }).click()
     const dialog = page.getByRole('dialog', { name: 'Pause menu' })
     await expect(dialog.getByText('77 G', { exact: true })).toBeVisible()
+    await expect(dialog.getByText('72 / 108', { exact: true })).toBeVisible()
 
     await dialog.getByRole('button', { name: 'EQUIPMENT' }).click()
     await expect(dialog.getByText('Branch Saber', { exact: true }).first()).toBeVisible()

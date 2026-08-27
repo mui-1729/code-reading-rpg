@@ -11,6 +11,7 @@ import {
   isEncounterTerrain,
   isWalkableTerrain,
   JS_BOSS_POSITION,
+  RECOVERY_POSITION,
   SHOP_POSITION,
   TS_BOSS_POSITION,
   type Terrain,
@@ -143,6 +144,9 @@ export type WorldInteractionIntent =
       kind: 'shop'
     }
   | {
+      kind: 'recovery'
+    }
+  | {
       kind: 'boss'
       battleId: 3 | 6
       region: BattleRegion
@@ -169,6 +173,10 @@ export function resolveWorldInteraction(
 
   if (isAdjacent(position, SHOP_POSITION)) {
     return { kind: 'shop' }
+  }
+
+  if (isAdjacent(position, RECOVERY_POSITION)) {
+    return { kind: 'recovery' }
   }
 
   if (isAdjacent(position, JS_BOSS_POSITION)) {

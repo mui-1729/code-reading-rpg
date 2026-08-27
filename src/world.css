@@ -147,6 +147,13 @@
   background: #304e63;
 }
 
+.terrain-recovery {
+  background:
+    radial-gradient(circle at 50% 44%, rgba(176, 255, 238, .28) 0 22%, transparent 24%),
+    #24594f;
+  box-shadow: inset 0 0 0 3px rgba(121, 255, 225, .18);
+}
+
 .world-object {
   position: relative;
   z-index: 2;
@@ -160,6 +167,11 @@
 .boss-object { color: #ff6688; }
 .shop-object { color: var(--gold); }
 .npc-object { color: #7fcaff; font-size: clamp(12px, 2vw, 20px); }
+.recovery-object {
+  color: #a8ffe9;
+  font-size: clamp(6px, 1vw, 9px);
+  letter-spacing: .04em;
+}
 
 .world-player-sprite {
   position: absolute;
