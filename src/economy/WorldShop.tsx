@@ -6,8 +6,13 @@ import {
   getEquipmentPresentation,
   useRpg,
 } from '../rpg'
-import { PATCH_KIT_HEAL } from './economy'
-import { purchaseShopItem, worldShopItems } from './shop'
+import {
+  getItemCount,
+  getItemEffectSummary,
+  getItemUsageSummary,
+  itemById,
+} from './items'
+import { getShopItemPrice, purchaseShopItem, worldShopItems } from './shop'
 
 type WorldShopProps = {
   open: boolean
@@ -54,7 +59,7 @@ export function WorldShop({ open, onClose, onMessage }: WorldShopProps) {
     setRpgState(result.rpgState)
     const name =
       item.kind === 'consumable'
-        ? item.name
+        ? itemById[item.itemId]?.name ?? item.itemId
         : equipmentById[item.equipmentId]?.name ?? item.equipmentId
     onMessage(`${name}を購入した。残り ${result.progress.gold} G。`)
   }
@@ -82,15 +87,41 @@ export function WorldShop({ open, onClose, onMessage }: WorldShopProps) {
         <div className="world-shop-list">
           {worldShopItems.map((item) => {
             if (item.kind === 'consumable') {
-              const affordable = progress.gold >= item.price
+              const definition = itemById[item.itemId]
+              if (!definition) return null
+              const price = getShopItemPrice(item)
+              const affordable = progress.gold >= price
+              const state = affordable ? 'available' : 'unavailable'
+              const count = getItemCount(progress, definition.id)
+
               return (
-                <article className="shop-item pixel-inner-window" key={item.id}>
-                  <div>
-                    <span className="shop-item-name">{item.name}</span>
-                    <strong>{item.price} G</strong>
+                <article
+                  className={`shop-item item-shop-item pixel-inner-window is-${state}`}
+                  key={item.id}
+                  data-item-id={definition.id}
+                  data-item-state={state}
+                >
+                  <div className="item-shop-head">
+                    <span className="shop-item-name shop-item-name-with-icon">
+                      <img
+                        className="item-pixel-icon item-shop-icon"
+                        src={definition.visual}
+                        alt=""
+                        aria-hidden="true"
+                      />
+                      <span className="item-shop-title">
+                        <small>{definition.categoryLabel}</small>
+                        <strong>{definition.name}</strong>
+                      </span>
+                    </span>
+                    <strong>{price} G</strong>
                   </div>
-                  <p>HPを最大{PATCH_KIT_HEAL}回復 · 1Battle 1回</p>
-                  <div className="shop-stock">OWNED ×{progress.inventory.patchKit}</div>
+                  <p>{definition.description}</p>
+                  <div className="item-rule-row">
+                    <strong>{getItemEffectSummary(definition)}</strong>
+                    <span>{getItemUsageSummary(definition)}</span>
+                  </div>
+                  <div className="shop-stock">OWNED ×{count}</div>
                   <button
                     type="button"
                     className="primary-button"
