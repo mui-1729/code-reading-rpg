@@ -14,9 +14,9 @@ export const battles: Battle[] = [
   {
     id: 1,
     areaId: JAVASCRIPT_AREA_ID,
-    label: 'BATTLE 01',
-    title: 'First Read',
-    subtitle: 'コードが選ぶ「対象」を読む',
+    label: 'CHAPTER 01',
+    title: 'Slime at the Broken Gate',
+    subtitle: '壊れた門を調べ、find()で最初の脅威を見つける',
     recommendedLevel: 1,
     expReward: 40,
     goldReward: 20,
@@ -30,9 +30,9 @@ export const battles: Battle[] = [
   {
     id: 2,
     areaId: JAVASCRIPT_AREA_ID,
-    label: 'BATTLE 02',
-    title: 'One or Many',
-    subtitle: 'find / filter と複数条件を戦況で使い分ける',
+    label: 'CHAPTER 02',
+    title: 'The Missing Patrol',
+    subtitle: 'find()を残したままfilter()と複数条件を加え、偵察隊を救出する',
     recommendedLevel: 2,
     expReward: 60,
     goldReward: 30,
@@ -47,9 +47,9 @@ export const battles: Battle[] = [
   {
     id: 3,
     areaId: JAVASCRIPT_AREA_ID,
-    label: 'BATTLE 03',
-    title: 'Priority Queue',
-    subtitle: '条件・集約・優先順位を読み、倒す順番を決める',
+    label: 'FINAL CHAPTER',
+    title: 'The Corrupted Runtime',
+    subtitle: 'これまでの構文にsort()/reduce()を重ね、王国を止めるRuntime Coreを倒す',
     recommendedLevel: 3,
     expReward: 100,
     goldReward: 50,
@@ -57,7 +57,7 @@ export const battles: Battle[] = [
     enemies: [
       enemy('slime-c', 'Slime', 46, 'Bite', 3, '●'),
       enemy('goblin-c', 'Goblin', 84, 'Execution', 8, '▲'),
-      enemy('boss-c', 'Boss', 156, 'Meteor', 12, '◆'),
+      enemy('boss-c', 'Boss', 156, 'Runtime Collapse', 12, '◆'),
     ],
     skillIds: [
       'trace',
