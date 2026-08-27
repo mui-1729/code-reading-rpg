@@ -4,7 +4,13 @@ import { gameAudio } from '../audio/gameAudio'
 import { useBgm } from '../audio/useBgm'
 import { WorldShop } from '../economy'
 import { useProgress } from '../progression'
-import { emptyPartyEquipment, equipmentById, getCombatStats, useRpg } from '../rpg'
+import {
+  characterVisuals,
+  emptyPartyEquipment,
+  equipmentById,
+  getCombatStats,
+  useRpg,
+} from '../rpg'
 import { openWorldTreasure } from './treasures'
 import { resolveWorldInteraction, resolveWorldMove } from './worldActions'
 import { getTreasureAtPosition, getVisibleWorldCells, getWorldRegion } from './worldMap'
@@ -42,6 +48,7 @@ export function WorldPage() {
   const region = getWorldRegion(position.x)
   const visibleCells = useMemo(() => getVisibleWorldCells(position), [position])
   const combatStats = getCombatStats(stats, rpgState)
+  const byteJoined = rpgState.partyMemberIds.includes('byte')
 
   useEffect(() => {
     const rewards: string[] = []
@@ -243,7 +250,11 @@ export function WorldPage() {
               >
                 {cell.terrain === 'boss' && <span className="world-object boss-object">BOSS</span>}
                 {cell.terrain === 'shop' && <span className="world-object shop-object">SHOP</span>}
-                {cell.terrain === 'npc' && <span className="world-object npc-object">B</span>}
+                {cell.terrain === 'npc' && !byteJoined && (
+                  <span className="world-object npc-object" aria-label="BYTE NPC">
+                    <img src={characterVisuals.byte.field} alt="" />
+                  </span>
+                )}
                 {cell.terrain === 'recovery' && <span className="world-object recovery-object">REST</span>}
                 {treasure && (
                   <span
@@ -255,7 +266,20 @@ export function WorldPage() {
                 )}
                 {player && (
                   <span className="world-player-sprite" aria-label="Player">
-                    ◆
+                    {byteJoined && (
+                      <img
+                        className="world-follower-pixel"
+                        src={characterVisuals.byte.field}
+                        alt=""
+                        aria-hidden="true"
+                      />
+                    )}
+                    <img
+                      className="world-player-pixel"
+                      src={characterVisuals.player.field}
+                      alt=""
+                      aria-hidden="true"
+                    />
                   </span>
                 )}
               </div>
