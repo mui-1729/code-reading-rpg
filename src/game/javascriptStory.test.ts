@@ -10,60 +10,60 @@ const javascriptBattles = battles.filter((battle) => battle.areaId === JAVASCRIP
 const javascriptQuest = mainQuests.find((quest) => quest.areaId === JAVASCRIPT_AREA_ID)
 
 describe('JavaScript story progression', () => {
-  it('3 chapters follow one selector bug from issue to SEV-1', () => {
+  it('3 chapters form one simple kingdom adventure', () => {
     expect(javascriptBattles.map((battle) => battle.label)).toEqual([
       'CHAPTER 01',
       'CHAPTER 02',
       'FINAL CHAPTER',
     ])
-    expect(javascriptBattles[0]?.title).toBe('Issue #101: Wrong Target')
-    expect(javascriptBattles[1]?.title).toBe('QA Triage: Selector Drift')
+    expect(javascriptBattles[0]?.title).toBe('草原の異変')
+    expect(javascriptBattles[1]?.title).toBe('広がる暴走')
     expect(javascriptBattles[2]).toMatchObject({
-      title: 'SEV-1: Targeting Outage',
+      title: '黒幕の城',
       isBoss: true,
     })
-    expect(javascriptBattles[0]?.subtitle).toContain('find()')
-    expect(javascriptBattles[1]?.subtitle).toContain('配列順への暗黙依存')
-    expect(javascriptBattles[2]?.subtitle).toContain('sort()/some()/reduce()')
+    expect(javascriptBattles[0]?.subtitle).toContain('西の草原')
+    expect(javascriptBattles[1]?.subtitle).toContain('黒い結晶')
+    expect(javascriptBattles[2]?.subtitle).toContain('Code Crystal')
     expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.name === 'Boss')).toBe(true)
-    expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.attackName === 'Selector Cascade')).toBe(true)
+    expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.attackName === 'Dark Cascade')).toBe(true)
   })
 
-  it('uses engineering roles and an issue-to-postmortem quest flow', () => {
-    expect(npcById.archivist).toMatchObject({ name: 'LEAD ADA', role: 'SENIOR ENGINEER' })
-    expect(npcById['lambda-sage']).toMatchObject({ name: 'REVIEWER LAMBDA', role: 'CODE REVIEWER' })
-    expect(npcById['byte-scout']).toMatchObject({ name: 'BYTE', role: 'QA ENGINEER' })
+  it('uses fantasy roles and a clear save-the-kingdom quest', () => {
+    expect(npcById.archivist).toMatchObject({ name: 'CAPTAIN ADA', role: 'ROYAL GUARD' })
+    expect(npcById['lambda-sage']).toMatchObject({ name: 'SAGE LAMBDA', role: 'COURT SCHOLAR' })
+    expect(npcById['byte-scout']).toMatchObject({ name: 'BYTE', role: 'SCOUT' })
 
-    expect(javascriptQuest?.title).toBe('Target Selector Incident')
+    expect(javascriptQuest?.title).toBe('JavaScript王国を救え')
     expect(javascriptQuest?.steps.map((step) => step.label)).toEqual([
-      'Issue #101を再現し、find()の「最初の一致」と期待する優先対象のズレを特定する',
-      'QA reportをtriageし、filter()/&&/||を使うselector群の影響範囲と共通前提を洗い出す',
-      'SEV-1を復旧し、配列順への暗黙依存をsort()/reduce()で明示的な優先順位へ置き換える',
+      '西の草原の魔物を倒し、異変の手がかりを見つける',
+      '暴走する魔物を退け、黒い結晶の痕跡を西の砦まで追う',
+      '西の砦のBossを倒し、Code Crystalを取り戻す',
     ])
   })
 
-  it('makes the root cause and prevention explicit in the postmortem dialogue', () => {
-    const adaPostmortem = npcById.archivist?.dialogues.find(
+  it('ends with the kingdom restored after the boss is defeated', () => {
+    const adaEnding = npcById.archivist?.dialogues.find(
       (dialogue) => dialogue.id === 'archivist-area-clear',
     )
-    const bytePostmortem = npcById['byte-scout']?.dialogues.find(
+    const byteEnding = npcById['byte-scout']?.dialogues.find(
       (dialogue) => dialogue.id === 'byte-area-clear',
     )
 
-    expect(adaPostmortem?.lines.join(' ')).toContain('暗黙の前提')
-    expect(adaPostmortem?.lines.join(' ')).toContain('sort()やreduce()')
-    expect(bytePostmortem?.lines.join(' ')).toContain('順番shuffle test')
+    expect(adaEnding?.lines.join(' ')).toContain('Code Crystalの光が戻った')
+    expect(adaEnding?.lines.join(' ')).toContain('JavaScript王国は救われた')
+    expect(byteEnding?.lines.join(' ')).toContain('全部元通り')
   })
 
-  it('shows the three chapters as an engineering work queue on the field', () => {
+  it('shows the three chapters as story locations on the field', () => {
     const battleLabels = javascriptField.interactions
       .filter((interaction) => interaction.kind === 'battle')
       .map((interaction) => interaction.label)
 
     expect(battleLabels).toEqual([
-      'ISSUE #101 · BUG FIX',
-      'QA TRIAGE · IMPACT',
-      'SEV-1 · INCIDENT',
+      '草原の異変',
+      '広がる暴走',
+      '西の砦',
     ])
   })
 
