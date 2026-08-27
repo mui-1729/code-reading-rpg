@@ -16,7 +16,8 @@ Open World
 ├─ Central Hub
 └─ TypeScript Forest
 ↓
-Random Encounter / Fixed Boss
+探索: Treasure / Shop / Party / Recovery
+または Random Encounter / Fixed Boss
 ↓
 Code Reading Battle
 ↓
@@ -41,16 +42,18 @@ Stage Select / Area Select / 専用Complete画面は通常導線へ戻さない�
 - Hub / road = safe zone
 - Random Encounterは最低5歩cooldown後にterrainごとの確率で発生
 - Battle 3 / 6は固定Boss
-- World座標 / encounter counter / current HPをsave
+- World座標 / encounter counter / current HP / Treasure開封状態をsave
 - HubにRecovery Pointを配置
+- JS / TSに一度きりのTreasureを1つずつ配置
 
 責務:
 
-- `src/world/worldMap.ts`: terrain / region / viewport / encounter候補
-- `src/world/worldActions.ts`: movement / encounter / Shop / Party / Recovery / Boss interactionのpure resolver
+- `src/world/worldMap.ts`: terrain / region / viewport / encounter候補 / Treasure位置
+- `src/world/worldActions.ts`: movement / encounter / Shop / Party / Recovery / Treasure / Boss interactionのpure resolver
+- `src/world/treasures.ts`: Treasure報酬と一度きり取得のpure domain
 - `WorldPage.tsx`: resolver結果をstate更新・SE・navigateへ接続するUI adapter
 
-World interactionを増やす場合も、`WorldPage.tsx`へ条件分岐を戻さずresolver側へ追加する。
+World interactionを増やす場合も、`WorldPage.tsx`へ位置条件分岐を戻さずresolver側へ追加する。
 
 ### HP / Recovery
 
@@ -65,6 +68,21 @@ BattleごとにHPを全快させず、探索中の消耗をWorldをまたいで�
 - Level / Equipment変更でmax HPが変わった場合はcurrent HPを新しい上限へclampする
 
 Recovery Pointはコード読解を代替する強化ではなく、探索・装備・消耗品に意味を持たせるRPG loopの基盤とする。
+
+### Treasure
+
+Worldを歩く理由を少数の意味ある地点で増やす。
+
+- JS `DEBUG CACHE`: 20 G + Debug Charm
+- TS `TYPE CACHE`: 35 G + PATCH KIT ×1
+- Treasure tileへ直接は入らず、隣接INTERACTで開ける
+- 開封後は`CHEST`から`OPEN`表示へ変わり、再取得できない
+- `openedTreasureIds`をsaveしreload後も閉じた状態へ戻らない
+- 旧saveでDebug Charmを既に持つ場合もJS TreasureのGoldは取得できる
+- Boss rewardのBranch Saber / Typed MailはTreasureから先取りさせない
+- Treasureを大量配置してmapを埋めない
+
+Treasureは学習の正解情報を与えず、探索・装備・消耗品の選択にだけ影響する。
 
 ## Battle
 
@@ -130,7 +148,7 @@ party → codeが選んだ同じtargetへの補助
 - Battle clear / area clear
 - Stage / Skill unlock
 
-### RpgState v2
+### RpgState v3
 
 ```ts
 {
@@ -142,6 +160,7 @@ party → codeが選んだ同じtargetへの補助
   stepsSinceEncounter,
   encounterCount,
   currentHp,
+  openedTreasureIds,
 }
 ```
 
@@ -152,8 +171,14 @@ party → codeが選んだ同じtargetへの補助
 - Party
 - Encounter pacing
 - Battle間current HP
+- 一度きりWorld Treasure
 
-v1 saveは装備込みmax HPをcurrent HPとしてv2へmigrationする。restore時はWorld bounds / known Equipment / known Party / slot整合性 / current HP上限を正規化する。
+migration:
+
+- v1 → v3: 装備込みmax HPをcurrent HPとして補完し、Treasureは未開封
+- v2 → v3: current HPを維持し、Treasureは未開封
+- v3 restore: World bounds / known Equipment / known Party / slot整合性 / current HP上限 / known Treasure IDだけへ正規化
+- 旧saveで既に所持しているknown Equipmentはstarter構成変更後も保持する
 
 ### TutorialState v1
 
@@ -181,6 +206,8 @@ TypeScript Forest
 
 表示場所はPause STATUSを基本とし、常設Quest HUDは置かない。Battle victory時は短い`WORLD PROGRESS / BOSS UNLOCKED / WORLD COMPLETE` feedbackだけを出す。
 
+TreasureはMain Objectiveに含めず、探索した人が得られる任意地点として扱う。
+
 ## Questの扱い
 
 通常runtimeから旧Quest feedback / Side Quest bonus処理 / legacy Area Shop mountは外している。
@@ -200,8 +227,9 @@ TypeScript Forest
 現在:
 
 - Weapon / Armor / Accessory
-- starter equipment
-- Boss clear equipment reward
+- starter: Training Blade / Traveler Coat
+- JS Treasure: Debug Charm
+- Boss clear equipment reward: Branch Saber / Typed Mail
 - BYTE 1人
 - BYTE follow-up attack
 
@@ -235,20 +263,21 @@ SYSTEM
 
 ## World content
 
-Worldを広げたため、次は地図サイズではなく**意味のある地点密度**を増やす。
+Worldを広げたため、地図サイズではなく**意味のある地点密度**を増やす。
 
 現在:
 
 - Hub Recovery Point
+- JS Debug Cache
+- TS Type Cache
 
 次の候補:
 
-- treasure
 - equipment shop
 - landmark
 - companion event
 
-ただし空間を埋めるだけのNPC・説明看板は追加しない。
+ただし空間を埋めるだけのNPC・説明看板・Treasure大量配置は追加しない。
 
 ## Testing boundary
 
@@ -256,9 +285,10 @@ Unit Testで固定する:
 
 - World terrain / viewport / bounds
 - encounter cooldown / battle selection
-- Recovery interaction
+- Recovery / Treasure interaction
+- Treasure一度きり報酬
 - World Objective derivation
-- PlayerProgress / RpgState persistence / v1→v2 migration / HP clamp
+- PlayerProgress / RpgState persistence / v1・v2→v3 migration / HP clamp / Treasure ID正規化
 - Equipment combat stats
 - Party follow-up
 - Battle code variation / Battle間uniqueness / solvability
@@ -277,6 +307,8 @@ Title
 → 次Battleへ残HP引き継ぎ
 → PATCH KIT回復save
 → Hub REST full recovery / reload persistence
+→ JS Treasure: Debug Charm + Gold / reload / 再取得不可
+→ TS Treasure: PATCH KIT + Gold / reload / 再取得不可
 → Defeat / Hub full recovery
 → BYTE join / follow-up
 → Equipment変更 / Battle反映
@@ -298,12 +330,12 @@ Unit Testはdomainの意味、E2Eは主要loopの接続を担当し、同じ条�
 - Sound / CodexのPause集約
 - Encounter code variation強化
 - persistent HP / Hub Recovery Point
+- one-shot Treasure / equipment acquisition
 
 ### P1: World content density
 
-1. treasure / equipment acquisition
-2. equipment shop
-3. landmark / companion event
+1. equipment shop
+2. landmark / companion event
 
 ### P1: RPG選択の深さ
 
