@@ -133,8 +133,8 @@ describe('quest progression', () => {
       questId: 'javascript-main',
       areaId: 'javascript',
       questTitle: '新人エンジニアの初仕事',
-      completedStepLabel: '最初のissueを調査してbugの原因を特定する',
-      nextStepLabel: '追加bug reportの影響範囲を調査する',
+      completedStepLabel: 'Issue #101を調査し、誤った対象を選ぶbugの原因を特定する',
+      nextStepLabel: 'QAから届いた複数reportをtriageし、影響範囲を特定する',
     })
   })
 
@@ -149,7 +149,7 @@ describe('quest progression', () => {
       questId: 'javascript-main',
       areaId: 'javascript',
       questTitle: '新人エンジニアの初仕事',
-      completedStepLabel: 'Production Incidentを解決してサービスを復旧する',
+      completedStepLabel: 'SEV-1 Production Incidentの原因を特定し、serviceを復旧する',
       nextStepLabel: undefined,
     })
   })
