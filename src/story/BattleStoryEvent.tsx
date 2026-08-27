@@ -4,9 +4,10 @@ import type { BattleStoryEvent as BattleStoryEventData } from './javascriptBattl
 type BattleStoryEventProps = {
   event: BattleStoryEventData
   onComplete: () => void
+  onSkip?: () => void
 }
 
-export function BattleStoryEvent({ event, onComplete }: BattleStoryEventProps) {
+export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEventProps) {
   const [lineIndex, setLineIndex] = useState(0)
   const line = event.lines[lineIndex]
   const isLast = lineIndex === event.lines.length - 1
@@ -53,7 +54,7 @@ export function BattleStoryEvent({ event, onComplete }: BattleStoryEventProps) {
         </div>
         <p>{line.text}</p>
         <div className="dialogue-actions">
-          <span>Enter / Space</span>
+          <button type="button" className="secondary-button" onClick={onSkip ?? onComplete}>SKIP</button>
           <button type="button" className="primary-button" onClick={advance}>
             {isLast ? '▶ CONTINUE' : '▶ NEXT'}
           </button>
