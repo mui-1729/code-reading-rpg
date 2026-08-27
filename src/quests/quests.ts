@@ -19,24 +19,24 @@ export const mainQuests: readonly QuestDefinition[] = [
     id: 'javascript-main',
     areaId: JAVASCRIPT_AREA_ID,
     title: '新人エンジニアの初仕事',
-    description: '小さなbug reportから始まり、影響範囲調査を経て本番障害を復旧する。',
+    description: 'Issue対応、QA triage、本番障害対応を通してJavaScriptのコードリーディングを身につける。',
     guideNpcId: 'archivist',
     steps: [
       {
         id: 'javascript-stage-1',
-        label: '最初のissueを調査してbugの原因を特定する',
+        label: 'Issue #101を調査し、誤った対象を選ぶbugの原因を特定する',
         condition: { kind: 'stageCleared', stageId: 1 },
         fieldTarget: { kind: 'battle', stageId: 1 },
       },
       {
         id: 'javascript-stage-2',
-        label: '追加bug reportの影響範囲を調査する',
+        label: 'QAから届いた複数reportをtriageし、影響範囲を特定する',
         condition: { kind: 'stageCleared', stageId: 2 },
         fieldTarget: { kind: 'battle', stageId: 2 },
       },
       {
         id: 'javascript-area-clear',
-        label: 'Production Incidentを解決してサービスを復旧する',
+        label: 'SEV-1 Production Incidentの原因を特定し、serviceを復旧する',
         condition: { kind: 'areaCleared', areaId: JAVASCRIPT_AREA_ID },
         fieldTarget: { kind: 'battle', stageId: 3 },
       },
