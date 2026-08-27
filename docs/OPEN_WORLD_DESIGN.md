@@ -20,9 +20,11 @@ Random Encounter / Fixed Boss
 ↓
 Code Reading Battle
 ↓
-EXP / Gold / Unlock / Equipment reward
+残HPを保持してWorldへ復帰
 ↓
-Worldの元座標へ復帰
+必要ならHub RESTでfull recovery
+↓
+EXP / Gold / Unlock / Equipment reward
 ```
 
 Stage Select / Area Select / 専用Complete画面は通常導線へ戻さない。
@@ -39,15 +41,30 @@ Stage Select / Area Select / 専用Complete画面は通常導線へ戻さない�
 - Hub / road = safe zone
 - Random Encounterは最低5歩cooldown後にterrainごとの確率で発生
 - Battle 3 / 6は固定Boss
-- World座標 / encounter counterをsave
+- World座標 / encounter counter / current HPをsave
+- HubにRecovery Pointを配置
 
 責務:
 
 - `src/world/worldMap.ts`: terrain / region / viewport / encounter候補
-- `src/world/worldActions.ts`: movement / encounter / Shop / Party / Boss interactionのpure resolver
+- `src/world/worldActions.ts`: movement / encounter / Shop / Party / Recovery / Boss interactionのpure resolver
 - `WorldPage.tsx`: resolver結果をstate更新・SE・navigateへ接続するUI adapter
 
 World interactionを増やす場合も、`WorldPage.tsx`へ条件分岐を戻さずresolver側へ追加する。
+
+### HP / Recovery
+
+BattleごとにHPを全快させず、探索中の消耗をWorldをまたいで保持する。
+
+- Battle開始時は`RpgState.currentHp`を使う
+- enemy damage / PATCH KIT回復はcurrent HPへ保存する
+- Victory後も残HPを保持して元のWorld座標へ戻る
+- Defeat時はHub開始位置へ戻しfull HPにする
+- Hubの`REST`へ隣接してINTERACTすると無料でfull recoveryする
+- current HP / max HPはPause STATUSで確認し、World常設HUDは増やさない
+- Level / Equipment変更でmax HPが変わった場合はcurrent HPを新しい上限へclampする
+
+Recovery Pointはコード読解を代替する強化ではなく、探索・装備・消耗品に意味を持たせるRPG loopの基盤とする。
 
 ## Battle
 
@@ -113,7 +130,7 @@ party → codeが選んだ同じtargetへの補助
 - Battle clear / area clear
 - Stage / Skill unlock
 
-### RpgState v1
+### RpgState v2
 
 ```ts
 {
@@ -124,6 +141,7 @@ party → codeが選んだ同じtargetへの補助
   worldPosition,
   stepsSinceEncounter,
   encounterCount,
+  currentHp,
 }
 ```
 
@@ -133,8 +151,9 @@ party → codeが選んだ同じtargetへの補助
 - Equipment
 - Party
 - Encounter pacing
+- Battle間current HP
 
-restore時はWorld bounds / known Equipment / known Party / slot整合性を正規化する。
+v1 saveは装備込みmax HPをcurrent HPとしてv2へmigrationする。restore時はWorld bounds / known Equipment / known Party / slot整合性 / current HP上限を正規化する。
 
 ### TutorialState v1
 
@@ -209,7 +228,7 @@ CODEX
 SYSTEM
 ```
 
-- EXP / Gold / stats / World ObjectiveはSTATUS
+- current HP / max HP / EXP / Gold / stats / World ObjectiveはSTATUS
 - 学習参照はCODEX
 - Sound ON/OFF / SE / BGM / Reset ProgressはSYSTEM
 - 独立SOUND / CODEX overlayは通常画面へ戻さない
@@ -218,9 +237,12 @@ SYSTEM
 
 Worldを広げたため、次は地図サイズではなく**意味のある地点密度**を増やす。
 
-候補:
+現在:
 
-- recovery point / Inn
+- Hub Recovery Point
+
+次の候補:
+
 - treasure
 - equipment shop
 - landmark
@@ -234,8 +256,9 @@ Unit Testで固定する:
 
 - World terrain / viewport / bounds
 - encounter cooldown / battle selection
+- Recovery interaction
 - World Objective derivation
-- PlayerProgress / RpgState persistence
+- PlayerProgress / RpgState persistence / v1→v2 migration / HP clamp
 - Equipment combat stats
 - Party follow-up
 - Battle code variation / Battle間uniqueness / solvability
@@ -248,9 +271,13 @@ Playwright E2Eで固定する:
 Title
 → World move
 → Random Encounter
+→ Battle damage
 → Victory
-→ World同座標へreturn
-→ reload persistence
+→ 残HPでWorld同座標へreturn
+→ 次Battleへ残HP引き継ぎ
+→ PATCH KIT回復save
+→ Hub REST full recovery / reload persistence
+→ Defeat / Hub full recovery
 → BYTE join / follow-up
 → Equipment変更 / Battle反映
 → Pause CODEX
@@ -270,13 +297,13 @@ Unit Testはdomainの意味、E2Eは主要loopの接続を担当し、同じ条�
 - Open World主要loop Playwright E2E
 - Sound / CodexのPause集約
 - Encounter code variation強化
+- persistent HP / Hub Recovery Point
 
 ### P1: World content density
 
-1. recovery point
-2. treasure / equipment acquisition
-3. equipment shop
-4. landmark / companion event
+1. treasure / equipment acquisition
+2. equipment shop
+3. landmark / companion event
 
 ### P1: RPG選択の深さ
 
