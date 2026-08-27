@@ -4,7 +4,7 @@ import { gameAudio } from '../audio/gameAudio'
 import { useBgm } from '../audio/useBgm'
 import { PATCH_KIT_PRICE, purchasePatchKit } from '../economy'
 import { useProgress } from '../progression'
-import { emptyPartyEquipment, useRpg } from '../rpg'
+import { emptyPartyEquipment, getCombatStats, useRpg } from '../rpg'
 import { resolveWorldInteraction, resolveWorldMove } from './worldActions'
 import { getVisibleWorldCells, getWorldRegion } from './worldMap'
 
@@ -25,11 +25,12 @@ const terrainLabels: Record<string, string> = {
   boss: 'Boss',
   shop: 'Shop',
   npc: 'NPC',
+  recovery: 'Recovery Point',
 }
 
 export function WorldPage() {
   const navigate = useNavigate()
-  const { progress, setProgress } = useProgress()
+  const { progress, stats, setProgress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
   const [message, setMessage] = useState('草むらではJavaScript、森ではTypeScriptのEnemyが出現する。')
   useBgm('field')
@@ -37,6 +38,7 @@ export function WorldPage() {
   const position = rpgState.worldPosition
   const region = getWorldRegion(position.x)
   const visibleCells = useMemo(() => getVisibleWorldCells(position), [position])
+  const combatStats = getCombatStats(stats, rpgState)
 
   useEffect(() => {
     const rewards: string[] = []
@@ -81,7 +83,9 @@ export function WorldPage() {
         setMessage(
           result.terrain === 'boss'
             ? 'Bossが道を塞いでいる。隣からINTERACT。'
-            : 'そこへは進めない。',
+            : result.terrain === 'recovery'
+              ? 'REST地点。隣からINTERACTするとHPを全回復できる。'
+              : 'そこへは進めない。',
         )
         return
       }
@@ -134,6 +138,18 @@ export function WorldPage() {
       return
     }
 
+    if (intent.kind === 'recovery') {
+      if (rpgState.currentHp >= combatStats.maxHp) {
+        gameAudio.playSe('confirm')
+        setMessage('REST: HPはすでに満タン。')
+        return
+      }
+      gameAudio.playSe('levelUp')
+      setRpgState((current) => ({ ...current, currentHp: combatStats.maxHp }))
+      setMessage(`REST: HP ${combatStats.maxHp} / ${combatStats.maxHp} · FULL RECOVERY`)
+      return
+    }
+
     if (intent.kind === 'boss') {
       if (!intent.unlocked) {
         setMessage(
@@ -148,7 +164,7 @@ export function WorldPage() {
     }
 
     setMessage('近くに調べられるものはない。')
-  }, [enterBattle, progress, rpgState, setProgress, setRpgState])
+  }, [combatStats.maxHp, enterBattle, progress, rpgState, setProgress, setRpgState])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -200,6 +216,7 @@ export function WorldPage() {
                 {cell.terrain === 'boss' && <span className="world-object boss-object">BOSS</span>}
                 {cell.terrain === 'shop' && <span className="world-object shop-object">SHOP</span>}
                 {cell.terrain === 'npc' && <span className="world-object npc-object">B</span>}
+                {cell.terrain === 'recovery' && <span className="world-object recovery-object">REST</span>}
                 {player && (
                   <span className="world-player-sprite" aria-label="Player">
                     ◆
