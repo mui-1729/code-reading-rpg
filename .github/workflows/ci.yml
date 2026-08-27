@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/181-item-inventory-ux]
   pull_request:
 
 jobs:
