@@ -1,6 +1,8 @@
+import { BASE_PLAYER_HP } from '../progression/constants'
 import { WORLD_HEIGHT, WORLD_START, WORLD_WIDTH } from '../world/worldMap'
 import {
   equipmentById,
+  getEquipmentBonuses,
   starterEquipmentIds,
   type EquipmentLoadout,
   type EquipmentSlot,
@@ -17,31 +19,47 @@ export type RpgState = {
   worldPosition: WorldPosition
   stepsSinceEncounter: number
   encounterCount: number
+  currentHp: number
 }
 
 export type StoredRpgState = {
-  version: 1
+  version: 2
   state: RpgState
 }
 
+type LegacyStoredRpgState = {
+  version: 1
+  state: Omit<RpgState, 'currentHp'>
+}
+
 export const RPG_STORAGE_KEY = 'code-reading-rpg:rpg-state'
-export const RPG_STATE_SCHEMA_VERSION = 1
+export const RPG_STATE_SCHEMA_VERSION = 2
 
 const equipmentSlots: EquipmentSlot[] = ['weapon', 'armor', 'accessory']
 
-export function createInitialRpgState(): RpgState {
+const initialEquipment = (): EquipmentLoadout => ({
+  weapon: 'training-blade',
+  armor: 'traveler-coat',
+  accessory: null,
+})
+
+export function getMaxHpForRpgState(baseMaxHp: number, state: Pick<RpgState, 'equipment'>): number {
+  return Math.max(1, Math.floor(baseMaxHp) + getEquipmentBonuses(state.equipment).maxHp)
+}
+
+export function createInitialRpgState(baseMaxHp = BASE_PLAYER_HP): RpgState {
+  const equipment = initialEquipment()
+  const currentHp = getMaxHpForRpgState(baseMaxHp, { equipment })
+
   return {
-    equipment: {
-      weapon: 'training-blade',
-      armor: 'traveler-coat',
-      accessory: null,
-    },
+    equipment,
     ownedEquipmentIds: [...starterEquipmentIds],
     partyMemberIds: [],
     partyEquipment: {},
     worldPosition: { ...WORLD_START },
     stepsSinceEncounter: 8,
     encounterCount: 0,
+    currentHp,
   }
 }
 
@@ -104,22 +122,31 @@ function normalizeWorldPosition(value: unknown): WorldPosition {
   return { x, y }
 }
 
+function normalizeCurrentHp(value: unknown, maxHp: number): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return maxHp
+  return Math.max(0, Math.min(maxHp, Math.floor(value)))
+}
+
 export function serializeRpgState(state: RpgState): string {
   const stored: StoredRpgState = { version: RPG_STATE_SCHEMA_VERSION, state }
   return JSON.stringify(stored)
 }
 
-export function restoreRpgState(raw: string | null): RpgState {
-  const initial = createInitialRpgState()
+export function restoreRpgState(raw: string | null, baseMaxHp = BASE_PLAYER_HP): RpgState {
+  const initial = createInitialRpgState(baseMaxHp)
   if (!raw) return initial
 
   try {
-    const parsed = JSON.parse(raw) as Partial<StoredRpgState>
-    if (parsed.version !== RPG_STATE_SCHEMA_VERSION || !parsed.state) return initial
+    const parsed = JSON.parse(raw) as Partial<StoredRpgState | LegacyStoredRpgState>
+    if ((parsed.version !== 1 && parsed.version !== RPG_STATE_SCHEMA_VERSION) || !parsed.state) {
+      return initial
+    }
+
     const state = parsed.state as Partial<RpgState>
     const ownedEquipmentIds = uniqueKnownEquipmentIds(state.ownedEquipmentIds)
     const partyMemberIds = uniqueKnownPartyIds(state.partyMemberIds)
     const joinedPartyMembers = new Set(partyMemberIds)
+    const equipment = normalizeLoadout(state.equipment, ownedEquipmentIds)
     const partyEquipment =
       state.partyEquipment && typeof state.partyEquipment === 'object'
         ? Object.fromEntries(
@@ -131,9 +158,10 @@ export function restoreRpgState(raw: string | null): RpgState {
               ]),
           ) as Record<string, EquipmentLoadout>
         : {}
+    const maxHp = getMaxHpForRpgState(baseMaxHp, { equipment })
 
     return {
-      equipment: normalizeLoadout(state.equipment, ownedEquipmentIds),
+      equipment,
       ownedEquipmentIds,
       partyMemberIds,
       partyEquipment,
@@ -146,6 +174,8 @@ export function restoreRpgState(raw: string | null): RpgState {
         typeof state.encounterCount === 'number' && Number.isInteger(state.encounterCount)
           ? Math.max(0, state.encounterCount)
           : initial.encounterCount,
+      currentHp:
+        parsed.version === 1 ? maxHp : normalizeCurrentHp(state.currentHp, maxHp),
     }
   } catch {
     return initial
