@@ -17,27 +17,10 @@
   bottom: auto;
 }
 
-.tutorial-prompt-copy {
-  display: grid;
-  gap: 4px;
-}
-
-.tutorial-prompt-copy > span {
-  font-size: 0.72rem;
-  letter-spacing: 0.16em;
-  opacity: 0.72;
-}
-
-.tutorial-prompt-copy > strong {
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-
-.tutorial-prompt-copy > small {
-  font-size: 0.72rem;
-  line-height: 1.5;
-  opacity: 0.72;
-}
+.tutorial-prompt-copy { display: grid; gap: 4px; }
+.tutorial-prompt-copy > span { font-size: .72rem; letter-spacing: .16em; opacity: .72; }
+.tutorial-prompt-copy > strong { font-size: .9rem; line-height: 1.5; }
+.tutorial-prompt-copy > small { font-size: .72rem; line-height: 1.5; opacity: .72; }
 
 .tutorial-skip {
   flex: 0 0 auto;
@@ -45,9 +28,10 @@
   background: transparent;
   color: inherit;
   font: inherit;
-  font-size: 0.7rem;
+  font-size: .7rem;
   text-decoration: underline;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .tutorial-highlight {
@@ -72,16 +56,33 @@
 
 @media (max-width: 720px) {
   .tutorial-prompt {
-    bottom: calc(max(10px, env(safe-area-inset-bottom)) + 74px);
     width: min(360px, calc(100vw - 20px));
     gap: 10px;
-    padding: 12px;
+    padding: 10px 12px;
   }
+
+  .tutorial-prompt-field {
+    top: max(8px, env(safe-area-inset-top));
+    bottom: auto;
+    pointer-events: none;
+  }
+
+  .tutorial-prompt-field .tutorial-skip { pointer-events: auto; }
 
   .tutorial-prompt-battle {
     top: max(72px, calc(env(safe-area-inset-top) + 58px));
     bottom: auto;
   }
+}
+
+@media (max-width: 460px) {
+  .tutorial-prompt-field {
+    width: calc(100vw - 12px);
+    padding: 8px 10px;
+  }
+
+  .tutorial-prompt-copy > strong { font-size: .8rem; }
+  .tutorial-prompt-copy > small { font-size: .66rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
