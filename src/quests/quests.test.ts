@@ -132,9 +132,9 @@ describe('quest progression', () => {
       kind: 'updated',
       questId: 'javascript-main',
       areaId: 'javascript',
-      questTitle: 'Target Selector Incident',
-      completedStepLabel: 'Issue #101を再現し、find()の「最初の一致」と期待する優先対象のズレを特定する',
-      nextStepLabel: 'QA reportをtriageし、filter()/&&/||を使うselector群の影響範囲と共通前提を洗い出す',
+      questTitle: 'JavaScript王国を救え',
+      completedStepLabel: '西の草原の魔物を倒し、異変の手がかりを見つける',
+      nextStepLabel: '暴走する魔物を退け、黒い結晶の痕跡を西の砦まで追う',
     })
   })
 
@@ -148,8 +148,8 @@ describe('quest progression', () => {
       kind: 'completed',
       questId: 'javascript-main',
       areaId: 'javascript',
-      questTitle: 'Target Selector Incident',
-      completedStepLabel: 'SEV-1を復旧し、配列順への暗黙依存をsort()/reduce()で明示的な優先順位へ置き換える',
+      questTitle: 'JavaScript王国を救え',
+      completedStepLabel: '西の砦のBossを倒し、Code Crystalを取り戻す',
       nextStepLabel: undefined,
     })
   })
