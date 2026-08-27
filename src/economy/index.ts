@@ -1,4 +1,3 @@
-export { AreaShop } from './AreaShop'
 export { WorldShop } from './WorldShop'
 export {
   consumePatchKit,
