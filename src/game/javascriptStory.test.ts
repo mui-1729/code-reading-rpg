@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { battles } from './battles'
+import { getLevelForExp } from '../progression'
 import { JAVASCRIPT_AREA_ID } from './areas'
+import { battles } from './battles'
 
 const javascriptBattles = battles.filter((battle) => battle.areaId === JAVASCRIPT_AREA_ID)
 
@@ -44,5 +45,14 @@ describe('JavaScript story progression', () => {
       'viper', 'lock', 'alert',
       'moon-edge', 'sweep', 'judge',
     ])
+  })
+
+  it('first clears naturally reach the next chapter level', () => {
+    const chapter1Exp = javascriptBattles[0]?.expReward ?? 0
+    const chapter2Exp = javascriptBattles[1]?.expReward ?? 0
+
+    expect(getLevelForExp(0)).toBe(1)
+    expect(getLevelForExp(chapter1Exp)).toBe(2)
+    expect(getLevelForExp(chapter1Exp + chapter2Exp)).toBe(3)
   })
 })
