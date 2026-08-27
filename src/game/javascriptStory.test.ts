@@ -6,18 +6,19 @@ import { battles } from './battles'
 const javascriptBattles = battles.filter((battle) => battle.areaId === JAVASCRIPT_AREA_ID)
 
 describe('JavaScript story progression', () => {
-  it('3 chapters lead from the broken gate to the final boss', () => {
+  it('3 chapters grow from a first bug fix into a production incident', () => {
     expect(javascriptBattles.map((battle) => battle.label)).toEqual([
       'CHAPTER 01',
       'CHAPTER 02',
       'FINAL CHAPTER',
     ])
-    expect(javascriptBattles[0]?.title).toBe('Slime at the Broken Gate')
-    expect(javascriptBattles[1]?.title).toBe('The Missing Patrol')
+    expect(javascriptBattles[0]?.title).toBe('Your First Bug Fix')
+    expect(javascriptBattles[1]?.title).toBe('Bug Reports Keep Coming')
     expect(javascriptBattles[2]).toMatchObject({
-      title: 'The Corrupted Runtime',
+      title: 'Production Incident',
       isBoss: true,
     })
+    expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.name === 'Production Bug')).toBe(true)
   })
 
   it('each chapter keeps every syntax learned in earlier chapters', () => {
