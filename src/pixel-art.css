@@ -23,7 +23,7 @@
   width: 72%;
   height: auto;
   display: block;
-  transform: scale(2.0);
+  transform: scale(1.94);
   transform-origin: 50% 50%;
 }
 
@@ -138,7 +138,7 @@
 
 @media (max-width: 700px) {
   .world-player-pixel {
-    transform: scale(1.9);
+    transform: scale(1.74);
   }
 
   .world-follower-pixel {
