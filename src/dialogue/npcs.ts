@@ -4,101 +4,101 @@ import type { NpcDefinition } from './types'
 export const npcDefinitions: NpcDefinition[] = [
   {
     id: 'archivist',
-    name: 'ARCHIVIST ADA',
-    role: 'OBJECTIVE GUIDE',
+    name: 'LEAD ADA',
+    role: 'SENIOR ENGINEER',
     dialogues: [
       {
         id: 'archivist-area-clear',
         condition: { kind: 'areaCleared', areaId: JAVASCRIPT_AREA_ID },
         lines: [
-          'JavaScript Kingdomの記録は完成した。Boss討伐、お見事。',
-          'まだ読み足りなければ、緑に光るCLEAR済みGateから何度でも復習できる。',
+          '本番サービスの復旧を確認した。初めての障害対応、完遂だ。',
+          '答えを覚えたんじゃなく、コードから原因を追えた。その読み方は次の仕事でも使える。',
         ],
       },
       {
         id: 'archivist-stage-2',
         condition: { kind: 'stageCleared', stageId: 2 },
         lines: [
-          '次の目的は北東のBOSS GATE。推奨はLV 3だ。',
-          '苦戦するなら過去のGateへ戻ってEXPを稼ぎ、コードの読み方も復習しよう。',
+          '調査ありがとう。複数の異常データは同じ障害の前兆だった。',
+          '本番が落ち始めている。次はFINAL CHAPTER、Production Incidentだ。今まで読んだ構文を全部使う。',
         ],
       },
       {
         id: 'archivist-stage-1',
         condition: { kind: 'stageCleared', stageId: 1 },
         lines: [
-          '最初のGateは突破したね。次は北中央のST2へ。',
-          '`find()`と`filter()`は「1つ」と「複数」の違いを意識して読むといい。',
+          '最初のbug fixは通った。でもQAから「似た異常が複数ある」と連絡が来た。',
+          'Chapter 2では`find()`も使いつつ、`filter()`と複数条件を読んで影響範囲を調査してほしい。',
         ],
       },
       {
         id: 'archivist-start',
         condition: { kind: 'always' },
         lines: [
-          'ここはJavaScript Kingdomの読解拠点。まず北西のST1 GATEを目指そう。',
-          '門の前でINTERACTするとBattleへ入れる。コードが誰を選ぶかを読んで戦うんだ。',
+          '今日から君もこの開発チームのエンジニアだ。ちょうど小さなbug reportが来ている。',
+          'まずChapter 1へ。既存コードを読んで、どのデータがbugの原因か特定してみよう。',
         ],
       },
     ],
   },
   {
     id: 'lambda-sage',
-    name: 'LAMBDA SAGE',
-    role: 'CODE HINT',
+    name: 'REVIEWER LAMBDA',
+    role: 'CODE REVIEWER',
     dialogues: [
       {
         id: 'lambda-level-3',
         condition: { kind: 'minLevel', level: 3 },
         lines: [
-          '`sort((a, b) => a.hp - b.hp)`なら、HPが小さい順に並ぶ。',
-          'でもBattleでは「並べ替えたあと何を選んでいるか」まで追うこと。途中だけ読んではいけない。',
+          '本番障害では焦って一行だけ見ないこと。`sort()`の後に何を選び、`reduce()`が何を残すかまで追おう。',
+          'コードレビューと同じだ。処理を上から追って、最終的な値を説明できれば原因に辿り着ける。',
         ],
       },
       {
         id: 'lambda-stage-1',
         condition: { kind: 'stageCleared', stageId: 1 },
         lines: [
-          '`find()`は条件に合う最初の1体で止まる。`filter()`は条件に合う全員を集める。',
-          '同じ条件式でも結果の個数が違う。その差が攻撃対象の差になる。',
+          'レビューの基本。`find()`は最初の1件、`filter()`は条件に合う全件を返す。',
+          'Chapter 2でもChapter 1の読み方は消えない。新しい構文は、知っている処理の上に積み上がる。',
         ],
       },
       {
         id: 'lambda-start',
         condition: { kind: 'always' },
         lines: [
-          '技名よりコードを見よう。たとえば`e.hp < 45`なら、まずHPが45未満かを確認する。',
-          '対象プレビューは出ない。実行する前に、自分で結果を予測するのがこの国のルールだ。',
+          '新人のうちは技名を覚えるより、式が返す値を説明できるようになる方が大事だ。',
+          'たとえば`e.hp < 45`なら、まず各データに条件を当てて結果を予測してから実行しよう。',
         ],
       },
     ],
   },
   {
     id: 'byte-scout',
-    name: 'BYTE SCOUT',
-    role: 'REVIEW SCOUT',
+    name: 'BYTE',
+    role: 'QA ENGINEER',
     dialogues: [
       {
         id: 'byte-area-clear',
         condition: { kind: 'areaCleared', areaId: JAVASCRIPT_AREA_ID },
         lines: [
-          '全Gate CLEARを確認！ でもseedを変えると敵HPや並び順が変わる。',
-          '同じ答えの暗記ではなく、別盤面でもコードを読めるか試してみよう。',
+          'Production復旧を確認！ QA側の再現テストも全部greenだ。',
+          'seedを変えるとデータや順番は変わる。別ケースでも読めたら、暗記じゃなく本当に理解できてるってことだな。',
         ],
       },
       {
         id: 'byte-level-2',
         condition: { kind: 'minLevel', level: 2 },
         lines: [
-          'LVが上がっても敵は自動で弱くならない。強くなるのは君のHPとSkill POWERだ。',
-          'ST2で迷ったらST1を再戦できる。EXP稼ぎと`find()`の復習を同時にやれるぞ。',
+          '追加のbug reportをまとめた。今度は異常データが1件とは限らない。',
+          '`find()`で1件を追う読み方を残したまま、`filter()`で影響範囲を洗い出そう。俺もテスト結果を追う。',
         ],
       },
       {
         id: 'byte-start',
         condition: { kind: 'always' },
         lines: [
-          '迷ったら南東の出口からStage Selectを開ける。解放状況と推奨LVを一覧で確認できるぞ。',
-          'フィールドに戻れば、また好きなGateへ歩いて挑戦できる。',
+          '俺はQAのBYTE。ユーザーから来た再現手順とテスト結果はこっちで整理する。',
+          '君は実装側としてコードを読んで原因を絞ってくれ。最初のissueはChapter 1だ。',
         ],
       },
     ],
