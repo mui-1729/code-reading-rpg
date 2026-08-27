@@ -20,11 +20,11 @@ Random Encounter / Fixed Boss
 ↓
 Code Reading Battle
 ↓
+EXP / Gold / Unlock / Equipment reward
+↓
 残HPを保持してWorldへ復帰
 ↓
 必要ならHub RESTでfull recovery
-↓
-EXP / Gold / Unlock / Equipment reward
 ```
 
 Stage Select / Area Select / 専用Complete画面は通常導線へ戻さない。
