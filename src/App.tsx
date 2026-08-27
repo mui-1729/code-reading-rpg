@@ -5,10 +5,14 @@ import { consumePatchKit, PATCH_KIT_HEAL } from './economy'
 import {
   areaById,
   battles,
+  BOSS_GUARD_CODE,
   generateBattle,
   getSkillCardsForBattle,
   getTargets,
+  isBossEnemy,
+  isBossGuardActive,
   JAVASCRIPT_AREA_ID,
+  resolveBossGuardDamage,
   skills,
   TYPESCRIPT_AREA_ID,
   type Enemy,
@@ -88,6 +92,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
     () => getSkillCardsForBattle(battle, seed),
     [battle, seed],
   )
+  const bossGuardActive = isBossGuardActive(battle, enemies)
 
   useEffect(() => {
     gameAudio.requestBgm('battle')
@@ -199,12 +204,22 @@ function App({ battleId, seed, returnTo }: AppProps) {
       }
 
       const targetIds = targets.map((target) => target.id)
+      const damageById = Object.fromEntries(
+        targets.map((target) => [
+          target.id,
+          resolveBossGuardDamage(battle, enemies, target, totalPower),
+        ]),
+      )
       const nextEnemies = enemies.map((enemy) =>
         targetIds.includes(enemy.id)
-          ? { ...enemy, hp: Math.max(0, enemy.hp - totalPower) }
+          ? {
+              ...enemy,
+              hp: Math.max(0, enemy.hp - (damageById[enemy.id]?.damage ?? totalPower)),
+            }
           : enemy,
       )
       const newlyDefeatedIds = getNewlyDefeatedIds(enemies, nextEnemies)
+      const guardedTargets = targets.filter((target) => damageById[target.id]?.guarded)
 
       gameAudio.playSe('enemyHit')
       if (newlyDefeatedIds.length > 0) {
@@ -212,13 +227,21 @@ function App({ battleId, seed, returnTo }: AppProps) {
       }
       setAnimatingIds(targetIds)
       setDefeatingIds(newlyDefeatedIds)
-      setDamagePopups(Object.fromEntries(targetIds.map((id) => [id, totalPower])))
+      setDamagePopups(
+        Object.fromEntries(
+          targetIds.map((id) => [id, damageById[id]?.damage ?? totalPower]),
+        ),
+      )
       setEnemies(nextEnemies)
       addLog(
         'player',
-        `${skill.name} → ${targets.map((target) => target.name).join(' / ')} · ${skillPower} DMG`,
+        `${skill.name} → ${targets
+          .map((target) => `${target.name} ${damageById[target.id]?.damage ?? totalPower}`)
+          .join(' / ')} DMG`,
       )
-      if (partyFollowUpDamage > 0) {
+      if (guardedTargets.length > 0) {
+        addLog('system', 'BOSS GUARD → minionが生存中。Boss damageは1。')
+      } else if (partyFollowUpDamage > 0) {
         const allies = rpgState.partyMemberIds
           .map((id) => partyMemberById[id]?.name)
           .filter(Boolean)
@@ -386,10 +409,10 @@ function App({ battleId, seed, returnTo }: AppProps) {
             const hpPercent = (enemy.hp / enemy.maxHp) * 100
             const defeated = enemy.hp <= 0
             const spriteClass = spriteClassName(enemy.name)
-            const isBossEnemy = battle.isBoss && spriteClass === 'boss'
+            const bossEnemy = battle.isBoss && isBossEnemy(enemy)
             return (
               <article
-                className={`enemy-card ${defeated ? 'defeated' : ''} ${animatingIds.includes(enemy.id) ? 'hit' : ''} ${defeatingIds.includes(enemy.id) ? 'defeating' : ''} ${isBossEnemy ? 'is-boss-enemy' : ''}`}
+                className={`enemy-card ${defeated ? 'defeated' : ''} ${animatingIds.includes(enemy.id) ? 'hit' : ''} ${defeatingIds.includes(enemy.id) ? 'defeating' : ''} ${bossEnemy ? 'is-boss-enemy' : ''}`}
                 key={enemy.id}
               >
                 {damagePopups[enemy.id] !== undefined && (
@@ -409,6 +432,15 @@ function App({ battleId, seed, returnTo }: AppProps) {
                   <span>NEXT</span>
                   <strong>{defeated ? '—' : enemy.attackName}</strong>
                   <em>{defeated ? 'DEFEATED' : `${getIncomingDamage(enemy.attackDamage, playerStats.defense)} DMG`}</em>
+                  {bossEnemy && !defeated && (
+                    <div
+                      className={`boss-guard-state ${bossGuardActive ? 'is-active' : 'is-open'}`}
+                      aria-label={`Boss guard ${bossGuardActive ? 'active' : 'open'}`}
+                    >
+                      <span>GUARD {bossGuardActive ? 'ACTIVE' : 'OPEN'}</span>
+                      <code>{BOSS_GUARD_CODE}</code>
+                    </div>
+                  )}
                 </div>
               </article>
             )
