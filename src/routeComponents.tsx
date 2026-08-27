@@ -24,7 +24,7 @@ const openingSystemLines: Record<string, string> = {
   error: 'ALERT // combat.target -> unexpected enemy',
   ada: 'TASK // read existing code -> explain behavior -> fix',
   byte: 'DEBUG LOG // values OK / target selection WRONG',
-  mission: 'OBJECTIVE // WEST · JAVASCRIPT GRASSLAND',
+  mission: 'OBJECTIVE // HUB: BYTE -> WEST: JAVASCRIPT GRASSLAND',
 }
 
 const hasExistingRun = () => {
@@ -126,7 +126,7 @@ export function HomePage() {
               SKIP
             </button>
             <button type="button" className="primary-button" onClick={next}>
-              {isLast ? '▶ 西の草原へ' : 'NEXT ▶'}
+              {isLast ? '▶ Hubへ出発' : 'NEXT ▶'}
             </button>
           </div>
         </section>
