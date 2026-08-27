@@ -121,7 +121,7 @@ export function TutorialPrompt() {
     completeBattle,
     skip,
   } = useTutorial()
-  const [, setRevision] = useState(0)
+  const [revision, setRevision] = useState(0)
   const initialPlayerPositionRef = useRef<string | number | null>(null)
   const routeKind = typeof window === 'undefined' ? 'other' : getRouteKind()
   const worldRoute = typeof window !== 'undefined' && window.location.pathname === '/world'
@@ -145,7 +145,13 @@ export function TutorialPrompt() {
       })
     })
 
-    observer.observe(document.body, { childList: true, characterData: true, subtree: true })
+    observer.observe(document.body, {
+      childList: true,
+      characterData: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-world-x', 'data-world-y'],
+    })
     return () => {
       observer.disconnect()
       if (frame !== 0) window.cancelAnimationFrame(frame)
@@ -173,7 +179,7 @@ export function TutorialPrompt() {
       completeFieldMove()
       initialPlayerPositionRef.current = null
     }
-  }, [completeFieldMove, routeKind, state.phase, state.status])
+  }, [completeFieldMove, revision, routeKind, state.phase, state.status])
 
   useEffect(() => {
     const onClick = (event: MouseEvent) => {
