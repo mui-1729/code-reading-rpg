@@ -9,7 +9,7 @@ UIは、**Open World探索とコード読解に必要な情報を優先し、常
 ## 基本原則
 
 - その瞬間の判断に必要な情報だけを常時表示する
-- EXP / Gold / Equipment / Partyなどの詳細はPauseへ寄せる
+- EXP / Gold / Equipment / Party / Sound設定などの詳細はPauseへ寄せる
 - Tutorialと同じ操作説明を常設しない
 - UIから明らかな内容を文章で重ねない
 - 正解target / 正解Skill / damage previewを表示しない
@@ -25,13 +25,14 @@ UIは、**Open World探索とコード読解に必要な情報を優先し、常
 - terrainから分かる探索context
 - short FIELD LOG
 - D-Pad / INTERACT
-- 小さいMENU / CODEX / SOUND導線
+- 小さいMENU / CODEX導線
 
 常時表示しないもの:
 
 - Level / EXP / Gold
 - Equipment一覧
 - Party詳細
+- Sound設定
 - 長いQuest Tracker
 - encounter確率
 - 「草むらを歩くと敵が出ます」のような繰り返し説明
@@ -66,7 +67,7 @@ NEXT: 西のBOSSへ
 
 ## Pause
 
-PauseはRPG情報の主な確認場所。
+PauseはRPG情報と設定の主な確認場所。
 
 Tabs:
 
@@ -86,7 +87,7 @@ SYSTEM
 - Max HP
 - Attack
 - Defense
-- World Objective（導入後）
+- World Objective
 
 ### ITEMS
 
@@ -111,8 +112,14 @@ Partyが正解targetを自動で示すような説明はしない。
 
 ### SYSTEM
 
+- Sound ON / OFF
+- SE volume
+- BGM volume
 - Reset Progress
-- 設定への最小案内
+
+Sound設定は独立した常設button / modalを持たせず、SYSTEMへ一本化する。音量変更は即時反映し、reload後も保持する。
+
+AudioContextの初回unlockだけはTitleを含む最初のuser gestureで行うが、これは表示UIを持たない。
 
 ## Battle
 
