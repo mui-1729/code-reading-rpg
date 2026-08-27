@@ -105,30 +105,38 @@ const reversedOperators: Record<string, string> = {
 const comparisonOperand =
   '(?:[A-Za-z_$][\\w$]*(?:\\.(?:hp|attackDamage|name|score))?|"[^"]*"|\'[^\']*\'|-?\\d+)'
 const reversibleComparison = new RegExp(
-  `(${comparisonOperand})\\s*(<=|>=|===|<|>)\\s*(${comparisonOperand})`,
+  `(${comparisonOperand})[ \\t]*(<=|>=|===|<|>)[ \\t]*(${comparisonOperand})`,
   'g',
 )
 
+function transformLines(code: string, transform: (line: string) => string): string {
+  return code.split('\n').map(transform).join('\n')
+}
+
 function reverseComparisons(code: string): string {
-  return code.replace(
-    reversibleComparison,
-    (_match, left: string, operator: string, right: string) =>
-      `${right} ${reversedOperators[operator] ?? operator} ${left}`,
+  return transformLines(code, (line) =>
+    line.replace(
+      reversibleComparison,
+      (_match, left: string, operator: string, right: string) =>
+        `${right} ${reversedOperators[operator] ?? operator} ${left}`,
+    ),
   )
 }
 
 function shiftIntegerBoundaries(code: string): string {
-  return code.replace(
-    /\b([A-Za-z_$][\w$]*\.(?:hp|attackDamage)|hp|attackDamage)\s*(<=|>=|<|>)\s*(-?\d+)\b/g,
-    (_match, left: string, operator: string, literal: string) => {
-      const value = Number(literal)
-      if (!Number.isInteger(value)) return _match
+  return transformLines(code, (line) =>
+    line.replace(
+      /\b([A-Za-z_$][\w$]*\.(?:hp|attackDamage)|hp|attackDamage)[ \t]*(<=|>=|<|>)[ \t]*(-?\d+)\b/g,
+      (_match, left: string, operator: string, literal: string) => {
+        const value = Number(literal)
+        if (!Number.isInteger(value)) return _match
 
-      if (operator === '<') return `${left} <= ${value - 1}`
-      if (operator === '<=') return `${left} < ${value + 1}`
-      if (operator === '>') return `${left} >= ${value + 1}`
-      return `${left} > ${value - 1}`
-    },
+        if (operator === '<') return `${left} <= ${value - 1}`
+        if (operator === '<=') return `${left} < ${value + 1}`
+        if (operator === '>') return `${left} >= ${value + 1}`
+        return `${left} > ${value - 1}`
+      },
+    ),
   )
 }
 
@@ -138,15 +146,19 @@ function useBracketPropertyAccess(code: string): string {
   const optionalPattern = new RegExp(`\\?\\.(${dataPropertyPattern})\\b`, 'g')
   const directPattern = new RegExp(`\\.(${dataPropertyPattern})\\b`, 'g')
 
-  return code
-    .replace(optionalPattern, (_match, property: string) => `?.["${property}"]`)
-    .replace(directPattern, (_match, property: string) => `["${property}"]`)
+  return transformLines(code, (line) =>
+    line
+      .replace(optionalPattern, (_match, property: string) => `?.["${property}"]`)
+      .replace(directPattern, (_match, property: string) => `["${property}"]`),
+  )
 }
 
 function parenthesizeSimpleArrowParameters(code: string): string {
-  return code.replace(
-    /(^|[(,]\s*)([A-Za-z_$][\w$]*)\s*=>/gm,
-    (_match, prefix: string, parameter: string) => `${prefix}(${parameter}) =>`,
+  return transformLines(code, (line) =>
+    line.replace(
+      /(^|[(,][ \t]*)([A-Za-z_$][\w$]*)[ \t]*=>/g,
+      (_match, prefix: string, parameter: string) => `${prefix}(${parameter}) =>`,
+    ),
   )
 }
 
