@@ -27,9 +27,38 @@ const openingSystemLines: Record<string, string> = {
   mission: 'OBJECTIVE // WEST · JAVASCRIPT GRASSLAND',
 }
 
+const hasExistingRun = () => {
+  const stored = window.localStorage.getItem('code-reading-rpg:rpg-state')
+  if (!stored) return false
+
+  try {
+    const parsed = JSON.parse(stored) as {
+      state?: {
+        worldPosition?: { x?: number; y?: number }
+        encounterCount?: number
+        openedTreasureIds?: unknown[]
+        partyMemberIds?: unknown[]
+      }
+    }
+    const state = parsed.state
+    if (!state) return false
+    const position = state.worldPosition
+    return Boolean(
+      (position && (position.x !== 20 || position.y !== 14)) ||
+      (state.encounterCount ?? 0) > 0 ||
+      (state.openedTreasureIds?.length ?? 0) > 0 ||
+      (state.partyMemberIds?.length ?? 0) > 0,
+    )
+  } catch {
+    return false
+  }
+}
+
 const readOpeningSeen = () => {
   if (typeof window === 'undefined') return false
-  return window.localStorage.getItem(JAVASCRIPT_OPENING_STORAGE_KEY) === 'seen'
+  return (
+    window.localStorage.getItem(JAVASCRIPT_OPENING_STORAGE_KEY) === 'seen' || hasExistingRun()
+  )
 }
 
 export function HomePage() {
@@ -129,7 +158,11 @@ export function HomePage() {
         </div>
 
         <nav className="title-menu" aria-label="Title menu">
-          <button className="primary-button menu-button" onClick={start}>
+          <button
+            className="primary-button menu-button"
+            aria-label={openingSeen ? 'CONTINUE · START RUN' : 'START'}
+            onClick={start}
+          >
             <span aria-hidden="true">▶</span> {openingSeen ? 'CONTINUE' : 'START'}
           </button>
           {openingSeen && (
