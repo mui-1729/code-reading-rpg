@@ -135,9 +135,10 @@ test.describe('Open World RPG loop', () => {
     expect(stored.state.currentHp).toBeGreaterThan(0)
     expect(stored.state.currentHp).toBeLessThan(108)
 
+    // Battle 1 clearでLV2になりmax HPは108→116へ増えるが、残HPは自動回復しない。
     await page.goto('/javascript/battle/1?seed=hp-carry-e2e&returnTo=%2Fworld')
     await expect(page.locator('.player-panel .status-label-row strong')).toHaveText(
-      `${stored.state.currentHp}/108`,
+      `${stored.state.currentHp}/116`,
     )
   })
 
