@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest'
+import { npcById } from '../dialogue/npcs'
 import { getLevelForExp } from '../progression'
+import { mainQuests } from '../quests/quests'
 import { JAVASCRIPT_AREA_ID } from './areas'
 import { battles } from './battles'
 
 const javascriptBattles = battles.filter((battle) => battle.areaId === JAVASCRIPT_AREA_ID)
+const javascriptQuest = mainQuests.find((quest) => quest.areaId === JAVASCRIPT_AREA_ID)
 
 describe('JavaScript story progression', () => {
   it('3 chapters grow from a first bug fix into a production incident', () => {
@@ -19,6 +22,19 @@ describe('JavaScript story progression', () => {
       isBoss: true,
     })
     expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.name === 'Production Bug')).toBe(true)
+  })
+
+  it('uses engineering roles and an issue-to-incident quest flow', () => {
+    expect(npcById.archivist).toMatchObject({ name: 'LEAD ADA', role: 'SENIOR ENGINEER' })
+    expect(npcById['lambda-sage']).toMatchObject({ name: 'REVIEWER LAMBDA', role: 'CODE REVIEWER' })
+    expect(npcById['byte-scout']).toMatchObject({ name: 'BYTE', role: 'QA ENGINEER' })
+
+    expect(javascriptQuest?.title).toBe('新人エンジニアの初仕事')
+    expect(javascriptQuest?.steps.map((step) => step.label)).toEqual([
+      '最初のissueを調査してbugの原因を特定する',
+      '追加bug reportの影響範囲を調査する',
+      'Production Incidentを解決してサービスを復旧する',
+    ])
   })
 
   it('each chapter keeps every syntax learned in earlier chapters', () => {
