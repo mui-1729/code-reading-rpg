@@ -16,20 +16,20 @@ export function BattleItemPanel() {
   const { progress, stats, setProgress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
   const [portalTarget, setPortalTarget] = useState<Element | null>(null)
-  const [battlePath, setBattlePath] = useState('')
+  const [battleLocation, setBattleLocation] = useState('')
   const [actionLocked, setActionLocked] = useState(false)
   const [usedThisBattle, setUsedThisBattle] = useState(false)
   const [lastHeal, setLastHeal] = useState<number | null>(null)
-  const pathRef = useRef('')
+  const locationRef = useRef('')
 
   useEffect(() => {
     if (typeof document === 'undefined' || typeof window === 'undefined') return
 
     const syncBattleUi = () => {
-      const nextPath = window.location.pathname
-      if (pathRef.current !== nextPath) {
-        pathRef.current = nextPath
-        setBattlePath(nextPath)
+      const nextLocation = `${window.location.pathname}${window.location.search}`
+      if (locationRef.current !== nextLocation) {
+        locationRef.current = nextLocation
+        setBattleLocation(nextLocation)
         setUsedThisBattle(false)
         setLastHeal(null)
       }
@@ -50,7 +50,7 @@ export function BattleItemPanel() {
     }
   }, [])
 
-  if (!portalTarget || !battlePath.includes('/battle/')) return null
+  if (!portalTarget || !battleLocation.includes('/battle/')) return null
 
   const combatStats = getCombatStats(stats, rpgState)
   const hp = Math.max(0, Math.min(combatStats.maxHp, rpgState.currentHp))
