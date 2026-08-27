@@ -1,5 +1,11 @@
 import { BASE_PLAYER_HP } from '../progression/constants'
-import { WORLD_HEIGHT, WORLD_START, WORLD_WIDTH } from '../world/worldMap'
+import {
+  WORLD_HEIGHT,
+  WORLD_START,
+  WORLD_TREASURES,
+  WORLD_WIDTH,
+  type WorldTreasureId,
+} from '../world/worldMap'
 import {
   equipmentById,
   getEquipmentBonuses,
@@ -20,20 +26,26 @@ export type RpgState = {
   stepsSinceEncounter: number
   encounterCount: number
   currentHp: number
+  openedTreasureIds: WorldTreasureId[]
 }
 
 export type StoredRpgState = {
-  version: 2
+  version: 3
   state: RpgState
 }
 
-type LegacyStoredRpgState = {
+type LegacyStoredRpgStateV2 = {
+  version: 2
+  state: Omit<RpgState, 'openedTreasureIds'>
+}
+
+type LegacyStoredRpgStateV1 = {
   version: 1
-  state: Omit<RpgState, 'currentHp'>
+  state: Omit<RpgState, 'currentHp' | 'openedTreasureIds'>
 }
 
 export const RPG_STORAGE_KEY = 'code-reading-rpg:rpg-state'
-export const RPG_STATE_SCHEMA_VERSION = 2
+export const RPG_STATE_SCHEMA_VERSION = 3
 
 const equipmentSlots: EquipmentSlot[] = ['weapon', 'armor', 'accessory']
 
@@ -60,6 +72,7 @@ export function createInitialRpgState(baseMaxHp = BASE_PLAYER_HP): RpgState {
     stepsSinceEncounter: 8,
     encounterCount: 0,
     currentHp,
+    openedTreasureIds: [],
   }
 }
 
@@ -87,6 +100,18 @@ function uniqueKnownPartyIds(value: unknown): string[] {
     new Set(
       value.filter(
         (id): id is string => typeof id === 'string' && partyMemberById[id] !== undefined,
+      ),
+    ),
+  )
+}
+
+function uniqueKnownTreasureIds(value: unknown): WorldTreasureId[] {
+  if (!Array.isArray(value)) return []
+  return Array.from(
+    new Set(
+      value.filter(
+        (id): id is WorldTreasureId =>
+          typeof id === 'string' && WORLD_TREASURES.some((treasure) => treasure.id === id),
       ),
     ),
   )
@@ -137,8 +162,13 @@ export function restoreRpgState(raw: string | null, baseMaxHp = BASE_PLAYER_HP):
   if (!raw) return initial
 
   try {
-    const parsed = JSON.parse(raw) as Partial<StoredRpgState | LegacyStoredRpgState>
-    if ((parsed.version !== 1 && parsed.version !== RPG_STATE_SCHEMA_VERSION) || !parsed.state) {
+    const parsed = JSON.parse(raw) as Partial<
+      StoredRpgState | LegacyStoredRpgStateV2 | LegacyStoredRpgStateV1
+    >
+    if (
+      (parsed.version !== 1 && parsed.version !== 2 && parsed.version !== RPG_STATE_SCHEMA_VERSION) ||
+      !parsed.state
+    ) {
       return initial
     }
 
@@ -176,6 +206,10 @@ export function restoreRpgState(raw: string | null, baseMaxHp = BASE_PLAYER_HP):
           : initial.encounterCount,
       currentHp:
         parsed.version === 1 ? maxHp : normalizeCurrentHp(state.currentHp, maxHp),
+      openedTreasureIds:
+        parsed.version === RPG_STATE_SCHEMA_VERSION
+          ? uniqueKnownTreasureIds(state.openedTreasureIds)
+          : [],
     }
   } catch {
     return initial

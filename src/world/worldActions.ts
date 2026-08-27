@@ -14,8 +14,10 @@ import {
   RECOVERY_POSITION,
   SHOP_POSITION,
   TS_BOSS_POSITION,
+  WORLD_TREASURES,
   type Terrain,
   type WorldRegion,
+  type WorldTreasureId,
 } from './worldMap'
 
 type BattleRegion = Exclude<WorldRegion, 'hub'>
@@ -147,6 +149,11 @@ export type WorldInteractionIntent =
       kind: 'recovery'
     }
   | {
+      kind: 'treasure'
+      treasureId: WorldTreasureId
+      opened: boolean
+    }
+  | {
       kind: 'boss'
       battleId: 3 | 6
       region: BattleRegion
@@ -177,6 +184,15 @@ export function resolveWorldInteraction(
 
   if (isAdjacent(position, RECOVERY_POSITION)) {
     return { kind: 'recovery' }
+  }
+
+  const treasure = WORLD_TREASURES.find((candidate) => isAdjacent(position, candidate.position))
+  if (treasure) {
+    return {
+      kind: 'treasure',
+      treasureId: treasure.id,
+      opened: rpgState.openedTreasureIds.includes(treasure.id),
+    }
   }
 
   if (isAdjacent(position, JS_BOSS_POSITION)) {

@@ -60,6 +60,24 @@ describe('World action resolver', () => {
     expect(result.nextState.worldPosition).toEqual({ x: 20, y: 16 })
   })
 
+  it('Treasure tileへ直接moveせず隣からinteractionする', () => {
+    const state = {
+      ...createInitialRpgState(),
+      worldPosition: { x: 10, y: 18 },
+    }
+
+    const result = resolveWorldMove({
+      rpgState: state,
+      progress: createInitialPlayerProgress(),
+      dx: 0,
+      dy: 1,
+    })
+
+    expect(result.kind).toBe('blocked')
+    expect(result.terrain).toBe('treasure')
+    expect(result.nextState.worldPosition).toEqual({ x: 10, y: 18 })
+  })
+
   it('通常moveでpositionとstepsSinceEncounterを更新する', () => {
     const state = createInitialRpgState()
     const result = resolveWorldMove({
@@ -126,7 +144,7 @@ describe('World action resolver', () => {
     })
   })
 
-  it('BYTE / Shop / Recovery / Boss interactionをintentとして返す', () => {
+  it('BYTE / Shop / Recovery / Treasure / Boss interactionをintentとして返す', () => {
     const initialProgress = createInitialPlayerProgress()
     const initialState = createInitialRpgState()
 
@@ -161,6 +179,31 @@ describe('World action resolver', () => {
         initialProgress,
       ),
     ).toEqual({ kind: 'recovery' })
+
+    expect(
+      resolveWorldInteraction(
+        { ...initialState, worldPosition: { x: 10, y: 18 } },
+        initialProgress,
+      ),
+    ).toEqual({ kind: 'treasure', treasureId: 'js-debug-cache', opened: false })
+
+    expect(
+      resolveWorldInteraction(
+        {
+          ...initialState,
+          worldPosition: { x: 10, y: 18 },
+          openedTreasureIds: ['js-debug-cache'],
+        },
+        initialProgress,
+      ),
+    ).toEqual({ kind: 'treasure', treasureId: 'js-debug-cache', opened: true })
+
+    expect(
+      resolveWorldInteraction(
+        { ...initialState, worldPosition: { x: 30, y: 18 } },
+        initialProgress,
+      ),
+    ).toEqual({ kind: 'treasure', treasureId: 'ts-supply-cache', opened: false })
 
     expect(
       resolveWorldInteraction(

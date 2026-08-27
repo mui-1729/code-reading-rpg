@@ -154,6 +154,13 @@
   box-shadow: inset 0 0 0 3px rgba(121, 255, 225, .18);
 }
 
+.terrain-treasure {
+  background:
+    radial-gradient(circle at 50% 45%, rgba(255, 219, 111, .24) 0 24%, transparent 26%),
+    #68512d;
+  box-shadow: inset 0 0 0 3px rgba(255, 210, 92, .16);
+}
+
 .world-object {
   position: relative;
   z-index: 2;
@@ -171,6 +178,15 @@
   color: #a8ffe9;
   font-size: clamp(6px, 1vw, 9px);
   letter-spacing: .04em;
+}
+.treasure-object {
+  color: #ffe07b;
+  font-size: clamp(6px, 1vw, 9px);
+  letter-spacing: .03em;
+}
+.treasure-object.opened {
+  color: #aaa27f;
+  opacity: .7;
 }
 
 .world-player-sprite {
