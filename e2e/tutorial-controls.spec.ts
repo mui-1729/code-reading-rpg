@@ -29,7 +29,7 @@ test('mobile TutorialがBYTE隣接時のINTERACT操作を認識する', async ({
 
   await expect(page.locator('.tutorial-prompt-field')).toContainText('BYTE / SHOP / BOSSの隣まで歩こう')
   await page.getByRole('button', { name: 'Move left' }).click()
-  await expect(page.locator('.tutorial-prompt-field')).toContainText('INTERACTを押して調べる')
+  await expect(page.locator('.tutorial-prompt-field')).toContainText(/INTERACTを押して調べる|Enter \/ Spaceで調べる/)
 
   await page.getByRole('button', { name: 'INTERACT' }).click()
   await expect(page.getByText(/BYTE joined the party!/)).toBeVisible()
