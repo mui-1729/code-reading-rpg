@@ -58,6 +58,7 @@
   margin: 0 auto;
   overflow: hidden;
   background: #3f7d3d;
+  isolation: isolate;
 }
 
 .world-tile {
@@ -157,10 +158,19 @@
 .treasure-object { color: #ffe07b; font-size: clamp(6px, 1vw, 9px); letter-spacing: .03em; }
 .treasure-object.opened { color: #aaa27f; opacity: .7; }
 
+.world-character-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  overflow: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
 .world-player-sprite,
 .world-follower-sprite {
   position: absolute;
-  z-index: 6;
   display: grid;
   place-items: center;
   width: 5.091%;
@@ -174,10 +184,11 @@
 }
 
 .world-player-sprite {
+  z-index: 2;
   color: #d8f6ff;
   font-size: clamp(8px, 1.5vw, 15px);
 }
-.world-follower-sprite { z-index: 5; }
+.world-follower-sprite { z-index: 1; }
 
 .world-message {
   width: min(100%, 880px);
