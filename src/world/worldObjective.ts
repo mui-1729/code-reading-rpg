@@ -35,17 +35,19 @@ type RegionDefinition = {
   encounterFirst: string
   encounterNext: string
   bossNext: string
+  clearNext: string
 }
 
 const definitions: readonly RegionDefinition[] = [
   {
     region: 'javascript',
-    label: 'JAVASCRIPT GRASSLAND',
+    label: 'TARGET SELECTOR INCIDENT',
     stageIds: [1, 2, 3],
     areaId: 'javascript',
-    encounterFirst: '草むらでJavaScript Battle',
-    encounterNext: '草むらで次のJavaScript Battle',
-    bossNext: '西のBOSSへ',
+    encounterFirst: '西の草むらでIssue #101を再現',
+    encounterNext: '西の草むらでQA triageを続行',
+    bossNext: '西のBOSSでSEV-1対応',
+    clearNext: 'POSTMORTEM · Root cause: implicit array order',
   },
   {
     region: 'typescript',
@@ -55,6 +57,7 @@ const definitions: readonly RegionDefinition[] = [
     encounterFirst: '森でTypeScript Battle',
     encounterNext: '森で次のTypeScript Battle',
     bossNext: '東のBOSSへ',
+    clearNext: 'AREA CLEAR',
   },
 ]
 
@@ -85,7 +88,7 @@ export function getWorldObjective(
       clearedBattles: 3,
       totalBattles: 3,
       status: 'clear',
-      next: 'AREA CLEAR',
+      next: definition.clearNext,
       bossUnlocked: true,
     }
   }
@@ -132,6 +135,7 @@ export function getWorldProgressChange(
         heading: 'WORLD COMPLETE',
         label: current.label,
         progressLabel: '3 / 3',
+        next: current.next,
       }
     }
 
