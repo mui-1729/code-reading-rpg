@@ -10,33 +10,49 @@ const javascriptBattles = battles.filter((battle) => battle.areaId === JAVASCRIP
 const javascriptQuest = mainQuests.find((quest) => quest.areaId === JAVASCRIPT_AREA_ID)
 
 describe('JavaScript story progression', () => {
-  it('3 chapters grow from a first bug fix into a production incident', () => {
+  it('3 chapters follow one selector bug from issue to SEV-1', () => {
     expect(javascriptBattles.map((battle) => battle.label)).toEqual([
       'CHAPTER 01',
       'CHAPTER 02',
       'FINAL CHAPTER',
     ])
-    expect(javascriptBattles[0]?.title).toBe('Your First Bug Fix')
-    expect(javascriptBattles[1]?.title).toBe('Bug Reports Keep Coming')
+    expect(javascriptBattles[0]?.title).toBe('Issue #101: Wrong Target')
+    expect(javascriptBattles[1]?.title).toBe('QA Triage: Selector Drift')
     expect(javascriptBattles[2]).toMatchObject({
-      title: 'Production Incident',
+      title: 'SEV-1: Targeting Outage',
       isBoss: true,
     })
+    expect(javascriptBattles[0]?.subtitle).toContain('find()')
+    expect(javascriptBattles[1]?.subtitle).toContain('配列順への暗黙依存')
+    expect(javascriptBattles[2]?.subtitle).toContain('sort()/some()/reduce()')
     expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.name === 'Boss')).toBe(true)
-    expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.attackName === 'Runtime Collapse')).toBe(true)
+    expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.attackName === 'Selector Cascade')).toBe(true)
   })
 
-  it('uses engineering roles and an issue-to-incident quest flow', () => {
+  it('uses engineering roles and an issue-to-postmortem quest flow', () => {
     expect(npcById.archivist).toMatchObject({ name: 'LEAD ADA', role: 'SENIOR ENGINEER' })
     expect(npcById['lambda-sage']).toMatchObject({ name: 'REVIEWER LAMBDA', role: 'CODE REVIEWER' })
     expect(npcById['byte-scout']).toMatchObject({ name: 'BYTE', role: 'QA ENGINEER' })
 
-    expect(javascriptQuest?.title).toBe('新人エンジニアの初仕事')
+    expect(javascriptQuest?.title).toBe('Target Selector Incident')
     expect(javascriptQuest?.steps.map((step) => step.label)).toEqual([
-      'Issue #101を調査し、誤った対象を選ぶbugの原因を特定する',
-      'QAから届いた複数reportをtriageし、影響範囲を特定する',
-      'SEV-1 Production Incidentの原因を特定し、serviceを復旧する',
+      'Issue #101を再現し、find()の「最初の一致」と期待する優先対象のズレを特定する',
+      'QA reportをtriageし、filter()/&&/||を使うselector群の影響範囲と共通前提を洗い出す',
+      'SEV-1を復旧し、配列順への暗黙依存をsort()/reduce()で明示的な優先順位へ置き換える',
     ])
+  })
+
+  it('makes the root cause and prevention explicit in the postmortem dialogue', () => {
+    const adaPostmortem = npcById.archivist?.dialogues.find(
+      (dialogue) => dialogue.id === 'archivist-area-clear',
+    )
+    const bytePostmortem = npcById['byte-scout']?.dialogues.find(
+      (dialogue) => dialogue.id === 'byte-area-clear',
+    )
+
+    expect(adaPostmortem?.lines.join(' ')).toContain('暗黙の前提')
+    expect(adaPostmortem?.lines.join(' ')).toContain('sort()やreduce()')
+    expect(bytePostmortem?.lines.join(' ')).toContain('順番shuffle test')
   })
 
   it('shows the three chapters as an engineering work queue on the field', () => {
