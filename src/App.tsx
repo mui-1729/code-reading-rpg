@@ -29,6 +29,7 @@ import {
   partyMemberById,
   useRpg,
 } from './rpg'
+import { WORLD_START } from './world/worldMap'
 
 type Phase = 'battle' | 'victory' | 'defeat'
 
@@ -52,7 +53,7 @@ const spriteClassName = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+
 function App({ battleId, seed, returnTo }: AppProps) {
   const navigate = useNavigate()
   const { progress, stats: baseStats, setProgress } = useProgress()
-  const { rpgState } = useRpg()
+  const { rpgState, setRpgState } = useRpg()
   const playerStats = getCombatStats(baseStats, rpgState)
   const partyFollowUpDamage = getPartyFollowUpDamage(rpgState.partyMemberIds, playerStats.level)
   const battle = useMemo(() => {
@@ -66,7 +67,9 @@ function App({ battleId, seed, returnTo }: AppProps) {
   const nextBattle = nextBattleCandidate?.areaId === battle.areaId ? nextBattleCandidate : undefined
 
   const [phase, setPhase] = useState<Phase>('battle')
-  const [playerHp, setPlayerHp] = useState(() => playerStats.maxHp)
+  const [playerHp, setPlayerHp] = useState(() =>
+    Math.max(0, Math.min(playerStats.maxHp, rpgState.currentHp)),
+  )
   const [enemies, setEnemies] = useState<Enemy[]>(cloneEnemies(battle.enemies))
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null)
   const [explainedSkill, setExplainedSkill] = useState<SkillCard | null>(null)
@@ -92,6 +95,27 @@ function App({ battleId, seed, returnTo }: AppProps) {
     gameAudio.requestBgm('battle')
     return () => gameAudio.stopBgm()
   }, [battleId])
+
+  useEffect(() => {
+    if (phase !== 'battle') return
+    setRpgState((current) =>
+      current.currentHp === playerHp ? current : { ...current, currentHp: playerHp },
+    )
+  }, [phase, playerHp, setRpgState])
+
+  useEffect(() => {
+    setPlayerHp((current) => Math.max(0, Math.min(playerStats.maxHp, current)))
+  }, [playerStats.maxHp])
+
+  useEffect(() => {
+    if (phase !== 'defeat') return
+    setRpgState((current) => ({
+      ...current,
+      currentHp: playerStats.maxHp,
+      worldPosition: { ...WORLD_START },
+      stepsSinceEncounter: 8,
+    }))
+  }, [phase, playerStats.maxHp, setRpgState])
 
   const addLog = (tone: LogEntry['tone'], text: string) => {
     setLogs((current) => [...current.slice(-4), { id: Date.now() + Math.random(), tone, text }])
@@ -536,7 +560,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
             <div className="eyebrow">DEFEAT</div>
             <div className="defeat-actions">
               <button className="primary-button" onClick={resetBattle}>▶ RETRY</button>
-              <button className="secondary-button" onClick={goReturnDestination}>◀ RETURN TO WORLD</button>
+              <button className="secondary-button" onClick={goReturnDestination}>◀ RETURN TO HUB</button>
               <button className="secondary-button" onClick={() => openCodeHelp(availableSkills[0])}>CODE HELP</button>
             </div>
           </section>
