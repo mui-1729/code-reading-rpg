@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { writeStoredAudioSettings } from '../audio/audioSettingsStorage'
 import { gameAudio, type AudioSettings } from '../audio/gameAudio'
+import { CodeCodexContent } from '../learning/CodeCodex'
 import { getTotalExpForLevel, useProgress } from '../progression'
 import {
   equipItem,
@@ -13,13 +14,14 @@ import {
 } from '../rpg'
 import { getWorldObjectives } from '../world/worldObjective'
 
-type PauseTab = 'status' | 'items' | 'equipment' | 'party' | 'system'
+type PauseTab = 'status' | 'items' | 'equipment' | 'party' | 'codex' | 'system'
 
 const tabs: Array<{ id: PauseTab; label: string }> = [
   { id: 'status', label: 'STATUS' },
   { id: 'items', label: 'ITEMS' },
   { id: 'equipment', label: 'EQUIPMENT' },
   { id: 'party', label: 'PARTY' },
+  { id: 'codex', label: 'CODEX' },
   { id: 'system', label: 'SYSTEM' },
 ]
 
@@ -240,6 +242,12 @@ export function PauseMenu() {
                       )
                     })
                   )}
+                </section>
+              )}
+
+              {tab === 'codex' && (
+                <section className="pause-section">
+                  <CodeCodexContent />
                 </section>
               )}
 
