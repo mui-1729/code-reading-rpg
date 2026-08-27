@@ -41,9 +41,13 @@ Stage Select / Area Select / 専用Complete画面は通常導線へ戻さない�
 - Battle 3 / 6は固定Boss
 - World座標 / encounter counterをsave
 
-`src/world/worldMap.ts`はterrain / region / viewport / encounter候補のpure logicを担当する。
+責務:
 
-`WorldPage.tsx`は現在movement・interaction・encounter遷移のorchestrationも持つ。今後World interactionが増える場合は、UIへ条件分岐を足し続けずpure resolverへ分離する。
+- `src/world/worldMap.ts`: terrain / region / viewport / encounter候補
+- `src/world/worldActions.ts`: movement / encounter / Shop / Party / Boss interactionのpure resolver
+- `WorldPage.tsx`: resolver結果をstate更新・SE・navigateへ接続するUI adapter
+
+World interactionを増やす場合も、`WorldPage.tsx`へ条件分岐を戻さずresolver側へ追加する。
 
 ## Battle
 
@@ -64,6 +68,24 @@ party → codeが選んだ同じtargetへの補助
 ```
 
 正解target / 正解Skill / damage previewを先に表示しない。
+
+### Encounter code variation
+
+「Skill名と答えの対応を一度覚えれば以後読まなくてよい」状態を避ける。
+
+- 通常Encounterは`encounterCount`を含むseedを使う
+- 同じEncounter seedはreload / retryでも同じ表示コードを再現する
+- 次のEncounterでは実コード表現を変える
+- 同じSkillを複数Battleで使う場合はbase variant pool自体をBattleごとに分離する
+- seed variationは学習範囲内の同値変換だけを使う
+  - callback / base variant
+  - 比較式の左右
+  - dot access / bracket access
+  - simple arrow parameter表記
+- threshold値そのものは変えず、Skillの説明と表示コードの条件を一致させる
+- `/* B2-... */`のような意味のない識別commentでunique扱いしない
+- TargetRule / damage / solvabilityは表示variationから独立させる
+- multiline codeは物理行数を変えず、CODE HELPの行対応を維持する
 
 ## State ownership
 
@@ -112,19 +134,17 @@ party → codeが選んだ同じtargetへの補助
 - Party
 - Encounter pacing
 
+restore時はWorld bounds / known Equipment / known Party / slot整合性を正規化する。
+
 ### TutorialState v1
 
 PlayerProgress / RpgStateと分離する。
 
-`RESET PROGRESS`はProgressProviderが汎用reset eventをdispatchし、RpgProvider / TutorialProviderがそれぞれ自分のstateをresetする。
+`RESET PROGRESS`はProgressProviderが汎用reset eventをdispatchし、RpgProvider / TutorialProviderがそれぞれ自分のstateをresetする。Sound設定はユーザー設定として別LocalStorageに保存し、RESET PROGRESSでは保持する。
 
 ## Progress guidance
 
-Open Worldでは「次Stageへ移動する」UIがないため、Playerが次に何をすれば進行するかを見失いやすい。
-
-今後は旧Quest UIを復活させるのではなく、**World Objective**をPlayerProgressからpureに導出する。
-
-例:
+Open Worldでは「次Stageへ移動する」UIがないため、**World Objective**をPlayerProgressからpureに導出する。
 
 ```text
 JavaScript Grassland
@@ -140,20 +160,13 @@ TypeScript Forest
 3/3 → CLEAR
 ```
 
-表示場所はPause STATUSを基本とし、常設HUDを増やさない。Battle victory時は短い一時feedbackだけ許可する。
+表示場所はPause STATUSを基本とし、常設Quest HUDは置かない。Battle victory時は短い`WORLD PROGRESS / BOSS UNLOCKED / WORLD COMPLETE` feedbackだけを出す。
 
 ## Questの扱い
 
-現在Side Quest definitionは空で、`completedSideQuestIds`は旧save互換のためだけに残っている。
+通常runtimeから旧Quest feedback / Side Quest bonus処理 / legacy Area Shop mountは外している。
 
-Main Quest definition / QuestVictoryFeedbackには旧Gate / Field用語が残っている。
-
-方針:
-
-1. World Objectiveを導入する
-2. Battle結果のprogress feedbackをWorld Objectiveへ置換する
-3. 通常runtimeからSide Quest処理・旧Quest feedback・旧Field focus依存を外す
-4. save schemaの`completedSideQuestIds`はmigration互換のため当面保持する
+`completedSideQuestIds`などのlegacy fieldは旧save互換のため当面保持するが、新機能のsource of truthにはしない。
 
 つまり「save互換」と「現在のゲーム機能」を分ける。
 
@@ -161,9 +174,7 @@ Main Quest definition / QuestVictoryFeedbackには旧Gate / Field用語が残っ
 
 旧route `/javascript`, `/typescript`, `/javascript/field`, `/typescript/field`, `*/complete` は互換redirect用途だけにする。
 
-旧Field / Area UIのdomain codeを即削除する必要はないが、新機能はそこへ追加しない。
-
-通常runtimeから参照されなくなったことを確認できた単位で整理する。
+旧Field / Area domain codeを即削除する必要はないが、新機能はそこへ追加しない。通常runtimeから参照されなくなったことを確認できた単位で整理する。
 
 ## Equipment / Party
 
@@ -182,6 +193,26 @@ Main Quest definition / QuestVictoryFeedbackには旧Gate / Field用語が残っ
 - Attack数値だけ違う大量装備
 - Partyが自動で正解targetを選ぶ
 - Level / Item grindだけでコードを読まず勝つ
+
+## Pause / fixed UI
+
+通常画面の固定導線は基本的に`MENU`へ集約する。
+
+Pause tabs:
+
+```text
+STATUS
+ITEMS
+EQUIPMENT
+PARTY
+CODEX
+SYSTEM
+```
+
+- EXP / Gold / stats / World ObjectiveはSTATUS
+- 学習参照はCODEX
+- Sound ON/OFF / SE / BGM / Reset ProgressはSYSTEM
+- 独立SOUND / CODEX overlayは通常画面へ戻さない
 
 ## World content
 
@@ -207,10 +238,11 @@ Unit Testで固定する:
 - PlayerProgress / RpgState persistence
 - Equipment combat stats
 - Party follow-up
-- Battle code uniqueness / solvability
+- Battle code variation / Battle間uniqueness / solvability
+- multiline CODE HELP行対応
 - reset propagation
 
-Manual / E2Eで確認する:
+Playwright E2Eで固定する:
 
 ```text
 Title
@@ -218,38 +250,45 @@ Title
 → Random Encounter
 → Victory
 → World同座標へreturn
-→ Pause確認
-→ BYTE join
-→ Equipment変更
-→ Battle反映
+→ reload persistence
+→ BYTE join / follow-up
+→ Equipment変更 / Battle反映
+→ Pause CODEX
+→ Pause SYSTEM Sound persistence
 ```
 
-World interactionがさらに増える前に、主要loopのbrowser E2Eを導入する価値が高い。
+Unit Testはdomainの意味、E2Eは主要loopの接続を担当し、同じ条件を両方へ重複させすぎない。
 
 ## 優先順位
 
-### P0: 現行設計の整合性
+### 完了した基盤
 
-1. World Objective / progress feedback
-2. 旧Quest / Side Quest runtime cleanup
-3. stale docs / UI wording cleanup
-
-### P1: World基盤を壊れにくくする
-
-1. movement / interaction / encounter orchestrationをpure resolverへ分離
-2. RpgState restore時のWorld bounds / known equipment / known party validation
-3. 主要Open World loopのE2E
+- World Objective / progress feedback
+- 旧Quest / Side Quest runtime cleanup
+- movement / interaction / encounter pure resolver
+- RpgState restore validation
+- Open World主要loop Playwright E2E
+- Sound / CodexのPause集約
+- Encounter code variation強化
 
 ### P1: World content density
 
 1. recovery point
 2. treasure / equipment acquisition
-3. landmark / companion event
+3. equipment shop
+4. landmark / companion event
+
+### P1: RPG選択の深さ
+
+1. 装備ごとの差をAttack数値以外にも作る
+2. Partyの役割差をコード読解を代替しない範囲で作る
+3. 回復・消耗品の選択肢を増やしすぎず整理する
 
 ### P2: 学習コンテンツ
 
 1. Boss-specific mechanic
 2. third learning region（SQL / React候補）
+3. 新region追加時も既存Worldへ自然につなぐ
 
 ## 守る原則
 
@@ -260,3 +299,4 @@ World interactionがさらに増える前に、主要loopのbrowser E2Eを導入
 5. legacy save互換と現行featureを混同しない
 6. UI条件分岐よりpure functionへ寄せる
 7. 新機能はtest可能な境界を先に作る
+8. 表示コードのvariationは学習上の意味を保ち、見た目だけのfake variationにしない
