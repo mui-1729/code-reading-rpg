@@ -25,6 +25,36 @@
   background: rgba(7, 7, 13, .96);
 }
 
+.boss-guard-state {
+  display: grid;
+  gap: 4px;
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(255, 255, 255, .12);
+}
+
+.boss-guard-state span {
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .06em;
+}
+
+.boss-guard-state code {
+  color: #a9a5b8;
+  font-size: 7px;
+  line-height: 1.45;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.boss-guard-state.is-active span {
+  color: var(--gold);
+}
+
+.boss-guard-state.is-open span {
+  color: var(--green);
+}
+
 @media (max-width: 700px) {
   .enemy-card {
     grid-template-rows: 92px auto auto auto;
@@ -32,5 +62,9 @@
 
   .enemy-card > .enemy-sprite.golem {
     transform: scale(.62);
+  }
+
+  .boss-guard-state code {
+    font-size: 6px;
   }
 }
