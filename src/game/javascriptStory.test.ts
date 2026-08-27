@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { npcById } from '../dialogue/npcs'
+import { javascriptField } from '../field/javascriptField'
 import { getLevelForExp } from '../progression'
 import { mainQuests } from '../quests/quests'
 import { JAVASCRIPT_AREA_ID } from './areas'
@@ -32,9 +33,21 @@ describe('JavaScript story progression', () => {
 
     expect(javascriptQuest?.title).toBe('新人エンジニアの初仕事')
     expect(javascriptQuest?.steps.map((step) => step.label)).toEqual([
-      '最初のissueを調査してbugの原因を特定する',
-      '追加bug reportの影響範囲を調査する',
-      'Production Incidentを解決してサービスを復旧する',
+      'Issue #101を調査し、誤った対象を選ぶbugの原因を特定する',
+      'QAから届いた複数reportをtriageし、影響範囲を特定する',
+      'SEV-1 Production Incidentの原因を特定し、serviceを復旧する',
+    ])
+  })
+
+  it('shows the three chapters as an engineering work queue on the field', () => {
+    const battleLabels = javascriptField.interactions
+      .filter((interaction) => interaction.kind === 'battle')
+      .map((interaction) => interaction.label)
+
+    expect(battleLabels).toEqual([
+      'ISSUE #101 · BUG FIX',
+      'QA TRIAGE · IMPACT',
+      'SEV-1 · INCIDENT',
     ])
   })
 
