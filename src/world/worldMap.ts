@@ -16,6 +16,7 @@ export type Terrain =
   | 'boss'
   | 'shop'
   | 'npc'
+  | 'recovery'
 
 export type WorldCell = {
   x: number
@@ -28,6 +29,7 @@ export const JS_BOSS_POSITION = { x: 8, y: 3 } as const
 export const TS_BOSS_POSITION = { x: 32, y: 3 } as const
 export const SHOP_POSITION = { x: 20, y: 12 } as const
 export const BYTE_POSITION = { x: 19, y: 13 } as const
+export const RECOVERY_POSITION = { x: 21, y: 16 } as const
 
 const samePosition = (a: { x: number; y: number }, b: { x: number; y: number }) =>
   a.x === b.x && a.y === b.y
@@ -44,6 +46,7 @@ export function getTerrain(x: number, y: number): Terrain {
   if (samePosition(position, JS_BOSS_POSITION) || samePosition(position, TS_BOSS_POSITION)) return 'boss'
   if (samePosition(position, SHOP_POSITION)) return 'shop'
   if (samePosition(position, BYTE_POSITION)) return 'npc'
+  if (samePosition(position, RECOVERY_POSITION)) return 'recovery'
 
   if (y === 14 || (x === 8 && y >= 3 && y <= 14) || (x === 32 && y >= 3 && y <= 14)) {
     return 'road'
@@ -65,7 +68,7 @@ export function getTerrain(x: number, y: number): Terrain {
 }
 
 export function isWalkableTerrain(terrain: Terrain): boolean {
-  return !['mountain', 'water', 'boss', 'shop', 'npc'].includes(terrain)
+  return !['mountain', 'water', 'boss', 'shop', 'npc', 'recovery'].includes(terrain)
 }
 
 export function isEncounterTerrain(terrain: Terrain): boolean {
