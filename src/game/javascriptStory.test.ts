@@ -10,39 +10,39 @@ const javascriptBattles = battles.filter((battle) => battle.areaId === JAVASCRIP
 const javascriptQuest = mainQuests.find((quest) => quest.areaId === JAVASCRIPT_AREA_ID)
 
 describe('JavaScript story progression', () => {
-  it('3 chapters form one simple kingdom adventure', () => {
+  it('3 chapters follow a programmer RPG story from bug to Code Core', () => {
     expect(javascriptBattles.map((battle) => battle.label)).toEqual([
       'CHAPTER 01',
       'CHAPTER 02',
       'FINAL CHAPTER',
     ])
-    expect(javascriptBattles[0]?.title).toBe('草原の異変')
-    expect(javascriptBattles[1]?.title).toBe('広がる暴走')
+    expect(javascriptBattles[0]?.title).toBe('最初のバグ')
+    expect(javascriptBattles[1]?.title).toBe('広がるバグ')
     expect(javascriptBattles[2]).toMatchObject({
-      title: '黒幕の城',
+      title: '暴走するCode Core',
       isBoss: true,
     })
-    expect(javascriptBattles[0]?.subtitle).toContain('西の草原')
-    expect(javascriptBattles[1]?.subtitle).toContain('黒い結晶')
-    expect(javascriptBattles[2]?.subtitle).toContain('Code Crystal')
-    expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.name === 'Boss')).toBe(true)
-    expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.attackName === 'Dark Cascade')).toBe(true)
+    expect(javascriptBattles[0]?.subtitle).toContain('新人Code Knight')
+    expect(javascriptBattles[1]?.subtitle).toContain('ログ')
+    expect(javascriptBattles[2]?.subtitle).toContain('共通処理')
+    expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.name === 'Code Core')).toBe(true)
+    expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.attackName === 'Runtime Cascade')).toBe(true)
   })
 
-  it('uses fantasy roles and a clear save-the-kingdom quest', () => {
-    expect(npcById.archivist).toMatchObject({ name: 'CAPTAIN ADA', role: 'ROYAL GUARD' })
-    expect(npcById['lambda-sage']).toMatchObject({ name: 'SAGE LAMBDA', role: 'COURT SCHOLAR' })
-    expect(npcById['byte-scout']).toMatchObject({ name: 'BYTE', role: 'SCOUT' })
+  it('uses programmer characters without incident-management jargon', () => {
+    expect(npcById.archivist).toMatchObject({ name: 'LEAD ADA', role: 'SENIOR ENGINEER' })
+    expect(npcById['lambda-sage']).toMatchObject({ name: 'LAMBDA', role: 'CODE MENTOR' })
+    expect(npcById['byte-scout']).toMatchObject({ name: 'BYTE', role: 'DEBUGGER' })
 
-    expect(javascriptQuest?.title).toBe('JavaScript王国を救え')
+    expect(javascriptQuest?.title).toBe('JavaScript王国のバグを追え')
     expect(javascriptQuest?.steps.map((step) => step.label)).toEqual([
-      '西の草原の魔物を倒し、異変の手がかりを見つける',
-      '暴走する魔物を退け、黒い結晶の痕跡を西の砦まで追う',
-      '西の砦のBossを倒し、Code Crystalを取り戻す',
+      '戦闘システムのターゲットバグを直す',
+      'ログを追い、複数の機能に広がるバグの共通コードを探す',
+      '暴走したCode Coreを止め、王国のシステムを復旧する',
     ])
   })
 
-  it('ends with the kingdom restored after the boss is defeated', () => {
+  it('ends with the shared Code Core fixed and the system restored', () => {
     const adaEnding = npcById.archivist?.dialogues.find(
       (dialogue) => dialogue.id === 'archivist-area-clear',
     )
@@ -50,20 +50,20 @@ describe('JavaScript story progression', () => {
       (dialogue) => dialogue.id === 'byte-area-clear',
     )
 
-    expect(adaEnding?.lines.join(' ')).toContain('Code Crystalの光が戻った')
-    expect(adaEnding?.lines.join(' ')).toContain('JavaScript王国は救われた')
-    expect(byteEnding?.lines.join(' ')).toContain('全部元通り')
+    expect(adaEnding?.lines.join(' ')).toContain('Code Coreは安定した')
+    expect(adaEnding?.lines.join(' ')).toContain('共通コード')
+    expect(byteEnding?.lines.join(' ')).toContain('全部green')
   })
 
-  it('shows the three chapters as story locations on the field', () => {
+  it('shows the three chapters as simple story gates on the field', () => {
     const battleLabels = javascriptField.interactions
       .filter((interaction) => interaction.kind === 'battle')
       .map((interaction) => interaction.label)
 
     expect(battleLabels).toEqual([
-      '草原の異変',
-      '広がる暴走',
-      '西の砦',
+      '最初のバグ',
+      '広がるバグ',
+      'CODE CORE',
     ])
   })
 
