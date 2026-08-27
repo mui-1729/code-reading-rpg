@@ -45,6 +45,10 @@ export function WorldPage() {
   useBgm('field')
 
   const position = rpgState.worldPosition
+  const [followerPosition, setFollowerPosition] = useState(() => ({
+    x: position.x,
+    y: position.y + 1,
+  }))
   const region = getWorldRegion(position.x)
   const visibleCells = useMemo(() => getVisibleWorldCells(position), [position])
   const combatStats = getCombatStats(stats, rpgState)
@@ -102,6 +106,7 @@ export function WorldPage() {
         return
       }
 
+      if (byteJoined) setFollowerPosition(position)
       setRpgState(result.nextState)
       if (result.kind === 'encounter') {
         setMessage('ENCOUNTER!')
@@ -111,7 +116,7 @@ export function WorldPage() {
 
       setMessage(terrainLabels[result.terrain] ?? result.terrain)
     },
-    [enterBattle, progress, rpgState, setRpgState, shopOpen],
+    [byteJoined, enterBattle, position, progress, rpgState, setRpgState, shopOpen],
   )
 
   const interact = useCallback(() => {
@@ -125,6 +130,7 @@ export function WorldPage() {
         return
       }
       gameAudio.playSe('skillUnlock')
+      setFollowerPosition({ x: position.x, y: position.y + 1 })
       setRpgState((current) => ({
         ...current,
         partyMemberIds: [...current.partyMemberIds, intent.memberId],
@@ -195,7 +201,7 @@ export function WorldPage() {
     }
 
     setMessage('近くに調べられるものはない。')
-  }, [combatStats.maxHp, enterBattle, progress, rpgState, setProgress, setRpgState, shopOpen])
+  }, [combatStats.maxHp, enterBattle, position, progress, rpgState, setProgress, setRpgState, shopOpen])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -236,6 +242,11 @@ export function WorldPage() {
         <div className="world-viewport pixel-inner-window" aria-label="Open world map">
           {visibleCells.map((cell) => {
             const player = cell.x === position.x && cell.y === position.y
+            const follower =
+              byteJoined &&
+              !player &&
+              cell.x === followerPosition.x &&
+              cell.y === followerPosition.y
             const treasure = cell.terrain === 'treasure' ? getTreasureAtPosition(cell) : undefined
             const treasureOpened = treasure
               ? rpgState.openedTreasureIds.includes(treasure.id)
@@ -264,16 +275,18 @@ export function WorldPage() {
                     {treasureOpened ? 'OPEN' : 'CHEST'}
                   </span>
                 )}
+                {follower && (
+                  <span className="world-follower-sprite" aria-label="BYTE follower">
+                    <img
+                      className="world-follower-pixel"
+                      src={characterVisuals.byte.field}
+                      alt=""
+                      aria-hidden="true"
+                    />
+                  </span>
+                )}
                 {player && (
                   <span className="world-player-sprite" aria-label="Player">
-                    {byteJoined && (
-                      <img
-                        className="world-follower-pixel"
-                        src={characterVisuals.byte.field}
-                        alt=""
-                        aria-hidden="true"
-                      />
-                    )}
                     <img
                       className="world-player-pixel"
                       src={characterVisuals.player.field}

@@ -28,12 +28,11 @@
 }
 
 .world-follower-pixel {
-  position: absolute;
+  position: relative;
   z-index: 2;
   width: 58%;
   height: auto;
-  left: 3%;
-  top: 30%;
+  display: block;
   opacity: .95;
   transform: scale(1.82);
   transform-origin: 50% 50%;
