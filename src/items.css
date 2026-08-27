@@ -1,0 +1,264 @@
+.item-pixel-icon {
+  image-rendering: pixelated;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+.item-shop-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.item-shop-title {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.item-shop-title small,
+.item-inventory-main small,
+.battle-item-copy small {
+  color: #8f8ca3;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .1em;
+}
+
+.item-shop-title strong {
+  color: #fff;
+  font-size: 13px;
+}
+
+.item-shop-icon {
+  width: 32px;
+  height: 32px;
+  padding: 4px;
+  border: 2px solid #3b3b52;
+  background: #0a0a13;
+}
+
+.item-rule-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 10px;
+  border: 2px solid #303045;
+  background: #0a0a13;
+}
+
+.item-rule-row strong {
+  color: var(--green);
+  font-size: 10px;
+}
+
+.item-rule-row span {
+  color: #aaa6ba;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .05em;
+  text-align: right;
+}
+
+.item-shop-item.is-unavailable {
+  opacity: .72;
+}
+
+.item-inventory-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.item-inventory-card {
+  display: grid;
+  gap: 11px;
+  padding: 14px;
+}
+
+.item-inventory-card.no-stock {
+  opacity: .7;
+}
+
+.item-inventory-card > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.item-inventory-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.item-inventory-main > span {
+  display: grid;
+  gap: 4px;
+}
+
+.item-inventory-main strong {
+  font-size: 12px;
+}
+
+.item-inventory-card header em {
+  color: var(--gold);
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.item-pause-icon {
+  width: 34px;
+  height: 34px;
+  padding: 4px;
+  border: 2px solid #343449;
+  background: #090912;
+}
+
+.item-inventory-rules {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.item-inventory-rules strong {
+  color: var(--green);
+  font-size: 10px;
+}
+
+.item-inventory-rules span {
+  color: #aaa6ba;
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.item-inventory-card p {
+  margin: 0;
+  color: #aaa6ba;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.item-stock-state {
+  width: fit-content;
+  padding: 4px 6px;
+  border: 1px solid #55546b;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.item-stock-state.has-stock {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.item-stock-state.no-stock {
+  color: #8f8894;
+}
+
+.battle-item-row {
+  justify-content: stretch;
+  padding: 8px;
+  border: 2px solid #303045;
+  background: #0a0a13;
+}
+
+.battle-item-card {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  margin-right: auto;
+}
+
+.item-battle-icon {
+  width: 30px;
+  height: 30px;
+  padding: 3px;
+  border: 2px solid #343449;
+  background: #090912;
+}
+
+.battle-item-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.battle-item-copy strong {
+  color: #fff;
+  font-size: 10px;
+}
+
+.battle-item-copy span {
+  color: #aaa6ba;
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.battle-item-state {
+  min-width: 118px;
+  text-align: center;
+}
+
+.battle-item-row[data-item-state='available'] {
+  border-color: #3f785e;
+}
+
+.battle-item-row[data-item-state='already-used'],
+.battle-item-row[data-item-state='no-stock'],
+.battle-item-row[data-item-state='hp-full'] {
+  opacity: .76;
+}
+
+.world-item-reward {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 2px solid #3f785e;
+  background: #08120f;
+}
+
+.world-item-reward img {
+  width: 30px;
+  height: 30px;
+}
+
+.world-item-reward span {
+  display: grid;
+  gap: 2px;
+}
+
+.world-item-reward small {
+  color: var(--green);
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.world-item-reward strong {
+  color: #fff;
+  font-size: 10px;
+}
+
+@media (max-width: 620px) {
+  .item-inventory-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .battle-item-row {
+    align-items: stretch;
+  }
+
+  .battle-item-state {
+    min-width: 0;
+    width: 100%;
+  }
+}
