@@ -4,76 +4,74 @@ import type { NpcDefinition } from './types'
 export const npcDefinitions: NpcDefinition[] = [
   {
     id: 'archivist',
-    name: 'LEAD ADA',
-    role: 'SENIOR ENGINEER',
+    name: 'CAPTAIN ADA',
+    role: 'ROYAL GUARD',
     dialogues: [
       {
         id: 'archivist-area-clear',
         condition: { kind: 'areaCleared', areaId: JAVASCRIPT_AREA_ID },
         lines: [
-          '復旧確認。error rateも通常値に戻った。ここからはpostmortemだ。',
-          'Root causeは「enemy配列は優先順で来る」という暗黙の前提。仕様にもtestにも存在しない順序を、selectorが頼っていた。',
-          '対策は候補をfilter()で絞り、必要ならsort()やreduce()で優先順位をコードに書くこと。順番を変えたtestも追加する。',
-          '小さなIssue #101を「たまたま変な1件」で終わらせず、共通前提まで追ったから本番を直せた。これが障害対応だ。',
+          'Code Crystalの光が戻った。西の草原の魔物たちも落ち着き始めている。',
+          '砦のBossはCrystalの力を奪って、魔物を暴走させていたんだ。',
+          '君が止めてくれたおかげでJavaScript王国は救われた。ありがとう。',
         ],
       },
       {
         id: 'archivist-stage-2',
         condition: { kind: 'stageCleared', stageId: 2 },
         lines: [
-          'impact調査の結果が出た。selectorごとに条件は違うのに、どれも入力配列の順番を信用している。共通原因だ。',
-          '悪いタイミングで今日のdeployがenemy取得順を変更した。本番でtargeting missが急増、SEV-1に上げる。',
-          'Finalでは「最初に見つかった値」ではなく、意図した優先順位をsort()/reduce()まで追って決める。',
+          'やはり黒い結晶は西の砦から流れ出していた。',
+          '門の奥に強い魔力を感じる。そこに今回の異変を起こしたBossがいるはずだ。',
+          'ここまで来たら最後まで行こう。Code Crystalを取り戻すんだ。',
         ],
       },
       {
         id: 'archivist-stage-1',
         condition: { kind: 'stageCleared', stageId: 1 },
         lines: [
-          '再現できたね。`find()`は「一番弱い敵」を返すんじゃない。配列を先頭から見て、条件に最初に合った1件を返す。',
-          '今のfixtureはたまたま並び順が安定していただけ。BYTEから似たreportが複数届いている。局所bugとは限らない。',
-          '次はQA triage。`filter()`と複数条件を読んで、どのselectorが同じ前提を持っているか洗い出そう。',
+          '魔物が持っていたその黒い欠片……Code Crystalの一部に似ている。',
+          'BYTEから、さらに西でも同じ欠片を見たと連絡が来た。異変はまだ続いている。',
+          '次は奥の草原へ進もう。何が起きているのか確かめるんだ。',
         ],
       },
       {
         id: 'archivist-start',
         condition: { kind: 'always' },
         lines: [
-          '今日から実装チームに入ってもらう。最初の担当はIssue #101、CODE ARENAのtargeting bugだ。',
-          'ユーザー報告は「攻撃対象が期待と違う」。修正を急ぐ前に、まず既存JavaScriptが実際にどのEnemyを選ぶか再現して。',
-          'コードを読んで事実を揃える。推測でpatchしない。それが最初の仕事だ。',
+          '西の草原で魔物が突然暴れ始めた。村へ近づく群れも増えている。',
+          'しかも王国を守るCode Crystalの光が、同じ頃から弱くなっているんだ。',
+          'まず草原へ向かってくれ。魔物を止めて、異変の手がかりを探そう。',
         ],
       },
     ],
   },
   {
     id: 'lambda-sage',
-    name: 'REVIEWER LAMBDA',
-    role: 'CODE REVIEWER',
+    name: 'SAGE LAMBDA',
+    role: 'COURT SCHOLAR',
     dialogues: [
       {
         id: 'lambda-level-3',
         condition: { kind: 'minLevel', level: 3 },
         lines: [
-          'incident中ほど、コードを短く見ようとしすぎるな。`filter → sort → [0]`なら、中間配列を頭の中で作ればいい。',
-          '`reduce()`は「魔法の集計」じゃない。候補を2つずつ比べて、どちらを残すかのruleを繰り返しているだけだ。',
-          '優先順位を入力順に任せずコードで表現できれば、今回のroot causeを潰せる。',
+          '西の砦には強い魔物が集まっている。慌てず、技に刻まれた式を上から読めばいい。',
+          '複数の敵から誰を選ぶ技なのか分かれば、Bossまでの道はきっと開ける。',
         ],
       },
       {
         id: 'lambda-stage-1',
         condition: { kind: 'stageCleared', stageId: 1 },
         lines: [
-          'レビュー観点を1つ。`find()`のfirst matchと「最小値」「最高優先度」は別物だ。名前がtargetでも意味は増えない。',
-          'Chapter 2では`filter()`で集合を作る。`&&`は条件を狭め、`||`は候補を広げる。その結果を説明できるか確認しよう。',
+          '草原の奥ほど敵の数も増える。次は一体だけでなく、複数の敵を選ぶ技も必要になるだろう。',
+          '技の式を見て「誰に当たるのか」を落ち着いて追えば大丈夫だ。',
         ],
       },
       {
         id: 'lambda-start',
         condition: { kind: 'always' },
         lines: [
-          'bug reportよりコードを先に信じるのでも、コードより期待仕様を先に信じるのでもない。両方を比べる。',
-          '`find()`を見たら「何を探すか」だけでなく「どの順番で、最初の何を返すか」まで読むんだ。',
+          'Code Knightの技は、刻まれたJavaScriptの式によって攻撃する相手が決まる。',
+          '技名だけで決めず、式がどの敵を選ぶのか見て戦うんだ。',
         ],
       },
     ],
@@ -81,31 +79,31 @@ export const npcDefinitions: NpcDefinition[] = [
   {
     id: 'byte-scout',
     name: 'BYTE',
-    role: 'QA ENGINEER',
+    role: 'SCOUT',
     dialogues: [
       {
         id: 'byte-area-clear',
         condition: { kind: 'areaCleared', areaId: JAVASCRIPT_AREA_ID },
         lines: [
-          '再現test、順番shuffle test、主要seedのregression、全部green。Productionも復旧した。',
-          '最初は「このseedだけ変」だった。でもseedを変えると順番が変わるからこそ、暗黙の順序依存が見えたんだな。',
-          '次からQAも「同じ値で順番だけ変えるcase」を入れる。postmortemのaction itemにしておく。',
+          '西の草原を見てきたけど、魔物はもう暴れてない。全部元通りだ！',
+          'Code Crystalも王城に戻ったし、これでしばらく安心だな。',
+          '次の旅も一緒に行こうぜ。',
         ],
       },
       {
         id: 'byte-level-2',
         condition: { kind: 'minLevel', level: 2 },
         lines: [
-          '追加reportをまとめた。単体targetだけじゃない。複数target、HPとattackDamageの複合条件でも結果が揺れる。',
-          '同じEnemyでも配列順を変えると結果が変わるcaseがある。値そのものじゃなく、selectorの選び方を追ってくれ。',
+          '奥の草原で黒い結晶を見つけた。触れた魔物ほど激しく暴れてる。',
+          '欠片は西へ行くほど増えてる。たぶん砦の方から流れてきてるぞ。',
         ],
       },
       {
         id: 'byte-start',
         condition: { kind: 'always' },
         lines: [
-          'QAのBYTE。Issue #101はこっちで再現済み。特定seedだと「弱い敵を狙うはずなのに別の敵へ飛ぶ」って報告だ。',
-          'まだ原因は断定してない。Enemyの値と並び順を変えたcaseを作るから、実装側でselectorを読んでくれ。',
+          '俺は斥候のBYTE。西の草原を見回ってたんだけど、今日は様子が変なんだ。',
+          'SlimeもGoblinも普段よりずっと荒れてる。俺も一緒に原因を探すよ。',
         ],
       },
     ],
