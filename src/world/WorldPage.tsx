@@ -260,7 +260,12 @@ export function WorldPage() {
           </div>
         </header>
 
-        <div className="world-viewport pixel-inner-window" aria-label="Open world map">
+        <div
+          className="world-viewport pixel-inner-window"
+          aria-label="Open world map"
+          data-world-x={position.x}
+          data-world-y={position.y}
+        >
           {visibleCells.map((cell) => {
             const treasure = cell.terrain === 'treasure' ? getTreasureAtPosition(cell) : undefined
             const treasureOpened = treasure
@@ -298,6 +303,8 @@ export function WorldPage() {
             <span
               className="world-follower-sprite world-character-overlay"
               style={spriteStyle(followerPosition)}
+              data-world-x={followerPosition.x}
+              data-world-y={followerPosition.y}
               aria-label="BYTE follower"
             >
               <img
@@ -312,6 +319,8 @@ export function WorldPage() {
           <span
             className="world-player-sprite world-character-overlay"
             style={spriteStyle(position)}
+            data-world-x={position.x}
+            data-world-y={position.y}
             aria-label="Player"
           >
             <img
