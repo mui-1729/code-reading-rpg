@@ -44,15 +44,16 @@ describe('Hub Shop', () => {
 
   it('所有済みEquipmentは二重購入しない', () => {
     const progress = withGold(999)
+    const initial = createInitialRpgState()
     const rpgState = {
-      ...createInitialRpgState(),
-      ownedEquipmentIds: [...createInitialRpgState().ownedEquipmentIds, 'patch-loop'],
+      ...initial,
+      ownedEquipmentIds: [...initial.ownedEquipmentIds, 'survival-loop'],
     }
-    const result = purchaseShopItem(progress, rpgState, 'patch-loop')
+    const result = purchaseShopItem(progress, rpgState, 'survival-loop')
 
     expect(result.purchased).toBe(false)
     expect(result.reason).toBe('owned')
     expect(result.progress.gold).toBe(999)
-    expect(result.rpgState.ownedEquipmentIds.filter((id) => id === 'patch-loop')).toHaveLength(1)
+    expect(result.rpgState.ownedEquipmentIds.filter((id) => id === 'survival-loop')).toHaveLength(1)
   })
 })
