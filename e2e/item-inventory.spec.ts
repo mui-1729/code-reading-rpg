@@ -152,6 +152,22 @@ test.describe('Item / Inventory UX', () => {
     expect(stored.progress.progress.inventory.patchKit).toBe(0)
   })
 
+  test('同じStageを別seedでreplayするとBattle itemの使用回数をresetする', async ({ page }) => {
+    await seedItemState(page, { patchKit: 2, currentHp: 40 })
+    await page.goto('/javascript/battle/1?seed=item-replay-a&returnTo=%2Fworld')
+
+    let item = page.locator('.battle-item-row[data-item-id="patch-kit"]')
+    await item.getByRole('button', { name: /PATCH KIT ×2/ }).click()
+    await expect(item).toHaveAttribute('data-item-state', 'already-used')
+    await expect(item.getByText('PATCH KIT ×1', { exact: true })).toBeVisible()
+
+    await page.goto('/javascript/battle/1?seed=item-replay-b&returnTo=%2Fworld')
+    item = page.locator('.battle-item-row[data-item-id="patch-kit"]')
+    await expect(item).toHaveAttribute('data-item-state', 'available')
+    await expect(item.getByText('READY · BATTLE ONLY', { exact: true })).toBeVisible()
+    await expect(item.getByRole('button', { name: /PATCH KIT ×1/ })).toBeEnabled()
+  })
+
   test('BattleでNO STOCK / HP FULLを明示して使用不可にする', async ({ page }) => {
     await seedItemState(page, { patchKit: 0, currentHp: 40 })
     await page.goto('/javascript/battle/1?seed=item-no-stock-e2e&returnTo=%2Fworld')
