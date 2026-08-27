@@ -132,9 +132,9 @@ describe('quest progression', () => {
       kind: 'updated',
       questId: 'javascript-main',
       areaId: 'javascript',
-      questTitle: '王国のコード門を突破せよ',
-      completedStepLabel: 'FIRST READ GATEをCLEARする',
-      nextStepLabel: 'ONE OR MANY GATEをCLEARする',
+      questTitle: '新人エンジニアの初仕事',
+      completedStepLabel: 'Issue #101を調査し、誤った対象を選ぶbugの原因を特定する',
+      nextStepLabel: 'QAから届いた複数reportをtriageし、影響範囲を特定する',
     })
   })
 
@@ -148,8 +148,8 @@ describe('quest progression', () => {
       kind: 'completed',
       questId: 'javascript-main',
       areaId: 'javascript',
-      questTitle: '王国のコード門を突破せよ',
-      completedStepLabel: 'Bossを倒してJavaScript KingdomをAREA CLEARする',
+      questTitle: '新人エンジニアの初仕事',
+      completedStepLabel: 'SEV-1 Production Incidentの原因を特定し、serviceを復旧する',
       nextStepLabel: undefined,
     })
   })

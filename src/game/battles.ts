@@ -14,9 +14,9 @@ export const battles: Battle[] = [
   {
     id: 1,
     areaId: JAVASCRIPT_AREA_ID,
-    label: 'BATTLE 01',
-    title: 'First Read',
-    subtitle: 'コードが選ぶ「対象」を読む',
+    label: 'CHAPTER 01',
+    title: 'Your First Bug Fix',
+    subtitle: '初めてのissue。既存コードを読み、find()でbugの原因データを特定する',
     recommendedLevel: 1,
     expReward: 40,
     goldReward: 20,
@@ -30,11 +30,11 @@ export const battles: Battle[] = [
   {
     id: 2,
     areaId: JAVASCRIPT_AREA_ID,
-    label: 'BATTLE 02',
-    title: 'One or Many',
-    subtitle: 'find / filter と複数条件を戦況で使い分ける',
+    label: 'CHAPTER 02',
+    title: 'Bug Reports Keep Coming',
+    subtitle: 'QAから追加報告。find()を復習しながらfilter()と複数条件で影響範囲を調査する',
     recommendedLevel: 2,
-    expReward: 60,
+    expReward: 80,
     goldReward: 30,
     enemies: [
       enemy('slime-b', 'Slime', 42, 'Nibble', 6, '●'),
@@ -47,9 +47,9 @@ export const battles: Battle[] = [
   {
     id: 3,
     areaId: JAVASCRIPT_AREA_ID,
-    label: 'BATTLE 03',
-    title: 'Priority Queue',
-    subtitle: '条件・集約・優先順位を読み、倒す順番を決める',
+    label: 'FINAL CHAPTER',
+    title: 'Production Incident',
+    subtitle: '本番障害発生。これまでの構文とsort()/reduce()を使い、原因を追ってサービスを復旧する',
     recommendedLevel: 3,
     expReward: 100,
     goldReward: 50,
@@ -57,7 +57,7 @@ export const battles: Battle[] = [
     enemies: [
       enemy('slime-c', 'Slime', 46, 'Bite', 3, '●'),
       enemy('goblin-c', 'Goblin', 84, 'Execution', 8, '▲'),
-      enemy('boss-c', 'Boss', 156, 'Meteor', 12, '◆'),
+      enemy('boss-c', 'Boss', 156, 'Runtime Collapse', 12, '◆'),
     ],
     skillIds: [
       'trace',

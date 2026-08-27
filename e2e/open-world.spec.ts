@@ -113,7 +113,7 @@ test.describe('Open World RPG loop', () => {
     // count=4, next=(10,11), steps=5 はseeded rollがTall Grassの18%を下回る。
     await page.getByRole('button', { name: 'Move down' }).click()
     await expect(page).toHaveURL(/\/javascript\/battle\/1\?/)
-    await expect(page.getByText('BATTLE 01', { exact: false })).toBeVisible()
+    await expect(page.getByText('CHAPTER 01', { exact: false })).toBeVisible()
 
     await executeSkill(page, 'TRACE')
     await expect(page.getByText('TURN 02')).toBeVisible()

@@ -23,14 +23,14 @@ export const javascriptField: FieldDefinition = {
   height,
   start: { x: 5, y: 7 },
   // Interactable objects are already solid tiles. Keep the interior floor open so the
-  // player always has a visible route from the entrance toward the three Battle Gates.
+  // player always has a visible route from the entrance toward the three work tasks.
   blockedTiles: borderTiles(width, height),
   interactions: [
     {
       id: 'stage-1-gate',
       kind: 'battle',
       stageId: 1,
-      label: 'FIRST READ GATE',
+      label: 'ISSUE #101 · BUG FIX',
       x: 2,
       y: 2,
     },
@@ -38,7 +38,7 @@ export const javascriptField: FieldDefinition = {
       id: 'stage-2-gate',
       kind: 'battle',
       stageId: 2,
-      label: 'ONE OR MANY GATE',
+      label: 'QA TRIAGE · IMPACT',
       x: 5,
       y: 2,
     },
@@ -46,7 +46,7 @@ export const javascriptField: FieldDefinition = {
       id: 'stage-3-gate',
       kind: 'battle',
       stageId: 3,
-      label: 'BOSS GATE',
+      label: 'SEV-1 · INCIDENT',
       x: 9,
       y: 2,
     },
