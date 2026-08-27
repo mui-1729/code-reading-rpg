@@ -18,25 +18,26 @@ export const mainQuests: readonly QuestDefinition[] = [
   {
     id: 'javascript-main',
     areaId: JAVASCRIPT_AREA_ID,
-    title: 'JavaScript王国を救え',
-    description: '西の草原で始まった魔物の暴走を追い、異変の黒幕を倒して王国を救う。',
+    title: 'JavaScript王国のバグを追え',
+    description:
+      '新人Code Knightとして王国のシステムを調べ、小さなバグから始まった異常の原因を追っていく。',
     guideNpcId: 'archivist',
     steps: [
       {
         id: 'javascript-stage-1',
-        label: '西の草原の魔物を倒し、異変の手がかりを見つける',
+        label: '戦闘システムのターゲットバグを直す',
         condition: { kind: 'stageCleared', stageId: 1 },
         fieldTarget: { kind: 'battle', stageId: 1 },
       },
       {
         id: 'javascript-stage-2',
-        label: '暴走する魔物を退け、黒い結晶の痕跡を西の砦まで追う',
+        label: 'ログを追い、複数の機能に広がるバグの共通コードを探す',
         condition: { kind: 'stageCleared', stageId: 2 },
         fieldTarget: { kind: 'battle', stageId: 2 },
       },
       {
         id: 'javascript-area-clear',
-        label: '西の砦のBossを倒し、Code Crystalを取り戻す',
+        label: '暴走したCode Coreを止め、王国のシステムを復旧する',
         condition: { kind: 'areaCleared', areaId: JAVASCRIPT_AREA_ID },
         fieldTarget: { kind: 'battle', stageId: 3 },
       },
