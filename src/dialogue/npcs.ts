@@ -4,74 +4,74 @@ import type { NpcDefinition } from './types'
 export const npcDefinitions: NpcDefinition[] = [
   {
     id: 'archivist',
-    name: 'CAPTAIN ADA',
-    role: 'ROYAL GUARD',
+    name: 'LEAD ADA',
+    role: 'SENIOR ENGINEER',
     dialogues: [
       {
         id: 'archivist-area-clear',
         condition: { kind: 'areaCleared', areaId: JAVASCRIPT_AREA_ID },
         lines: [
-          'Code Crystalの光が戻った。西の草原の魔物たちも落ち着き始めている。',
-          '砦のBossはCrystalの力を奪って、魔物を暴走させていたんだ。',
-          '君が止めてくれたおかげでJavaScript王国は救われた。ありがとう。',
+          'Code Coreは安定した。戦闘システムも全部正常に戻ってる。',
+          '最初は小さなターゲットバグに見えたけど、原因は複数の機能が使っていた共通コードだった。',
+          '一つ直して終わりじゃなく、ログを追ってつながりを見つけたのが今回の勝因だ。いい仕事だったよ。',
         ],
       },
       {
         id: 'archivist-stage-2',
         condition: { kind: 'stageCleared', stageId: 2 },
         lines: [
-          'やはり黒い結晶は西の砦から流れ出していた。',
-          '門の奥に強い魔力を感じる。そこに今回の異変を起こしたBossがいるはずだ。',
-          'ここまで来たら最後まで行こう。Code Crystalを取り戻すんだ。',
+          'ログをまとめると、異常は全部同じ共通処理につながってる。',
+          '場所は西のCode Core。そこが壊れて、王国中の戦闘処理へ変な値を流してるみたいだ。',
+          '次が最後。Coreの中へ入って、暴走している処理そのものを止めよう。',
         ],
       },
       {
         id: 'archivist-stage-1',
         condition: { kind: 'stageCleared', stageId: 1 },
         lines: [
-          '魔物が持っていたその黒い欠片……Code Crystalの一部に似ている。',
-          'BYTEから、さらに西でも同じ欠片を見たと連絡が来た。異変はまだ続いている。',
-          '次は奥の草原へ進もう。何が起きているのか確かめるんだ。',
+          'ターゲット処理は直ったね。でも別の機能からも同じようなエラーが出始めた。',
+          'BYTEがログを集めてくれてる。次は一つの関数だけじゃなく、どこまでバグが広がっているか見よう。',
+          '新しいコードも増えるけど、前に読んだ処理はそのまま使う。少しずつ追えば大丈夫。',
         ],
       },
       {
         id: 'archivist-start',
         condition: { kind: 'always' },
         lines: [
-          '西の草原で魔物が突然暴れ始めた。村へ近づく群れも増えている。',
-          'しかも王国を守るCode Crystalの光が、同じ頃から弱くなっているんだ。',
-          'まず草原へ向かってくれ。魔物を止めて、異変の手がかりを探そう。',
+          '今日からJavaScript王国の開発チームに入ってもらう。君は新人Code Knightだ。',
+          '最初の仕事は戦闘システムのバグ修正。攻撃が違う敵へ飛ぶことがあるらしい。',
+          '技に書かれたJavaScriptを読んで、どの敵が選ばれるのか確かめながら直していこう。',
         ],
       },
     ],
   },
   {
     id: 'lambda-sage',
-    name: 'SAGE LAMBDA',
-    role: 'COURT SCHOLAR',
+    name: 'LAMBDA',
+    role: 'CODE MENTOR',
     dialogues: [
       {
         id: 'lambda-level-3',
         condition: { kind: 'minLevel', level: 3 },
         lines: [
-          '西の砦には強い魔物が集まっている。慌てず、技に刻まれた式を上から読めばいい。',
-          '複数の敵から誰を選ぶ技なのか分かれば、Bossまでの道はきっと開ける。',
+          'Code Coreの中は処理が長くなる。でも一気に全部理解しようとしなくていい。',
+          'filter、sort、reduceみたいに、処理を一段ずつ追えば最後に何が選ばれるか見えてくる。',
         ],
       },
       {
         id: 'lambda-stage-1',
         condition: { kind: 'stageCleared', stageId: 1 },
         lines: [
-          '草原の奥ほど敵の数も増える。次は一体だけでなく、複数の敵を選ぶ技も必要になるだろう。',
-          '技の式を見て「誰に当たるのか」を落ち着いて追えば大丈夫だ。',
+          '次から敵が増える。複数の候補を残したり、条件を組み合わせたりするコードも出てくるよ。',
+          '迷ったら「今この行で何が残ったか」だけ考えると読みやすい。',
         ],
       },
       {
         id: 'lambda-start',
         condition: { kind: 'always' },
         lines: [
-          'Code Knightの技は、刻まれたJavaScriptの式によって攻撃する相手が決まる。',
-          '技名だけで決めず、式がどの敵を選ぶのか見て戦うんだ。',
+          '技名よりコードを見よう。JavaScriptが実際に返した値が、そのまま攻撃対象になる。',
+          'まずはfind()みたいな短い処理から読めばいい。',
         ],
       },
     ],
@@ -79,31 +79,31 @@ export const npcDefinitions: NpcDefinition[] = [
   {
     id: 'byte-scout',
     name: 'BYTE',
-    role: 'SCOUT',
+    role: 'DEBUGGER',
     dialogues: [
       {
         id: 'byte-area-clear',
         condition: { kind: 'areaCleared', areaId: JAVASCRIPT_AREA_ID },
         lines: [
-          '西の草原を見てきたけど、魔物はもう暴れてない。全部元通りだ！',
-          'Code Crystalも王城に戻ったし、これでしばらく安心だな。',
-          '次の旅も一緒に行こうぜ。',
+          'ログきれいになった！ Code Coreも戦闘システムも全部greenだ。',
+          '最初の小さいバグからここまで来るとは思わなかったな。',
+          '次のエリアでも変な動き見つけたら、また一緒にデバッグしようぜ。',
         ],
       },
       {
         id: 'byte-level-2',
         condition: { kind: 'minLevel', level: 2 },
         lines: [
-          '奥の草原で黒い結晶を見つけた。触れた魔物ほど激しく暴れてる。',
-          '欠片は西へ行くほど増えてる。たぶん砦の方から流れてきてるぞ。',
+          'ログ拾ってきた。ターゲットだけじゃなく、複数の敵を選ぶ処理でも変な結果が出てる。',
+          'しかも全部、西のCode Coreを通った直後からおかしくなってる。かなり怪しいぞ。',
         ],
       },
       {
         id: 'byte-start',
         condition: { kind: 'always' },
         lines: [
-          '俺は斥候のBYTE。西の草原を見回ってたんだけど、今日は様子が変なんだ。',
-          'SlimeもGoblinも普段よりずっと荒れてる。俺も一緒に原因を探すよ。',
+          '俺はBYTE。ログを追ったり、変な動きを探したりするのが得意なんだ。',
+          '最初のバグ、俺も一緒に見るよ。分からなくなったら敵のHPとコードを順番に確認しよう。',
         ],
       },
     ],
