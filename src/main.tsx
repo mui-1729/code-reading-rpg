@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { AppRouter } from './AppRouter'
-import { AudioControls } from './audio/AudioControls'
+import { AudioUnlock } from './audio/AudioUnlock'
 import './styles.css'
 import './layout-fixes.css'
 import './reward.css'
@@ -24,6 +24,6 @@ import './pause.css'
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AppRouter />
-    <AudioControls />
+    <AudioUnlock />
   </StrictMode>,
 )

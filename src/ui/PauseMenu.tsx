@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation } from '@tanstack/react-router'
+import { writeStoredAudioSettings } from '../audio/audioSettingsStorage'
+import { gameAudio, type AudioSettings } from '../audio/gameAudio'
+import { CodeCodexContent } from '../learning/CodeCodex'
 import { getTotalExpForLevel, useProgress } from '../progression'
 import {
   equipItem,
@@ -11,15 +14,18 @@ import {
 } from '../rpg'
 import { getWorldObjectives } from '../world/worldObjective'
 
-type PauseTab = 'status' | 'items' | 'equipment' | 'party' | 'system'
+type PauseTab = 'status' | 'items' | 'equipment' | 'party' | 'codex' | 'system'
 
 const tabs: Array<{ id: PauseTab; label: string }> = [
   { id: 'status', label: 'STATUS' },
   { id: 'items', label: 'ITEMS' },
   { id: 'equipment', label: 'EQUIPMENT' },
   { id: 'party', label: 'PARTY' },
+  { id: 'codex', label: 'CODEX' },
   { id: 'system', label: 'SYSTEM' },
 ]
+
+const toPercent = (value: number) => Math.round(value * 100)
 
 export function PauseMenu() {
   const location = useLocation()
@@ -28,6 +34,7 @@ export function PauseMenu() {
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<PauseTab>('status')
   const [resetArmed, setResetArmed] = useState(false)
+  const [audioSettings, setAudioSettings] = useState<AudioSettings>(() => gameAudio.getSettings())
   const combatStats = getCombatStats(stats, rpgState)
   const nextLevelExp = getTotalExpForLevel(stats.level + 1)
   const worldObjectives = getWorldObjectives(progress)
@@ -73,6 +80,18 @@ export function PauseMenu() {
     }))
   }
 
+  const updateAudioSettings = (next: AudioSettings) => {
+    const stored = writeStoredAudioSettings(next)
+    const applied = gameAudio.setSettings(stored)
+    setAudioSettings(applied)
+    return applied
+  }
+
+  const toggleSound = () => {
+    const next = updateAudioSettings({ ...audioSettings, muted: !audioSettings.muted })
+    if (!next.muted) gameAudio.playSe('confirm')
+  }
+
   const closeMenu = () => {
     setOpen(false)
     setResetArmed(false)
@@ -83,7 +102,10 @@ export function PauseMenu() {
       <button
         type="button"
         className="pause-trigger secondary-button"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setAudioSettings(gameAudio.getSettings())
+          setOpen(true)
+        }}
         aria-label="Pause menuを開く"
       >
         MENU
@@ -223,23 +245,86 @@ export function PauseMenu() {
                 </section>
               )}
 
+              {tab === 'codex' && (
+                <section className="pause-section">
+                  <CodeCodexContent />
+                </section>
+              )}
+
               {tab === 'system' && (
                 <section className="pause-section system-section">
-                  <p>音量設定は画面下部のSOUNDコントロールから変更できます。</p>
-                  <button
-                    type="button"
-                    className={resetArmed ? 'danger-button' : 'secondary-button'}
-                    onClick={() => {
-                      if (!resetArmed) {
-                        setResetArmed(true)
-                        return
-                      }
-                      resetProgress()
-                      closeMenu()
-                    }}
-                  >
-                    {resetArmed ? 'CONFIRM RESET PROGRESS' : 'RESET PROGRESS'}
-                  </button>
+                  <div className="pause-audio-panel pixel-inner-window">
+                    <header className="pause-audio-header">
+                      <div>
+                        <span>SOUND</span>
+                        <p>BGMとSEはここだけで設定します。</p>
+                      </div>
+                      <strong>{audioSettings.muted ? 'OFF' : 'ON'}</strong>
+                    </header>
+
+                    <button
+                      type="button"
+                      className={`audio-toggle ${audioSettings.muted ? 'muted' : ''}`}
+                      onClick={toggleSound}
+                      aria-pressed={audioSettings.muted}
+                    >
+                      {audioSettings.muted ? 'SOUND OFF' : 'SOUND ON'}
+                    </button>
+
+                    <label className="audio-slider">
+                      <span>SE {toPercent(audioSettings.seVolume)}</span>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="5"
+                        value={toPercent(audioSettings.seVolume)}
+                        onChange={(event) =>
+                          updateAudioSettings({
+                            ...audioSettings,
+                            seVolume: Number(event.target.value) / 100,
+                          })
+                        }
+                        aria-label="Sound effect volume"
+                      />
+                    </label>
+
+                    <label className="audio-slider">
+                      <span>BGM {toPercent(audioSettings.bgmVolume)}</span>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="5"
+                        value={toPercent(audioSettings.bgmVolume)}
+                        onChange={(event) =>
+                          updateAudioSettings({
+                            ...audioSettings,
+                            bgmVolume: Number(event.target.value) / 100,
+                          })
+                        }
+                        aria-label="Background music volume"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="pause-reset-panel pixel-inner-window">
+                    <p>進行・装備・仲間・World位置を最初からやり直します。Sound設定は保持します。</p>
+                    <button
+                      type="button"
+                      className={resetArmed ? 'danger-button' : 'secondary-button'}
+                      onClick={() => {
+                        if (!resetArmed) {
+                          setResetArmed(true)
+                          return
+                        }
+                        resetProgress()
+                        closeMenu()
+                      }}
+                    >
+                      {resetArmed ? 'CONFIRM RESET PROGRESS' : 'RESET PROGRESS'}
+                    </button>
+                  </div>
                 </section>
               )}
             </div>
