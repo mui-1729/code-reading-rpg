@@ -55,6 +55,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
   const { progress, stats: baseStats, setProgress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
   const playerStats = getCombatStats(baseStats, rpgState)
+  const playerHp = Math.max(0, Math.min(playerStats.maxHp, rpgState.currentHp))
   const partyFollowUpDamage = getPartyFollowUpDamage(rpgState.partyMemberIds, playerStats.level)
   const battle = useMemo(() => {
     const generated = generateBattle(battleId, seed)
@@ -67,9 +68,6 @@ function App({ battleId, seed, returnTo }: AppProps) {
   const nextBattle = nextBattleCandidate?.areaId === battle.areaId ? nextBattleCandidate : undefined
 
   const [phase, setPhase] = useState<Phase>('battle')
-  const [playerHp, setPlayerHp] = useState(() =>
-    Math.max(0, Math.min(playerStats.maxHp, rpgState.currentHp)),
-  )
   const [enemies, setEnemies] = useState<Enemy[]>(cloneEnemies(battle.enemies))
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null)
   const [explainedSkill, setExplainedSkill] = useState<SkillCard | null>(null)
@@ -96,55 +94,8 @@ function App({ battleId, seed, returnTo }: AppProps) {
     return () => gameAudio.stopBgm()
   }, [battleId])
 
-  useEffect(() => {
-    if (phase !== 'battle') return
-    setRpgState((current) =>
-      current.currentHp === playerHp ? current : { ...current, currentHp: playerHp },
-    )
-  }, [phase, playerHp, setRpgState])
-
-  useEffect(() => {
-    setPlayerHp((current) => Math.max(0, Math.min(playerStats.maxHp, current)))
-  }, [playerStats.maxHp])
-
-  useEffect(() => {
-    if (phase !== 'defeat') return
-    setRpgState((current) => ({
-      ...current,
-      currentHp: playerStats.maxHp,
-      worldPosition: { ...WORLD_START },
-      stepsSinceEncounter: 8,
-    }))
-  }, [phase, playerStats.maxHp, setRpgState])
-
   const addLog = (tone: LogEntry['tone'], text: string) => {
     setLogs((current) => [...current.slice(-4), { id: Date.now() + Math.random(), tone, text }])
-  }
-
-  const clearMotionState = () => {
-    setAnimatingIds([])
-    setDefeatingIds([])
-    setDamagePopups({})
-    setPlayerDamagePopup(null)
-    setPlayerHit(false)
-    setSkillWindup(false)
-    setEnemyTurnActive(false)
-  }
-
-  const resetBattle = () => {
-    gameAudio.playSe('confirm')
-    gameAudio.requestBgm('battle')
-    setPlayerHp(playerStats.maxHp)
-    setEnemies(cloneEnemies(battle.enemies))
-    setSelectedSkillId(null)
-    setLogs([])
-    setTurn(1)
-    clearMotionState()
-    setExplainedSkill(null)
-    setIsResolving(false)
-    setPatchKitUsed(false)
-    setVictoryReward(null)
-    setPhase('battle')
   }
 
   const completeVictory = () => {
@@ -201,7 +152,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
       gameAudio.playSe('playerHit')
       setPlayerHit(true)
       setPlayerDamagePopup(totalDamage)
-      setPlayerHp(nextPlayerHp)
+      setRpgState((current) => ({ ...current, currentHp: nextPlayerHp }))
 
       setTimeout(() => {
         setPlayerHit(false)
@@ -212,6 +163,12 @@ function App({ battleId, seed, returnTo }: AppProps) {
           setTimeout(() => {
             gameAudio.stopBgm()
             gameAudio.playSe('defeat')
+            setRpgState((current) => ({
+              ...current,
+              currentHp: playerStats.maxHp,
+              worldPosition: { ...WORLD_START },
+              stepsSinceEncounter: 8,
+            }))
             setPhase('defeat')
           }, BATTLE_MOTION.resultDelayMs)
         } else {
@@ -300,7 +257,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
 
     gameAudio.playSe('confirm')
     setProgress(result.progress)
-    setPlayerHp(result.hp)
+    setRpgState((current) => ({ ...current, currentHp: result.hp }))
     setPatchKitUsed(true)
     addLog('system', `PATCH KIT → +${result.healed} HP`)
   }
@@ -559,8 +516,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
           <section className="result-card defeat-card pixel-window result-card-enter">
             <div className="eyebrow">DEFEAT</div>
             <div className="defeat-actions">
-              <button className="primary-button" onClick={resetBattle}>▶ RETRY</button>
-              <button className="secondary-button" onClick={goReturnDestination}>◀ RETURN TO HUB</button>
+              <button className="primary-button" onClick={goReturnDestination}>▶ RETURN TO HUB</button>
               <button className="secondary-button" onClick={() => openCodeHelp(availableSkills[0])}>CODE HELP</button>
             </div>
           </section>
