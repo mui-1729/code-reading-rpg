@@ -1,3 +1,4 @@
+import { battles } from './battles'
 import type { Seed } from './random'
 import {
   skillDefinitions as javascriptSkillDefinitions,
@@ -35,13 +36,6 @@ function getDefaultVariant(definition: SkillDefinition): CodeVariant {
   return defaultVariant
 }
 
-function getBattleVariantIndex(battleId: number, variantCount: number): number {
-  if (variantCount <= 1) return 0
-
-  const areaBattleIndex = battleId >= 4 ? battleId - 4 : battleId - 1
-  return Math.abs(areaBattleIndex) % variantCount
-}
-
 function hashString(value: string): number {
   let hash = 2166136261
   for (let index = 0; index < value.length; index += 1) {
@@ -49,6 +43,55 @@ function hashString(value: string): number {
     hash = Math.imul(hash, 16777619)
   }
   return hash >>> 0
+}
+
+function getEncounterOrdinal(seed: Seed): number | null {
+  const value = String(seed)
+  const encounter = /^encounter:(\d+):/.exec(value)
+  if (encounter?.[1]) return Number(encounter[1])
+
+  const boss = /^boss:[^:]+:(\d+)$/.exec(value)
+  if (boss?.[1]) return Number(boss[1])
+
+  return null
+}
+
+function getVariationNumber(seed: Seed, battleId: number, skillId: string): number {
+  const encounterOrdinal = getEncounterOrdinal(seed)
+  const skillOffset = hashString(`${battleId}:${skillId}:offset`)
+  if (encounterOrdinal !== null) return encounterOrdinal + skillOffset
+  return hashString(`${battleId}:${String(seed)}:${skillId}:semantic`)
+}
+
+function getBattleVariantPool(
+  definition: SkillDefinition,
+  battleId: number,
+  lineMode: CodeVariant['lineMode'],
+): CodeVariant[] {
+  const eligibleVariants = definition.codeVariants.filter(
+    (variant) => variant.lineMode === lineMode,
+  )
+  if (eligibleVariants.length === 0) {
+    throw new Error(`Skill ${definition.id} has no ${lineMode} code variant`)
+  }
+
+  const appearances = battles.filter((battle) => {
+    if (!battle.skillIds.includes(definition.id)) return false
+    const multiLine = battle.multiLineSkillIds?.includes(definition.id) ?? false
+    return (lineMode === 'multi') === multiLine
+  })
+  const appearanceIndex = appearances.findIndex((battle) => battle.id === battleId)
+  if (appearanceIndex < 0 || appearances.length <= 1) return eligibleVariants
+
+  // 同じSkillを別Battleで使う場合、base variantの集合自体を分離する。
+  // これによりseed variationを増やしてもBattle間で同一base codeを共有しない。
+  const pool = eligibleVariants.filter(
+    (_variant, index) => index % appearances.length === appearanceIndex,
+  )
+  if (pool.length > 0) return pool
+
+  const fallback = eligibleVariants[appearanceIndex % eligibleVariants.length]
+  return fallback ? [fallback] : eligibleVariants
 }
 
 const reversedOperators: Record<string, string> = {
@@ -59,27 +102,95 @@ const reversedOperators: Record<string, string> = {
   '===': '===',
 }
 
-function reverseLiteralComparisons(code: string): string {
+const comparisonOperand =
+  '(?:[A-Za-z_$][\\w$]*(?:\\.(?:hp|attackDamage|name|score))?|"[^"]*"|\'[^\']*\'|-?\\d+)'
+const reversibleComparison = new RegExp(
+  `(${comparisonOperand})\\s*(<=|>=|===|<|>)\\s*(${comparisonOperand})`,
+  'g',
+)
+
+function reverseComparisons(code: string): string {
   return code.replace(
-    /\b([A-Za-z_$][\w$]*\.(?:hp|attackDamage|name))\s*(<=|>=|===|<|>)\s*("[^"]*"|'[^']*'|\d+)/g,
+    reversibleComparison,
     (_match, left: string, operator: string, right: string) =>
       `${right} ${reversedOperators[operator] ?? operator} ${left}`,
   )
 }
 
-function makeSemanticReplayVariant(
-  variant: CodeVariant,
-  battleId: number,
-  skillId: string,
-  seed: Seed,
-): CodeVariant {
-  const shouldReverse = (hashString(`${battleId}:${String(seed)}:${skillId}:semantic`) & 1) === 1
-  if (!shouldReverse) return variant
+function shiftIntegerBoundaries(code: string): string {
+  return code.replace(
+    /\b([A-Za-z_$][\w$]*\.(?:hp|attackDamage)|hp|attackDamage)\s*(<=|>=|<|>)\s*(-?\d+)\b/g,
+    (_match, left: string, operator: string, literal: string) => {
+      const value = Number(literal)
+      if (!Number.isInteger(value)) return _match
 
-  return {
-    ...variant,
-    code: reverseLiteralComparisons(variant.code),
+      if (operator === '<') return `${left} <= ${value - 1}`
+      if (operator === '<=') return `${left} < ${value + 1}`
+      if (operator === '>') return `${left} >= ${value + 1}`
+      return `${left} > ${value - 1}`
+    },
+  )
+}
+
+const dataPropertyPattern = 'hp|attackDamage|name|score|enemy|value|limit|stats'
+
+function useBracketPropertyAccess(code: string): string {
+  const optionalPattern = new RegExp(`\\?\\.(${dataPropertyPattern})\\b`, 'g')
+  const directPattern = new RegExp(`\\.(${dataPropertyPattern})\\b`, 'g')
+
+  return code
+    .replace(optionalPattern, (_match, property: string) => `?.["${property}"]`)
+    .replace(directPattern, (_match, property: string) => `["${property}"]`)
+}
+
+function parenthesizeSimpleArrowParameters(code: string): string {
+  return code.replace(
+    /(^|[(,]\s*)([A-Za-z_$][\w$]*)\s*=>/gm,
+    (_match, prefix: string, parameter: string) => `${prefix}(${parameter}) =>`,
+  )
+}
+
+function getSemanticCandidates(variant: CodeVariant): CodeVariant[] {
+  const comparisonTransforms = [
+    (code: string) => code,
+    reverseComparisons,
+    shiftIntegerBoundaries,
+    (code: string) => reverseComparisons(shiftIntegerBoundaries(code)),
+  ]
+  const propertyTransforms = [(code: string) => code, useBracketPropertyAccess]
+  const arrowTransforms = [(code: string) => code, parenthesizeSimpleArrowParameters]
+  const seen = new Set<string>()
+  const candidates: CodeVariant[] = []
+
+  for (const comparisonTransform of comparisonTransforms) {
+    for (const propertyTransform of propertyTransforms) {
+      for (const arrowTransform of arrowTransforms) {
+        const code = arrowTransform(propertyTransform(comparisonTransform(variant.code)))
+        if (seen.has(code)) continue
+        seen.add(code)
+        candidates.push({ ...variant, code })
+      }
+    }
   }
+
+  return candidates
+}
+
+function getEncounterVariant(
+  definition: SkillDefinition,
+  battleId: number,
+  seed: Seed,
+  lineMode: CodeVariant['lineMode'],
+): CodeVariant {
+  const basePool = getBattleVariantPool(definition, battleId, lineMode)
+  const candidates = basePool.flatMap(getSemanticCandidates)
+  const uniqueCandidates = Array.from(
+    new Map(candidates.map((candidate) => [candidate.code, candidate])).values(),
+  )
+  const variationNumber = getVariationNumber(seed, battleId, definition.id)
+  const selected = uniqueCandidates[variationNumber % uniqueCandidates.length]
+  if (!selected) throw new Error(`Skill ${definition.id} has no generated code variant`)
+  return selected
 }
 
 export function getSkillCardForBattle(
@@ -91,20 +202,10 @@ export function getSkillCardForBattle(
   const definition = allSkillDefinitionById[skillId]
   if (!definition) throw new Error(`Unknown skill: ${skillId}`)
 
-  const eligibleVariants = definition.codeVariants.filter(
-    (variant) => variant.lineMode === lineMode,
+  return createSkillCard(
+    definition,
+    getEncounterVariant(definition, battleId, seed, lineMode),
   )
-  if (eligibleVariants.length === 0) {
-    throw new Error(`Skill ${skillId} has no ${lineMode} code variant`)
-  }
-
-  // Reused SkillはBattleごとに別のbase variantを担当させる。
-  // seedはそのbase codeの同値な比較表現だけを変え、TargetRuleには触れない。
-  const selected = eligibleVariants[getBattleVariantIndex(battleId, eligibleVariants.length)]
-  if (!selected) throw new Error(`Skill ${skillId} has no code variant`)
-
-  const semanticVariant = makeSemanticReplayVariant(selected, battleId, skillId, seed)
-  return createSkillCard(definition, semanticVariant)
 }
 
 export function getSkillCardsForBattle(battle: Battle, seed: Seed): SkillCard[] {
