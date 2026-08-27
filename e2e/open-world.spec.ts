@@ -22,20 +22,21 @@ const createProgress = (overrides: Record<string, unknown> = {}) => ({
 })
 
 const createRpgState = (overrides: Record<string, unknown> = {}) => ({
-  version: 2,
+  version: 3,
   state: {
     equipment: {
       weapon: 'training-blade',
       armor: 'traveler-coat',
       accessory: null,
     },
-    ownedEquipmentIds: ['training-blade', 'traveler-coat', 'debug-charm'],
+    ownedEquipmentIds: ['training-blade', 'traveler-coat'],
     partyMemberIds: [],
     partyEquipment: {},
     worldPosition: { x: 20, y: 14 },
     stepsSinceEncounter: 8,
     encounterCount: 0,
     currentHp: 108,
+    openedTreasureIds: [],
     ...overrides,
   },
 })
@@ -91,6 +92,10 @@ async function storedRpgState(page: Page) {
   return page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), RPG_KEY)
 }
 
+async function storedProgress(page: Page) {
+  return page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), PROGRESS_KEY)
+}
+
 test.describe('Open World RPG loop', () => {
   test('Title → deterministic Encounter → Battle victory → World returnで位置と残HPを保持する', async ({ page }) => {
     await seedStorage(page, {
@@ -128,7 +133,7 @@ test.describe('Open World RPG loop', () => {
     await expect.poll(() => playerPosition(page)).toEqual({ x: 10, y: 11 })
 
     const stored = await storedRpgState(page)
-    expect(stored.version).toBe(2)
+    expect(stored.version).toBe(3)
     expect(stored.state.worldPosition).toEqual({ x: 10, y: 11 })
     expect(stored.state.encounterCount).toBe(5)
     expect(stored.state.stepsSinceEncounter).toBe(0)
@@ -154,10 +159,7 @@ test.describe('Open World RPG loop', () => {
     await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
 
     await expect.poll(async () => (await storedRpgState(page)).state.currentHp).toBe(64)
-    const progress = await page.evaluate(
-      (key) => JSON.parse(localStorage.getItem(key) ?? 'null'),
-      PROGRESS_KEY,
-    )
+    const progress = await storedProgress(page)
     expect(progress.progress.inventory.patchKit).toBe(0)
   })
 
@@ -182,6 +184,62 @@ test.describe('Open World RPG loop', () => {
     await page.reload()
     await page.getByRole('button', { name: 'Pause menuを開く' }).click()
     await expect(page.getByRole('dialog', { name: 'Pause menu' }).getByText('108 / 108', { exact: true })).toBeVisible()
+  })
+
+  test('JS TreasureはDebug CharmとGoldを一度だけ付与しreload後もOPENを維持する', async ({ page }) => {
+    await seedStorage(page, {
+      progress: createProgress({ gold: 5 }),
+      rpg: createRpgState({ worldPosition: { x: 10, y: 18 } }),
+    })
+
+    await page.goto('/world')
+    await expect(page.getByLabel('js-debug-cache treasure closed')).toBeVisible()
+    await page.getByRole('button', { name: 'INTERACT' }).click()
+    await expect(page.getByText(/DEBUG CACHE OPEN/)).toBeVisible()
+
+    await expect.poll(async () => (await storedProgress(page)).progress.gold).toBe(25)
+    await expect.poll(async () => (await storedRpgState(page)).state.openedTreasureIds).toEqual([
+      'js-debug-cache',
+    ])
+    await expect.poll(async () => (await storedRpgState(page)).state.ownedEquipmentIds).toContain(
+      'debug-charm',
+    )
+
+    await page.reload()
+    await expect(page.getByLabel('js-debug-cache treasure opened')).toBeVisible()
+    await page.getByRole('button', { name: 'INTERACT' }).click()
+    await expect(page.getByText(/すでに空だ/)).toBeVisible()
+    await expect.poll(async () => (await storedProgress(page)).progress.gold).toBe(25)
+
+    await page.getByRole('button', { name: 'Pause menuを開く' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Pause menu' })
+    await dialog.getByRole('button', { name: 'EQUIPMENT' }).click()
+    await expect(dialog.getByText('Debug Charm', { exact: true }).first()).toBeVisible()
+  })
+
+  test('TS TreasureはPATCH KITとGoldを一度だけ付与しreload後もOPENを維持する', async ({ page }) => {
+    await seedStorage(page, {
+      progress: createProgress({ gold: 10, inventory: { patchKit: 2 } }),
+      rpg: createRpgState({ worldPosition: { x: 30, y: 18 } }),
+    })
+
+    await page.goto('/world')
+    await expect(page.getByLabel('ts-supply-cache treasure closed')).toBeVisible()
+    await page.getByRole('button', { name: 'INTERACT' }).click()
+    await expect(page.getByText(/TYPE CACHE OPEN/)).toBeVisible()
+
+    await expect.poll(async () => (await storedProgress(page)).progress.gold).toBe(45)
+    await expect.poll(async () => (await storedProgress(page)).progress.inventory.patchKit).toBe(3)
+    await expect.poll(async () => (await storedRpgState(page)).state.openedTreasureIds).toEqual([
+      'ts-supply-cache',
+    ])
+
+    await page.reload()
+    await expect(page.getByLabel('ts-supply-cache treasure opened')).toBeVisible()
+    await page.getByRole('button', { name: 'INTERACT' }).click()
+    await expect(page.getByText(/すでに空だ/)).toBeVisible()
+    await expect.poll(async () => (await storedProgress(page)).progress.gold).toBe(45)
+    await expect.poll(async () => (await storedProgress(page)).progress.inventory.patchKit).toBe(3)
   })
 
   test('DefeatするとHubへ戻りfull HPで復帰する', async ({ page }) => {
@@ -225,6 +283,7 @@ test.describe('Open World RPG loop', () => {
         stepsSinceEncounter: 6,
         encounterCount: 9,
         currentHp: 72,
+        openedTreasureIds: ['js-debug-cache'],
       }),
     })
 
