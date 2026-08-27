@@ -1,5 +1,11 @@
 import { BASE_PLAYER_HP } from '../progression/constants'
-import { WORLD_HEIGHT, WORLD_START, WORLD_WIDTH } from '../world/worldMap'
+import {
+  WORLD_HEIGHT,
+  WORLD_START,
+  WORLD_TREASURES,
+  WORLD_WIDTH,
+  type WorldTreasureId,
+} from '../world/worldMap'
 import {
   equipmentById,
   getEquipmentBonuses,
@@ -20,7 +26,7 @@ export type RpgState = {
   stepsSinceEncounter: number
   encounterCount: number
   currentHp: number
-  openedTreasureIds: string[]
+  openedTreasureIds: WorldTreasureId[]
 }
 
 export type StoredRpgState = {
@@ -99,9 +105,16 @@ function uniqueKnownPartyIds(value: unknown): string[] {
   )
 }
 
-function uniqueStringIds(value: unknown): string[] {
+function uniqueKnownTreasureIds(value: unknown): WorldTreasureId[] {
   if (!Array.isArray(value)) return []
-  return Array.from(new Set(value.filter((id): id is string => typeof id === 'string' && id.length > 0)))
+  return Array.from(
+    new Set(
+      value.filter(
+        (id): id is WorldTreasureId =>
+          typeof id === 'string' && WORLD_TREASURES.some((treasure) => treasure.id === id),
+      ),
+    ),
+  )
 }
 
 function normalizeLoadout(
@@ -195,7 +208,7 @@ export function restoreRpgState(raw: string | null, baseMaxHp = BASE_PLAYER_HP):
         parsed.version === 1 ? maxHp : normalizeCurrentHp(state.currentHp, maxHp),
       openedTreasureIds:
         parsed.version === RPG_STATE_SCHEMA_VERSION
-          ? uniqueStringIds(state.openedTreasureIds)
+          ? uniqueKnownTreasureIds(state.openedTreasureIds)
           : [],
     }
   } catch {
