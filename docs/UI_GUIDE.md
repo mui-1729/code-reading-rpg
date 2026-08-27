@@ -9,7 +9,7 @@ UIは、**Open World探索とコード読解に必要な情報を優先し、常
 ## 基本原則
 
 - その瞬間の判断に必要な情報だけを常時表示する
-- EXP / Gold / Equipment / Party / Sound設定などの詳細はPauseへ寄せる
+- EXP / Gold / Equipment / Party / Codex / Sound設定などの詳細はPauseへ寄せる
 - Tutorialと同じ操作説明を常設しない
 - UIから明らかな内容を文章で重ねない
 - 正解target / 正解Skill / damage previewを表示しない
@@ -25,13 +25,14 @@ UIは、**Open World探索とコード読解に必要な情報を優先し、常
 - terrainから分かる探索context
 - short FIELD LOG
 - D-Pad / INTERACT
-- 小さいMENU / CODEX導線
+- 小さいMENU導線
 
 常時表示しないもの:
 
 - Level / EXP / Gold
 - Equipment一覧
 - Party詳細
+- Codex
 - Sound設定
 - 長いQuest Tracker
 - encounter確率
@@ -67,7 +68,7 @@ NEXT: 西のBOSSへ
 
 ## Pause
 
-PauseはRPG情報と設定の主な確認場所。
+PauseはRPG情報・学習参照・設定の主な確認場所。
 
 Tabs:
 
@@ -76,6 +77,7 @@ STATUS
 ITEMS
 EQUIPMENT
 PARTY
+CODEX
 SYSTEM
 ```
 
@@ -109,6 +111,16 @@ SYSTEM
 - member role / base stats
 
 Partyが正解targetを自動で示すような説明はしない。
+
+### CODEX
+
+既存のJavaScript / TypeScript学習参照をPause内で表示する。
+
+- JavaScript / TypeScript tabs
+- concept / summary / code / notes
+- 独立した常設CODEX button / overlay / shortcutは持たない
+
+Codex自体が説明UIなので外側の説明を増やさない。
 
 ### SYSTEM
 
@@ -182,13 +194,6 @@ click / tap / auto advance / skipを維持する。
 最終target / correctは表示しない。
 
 詳細は`docs/CODE_DATA.md`。
-
-## Code Codex
-
-Codex自体が説明UIなので外側の説明を増やさない。
-
-- JavaScript / TypeScript tabs
-- concept / summary / code / notes
 
 ## Shop
 
