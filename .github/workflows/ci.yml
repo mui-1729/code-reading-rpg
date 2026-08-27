@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, feat/boss-guard-mechanic]
+    branches: [main]
   pull_request:
 
 jobs:
