@@ -162,7 +162,11 @@
   color: #8f8894;
 }
 
-.battle-item-row {
+.battle-item-row:not([data-item-id]) {
+  display: none;
+}
+
+.battle-item-row[data-item-id] {
   justify-content: stretch;
   padding: 8px;
   border: 2px solid #303045;
@@ -253,7 +257,7 @@
     grid-template-columns: 1fr;
   }
 
-  .battle-item-row {
+  .battle-item-row[data-item-id] {
     align-items: stretch;
   }
 
