@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useProgress } from '../progression/useProgress'
+import { getCombatStats } from './combat'
 import { RpgContext } from './RpgContext'
 import {
   createInitialRpgState,
@@ -9,17 +11,26 @@ import {
 
 const PROGRESS_RESET_EVENT = 'code-reading-rpg:progress-reset'
 
-function loadInitialRpgState() {
-  if (typeof window === 'undefined') return createInitialRpgState()
+function loadInitialRpgState(baseMaxHp: number) {
+  if (typeof window === 'undefined') return createInitialRpgState(baseMaxHp)
   try {
-    return restoreRpgState(window.localStorage.getItem(RPG_STORAGE_KEY))
+    return restoreRpgState(window.localStorage.getItem(RPG_STORAGE_KEY), baseMaxHp)
   } catch {
-    return createInitialRpgState()
+    return createInitialRpgState(baseMaxHp)
   }
 }
 
 export function RpgProvider({ children }: { children: ReactNode }) {
-  const [rpgState, setRpgState] = useState(loadInitialRpgState)
+  const { stats } = useProgress()
+  const [rpgState, setRpgState] = useState(() => loadInitialRpgState(stats.maxHp))
+  const combatMaxHp = getCombatStats(stats, rpgState).maxHp
+
+  useEffect(() => {
+    setRpgState((current) => {
+      const nextHp = Math.max(0, Math.min(combatMaxHp, current.currentHp))
+      return nextHp === current.currentHp ? current : { ...current, currentHp: nextHp }
+    })
+  }, [combatMaxHp])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -32,10 +43,10 @@ export function RpgProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const reset = () => setRpgState(createInitialRpgState())
+    const reset = () => setRpgState(createInitialRpgState(stats.maxHp))
     window.addEventListener(PROGRESS_RESET_EVENT, reset)
     return () => window.removeEventListener(PROGRESS_RESET_EVENT, reset)
-  }, [])
+  }, [stats.maxHp])
 
   const value = useMemo(() => ({ rpgState, setRpgState }), [rpgState])
   return <RpgContext.Provider value={value}>{children}</RpgContext.Provider>
