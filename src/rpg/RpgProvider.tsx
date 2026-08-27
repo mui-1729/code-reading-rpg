@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useProgress } from '../progression/useProgress'
-import { getCombatStats } from './combat'
 import { RpgContext } from './RpgContext'
 import {
   createInitialRpgState,
@@ -23,14 +22,6 @@ function loadInitialRpgState(baseMaxHp: number) {
 export function RpgProvider({ children }: { children: ReactNode }) {
   const { stats } = useProgress()
   const [rpgState, setRpgState] = useState(() => loadInitialRpgState(stats.maxHp))
-  const combatMaxHp = getCombatStats(stats, rpgState).maxHp
-
-  useEffect(() => {
-    setRpgState((current) => {
-      const nextHp = Math.max(0, Math.min(combatMaxHp, current.currentHp))
-      return nextHp === current.currentHp ? current : { ...current, currentHp: nextHp }
-    })
-  }, [combatMaxHp])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
