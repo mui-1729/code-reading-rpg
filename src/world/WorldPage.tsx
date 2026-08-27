@@ -73,6 +73,47 @@ export function WorldPage() {
     return 'LEAD ADA // 新人Code Knightの最初の仕事だ。西の草原で戦闘システムのターゲットバグを直そう。'
   }, [progress.clearedAreaIds, progress.clearedStageIds])
 
+  const javascriptNextObjective = useMemo(() => {
+    if (progress.clearedAreaIds.includes('javascript') || progress.clearedStageIds.includes(3)) {
+      return {
+        label: 'JAVASCRIPT CLEAR',
+        title: 'Code Coreの復旧完了',
+        detail: 'JavaScript編はクリア。王国の戦闘システムは正常に戻った。',
+        clear: true,
+      }
+    }
+    if (progress.clearedStageIds.includes(2)) {
+      return {
+        label: 'NEXT OBJECTIVE · 4 / 4',
+        title: 'Code Coreへ向かう',
+        detail: '北西の道を進み、BOSSの隣まで行ってINTERACT。暴走した共通処理を止めよう。',
+        clear: false,
+      }
+    }
+    if (progress.clearedStageIds.includes(1)) {
+      return {
+        label: 'NEXT OBJECTIVE · 3 / 4',
+        title: '草原でもう一つのバグを追う',
+        detail: '西のJavaScript草原で濃い草むらを歩き、次のBattleを発生させよう。',
+        clear: false,
+      }
+    }
+    if (!byteJoined) {
+      return {
+        label: 'NEXT OBJECTIVE · 1 / 4',
+        title: 'BYTEと合流する',
+        detail: '開始地点から左か上へ1歩進み、BYTEの隣でINTERACT。仲間になったら西へ向かおう。',
+        clear: false,
+      }
+    }
+    return {
+      label: 'NEXT OBJECTIVE · 2 / 4',
+      title: '西のJavaScript草原へ向かう',
+      detail: 'Hubから西へ進み、濃い草むらを歩いて最初のBattleを発生させよう。',
+      clear: false,
+    }
+  }, [byteJoined, progress.clearedAreaIds, progress.clearedStageIds])
+
   const spriteStyle = useCallback(
     (spritePosition: Position) => ({
       left: `${((spritePosition.x - viewportStart.x + 0.5) / VIEWPORT_COLUMNS) * 100}%`,
@@ -284,6 +325,15 @@ export function WorldPage() {
             </p>
           </div>
         </header>
+
+        <section
+          className={`world-next-objective pixel-inner-window ${javascriptNextObjective.clear ? 'is-clear' : ''}`}
+          aria-label="Next objective"
+        >
+          <span>{javascriptNextObjective.label}</span>
+          <strong>{javascriptNextObjective.title}</strong>
+          <p>{javascriptNextObjective.detail}</p>
+        </section>
 
         <div
           className="world-viewport pixel-inner-window"
