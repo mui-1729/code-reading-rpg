@@ -299,7 +299,12 @@ export function WorldPage() {
             )
           })}
 
-          <div className="world-character-layer" aria-hidden="true">
+          <div
+            className="world-character-layer"
+            aria-hidden="true"
+            data-world-x={position.x}
+            data-world-y={position.y}
+          >
             {followerVisible && (
               <span
                 className="world-follower-sprite world-character-overlay"
