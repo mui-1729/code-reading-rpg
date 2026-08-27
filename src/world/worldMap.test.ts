@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   getEncounterBattleId,
   getTerrain,
+  getTreasureAtPosition,
   getVisibleWorldCells,
   getWorldRegion,
   isEncounterTerrain,
@@ -10,6 +11,7 @@ import {
   TS_BOSS_POSITION,
   VIEWPORT_HEIGHT,
   VIEWPORT_WIDTH,
+  WORLD_TREASURES,
 } from './worldMap'
 
 describe('open world map', () => {
@@ -32,6 +34,20 @@ describe('open world map', () => {
     expect(isEncounterTerrain('tall-grass')).toBe(true)
     expect(isEncounterTerrain('forest')).toBe(true)
     expect(isEncounterTerrain('road')).toBe(false)
+  })
+
+  it('JS / TSに1つずつTreasureを置き、直接は踏めないWorld objectとして扱う', () => {
+    expect(WORLD_TREASURES).toHaveLength(2)
+    expect(WORLD_TREASURES.map((treasure) => treasure.region)).toEqual([
+      'javascript',
+      'typescript',
+    ])
+
+    for (const treasure of WORLD_TREASURES) {
+      expect(getTerrain(treasure.position.x, treasure.position.y)).toBe('treasure')
+      expect(getTreasureAtPosition(treasure.position)?.id).toBe(treasure.id)
+    }
+    expect(isWalkableTerrain('treasure')).toBe(false)
   })
 
   it('未クリアの通常Battleを優先し、クリア後は地域内Battleを再Encounterできる', () => {
