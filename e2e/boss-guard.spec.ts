@@ -1,0 +1,123 @@
+import { expect, test, type Page } from '@playwright/test'
+
+const PROGRESS_KEY = 'code-reading-rpg:player-progress'
+const RPG_KEY = 'code-reading-rpg:rpg-state'
+const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
+
+const initialSkills = ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label']
+
+const progress = {
+  version: 4,
+  progress: {
+    exp: 0,
+    gold: 0,
+    inventory: { patchKit: 0 },
+    clearedStageIds: [],
+    clearedAreaIds: [],
+    completedSideQuestIds: [],
+    unlockedStageIds: [1, 4],
+    unlockedSkillIds: initialSkills,
+  },
+}
+
+const rpg = {
+  version: 3,
+  state: {
+    equipment: {
+      weapon: 'training-blade',
+      armor: 'traveler-coat',
+      accessory: null,
+    },
+    ownedEquipmentIds: ['training-blade', 'traveler-coat'],
+    partyMemberIds: [],
+    partyEquipment: {},
+    worldPosition: { x: 20, y: 14 },
+    stepsSinceEncounter: 8,
+    encounterCount: 0,
+    currentHp: 108,
+    openedTreasureIds: [],
+  },
+}
+
+async function seedStorage(page: Page) {
+  await page.goto('/')
+  await page.evaluate(
+    ({ progressValue, rpgValue, progressKey, rpgKey, tutorialKey }) => {
+      localStorage.clear()
+      localStorage.setItem(progressKey, JSON.stringify(progressValue))
+      localStorage.setItem(rpgKey, JSON.stringify(rpgValue))
+      localStorage.setItem(
+        tutorialKey,
+        JSON.stringify({ version: 1, status: 'skipped', phase: 'battle' }),
+      )
+    },
+    {
+      progressValue: progress,
+      rpgValue: rpg,
+      progressKey: PROGRESS_KEY,
+      rpgKey: RPG_KEY,
+      tutorialKey: TUTORIAL_KEY,
+    },
+  )
+}
+
+async function executeSkill(page: Page, name: string) {
+  const card = page.getByRole('button', { name: new RegExp(`^${name}\\b`) })
+  await expect(card).toBeEnabled()
+  await card.click()
+  await expect(card).toHaveClass(/selected/)
+  await card.click()
+}
+
+async function enemyHp(card: ReturnType<Page['locator']>) {
+  const text = await card.locator('.enemy-name-row span').innerText()
+  return Number(text.split('/')[0])
+}
+
+test.describe('Boss GUARD', () => {
+  test('JS Bossはminion生存中1 damageに抑え、全滅直後にOPENになる', async ({ page }) => {
+    await seedStorage(page)
+    await page.goto('/javascript/battle/3?seed=boss-guard-js-e2e&returnTo=%2Fworld')
+
+    const boss = page.locator('.enemy-card.is-boss-enemy')
+    await expect(page.getByLabel('Boss Guard ACTIVE')).toBeVisible()
+    await expect(page.getByLabel('Boss Guard ACTIVE')).toContainText(
+      'enemies.some(e => e.name !== "Boss" && e.hp > 0)',
+    )
+    await expect(boss.locator('.enemy-name-row span')).toHaveText('156/156')
+
+    await executeSkill(page, 'ALERT')
+    await expect(boss.locator('.enemy-name-row span')).toHaveText('155/156')
+    await expect(page.getByText('BOSS GUARD → total damage to Boss capped at 1')).toBeVisible()
+    await expect(page.getByText('TURN 02')).toBeVisible()
+
+    await executeSkill(page, 'MOON EDGE')
+    await expect(page.getByText('TURN 03')).toBeVisible()
+
+    await executeSkill(page, 'PULSE')
+    await expect(page.getByText('TURN 04')).toBeVisible()
+
+    await executeSkill(page, 'PULSE')
+    await expect(page.getByLabel('Boss Guard OPEN')).toBeVisible()
+    await expect(page.getByText('TURN 05')).toBeVisible()
+
+    const hpBeforeOpenHit = await enemyHp(boss)
+    await executeSkill(page, 'ALERT')
+    await expect.poll(() => enemyHp(boss)).toBeLessThan(hpBeforeOpenHit - 1)
+  })
+
+  test('TS BossでもGUARDがBossだけを1 damageへ抑える', async ({ page }) => {
+    await seedStorage(page)
+    await page.goto('/typescript/battle/6?seed=boss-guard-ts-e2e&returnTo=%2Fworld')
+
+    const boss = page.locator('.enemy-card.is-boss-enemy')
+    const goblin = page.locator('.enemy-card').filter({ hasText: 'Goblin' })
+    await expect(page.getByLabel('Boss Guard ACTIVE')).toBeVisible()
+    await expect(boss.locator('.enemy-name-row span')).toHaveText('132/132')
+    await expect(goblin.locator('.enemy-name-row span')).toHaveText('82/82')
+
+    await executeSkill(page, 'TYPE GUARD')
+    await expect(boss.locator('.enemy-name-row span')).toHaveText('131/132')
+    await expect.poll(() => enemyHp(goblin)).toBeLessThan(82)
+  })
+})
