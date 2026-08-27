@@ -8,6 +8,7 @@ import {
   equipItem,
   equipmentDefinitions,
   getCombatStats,
+  getWeaponVisual,
   partyMemberById,
   useRpg,
   type EquipmentSlot,
@@ -193,22 +194,35 @@ export function PauseMenu() {
                           <strong>{equippedId ? ownedEquipment.find((item) => item.id === equippedId)?.name ?? equippedId : 'EMPTY'}</strong>
                         </header>
                         <div className="equipment-options">
-                          {ownedEquipment.filter((item) => item.slot === slot).map((item) => (
-                            <button
-                              type="button"
-                              key={item.id}
-                              className={equippedId === item.id ? 'is-equipped' : ''}
-                              onClick={() => equip(item.id)}
-                            >
-                              <strong>{item.name}</strong>
-                              <small>
-                                {item.bonuses.attack ? `ATK +${item.bonuses.attack} ` : ''}
-                                {item.bonuses.defense ? `DEF +${item.bonuses.defense} ` : ''}
-                                {item.bonuses.maxHp ? `HP +${item.bonuses.maxHp}` : ''}
-                              </small>
-                              <span className="equipment-description">{item.description}</span>
-                            </button>
-                          ))}
+                          {ownedEquipment.filter((item) => item.slot === slot).map((item) => {
+                            const visual = getWeaponVisual(item.id)
+                            return (
+                              <button
+                                type="button"
+                                key={item.id}
+                                className={equippedId === item.id ? 'is-equipped' : ''}
+                                onClick={() => equip(item.id)}
+                              >
+                                <span className="equipment-option-main">
+                                  {visual && (
+                                    <img
+                                      className="equipment-pixel-icon"
+                                      src={visual}
+                                      alt=""
+                                      aria-hidden="true"
+                                    />
+                                  )}
+                                  <strong>{item.name}</strong>
+                                </span>
+                                <small>
+                                  {item.bonuses.attack ? `ATK +${item.bonuses.attack} ` : ''}
+                                  {item.bonuses.defense ? `DEF +${item.bonuses.defense} ` : ''}
+                                  {item.bonuses.maxHp ? `HP +${item.bonuses.maxHp}` : ''}
+                                </small>
+                                <span className="equipment-description">{item.description}</span>
+                              </button>
+                            )
+                          })}
                           <button type="button" onClick={() => unequip(slot)}>EMPTY</button>
                         </div>
                       </div>
