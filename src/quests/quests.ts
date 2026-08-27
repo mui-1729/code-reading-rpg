@@ -18,25 +18,25 @@ export const mainQuests: readonly QuestDefinition[] = [
   {
     id: 'javascript-main',
     areaId: JAVASCRIPT_AREA_ID,
-    title: '王国のコード門を突破せよ',
-    description: 'JavaScriptの配列処理を読み、3つのGateを越えてBossを倒す。',
+    title: '新人エンジニアの初仕事',
+    description: '小さなbug reportから始まり、影響範囲調査を経て本番障害を復旧する。',
     guideNpcId: 'archivist',
     steps: [
       {
         id: 'javascript-stage-1',
-        label: 'FIRST READ GATEをCLEARする',
+        label: '最初のissueを調査してbugの原因を特定する',
         condition: { kind: 'stageCleared', stageId: 1 },
         fieldTarget: { kind: 'battle', stageId: 1 },
       },
       {
         id: 'javascript-stage-2',
-        label: 'ONE OR MANY GATEをCLEARする',
+        label: '追加bug reportの影響範囲を調査する',
         condition: { kind: 'stageCleared', stageId: 2 },
         fieldTarget: { kind: 'battle', stageId: 2 },
       },
       {
         id: 'javascript-area-clear',
-        label: 'Bossを倒してJavaScript KingdomをAREA CLEARする',
+        label: 'Production Incidentを解決してサービスを復旧する',
         condition: { kind: 'areaCleared', areaId: JAVASCRIPT_AREA_ID },
         fieldTarget: { kind: 'battle', stageId: 3 },
       },
