@@ -8,15 +8,24 @@
 
 `CODE//READ RPG`は、コードを書く練習ではなく、**既存コードを読んで「現在のstateに対して何が起きるか」を判断する力をRPGとして鍛えるゲーム**です。
 
+現在採用する世界観:
+
+> **新人エンジニアとしてREAL WORLDでsystem problemを受け、fantasyなCODE WORLDへ潜り、実際のコードを読んで世界の異変とincidentのroot causeを解決する。**
+
+詳細は[`WORLD_DIRECTION.md`](./WORLD_DIRECTION.md)。
+
 コア原則:
 
 - Battleのtarget判断は表示コードを読んで行う
+- codeはCODE WORLDのtarget / effect / stateを決めるruleとして扱う
+- REAL WORLDのproblemとCODE WORLDの異変を同じ原因としてつなぐ
+- fantasy RPGらしさを残し、office simulatorへ寄せ切らない
 - RPG成長は読解を代替せず、HP / damage / defenseの余裕を作る
 - 「正解ボタンを当てるクイズ」ではなく、読んだ結果がそのままBattleへ反映される
 - 同じSkill名や固定手順の暗記だけで攻略しにくくする
-- 1つのWorldを探索しながら学習contentへ入る
-- 技術名を細かく1つずつ章にせず、同じ仕事・同じ思考でまとめられるものは1つの編にまとめる
-- React / Next.js等、固有のmental modelが大きいframeworkは無理に同じ編へまとめない
+- 1つのWorldを探索しながらlearning contentへ入る
+- 同じ仕事・同じ思考でまとめられる概念は1つの編にまとめる
+- React / Next.js等、固有mental modelが大きいものは無理に統合しない
 
 ## 2. 現在のプレイ構造
 
@@ -40,6 +49,10 @@ EXP / Gold / Level / Equipment / Story event
 ```
 
 通常導線にStage Select / Area Select /専用Complete画面はありません。旧URLは互換redirectだけ残します。
+
+現時点ではREAL WORLD → CODE WORLDの二層構造は**方向性として決定済みだが、Opening / CONNECT表現はまだ専用実装されていません**。
+
+現在のGrassland / Forestは削除せず、CODE WORLDの技術regionとして再解釈します。
 
 ## 3. 実装済み
 
@@ -115,7 +128,59 @@ EXP / Gold / Level / Equipment / Story event
 - GitHub Actions
 - Cloudflare Workers Preview / Production
 
-## 4. 現在残っている整理対象
+## 4. World direction — 決定済み / 未実装
+
+現在の大きな方向は次。
+
+```text
+REAL WORLD
+新人エンジニアとしてtask / incidentを受ける
+↓ CONNECT
+CODE WORLD
+softwareがfantasy worldとして見える
+↓
+NPC / Treasure / Battle / Boss
+↓
+code / dataからroot causeを理解する
+↓ RETURN
+REAL WORLD
+incident解決
+```
+
+### 残すもの
+
+- JavaScript Grassland
+- TypeScript Forest
+- monster
+- Treasure
+- Gold
+- Equipment
+- Item
+- Shop
+- Inn / Recovery
+- Party
+- Battle engine
+
+### 今後追加 / 改修するもの
+
+- REAL WORLDでのshort task / incident briefing
+- CODE WORLDへ入ったと分かるCONNECT transition
+- Final後のRETURN / closure
+- World Objectiveと調査目的の接続
+- REAL WORLD NPCとCODE WORLD NPCの役割整理
+- 技術ごとのRegion identity
+- Bossをroot causeの象徴として見せるpresentation
+- Database以降でtechnical modelとfantasy representationを同時prototype
+
+### やらないこと
+
+- 草原を全部server roomへ置換する
+- monsterを全部technical cardへ置換する
+- Gold / Inn / Equipmentをengineering metaphorへ強制変換する
+- office simulationをmain gameplayにする
+- 世界観変更を理由にOpen World / Battleを作り直す
+
+## 5. 現在残っている整理対象
 
 ### Legacy code
 
@@ -130,67 +195,71 @@ Open World化前のField / Quest / Area UIの一部dataがrepositoryに残って
 - `QuestVictoryFeedback`はWorld progress feedbackへ置換済み
 - `completedSideQuestIds`はsave migration互換のため残す
 
-**「unused UI」と「互換・test fixtureとしてまだ意味があるdata」を分けて整理する**のが方針です。
+**unused UIと、互換・test fixtureとしてまだ意味があるdataを分ける**。
 
 ### Large orchestration components
 
 - `src/App.tsx` — Battle runtime orchestrationが大きい
-- `src/world/WorldPage.tsx` — resolver自体は分離済みだがUI adapter責務が多い
+- `src/world/WorldPage.tsx` — resolverは分離済みだがUI adapter責務が多い
 - `src/ui/PauseMenu.tsx` — 6 tabs分のpresentationが1fileに集まる
 
-これらはdead code cleanupとは別Issueで、挙動変更と混ぜずに分割する方が安全です。
+挙動変更と混ぜず、必要性が明確なIssueで分割する。
 
-## 5. 次に実装する優先候補
+## 6. 次に実装する優先候補
 
 ### P0 — RPG Economy / Equipment loop
 
-Equipment / Gold / Shop / Recoveryの基盤はあるが、RPGとしてのloopはまだ薄い。
-
-次は次を1つのsystemとしてまとめる。
+Issue #178配下の#180〜#184。
 
 ```text
 探索 / Battle
-→ Gold・Treasureを得る
-→ Shopで比較して買う
-→ Equipmentを装備する
-→ InnでGoldを使って回復する
-→ 次の探索へ
+→ Gold・Treasure
+→ Shop
+→ Item / Equipment
+→ Inn
+→ 次の探索
 ```
 
 やること:
 
-- Equipmentをpixel-art icon / cardで画像化し、Shop / Pause / rewardで共通利用する
-- owned / equipped / unavailableを視覚的に分ける
-- inventory / itemの所有と使用場所を分かりやすくする
-- Gold source / sink / price balanceを整理する
-- 無料Recovery PointをInn / Restとして意味のあるGold sinkへ再設計する
-- 回復前後HP / price / 所持Gold不足をUIへ出す
-- save schema互換を壊さずに実装する
+- Equipmentをpixel-art icon / card化
+- owned / equipped / unavailableを視覚化
+- Item / Inventory UX
+- Gold source / sink / price balance
+- 無料Recovery PointをInn / Restへ再設計
+- save compatibility / E2E
 
-RPGを強くしても、GoldやEquipmentだけでcode readingを無視して攻略できるbalanceにはしない。
+このworld directionでも、Gold / Equipment / InnはCODE WORLD側のRPG systemとしてそのまま重要。
 
-### P1 — Battle runtimeの責務分割
+### P0.5 — CODE WORLD framing pass
 
-`App.tsx`を機能単位に分ける候補:
+RPG Economy後、Database region追加前に最低限実装する。
+
+- first task / incident briefing
+- REAL WORLD → CODE WORLD CONNECT
+- Final後のRETURN / closure
+- JavaScript / TypeScriptのStory copyを二層構造へ合わせる
+- Region identityの最小整理
+- World Objectiveを調査目的へ接続
+
+大規模map rewriteはしない。
+
+### P1 — Battle runtime responsibility split
+
+候補:
 
 - Battle session state / transition
 - player action execution
 - enemy turn
 - story event integration
 - result handoff
-- presentation component
-
-条件:
-
-- `TargetRule` / generator / save schemaを変えない
-- refactor前後でUnit / E2Eが同じ意味を保証する
-- 大きなUI redesignと同時に行わない
+- presentation
 
 ### P1 — Database編 prototype
 
-**3つ目のlearning regionはDatabase編を優先します。**
+3つ目のlearning regionはDatabase編を優先。
 
-SQLだけを独立させず、DBを扱う仕事として次をまとめます。
+扱うcandidate:
 
 - table / row / column
 - SELECT / WHERE
@@ -199,35 +268,23 @@ SQLだけを独立させず、DBを扱う仕事として次をまとめます。
 - JOIN
 - NULL
 - GROUP BY / aggregate
-- indexの入口
-- transactionの入口
+- index / transaction入口
 
-現在のtarget-selection BattleとSQLは相性がよいため、まず1 Battle prototypeを作って成立を確認します。
+prototypeではBattle成立だけでなく、
 
-prototypeで確認すること:
+- rowをmonster / record / cardのどれで見せるか
+- underground archive等のfield表現が理解を助けるか
+- REAL WORLDのdata problemとCODE WORLDの異変がつながるか
 
-- queryを読まないと結果rowを判断しにくいか
-- `TargetRule`相当のsafe domainへ落とせるか
-- WHERE → ORDER BY → LIMITをゲーム結果へ自然に反映できるか
-- CODE HELP / CODE DATAをDB向けに一般化できるか
-
-成功後に3 Chapter + World regionへ広げます。
+も確認する。
 
 ### P1 — TypeScript固有Boss mechanic
 
-現在のGUARDはJS / TS Bossで共通です。TypeScript側には、型情報を読む意味がもっと直接出る固有mechanicを検討できます。
+現在のGUARDはJS / TS共通。
 
-例:
+TypeScriptではunion / narrowing / optional / `keyof`等がBoss stateへ直接関わるmechanicを検討する。
 
-- union / narrowing条件を読んで解除対象を判断する
-- optional propertyの有無でBoss stateが変わる
-- `keyof` / indexed accessに対応するdataを読む
-
-ただし「mechanic専用説明panel」を増やさず、表示コードから理解できることを条件にします。
-
-### P2以降 — 長期的な学習編
-
-現在の方向:
+### P2以降 — 長期learning content
 
 ```text
 JavaScript
@@ -243,53 +300,36 @@ JavaScript
 → Architecture / Refactoring
 ```
 
-まとめる例:
+詳細は[`ENGINEER_STORY_ROADMAP.md`](./ENGINEER_STORY_ROADMAP.md)。
 
-- Database編: SQL + relational data + JOIN + NULL + aggregate + index / transaction入口
-- Backend / API編: HTTP + validation + async + DB access + auth基礎
-- Team Development / Delivery編: Git + PR + Testing + CI/CD
-- Production / Performance編: logs + metrics + incident + performance
-
-分ける例:
-
-- React編
-- Next.js編
-- TanStack編
-
-framework固有のruntime / data flow / mental modelが大きいものは別編にします。
-
-詳細は`ENGINEER_STORY_ROADMAP.md`をsource of truthとします。
-
-### Party depth
-
-RPG Economy loopを整えた後、必要なら追加:
-
-- 2人目のcompanion
-- heal / support role
-- member equipmentの意味を強化
-
-ただしPartyが正解targetを自動判定する機能は追加しません。
-
-## 6. 当面やらない
+## 7. 当面やらない
 
 - Stage Select / Area Select復活
 - 大量のQuest Log /常設HUD
 - game infrastructureとしてのLogin / Cloud Save
 - Ranking
-- 読解を飛ばせるauto target / auto battle
+- auto target / auto battle
 - 数値だけ違うEquipment大量追加
-- Worldを広げるだけのmap expansion
+- Worldサイズだけを増やすmap expansion
+- office map / meeting / Slack操作等のreal-world simulation
+- fantasy要素をtechnical UIへ全面置換するredesign
 
-Backend / API編は**学習content**として作ります。ゲーム自体へserver / loginを導入する意味ではありません。
+Backend / API編はlearning contentとして作る。ゲーム自体へserver / loginを導入する意味ではない。
 
-## 7. 決定済みの大きな方向
+## 8. 決定済みの大きな方向
 
+- REAL WORLDの新人エンジニア + fantasy CODE WORLDの二層構造を採用
+- codeはCODE WORLDのruleとして実際のtarget / effectを決める
+- JavaScript Grassland / TypeScript Forestは消さず、技術regionとして活かす
+- 現実側のproblemとCODE WORLD側の異変を同じ原因へ接続する
+- RPG systemをengineering metaphorへ無理に変換しない
 - JavaScript / TypeScriptは同じ3 Chapter構造の「〜編」として揃える
-- TypeScript編もJavaScript編と同じく1つのincidentを追うstory structureにする
+- TypeScript編も1つのincidentを追うstory structureに統一済み
 - まとめられる基礎概念は仕事単位でまとめる
-- framework固有のmental modelは無理にまとめない
-- 3つ目の新規regionはDatabase編を優先する
+- framework固有mental modelは無理にまとめない
+- 3つ目の新規regionはDatabase編を優先
 - Databaseの次はBackend / API、その後React / Next.js / TanStackを候補とする
 - 新規learning regionより先にRPG Economy / Equipment loopを完成させる
+- Database region追加前にCODE WORLD framingの最低限を実装する
 
-この方向を前提に、今後は各編のprototypeとRPG基盤をIssue単位で進めます。
+今後は[`WORLD_DIRECTION.md`](./WORLD_DIRECTION.md)を世界観のsource of truthとして、各編のprototypeとRPG基盤をIssue単位で進めます。

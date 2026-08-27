@@ -2,11 +2,29 @@
 
 ## 目的
 
-このゲーム全体を「新人エンジニアが、実務上の問題を解決しながら成長するRPG」として構成する。
+この文書は、長期的なlearning contentを**新人エンジニアとしてどんな仕事を経験し、何を読むようになるか**で整理する。
 
-各「〜編」は技術名を細かく1つずつ並べるのではなく、**同じ仕事・同じ思考で自然に学べるものは1つの編へまとめる**。
+世界観そのものは[`WORLD_DIRECTION.md`](./WORLD_DIRECTION.md)をsource of truthとする。
 
-一方で、React / Next.jsのように実行モデルや設計思想そのものが変わるframeworkは、無理に同じ編へ押し込まない。
+各「〜編」は、
+
+```text
+REAL WORLDで仕事 / incidentを受ける
+↓
+CODE WORLDで同じproblemが異変として見える
+↓
+code / dataを読む
+↓
+Chapterを進めながらroot causeへ近づく
+↓
+Boss / Finalで総合して解決
+```
+
+という共通framingを持つ。
+
+細かなStory台本、NPC名、台詞、Region固有名はこの文書で固定しない。
+
+---
 
 ## 編をまとめる基準
 
@@ -14,7 +32,7 @@
 
 - 同じ実務上の問題を解くために一緒に使う
 - 前の概念がそのまま次の概念の土台になる
-- 1つの3 Chapter storyとして自然につながる
+- 1つの3 Chapter arcとして自然につながる
 - Battle上でも同じ種類の「コードを読んで結果を判断する」体験になる
 
 分ける:
@@ -22,34 +40,35 @@
 - framework固有のruntime / data flow / mental modelが中心になる
 - 同じ名前の概念でも読み方が大きく変わる
 - 1編へ入れると未習概念が多すぎる
-- story上の仕事が別物になる
+- Story上の仕事が別物になる
 
 共通ルール:
 
-- 各編は原則 Chapter 1 → Chapter 2 → Final の3段階
+- 各編は原則 Chapter 1 → Chapter 2 → Final
 - 新しく学んだ読み方は後Chapterでも再登場する
 - 前の編で学んだ読み方も後の編で再利用する
-- Battleはクイズではなく、現在のstateとコードを読んで意思決定する
-- Story上の仕事と学習内容を一致させる
-- Bossはその編で学んだ内容の総合問題にする
-- 未習構文を大量に出して難しくしない
+- Battleはクイズではなくcurrent stateとcodeを読んで意思決定する
+- REAL WORLDのproblemとCODE WORLDの異変を同じ原因へつなぐ
+- Bossはその編で追っていたroot causeを象徴する
+- 未習syntaxを大量に出して難しくしない
+- Region表現はlearningを助けるために使い、技術名の装飾だけにしない
 
 ---
 
 ## 01. JavaScript編 — コード読解の基礎
 
-### 役割
+### REAL WORLDでの役割
 
-開発チームに入った新人エンジニア。
+開発チームに入った新人エンジニアとして、最初のbug investigationを任される。
 
-### 主な問題
+### 主なproblem theme
 
 - 初めてのbug report
-- 原因データの特定
+- 原因dataの特定
 - 類似bugの影響範囲調査
 - 共通処理の障害
 
-### 読解テーマ
+### 読解theme
 
 - object / array
 - callback
@@ -62,33 +81,39 @@
 - `sort`
 - `reduce`
 
-### Story
+### CODE WORLD方向
 
-1. 最初のバグ
-2. 広がるバグ
-3. 暴走するCode Core
+現在のJavaScript Grasslandを残す。
 
-現在実装済み。以後の編のstory / cumulative learningの基準とする。
+最初に「codeがworld ruleとしてtarget / effectを決める」ことを体験するRegionにする。
+
+generic fantasyを消さず、今後必要に応じてJavaScriptのruntime / object / arrayを感じるobject / landmarkを薄く足す。
+
+### 現状
+
+Battle 1〜3、3 Chapter Storyは実装済み。
+
+今後は詳細Storyの全面rewriteではなく、REAL WORLD → CONNECT → Grasslandというframingを強化する。
 
 ---
 
 ## 02. TypeScript編 — 型を含むコード読解
 
-JavaScript編と**同じ粒度・同じ3 Chapter構造の1編**として扱う。
+JavaScript編と同じ粒度・同じ3 Chapter構造の1編として扱う。
 
-### 役割
+### REAL WORLDでの役割
 
-複数人で触るコードベースへ参加し、型情報を使って不具合の原因を追う。
+複数人で触るcodebaseへ参加し、型情報を使って不具合の原因を追う。
 
-### 主な問題
+### 主なproblem theme
 
 - API responseと想定型の不一致
 - `undefined`を考慮していない処理
-- union typeの分岐漏れ
-- optional propertyの読み間違い
+- union typeの分岐
+- optional property
 - shared contractの崩れ
 
-### 読解テーマ
+### 読解theme
 
 - type annotation
 - interface / type
@@ -100,37 +125,58 @@ JavaScript編と**同じ粒度・同じ3 Chapter構造の1編**として扱う�
 - indexed access
 - genericの入口
 
-### Story方向
+### CODE WORLD方向
 
-1. 型の食い違いを発見
-2. optional / unionを含む複数箇所へ影響が広がる
-3. shared contractの根本原因を修復
+現在のTypeScript Forestを残す。
 
-現在Battle 4〜6は実装済み。次はJavaScript編と同じstory品質へ揃える。
+今後visualを整える場合、
+
+- crystal
+- rune
+- structure
+- boundary
+
+など、type / contractを薄く感じるmotifをcandidateとする。
+
+ただし「TypeScriptだから全部青い結晶」に固定しない。
+
+### 現状
+
+Battle 4〜6とEngineer Storyは実装済み。
+
+現在のarcは、
+
+- API契約の食い違い
+- optional / unionへの波及
+- Shared Contract / Frontier Compilerのroot cause
+
+へ接続済み。
+
+今後はこれをCODE WORLD側のForestの異変 / root cause entityとして自然につなぐ。
 
 ---
 
 ## 03. Database編 — データを正しく取り出し、壊さない
 
-**次に追加する新規学習編の第一候補。**
+**次に追加する新規learning編の第一候補。**
 
-`SQL編`として細かく切らず、DBを扱うために必要な基礎を1つの編へまとめる。
+`SQL編`として細かく切らず、DBを扱う仕事として必要な基礎をまとめる。
 
-### 役割
+### REAL WORLDでの役割
 
-本番データを調査し、必要なrowを正しく取得・更新するアプリケーションエンジニア。
+本番dataを調査し、必要なrowを正しく取得・更新するapplication engineer。
 
-### 主な問題
+### 主なproblem theme
 
-- 欲しいrowが取得できない
+- 欲しいrowが取れない
 - 条件漏れで対象が多すぎる
 - JOINで重複する
-- NULLの扱いを誤る
+- NULLを誤る
 - 集計結果が合わない
 - queryが遅い
 - transaction途中で状態が不整合になる
 
-### 読解テーマ
+### 読解theme
 
 Chapter 1:
 
@@ -146,40 +192,60 @@ Chapter 2:
 - `JOIN`
 - `NULL`
 - `GROUP BY`
-- aggregate (`COUNT`, `SUM`等)
+- aggregate
 
 Final:
 
 - indexの入口
 - transaction
 - 複数queryの依存関係
-- 「結果は正しいが遅い」と「結果自体が間違っている」の切り分け
+- correct resultとslow queryの切り分け
 
-### Battleとの相性
+### CODE WORLD方向
 
-現在の「コードがどの対象を選ぶか読む」Battleと特に相性がよい。
+technical modelとfantasy representationを**最初から一緒にprototypeする最初の編**にする。
 
-```text
-Enemy / object
-≈ row
+candidate:
 
-TargetRule
-≈ WHERE / JOIN / ORDER BY / LIMIT の結果
-```
+- underground archive
+- giant library
+- mine / storage layer
 
-最初は1 Battle prototypeで成立を確認してから3 Chapterへ広げる。
+Battle representationは固定しない。
+
+検証候補:
+
+- rowをmonsterとして見せる
+- record / cardとして見せる
+- world objectとして並べる
+
+`WHERE → ORDER BY → LIMIT`を読む意味が最も自然に出る表現を選ぶ。
+
+### prototype
+
+最初は1 Battleだけ作る。
+
+確認する:
+
+- queryを読まないとresult rowを判断しにくいか
+- safe internal ruleへ落とせるか
+- CODE HELP / CODE DATAをDB向けに一般化できるか
+- field表現がlearningを助けるか
+- REAL WORLDのdata issueとCODE WORLDの異変が同じproblemに見えるか
+
+成功後に3 Chapter + full Regionへ広げる。
 
 ---
 
 ## 04. Backend / API編 — requestからresponseまでを追う
 
-framework名ではなく、backend全般に共通するrequest flowをまとめる。
+framework名ではなくbackend全般に共通するrequest flowをまとめる。
 
-### 役割
+### REAL WORLDでの役割
 
-Frontend・DB・外部serviceをつなぐAPIを担当する。
+Frontend・DB・external serviceをつなぐAPIを担当する。
 
-### 読解テーマ
+### 読解theme
 
 - HTTP method / status code
 - request / response
@@ -189,38 +255,45 @@ Frontend・DB・外部serviceをつなぐAPIを担当する。
 - error handling
 - pagination
 - timeout / retry
-- DB accessの流れ
-- authentication / authorizationの基礎
-- session / tokenの基礎
+- DB access
+- authentication / authorization基礎
+- session / token基礎
 
-### Story例
+### CODE WORLD方向
 
-1. 正しいrequestなのにresponseがおかしい
-2. DB / external APIをまたぐ処理で失敗が広がる
-3. auth / validation / transactionを含む障害を追う
+request / responseがsystem間を移動する感覚をfieldへ反映できる。
 
-Express / Hono / Nest等のframework固有知識をこの編の中心にはしない。必要になれば別contentとして扱う。
+candidate:
+
+- gate city
+- road network
+- port
+- message transport
+
+「APIだから道路」と固定するのではなく、request flowがplayerに読めるかで決める。
+
+Express / Hono / Nest等はこの編の中心にしない。
 
 ---
 
 ## 05. React編 — componentとstateを読む
 
-Reactはframework / library固有のmental modelが大きいため独立編にする。
+Reactは固有mental modelが大きいため独立編。
 
-### 役割
+### REAL WORLDでの役割
 
 Frontend UI機能を担当する。
 
-### 主な問題
+### problem theme
 
 - propsの渡し間違い
-- state更新後に表示が合わない
+- state更新後の表示不整合
 - derived stateの二重管理
 - list keyによる表示崩れ
-- Effect依存関係による古い値
-- 不要な再render
+- Effect dependency
+- stale value / render問題
 
-### 読解テーマ
+### 読解theme
 
 - component
 - props
@@ -232,15 +305,25 @@ Frontend UI機能を担当する。
 - `useEffect`
 - memoizationの必要性判断
 
-Boss案: Stale State / Render Loop
+### CODE WORLD方向
+
+candidate:
+
+- machine city
+- living UI district
+- componentごとに構成されたstructure
+
+state changeがworld presentationへ反映される表現と相性がよい。
+
+Boss candidate: Render Core / Stale State系。
 
 ---
 
 ## 06. Next.js編 — Full-stack Reactの境界を読む
 
-Reactと一緒にせず、Next.js固有の実行場所・routing・data flowを読む編にする。
+Reactと分け、Next.js固有の実行場所・routing・data flowを読む。
 
-### 読解テーマ候補
+### 読解theme
 
 - App Router
 - layout / route
@@ -249,17 +332,23 @@ Reactと一緒にせず、Next.js固有の実行場所・routing・data flowを�
 - Server Action
 - cache / revalidation
 - loading / error boundary
-- request-time / build-timeの違い
+- request-time / build-time
 
-「Reactが分かれば自動的にNext.jsも分かる」とは扱わない。
+### CODE WORLD方向
+
+candidate:
+
+- server citadel
+- layered city
+- client / server boundaryをまたぐdistrict
+
+Reactが分かれば自動的にNext.jsも分かるとは扱わない。
 
 ---
 
 ## 07. TanStack編 — Router / Query / Startのdata flowを読む
 
-TanStack系もNext.jsとは別に扱う。
-
-最初から全packageを詰め込まず、実際に教材として使う範囲を決めてからChapter化する。
+最初から全packageを詰め込まない。
 
 候補:
 
@@ -267,19 +356,21 @@ TanStack系もNext.jsとは別に扱う。
 - TanStack Query: server state / cache / invalidation
 - TanStack Start: full-stack boundary
 
-Router / Queryだけで十分な場合は1編にまとめる。TanStack Startまで扱って内容が大きくなる場合は、将来分割してよい。
+CODE WORLDではroute network / terminal district等をcandidateとする。
+
+Router / Queryだけで十分なら1編。Startまで含めて大きければ将来分割してよい。
 
 ---
 
 ## 08. Team Development / Delivery編 — 安全に変更を出す
 
-Git・Testing・CI/CDは別々の用語集にせず、**変更を安全にproductionへ届ける1つの仕事**としてまとめる。
+Git・Testing・CI/CDを、**変更を安全にproductionへ届ける1つの仕事**としてまとめる。
 
-### 読解テーマ
+### 読解theme
 
 - diff / commit / branch
 - merge / rebase
-- Pull Request / review
+- PR / review
 - unit / integration / E2E
 - fixture / mock / assertion
 - CI workflow
@@ -288,15 +379,17 @@ Git・Testing・CI/CDは別々の用語集にせず、**変更を安全にproduc
 - preview deploy
 - rollback
 
-Boss案: Broken Release
+CODE WORLDではworkshop / release facility等をcandidateとする。
+
+Boss candidate: Broken Release / Build Pipeline。
 
 ---
 
 ## 09. Security編 — trust boundaryを読む
 
-Backend編でauthの基礎は扱うが、security固有の判断は独立編にする。
+Backend編でauth基礎を扱っても、security固有判断は独立編にする。
 
-### 読解テーマ
+### 読解theme
 
 - authentication vs authorization
 - server-side permission check
@@ -304,17 +397,19 @@ Backend編でauthの基礎は扱うが、security固有の判断は独立編に�
 - session / token
 - trust boundary
 - XSS / injection / CSRFの考え方
-- secret / credentialの扱い
+- secret / credential
 
-攻撃手順を競う章ではなく、安全な実装を読んで判断する章にする。
+CODE WORLDではfortress / guarded boundary等をcandidateとする。
+
+攻撃手順を競う章ではなく、安全な実装を読んで判断する章。
 
 ---
 
 ## 10. Production / Performance編 — 動いているsystemを調査する
 
-Observability・Incident Response・Performanceはproduction上の調査としてまとめる。
+Observability・Incident Response・Performanceをproduction調査としてまとめる。
 
-### 読解テーマ
+### 読解theme
 
 - log / stack trace
 - metrics / traces
@@ -326,7 +421,9 @@ Observability・Incident Response・Performanceはproduction上の調査とし�
 - cache / batching
 - query count
 
-Boss案: Major Incident / Traffic Spike
+CODE WORLDではobservatory / control tower等をcandidateとする。
+
+Boss candidate: Major Incident / Traffic Spike。
 
 ---
 
@@ -334,7 +431,7 @@ Boss案: Major Incident / Traffic Spike
 
 最後の総合編。
 
-### 読解テーマ
+### 読解theme
 
 - responsibility
 - dependency
@@ -345,7 +442,9 @@ Boss案: Major Incident / Traffic Spike
 - backward compatibility
 - migration strategy
 
-Boss案: Legacy Monolith
+CODE WORLDではold capital / legacy ruins等をcandidateとする。
+
+Boss candidate: Legacy Monolith。
 
 ---
 
@@ -365,23 +464,29 @@ JavaScript
 → Architecture / Refactoring
 ```
 
-順序は「技術の流行」ではなく、後の編を読むための前提が自然に積み上がるかで決める。
+順序は流行ではなく、後の編を読む前提が自然に積み上がるかで決める。
 
-特にDatabaseをReactより先に置く理由:
+DatabaseをReactより先に置く理由:
 
-- 現在のBattle systemとSQLの相性がよく、新regionを成立させやすい
-- Backend編の前提としてDBを理解している方がrequest → DB → responseを追いやすい
-- Frontendだけに偏らず、早い段階でsystem全体を見る視点を作れる
+- current Battle systemとSQLの相性がよい
+- Backend編の前提としてDBを理解した方がrequest → DB → responseを追いやすい
+- Frontendだけに偏らず早期にsystem全体を見る
+- CODE WORLD representationを新方針でprototypeする題材として適している
+
+---
 
 ## 各編を作るときのチェック
 
-1. プレイヤーはエンジニアとして何の仕事を任されたか
-2. 現場で何が壊れた / 困っているか
-3. その問題を理解するために何のコード / dataを読むか
-4. Chapterごとに何が新しく増えるか
-5. 前Chapter・前編の知識をどこで再利用するか
-6. Bossは何を総合して読ませるか
-7. 戦闘以外にNPC / log / issue / review等で何を体験させるか
-8. 同じ仕事としてまとめられる概念を無駄に別編へ分けていないか
-9. framework固有のmental modelを無理に別frameworkと混ぜていないか
-10. 「クイズに答える」だけになっていないか
+1. REAL WORLDで何の仕事を任されたか
+2. 現場で何が壊れた /困っているか
+3. CODE WORLDでは同じproblemがどう異変として見えるか
+4. その問題を理解するために何のcode / dataを読むか
+5. Region表現はmental modelを助けるか
+6. Chapterごとに何が新しく増えるか
+7. 前Chapter・前編の知識をどこで再利用するか
+8. Bossは何のroot causeを象徴し、何を総合して読ませるか
+9. Battle以外にNPC / World / clueで何を体験させるか
+10. 同じ仕事としてまとめられる概念を無駄に別編へ分けていないか
+11. framework固有mental modelを無理に混ぜていないか
+12. クイズに答えるだけになっていないか
+13. engineering framingのためにfantasy RPGの面白さを消していないか
