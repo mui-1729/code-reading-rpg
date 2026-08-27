@@ -17,6 +17,7 @@ export type Terrain =
   | 'shop'
   | 'npc'
   | 'recovery'
+  | 'treasure'
 
 export type WorldCell = {
   x: number
@@ -31,8 +32,19 @@ export const SHOP_POSITION = { x: 20, y: 12 } as const
 export const BYTE_POSITION = { x: 19, y: 13 } as const
 export const RECOVERY_POSITION = { x: 21, y: 16 } as const
 
+export const WORLD_TREASURES = [
+  { id: 'js-debug-cache', position: { x: 10, y: 19 }, region: 'javascript' },
+  { id: 'ts-supply-cache', position: { x: 30, y: 19 }, region: 'typescript' },
+] as const
+
+export type WorldTreasureId = (typeof WORLD_TREASURES)[number]['id']
+
 const samePosition = (a: { x: number; y: number }, b: { x: number; y: number }) =>
   a.x === b.x && a.y === b.y
+
+export function getTreasureAtPosition(position: { x: number; y: number }) {
+  return WORLD_TREASURES.find((treasure) => samePosition(position, treasure.position))
+}
 
 export function getWorldRegion(x: number): WorldRegion {
   if (x <= 17) return 'javascript'
@@ -47,6 +59,7 @@ export function getTerrain(x: number, y: number): Terrain {
   if (samePosition(position, SHOP_POSITION)) return 'shop'
   if (samePosition(position, BYTE_POSITION)) return 'npc'
   if (samePosition(position, RECOVERY_POSITION)) return 'recovery'
+  if (getTreasureAtPosition(position)) return 'treasure'
 
   if (y === 14 || (x === 8 && y >= 3 && y <= 14) || (x === 32 && y >= 3 && y <= 14)) {
     return 'road'
@@ -68,7 +81,7 @@ export function getTerrain(x: number, y: number): Terrain {
 }
 
 export function isWalkableTerrain(terrain: Terrain): boolean {
-  return !['mountain', 'water', 'boss', 'shop', 'npc', 'recovery'].includes(terrain)
+  return !['mountain', 'water', 'boss', 'shop', 'npc', 'recovery', 'treasure'].includes(terrain)
 }
 
 export function isEncounterTerrain(terrain: Terrain): boolean {
