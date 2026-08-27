@@ -57,24 +57,55 @@ async function seed(page: Page, position: { x: number; y: number }, withByte = f
 
 async function spritePosition(page: Page, selector: string) {
   return page.locator(selector).evaluate((sprite) => ({
-    x: Number(sprite.parentElement?.dataset.worldX),
-    y: Number(sprite.parentElement?.dataset.worldY),
+    x: Number((sprite as HTMLElement).dataset.worldX),
+    y: Number((sprite as HTMLElement).dataset.worldY),
   }))
 }
 
-test('BYTEは主人公と重ならず、移動前のマスを1歩遅れて追従する', async ({ page }) => {
+async function expectInsideViewport(page: Page, selector: string) {
+  const viewport = await page.locator('.world-viewport').boundingBox()
+  const sprite = await page.locator(selector).boundingBox()
+  expect(viewport).not.toBeNull()
+  expect(sprite).not.toBeNull()
+  if (!viewport || !sprite) return
+
+  expect(sprite.x + sprite.width / 2).toBeGreaterThan(viewport.x)
+  expect(sprite.x + sprite.width / 2).toBeLessThan(viewport.x + viewport.width)
+  expect(sprite.y + sprite.height / 2).toBeGreaterThan(viewport.y)
+  expect(sprite.y + sprite.height / 2).toBeLessThan(viewport.y + viewport.height)
+}
+
+test('BYTEは主人公と重ならず、専用layer内で1歩遅れて追従する', async ({ page }) => {
   await seed(page, { x: 20, y: 14 }, true)
   await page.goto('/world')
 
-  await expect(page.locator('.world-player-sprite')).toBeVisible()
-  await expect(page.locator('.world-follower-sprite')).toBeVisible()
+  const layer = page.locator('.world-character-layer')
+  const player = page.locator('.world-player-sprite')
+  const follower = page.locator('.world-follower-sprite')
+  await expect(layer).toBeVisible()
+  await expect(player).toBeVisible()
+  await expect(follower).toBeVisible()
+  await expectInsideViewport(page, '.world-player-sprite')
+  await expectInsideViewport(page, '.world-follower-sprite')
+
   expect(await spritePosition(page, '.world-follower-sprite')).not.toEqual(
     await spritePosition(page, '.world-player-sprite'),
   )
 
+  await player.evaluate((element) => {
+    ;(window as typeof window & { __worldPlayerNode?: Element }).__worldPlayerNode = element
+  })
+
   await page.getByRole('button', { name: 'Move right' }).click()
   await expect.poll(() => spritePosition(page, '.world-player-sprite')).toEqual({ x: 21, y: 14 })
   await expect.poll(() => spritePosition(page, '.world-follower-sprite')).toEqual({ x: 20, y: 14 })
+  await expectInsideViewport(page, '.world-player-sprite')
+  await expectInsideViewport(page, '.world-follower-sprite')
+
+  const sameNode = await player.evaluate(
+    (element) => (window as typeof window & { __worldPlayerNode?: Element }).__worldPlayerNode === element,
+  )
+  expect(sameNode).toBe(true)
 })
 
 test('World tileは見た目上のgrid borderを持たない', async ({ page }) => {
