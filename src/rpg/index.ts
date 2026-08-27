@@ -4,6 +4,7 @@ export {
   equipmentById,
   equipmentDefinitions,
   getEquipmentBonuses,
+  getEquipmentEffectText,
   starterEquipmentIds,
 } from './equipment'
 export type {
