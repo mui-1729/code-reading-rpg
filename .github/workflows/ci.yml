@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/world-equipment-shop]
   pull_request:
 
 jobs:
