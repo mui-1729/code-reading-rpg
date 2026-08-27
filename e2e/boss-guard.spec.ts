@@ -79,6 +79,10 @@ test.describe('Boss GUARD', () => {
     await seedStorage(page)
     await page.goto('/javascript/battle/3?seed=boss-guard-js-e2e&returnTo=%2Fworld')
 
+    const briefing = page.getByRole('dialog', { name: 'Code Coreへ' })
+    await expect(briefing).toBeVisible()
+    await briefing.getByRole('button', { name: 'SKIP' }).click()
+
     const boss = page.locator('.enemy-card.is-boss-enemy')
     await expect(page.getByLabel('Boss Guard ACTIVE')).toBeVisible()
     await expect(page.getByLabel('Boss Guard ACTIVE')).toContainText(
