@@ -60,6 +60,14 @@
   overflow: visible;
 }
 
+/* Legacy .player-sprite drew a CSS body and sword with pseudo-elements.
+   The pixel-art battle sprite replaces those layers completely. */
+.battle-character-stack::before,
+.battle-character-stack::after {
+  content: none;
+  display: none;
+}
+
 .battle-character-pixel {
   width: 46px;
   height: 64px;
