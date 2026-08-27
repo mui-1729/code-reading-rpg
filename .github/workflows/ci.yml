@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, refactor/173-docs-code-cleanup]
+    branches: [main]
   pull_request:
 
 jobs:
