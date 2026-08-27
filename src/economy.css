@@ -101,6 +101,111 @@
   font-size: 0.72rem;
 }
 
+.shop-item-name-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.equipment-shop-title {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.equipment-shop-title small {
+  color: #8f8ca3;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .1em;
+}
+
+.equipment-shop-title strong {
+  color: #fff;
+  font-size: 13px;
+}
+
+.equipment-shop-icon {
+  width: 32px;
+  height: 32px;
+  padding: 4px;
+  border: 2px solid #3b3b52;
+  background: #0a0a13;
+}
+
+.equipment-stat-line {
+  color: #e7e4f2;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .04em;
+}
+
+.equipment-compare-row {
+  display: grid;
+  gap: 5px;
+  padding: 9px 10px;
+  border: 2px solid #303045;
+  background: #0a0a13;
+}
+
+.equipment-compare-row span {
+  color: #8f8ca3;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .06em;
+}
+
+.equipment-compare-row strong {
+  color: #fff4b0;
+  font-size: 10px;
+}
+
+.equipment-state-badge {
+  width: fit-content;
+  padding: 4px 6px;
+  border: 1px solid #55546b;
+  color: #b8b5c7;
+  font-size: 7px;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: .08em;
+  line-height: 1;
+}
+
+.equipment-state-badge.is-equipped {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.equipment-state-badge.is-owned {
+  border-color: var(--blue);
+  color: #9edbff;
+}
+
+.equipment-state-badge.is-available {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.equipment-state-badge.is-unavailable {
+  border-color: #5c5663;
+  color: #8f8894;
+}
+
+.equipment-shop-item.is-equipped {
+  border-color: var(--green);
+  box-shadow: inset 4px 0 0 var(--green);
+}
+
+.equipment-shop-item.is-owned {
+  border-color: #356b8d;
+}
+
+.equipment-shop-item.is-unavailable {
+  opacity: .72;
+}
+
 @media (max-width: 720px) {
   .shop-panel,
   .world-shop-panel {

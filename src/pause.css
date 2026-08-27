@@ -149,10 +149,11 @@
 }
 
 .equipment-options button {
-  min-height: 76px;
+  min-height: 112px;
   padding: 10px;
   display: grid;
-  gap: 5px;
+  gap: 6px;
+  align-content: start;
   text-align: left;
   border: 2px solid #303045;
   background: #0e0e18;
@@ -161,14 +162,49 @@
   cursor: pointer;
 }
 
+.equipment-options button:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
 .equipment-options button.is-equipped {
   border-color: var(--green);
   box-shadow: inset 4px 0 0 var(--green);
 }
 
 .equipment-options small {
-  color: #8f8ca3;
+  color: #b5b1c5;
   font-size: 9px;
+  font-weight: 900;
+}
+
+.equipment-option-title {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.equipment-option-title strong {
+  font-size: 11px;
+}
+
+.equipment-pause-icon {
+  width: 28px;
+  height: 28px;
+  padding: 3px;
+  border: 2px solid #343449;
+  background: #090912;
+}
+
+.equipment-comparison {
+  color: #fff0a5;
+  font-size: 8px;
+  font-weight: 900;
+  line-height: 1.45;
+}
+
+.equipment-options button.is-equipped .equipment-comparison {
+  color: var(--green);
 }
 
 .equipment-description {
@@ -176,6 +212,18 @@
   font-size: 9px;
   font-weight: 500;
   line-height: 1.5;
+}
+
+.equipment-empty-option {
+  min-height: 56px !important;
+  place-items: center;
+  align-content: center !important;
+  text-align: center !important;
+  color: #8f8ca3 !important;
+}
+
+.equipment-empty-option:disabled {
+  opacity: .45 !important;
 }
 
 .party-row span {

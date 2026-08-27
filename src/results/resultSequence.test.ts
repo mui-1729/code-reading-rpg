@@ -73,4 +73,25 @@ describe('buildResultSequence', () => {
       },
     ])
   })
+
+  it('Equipment rewardをvisual sourceへ接続できる結果イベントとして保持する', () => {
+    expect(buildResultSequence([
+      { text: 'WORLD COMPLETE: JAVASCRIPT KINGDOM · 3 / 3' },
+      { equipmentId: 'branch-saber', equipmentName: 'Branch Saber' },
+    ])).toEqual([
+      {
+        id: 'world-complete-0',
+        title: 'WORLD COMPLETE',
+        detail: 'JAVASCRIPT KINGDOM · 3 / 3',
+        tone: 'clear',
+      },
+      {
+        id: 'equipment-1',
+        title: 'EQUIPMENT ACQUIRED',
+        detail: 'Branch Saber',
+        tone: 'unlock',
+        equipmentId: 'branch-saber',
+      },
+    ])
+  })
 })

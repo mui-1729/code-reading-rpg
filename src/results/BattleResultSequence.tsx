@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { getEquipmentPresentation } from '../rpg'
 import { BattleStoryEvent } from '../story/BattleStoryEvent'
 import { getBattleStoryEvent } from '../story/battleStoryEvents'
 import type { BattleStoryEvent as BattleStoryEventData } from '../story/types'
@@ -41,6 +42,14 @@ const readRewardItems = (summary: HTMLElement): RawResultItem[] => {
     const next = progressFeedback.querySelector('em')?.textContent?.trim()
     const detail = [title, progress, next].filter(Boolean).join(' · ')
     if (status && detail) items.push({ text: `${status}: ${detail}` })
+
+    const equipmentId = progressFeedback.dataset.equipmentRewardId
+    if (equipmentId) {
+      items.push({
+        equipmentId,
+        equipmentName: progressFeedback.dataset.equipmentRewardName,
+      })
+    }
     progressFeedback.classList.add('result-sequence-consumed')
   }
 
@@ -179,6 +188,9 @@ export function BattleResultSequence() {
   if (!target || items.length === 0) return null
 
   const current = items[Math.min(index, items.length - 1)]
+  const currentEquipment = current.equipmentId
+    ? getEquipmentPresentation(current.equipmentId)
+    : null
   const advance = () => {
     if (done) return
     if (index >= items.length - 1) {
@@ -196,17 +208,38 @@ export function BattleResultSequence() {
         <>
           <div className="result-sequence-kicker">RESULT</div>
           <div className="result-sequence-summary">
-            {items.map((item) => (
-              <div key={item.id}>
-                <span>{item.title}</span>
-                {item.detail && <strong>{item.detail}</strong>}
-              </div>
-            ))}
+            {items.map((item) => {
+              const equipment = item.equipmentId
+                ? getEquipmentPresentation(item.equipmentId)
+                : null
+              return (
+                <div key={item.id} className={item.equipmentId ? 'is-equipment' : undefined}>
+                  {equipment?.visual && (
+                    <img
+                      className="result-equipment-icon equipment-pixel-icon"
+                      src={equipment.visual}
+                      alt=""
+                      aria-hidden="true"
+                    />
+                  )}
+                  <span>{item.title}</span>
+                  {item.detail && <strong>{item.detail}</strong>}
+                </div>
+              )
+            })}
           </div>
         </>
       ) : (
         <div className="result-sequence-event" key={`${current.id}:${index}`} onClick={advance}>
           <div className="result-sequence-kicker">{index + 1} / {items.length}</div>
+          {currentEquipment?.visual && (
+            <img
+              className="result-equipment-hero equipment-pixel-icon"
+              src={currentEquipment.visual}
+              alt=""
+              aria-hidden="true"
+            />
+          )}
           <strong>{current.title}</strong>
           {current.detail && <span>{current.detail}</span>}
           <small>Tap / click to continue</small>
