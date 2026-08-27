@@ -5,6 +5,21 @@ export {
   PATCH_KIT_PRICE,
   purchasePatchKit,
 } from './economy'
-export { purchaseShopItem, worldShopItems } from './shop'
+export {
+  getBattleItemUseState,
+  getItemCount,
+  getItemEffectSummary,
+  getItemUsageSummary,
+  itemById,
+  itemDefinitions,
+  patchKitItem,
+} from './items'
+export { getShopItemPrice, purchaseShopItem, worldShopItems } from './shop'
 export type { ConsumePatchKitResult, PurchaseResult } from './economy'
+export type {
+  BattleItemUseReason,
+  BattleItemUseState,
+  ItemDefinition,
+  ItemId,
+} from './items'
 export type { ShopItemDefinition, ShopPurchaseReason, ShopPurchaseResult } from './shop'

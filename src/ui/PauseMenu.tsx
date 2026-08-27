@@ -2,6 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { writeStoredAudioSettings } from '../audio/audioSettingsStorage'
 import { gameAudio, type AudioSettings } from '../audio/gameAudio'
+import {
+  getItemCount,
+  getItemEffectSummary,
+  getItemUsageSummary,
+  itemDefinitions,
+} from '../economy'
 import { CodeCodexContent } from '../learning/CodeCodex'
 import { getTotalExpForLevel, useProgress } from '../progression'
 import {
@@ -177,11 +183,37 @@ export function PauseMenu() {
               )}
 
               {tab === 'items' && (
-                <section className="pause-section pause-list">
-                  <article className="pixel-inner-window pause-list-row">
-                    <div><strong>PATCH KIT</strong><p>Battle中にHPを24回復。1Battleにつき1回。</p></div>
-                    <span>×{progress.inventory.patchKit}</span>
-                  </article>
+                <section className="pause-section item-inventory-grid" aria-label="Item inventory">
+                  {itemDefinitions.map((item) => {
+                    const count = getItemCount(progress, item.id)
+                    return (
+                      <article
+                        className={`item-inventory-card pixel-inner-window ${count > 0 ? 'has-stock' : 'no-stock'}`}
+                        key={item.id}
+                        data-item-id={item.id}
+                        data-item-count={count}
+                      >
+                        <header>
+                          <span className="item-inventory-main">
+                            <img className="item-pixel-icon item-pause-icon" src={item.visual} alt="" aria-hidden="true" />
+                            <span>
+                              <small>{item.categoryLabel}</small>
+                              <strong>{item.name}</strong>
+                            </span>
+                          </span>
+                          <em>×{count}</em>
+                        </header>
+                        <div className="item-inventory-rules">
+                          <strong>{getItemEffectSummary(item)}</strong>
+                          <span>{getItemUsageSummary(item)}</span>
+                        </div>
+                        <p>{item.description}</p>
+                        <div className={`item-stock-state ${count > 0 ? 'has-stock' : 'no-stock'}`}>
+                          {count > 0 ? 'READY IN BATTLE' : 'NO STOCK'}
+                        </div>
+                      </article>
+                    )
+                  })}
                 </section>
               )}
 

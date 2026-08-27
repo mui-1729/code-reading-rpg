@@ -1,14 +1,14 @@
 import type { PlayerProgress } from '../progression'
 import { equipmentById } from '../rpg/equipment'
 import type { RpgState } from '../rpg/state'
-import { PATCH_KIT_PRICE, purchasePatchKit } from './economy'
+import { purchasePatchKit } from './economy'
+import { itemById, type ItemId } from './items'
 
 export type ShopItemDefinition =
   | {
-      id: 'patch-kit'
+      id: string
       kind: 'consumable'
-      name: 'PATCH KIT'
-      price: number
+      itemId: ItemId
     }
   | {
       id: string
@@ -27,11 +27,15 @@ export type ShopPurchaseResult = {
 }
 
 export const worldShopItems: readonly ShopItemDefinition[] = [
-  { id: 'patch-kit', kind: 'consumable', name: 'PATCH KIT', price: PATCH_KIT_PRICE },
+  { id: 'patch-kit', kind: 'consumable', itemId: 'patch-kit' },
   { id: 'guard-edge', kind: 'equipment', equipmentId: 'guard-edge', price: 55 },
   { id: 'vital-coat', kind: 'equipment', equipmentId: 'vital-coat', price: 60 },
   { id: 'life-charm', kind: 'equipment', equipmentId: 'life-charm', price: 50 },
 ]
+
+export function getShopItemPrice(item: ShopItemDefinition) {
+  return item.kind === 'consumable' ? itemById[item.itemId].price : item.price
+}
 
 export function purchaseShopItem(
   progress: PlayerProgress,
@@ -44,6 +48,9 @@ export function purchaseShopItem(
   }
 
   if (item.kind === 'consumable') {
+    if (!itemById[item.itemId]) {
+      return { progress, rpgState, purchased: false, reason: 'unknown-item' }
+    }
     const result = purchasePatchKit(progress)
     return {
       progress: result.progress,
