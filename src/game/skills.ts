@@ -1,4 +1,4 @@
-import { createSeededRandom, type Seed } from './random'
+import type { Seed } from './random'
 import {
   skillDefinitions as javascriptSkillDefinitions,
   type CodeVariant,
@@ -35,28 +35,50 @@ function getDefaultVariant(definition: SkillDefinition): CodeVariant {
   return defaultVariant
 }
 
-function shortHash(value: string): string {
+function getBattleVariantIndex(battleId: number, variantCount: number): number {
+  if (variantCount <= 1) return 0
+
+  const areaBattleIndex = battleId >= 4 ? battleId - 4 : battleId - 1
+  return Math.abs(areaBattleIndex) % variantCount
+}
+
+function hashString(value: string): number {
   let hash = 2166136261
   for (let index = 0; index < value.length; index += 1) {
     hash ^= value.charCodeAt(index)
     hash = Math.imul(hash, 16777619)
   }
-  return (hash >>> 0).toString(36)
+  return hash >>> 0
 }
 
-function makeBattleUniqueVariant(
+const reversedOperators: Record<string, string> = {
+  '<': '>',
+  '>': '<',
+  '<=': '>=',
+  '>=': '<=',
+  '===': '===',
+}
+
+function reverseLiteralComparisons(code: string): string {
+  return code.replace(
+    /\b([A-Za-z_$][\w$]*\.(?:hp|attackDamage|name))\s*(<=|>=|===|<|>)\s*("[^"]*"|'[^']*'|\d+)/g,
+    (_match, left: string, operator: string, right: string) =>
+      `${right} ${reversedOperators[operator] ?? operator} ${left}`,
+  )
+}
+
+function makeSemanticReplayVariant(
   variant: CodeVariant,
   battleId: number,
+  skillId: string,
   seed: Seed,
 ): CodeVariant {
-  const fingerprint = `B${battleId}-${shortHash(String(seed)).slice(0, 5)}`
-  const lines = variant.code.split('\n')
-  const lastIndex = lines.length - 1
-  lines[lastIndex] = `${lines[lastIndex] ?? ''} /* ${fingerprint} */`
+  const shouldReverse = (hashString(`${battleId}:${String(seed)}:${skillId}:semantic`) & 1) === 1
+  if (!shouldReverse) return variant
 
   return {
     ...variant,
-    code: lines.join('\n'),
+    code: reverseLiteralComparisons(variant.code),
   }
 }
 
@@ -76,11 +98,13 @@ export function getSkillCardForBattle(
     throw new Error(`Skill ${skillId} has no ${lineMode} code variant`)
   }
 
-  const random = createSeededRandom(`${battleId}:${String(seed)}:${skillId}:code-variant`)
-  const selected = eligibleVariants[random.int(0, eligibleVariants.length - 1)]
+  // Reused SkillはBattleごとに別のbase variantを担当させる。
+  // seedはそのbase codeの同値な比較表現だけを変え、TargetRuleには触れない。
+  const selected = eligibleVariants[getBattleVariantIndex(battleId, eligibleVariants.length)]
   if (!selected) throw new Error(`Skill ${skillId} has no code variant`)
 
-  return createSkillCard(definition, makeBattleUniqueVariant(selected, battleId, seed))
+  const semanticVariant = makeSemanticReplayVariant(selected, battleId, skillId, seed)
+  return createSkillCard(definition, semanticVariant)
 }
 
 export function getSkillCardsForBattle(battle: Battle, seed: Seed): SkillCard[] {
