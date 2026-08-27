@@ -14,7 +14,7 @@ export type ItemDefinition = {
     amount: number
   }
   usage: {
-    location: 'battle'
+    location: 'battle' | 'field'
     maxUsesPerBattle: number
   }
 }
@@ -69,7 +69,7 @@ export function getItemUsageSummary(item: ItemDefinition) {
   if (item.usage.location === 'battle') {
     return `BATTLE ONLY · ${item.usage.maxUsesPerBattle} USE`
   }
-  return item.usage.location.toUpperCase()
+  return 'FIELD ONLY'
 }
 
 export function getBattleItemUseState(input: {
