@@ -39,9 +39,11 @@ export function consumePatchKit(
   hp: number,
   maxHp: number,
   usedThisBattle = false,
+  healAmount = PATCH_KIT_HEAL,
 ): ConsumePatchKitResult {
   const normalizedMaxHp = Math.max(1, Math.floor(maxHp))
   const normalizedHp = Math.max(0, Math.min(normalizedMaxHp, Math.floor(hp)))
+  const normalizedHealAmount = Math.max(0, Math.floor(healAmount))
 
   if (
     usedThisBattle ||
@@ -57,7 +59,7 @@ export function consumePatchKit(
     }
   }
 
-  const nextHp = Math.min(normalizedMaxHp, normalizedHp + PATCH_KIT_HEAL)
+  const nextHp = Math.min(normalizedMaxHp, normalizedHp + normalizedHealAmount)
 
   return {
     consumed: true,
