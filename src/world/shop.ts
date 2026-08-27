@@ -44,12 +44,12 @@ export const SHOP_ITEMS: readonly ShopItemDefinition[] = [
     description: 'Armor · 最大HPを優先する耐久型。',
   },
   {
-    id: 'patch-loop',
+    id: 'survival-loop',
     kind: 'equipment',
-    name: 'Patch Loop',
-    equipmentId: 'patch-loop',
+    name: 'Survival Loop',
+    equipmentId: 'survival-loop',
     price: 50,
-    description: 'Accessory · PATCH KITの回復量を強化。',
+    description: 'Accessory · 最大HPを増やす代わりにDefenseが下がる。',
   },
 ]
 
