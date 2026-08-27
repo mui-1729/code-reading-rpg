@@ -31,24 +31,38 @@ export const equipmentDefinitions: readonly EquipmentDefinition[] = [
     bonuses: { attack: 3 },
   },
   {
+    id: 'guard-edge',
+    name: 'Guard Edge',
+    slot: 'weapon',
+    description: '攻撃を少し抑え、Defenseも補う安定型の片手剣。',
+    bonuses: { attack: 4, defense: 2 },
+  },
+  {
     id: 'branch-saber',
     name: 'Branch Saber',
     slot: 'weapon',
-    description: '分岐を刻んだ剣。Attackをさらに伸ばす。',
+    description: '分岐を刻んだ剣。Defense補助を持たない代わりにAttackを大きく伸ばす。',
     bonuses: { attack: 6 },
   },
   {
     id: 'traveler-coat',
     name: 'Traveler Coat',
     slot: 'armor',
-    description: '探索者用の上着。HPとDefenseを少し増やす。',
+    description: '探索者用の上着。HPとDefenseを少しずつ増やす。',
     bonuses: { maxHp: 8, defense: 3 },
+  },
+  {
+    id: 'vital-coat',
+    name: 'Vital Coat',
+    slot: 'armor',
+    description: 'Defenseより最大HPを優先した、長期探索向けの軽装。',
+    bonuses: { maxHp: 22, defense: 1 },
   },
   {
     id: 'typed-mail',
     name: 'Typed Mail',
     slot: 'armor',
-    description: '型で守られた軽装。Defenseを大きく増やす。',
+    description: '型で守られた軽装。最大HPよりDefenseを重視する。',
     bonuses: { maxHp: 12, defense: 5 },
   },
   {
@@ -57,6 +71,13 @@ export const equipmentDefinitions: readonly EquipmentDefinition[] = [
     slot: 'accessory',
     description: '小さな護符。AttackとDefenseを少しずつ補う。',
     bonuses: { attack: 2, defense: 1 },
+  },
+  {
+    id: 'life-charm',
+    name: 'Life Charm',
+    slot: 'accessory',
+    description: '火力補助を持たず、最大HPだけを大きく伸ばす護符。',
+    bonuses: { maxHp: 16 },
   },
 ]
 
