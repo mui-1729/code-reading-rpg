@@ -206,6 +206,7 @@ export function PauseMenu() {
                                 {item.bonuses.defense ? `DEF +${item.bonuses.defense} ` : ''}
                                 {item.bonuses.maxHp ? `HP +${item.bonuses.maxHp}` : ''}
                               </small>
+                              <span className="equipment-description">{item.description}</span>
                             </button>
                           ))}
                           <button type="button" onClick={() => unequip(slot)}>EMPTY</button>

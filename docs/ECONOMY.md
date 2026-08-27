@@ -2,18 +2,18 @@
 
 ## 目的
 
-Battle報酬を次のBattleの余裕へ変換する最小economy loopを定義する。
+Battle報酬を次のBattleの余裕や装備選択へ変換するeconomy loopを定義する。
 
 ```text
-Battle Victory
+Battle Victory / Treasure
 ↓
 Gold
 ↓
 Open World Hub SHOP
 ↓
-PATCH KIT
+PATCH KIT / Equipment
 ↓
-Battle中のHP回復
+Battle中の余裕・Player buildの選択
 ```
 
 このloopはコード読解を代替しない。
@@ -33,24 +33,50 @@ replayでもGoldは獲得できる。CLEAR / unlockは初回だけ。
 
 ## Shop
 
-current flowではCentral Hubの`SHOP` objectへ隣接してINTERACTする。
+Central Hubの`SHOP` objectへ隣接してINTERACTするとcompactなShop UIを開く。
 
 現在の商品:
 
-```text
-PATCH KIT
-30 G
-最大24 HP回復
-```
+| 商品 | Price | 役割 |
+| --- | ---: | --- |
+| PATCH KIT | 30 G | 最大24 HP回復、1Battle 1回 |
+| Guard Edge | 55 G | ATK +4 / DEF +2 の安定型Weapon |
+| Vital Coat | 60 G | HP +22 / DEF +1 のHP重視Armor |
+| Life Charm | 50 G | HP +16 の耐久特化Accessory |
 
 購入時:
 
+- current Gold / price / ownedをShop内に表示
 - Gold不足なら購入不可
-- 成功時Gold -30
-- Inventory +1
-- short FIELD LOGで結果を伝える
+- Equipment所有済みなら再購入不可
+- PATCH KIT成功時はGoldを減らしInventory +1
+- Equipment成功時はGoldを減らし`ownedEquipmentIds`へ追加
+- Equipmentは購入時に自動装備しない。Pause > EQUIPMENTで比較して選ぶ
+- 結果はshort FIELD LOGへ出す
+- World常設HUDへShop情報を追加しない
 
 旧Area header modalの`AreaShop.tsx`はlegacy UI。新しいShop featureの基準にしない。
+
+## Equipment role
+
+Equipmentは同slot内で単純な完全上位互換だけを並べない。
+
+Weapon:
+
+- Guard Edge: Attackを抑え、Defenseも補う安定型
+- Branch Saber: Defense補助なしでAttackを優先
+
+Armor:
+
+- Vital Coat: 最大HPを大きく伸ばす
+- Typed Mail: 最大HPよりDefenseを重視
+
+Accessory:
+
+- Debug Charm: Attack + Defenseの小さな複合補助
+- Life Charm: 最大HPだけを伸ばす耐久特化
+
+効果値と短い役割説明はPause > EQUIPMENTで比較できる。
 
 ## Battle Item
 
@@ -87,24 +113,20 @@ Equipment / Party / World positionはEconomyではなくRpgStateの責務。
 
 ```text
 src/economy/
-├── economy.ts
+├── economy.ts        # PATCH KIT purchase / consume
+├── shop.ts           # Shop inventory / pure purchase resolver
+├── WorldShop.tsx     # Open World Shop UI
 ├── economy.test.ts
-├── AreaShop.tsx   # legacy Area modal
+├── shop.test.ts
+├── AreaShop.tsx      # legacy Area modal
 └── index.ts
 ```
 
-`economy.ts`のpure functions:
-
-- `purchasePatchKit(progress)`
-- `consumePatchKit(progress, hp, maxHp, usedThisBattle)`
-
-World UIはpurchase結果をPlayerProgressへ反映するだけ。
-
-Battle UIはconsume結果とBattle内used stateを管理する。
+`shop.ts`はPlayerProgress / RpgStateを受け取り、購入後stateをpureに返す。UIはその結果を各Providerへ反映するだけにする。
 
 ## Boundaries
 
-Economyが変更してはいけないもの:
+Economy / Equipmentが変更してはいけないもの:
 
 - TargetRule
 - code variant
@@ -113,31 +135,20 @@ Economyが変更してはいけないもの:
 - correct target
 - Party target
 
-PATCH KITは「間違えても少し耐えられる」余裕だけを作る。
+PATCH KITとEquipmentは「間違えても少し耐えられる」「火力か耐久かを選ぶ」余裕だけを作る。
 
 ## Save
 
-PlayerProgress schema v4。
+PlayerProgress schema v4 / RpgState v3。
 
-v1 / v2 / v3 migrationでは既存進行を維持し、Economy fieldが存在しないsaveは:
-
-```text
-gold = 0
-patchKit = 0
-```
-
-から開始する。
+Shop自体の追加でschema versionは上げない。購入Equipmentは既存`ownedEquipmentIds`へ保存する。
 
 ## Tests
 
-- purchase success
-- insufficient Gold
-- Inventory増加
-- consume
-- heal cap
-- full HP no consume
-- no stock
-- one-use per Battle
-- victory Gold
-- v1 / v2 / v3 → v4
-- v4 serialize / restore
+- PATCH KIT purchase success / insufficient Gold
+- Equipment purchase / Gold deduction / ownedEquipmentIds
+- owned Equipment再購入不可
+- Equipment Gold不足
+- slot内のrole差
+- consume / heal cap / full HP / no stock / one-use per Battle
+- World Shop open / purchase / reload persistence / Pause比較

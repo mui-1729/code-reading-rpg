@@ -3,7 +3,7 @@
 }
 
 .shop-overlay {
-  z-index: 90;
+  z-index: 210;
 }
 
 .shop-panel {
@@ -60,6 +60,23 @@
   opacity: 0.78;
 }
 
+.world-shop-panel {
+  width: min(760px, calc(100vw - 32px));
+  max-height: 88vh;
+  overflow: auto;
+}
+
+.world-shop-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.world-shop-list .shop-item {
+  margin-top: 0;
+  align-content: start;
+}
+
 .economy-progress-stat strong {
   color: #f5d742;
 }
@@ -85,10 +102,15 @@
 }
 
 @media (max-width: 720px) {
-  .shop-panel {
+  .shop-panel,
+  .world-shop-panel {
     width: min(420px, calc(100vw - 20px));
     max-height: 82vh;
     overflow: auto;
+  }
+
+  .world-shop-list {
+    grid-template-columns: 1fr;
   }
 
   .battle-item-row {

@@ -149,7 +149,7 @@
 }
 
 .equipment-options button {
-  min-height: 58px;
+  min-height: 76px;
   padding: 10px;
   display: grid;
   gap: 5px;
@@ -169,6 +169,13 @@
 .equipment-options small {
   color: #8f8ca3;
   font-size: 9px;
+}
+
+.equipment-description {
+  color: #b8b5c7;
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1.5;
 }
 
 .party-row span {

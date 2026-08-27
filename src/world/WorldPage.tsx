@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { gameAudio } from '../audio/gameAudio'
 import { useBgm } from '../audio/useBgm'
-import { PATCH_KIT_PRICE, purchasePatchKit } from '../economy'
+import { WorldShop } from '../economy'
 import { useProgress } from '../progression'
 import { emptyPartyEquipment, equipmentById, getCombatStats, useRpg } from '../rpg'
 import { openWorldTreasure } from './treasures'
@@ -35,6 +35,7 @@ export function WorldPage() {
   const { progress, stats, setProgress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
   const [message, setMessage] = useState('草むらではJavaScript、森ではTypeScriptのEnemyが出現する。')
+  const [shopOpen, setShopOpen] = useState(false)
   useBgm('field')
 
   const position = rpgState.worldPosition
@@ -77,7 +78,7 @@ export function WorldPage() {
 
   const move = useCallback(
     (dx: number, dy: number) => {
-      if (document.body.dataset.rpgPaused === 'true') return
+      if (shopOpen || document.body.dataset.rpgPaused === 'true') return
 
       const result = resolveWorldMove({ rpgState, progress, dx, dy })
       if (result.kind === 'blocked') {
@@ -103,11 +104,11 @@ export function WorldPage() {
 
       setMessage(terrainLabels[result.terrain] ?? result.terrain)
     },
-    [enterBattle, progress, rpgState, setRpgState],
+    [enterBattle, progress, rpgState, setRpgState, shopOpen],
   )
 
   const interact = useCallback(() => {
-    if (document.body.dataset.rpgPaused === 'true') return
+    if (shopOpen || document.body.dataset.rpgPaused === 'true') return
 
     const intent = resolveWorldInteraction(rpgState, progress)
 
@@ -130,15 +131,9 @@ export function WorldPage() {
     }
 
     if (intent.kind === 'shop') {
-      const result = purchasePatchKit(progress)
-      if (!result.purchased) {
-        gameAudio.playSe('cancel')
-        setMessage(`PATCH KITは${PATCH_KIT_PRICE} G。Goldが足りない。`)
-        return
-      }
       gameAudio.playSe('confirm')
-      setProgress(result.progress)
-      setMessage(`PATCH KITを購入した。残り ${result.progress.gold} G。`)
+      setShopOpen(true)
+      setMessage('SHOP: Item / Equipmentを選んで購入できる。')
       return
     }
 
@@ -193,11 +188,11 @@ export function WorldPage() {
     }
 
     setMessage('近くに調べられるものはない。')
-  }, [combatStats.maxHp, enterBattle, progress, rpgState, setProgress, setRpgState])
+  }, [combatStats.maxHp, enterBattle, progress, rpgState, setProgress, setRpgState, shopOpen])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (document.body.dataset.rpgPaused === 'true') return
+      if (shopOpen || document.body.dataset.rpgPaused === 'true') return
       const key = event.key.toLowerCase()
       if (key === 'arrowup' || key === 'w') {
         event.preventDefault()
@@ -218,7 +213,7 @@ export function WorldPage() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [interact, move])
+  }, [interact, move, shopOpen])
 
   return (
     <main className="app-shell world-shell title-screen">
@@ -293,6 +288,8 @@ export function WorldPage() {
           </button>
         </div>
       </section>
+
+      <WorldShop open={shopOpen} onClose={() => setShopOpen(false)} onMessage={setMessage} />
     </main>
   )
 }
