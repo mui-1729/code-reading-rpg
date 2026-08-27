@@ -18,26 +18,25 @@ export const mainQuests: readonly QuestDefinition[] = [
   {
     id: 'javascript-main',
     areaId: JAVASCRIPT_AREA_ID,
-    title: 'Target Selector Incident',
-    description:
-      '小さなtargeting bugから始まり、QA triage、SEV-1復旧、postmortemまでを経験するJavaScript編。',
+    title: 'JavaScript王国を救え',
+    description: '西の草原で始まった魔物の暴走を追い、異変の黒幕を倒して王国を救う。',
     guideNpcId: 'archivist',
     steps: [
       {
         id: 'javascript-stage-1',
-        label: 'Issue #101を再現し、find()の「最初の一致」と期待する優先対象のズレを特定する',
+        label: '西の草原の魔物を倒し、異変の手がかりを見つける',
         condition: { kind: 'stageCleared', stageId: 1 },
         fieldTarget: { kind: 'battle', stageId: 1 },
       },
       {
         id: 'javascript-stage-2',
-        label: 'QA reportをtriageし、filter()/&&/||を使うselector群の影響範囲と共通前提を洗い出す',
+        label: '暴走する魔物を退け、黒い結晶の痕跡を西の砦まで追う',
         condition: { kind: 'stageCleared', stageId: 2 },
         fieldTarget: { kind: 'battle', stageId: 2 },
       },
       {
         id: 'javascript-area-clear',
-        label: 'SEV-1を復旧し、配列順への暗黙依存をsort()/reduce()で明示的な優先順位へ置き換える',
+        label: '西の砦のBossを倒し、Code Crystalを取り戻す',
         condition: { kind: 'areaCleared', areaId: JAVASCRIPT_AREA_ID },
         fieldTarget: { kind: 'battle', stageId: 3 },
       },
