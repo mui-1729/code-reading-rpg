@@ -8,14 +8,15 @@ Tutorialは構文学習そのものを担当しない。JavaScript / TypeScript�
 
 ## 原則
 
-- 初回だけ
+- 初回だけ自動表示
 - overlayで操作を止めない
 - NEXTを読むだけのTutorialにしない
 - 実操作成功を完了条件にする
 - target / 正解Skillを教えない
 - Tutorial stateをPlayerProgress / RpgState / Battle Domainへ混ぜない
 - Desktop / Mobileの既存操作を使う
-- SKIP後は再表示しない
+- SKIP後は自動再表示しない
+- MENU > SYSTEM > REPLAY TUTORIALからいつでもやり直せる
 - RESET PROGRESSでTutorialも初期状態へ戻す
 
 ## Flow
@@ -68,6 +69,8 @@ blocked terrainへ入力し座標が変わらなければ完了しない。
 - TypeScript Boss
 
 隣接した状態でのみINTERACT promptを表示する。
+
+World characterはtileの子要素ではなく専用overlay layerにいるため、隣接判定はPlayerと各World tileの`data-world-x / data-world-y`を比較して行う。
 
 Desktop:
 
@@ -126,6 +129,14 @@ Battle Tutorial中に必要なら短く:
 ```
 
 CODE HELP使用は必須にしない。
+
+## Replay
+
+TutorialをSKIP / COMPLETEした後でも、Pause MENUのSYSTEMから`REPLAY TUTORIAL`を選べる。
+
+- Worldで実行: `field-move`から再開
+- Battleで実行: route検知によりBattle Tutorialへ進む
+- PlayerProgress / RpgState / Equipment / Partyは変更しない
 
 ## Persistence
 
@@ -191,5 +202,6 @@ Manual / E2E:
 - Skill選び直し
 - direct Battle entry
 - SKIP
+- SYSTEMからREPLAY TUTORIAL
 - RESET後の再表示
 - reduced motion
