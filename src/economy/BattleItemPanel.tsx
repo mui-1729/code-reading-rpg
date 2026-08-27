@@ -63,6 +63,7 @@ export function BattleItemPanel() {
     usedThisBattle,
     actionLocked,
   })
+  const effectSummary = getItemEffectSummary(patchKitItem)
 
   const usePatchKit = () => {
     if (!useState.canUse) {
@@ -99,7 +100,7 @@ export function BattleItemPanel() {
         <span className="battle-item-copy">
           <small>{patchKitItem.categoryLabel}</small>
           <strong>{patchKitItem.name} ×{count}</strong>
-          <span>{getItemEffectSummary(patchKitItem)} · {getItemUsageSummary(patchKitItem)}</span>
+          <span>{effectSummary} · {getItemUsageSummary(patchKitItem)}</span>
         </span>
       </div>
       <button
@@ -107,7 +108,7 @@ export function BattleItemPanel() {
         className="secondary-button patch-kit-action"
         onClick={usePatchKit}
         disabled={!useState.canUse}
-        aria-label={`Use ${patchKitItem.name}`}
+        aria-label={`${patchKitItem.name} ×${count} · ${effectSummary}`}
       >
         ▶ USE
       </button>
