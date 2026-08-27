@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, docs/187-code-world-direction]
+    branches: [main]
   pull_request:
 
 jobs:
