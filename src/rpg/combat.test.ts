@@ -30,6 +30,52 @@ describe('RPG combat stats', () => {
     expect(stats.defense).toBe(7)
   })
 
+  it('Weaponは高AttackとDefense補助のtrade-offを持つ', () => {
+    const state = createInitialRpgState()
+    const branch = getCombatStats(baseStats, {
+      ...state,
+      equipment: equipItem(state.equipment, 'branch-saber'),
+    })
+    const guard = getCombatStats(baseStats, {
+      ...state,
+      equipment: equipItem(state.equipment, 'guard-blade'),
+    })
+
+    expect(branch.attack).toBeGreaterThan(guard.attack)
+    expect(guard.defense).toBeGreaterThan(branch.defense)
+  })
+
+  it('Armorは最大HPとDefenseのtrade-offを持つ', () => {
+    const state = createInitialRpgState()
+    const typed = getCombatStats(baseStats, {
+      ...state,
+      equipment: equipItem(state.equipment, 'typed-mail'),
+    })
+    const vital = getCombatStats(baseStats, {
+      ...state,
+      equipment: equipItem(state.equipment, 'vital-jacket'),
+    })
+
+    expect(vital.maxHp).toBeGreaterThan(typed.maxHp)
+    expect(typed.defense).toBeGreaterThan(vital.defense)
+  })
+
+  it('Accessoryは汎用statsと最大HP特化から選べる', () => {
+    const state = createInitialRpgState()
+    const debug = getCombatStats(baseStats, {
+      ...state,
+      equipment: equipItem(state.equipment, 'debug-charm'),
+    })
+    const survival = getCombatStats(baseStats, {
+      ...state,
+      equipment: equipItem(state.equipment, 'survival-loop'),
+    })
+
+    expect(debug.attack).toBeGreaterThan(survival.attack)
+    expect(debug.defense).toBeGreaterThan(survival.defense)
+    expect(survival.maxHp).toBeGreaterThan(debug.maxHp)
+  })
+
   it('AttackはSkill damageへ、Defenseは被damage軽減へ反映する', () => {
     const stats = getCombatStats(baseStats, createInitialRpgState())
     expect(getSkillDamage(34, stats)).toBeGreaterThan(34)
