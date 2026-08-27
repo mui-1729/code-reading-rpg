@@ -57,8 +57,8 @@ async function seed(page: Page, position: { x: number; y: number }, withByte = f
 
 async function spritePosition(page: Page, selector: string) {
   return page.locator(selector).evaluate((sprite) => ({
-    x: Number(sprite.parentElement?.dataset.worldX),
-    y: Number(sprite.parentElement?.dataset.worldY),
+    x: Number((sprite as HTMLElement).dataset.worldX),
+    y: Number((sprite as HTMLElement).dataset.worldY),
   }))
 }
 
@@ -66,15 +66,21 @@ test('BYTEは主人公と重ならず、移動前のマスを1歩遅れて追従
   await seed(page, { x: 20, y: 14 }, true)
   await page.goto('/world')
 
-  await expect(page.locator('.world-player-sprite')).toBeVisible()
-  await expect(page.locator('.world-follower-sprite')).toBeVisible()
+  const player = page.locator('.world-player-sprite')
+  const follower = page.locator('.world-follower-sprite')
+  await expect(player).toBeVisible()
+  await expect(follower).toBeVisible()
   expect(await spritePosition(page, '.world-follower-sprite')).not.toEqual(
     await spritePosition(page, '.world-player-sprite'),
   )
 
+  const playerNode = await player.elementHandle()
   await page.getByRole('button', { name: 'Move right' }).click()
   await expect.poll(() => spritePosition(page, '.world-player-sprite')).toEqual({ x: 21, y: 14 })
   await expect.poll(() => spritePosition(page, '.world-follower-sprite')).toEqual({ x: 20, y: 14 })
+
+  // Player sprite itself stays mounted while its coordinates move, preventing Safari/iOS image flicker.
+  expect(await player.elementHandle()).toEqual(playerNode)
 })
 
 test('World tileは見た目上のgrid borderを持たない', async ({ page }) => {
