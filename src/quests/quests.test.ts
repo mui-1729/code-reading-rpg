@@ -132,9 +132,9 @@ describe('quest progression', () => {
       kind: 'updated',
       questId: 'javascript-main',
       areaId: 'javascript',
-      questTitle: 'JavaScript王国を救え',
-      completedStepLabel: '西の草原の魔物を倒し、異変の手がかりを見つける',
-      nextStepLabel: '暴走する魔物を退け、黒い結晶の痕跡を西の砦まで追う',
+      questTitle: 'JavaScript王国のバグを追え',
+      completedStepLabel: '戦闘システムのターゲットバグを直す',
+      nextStepLabel: 'ログを追い、複数の機能に広がるバグの共通コードを探す',
     })
   })
 
@@ -148,8 +148,8 @@ describe('quest progression', () => {
       kind: 'completed',
       questId: 'javascript-main',
       areaId: 'javascript',
-      questTitle: 'JavaScript王国を救え',
-      completedStepLabel: '西の砦のBossを倒し、Code Crystalを取り戻す',
+      questTitle: 'JavaScript王国のバグを追え',
+      completedStepLabel: '暴走したCode Coreを止め、王国のシステムを復旧する',
       nextStepLabel: undefined,
     })
   })
