@@ -18,25 +18,26 @@ export const mainQuests: readonly QuestDefinition[] = [
   {
     id: 'javascript-main',
     areaId: JAVASCRIPT_AREA_ID,
-    title: '新人エンジニアの初仕事',
-    description: 'Issue対応、QA triage、本番障害対応を通してJavaScriptのコードリーディングを身につける。',
+    title: 'JavaScript王国のバグを追え',
+    description:
+      '新人Code Knightとして王国のシステムを調べ、小さなバグから始まった異常の原因を追っていく。',
     guideNpcId: 'archivist',
     steps: [
       {
         id: 'javascript-stage-1',
-        label: 'Issue #101を調査し、誤った対象を選ぶbugの原因を特定する',
+        label: '戦闘システムのターゲットバグを直す',
         condition: { kind: 'stageCleared', stageId: 1 },
         fieldTarget: { kind: 'battle', stageId: 1 },
       },
       {
         id: 'javascript-stage-2',
-        label: 'QAから届いた複数reportをtriageし、影響範囲を特定する',
+        label: 'ログを追い、複数の機能に広がるバグの共通コードを探す',
         condition: { kind: 'stageCleared', stageId: 2 },
         fieldTarget: { kind: 'battle', stageId: 2 },
       },
       {
         id: 'javascript-area-clear',
-        label: 'SEV-1 Production Incidentの原因を特定し、serviceを復旧する',
+        label: '暴走したCode Coreを止め、王国のシステムを復旧する',
         condition: { kind: 'areaCleared', areaId: JAVASCRIPT_AREA_ID },
         fieldTarget: { kind: 'battle', stageId: 3 },
       },

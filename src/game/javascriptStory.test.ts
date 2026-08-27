@@ -10,44 +10,60 @@ const javascriptBattles = battles.filter((battle) => battle.areaId === JAVASCRIP
 const javascriptQuest = mainQuests.find((quest) => quest.areaId === JAVASCRIPT_AREA_ID)
 
 describe('JavaScript story progression', () => {
-  it('3 chapters grow from a first bug fix into a production incident', () => {
+  it('3 chapters follow a programmer RPG story from bug to Code Core', () => {
     expect(javascriptBattles.map((battle) => battle.label)).toEqual([
       'CHAPTER 01',
       'CHAPTER 02',
       'FINAL CHAPTER',
     ])
-    expect(javascriptBattles[0]?.title).toBe('Your First Bug Fix')
-    expect(javascriptBattles[1]?.title).toBe('Bug Reports Keep Coming')
+    expect(javascriptBattles[0]?.title).toBe('最初のバグ')
+    expect(javascriptBattles[1]?.title).toBe('広がるバグ')
     expect(javascriptBattles[2]).toMatchObject({
-      title: 'Production Incident',
+      title: '暴走するCode Core',
       isBoss: true,
     })
+    expect(javascriptBattles[0]?.subtitle).toContain('新人Code Knight')
+    expect(javascriptBattles[1]?.subtitle).toContain('ログ')
+    expect(javascriptBattles[2]?.subtitle).toContain('共通処理')
     expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.name === 'Boss')).toBe(true)
-    expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.attackName === 'Runtime Collapse')).toBe(true)
+    expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.attackName === 'Runtime Cascade')).toBe(true)
   })
 
-  it('uses engineering roles and an issue-to-incident quest flow', () => {
+  it('uses programmer characters without incident-management jargon', () => {
     expect(npcById.archivist).toMatchObject({ name: 'LEAD ADA', role: 'SENIOR ENGINEER' })
-    expect(npcById['lambda-sage']).toMatchObject({ name: 'REVIEWER LAMBDA', role: 'CODE REVIEWER' })
-    expect(npcById['byte-scout']).toMatchObject({ name: 'BYTE', role: 'QA ENGINEER' })
+    expect(npcById['lambda-sage']).toMatchObject({ name: 'LAMBDA', role: 'CODE MENTOR' })
+    expect(npcById['byte-scout']).toMatchObject({ name: 'BYTE', role: 'DEBUGGER' })
 
-    expect(javascriptQuest?.title).toBe('新人エンジニアの初仕事')
+    expect(javascriptQuest?.title).toBe('JavaScript王国のバグを追え')
     expect(javascriptQuest?.steps.map((step) => step.label)).toEqual([
-      'Issue #101を調査し、誤った対象を選ぶbugの原因を特定する',
-      'QAから届いた複数reportをtriageし、影響範囲を特定する',
-      'SEV-1 Production Incidentの原因を特定し、serviceを復旧する',
+      '戦闘システムのターゲットバグを直す',
+      'ログを追い、複数の機能に広がるバグの共通コードを探す',
+      '暴走したCode Coreを止め、王国のシステムを復旧する',
     ])
   })
 
-  it('shows the three chapters as an engineering work queue on the field', () => {
+  it('ends with the shared Code Core fixed and the system restored', () => {
+    const adaEnding = npcById.archivist?.dialogues.find(
+      (dialogue) => dialogue.id === 'archivist-area-clear',
+    )
+    const byteEnding = npcById['byte-scout']?.dialogues.find(
+      (dialogue) => dialogue.id === 'byte-area-clear',
+    )
+
+    expect(adaEnding?.lines.join(' ')).toContain('Code Coreは安定した')
+    expect(adaEnding?.lines.join(' ')).toContain('共通コード')
+    expect(byteEnding?.lines.join(' ')).toContain('全部green')
+  })
+
+  it('shows the three chapters as simple story gates on the field', () => {
     const battleLabels = javascriptField.interactions
       .filter((interaction) => interaction.kind === 'battle')
       .map((interaction) => interaction.label)
 
     expect(battleLabels).toEqual([
-      'ISSUE #101 · BUG FIX',
-      'QA TRIAGE · IMPACT',
-      'SEV-1 · INCIDENT',
+      '最初のバグ',
+      '広がるバグ',
+      'CODE CORE',
     ])
   })
 

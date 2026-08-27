@@ -11,63 +11,67 @@ export const npcDefinitions: NpcDefinition[] = [
         id: 'archivist-area-clear',
         condition: { kind: 'areaCleared', areaId: JAVASCRIPT_AREA_ID },
         lines: [
-          '本番サービスの復旧を確認した。初めての障害対応、完遂だ。',
-          '答えを覚えたんじゃなく、コードから原因を追えた。その読み方は次の仕事でも使える。',
+          'Code Coreは安定した。戦闘システムも全部正常に戻ってる。',
+          '最初は小さなターゲットバグに見えたけど、原因は複数の機能が使っていた共通コードだった。',
+          '一つ直して終わりじゃなく、ログを追ってつながりを見つけたのが今回の勝因だ。いい仕事だったよ。',
         ],
       },
       {
         id: 'archivist-stage-2',
         condition: { kind: 'stageCleared', stageId: 2 },
         lines: [
-          '調査ありがとう。複数の異常データは同じ障害の前兆だった。',
-          '本番が落ち始めている。次はFINAL CHAPTER、Production Incidentだ。今まで読んだ構文を全部使う。',
+          'ログをまとめると、異常は全部同じ共通処理につながってる。',
+          '場所は西のCode Core。そこが壊れて、王国中の戦闘処理へ変な値を流してるみたいだ。',
+          '次が最後。Coreの中へ入って、暴走している処理そのものを止めよう。',
         ],
       },
       {
         id: 'archivist-stage-1',
         condition: { kind: 'stageCleared', stageId: 1 },
         lines: [
-          '最初のbug fixは通った。でもQAから「似た異常が複数ある」と連絡が来た。',
-          'Chapter 2では`find()`も使いつつ、`filter()`と複数条件を読んで影響範囲を調査してほしい。',
+          'ターゲット処理は直ったね。でも別の機能からも同じようなエラーが出始めた。',
+          'BYTEがログを集めてくれてる。次は一つの関数だけじゃなく、どこまでバグが広がっているか見よう。',
+          '新しいコードも増えるけど、前に読んだ処理はそのまま使う。少しずつ追えば大丈夫。',
         ],
       },
       {
         id: 'archivist-start',
         condition: { kind: 'always' },
         lines: [
-          '今日から君もこの開発チームのエンジニアだ。ちょうど小さなbug reportが来ている。',
-          'まずChapter 1へ。既存コードを読んで、どのデータがbugの原因か特定してみよう。',
+          '今日からJavaScript王国の開発チームに入ってもらう。君は新人Code Knightだ。',
+          '最初の仕事は戦闘システムのバグ修正。攻撃が違う敵へ飛ぶことがあるらしい。',
+          '技に書かれたJavaScriptを読んで、どの敵が選ばれるのか確かめながら直していこう。',
         ],
       },
     ],
   },
   {
     id: 'lambda-sage',
-    name: 'REVIEWER LAMBDA',
-    role: 'CODE REVIEWER',
+    name: 'LAMBDA',
+    role: 'CODE MENTOR',
     dialogues: [
       {
         id: 'lambda-level-3',
         condition: { kind: 'minLevel', level: 3 },
         lines: [
-          '本番障害では焦って一行だけ見ないこと。`sort()`の後に何を選び、`reduce()`が何を残すかまで追おう。',
-          'コードレビューと同じだ。処理を上から追って、最終的な値を説明できれば原因に辿り着ける。',
+          'Code Coreの中は処理が長くなる。でも一気に全部理解しようとしなくていい。',
+          'filter、sort、reduceみたいに、処理を一段ずつ追えば最後に何が選ばれるか見えてくる。',
         ],
       },
       {
         id: 'lambda-stage-1',
         condition: { kind: 'stageCleared', stageId: 1 },
         lines: [
-          'レビューの基本。`find()`は最初の1件、`filter()`は条件に合う全件を返す。',
-          'Chapter 2でもChapter 1の読み方は消えない。新しい構文は、知っている処理の上に積み上がる。',
+          '次から敵が増える。複数の候補を残したり、条件を組み合わせたりするコードも出てくるよ。',
+          '迷ったら「今この行で何が残ったか」だけ考えると読みやすい。',
         ],
       },
       {
         id: 'lambda-start',
         condition: { kind: 'always' },
         lines: [
-          '新人のうちは技名を覚えるより、式が返す値を説明できるようになる方が大事だ。',
-          'たとえば`e.hp < 45`なら、まず各データに条件を当てて結果を予測してから実行しよう。',
+          '技名よりコードを見よう。JavaScriptが実際に返した値が、そのまま攻撃対象になる。',
+          'まずはfind()みたいな短い処理から読めばいい。',
         ],
       },
     ],
@@ -75,30 +79,31 @@ export const npcDefinitions: NpcDefinition[] = [
   {
     id: 'byte-scout',
     name: 'BYTE',
-    role: 'QA ENGINEER',
+    role: 'DEBUGGER',
     dialogues: [
       {
         id: 'byte-area-clear',
         condition: { kind: 'areaCleared', areaId: JAVASCRIPT_AREA_ID },
         lines: [
-          'Production復旧を確認！ QA側の再現テストも全部greenだ。',
-          'seedを変えるとデータや順番は変わる。別ケースでも読めたら、暗記じゃなく本当に理解できてるってことだな。',
+          'ログきれいになった！ Code Coreも戦闘システムも全部greenだ。',
+          '最初の小さいバグからここまで来るとは思わなかったな。',
+          '次のエリアでも変な動き見つけたら、また一緒にデバッグしようぜ。',
         ],
       },
       {
         id: 'byte-level-2',
         condition: { kind: 'minLevel', level: 2 },
         lines: [
-          '追加のbug reportをまとめた。今度は異常データが1件とは限らない。',
-          '`find()`で1件を追う読み方を残したまま、`filter()`で影響範囲を洗い出そう。俺もテスト結果を追う。',
+          'ログ拾ってきた。ターゲットだけじゃなく、複数の敵を選ぶ処理でも変な結果が出てる。',
+          'しかも全部、西のCode Coreを通った直後からおかしくなってる。かなり怪しいぞ。',
         ],
       },
       {
         id: 'byte-start',
         condition: { kind: 'always' },
         lines: [
-          '俺はQAのBYTE。ユーザーから来た再現手順とテスト結果はこっちで整理する。',
-          '君は実装側としてコードを読んで原因を絞ってくれ。最初のissueはChapter 1だ。',
+          '俺はBYTE。ログを追ったり、変な動きを探したりするのが得意なんだ。',
+          '最初のバグ、俺も一緒に見るよ。分からなくなったら敵のHPとコードを順番に確認しよう。',
         ],
       },
     ],

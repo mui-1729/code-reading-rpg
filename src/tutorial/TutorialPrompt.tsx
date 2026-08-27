@@ -38,14 +38,19 @@ function getPlayerTileIndex() {
   return tiles.findIndex((tile) => tile.querySelector('.field-player, .world-player-sprite'))
 }
 
+function getWorldPlayerPosition() {
+  const worldPlayer = document.querySelector<HTMLElement>('.world-player-sprite')
+  if (!worldPlayer) return null
+
+  const x = Number(worldPlayer.dataset.worldX ?? worldPlayer.parentElement?.dataset.worldX)
+  const y = Number(worldPlayer.dataset.worldY ?? worldPlayer.parentElement?.dataset.worldY)
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return null
+  return { x, y }
+}
+
 function getPlayerPositionToken(): string | number | null {
-  const worldPlayer = document.querySelector('.world-player-sprite')
-  const worldTile = worldPlayer?.parentElement
-  if (worldTile) {
-    const x = worldTile.dataset.worldX
-    const y = worldTile.dataset.worldY
-    if (x !== undefined && y !== undefined) return `${x}:${y}`
-  }
+  const worldPosition = getWorldPlayerPosition()
+  if (worldPosition) return `${worldPosition.x}:${worldPosition.y}`
 
   const index = getPlayerTileIndex()
   return index >= 0 ? index : null
@@ -75,21 +80,23 @@ function hasInteractionNearby() {
   const map = getFieldMap()
   const width = getFieldWidth()
   const tiles = getFieldTiles()
-  const playerIndex = getPlayerTileIndex()
-  if (!map || !width || playerIndex < 0) return false
+  if (!map || !width) return false
 
   if (map.classList.contains('world-viewport')) {
-    const offsets = [-width, width, -1, 1]
-    return offsets.some((offset) => {
-      if (offset === -1 && playerIndex % width === 0) return false
-      if (offset === 1 && playerIndex % width === width - 1) return false
-      const targetIndex = playerIndex + offset
-      return targetIndex >= 0 &&
-        targetIndex < tiles.length &&
-        Boolean(tiles[targetIndex]?.querySelector('.world-object'))
+    const player = getWorldPlayerPosition()
+    if (!player) return false
+
+    return tiles.some((tile) => {
+      const x = Number(tile.dataset.worldX)
+      const y = Number(tile.dataset.worldY)
+      if (!Number.isFinite(x) || !Number.isFinite(y)) return false
+      const adjacent = Math.abs(x - player.x) + Math.abs(y - player.y) === 1
+      return adjacent && Boolean(tile.querySelector('.world-object'))
     })
   }
 
+  const playerIndex = getPlayerTileIndex()
+  if (playerIndex < 0) return false
   const offset = getFacingOffset(width)
   if (offset === null) return false
   const targetIndex = playerIndex + offset
@@ -114,7 +121,7 @@ export function TutorialPrompt() {
     completeBattle,
     skip,
   } = useTutorial()
-  const [, setRevision] = useState(0)
+  const [revision, setRevision] = useState(0)
   const initialPlayerPositionRef = useRef<string | number | null>(null)
   const routeKind = typeof window === 'undefined' ? 'other' : getRouteKind()
   const worldRoute = typeof window !== 'undefined' && window.location.pathname === '/world'
@@ -138,7 +145,13 @@ export function TutorialPrompt() {
       })
     })
 
-    observer.observe(document.body, { childList: true, characterData: true, subtree: true })
+    observer.observe(document.body, {
+      childList: true,
+      characterData: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-world-x', 'data-world-y'],
+    })
     return () => {
       observer.disconnect()
       if (frame !== 0) window.cancelAnimationFrame(frame)
@@ -166,7 +179,7 @@ export function TutorialPrompt() {
       completeFieldMove()
       initialPlayerPositionRef.current = null
     }
-  }, [completeFieldMove, routeKind, state.phase, state.status])
+  }, [completeFieldMove, revision, routeKind, state.phase, state.status])
 
   useEffect(() => {
     const onClick = (event: MouseEvent) => {

@@ -1,10 +1,26 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { BattleStoryEvent } from '../story/BattleStoryEvent'
+import {
+  getJavaScriptPostBattleEvent,
+  getJavaScriptPreBattleEvent,
+  type BattleStoryEvent as BattleStoryEventData,
+} from '../story/javascriptBattleEvents'
 import { buildResultSequence, type RawResultItem, type ResultSequenceItem } from './resultSequence'
 
 const AUTO_ADVANCE_MS = 1100
 const WORLD_PROGRESS_SELECTOR =
   '[data-result-feedback="world-progress"]:not(.result-sequence-consumed)'
+const JAVASCRIPT_BATTLE_PATH = /^\/javascript\/battle\/(\d+)$/
+
+const getJavaScriptBattleId = () => {
+  const match = JAVASCRIPT_BATTLE_PATH.exec(window.location.pathname)
+  return match?.[1] ? Number(match[1]) : null
+}
+
+const isFirstClear = (summary: HTMLElement) =>
+  Array.from(summary.querySelectorAll<HTMLElement>('.reward-unlock'))
+    .some((element) => element.textContent?.includes('STAGE CLEAR RECORDED'))
 
 const readRewardItems = (summary: HTMLElement): RawResultItem[] => {
   const items: RawResultItem[] = []
@@ -46,7 +62,11 @@ export function BattleResultSequence() {
   const [items, setItems] = useState<ResultSequenceItem[]>([])
   const [index, setIndex] = useState(0)
   const [done, setDone] = useState(false)
+  const [storyEvent, setStoryEvent] = useState<BattleStoryEventData | null>(null)
   const activeTarget = useRef<HTMLElement | null>(null)
+  const activePath = useRef('')
+  const preStoryShown = useRef(false)
+  const postStoryTarget = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     let collectFrame = 0
@@ -60,7 +80,24 @@ export function BattleResultSequence() {
     }
 
     const scan = () => {
+      const path = window.location.pathname
+      if (path !== activePath.current) {
+        activePath.current = path
+        preStoryShown.current = false
+        postStoryTarget.current = null
+        setStoryEvent(null)
+      }
+
       const nextTarget = document.querySelector<HTMLElement>('.victory-card .reward-summary')
+      const battleId = getJavaScriptBattleId()
+
+      if (battleId !== null && !nextTarget && !preStoryShown.current) {
+        const preEvent = getJavaScriptPreBattleEvent(battleId)
+        if (preEvent) {
+          preStoryShown.current = true
+          setStoryEvent(preEvent)
+        }
+      }
 
       if (nextTarget === activeTarget.current) {
         const pendingProgress = document.querySelector(WORLD_PROGRESS_SELECTOR)
@@ -90,6 +127,14 @@ export function BattleResultSequence() {
       nextTarget.classList.add('result-sequence-active')
       nextTarget.closest<HTMLElement>('.victory-card')?.classList.add('result-sequence-host')
       collect(nextTarget)
+
+      if (battleId !== null && postStoryTarget.current !== nextTarget && isFirstClear(nextTarget)) {
+        const postEvent = getJavaScriptPostBattleEvent(battleId)
+        if (postEvent) {
+          postStoryTarget.current = nextTarget
+          setStoryEvent(postEvent)
+        }
+      }
     }
 
     scan()
@@ -115,7 +160,7 @@ export function BattleResultSequence() {
   }, [done, host])
 
   useEffect(() => {
-    if (!target || done || items.length === 0) return
+    if (!target || done || items.length === 0 || storyEvent) return
     const timer = window.setTimeout(() => {
       setIndex((current) => {
         if (current >= items.length - 1) {
@@ -126,7 +171,20 @@ export function BattleResultSequence() {
       })
     }, AUTO_ADVANCE_MS)
     return () => window.clearTimeout(timer)
-  }, [done, index, items.length, target])
+  }, [done, index, items.length, storyEvent, target])
+
+  if (storyEvent) {
+    return (
+      <BattleStoryEvent
+        event={storyEvent}
+        onComplete={() => setStoryEvent(null)}
+        onSkip={() => {
+          setStoryEvent(null)
+          if (target) setDone(true)
+        }}
+      />
+    )
+  }
 
   if (!target || items.length === 0) return null
 

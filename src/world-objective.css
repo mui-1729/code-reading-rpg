@@ -1,3 +1,40 @@
+.world-next-objective {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  display: grid;
+  gap: 6px;
+  border-color: var(--gold);
+  background: #11101b;
+}
+
+.world-next-objective > span {
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .1em;
+}
+
+.world-next-objective > strong {
+  color: #fff8d9;
+  font-size: 14px;
+}
+
+.world-next-objective > p {
+  margin: 0;
+  color: #d8d4e4;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.world-next-objective.is-clear {
+  border-color: var(--green);
+}
+
+.world-next-objective.is-clear > span,
+.world-next-objective.is-clear > strong {
+  color: var(--green);
+}
+
 .world-objective-list {
   display: grid;
   gap: 9px;
@@ -55,6 +92,14 @@
 }
 
 @media (max-width: 520px) {
+  .world-next-objective {
+    padding: 10px 11px;
+  }
+
+  .world-next-objective > strong {
+    font-size: 13px;
+  }
+
   .world-objective-row header {
     display: grid;
     gap: 5px;

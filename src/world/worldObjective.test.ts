@@ -3,13 +3,14 @@ import { createInitialPlayerProgress } from '../progression'
 import { getWorldObjective, getWorldProgressChange } from './worldObjective'
 
 describe('World Objective', () => {
-  it('初期状態ではJS草むらとTS森のEncounterを案内する', () => {
+  it('初期状態ではJSの最初のバグとTS森のEncounterを案内する', () => {
     const progress = createInitialPlayerProgress()
 
     expect(getWorldObjective('javascript', progress)).toMatchObject({
+      label: 'JAVASCRIPT KINGDOM',
       clearedBattles: 0,
       status: 'encounter',
-      next: '草むらでJavaScript Battle',
+      next: '戦闘システムの最初のバグを直す',
       bossUnlocked: false,
     })
     expect(getWorldObjective('typescript', progress)).toMatchObject({
@@ -20,7 +21,7 @@ describe('World Objective', () => {
     })
   })
 
-  it('通常Battleを1つCLEARすると次のEncounterを案内する', () => {
+  it('JS Chapter 1 CLEAR後はログから共通コードを追う', () => {
     const progress = {
       ...createInitialPlayerProgress(),
       clearedStageIds: [1],
@@ -30,11 +31,11 @@ describe('World Objective', () => {
     expect(getWorldObjective('javascript', progress)).toMatchObject({
       clearedBattles: 1,
       status: 'encounter',
-      next: '草むらで次のJavaScript Battle',
+      next: 'ログを追って共通コードを探す',
     })
   })
 
-  it('2つ目の通常BattleをCLEARするとBossを案内する', () => {
+  it('JS Chapter 2 CLEAR後はCode Coreを案内する', () => {
     const progress = {
       ...createInitialPlayerProgress(),
       clearedStageIds: [1, 2],
@@ -44,7 +45,7 @@ describe('World Objective', () => {
     expect(getWorldObjective('javascript', progress)).toMatchObject({
       clearedBattles: 2,
       status: 'boss',
-      next: '西のBOSSへ',
+      next: '西のCode Coreへ向かう',
       bossUnlocked: true,
     })
   })
@@ -65,7 +66,7 @@ describe('World Objective', () => {
     expect(getWorldObjective('javascript', progress).clearedBattles).toBe(0)
   })
 
-  it('Boss CLEAR後は3/3のAREA CLEARになる', () => {
+  it('JS Boss CLEAR後はシステム復旧を示す', () => {
     const progress = {
       ...createInitialPlayerProgress(),
       clearedStageIds: [1, 2, 3],
@@ -76,12 +77,12 @@ describe('World Objective', () => {
     expect(getWorldObjective('javascript', progress)).toMatchObject({
       clearedBattles: 3,
       status: 'clear',
-      next: 'AREA CLEAR',
+      next: 'SYSTEM RESTORED',
       bossUnlocked: true,
     })
   })
 
-  it('progress差分から通常進行・Boss解放・Completeを判定する', () => {
+  it('progress差分からbug進行・Code Core解放・復旧を返す', () => {
     const initial = createInitialPlayerProgress()
     const afterFirst = {
       ...initial,
@@ -101,16 +102,21 @@ describe('World Objective', () => {
 
     expect(getWorldProgressChange(initial, afterFirst)).toMatchObject({
       heading: 'WORLD PROGRESS',
+      label: 'JAVASCRIPT KINGDOM',
       progressLabel: '1 / 3',
+      next: 'ログを追って共通コードを探す',
     })
     expect(getWorldProgressChange(afterFirst, afterSecond)).toMatchObject({
       heading: 'BOSS UNLOCKED',
+      label: 'JAVASCRIPT KINGDOM',
       progressLabel: '2 / 3',
-      next: '西のBOSSへ',
+      next: '西のCode Coreへ向かう',
     })
     expect(getWorldProgressChange(afterSecond, afterBoss)).toMatchObject({
       heading: 'WORLD COMPLETE',
+      label: 'JAVASCRIPT KINGDOM',
       progressLabel: '3 / 3',
+      next: 'SYSTEM RESTORED',
     })
   })
 
@@ -120,7 +126,6 @@ describe('World Objective', () => {
       clearedStageIds: [1],
       unlockedStageIds: [1, 4, 2],
     }
-
     expect(getWorldProgressChange(progress, progress)).toBeNull()
   })
 })
