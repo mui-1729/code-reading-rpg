@@ -299,37 +299,35 @@ export function WorldPage() {
             )
           })}
 
-          {followerVisible && (
+          <div className="world-character-layer" aria-hidden="true">
+            {followerVisible && (
+              <span
+                className="world-follower-sprite world-character-overlay"
+                style={spriteStyle(followerPosition)}
+                data-world-x={followerPosition.x}
+                data-world-y={followerPosition.y}
+              >
+                <img
+                  className="world-follower-pixel"
+                  src={characterVisuals.byte.field}
+                  alt=""
+                />
+              </span>
+            )}
+
             <span
-              className="world-follower-sprite world-character-overlay"
-              style={spriteStyle(followerPosition)}
-              data-world-x={followerPosition.x}
-              data-world-y={followerPosition.y}
-              aria-label="BYTE follower"
+              className="world-player-sprite world-character-overlay"
+              style={spriteStyle(position)}
+              data-world-x={position.x}
+              data-world-y={position.y}
             >
               <img
-                className="world-follower-pixel"
-                src={characterVisuals.byte.field}
+                className="world-player-pixel"
+                src={characterVisuals.player.field}
                 alt=""
-                aria-hidden="true"
               />
             </span>
-          )}
-
-          <span
-            className="world-player-sprite world-character-overlay"
-            style={spriteStyle(position)}
-            data-world-x={position.x}
-            data-world-y={position.y}
-            aria-label="Player"
-          >
-            <img
-              className="world-player-pixel"
-              src={characterVisuals.player.field}
-              alt=""
-              aria-hidden="true"
-            />
-          </span>
+          </div>
         </div>
 
         <section className="world-message pixel-inner-window" aria-live="polite">
