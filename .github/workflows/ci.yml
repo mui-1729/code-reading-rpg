@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, docs/179-rpg-economy-equipment-design]
   pull_request:
 
 jobs:
