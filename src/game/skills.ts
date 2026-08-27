@@ -1,4 +1,4 @@
-import { createSeededRandom, type Seed } from './random'
+import type { Seed } from './random'
 import {
   skillDefinitions as javascriptSkillDefinitions,
   type CodeVariant,
