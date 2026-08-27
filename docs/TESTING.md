@@ -15,7 +15,14 @@ npm test
 npm run build
 ```
 
-PR前にも同じ4項目を実行する。PR CIは二重確認。
+加えてPR / mainではChromiumを使ったPlaywright E2Eを実行する。
+
+```bash
+npx playwright install --with-deps chromium
+npm run test:e2e
+```
+
+PR前にも4項目を実行し、Open World / route / persistenceへ触れる変更ではE2Eも通す。PR CIは二重確認。
 
 ## 3. Unit Test
 
@@ -41,9 +48,6 @@ PR前にも同じ4項目を実行する。PR CIは二重確認。
 - adjacency
 - encounter chance helper
 - progressに応じたencounter Battle選択
-
-今後World action resolverを追加したら:
-
 - move成功 / blocked
 - encounter cooldown
 - encounter intent
@@ -70,9 +74,6 @@ PR前にも同じ4項目を実行する。PR CIは二重確認。
 - World position persistence
 - encounter counters
 - reset event連携
-
-今後validation強化時:
-
 - out-of-bounds World position
 - unknown Equipment ID
 - unknown Party ID
@@ -97,8 +98,6 @@ Party:
 - codeが選んだ同じtarget以外へ攻撃しない設計境界
 
 ### World Objective
-
-導入後:
 
 - JS / TS各progress状態
 - first encounter → next encounter → Boss → CLEAR
@@ -152,23 +151,22 @@ Party:
 - Battle間の表示code重複を避ける
 - 序盤へ発展構文を突然混ぜない
 
-## 6. Component / E2E方針
+## 6. Browser E2E
 
-Open World化により、pure testだけではroute横断loopの回帰を拾いにくくなった。
+Playwright + Chromiumを使用する。Unit Testを置き換えず、route・DOM・LocalStorageをまたぐ主要loopだけを固定する。
 
-優先E2E:
+### Core loop
 
 ```text
 Title
 → World
-→ move
-→ Random Encounter
+→ deterministic Random Encounter
 → Battle victory
 → Worldへreturn
 → position保持
 ```
 
-次:
+### Party
 
 ```text
 World
@@ -178,23 +176,31 @@ World
 → follow-up確認
 ```
 
-次:
+### Equipment
 
 ```text
-Boss clear
+JS Boss clear state
 → Equipment reward
 → Pause EQUIPMENT
 → equip
-→ Battle stats反映
+→ Battle POWER反映
 ```
 
-Persistence:
+### Persistence
 
 ```text
 World位置 / Gold / Equipment / Party
 → reload
 → state保持
 ```
+
+### E2Eの安定性ルール
+
+- Random Encounterは正規save + seeded stateで決定論的に再現する
+- `waitForTimeout`を成功条件にしない
+- URL / role / visible state / LocalStorageを待機条件にする
+- 1本の巨大scenarioにせず、core / persistence / party / equipmentを分ける
+- `npm test`は`src`のみを対象にし、Playwright specをVitestが拾わないよう分離する
 
 ## 7. Cloudflare Preview
 
@@ -213,7 +219,8 @@ PRごとに最低限:
 
 main merge後:
 
-- GitHub Actions success
+- GitHub Actions build job success
+- GitHub Actions e2e job success
 - Cloudflare Production success
 - 変更範囲に応じたsmoke check
 
@@ -232,11 +239,13 @@ bug fixでは原因に対応するtestを残す。
 ## 10. PR最低条件
 
 - [ ] 必要なUnit Test追加
+- [ ] 必要なE2E追加 / 更新
 - [ ] `npm ci`
 - [ ] `npm run lint`
 - [ ] `npm test`
 - [ ] `npm run build`
-- [ ] GitHub Actions
+- [ ] Open World / route / persistence変更なら`npm run test:e2e`
+- [ ] GitHub Actions build + e2e
 - [ ] Cloudflare Preview
 - [ ] Self Review
 - [ ] Squash Merge
