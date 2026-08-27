@@ -55,7 +55,7 @@ Central Hubの`SHOP` objectへ隣接してINTERACTするとcompactなShop UIを�
 - 結果はshort FIELD LOGへ出す
 - World常設HUDへShop情報を追加しない
 
-旧Area header modalの`AreaShop.tsx`はlegacy UI。新しいShop featureの基準にしない。
+Open World移行前のArea header Shop UIは削除済み。新しいShop featureは`WorldShop.tsx`を基準にする。
 
 ## Equipment role
 
@@ -118,7 +118,6 @@ src/economy/
 ├── WorldShop.tsx     # Open World Shop UI
 ├── economy.test.ts
 ├── shop.test.ts
-├── AreaShop.tsx      # legacy Area modal
 └── index.ts
 ```
 
