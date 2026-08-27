@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, refactor/pause-sound-settings]
+    branches: [main]
   pull_request:
 
 jobs:
