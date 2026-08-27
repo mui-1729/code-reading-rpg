@@ -42,6 +42,18 @@ describe('economy', () => {
     expect(progress.inventory.patchKit).toBe(2)
   })
 
+  it('装備補助で指定された回復量を使う', () => {
+    const progress = {
+      ...createInitialPlayerProgress(),
+      inventory: { patchKit: 1 },
+    }
+    const result = consumePatchKit(progress, 40, 100, false, PATCH_KIT_HEAL + 12)
+
+    expect(result.consumed).toBe(true)
+    expect(result.healed).toBe(36)
+    expect(result.hp).toBe(76)
+  })
+
   it('同じBattleですでに使っていれば2個目を消費しない', () => {
     const progress = {
       ...createInitialPlayerProgress(),
