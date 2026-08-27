@@ -18,25 +18,26 @@ export const mainQuests: readonly QuestDefinition[] = [
   {
     id: 'javascript-main',
     areaId: JAVASCRIPT_AREA_ID,
-    title: '新人エンジニアの初仕事',
-    description: 'Issue対応、QA triage、本番障害対応を通してJavaScriptのコードリーディングを身につける。',
+    title: 'Target Selector Incident',
+    description:
+      '小さなtargeting bugから始まり、QA triage、SEV-1復旧、postmortemまでを経験するJavaScript編。',
     guideNpcId: 'archivist',
     steps: [
       {
         id: 'javascript-stage-1',
-        label: 'Issue #101を調査し、誤った対象を選ぶbugの原因を特定する',
+        label: 'Issue #101を再現し、find()の「最初の一致」と期待する優先対象のズレを特定する',
         condition: { kind: 'stageCleared', stageId: 1 },
         fieldTarget: { kind: 'battle', stageId: 1 },
       },
       {
         id: 'javascript-stage-2',
-        label: 'QAから届いた複数reportをtriageし、影響範囲を特定する',
+        label: 'QA reportをtriageし、filter()/&&/||を使うselector群の影響範囲と共通前提を洗い出す',
         condition: { kind: 'stageCleared', stageId: 2 },
         fieldTarget: { kind: 'battle', stageId: 2 },
       },
       {
         id: 'javascript-area-clear',
-        label: 'SEV-1 Production Incidentの原因を特定し、serviceを復旧する',
+        label: 'SEV-1を復旧し、配列順への暗黙依存をsort()/reduce()で明示的な優先順位へ置き換える',
         condition: { kind: 'areaCleared', areaId: JAVASCRIPT_AREA_ID },
         fieldTarget: { kind: 'battle', stageId: 3 },
       },
