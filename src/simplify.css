@@ -64,6 +64,14 @@
   border-color: var(--green);
 }
 
+.result-equipment-hero {
+  width: 52px;
+  height: 52px;
+  padding: 7px;
+  border: 3px solid var(--green);
+  background: #0b1610;
+}
+
 .result-sequence-controls {
   display: flex;
   justify-content: center;
@@ -81,6 +89,20 @@
   gap: 14px;
   padding: 8px 10px;
   border-bottom: 1px solid #34344d;
+}
+
+.result-sequence-summary > div.is-equipment {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+}
+
+.result-equipment-icon {
+  width: 26px;
+  height: 26px;
+  padding: 3px;
+  border: 1px solid #4f6f42;
+  background: #0b1610;
 }
 
 .result-sequence-summary span {
@@ -147,6 +169,14 @@
 
   .result-sequence-summary > div {
     display: grid;
+  }
+
+  .result-sequence-summary > div.is-equipment {
+    grid-template-columns: 28px 1fr;
+  }
+
+  .result-sequence-summary > div.is-equipment strong {
+    grid-column: 2;
   }
 
   .result-sequence-summary strong {
