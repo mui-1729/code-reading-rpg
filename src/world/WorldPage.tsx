@@ -2,9 +2,15 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { gameAudio } from '../audio/gameAudio'
 import { useBgm } from '../audio/useBgm'
-import { PATCH_KIT_PRICE, purchasePatchKit } from '../economy'
 import { useProgress } from '../progression'
-import { emptyPartyEquipment, equipmentById, getCombatStats, useRpg } from '../rpg'
+import {
+  emptyPartyEquipment,
+  equipmentById,
+  getCombatStats,
+  getEquipmentEffectText,
+  useRpg,
+} from '../rpg'
+import { purchaseShopItem, SHOP_ITEMS } from './shop'
 import { openWorldTreasure } from './treasures'
 import { resolveWorldInteraction, resolveWorldMove } from './worldActions'
 import { getTreasureAtPosition, getVisibleWorldCells, getWorldRegion } from './worldMap'
@@ -35,6 +41,8 @@ export function WorldPage() {
   const { progress, stats, setProgress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
   const [message, setMessage] = useState('草むらではJavaScript、森ではTypeScriptのEnemyが出現する。')
+  const [shopOpen, setShopOpen] = useState(false)
+  const [shopNotice, setShopNotice] = useState('商品を選ぶ。Equipmentは購入後MENUから装備する。')
   useBgm('field')
 
   const position = rpgState.worldPosition
@@ -75,9 +83,42 @@ export function WorldPage() {
     [navigate],
   )
 
+  const closeShop = useCallback(() => {
+    gameAudio.playSe('cancel')
+    setShopOpen(false)
+  }, [])
+
+  const buyShopItem = useCallback(
+    (itemId: string) => {
+      const result = purchaseShopItem(progress, rpgState, itemId)
+      if (!result.item) return
+
+      if (!result.purchased) {
+        gameAudio.playSe('cancel')
+        setShopNotice(
+          result.reason === 'owned'
+            ? `${result.item.name}: OWNED`
+            : `${result.item.name}: ${result.item.price} G必要。`,
+        )
+        return
+      }
+
+      gameAudio.playSe('confirm')
+      setProgress(result.progress)
+      setRpgState(result.rpgState)
+
+      if (result.item.kind === 'equipment') {
+        setShopNotice(`${result.item.name}を購入。MENU > EQUIPMENTから装備できる。`)
+      } else {
+        setShopNotice(`PATCH KITを購入。STOCK ×${result.progress.inventory.patchKit}`)
+      }
+    },
+    [progress, rpgState, setProgress, setRpgState],
+  )
+
   const move = useCallback(
     (dx: number, dy: number) => {
-      if (document.body.dataset.rpgPaused === 'true') return
+      if (document.body.dataset.rpgPaused === 'true' || shopOpen) return
 
       const result = resolveWorldMove({ rpgState, progress, dx, dy })
       if (result.kind === 'blocked') {
@@ -103,11 +144,11 @@ export function WorldPage() {
 
       setMessage(terrainLabels[result.terrain] ?? result.terrain)
     },
-    [enterBattle, progress, rpgState, setRpgState],
+    [enterBattle, progress, rpgState, setRpgState, shopOpen],
   )
 
   const interact = useCallback(() => {
-    if (document.body.dataset.rpgPaused === 'true') return
+    if (document.body.dataset.rpgPaused === 'true' || shopOpen) return
 
     const intent = resolveWorldInteraction(rpgState, progress)
 
@@ -130,15 +171,10 @@ export function WorldPage() {
     }
 
     if (intent.kind === 'shop') {
-      const result = purchasePatchKit(progress)
-      if (!result.purchased) {
-        gameAudio.playSe('cancel')
-        setMessage(`PATCH KITは${PATCH_KIT_PRICE} G。Goldが足りない。`)
-        return
-      }
       gameAudio.playSe('confirm')
-      setProgress(result.progress)
-      setMessage(`PATCH KITを購入した。残り ${result.progress.gold} G。`)
+      setShopNotice('商品を選ぶ。Equipmentは購入後MENUから装備する。')
+      setShopOpen(true)
+      setMessage('HUB SHOPを開いた。')
       return
     }
 
@@ -193,10 +229,17 @@ export function WorldPage() {
     }
 
     setMessage('近くに調べられるものはない。')
-  }, [combatStats.maxHp, enterBattle, progress, rpgState, setProgress, setRpgState])
+  }, [combatStats.maxHp, enterBattle, progress, rpgState, setProgress, setRpgState, shopOpen])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (shopOpen) {
+        if (event.key === 'Escape') {
+          event.preventDefault()
+          closeShop()
+        }
+        return
+      }
       if (document.body.dataset.rpgPaused === 'true') return
       const key = event.key.toLowerCase()
       if (key === 'arrowup' || key === 'w') {
@@ -218,7 +261,7 @@ export function WorldPage() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [interact, move])
+  }, [closeShop, interact, move, shopOpen])
 
   return (
     <main className="app-shell world-shell title-screen">
@@ -293,6 +336,63 @@ export function WorldPage() {
           </button>
         </div>
       </section>
+
+      {shopOpen && (
+        <div className="shop-overlay" role="presentation" onClick={closeShop}>
+          <section
+            className="shop-dialog pixel-window"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Hub Shop"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="shop-header">
+              <div>
+                <span className="eyebrow">CENTRAL HUB</span>
+                <h2>HUB SHOP</h2>
+              </div>
+              <div className="shop-wallet">
+                <span>GOLD</span>
+                <strong>{progress.gold} G</strong>
+              </div>
+              <button className="close-button" type="button" onClick={closeShop} aria-label="Close shop">
+                ×
+              </button>
+            </header>
+
+            <p className="shop-notice" aria-live="polite">{shopNotice}</p>
+
+            <div className="shop-items">
+              {SHOP_ITEMS.map((item) => {
+                const equipment = item.kind === 'equipment' ? equipmentById[item.equipmentId] : undefined
+                const owned = item.kind === 'equipment' && rpgState.ownedEquipmentIds.includes(item.equipmentId)
+                return (
+                  <article className="shop-item pixel-inner-window" key={item.id}>
+                    <div className="shop-item-copy">
+                      <header>
+                        <strong>{item.name}</strong>
+                        <span>{item.price} G</span>
+                      </header>
+                      <p>{item.description}</p>
+                      {equipment && <small>{getEquipmentEffectText(equipment)}</small>}
+                      {item.kind === 'item' && <small>STOCK ×{progress.inventory.patchKit}</small>}
+                    </div>
+                    <button
+                      type="button"
+                      className={owned ? 'secondary-button' : 'primary-button'}
+                      onClick={() => buyShopItem(item.id)}
+                      disabled={owned}
+                      aria-label={`Buy ${item.name}`}
+                    >
+                      {owned ? 'OWNED' : 'BUY'}
+                    </button>
+                  </article>
+                )
+              })}
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   )
 }
