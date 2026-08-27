@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, refactor/world-action-resolver]
+    branches: [main]
   pull_request:
 
 jobs:
