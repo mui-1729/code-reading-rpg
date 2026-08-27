@@ -123,23 +123,6 @@ function reverseComparisons(code: string): string {
   )
 }
 
-function shiftIntegerBoundaries(code: string): string {
-  return transformLines(code, (line) =>
-    line.replace(
-      /\b([A-Za-z_$][\w$]*\.(?:hp|attackDamage)|hp|attackDamage)[ \t]*(<=|>=|<|>)[ \t]*(-?\d+)\b/g,
-      (_match, left: string, operator: string, literal: string) => {
-        const value = Number(literal)
-        if (!Number.isInteger(value)) return _match
-
-        if (operator === '<') return `${left} <= ${value - 1}`
-        if (operator === '<=') return `${left} < ${value + 1}`
-        if (operator === '>') return `${left} >= ${value + 1}`
-        return `${left} > ${value - 1}`
-      },
-    ),
-  )
-}
-
 const dataPropertyPattern = 'hp|attackDamage|name|score|enemy|value|limit|stats'
 
 function useBracketPropertyAccess(code: string): string {
@@ -163,12 +146,7 @@ function parenthesizeSimpleArrowParameters(code: string): string {
 }
 
 function getSemanticCandidates(variant: CodeVariant): CodeVariant[] {
-  const comparisonTransforms = [
-    (code: string) => code,
-    reverseComparisons,
-    shiftIntegerBoundaries,
-    (code: string) => reverseComparisons(shiftIntegerBoundaries(code)),
-  ]
+  const comparisonTransforms = [(code: string) => code, reverseComparisons]
   const propertyTransforms = [(code: string) => code, useBracketPropertyAccess]
   const arrowTransforms = [(code: string) => code, parenthesizeSimpleArrowParameters]
   const seen = new Set<string>()
