@@ -2,24 +2,25 @@
 
 ## Goal
 
-`CODE//READ RPG`の主人公・仲間・武器を、初期のDragon Quest / Final Fantasyを連想する**粗めの16-bit JRPGドット**へ寄せる。
+`CODE//READ RPG`の主人公・仲間・武器を、**ファミコン〜初期8-bit JRPGくらいの粗いドット**へ寄せる。
 
-高解像度イラストを縮小して使うのではなく、Field / Battle / Equipmentそれぞれで読みやすい小さなspriteを使う。
+高解像度イラストを縮小して使わず、少ないpixel / 少ない色数でField / Battle / Equipmentそれぞれに必要な情報だけを見せる。
 
 参考方向:
 
-- 低解像度の輪郭
-- 少ない色数
-- 1px単位で読めるsilhouette
+- 16×16〜16×24前後の粗いcharacter sprite
+- 3〜5色程度を基本にする
+- anti-aliasなし
+- 顔の描き込みよりsilhouette優先
 - 黒背景 / 白枠 / 青系accentの既存UIと共存
-- キャラクターを大きく描き込みすぎない
+- 昔のDQ / FFのように「何のキャラか分かれば十分」の密度
 
 ## Scope
 
 今回入れるもの:
 
-1. 主人公 `CODE KNIGHT` のpixel sprite
-2. 仲間 `BYTE` のpixel sprite
+1. 主人公 `CODE KNIGHT` の8-bit pixel sprite
+2. 仲間 `BYTE` の8-bit pixel sprite
 3. Fieldで主人公spriteを表示
 4. BYTE加入後、Fieldで主人公の後ろにfollow表示
 5. Battleで主人公 / BYTEをsprite表示
@@ -44,47 +45,65 @@
 
 Field:
 
-- 1 character: 約16×24〜24×32px相当
+- 1 character: **16×24px前後**
 - CSSで`image-rendering: pixelated`
 - tileからはみ出しすぎない
 
 Battle:
 
-- Fieldより一段大きい
-- 約32×48〜48×64px相当
+- **24×32px前後**
+- Fieldより少しだけ大きい
 - 既存status panel内でHP表示を邪魔しない
 
 Weapon:
 
-- 約16×16〜24×24px相当
-- silhouette優先
-- 装備一覧で判別できればよい
+- **12×12〜16×16px前後**
+- 柄 / 刃 / accent色だけで判別
+- 細かい装飾はしない
+
+### Palette
+
+主人公:
+
+- 髪: 濃紺〜黒
+- 服: 青
+- 肌: 1色
+- highlight: 水色1色
+
+BYTE:
+
+- 髪/帽子: 深緑
+- 服: 緑
+- 肌: 1色
+- highlight: 黄緑1色
+
+基本はtransparentを除いて3〜5色以内。
 
 ### Character identity
 
 主人公 / CODE KNIGHT:
 
 - 暗い髪
-- 青系の軽装
+- 青い服
 - 剣士
-- 小さなspriteでも主人公だと分かる青accent
+- 小さいspriteでも青accentで主人公と分かる
 
 BYTE / SCOUT:
 
 - 緑系
-- 軽装の偵察役
 - 主人公より細身
+- scoutらしい軽装
 - `B` glyphはfallbackとして残すが通常表示はspriteへ置換
 
 ### Weapon identity
 
 既存Weaponを最低限描き分ける:
 
-- Training Blade: 素朴な短剣
-- Guard Edge: 青銀、安定型
-- Branch Saber: 枝分かれ / 金系accent、高火力型
+- Training Blade: 灰色の短い剣
+- Guard Edge: 青い刃 / guardが目立つ
+- Branch Saber: 金〜黄緑の枝分かれ形状
 
-Shop / Boss reward / Equipmentから得たWeaponが見た目で分かることを優先する。
+Shop / Boss reward / Equipmentから得たWeaponが小さなiconでも区別できればよい。
 
 ## Asset structure
 
@@ -92,18 +111,20 @@ Shop / Boss reward / Equipmentから得たWeaponが見た目で分かること�
 public/
 └── pixel-art/
     ├── characters/
-    │   ├── code-knight-field.png
-    │   ├── code-knight-battle.png
-    │   ├── byte-field.png
-    │   └── byte-battle.png
+    │   ├── code-knight-field.svg
+    │   ├── code-knight-battle.svg
+    │   ├── byte-field.svg
+    │   └── byte-battle.svg
     └── weapons/
-        ├── training-blade.png
-        ├── guard-edge.png
-        └── branch-saber.png
+        ├── training-blade.svg
+        ├── guard-edge.svg
+        └── branch-saber.svg
 
 src/rpg/
 └── visualAssets.ts
 ```
+
+SVGはvector drawingとして滑らかに描かず、**1px矩形だけを並べたpixel source**として使う。
 
 `visualAssets.ts`をsource of truthにして、UI側でpathを直接書き散らさない。
 
@@ -111,7 +132,7 @@ src/rpg/
 
 ### Player
 
-現在の`◆`をpixel spriteへ置換する。
+現在の`◆`を8-bit pixel spriteへ置換する。
 
 DOM上の`.world-player-sprite` classはE2E互換のため維持する。
 
@@ -178,8 +199,8 @@ Weapon rowにiconを表示する。
 ## Implementation order
 
 1. このplanをcommit
-2. Character / Weapon pixel assetsを生成
-3. binary assetsを`public/pixel-art`へ追加
+2. Character / Weaponを8-bit pixel assetとして作成
+3. `public/pixel-art`へ追加
 4. `visualAssets.ts`を追加
 5. Field player / BYTE表示を差し替え
 6. Battle player / BYTE表示を差し替え
@@ -192,10 +213,11 @@ Weapon rowにiconを表示する。
 
 ## Acceptance criteria
 
-- Fieldの主人公が`◆`ではなくpixel characterとして見える
+- Fieldの主人公が`◆`ではなくファミコン風pixel characterとして見える
 - BYTE加入前はHub NPC、加入後はPlayer followerとして見える
-- Battleで主人公とBYTEがpixel spriteとして見える
+- Battleで主人公とBYTEが粗いpixel spriteとして見える
 - Weapon変更がBattle visualとEquipment iconに反映される
+- 画像を拡大してもanti-aliasされない
 - 既存Battle target / code / damage logicを壊さない
 - 既存save schemaを変更しない
 - mobileでspriteがUIを押し潰さない
