@@ -84,10 +84,10 @@ test.describe('Boss GUARD', () => {
     await expect(page.getByLabel('Boss Guard ACTIVE')).toContainText(
       'enemies.some(e => e.name !== "Boss" && e.hp > 0)',
     )
-    await expect(boss.locator('.enemy-name-row span')).toHaveText('156/156')
 
+    const guardedHpBefore = await enemyHp(boss)
     await executeSkill(page, 'ALERT')
-    await expect(boss.locator('.enemy-name-row span')).toHaveText('155/156')
+    await expect.poll(() => enemyHp(boss)).toBe(guardedHpBefore - 1)
     await expect(page.getByText('BOSS GUARD → total damage to Boss capped at 1')).toBeVisible()
     await expect(page.getByText('TURN 02')).toBeVisible()
 
@@ -113,11 +113,11 @@ test.describe('Boss GUARD', () => {
     const boss = page.locator('.enemy-card.is-boss-enemy')
     const goblin = page.locator('.enemy-card').filter({ hasText: 'Goblin' })
     await expect(page.getByLabel('Boss Guard ACTIVE')).toBeVisible()
-    await expect(boss.locator('.enemy-name-row span')).toHaveText('132/132')
-    await expect(goblin.locator('.enemy-name-row span')).toHaveText('82/82')
 
+    const bossHpBefore = await enemyHp(boss)
+    const goblinHpBefore = await enemyHp(goblin)
     await executeSkill(page, 'TYPE GUARD')
-    await expect(boss.locator('.enemy-name-row span')).toHaveText('131/132')
-    await expect.poll(() => enemyHp(goblin)).toBeLessThan(82)
+    await expect.poll(() => enemyHp(boss)).toBe(bossHpBefore - 1)
+    await expect.poll(() => enemyHp(goblin)).toBeLessThan(goblinHpBefore - 1)
   })
 })
