@@ -4,6 +4,8 @@
 
 Battle報酬を次のBattleの余裕や装備選択へ変換するeconomy loopを定義する。
 
+この文書は**現在実装されているGold / PATCH KIT / Shop仕様**を中心に扱う。Equipment visual / Inventory / Gold balance / paid Innまで含む#178のtarget designは[`RPG_ECONOMY_EQUIPMENT_DESIGN.md`](./RPG_ECONOMY_EQUIPMENT_DESIGN.md)をsource of truthとする。
+
 ```text
 Battle Victory / Treasure
 ↓
@@ -78,6 +80,8 @@ Accessory:
 
 効果値と短い役割説明はPause > EQUIPMENTで比較できる。
 
+現在はWeaponのみpixel SVG visual mappingを持つ。Armor / Accessory / Itemまで含む共通visual systemは#180で整備する。
+
 ## Battle Item
 
 PATCH KITを所持している時だけBattle consoleへcompact actionを出す。
@@ -96,6 +100,24 @@ PATCH KITを所持している時だけBattle consoleへcompact actionを出す�
 - maxHPを超えない
 - stock -1
 - 同Battle2回目不可
+
+Item / Inventory presentationの共通化は#181で扱う。
+
+## Recovery / Inn
+
+現在のHub Recovery Pointは、HPが減っていれば**無料で即full recovery**する。
+
+これはcurrent implementationであり、target designではGold economyへ接続するため#183でpaid Innへ置き換える。
+
+初期target:
+
+- fixed 20 G
+- Rest前にcurrent HP / max HP / price / Goldを表示
+- full HPならchargeしない
+- Gold不足ならstateを変更しない
+- success時だけGold減少 + full recovery
+
+詳細は[`RPG_ECONOMY_EQUIPMENT_DESIGN.md`](./RPG_ECONOMY_EQUIPMENT_DESIGN.md)を参照する。
 
 ## PlayerProgress
 
@@ -123,6 +145,8 @@ src/economy/
 
 `shop.ts`はPlayerProgress / RpgStateを受け取り、購入後stateをpureに返す。UIはその結果を各Providerへ反映するだけにする。
 
+paid Inn実装時も同様に、Gold / HPのtransactionはpure resolverへ置き、`WorldPage.tsx`へ価格判定を直書きしない。
+
 ## Boundaries
 
 Economy / Equipmentが変更してはいけないもの:
@@ -140,7 +164,9 @@ PATCH KITとEquipmentは「間違えても少し耐えられる」「火力か�
 
 PlayerProgress schema v4 / RpgState v3。
 
-Shop自体の追加でschema versionは上げない。購入Equipmentは既存`ownedEquipmentIds`へ保存する。
+Shop / visual metadata / paid Innの追加だけではschema versionを上げない。購入Equipmentは既存`ownedEquipmentIds`へ保存する。
+
+generic inventory等、保存shape自体を変更する場合のみmigrationとversion bumpを同時に行う。
 
 ## Tests
 
@@ -151,3 +177,5 @@ Shop自体の追加でschema versionは上げない。購入Equipmentは既存`o
 - slot内のrole差
 - consume / heal cap / full HP / no stock / one-use per Battle
 - World Shop open / purchase / reload persistence / Pause比較
+- paid Inn success / full HP no-charge / insufficient Gold
+- Gold獲得 → purchase → equip → Rest → reloadの統合E2E

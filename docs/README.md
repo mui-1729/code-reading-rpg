@@ -18,7 +18,8 @@
 
 - [`OPEN_WORLD_DESIGN.md`](./OPEN_WORLD_DESIGN.md) — World、Encounter、HP持続、Treasure、Objective
 - [`RPG_PROGRESSION.md`](./RPG_PROGRESSION.md) — EXP / Level / unlock / save progression
-- [`ECONOMY.md`](./ECONOMY.md) — Gold / PATCH KIT / Shop
+- [`ECONOMY.md`](./ECONOMY.md) — 現在のGold / PATCH KIT / Shop仕様
+- [`RPG_ECONOMY_EQUIPMENT_DESIGN.md`](./RPG_ECONOMY_EQUIPMENT_DESIGN.md) — Equipment / Item / Gold / Shop / Innを1つのRPG loopとして完成させる設計
 - [`QUEST_SYSTEM.md`](./QUEST_SYSTEM.md) — 旧Quest domainを含む進行表現の背景。current runtimeではWorld Objectiveが主導線
 
 ### Learning / content
