@@ -85,9 +85,6 @@ export function getBattleItemUseState(input: {
   const hp = Math.max(0, Math.min(maxHp, Math.floor(input.hp)))
   const count = getItemCount(input.progress, input.itemId)
 
-  if (input.actionLocked) {
-    return { canUse: false, reason: 'action-locked', reasonLabel: 'ACTION LOCKED' }
-  }
   if (input.usedThisBattle && item.usage.maxUsesPerBattle <= 1) {
     return { canUse: false, reason: 'already-used', reasonLabel: 'USED THIS BATTLE' }
   }
@@ -96,6 +93,9 @@ export function getBattleItemUseState(input: {
   }
   if (item.effect.kind === 'heal' && hp >= maxHp) {
     return { canUse: false, reason: 'hp-full', reasonLabel: 'HP FULL' }
+  }
+  if (input.actionLocked) {
+    return { canUse: false, reason: 'action-locked', reasonLabel: 'ACTION LOCKED' }
   }
 
   return { canUse: true, reason: 'available', reasonLabel: 'READY · BATTLE ONLY' }
