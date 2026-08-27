@@ -1,0 +1,29 @@
+.boss-guard {
+  margin-top: 9px;
+  padding-top: 8px;
+  border-top: 2px dashed #555573;
+  display: grid;
+  gap: 5px;
+}
+
+.boss-guard-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.boss-guard-head span { color: var(--gold); }
+.boss-guard.active .boss-guard-head strong { color: var(--red); }
+.boss-guard.open .boss-guard-head strong { color: var(--green); }
+
+.boss-guard code {
+  color: #c9c5dc;
+  font-size: 8px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
