@@ -57,7 +57,7 @@ export const battles: Battle[] = [
     enemies: [
       enemy('slime-c', 'Slime', 46, 'Bite', 3, '●'),
       enemy('goblin-c', 'Goblin', 84, 'Execution', 8, '▲'),
-      enemy('boss-c', 'Code Core', 156, 'Runtime Cascade', 12, '◆'),
+      enemy('boss-c', 'Boss', 156, 'Runtime Cascade', 12, '◆'),
     ],
     skillIds: [
       'trace',
