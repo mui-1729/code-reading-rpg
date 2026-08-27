@@ -151,7 +151,7 @@ export function PauseMenu() {
                     <div><span>LEVEL</span><strong>{combatStats.level}</strong></div>
                     <div><span>EXP</span><strong>{progress.exp} / {nextLevelExp}</strong></div>
                     <div><span>GOLD</span><strong>{progress.gold} G</strong></div>
-                    <div><span>MAX HP</span><strong>{combatStats.maxHp}</strong></div>
+                    <div><span>HP</span><strong>{rpgState.currentHp} / {combatStats.maxHp}</strong></div>
                     <div><span>ATTACK</span><strong>{combatStats.attack}</strong></div>
                     <div><span>DEFENSE</span><strong>{combatStats.defense}</strong></div>
                   </div>
@@ -221,7 +221,7 @@ export function PauseMenu() {
                   <article className="pixel-inner-window pause-list-row party-row">
                     <div>
                       <strong>CODE KNIGHT</strong>
-                      <p>LV {combatStats.level} · HP {combatStats.maxHp} · ATK {combatStats.attack} · DEF {combatStats.defense}</p>
+                      <p>LV {combatStats.level} · HP {rpgState.currentHp}/{combatStats.maxHp} · ATK {combatStats.attack} · DEF {combatStats.defense}</p>
                     </div>
                     <span>LEADER</span>
                   </article>
