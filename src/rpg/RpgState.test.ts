@@ -4,12 +4,13 @@ import {
   createInitialRpgState,
   restoreRpgState,
   serializeRpgState,
+  type RpgState,
 } from './state'
 
 describe('RPG state storage', () => {
   it('validな装備・仲間・World座標・Encounter状態・current HP・Treasure状態を保存して復元する', () => {
     const initial = createInitialRpgState()
-    const state = {
+    const state: RpgState = {
       ...initial,
       ownedEquipmentIds: [...initial.ownedEquipmentIds, 'debug-charm'],
       partyMemberIds: ['byte'],
@@ -21,7 +22,7 @@ describe('RPG state storage', () => {
       stepsSinceEncounter: 3,
       encounterCount: 4,
       currentHp: 57,
-      openedTreasureIds: ['js-debug-cache'] as const,
+      openedTreasureIds: ['js-debug-cache'],
     }
 
     expect(restoreRpgState(serializeRpgState(state))).toEqual(state)
