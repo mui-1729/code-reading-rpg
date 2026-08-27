@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, feat/boss-code-guard]
+    branches: [main]
   pull_request:
 
 jobs:
