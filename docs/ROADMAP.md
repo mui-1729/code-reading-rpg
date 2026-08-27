@@ -1,59 +1,32 @@
 # CODE//READ RPG ロードマップ
 
-## 目的
+この文書は**次に何を作るか**だけを管理する。現在の実装一覧は[`PROJECT_STATUS.md`](./PROJECT_STATUS.md)、守る設計原則は[`GAME_DESIGN.md`](./GAME_DESIGN.md)を参照する。
 
-`CODE//READ RPG`を、**1つの2D Worldを探索しながらコードを読むRPG**として育てる。
+## North Star
 
-機能を増やす前に、Open World化後の責務と導線を安定させる。
+`CODE//READ RPG`を、**1つの2D Worldを探索し、エンジニアとして起きている問題をコードを読んで解決するRPG**として育てる。
 
-詳細設計は`docs/OPEN_WORLD_DESIGN.md`をsource of truthとする。
+優先順位は「機能数」ではなく次で決める。
 
-## 現在のコア導線
+1. コード読解が実際の意思決定になっているか
+2. 既存contentがstory / learningとして一貫しているか
+3. 新機能を足す前にcurrent runtimeを保守できるか
+4. RPG要素が読解を代替していないか
 
-```text
-Title
-↓
-Open World
-├─ JavaScript Grassland
-├─ Central Hub
-└─ TypeScript Forest
-↓
-Random Encounter / Fixed Boss
-↓
-Code Reading Battle
-↓
-Worldへ復帰
-```
+## Baseline — 実装済み
 
-Stage Select / Area Selectは通常導線に使わない。
+### World / progression
 
-## 守る原則
-
-1. コードを読まないと正しいtargetを選びにくい
-2. 同じ表示コードの丸暗記だけで攻略できない
-3. Level / Equipment / Partyで読解を不要にしない
-4. Worldは上下左右へ探索できる
-5. terrainから学習regionが直感的に分かる
-6. RPG詳細はPauseへ集約する
-7. 常設Quest Trackerを復活させない
-8. legacy save互換とcurrent featureを分ける
-9. World UIへ分岐を増やす前にpure resolverを検討する
-10. 主要loopを自動テストできる形へ寄せる
-
-## 実装済み
-
-### Open World
-
-- 40×28 World
-- 11×9 camera viewport
-- 上下左右探索
-- JavaScript Grassland / tall-grass
-- TypeScript Forest
-- Central Hub / road / mountain / water
-- Random Encounter
-- encounter cooldown
-- fixed Boss
-- World位置save
+- 40 × 28 Open World + 11 × 9 camera viewport
+- JavaScript Grassland / Central Hub / TypeScript Forest
+- Random Encounter / cooldown / fixed Boss
+- World action pure resolver
+- World Objective / progress feedback
+- persistent HP / Hub Recovery Point
+- one-shot Treasure
+- selectable Hub Shop
+- BYTE join / follower
+- PlayerProgress v4 / RpgState v3 + migration / validation
 
 ### Battle / learning
 
@@ -61,159 +34,163 @@ Stage Select / Area Selectは通常導線に使わない。
 - TypeScript Battle 4〜6
 - SELECT → EXECUTE
 - seeded generation / solvability
-- code variants / multiline
-- Battle + seed固有表示code
-- CODE HELP / CODE DATA
-- result sequence
+- Encounterごとのsemantic code variation
+- multiline + line-by-line CODE HELP
+- CODE DATA inspector
+- Boss GUARD
+- staged result sequence
 
-### RPG
+### RPG / UI
 
 - EXP / Level / Gold
-- Max HP / Attack / Defense
-- Weapon / Armor / Accessory
-- Equipment bonus
-- PATCH KIT / Hub Shop
-- Party member BYTE
-- follow-up attack
-- Boss clear equipment reward
-- Pause: STATUS / ITEMS / EQUIPMENT / PARTY / SYSTEM
-- PlayerProgress v4
-- RpgState v1
+- Attack / Defense / Max HP
+- Weapon / Armor / Accessory + role差
+- PATCH KIT
+- BYTE follow-up
+- Pause: STATUS / ITEMS / EQUIPMENT / PARTY / CODEX / SYSTEM
+- Tutorial + replay
+- 8-bit World / character / weapon visual
 
-### UI / onboarding
+### Story
 
-- MOVE → INTERACT → SELECT → EXECUTE Tutorial
-- World座標ベースMOVE判定
-- Stage Select / Complete画面を通常導線から削除
-- Battle結果の段階表示
-- reduced motion
+- JavaScript Opening
+- Chapter 1 → Chapter 2 → Final Chapterの因果関係
+- Battle間story event / Final briefing / ending
+- World NEXT OBJECTIVE
+- JavaScript syntaxの累積学習
 
-## P0: 現行Open Worldの設計整合性
+以前のRoadmapにあったWorld Objective、legacy runtime cleanup、World resolver、RpgState validation、Open World E2E、Treasure、Equipment Shop、Boss mechanicはすべてbaselineへ移動済み。
 
-### 1. World Objective / Progress Feedback
+## P0 — TypeScript編を現在のJavaScript品質へ揃える
 
-Stage Selectをなくしたため、次に何をすれば進むかをPauseから確認できるようにする。
+TypeScript regionはplayableだが、story / objective / character presentationの統一度がJavaScriptより低い。
 
-要件:
+### Goal
 
-- PlayerProgressからpureにderive
-- JavaScript / TypeScriptごとのprogress
-- Pause STATUSへ表示
-- Battle勝利時に短い一時feedback
-- Boss unlockを明確にする
-- 常設HUDは増やさない
-
-### 2. Legacy Quest runtime cleanup
-
-World Objective導入後:
-
-- 旧Gate文言のMain Quest feedbackを置換
-- inactive Side Quest victory処理を通常Battle runtimeから外す
-- QuestVictoryFeedbackをWorld progress feedbackへ置換
-- legacy `completedSideQuestIds`はsave互換のため保持
-- old Field focusは通常runtimeから外す
-
-### 3. stale Area / Field wording cleanup
-
-新しいfeatureやdocsでArea Select / Field Gateをcurrent flowとして扱わない。
-
-## P1: World基盤
-
-### 1. World action resolver
-
-現在`WorldPage.tsx`にあるmovement / encounter / interactionの条件分岐をpure resolverへ分離する。
-
-目的:
-
-- object追加時のUI肥大化を防ぐ
-- encounter testを強くする
-- navigation intentとstate updateを分ける
-
-### 2. RpgState validation
-
-restore時に次を検証する。
-
-- World bounds
-- known Equipment ID
-- known Party ID
-- loadout consistency
-
-### 3. Open World E2E
-
-主要flow:
-
-```text
-Title
-→ World move
-→ Encounter
-→ Victory
-→ World return
-→ Pause
-→ BYTE join
-→ Equipment
-→ Battle
-```
-
-をbrowser E2Eで固定する。
-
-## P1: World content density
-
-地図をさらに広げる前に意味のある地点を増やす。
+3つのBattleを「型の食い違いを追う1つの仕事」としてつなぐ。
 
 候補:
 
-- recovery point / Inn
-- treasure
-- equipment shop
-- landmark
-- companion event
+1. Chapter 1 — API / data contractの型ずれを発見
+2. Chapter 2 — optional / unionを含む複数箇所へ影響が広がる
+3. Final — shared contract / compiler-side failureの根本原因を止める
 
-空間を埋めるだけのNPC / Signは追加しない。
+### Acceptance direction
 
-## P2: Battle / learning depth
+- 前Chapterのsyntaxを後Chapterでも使う
+- World Objective / NPC / briefing / result copyを同じ事件へ揃える
+- BossがTypeScriptの型情報を読む総合問題になる
+- JavaScript編をコピーしただけのstoryにしない
+- Battle engineを複製しない
 
-### Boss-specific mechanic
+## P1 — Battle runtimeを小さな責務へ分ける
 
-Bossだけの読解パターンを追加する。
+`src/App.tsx`は共通Battle runtimeとして成長し、session / action / enemy turn / story / result handoff / presentationのorchestrationが集まっている。
+
+分割候補:
+
+- battle session state / transitions
+- player action execution
+- enemy turn
+- story event bridge
+- result handoff
+- Battle presentation
+
+### 条件
+
+- gameplay変更と混ぜない
+- `TargetRule` / generator / solvability / save schemaを変更しない
+- Unit / E2Eを先に境界として使う
+- 「抽象化すること」自体を目的にしない
+
+## P1 — TypeScript固有Boss mechanic
+
+現在のGUARDはJS / TS Boss共通。TypeScript側では型情報そのものを読む意味が出るmechanicを検討する。
+
+候補:
+
+- union / narrowingで解除対象を判断
+- optional property有無でBoss stateが変わる
+- `keyof` / indexed accessで読む値を切り替える
 
 条件:
 
 - 表示コードから理解できる
-- 新しい常設説明panelを必要としない
-- TargetRule / solvabilityをtestできる
+- target / correct previewを出さない
+- 常設説明panelを増やさない
+- pure resolver + testで固定できる
 
-### Third learning region
+## P2 — Third learning region prototype
+
+本実装の前に**1 Battleだけprototype**し、現在のcode-reading Battle loopと相性を確認する。
+
+### React候補
+
+長所:
+
+- JS → TS → ReactのWeb frontend学習順が自然
+- props / state / render flow / derived dataを扱える
+
+難所:
+
+- 現在のtarget-selection Battleへcomponent lifecycle / state問題を自然に写像する設計が必要
+
+### SQL候補
+
+長所:
+
+- WHERE / AND / OR / ORDER BY / LIMIT / JOINが現在のdata-selection Battleと相性がよい
+- 「どのrowが返るか」をゲーム結果へ対応させやすい
+
+難所:
+
+- JS → TSの直後の学習順として何をstory上の仕事にするか決める必要がある
+
+prototypeで確認するもの:
+
+- コードを読まないと結果を判断しにくいか
+- 現行`TargetRule`相当のsafe domainへ落とせるか
+- 3 Chapterへ難易度を累積できるか
+- Open Worldへregionを増やす価値があるか
+
+## P2 — Party / Equipment depth
+
+必要性が出たときだけ追加する。
 
 候補:
 
-- SQL = cave / ruins
-- React = town / workshop
+- 2人目companion
+- heal / support role
+- party equipmentの意味を強化
+- trade-offのある少数Equipment
 
-Area Selectは作らずWorldへ接続する。
+追加しないもの:
 
-## P2: Party / Equipment depth
+- 自動target判定
+- auto battle
+- 完全上位互換Equipmentの大量追加
+- grindだけでコード読解を無視できる成長
 
-必要性が確認できたら追加する。
+## Maintenance backlog
 
-- 2人目の仲間
-- support / heal role
-- party equipment利用
-- equipment特性
+機能開発とは分けて扱う。
 
-単純なAttack inflationだけにしない。
+- legacy Field / Quest content definitionの残存参照を段階的に減らす
+- `WorldPage.tsx` / `PauseMenu.tsx`のpresentation分割は、変更理由が明確になった時点で行う
+- historical docsはcurrent source of truthと混ざらないようindex上で分類する
+- save compatibility fieldは「unusedだから」で即削除しない
 
 ## 当面増やさないもの
 
-- Stage Select
-- Area Select
+- Stage Select / Area Select
 - 複雑なQuest Log
 - 大量の常設HUD
-- 大量のsupport item
+- Worldサイズだけを増やすmap expansion
 - Backend / Login / Cloud Save / Ranking
 
-Backendは複数端末同期や共有Challengeが必要になった時点で検討する。
+Backendは複数端末同期、共有challenge、account等の具体的要件が出た時点で検討する。
 
-## Quality gate
+## 新機能のQuality gate
 
 PR前:
 
@@ -222,6 +199,7 @@ npm ci
 npm run lint
 npm test
 npm run build
+npm run test:e2e
 ```
 
 PR後:
