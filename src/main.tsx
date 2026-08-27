@@ -20,6 +20,7 @@ import './inspector.css'
 import './economy.css'
 import './simplify.css'
 import './pause.css'
+import './boss-guard.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
