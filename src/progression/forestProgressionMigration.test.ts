@@ -59,10 +59,19 @@ describe('Forest progression save normalization', () => {
     expect(restored.unlockedSkillIds).not.toContain('gather')
   })
 
-  it('Battle 14 clear済みsaveではGATHER unlockも復元する', () => {
+  it('#209時点でBattle 14までclearしたv4 saveへBattle 15とGATHER unlockを補う', () => {
     const restored = restorePlayerProgress(storedProgress([7, 8, 9, 10, 11, 12, 13, 14]))
 
-    expect(restored.unlockedStageIds).toContain(14)
+    expect(restored.unlockedStageIds).toContain(15)
     expect(restored.unlockedSkillIds).toContain('gather')
+    expect(restored.unlockedSkillIds).not.toContain('echo')
+  })
+
+  it('Battle 15 clear済みsaveではECHO unlockも復元する', () => {
+    const restored = restorePlayerProgress(storedProgress([7, 8, 9, 10, 11, 12, 13, 14, 15]))
+
+    expect(restored.unlockedStageIds).toContain(15)
+    expect(restored.unlockedSkillIds).toContain('gather')
+    expect(restored.unlockedSkillIds).toContain('echo')
   })
 })
