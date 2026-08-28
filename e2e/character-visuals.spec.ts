@@ -1,12 +1,35 @@
 import { expect, test, type Page } from '@playwright/test'
 
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
+const RPG_KEY = 'code-reading-rpg:rpg-state'
 
 async function skipTutorial(page: Page) {
   await page.goto('/')
   await page.evaluate((key) => {
     localStorage.setItem(key, JSON.stringify({ version: 1, status: 'skipped', phase: 'battle' }))
   }, TUTORIAL_KEY)
+}
+
+async function seedVillage(page: Page) {
+  await skipTutorial(page)
+  await page.evaluate((key) => {
+    localStorage.setItem(key, JSON.stringify({
+      version: 4,
+      state: {
+        equipment: { weapon: 'training-blade', armor: 'traveler-coat', accessory: null },
+        ownedEquipmentIds: ['training-blade', 'traveler-coat'],
+        partyMemberIds: ['byte'],
+        partyEquipment: {},
+        worldMapId: 'js-village',
+        worldPosition: { x: 12, y: 8 },
+        stepsSinceEncounter: 8,
+        encounterCount: 0,
+        currentHp: 108,
+        openedTreasureIds: [],
+      },
+    }))
+  }, RPG_KEY)
+  await page.goto('/world')
 }
 
 test('Village Training StoryでTRAINER MIOのpixel portraitを表示する', async ({ page }) => {
@@ -16,6 +39,14 @@ test('Village Training StoryでTRAINER MIOのpixel portraitを表示する', asy
   const portrait = page.getByAltText('TRAINER MIO portrait')
   await expect(portrait).toBeVisible()
   await expect(portrait).toHaveAttribute('src', '/pixel-art/characters/trainer-mio-portrait.svg')
+})
+
+test('VillageのTRAIN地点にTRAINER MIOのfield spriteを表示する', async ({ page }) => {
+  await seedVillage(page)
+
+  const mio = page.getByAltText('TRAINER MIO')
+  await expect(mio).toBeVisible()
+  await expect(mio).toHaveAttribute('src', '/pixel-art/characters/trainer-mio-field.svg')
 })
 
 test('TypeScript StoryでLEAD ADAとTYPE WARDENに固有portraitを表示する', async ({ page }) => {
