@@ -63,18 +63,18 @@ export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEvent
         </div>
         <div className={`story-world-layer is-${layer}`}>{storyLayerLabels[layer]}</div>
         <div className="dialogue-speaker">
-          <div className="dialogue-speaker-main">
-            {speakerVisual && (
-              <img
-                className="story-speaker-portrait"
-                src={speakerVisual}
-                alt={`${line.speaker} portrait`}
-              />
-            )}
-            <div>
-              <span>{line.role}</span>
-              <strong>{line.speaker}</strong>
-            </div>
+          {speakerVisual && (
+            <img
+              src={speakerVisual}
+              alt={`${line.speaker} portrait`}
+              width="48"
+              height="48"
+              style={{ imageRendering: 'pixelated', flex: '0 0 auto' }}
+            />
+          )}
+          <div>
+            <span>{line.role}</span>
+            <strong>{line.speaker}</strong>
           </div>
           <span className="dialogue-progress">{lineIndex + 1}/{event.lines.length}</span>
         </div>
