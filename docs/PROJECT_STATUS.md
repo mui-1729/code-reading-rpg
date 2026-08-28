@@ -67,7 +67,7 @@ JAVASCRIPT DEEP FOREST
 18: every() — 全員が条件に合うかをbooleanで確認
 19: 2nd MID BOSS — filter / map / some / every理解確認
 20: sort() + [0] + intermediate value
-21: optional chaining ?. + nullish coalescing ??
+21: nested data + optional chaining ?. + nullish coalescing ??
 22: reduce() — 途中結果を一つへ集約
 ↓
 OVERWORLD FINAL INCIDENT
@@ -98,9 +98,10 @@ JavaScript Area CLEAR / REAL WORLD RETURN
 - 16: `map()`を「一つずつ別の形へ変換する」と普通の言葉から導入
 - 17 / 18: `some()` / `every()`を「一体でも / 全員」のboolean resultとして分ける
 - 19: new syntaxなしの2nd MID BOSS
-- 20: `alive → ordered → ordered[0]`の途中値で`sort()`と複数行codeを読む
-- 21: `?.`で安全に止まり、`??`でnull / undefined時だけ代替値を使う
+- 20: `living → byHp → byHp[0]`の途中値で`sort()`と複数行codeを読む
+- 21: `map()`でnestedな`stats.hp`へ包み、`stats?.hp ?? Infinity`を読む
 - 22: `reduce()`で`best`を更新しながら一つの結果へ集約する
+- CODE DATAはBattle 20の`living / byHp`とBattle 21の`living / wrapped / stats.hp`を表示できる
 - Random Encounterはclear済みLessonだけを段階的に反復し、MID BOSS 19は混ぜない
 
 ### Final incident / Final Boss
@@ -203,7 +204,7 @@ value / property
 → map()
 → some() / every()
 → sort() / [0] / intermediate value
-→ ?. / ??
+→ nested data / ?. / ??
 → reduce()
 → 実際の異変1 / 2
 → Final Boss
@@ -253,7 +254,7 @@ Derived progression:
 22 clear → REDUCE FOCUS
 ```
 
-#203 / #205 / #207 / #209 / #214時点の既存v4 saveから、その時点以降のrouteへ進める。
+既存v4 saveから、clearedStageIdsに応じて後続routeへ進める。
 
 ## 9. Quality gate
 
@@ -265,6 +266,7 @@ Derived progression:
 - Fixed 15 → 16 → 17 → 18 → 19 → 20 → 21 → 22
 - clear済みconceptだけのRandom pool
 - MID BOSS 13 / 19がRandomへ入らない
+- Battle 20 / 21 CODE DATA intermediate values
 - Battle 22前は旧Battle 1 / 2を先出ししない
 - 22後はBattle 1 → 2へ再接続
 - Boss 3は22 + 1 + 2 clearまでlocked
@@ -293,9 +295,9 @@ main CI
 Cloudflare Production
 ```
 
-## 10. 次のP0 / P1
+## 10. 次のP1
 
-JavaScript地方のlearning routeが1地方として完結した後は、gameplay変更を増やす前にIssue #196のBattle runtime responsibility splitを優先候補とする。
+JavaScript地方のlearning routeが1地方として完結したため、gameplay変更を増やす前にIssue #196のBattle runtime responsibility splitを優先する。
 
 その後:
 
