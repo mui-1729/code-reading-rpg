@@ -40,12 +40,15 @@ REAL WORLDでは新人エンジニアとしてproblemを受けるが、technical
 - JavaScript側にGrassland / Woods / Deep Woods
 - `GREENFIELD VILLAGE` 21 × 15の別map
 - `JAVASCRIPT FOREST` 31 × 21の別map
-- Overworld ↔ Village / Forest transition
+- `JAVASCRIPT DEEP FOREST` 31 × 21の別map
+- Overworld ↔ Village / Forest、Forest ↔ Deep Forest transition
 - Forest入口はVillage Training 9 clearで解放
+- Deep Forest入口はBattle 14 clearで解放
 - VillageはRandom Encounterなし
-- Forestは学習済みconceptだけをRandom Encounterで反復
+- Forest / Deep Forestは学習済みconceptだけをRandom Encounterで反復
 - Forest西側main trailに固定MID BOSS
 - MID BOSSの先のWoodsで`filter()`固定Lessonを導入
+- Deep Forest最初のEncounter terrainで`filter()`条件違いの固定Lessonを導入
 - Village中央に`TRAIN` learning checkpoint
 - Central Hub / TypeScript側の既存導線
 - Random Encounter / cooldown / fixed Boss
@@ -79,12 +82,17 @@ REAL WORLDでは新人エンジニアとしてproblemを受けるが、technical
   - `GATHER`はexisting `allBelow` TargetRuleを再利用
   - Battle 13 clear後の固定Lessonで初導入
   - first clear後だけForest Random Encounter poolへ追加
+- JavaScript Deep Forest Learning Battle 15
+  - `filter(e => e.hp > 65)`で条件方向を変えて反復
+  - existing `ECHO` / `allAbove`を再利用しnew TargetRuleなし
+  - Battle 14 clear後にDeep Forestへ入り、Randomより先に固定導入
+  - clear前RandomはBattle 14のみ、clear後は14 / 15を反復
 - TypeScript Battle 4〜6
-- Training 7 → 8 → 9 → Forest 10 → 11 → 12 → MID BOSS 13 → filter 14をfirst clearで順にunlock
+- Training 7 → 8 → 9 → Forest 10 → 11 → 12 → MID BOSS 13 → filter 14 → Deep Forest 15をfirst clearで順にunlock
 - Trainingは各8 EXP / 0 Goldで既存economyを崩さない
-- Forestは少量のEXP / Goldを持ち、同じBattleを値 / enemy順 / code variant違いで再Encounterできる
+- Forest / Deep Forestは少量のEXP / Goldを持ち、同じBattleを値 / enemy順 / code variant違いで再Encounterできる
 - Storyで「普通の言葉 → 小さい記号 / property → syntax」の順に説明し、correct targetはPlayerへ残す
-- `filter()`はBattle 14で初めて正式名称を導入する
+- `filter()`はBattle 14で初めて正式名称を導入し、Battle 15で条件違いを反復する
 - SELECT → EXECUTE
 - safe `TargetRule`; display codeを`eval()`しない
 - seeded generation / solvability
@@ -94,7 +102,7 @@ REAL WORLDでは新人エンジニアとしてproblemを受けるが、technical
 - Boss GUARD
 - staged result sequence
 
-既存JS Battle 1〜3は**現在動くmain story baselineであって、JavaScript編の最終Battle数ではない**。Village Training 7〜9、Forest Learning 10〜12、MID BOSS 13、filter Lesson 14を、その前段のbeginner learning routeとして追加した。
+既存JS Battle 1〜3は**現在動くmain story baselineであって、JavaScript編の最終Battle数ではない**。Village Training 7〜9、Forest Learning 10〜12、MID BOSS 13、filter Lesson 14、Deep Forest Lesson 15を、その前段のbeginner learning routeとして追加した。
 
 ### RPG / Economy
 
@@ -233,12 +241,25 @@ value
    - Battle 13 clear後、西側Woodsの固定Lessonとして初登場
    - Battle 14 clear前はRandom Encounterへ混ぜず、clear後だけ復習poolへ追加
    - #207時点のBattle 13 clear済みv4 saveへBattle 14 unlockを補う
+6. `JAVASCRIPT DEEP FOREST`を追加し、`filter()`を別条件で反復（#212）
+   - Battle 14 clearでForest西端のDeep Forest入口を解放
+   - Battle 15: `enemies.filter(e => e.hp > 65)`
+   - existing `ECHO` / `allAbove`を利用しnew TargetRuleなし
+   - Deep Forest最初のEncounter terrainでBattle 15を固定導入
+   - 15 clear前RandomはBattle 14だけ、clear後は14 / 15を反復
+   - #209時点のBattle 14 clear済みv4 saveへBattle 15 unlockを補う
+   - Battle 15 clear済みsaveではECHOもderived unlockする
 
 次:
 
-6. `filter()`を値 / enemy順 / 条件違いでさらに反復しつつ、`map()` / `some()` / `every()`をDeep Forestで段階的に導入する
-7. 2体目の中BossまたはDeep Forestの区切りで既習conceptを組み合わせる
-8. existing Battle 1〜3を長いprogression内へ再配置 / 再役割化する
+7. Deep Forestで`map()`を初心者向けに導入し、`filter()`で集める処理との違いを反復する
+8. `some()` / `every()`を「一体でもあるか / 全員そうか」のbooleanとして段階的に導入する
+9. Deep Forestの2体目MID BOSSで`filter()` / `map()` / `some()` / `every()`を既習内容として組み合わせる
+10. `sort()`とmultiline / intermediate valueを最深部への導線で導入する
+11. optional chaining / nullish coalescingをnested dataの安全な読み取りとして導入する
+12. `reduce()` / aggregateをJavaScript地方終盤の集約処理として導入する
+13. existing Battle 1〜3を長いprogression内へ再配置 / 再役割化し、最深部のFinal Bossへ接続する
+14. JavaScript Final Bossを倒した時だけJavaScript Area CLEARとし、REAL WORLD RETURNまで地方の物語を完結させる
 
 Battle engine / generatorを作り直さない。TargetRule追加が必要な場合も、表示codeの意味をsafe domainへ写す最小追加にする。
 

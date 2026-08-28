@@ -12,6 +12,7 @@ import {
   isEncounterTerrain,
   isWalkableTerrain,
   JS_BOSS_POSITION,
+  JS_DEEP_FOREST_MAP_ID,
   JS_FOREST_MAP_ID,
   JS_FOREST_MIDBOSS_POSITION,
   JS_VILLAGE_MAP_ID,
@@ -29,7 +30,7 @@ import {
 
 type BattleRegion = Exclude<WorldRegion, 'hub'>
 type JavaScriptTrainingBattleId = 7 | 8 | 9
-type JavaScriptForestBattleId = 10 | 11 | 12 | 14
+type JavaScriptLearningBattleId = 10 | 11 | 12 | 14 | 15
 
 export type EncounterRolls = {
   trigger: number
@@ -97,7 +98,7 @@ function getForestLearningBattleId(
   mapId: WorldMapId,
   position: { x: number; y: number },
   clearedStageIds: readonly number[],
-): JavaScriptForestBattleId | null {
+): JavaScriptLearningBattleId | null {
   if (mapId !== JS_FOREST_MAP_ID || !clearedStageIds.includes(9)) return null
 
   // 新conceptはRandom Encounterではなく、東から西へ進む固定Lessonで順番に導入する。
@@ -110,11 +111,20 @@ function getForestLearningBattleId(
   return null
 }
 
-function createForestLessonEncounter(
+function getDeepForestLearningBattleId(
+  mapId: WorldMapId,
+  clearedStageIds: readonly number[],
+): JavaScriptLearningBattleId | null {
+  if (mapId !== JS_DEEP_FOREST_MAP_ID || !clearedStageIds.includes(14)) return null
+  if (!clearedStageIds.includes(15)) return 15
+  return null
+}
+
+function createJavaScriptLessonEncounter(
   rpgState: RpgState,
   movedState: RpgState,
   next: { x: number; y: number },
-  battleId: JavaScriptForestBattleId,
+  battleId: JavaScriptLearningBattleId,
 ): WorldMoveResult {
   const encounterNumber = rpgState.encounterCount + 1
   const encounterState: RpgState = {
@@ -194,9 +204,11 @@ export function resolveWorldMove({
   }
 
   if (isEncounterTerrain(terrain)) {
-    const lessonBattleId = getForestLearningBattleId(mapId, next, progress.clearedStageIds)
+    const lessonBattleId =
+      getForestLearningBattleId(mapId, next, progress.clearedStageIds) ??
+      getDeepForestLearningBattleId(mapId, progress.clearedStageIds)
     if (lessonBattleId !== null) {
-      return createForestLessonEncounter(rpgState, movedState, next, lessonBattleId)
+      return createJavaScriptLessonEncounter(rpgState, movedState, next, lessonBattleId)
     }
   }
 

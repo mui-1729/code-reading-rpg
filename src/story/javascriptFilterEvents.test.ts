@@ -14,7 +14,7 @@ describe('JavaScript filter lesson story', () => {
     expect(text).toContain('HPが45未満')
   })
 
-  it('Storyで現在盤面のcorrect target名を直接教えない', () => {
+  it('Battle 14 Storyで現在盤面のcorrect target名を直接教えない', () => {
     const event = getBattleStoryEvent('/javascript/battle/14', 'pre')
     const text = event?.lines.map((line) => line.text).join('\n') ?? ''
 
@@ -30,5 +30,28 @@ describe('JavaScript filter lesson story', () => {
     expect(text).toContain('find()')
     expect(text).toContain('filter()')
     expect(text).toContain('全部')
+  })
+
+  it('Battle 15ではfilter()の意味を保ったまま<と>の条件差を説明する', () => {
+    const event = getBattleStoryEvent('/javascript/battle/15', 'pre')
+    const text = event?.lines.map((line) => line.text).join('\n') ?? ''
+
+    expect(event?.title).toBe('条件の向きが変わっても、全部を見る')
+    expect(text).toContain('filter()')
+    expect(text).toContain('HPが45未満')
+    expect(text).toContain('HPが65より大きい')
+    expect(text).toContain('<')
+    expect(text).toContain('>')
+    expect(text).toContain('全部集める')
+  })
+
+  it('Battle 15 Storyでcorrect target名や対象数を公開しない', () => {
+    const event = getBattleStoryEvent('/javascript/battle/15', 'pre')
+    const text = event?.lines.map((line) => line.text).join('\n') ?? ''
+
+    expect(text).not.toContain('Slime')
+    expect(text).not.toContain('Boar')
+    expect(text).not.toContain('Guardian')
+    expect(text).not.toMatch(/\b[1234]体\b/)
   })
 })
