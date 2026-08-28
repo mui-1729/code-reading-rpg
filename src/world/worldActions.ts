@@ -30,7 +30,7 @@ import {
 
 type BattleRegion = Exclude<WorldRegion, 'hub'>
 type JavaScriptTrainingBattleId = 7 | 8 | 9
-type JavaScriptLearningBattleId = 10 | 11 | 12 | 14 | 15
+type JavaScriptLearningBattleId = 10 | 11 | 12 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22
 
 export type EncounterRolls = {
   trigger: number
@@ -113,11 +113,37 @@ function getForestLearningBattleId(
 
 function getDeepForestLearningBattleId(
   mapId: WorldMapId,
+  position: { x: number; y: number },
   clearedStageIds: readonly number[],
 ): JavaScriptLearningBattleId | null {
   if (mapId !== JS_DEEP_FOREST_MAP_ID || !clearedStageIds.includes(14)) return null
+
   if (!clearedStageIds.includes(15)) return 15
+  if (!clearedStageIds.includes(16) && position.x <= 24) return 16
+  if (!clearedStageIds.includes(17) && position.x <= 19) return 17
+  if (!clearedStageIds.includes(18) && position.x <= 14) return 18
+
+  // 第二MID BOSSもnew syntaxを持たない固定Battleとして扱う。
+  if (!clearedStageIds.includes(19) && position.x <= 10) return 19
+
+  // 第二MID BOSSの先を最深部として、advanced syntaxを順番に固定導入する。
+  if (!clearedStageIds.includes(20) && position.x <= 9) return 20
+  if (!clearedStageIds.includes(21) && position.x <= 7) return 21
+  if (!clearedStageIds.includes(22) && position.x <= 5) return 22
   return null
+}
+
+export function getDeepForestReviewBattleId(
+  clearedStageIds: readonly number[],
+  roll: number,
+): number | null {
+  const candidates = [14, 15, 16, 17, 18, 20, 21, 22].filter((battleId) =>
+    clearedStageIds.includes(battleId),
+  )
+  if (candidates.length === 0) return null
+
+  const normalizedRoll = Math.max(0, Math.min(0.999999, roll))
+  return candidates[Math.floor(normalizedRoll * candidates.length)] ?? null
 }
 
 function createJavaScriptLessonEncounter(
@@ -206,7 +232,7 @@ export function resolveWorldMove({
   if (isEncounterTerrain(terrain)) {
     const lessonBattleId =
       getForestLearningBattleId(mapId, next, progress.clearedStageIds) ??
-      getDeepForestLearningBattleId(mapId, progress.clearedStageIds)
+      getDeepForestLearningBattleId(mapId, next, progress.clearedStageIds)
     if (lessonBattleId !== null) {
       return createJavaScriptLessonEncounter(rpgState, movedState, next, lessonBattleId)
     }
@@ -216,18 +242,30 @@ export function resolveWorldMove({
     return { kind: 'moved', nextState: movedState, terrain, region }
   }
 
+  // 旧main Battle 1 / 2はJavaScript学習routeを最後まで終えてから最終異変として再接続する。
+  if (
+    mapId === OVERWORLD_MAP_ID &&
+    region === 'javascript' &&
+    !progress.clearedStageIds.includes(22)
+  ) {
+    return { kind: 'moved', nextState: movedState, terrain, region }
+  }
+
   const rolls = encounterRolls ?? createEncounterRolls(rpgState, next.x, next.y, nextSteps)
   if (rolls.trigger >= getEncounterChance(terrain)) {
     return { kind: 'moved', nextState: movedState, terrain, region }
   }
 
-  const battleId = getEncounterBattleId(
-    region,
-    progress.unlockedStageIds,
-    progress.clearedStageIds,
-    rolls.battle,
-    mapId,
-  )
+  const battleId =
+    mapId === JS_DEEP_FOREST_MAP_ID
+      ? getDeepForestReviewBattleId(progress.clearedStageIds, rolls.battle)
+      : getEncounterBattleId(
+          region,
+          progress.unlockedStageIds,
+          progress.clearedStageIds,
+          rolls.battle,
+          mapId,
+        )
   if (battleId === null) {
     return { kind: 'moved', nextState: movedState, terrain, region }
   }
@@ -369,7 +407,10 @@ export function resolveWorldInteraction(
       kind: 'boss',
       battleId: 3,
       region: 'javascript',
-      unlocked: progress.unlockedStageIds.includes(3),
+      unlocked:
+        progress.clearedStageIds.includes(22) &&
+        progress.clearedStageIds.includes(1) &&
+        progress.clearedStageIds.includes(2),
       seed: `boss:js:${rpgState.encounterCount}`,
     }
   }
