@@ -14,6 +14,7 @@ import {
   JS_BOSS_POSITION,
   JS_VILLAGE_MAP_ID,
   JS_VILLAGE_POSITION,
+  JS_VILLAGE_TRAINING_POSITION,
   OVERWORLD_MAP_ID,
   TS_BOSS_POSITION,
   VIEWPORT_HEIGHT,
@@ -71,13 +72,27 @@ describe('open world map', () => {
     expect(isEncounterTerrain('town')).toBe(false)
   })
 
-  it('Villageのhouseは歩けず、road / exitは歩ける', () => {
+  it('Villageのhouse / TRAINは歩けず、road / exitは歩ける', () => {
     expect(getTerrain(0, 0, JS_VILLAGE_MAP_ID)).toBe('house')
     expect(getTerrain(10, 7, JS_VILLAGE_MAP_ID)).toBe('road')
+    expect(
+      getTerrain(
+        JS_VILLAGE_TRAINING_POSITION.x,
+        JS_VILLAGE_TRAINING_POSITION.y,
+        JS_VILLAGE_MAP_ID,
+      ),
+    ).toBe('training')
     expect(getTerrain(10, 14, JS_VILLAGE_MAP_ID)).toBe('exit')
     expect(isWalkableTerrain('house')).toBe(false)
+    expect(isWalkableTerrain('training')).toBe(false)
     expect(isWalkableTerrain('road')).toBe(true)
     expect(isWalkableTerrain('exit')).toBe(true)
+  })
+
+  it('Village入口へ向かう縦道はEncounterなしのroadとして確保する', () => {
+    expect(getTerrain(14, 14, OVERWORLD_MAP_ID)).toBe('road')
+    expect(getTerrain(14, 13, OVERWORLD_MAP_ID)).toBe('road')
+    expect(getTerrain(14, 12, OVERWORLD_MAP_ID)).toBe('village')
   })
 
   it('JS / TSに1つずつTreasureを置き、直接は踏めないWorld objectとして扱う', () => {
@@ -95,13 +110,13 @@ describe('open world map', () => {
   })
 
   it('未クリアの通常Battleを優先し、クリア後は地域内Battleを再Encounterできる', () => {
-    expect(getEncounterBattleId('javascript', [1, 4], [], 0.2)).toBe(1)
-    expect(getEncounterBattleId('javascript', [1, 4, 2], [1], 0.2)).toBe(2)
-    expect(getEncounterBattleId('javascript', [1, 4, 2, 3], [1, 2], 0.2)).toBe(1)
-    expect(getEncounterBattleId('javascript', [1, 4, 2, 3], [1, 2], 0.8)).toBe(2)
+    expect(getEncounterBattleId('javascript', [1, 4, 7], [], 0.2)).toBe(1)
+    expect(getEncounterBattleId('javascript', [1, 4, 7, 2], [1], 0.2)).toBe(2)
+    expect(getEncounterBattleId('javascript', [1, 4, 7, 2, 3], [1, 2], 0.2)).toBe(1)
+    expect(getEncounterBattleId('javascript', [1, 4, 7, 2, 3], [1, 2], 0.8)).toBe(2)
 
-    expect(getEncounterBattleId('typescript', [1, 4], [], 0.2)).toBe(4)
-    expect(getEncounterBattleId('typescript', [1, 4, 5], [4], 0.2)).toBe(5)
-    expect(getEncounterBattleId('hub', [1, 4], [], 0.2)).toBeNull()
+    expect(getEncounterBattleId('typescript', [1, 4, 7], [], 0.2)).toBe(4)
+    expect(getEncounterBattleId('typescript', [1, 4, 7, 5], [4], 0.2)).toBe(5)
+    expect(getEncounterBattleId('hub', [1, 4, 7], [], 0.2)).toBeNull()
   })
 })
