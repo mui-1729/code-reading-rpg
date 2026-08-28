@@ -45,6 +45,7 @@ REAL WORLDでは新人エンジニアとしてproblemを受けるが、technical
 - VillageはRandom Encounterなし
 - Forestは学習済みconceptだけをRandom Encounterで反復
 - Forest西側main trailに固定MID BOSS
+- MID BOSSの先のWoodsで`filter()`固定Lessonを導入
 - Village中央に`TRAIN` learning checkpoint
 - Central Hub / TypeScript側の既存導線
 - Random Encounter / cooldown / fixed Boss
@@ -73,12 +74,17 @@ REAL WORLDでは新人エンジニアとしてproblemを受けるが、technical
   - comparison / property / `find()` / `&&` / `||`の理解確認
   - Random Encounterには入れない
   - JavaScript Area CLEARにはしない
+- JavaScript Forest Learning Battle 14
+  - `find()`と`filter()`を同じ`hp < 45`で比較
+  - `GATHER`はexisting `allBelow` TargetRuleを再利用
+  - Battle 13 clear後の固定Lessonで初導入
+  - first clear後だけForest Random Encounter poolへ追加
 - TypeScript Battle 4〜6
-- Training 7 → 8 → 9 → Forest 10 → 11 → 12 → MID BOSS 13をfirst clearで順にunlock
+- Training 7 → 8 → 9 → Forest 10 → 11 → 12 → MID BOSS 13 → filter 14をfirst clearで順にunlock
 - Trainingは各8 EXP / 0 Goldで既存economyを崩さない
 - Forestは少量のEXP / Goldを持ち、同じBattleを値 / enemy順 / code variant違いで再Encounterできる
 - Storyで「普通の言葉 → 小さい記号 / property → syntax」の順に説明し、correct targetはPlayerへ残す
-- `filter()`はBattle 13までまだ導入しない
+- `filter()`はBattle 14で初めて正式名称を導入する
 - SELECT → EXECUTE
 - safe `TargetRule`; display codeを`eval()`しない
 - seeded generation / solvability
@@ -88,7 +94,7 @@ REAL WORLDでは新人エンジニアとしてproblemを受けるが、technical
 - Boss GUARD
 - staged result sequence
 
-既存JS Battle 1〜3は**現在動くmain story baselineであって、JavaScript編の最終Battle数ではない**。Village Training 7〜9、Forest Learning 10〜12、MID BOSS 13を、その前段のbeginner learning routeとして追加した。
+既存JS Battle 1〜3は**現在動くmain story baselineであって、JavaScript編の最終Battle数ではない**。Village Training 7〜9、Forest Learning 10〜12、MID BOSS 13、filter Lesson 14を、その前段のbeginner learning routeとして追加した。
 
 ### RPG / Economy
 
@@ -220,12 +226,19 @@ value
    - Random Encounter pool / JavaScript Area CLEARへ混ぜない
    - #205時点のBattle 12 clear済みv4 saveへBattle 13 unlockを補う
    - clear後は次の「条件に合うものをまとめて集める」課題だけを普通の言葉で示す
+5. 中Boss後のForestで`filter()`を導入（#209）
+   - Battle 14で同じ`hp < 45`条件の`find()`と`filter()`を比較
+   - `filter()` = 条件に合うものを最後まで見て全部集める、と普通の言葉から説明
+   - existing `allBelow` TargetRuleをGATHERへ再利用し、Battle engineは変更しない
+   - Battle 13 clear後、西側Woodsの固定Lessonとして初登場
+   - Battle 14 clear前はRandom Encounterへ混ぜず、clear後だけ復習poolへ追加
+   - #207時点のBattle 13 clear済みv4 saveへBattle 14 unlockを補う
 
 次:
 
-5. `filter()`を中Boss後のForest / Deep Forestで導入する
-6. `map()` / `some()` / `every()`等を反復しながらDeep Forestへ進める
-7. existing Battle 1〜3を長いprogression内へ再配置 / 再役割化する
+6. `filter()`を値 / enemy順 / 条件違いでさらに反復しつつ、`map()` / `some()` / `every()`をDeep Forestで段階的に導入する
+7. 2体目の中BossまたはDeep Forestの区切りで既習conceptを組み合わせる
+8. existing Battle 1〜3を長いprogression内へ再配置 / 再役割化する
 
 Battle engine / generatorを作り直さない。TargetRule追加が必要な場合も、表示codeの意味をsafe domainへ写す最小追加にする。
 
