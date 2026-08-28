@@ -1,36 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useProgress } from '../progression'
 import { useRpg } from '../rpg'
-import {
-  isTypeScriptRegionUnlocked,
-  normalizeLockedTypeScriptPosition,
-  shouldBlockTypeScriptRegionMove,
-} from './regionAccess'
+import { isTypeScriptRegionUnlocked, shouldBlockTypeScriptRegionMove } from './regionAccess'
 
 const LOCKED_MESSAGE =
   'TYPESCRIPT FRONTIER LOCKED // まずJavaScript地方のCode Coreを止めよう。Final Bossを倒すと東へ進める。'
 
 export function TypeScriptRegionGate() {
   const { progress } = useProgress()
-  const { rpgState, setRpgState } = useRpg()
+  const { rpgState } = useRpg()
   const [message, setMessage] = useState<string | null>(null)
   const unlocked = isTypeScriptRegionUnlocked(progress)
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || window.location.pathname !== '/world' || unlocked) return
-
-    const normalized = normalizeLockedTypeScriptPosition(
-      rpgState.worldMapId,
-      rpgState.worldPosition,
-      progress,
-    )
-    if (
-      normalized.x !== rpgState.worldPosition.x ||
-      normalized.y !== rpgState.worldPosition.y
-    ) {
-      setRpgState((current) => ({ ...current, worldPosition: normalized }))
-    }
-  }, [progress, rpgState.worldMapId, rpgState.worldPosition, setRpgState, unlocked])
 
   useEffect(() => {
     if (typeof document === 'undefined' || typeof window === 'undefined' || unlocked) return
