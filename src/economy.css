@@ -22,6 +22,7 @@
   justify-content: space-between;
   gap: 16px;
   padding: 12px;
+  border-color: var(--gold);
 }
 
 .shop-wallet span,
@@ -66,15 +67,106 @@
   overflow: auto;
 }
 
+.world-shop-section {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.world-shop-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 2px;
+}
+
+.world-shop-section-head strong {
+  color: var(--gold);
+  font-size: 10px;
+  letter-spacing: .12em;
+}
+
+.world-shop-section-head span {
+  color: #8f8ca3;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .06em;
+}
+
 .world-shop-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
+.world-shop-list.is-consumable {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .world-shop-list .shop-item {
   margin-top: 0;
   align-content: start;
+}
+
+.shop-cost-preview {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 8px;
+  border: 2px solid #303045;
+  background: #090912;
+}
+
+.shop-cost-preview > span {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 4px 6px;
+  border-right: 1px solid #303045;
+}
+
+.shop-cost-preview > span:last-of-type {
+  border-right: 0;
+}
+
+.shop-cost-preview small {
+  color: #77748a;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.shop-cost-preview strong {
+  color: #f3f0ff;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.shop-cost-preview[data-affordable='true'] > span:last-of-type strong {
+  color: var(--green);
+}
+
+.shop-cost-preview em {
+  grid-column: 1 / -1;
+  padding: 5px 6px;
+  border: 1px solid #735052;
+  color: #ffaaa4;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-align: center;
+}
+
+.shop-owned-note {
+  color: #8f8ca3;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: .05em;
+  line-height: 1.5;
+  text-align: center;
 }
 
 .economy-progress-stat strong {
@@ -202,8 +294,9 @@
   border-color: #356b8d;
 }
 
-.equipment-shop-item.is-unavailable {
-  opacity: .72;
+.equipment-shop-item.is-unavailable,
+.item-shop-item.is-unavailable {
+  opacity: .76;
 }
 
 @media (max-width: 720px) {
@@ -214,8 +307,14 @@
     overflow: auto;
   }
 
-  .world-shop-list {
+  .world-shop-list,
+  .world-shop-list.is-consumable {
     grid-template-columns: 1fr;
+  }
+
+  .world-shop-section-head {
+    display: grid;
+    gap: 4px;
   }
 
   .battle-item-row {
