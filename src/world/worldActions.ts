@@ -13,6 +13,7 @@ import {
   isWalkableTerrain,
   JS_BOSS_POSITION,
   JS_FOREST_MAP_ID,
+  JS_FOREST_MIDBOSS_POSITION,
   JS_VILLAGE_MAP_ID,
   JS_VILLAGE_TRAINING_POSITION,
   OVERWORLD_MAP_ID,
@@ -267,6 +268,13 @@ export type WorldInteractionIntent =
       battleId: JavaScriptTrainingBattleId | null
     }
   | {
+      kind: 'midboss'
+      battleId: 13
+      region: 'javascript'
+      unlocked: boolean
+      seed: string
+    }
+  | {
       kind: 'boss'
       battleId: 3 | 6
       region: BattleRegion
@@ -288,6 +296,19 @@ export function resolveWorldInteraction(
       return {
         kind: 'training',
         battleId: getNextJavaScriptTrainingBattleId(progress.clearedStageIds),
+      }
+    }
+    return { kind: 'none' }
+  }
+
+  if (rpgState.worldMapId === JS_FOREST_MAP_ID) {
+    if (isAdjacent(position, JS_FOREST_MIDBOSS_POSITION)) {
+      return {
+        kind: 'midboss',
+        battleId: 13,
+        region: 'javascript',
+        unlocked: progress.clearedStageIds.includes(12),
+        seed: `midboss:js-forest:${rpgState.encounterCount}`,
       }
     }
     return { kind: 'none' }
