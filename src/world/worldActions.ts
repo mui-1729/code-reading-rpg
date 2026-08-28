@@ -79,7 +79,10 @@ function createEncounterRolls(
   nextY: number,
   nextSteps: number,
 ): EncounterRolls {
-  const seedBase = `${rpgState.worldMapId}:${rpgState.encounterCount}:${nextX}:${nextY}:${nextSteps}`
+  const seedBase =
+    rpgState.worldMapId === OVERWORLD_MAP_ID
+      ? `${rpgState.encounterCount}:${nextX}:${nextY}:${nextSteps}`
+      : `${rpgState.worldMapId}:${rpgState.encounterCount}:${nextX}:${nextY}:${nextSteps}`
   const random = createSeededRandom(seedBase)
   return { trigger: random.next(), battle: random.next() }
 }
@@ -154,6 +157,10 @@ export function resolveWorldMove({
     stepsSinceEncounter: 0,
     encounterCount: encounterNumber,
   }
+  const encounterSeed =
+    mapId === OVERWORLD_MAP_ID
+      ? `encounter:${encounterNumber}:${next.x}:${next.y}`
+      : `encounter:${mapId}:${encounterNumber}:${next.x}:${next.y}`
 
   return {
     kind: 'encounter',
@@ -163,7 +170,7 @@ export function resolveWorldMove({
     battle: {
       battleId,
       region,
-      seed: `encounter:${mapId}:${encounterNumber}:${next.x}:${next.y}`,
+      seed: encounterSeed,
     },
   }
 }
