@@ -24,27 +24,23 @@ function storedProgress(
 describe('Forest progression save normalization', () => {
   it('#203時点でBattle 9までclearしたv4 saveへBattle 10 unlockを補う', () => {
     const restored = restorePlayerProgress(storedProgress([7, 8, 9]))
-
     expect(restored.unlockedStageIds).toContain(10)
   })
 
   it('Battle 10 clear済みsaveへBattle 11とLINK unlockを補う', () => {
     const restored = restorePlayerProgress(storedProgress([7, 8, 9, 10]))
-
     expect(restored.unlockedStageIds).toContain(11)
     expect(restored.unlockedSkillIds).toContain('link')
   })
 
   it('Battle 11 clear済みsaveへBattle 12とFORK unlockを補う', () => {
     const restored = restorePlayerProgress(storedProgress([7, 8, 9, 10, 11]))
-
     expect(restored.unlockedStageIds).toContain(12)
     expect(restored.unlockedSkillIds).toContain('fork')
   })
 
   it('#205時点でBattle 12までclearしたv4 saveへBattle 13 unlockを補う', () => {
     const restored = restorePlayerProgress(storedProgress([7, 8, 9, 10, 11, 12]))
-
     expect(restored.unlockedStageIds).toContain(13)
     expect(restored.unlockedSkillIds).toContain('link')
     expect(restored.unlockedSkillIds).toContain('fork')
@@ -52,17 +48,20 @@ describe('Forest progression save normalization', () => {
 
   it('#207時点でBattle 13までclearしたv4 saveへBattle 14 unlockを補う', () => {
     const restored = restorePlayerProgress(storedProgress([7, 8, 9, 10, 11, 12, 13]))
-
     expect(restored.unlockedStageIds).toContain(14)
-    expect(restored.unlockedSkillIds).toContain('link')
-    expect(restored.unlockedSkillIds).toContain('fork')
     expect(restored.unlockedSkillIds).not.toContain('gather')
   })
 
-  it('Battle 14 clear済みsaveではGATHER unlockも復元する', () => {
+  it('#209時点でBattle 14までclearしたv4 saveへBattle 15とGATHER unlockを補う', () => {
     const restored = restorePlayerProgress(storedProgress([7, 8, 9, 10, 11, 12, 13, 14]))
-
-    expect(restored.unlockedStageIds).toContain(14)
+    expect(restored.unlockedStageIds).toContain(15)
     expect(restored.unlockedSkillIds).toContain('gather')
+    expect(restored.unlockedSkillIds).not.toContain('echo')
+  })
+
+  it('Battle 15 clear済みsaveではECHO unlockも復元する', () => {
+    const restored = restorePlayerProgress(storedProgress([7, 8, 9, 10, 11, 12, 13, 14, 15]))
+    expect(restored.unlockedSkillIds).toContain('gather')
+    expect(restored.unlockedSkillIds).toContain('echo')
   })
 })
