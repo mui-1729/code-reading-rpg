@@ -80,4 +80,11 @@ test('PATCH KITは在庫2個でも同一Battleで1回だけ使用できる', asy
   await patchKit.click({ force: true })
   await expect.poll(async () => (await storedProgress(page)).progress.inventory.patchKit).toBe(1)
   await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
+
+  // seedが変われば別Battle session。残り1個を再び使える。
+  await page.goto('/javascript/battle/1?seed=patch-kit-next-battle&returnTo=%2Fworld')
+  const nextBattlePatchKit = page.locator('.patch-kit-action')
+  await expect(nextBattlePatchKit).toHaveCount(1)
+  await expect(nextBattlePatchKit).toBeEnabled()
+  await expect(nextBattlePatchKit).toContainText('PATCH KIT ×1')
 })
