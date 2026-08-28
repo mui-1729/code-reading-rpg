@@ -15,7 +15,8 @@ CODE WORLD
 ├─ Overworld
 ├─ Village map
 ├─ Forest map
-└─ future Deep Forest / Interior / Dungeon map
+├─ Deep Forest map
+└─ future Interior / deepest field map
 ↓
 Explore / NPC / Shop / Inn / Treasure
 または
@@ -43,6 +44,7 @@ Reward / Story / Progress
 - joined BYTEはprevious tileへ追従
 - `GREENFIELD VILLAGE` 21 × 15
 - `JAVASCRIPT FOREST` 31 × 21
+- `JAVASCRIPT DEEP FOREST` 31 × 21
 - `worldMapId + local worldPosition`でmulti-map化
 
 ## 3. Multi-map model
@@ -77,10 +79,15 @@ Overworld
     ├─ Fixed Lesson: 10 → 11 → 12
     ├─ MID BOSS: 13
     ├─ Fixed filter Lesson: 14
-    └─ Random Encounter: clear済みLessonだけを反復
+    ├─ Random Encounter: clear済みLessonだけを反復
+    └─ west EXIT
+        ↓
+        JAVASCRIPT DEEP FOREST (`js-deep-forest`)
+        ├─ Fixed filter repetition: 15
+        └─ Random Encounter: 14 / 15をprogressに応じて反復
 ```
 
-Village / Forestは同じ`/world` route上でmapを切り替える。
+Village / Forest / Deep Forestは同じ`/world` route上でmapを切り替える。
 
 ## 4. JavaScript地方のmap identity
 
@@ -121,11 +128,27 @@ Deep Forest
 - Overworld西側の入口から入る
 - Training 9 clear前は入口を通れない
 - 東のEXITからOverworldへ戻る
+- 西端のEXITからDeep Forestへ進む
+- Deep Forest入口はBattle 14 clearで解放
 - current map / positionはRpgState v4のまま保存・reload可能
 
 Forestは空白を広げるmapではなく、**西へ進むほど新conceptを固定Lessonで導入し、その途中で既習conceptだけをRandom Encounter反復するmap**。
 
-## 5. Forest progression
+### JAVASCRIPT DEEP FOREST
+
+- 31 × 21
+- stable ID: `js-deep-forest`
+- woods / deep-woods主体でForestより密度の高い自然field
+- east-west main trailと枝道を持つ
+- 川はmain trail上だけ橋として通過できる
+- 東のEXITからForestへ戻る
+- Battle 14 clear前はForest側portalを通れない
+- Battle 15を最初のEncounter terrainで固定導入
+- current map / positionはRpgState v4のまま保存・reload可能
+
+Deep Forestでは、同じ`filter()`を条件違いで反復したあと、`map()` / `some()` / `every()`等の次のarray readingへ進める。
+
+## 5. Forest / Deep Forest progression
 
 ### Battle 10〜12
 
@@ -164,9 +187,24 @@ filter() = 条件に合うものを最後まで見て全部集める
 
 - Battle 13 clear前はFixed 14を発火しない
 - Battle 14 clear前のRandom poolは10 / 11 / 12だけ
-- Battle 14 clear後だけRandom poolへ14を追加
+- Battle 14 clear後だけForest Random poolへ14を追加
 - fixed LessonはRandom chance / minimum-step cooldownより優先
 - Battle後はsame Forest map / positionへ戻る
+
+### Battle 15 — Deep Forest filter() repetition
+
+Battle 14 clear後、Forest西端からDeep Forestへ入り、最初のEncounter terrainで固定導入する。
+
+```text
+Battle 14: enemies.filter(e => e.hp < 45)
+Battle 15: enemies.filter(e => e.hp > 65)
+```
+
+- `filter()`の意味は変えず、`<` / `>`の条件方向だけを変える
+- Battle 15 clear前のDeep Forest RandomはBattle 14だけ
+- Battle 15 clear後はDeep Forest RandomをBattle 14 / 15で反復
+- Fixed 15はRandom chance / minimum-step cooldownより優先
+- Battle後はsame Deep Forest map / positionへ戻る
 
 ### Random Encounter pool
 
@@ -188,11 +226,17 @@ filter() = 条件に合うものを最後まで見て全部集める
 → MID BOSS 13
 
 13 clear / 14未clear
-→ Random 10 / 11 / 12
+→ Forest Random 10 / 11 / 12
 → 西側WoodsでFixed 14
 
-14 clear後
-→ Random 10 / 11 / 12 / 14
+14 clear / 15未clear
+→ Forest Random 10 / 11 / 12 / 14
+→ Deep Forestへtransition
+→ Deep Forest Random 14だけ
+→ 最初のEncounter terrainでFixed 15
+
+15 clear後
+→ Deep Forest Random 14 / 15
 ```
 
 新conceptをRandom抽選で初登場させない。
@@ -263,6 +307,9 @@ Battleの`returnTo=/world`は、RpgStateに保存されたcurrent map / position
 ```text
 Overworld → JAVASCRIPT FOREST
 requires: Training 9 clear
+
+JAVASCRIPT FOREST → JAVASCRIPT DEEP FOREST
+requires: Battle 14 clear
 ```
 
 ## 8. Encounter rules
@@ -317,7 +364,7 @@ worldPosition = 旧worldPosition
 
 としてmigrationする。
 
-PlayerProgressもv4を維持し、Forest追加ごとにschema bumpせず進行からderived unlockを補う。
+PlayerProgressもv4を維持し、Forest / Deep Forest追加ごとにschema bumpせず進行からderived unlockを補う。
 
 ```text
 9 clear  → Stage 10
@@ -325,7 +372,8 @@ PlayerProgressもv4を維持し、Forest追加ごとにschema bumpせず進行�
 11 clear → Stage 12 + FORK
 12 clear → Stage 13
 13 clear → Stage 14
-14 clear → GATHER
+14 clear → Stage 15 + GATHER
+15 clear → ECHO
 ```
 
 未知map ID / bounds外positionはOverworld開始地点へfallbackする。
@@ -342,7 +390,9 @@ BYTEと合流
 → JAVASCRIPT FOREST 10〜12
 → MID BOSS 13
 → 西側Woodsでfilter Lesson 14
-→ 次のDeep Forest progression
+→ JAVASCRIPT DEEP FOREST
+→ filter condition repetition 15
+→ map / some / everyへ続く
 ```
 
 Objectiveは「次にどこへ行き、何を読むか」までは示してよいが、correct targetは示さない。
@@ -351,7 +401,7 @@ Objectiveは「次にどこへ行き、何を読むか」までは示してよ�
 
 ## 12. Visual identity reservation
 
-- JavaScript: grassland / woods / forest / river / nature village
+- JavaScript: grassland / woods / forest / deep forest / river / nature village
 - TypeScript: stone / crystal / rune / ruins / temple
 - Database: underground / mine / archive / library
 
@@ -365,9 +415,10 @@ Unit:
 - terrain / viewport
 - movement / blocked
 - portal transition / progress gate
-- fixed learning trigger 10 → 11 → 12 → 14
+- fixed learning trigger 10 → 11 → 12 → 14 → 15
 - MID BOSS 13 gate / clear後path
-- Random poolがclear済みLessonだけを返す
+- Forest / Deep Forest Random poolがclear済みLessonだけを返す
+- Deep Forest portal gate / return transition
 - old save progression normalization
 - fixed objectが所属map外で誤発火しない
 
@@ -381,6 +432,9 @@ E2E:
 - 13 clear後の西側path
 - Battle 14 fixed introduction
 - `find()` / `filter()` beginner Story
+- Battle 14 clear後のForest → Deep Forest transition / reload persistence
+- Deep Forest最初のEncounter terrainでFixed 15
+- Battle 15 Storyで`<` / `>`の条件差を説明しcorrect targetを公開しない
 - existing battle / HP / recovery / economy regression
 
 PR前は`npm ci` / lint / unit / build / E2Eを通す。
