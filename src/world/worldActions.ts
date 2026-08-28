@@ -29,7 +29,7 @@ import {
 
 type BattleRegion = Exclude<WorldRegion, 'hub'>
 type JavaScriptTrainingBattleId = 7 | 8 | 9
-type JavaScriptForestBattleId = 10 | 11 | 12
+type JavaScriptForestBattleId = 10 | 11 | 12 | 14
 
 export type EncounterRolls = {
   trigger: number
@@ -100,11 +100,13 @@ function getForestLearningBattleId(
 ): JavaScriptForestBattleId | null {
   if (mapId !== JS_FOREST_MAP_ID || !clearedStageIds.includes(9)) return null
 
-  // 最初のWoodsで&&を固定導入。その後は西へ進むほど次の固定Lessonへ進む。
-  // Random Encounterは、この固定Lessonでclear済みのconceptだけを復習する。
+  // 新conceptはRandom Encounterではなく、東から西へ進む固定Lessonで順番に導入する。
+  // 中Boss後のfilter()も、守り人を突破して西側のWoodsへ入ってから初登場させる。
   if (!clearedStageIds.includes(10)) return 10
   if (!clearedStageIds.includes(11) && position.x <= 17) return 11
   if (!clearedStageIds.includes(12) && position.x <= 8) return 12
+  if (!clearedStageIds.includes(13)) return null
+  if (!clearedStageIds.includes(14) && position.x <= 4) return 14
   return null
 }
 
