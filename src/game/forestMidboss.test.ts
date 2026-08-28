@@ -30,11 +30,8 @@ describe('JavaScript Forest midboss battle', () => {
     const unlocked = [10, 11, 12, 13]
 
     for (const roll of [0.05, 0.4, 0.75, 0.99]) {
-      expect(getEncounterBattleId('javascript', unlocked, cleared, roll, JS_FOREST_MAP_ID)).toBeOneOf([
-        10,
-        11,
-        12,
-      ])
+      const battleId = getEncounterBattleId('javascript', unlocked, cleared, roll, JS_FOREST_MAP_ID)
+      expect([10, 11, 12]).toContain(battleId)
     }
   })
 })
