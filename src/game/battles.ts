@@ -188,8 +188,8 @@ export const battles: Battle[] = [
     expReward: 16,
     goldReward: 6,
     enemies: [
-      enemy('sprout-forest-a', 'Sprout', 32, 'Leaf Tap', 4, '♣'),
-      enemy('goblin-forest-a', 'Goblin', 64, 'Branch Slash', 7, '▲'),
+      enemy('goblin-forest-a-low', 'Goblin', 42, 'Twig Slash', 4, '▲'),
+      enemy('goblin-forest-a-high', 'Goblin', 64, 'Branch Slash', 7, '▲'),
       enemy('boar-forest-a', 'Boar', 86, 'Tackle', 6, '♠'),
     ],
     skillIds: ['trace', 'pulse', 'link'],
