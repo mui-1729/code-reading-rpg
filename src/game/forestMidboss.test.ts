@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
+import { applyBattleVictory, createInitialPlayerProgress } from '../progression'
+import { getEncounterBattleId, JS_FOREST_MAP_ID } from '../world/worldMap'
 import { battles } from './battles'
 import { generateBattle } from './generator'
 import { isBattleSolvable } from './solvability'
-import { getEncounterBattleId, JS_FOREST_MAP_ID } from '../world/worldMap'
 
 describe('JavaScript Forest midboss battle', () => {
   const midboss = battles.find((battle) => battle.id === 13)
@@ -13,6 +14,22 @@ describe('JavaScript Forest midboss battle', () => {
     expect(midboss?.isBoss).not.toBe(true)
     expect(midboss?.unlockSkillId).toBeUndefined()
     expect(midboss?.multiLineSkillIds).toBeUndefined()
+  })
+
+  it('clearしてもJavaScript Area CLEARにはしない', () => {
+    expect(midboss).toBeDefined()
+    if (!midboss) return
+
+    const result = applyBattleVictory(createInitialPlayerProgress(), {
+      stageId: midboss.id,
+      expReward: midboss.expReward,
+      goldReward: midboss.goldReward,
+      clearAreaId: midboss.isBoss ? midboss.areaId : undefined,
+    })
+
+    expect(result.progress.clearedStageIds).toContain(13)
+    expect(result.progress.clearedAreaIds).not.toContain('javascript')
+    expect(result.reward.clearedAreaId).toBeUndefined()
   })
 
   it('base battleとseeded variantが解ける', () => {
