@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/212-deep-forest-filter-repeat]
   pull_request:
 
 jobs:
