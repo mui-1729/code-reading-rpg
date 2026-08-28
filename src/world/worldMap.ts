@@ -329,9 +329,15 @@ export function getEncounterBattleId(
     if (!clearedStageIds.includes(9) || !clearedStageIds.includes(10)) return null
     if (!clearedStageIds.includes(11)) return 10
     if (!clearedStageIds.includes(12)) return roll < 0.5 ? 10 : 11
-    if (roll < 1 / 3) return 10
-    if (roll < 2 / 3) return 11
-    return 12
+    if (!clearedStageIds.includes(14)) {
+      if (roll < 1 / 3) return 10
+      if (roll < 2 / 3) return 11
+      return 12
+    }
+    if (roll < 0.25) return 10
+    if (roll < 0.5) return 11
+    if (roll < 0.75) return 12
+    return 14
   }
 
   if (region === 'javascript') {
