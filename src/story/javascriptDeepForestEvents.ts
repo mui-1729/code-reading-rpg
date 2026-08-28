@@ -197,7 +197,7 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: '複数行を一気に見なくていい。1行目でalive、2行目でorderedを作り、最後の[0]でorderedの先頭を取る。',
+          text: '複数行を一気に見なくていい。1行目でliving、2行目でbyHpを作り、最後の[0]でbyHpの先頭を取る。',
         },
         {
           speaker: 'BYTE',
@@ -216,7 +216,7 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: 'alive → ordered → ordered[0]。変数ごとに現在値を置けば、複数行でも一行ずつ追える。',
+          text: 'living → byHp → byHp[0]。変数ごとに現在値を置けば、複数行でも一行ずつ追える。',
         },
         {
           speaker: 'BYTE',
@@ -243,13 +243,13 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: '??は左側がnullかundefinedのときだけ右側の値を使う。SAFE PATHではhpを読めなければInfinityとして扱う。',
+          text: 'SAFE PATHではmap()でEnemyをnestedなstats.hpへ包む。stats?.hpで安全に読み、値がなければ?? Infinityで代わりの値を使う。',
         },
         {
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: '新しいのは安全に値を読む部分だけ。aliveを作ってsort()し、[0]を取る大きな流れはBattle 20と同じだ。',
+          text: '新しいのはnestedな値を安全に読む部分だけ。livingを作る → wrappedへ包む → sort()して先頭の.enemyへ戻る、の順に追おう。',
         },
       ],
     },
@@ -262,7 +262,7 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: '?.で安全に止まり、??で必要なら代わりの値を使う。この二段階を見つければ、防御的なcodeも怖くない。',
+          text: 'stats?.hpで安全に止まり、??で必要なら代わりの値を使う。この二段階を見つければ、nestedなdataを読むcodeも追いやすい。',
         },
         {
           speaker: 'BYTE',
