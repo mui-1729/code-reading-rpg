@@ -32,7 +32,7 @@ REAL WORLD briefing
 CODE WORLD
 Overworld / Village / Forest / Deep Forestを探索
 ↓
-Fixed Learning Battle / Random Encounter / Boss
+Fixed Learning Battle / Random Encounter / MID BOSS / Final Boss
 ↓
 Code Reading Battle
 ↓
@@ -43,81 +43,76 @@ EXP / Gold / Item / Equipment / Story
 
 通常導線へStage Select / Area Selectは戻さない。旧URLは互換redirectのみ残す。
 
-## 3. JavaScript beginner route
+## 3. JavaScript地方 — complete learning route
 
-既存JavaScript Battle 1〜3はmain story baselineだが、**JavaScript編を3戦だけで完結させる前提は撤回済み**。
-
-現在のbeginner route:
+JavaScriptは、Village → Forest → Deep Forest → 最終異変 → Code Core Final Bossまで1地方としてつながる。
 
 ```text
 GREENFIELD VILLAGE
-Battle 7: enemy.hp + < / >
-↓
-Battle 8: enemy.name + ===
-↓
-Battle 9: enemies + find()
+7: enemy.hp + < / >
+8: enemy.name + ===
+9: enemies + find()
 ↓
 JAVASCRIPT FOREST
-Battle 10: find() + &&
-↓
-Battle 11: find() + ||
-↓
-Battle 12: comparison / find() / && / || combined
-↓
-MID BOSS Battle 13: 既習内容だけの理解確認
-↓
-Battle 14: find() と filter() を比較
+10: find() + &&
+11: find() + ||
+12: comparison / find() / && / || combined
+13: MID BOSS — 既習内容だけの理解確認
+14: find() と filter() を比較
 ↓
 JAVASCRIPT DEEP FOREST
-Battle 15: filter()を hp > 65 でも反復
+15: filter()を hp > 65 でも反復
+16: map() — 各要素を別の形へ変換
+17: some() — 一体でも条件に合うかをbooleanで確認
+18: every() — 全員が条件に合うかをbooleanで確認
+19: 2nd MID BOSS — filter / map / some / every理解確認
+20: sort() + [0] + intermediate value
+21: optional chaining ?. + nullish coalescing ??
+22: reduce() — 途中結果を一つへ集約
+↓
+OVERWORLD FINAL INCIDENT
+1 → 2
+↓
+CODE CORE
+Final Boss 3
+↓
+JavaScript Area CLEAR / REAL WORLD RETURN
 ```
 
-### Battle 7〜9 — Village Training
+### Village 7〜9
 
 - comparison / property / collection / `find()`を小さい単位から導入
-- 各8 EXP / 0 Gold
-- `TRACE` / `PULSE` / `NOVA`を使用
 - VillageではRandom Encounterなし
+- 各8 EXP / 0 Gold
 
-### Battle 10〜12 — Forest logic lessons
+### Forest 10〜14
 
-- 10: `find()` + `&&`
-- 11: `find()` + `||`
-- 12: `&&` / `||` combined
-- 新conceptは固定Lessonで導入し、clear済みBattleだけをRandom Encounterで反復
-- `LINK` / `FORK`を追加
+- `&&` / `||`を固定Lesson 10〜12で順番に導入
+- Battle 13はnew syntaxなしのMID BOSS
+- Battle 14で同じ`hp < 45`を使い、`find()`と`filter()`の「一体で止まる / 全部集める」を比較
+- 未学習BattleはRandom Encounterへ入れない
 
-### Battle 13 — 最初のForest MID BOSS
+### Deep Forest 15〜22
 
-- comparison / property / `find()` / `&&` / `||`だけを使用
-- new syntax / new TargetRule / Boss GUARDなし
-- Forest Random poolへ入れない
-- JavaScript Area CLEARにしない
-- clear後はMID BOSS tileを通過可能にし、西側へ進める
+- 15: `filter()`を`hp > 65`でも反復
+- 16: `map()`を「一つずつ別の形へ変換する」と普通の言葉から導入
+- 17 / 18: `some()` / `every()`を「一体でも / 全員」のboolean resultとして分ける
+- 19: new syntaxなしの2nd MID BOSS
+- 20: `alive → ordered → ordered[0]`の途中値で`sort()`と複数行codeを読む
+- 21: `?.`で安全に止まり、`??`でnull / undefined時だけ代替値を使う
+- 22: `reduce()`で`best`を更新しながら一つの結果へ集約する
+- Random Encounterはclear済みLessonだけを段階的に反復し、MID BOSS 19は混ぜない
 
-### Battle 14 — filter() introduction
+### Final incident / Final Boss
 
-- `find()`と`filter()`を同じ`hp < 45`条件で比較
-- `find()` = 前から見て最初の1体で止まる
-- `filter()` = 最後まで見て条件に合うものを全部集める
-- `GATHER`を追加し、existing `allBelow` TargetRuleを再利用
-- Battle 13 clear後、西側Woodsの固定Lessonとして初登場
-- Battle 14 clear前はRandom Encounterへ混ぜない
-- clear後だけBattle 14をForest復習poolへ加える
-- Story / CODE HELPは読み方まで説明し、現在盤面の対象数・Enemy名はPlayerに残す
-
-### Battle 15 — Deep Forest filter() repetition
-
-- `filter(e => e.hp > 65)`を既存`ECHO`で読む
-- `<`から`>`へ条件方向が変わっても、filter()は最後まで見て全部集めることを確認
-- existing `allAbove` TargetRuleを再利用しnew TargetRuleなし
-- Battle 14 clear後にDeep Forestへ入り、最初のEncounter terrainでRandomより先に固定導入
-- Battle 15 clear前のDeep Forest RandomはBattle 14だけ
-- clear後はBattle 14 / 15を値・並び・code variant違いで反復
+- Battle 22まで終える前はOverworld JavaScript Randomで既存Battle 1 / 2を先出ししない
+- 22 clear後、Overworldへ戻るとBattle 1 → 2を最終異変の確認戦として再接続する
+- Final Boss 3は**22 + 1 + 2 clear後だけ**開始可能
+- Battle 3だけがJavaScript Area CLEARを発生させ、既存REAL WORLD RETURN Storyへつなぐ
 
 ## 4. Multi-map World
 
-現在のstable map:
+stable map:
 
 - `overworld` — 40 × 28
 - `js-village` — GREENFIELD VILLAGE 21 × 15
@@ -129,53 +124,31 @@ Battle 15: filter()を hp > 65 でも反復
 - viewport 11 × 9
 - `worldMapId + local worldPosition`をRpgState v4で保存
 - `/world` route上でmap transition
-- Village / Forest / Deep ForestからBattleへ入り、`returnTo=/world`で同じmap / positionへ戻る
+- local mapからBattleへ入り、`returnTo=/world`でsame map / positionへ戻る
 - Defeat時だけOverworld Hubへ戻す
 
-Forest / Deep Forest progression:
+Deep Forest fixed-first progression:
 
 ```text
-9 clear / 10未clear
-→ Randomなし
-→ Fixed 10
-
-10 clear / 11未clear
-→ Random 10
-→ Fixed 11
-
-11 clear / 12未clear
-→ Random 10 / 11
-→ Fixed 12
-
-12 clear / 13未clear
-→ Random 10 / 11 / 12
-→ MID BOSS 13
-
-13 clear / 14未clear
-→ MID BOSSの先へ進める
-→ Randomは10 / 11 / 12のまま
-→ 西側WoodsでFixed 14
-
-14 clear
-→ Forest Random 10 / 11 / 12 / 14
-→ Forest西端からDeep Forestへtransition
-
-Deep Forest / 15未clear
-→ RandomはBattle 14だけ
-→ 最初のEncounter terrainでFixed 15
-
-15 clear後
-→ Deep Forest Random 14 / 15
+14 clear → Deep Forest open
+15 fixed first
+↓
+x <= 24 → 16 map
+x <= 19 → 17 some
+x <= 14 → 18 every
+x <= 10 → 19 MID BOSS
+x <= 9  → 20 sort
+x <= 7  → 21 ?. / ??
+x <= 5  → 22 reduce
 ```
 
-未学習conceptをRandom抽選で先に見せない。
+fixed learning BattleはRandom chance / cooldownより優先する。
 
 ## 5. Battle runtime
 
 現在:
 
-- JavaScript main Battle 1〜3
-- JavaScript beginner Battle 7〜15
+- JavaScript Battle 1〜3 / 7〜22
 - TypeScript Battle 4〜6
 - SELECT → EXECUTE
 - safe internal `TargetRule`; display codeを`eval()`しない
@@ -187,33 +160,38 @@ Deep Forest / 15未clear
 - staged result sequence
 - persistent HP
 
-Forest / Deep Forestで追加・再利用しているsafe rule:
+JavaScript learning routeで使うsafe rule:
 
 ```text
+firstBelow / firstAbove
+allBelow / allAbove
+named
 firstAboveAndNamed
 firstBelowOrAbove
-allBelow
-allAbove
+allIfAnyBelow
+allIfEveryBelow
+lowestHp
+highestAttack
 ```
 
-Battle 14 / 15はnew TargetRuleを増やさず、existing `allBelow` / `allAbove`を利用する。
+`every()`導入のため追加した`allIfEveryBelow`以外はexisting ruleをできるだけ再利用する。
 
 ## 6. Story / onboarding
 
 実装済み:
 
 - REAL WORLD → CONNECT → CODE WORLD Opening
-- JavaScript main Battle Story
-- Village Training 7〜9 beginner-first Story
-- Forest 10〜12 beginner-first pre / post Story
-- MID BOSS 13 pre / post Story
-- filter Lesson 14 pre / post Story
-- Deep Forest filter Lesson 15 pre / post Story
+- Village 7〜9 beginner-first Story
+- Forest 10〜14 beginner-first Story
+- Deep Forest 15〜22 beginner-first pre / post Story
+- MID BOSS 13 / 19 Story
+- existing Battle 1 / 2 final incident Story
+- Final Boss 3 → JavaScript ending / REAL WORLD RETURN
 - TypeScript既存Story
 - Tutorial: MOVE → INTERACT → SELECT → EXECUTE
 - World Objective / BYTE guidance
 
-現在のJavaScript説明順:
+JavaScript説明順:
 
 ```text
 value / property
@@ -221,11 +199,17 @@ value / property
 → collection
 → find()
 → && / ||
-→ MID BOSSで既習内容を確認
-→ 「全部集める」という意味
 → filter()
-→ filter()を< / >の条件違いで反復
+→ map()
+→ some() / every()
+→ sort() / [0] / intermediate value
+→ ?. / ??
+→ reduce()
+→ 実際の異変1 / 2
+→ Final Boss
 ```
+
+Story / CODE HELPは読み方を説明するが、現在盤面のcorrect target名 / 対象数はPlayerへ残す。
 
 ## 7. RPG / Economy
 
@@ -248,38 +232,45 @@ Economy / Equipmentはcorrect targetを変えず、survivabilityとRPG progressi
 - RpgState v1〜v3 → v4 migration
 - current `worldMapId + local worldPosition`を保存
 - unknown map / bounds外locationはHubへfallback
-- save schema bumpなしでForest / Deep Forest progressionをderived補完
+- save schema bumpなしでJavaScript routeをderived補完
 
 Derived progression:
 
 ```text
-9 clear  → Stage 10
-10 clear → Stage 11 + LINK
-11 clear → Stage 12 + FORK
-12 clear → Stage 13
-13 clear → Stage 14
-14 clear → Stage 15 + GATHER
-15 clear → ECHO
+9 clear  → 10
+10 clear → 11 + LINK
+11 clear → 12 + FORK
+12 clear → 13
+13 clear → 14
+14 clear → 15 + GATHER
+15 clear → 16 + ECHO
+16 clear → 17 + PROJECT
+17 clear → 18 + SIGNAL
+18 clear → 19 + SYNC
+19 clear → 20
+20 clear → 21 + ORDER
+21 clear → 22 + SAFE PATH
+22 clear → REDUCE FOCUS
 ```
 
-#203 / #205 / #207 / #209時点の既存v4 saveから、その時点以降のJavaScript learning routeへ進める。
+#203 / #205 / #207 / #209 / #214時点の既存v4 saveから、その時点以降のrouteへ進める。
 
 ## 9. Quality gate
 
 回帰対象:
 
-- Village TRAIN 7 → 8 → 9
-- Forest gate / transition / reload persistence
-- Fixed Lesson 10 → 11 → 12
+- Village 7 → 8 → 9
+- Forest 10 → 11 → 12 → 13 → 14
+- Deep Forest gate / reload persistence
+- Fixed 15 → 16 → 17 → 18 → 19 → 20 → 21 → 22
 - clear済みconceptだけのRandom pool
-- MID BOSS 13 gate / Story / clear後の道開通
-- Battle 14 fixed introduction / `find()` vs `filter()` Story
-- Battle 14 clear前後のForest Random pool
-- Battle 14 clear gate → Deep Forest transition / reload persistence
-- Deep Forest Fixed 15 / filter()条件違いStory
-- Battle 15 clear前後のDeep Forest Random pool
+- MID BOSS 13 / 19がRandomへ入らない
+- Battle 22前は旧Battle 1 / 2を先出ししない
+- 22後はBattle 1 → 2へ再接続
+- Boss 3は22 + 1 + 2 clearまでlocked
+- Boss 3だけがJavaScript Area CLEAR
 - old v4 save normalization
-- existing JS 1〜3 / TS / economy / save semantics
+- existing TypeScript / economy / save semantics
 
 PR前:
 
@@ -302,22 +293,17 @@ main CI
 Cloudflare Production
 ```
 
-## 10. 次のP0
+## 10. 次のP0 / P1
 
-Battle 15までで`filter()`を条件違いでも読めるところまで固めた。ここからJavaScript地方を最後まで作り切る。
+JavaScript地方のlearning routeが1地方として完結した後は、gameplay変更を増やす前にIssue #196のBattle runtime responsibility splitを優先候補とする。
 
-順序:
+その後:
 
-1. Deep Forestで`map()`を「集めたものを別の値へ変える」と普通の言葉から導入
-2. `some()` / `every()`を「一体でもあるか / 全員そうか」のboolean resultとして段階的に導入
-3. 2体目の中Bossで`filter()` / `map()` / `some()` / `every()`を組み合わせて理解確認
-4. 最深部への道で`sort()`、multiline / intermediate valueを導入
-5. optional chaining / nullish coalescingをnested dataの安全な読み取りとして導入
-6. `reduce()` / aggregateを終盤の集約処理として導入
-7. existing Battle 1〜3を長いprogressionへ再配置 / 再役割化
-8. 最深部Final Bossを倒した時だけJavaScript Area CLEARにし、REAL WORLD RETURNまで完結
+1. TypeScript地方のvisual / beginner Story pass
+2. TypeScript専用Boss mechanicの必要性検証
+3. Database編prototype
 
-大規模な新規regionへ入る前にはIssue #196のBattle runtime responsibility splitも行う。
+JavaScriptへ新しいsyntaxを無制限に足し続けない。
 
 ## 11. 現在残っている整理対象
 
