@@ -18,7 +18,7 @@ function forestState(position: { x: number; y: number }) {
 }
 
 describe('JavaScript Forest midboss', () => {
-  it('main trail西側へ固定MID BOSS objectを置き、直接は踏めない', () => {
+  it('main trail西側へ固定MID BOSS objectを置き、clear前は直接踏めない', () => {
     expect(
       getTerrain(JS_FOREST_MIDBOSS_POSITION.x, JS_FOREST_MIDBOSS_POSITION.y, JS_FOREST_MAP_ID),
     ).toBe('midboss')
@@ -63,7 +63,11 @@ describe('JavaScript Forest midboss', () => {
         x: JS_FOREST_MIDBOSS_POSITION.x + 1,
         y: JS_FOREST_MIDBOSS_POSITION.y,
       }),
-      { ...progress, clearedStageIds: [7, 8, 9, 10, 11, 12], unlockedStageIds: [...progress.unlockedStageIds, 13] },
+      {
+        ...progress,
+        clearedStageIds: [7, 8, 9, 10, 11, 12],
+        unlockedStageIds: [...progress.unlockedStageIds, 13],
+      },
     )
 
     expect(intent).toEqual({
@@ -73,5 +77,30 @@ describe('JavaScript Forest midboss', () => {
       unlocked: true,
       seed: 'midboss:js-forest:0',
     })
+  })
+
+  it('Battle 13 clear後はMID BOSS地点をroadとして通過でき、interactionも消える', () => {
+    const progress = createInitialPlayerProgress()
+    const clearedProgress = {
+      ...progress,
+      clearedStageIds: [7, 8, 9, 10, 11, 12, 13],
+      unlockedStageIds: [...progress.unlockedStageIds, 13],
+    }
+    const state = forestState({
+      x: JS_FOREST_MIDBOSS_POSITION.x + 1,
+      y: JS_FOREST_MIDBOSS_POSITION.y,
+    })
+
+    const moveResult = resolveWorldMove({
+      rpgState: state,
+      progress: clearedProgress,
+      dx: -1,
+      dy: 0,
+    })
+
+    expect(moveResult.kind).toBe('moved')
+    expect(moveResult.terrain).toBe('road')
+    expect(moveResult.nextState.worldPosition).toEqual(JS_FOREST_MIDBOSS_POSITION)
+    expect(resolveWorldInteraction(state, clearedProgress)).toEqual({ kind: 'none' })
   })
 })
