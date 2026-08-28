@@ -7,6 +7,12 @@ describe('battle story event resolver', () => {
     expect(getBattleStoryEvent('/javascript/battle/1', 'post')?.title).toBe('直ったはずなのに')
   })
 
+  it('resolves JavaScript Village Training story events', () => {
+    expect(getBattleStoryEvent('/javascript/battle/7', 'pre')?.title).toBe('まず、数字を一つ読む')
+    expect(getBattleStoryEvent('/javascript/battle/8', 'pre')?.title).toBe('文字も値として読む')
+    expect(getBattleStoryEvent('/javascript/battle/9', 'pre')?.title).toBe('前から探して、最初で止まる')
+  })
+
   it('resolves TypeScript story events', () => {
     expect(getBattleStoryEvent('/typescript/battle/4', 'pre')?.title).toBe('API更新後の型ずれ')
     expect(getBattleStoryEvent('/typescript/battle/5', 'post')?.title).toBe('Shared Contractにつながった')
