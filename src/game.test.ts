@@ -65,6 +65,11 @@ describe('getTargets', () => {
     ).toEqual(['b'])
   })
 
+  it('HPの低い側または高い側に一致した最初の生存敵を返す', () => {
+    expect(targetIds(enemies, { kind: 'firstBelowOrAbove', below: 35, above: 65 })).toEqual(['b'])
+    expect(targetIds(enemies, { kind: 'firstBelowOrAbove', below: 35, above: 80 })).toEqual(['c'])
+  })
+
   it('some()相当ruleは条件に合う敵が1体でもいれば生存敵全員を返す', () => {
     expect(targetIds(enemies, { kind: 'allIfAnyBelow', hp: 35 })).toEqual(['a', 'b', 'c'])
     expect(targetIds(enemies, { kind: 'allIfAnyBelow', hp: 20 })).toEqual([])
@@ -80,6 +85,7 @@ describe('getTargets', () => {
     expect(targetIds(withDefeated, { kind: 'named', name: 'Goblin' })).toEqual(['b'])
     expect(targetIds(withDefeated, { kind: 'lowestHp' })).toEqual(['c'])
     expect(targetIds(withDefeated, { kind: 'highestAttack' })).toEqual(['b'])
+    expect(targetIds(withDefeated, { kind: 'firstBelowOrAbove', below: 35, above: 80 })).toEqual(['c'])
   })
 
   it('対象が存在しない場合は空配列を返す', () => {
@@ -114,6 +120,20 @@ describe('battle skill progression', () => {
     ])
     expect(trainingBattles.every((battle) => battle.goldReward === 0)).toBe(true)
     expect(trainingBattles.every((battle) => battle.expReward === 8)).toBe(true)
+  })
+
+  it('Forest Battle 10→11→12はfind()のまま&& → || → 組み合わせへ進む', () => {
+    const forestBattles = getBattlesForArea(JAVASCRIPT_AREA_ID).filter((battle) =>
+      [10, 11, 12].includes(battle.id),
+    )
+
+    expect(forestBattles.map((battle) => battle.id)).toEqual([10, 11, 12])
+    expect(forestBattles[0].skillIds).toContain('link')
+    expect(forestBattles[1].skillIds).toEqual(expect.arrayContaining(['link', 'fork']))
+    expect(forestBattles[2].skillIds).toEqual(expect.arrayContaining(['link', 'fork']))
+    expect(forestBattles[0].unlockSkillId).toBe('link')
+    expect(forestBattles[1].unlockSkillId).toBe('fork')
+    expect(forestBattles.every((battle) => !battle.skillIds.includes('viper'))).toBe(true)
   })
 
   it('TypeScript Battle 4→5→6でも既習Skillを維持して型概念を追加する', () => {
