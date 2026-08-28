@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useProgress } from '../progression'
 import { getEquipmentPresentation } from '../rpg'
 import { BattleStoryEvent } from '../story/BattleStoryEvent'
 import { getBattleStoryEvent } from '../story/battleStoryEvents'
@@ -57,6 +58,7 @@ const readRewardItems = (summary: HTMLElement): RawResultItem[] => {
 }
 
 export function BattleResultSequence() {
+  const { progress } = useProgress()
   const [target, setTarget] = useState<HTMLElement | null>(null)
   const [host, setHost] = useState<HTMLElement | null>(null)
   const [items, setItems] = useState<ResultSequenceItem[]>([])
@@ -67,6 +69,11 @@ export function BattleResultSequence() {
   const activePath = useRef('')
   const preStoryShown = useRef(false)
   const postStoryTarget = useRef<HTMLElement | null>(null)
+  const clearedStageIds = useRef(progress.clearedStageIds)
+
+  useEffect(() => {
+    clearedStageIds.current = progress.clearedStageIds
+  }, [progress.clearedStageIds])
 
   useEffect(() => {
     let collectFrame = 0
@@ -91,7 +98,7 @@ export function BattleResultSequence() {
       const nextTarget = document.querySelector<HTMLElement>('.victory-card .reward-summary')
 
       if (!nextTarget && !preStoryShown.current) {
-        const preEvent = getBattleStoryEvent(path, 'pre')
+        const preEvent = getBattleStoryEvent(path, 'pre', clearedStageIds.current)
         if (preEvent) {
           preStoryShown.current = true
           setStoryEvent(preEvent)
