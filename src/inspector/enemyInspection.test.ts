@@ -96,6 +96,31 @@ describe('runtime code data', () => {
     ])
   })
 
+  it('Deep Forestのliving / byHp / wrappedを現在盤面から確認できる', () => {
+    const orderVariables = createCodeDataVariables(
+      enemies,
+      'const living = enemies.filter(e => e.hp > 0)\nconst byHp = [...living].sort((a, b) => a.hp - b.hp)\nbyHp[0]',
+    )
+    const safeCode = 'const living = enemies.filter(e => e.hp > 0)\nconst wrapped = living.map(e => ({ enemy: e, stats: { hp: e.hp } }))\nwrapped.sort((a, b) => (a.stats?.hp ?? Infinity) - (b.stats?.hp ?? Infinity))[0].enemy'
+    const safeVariables = createCodeDataVariables(enemies, safeCode)
+    const snapshot = createEnemyInspectionSnapshot(enemies[0], safeCode)
+
+    expect(orderVariables.map((item) => item.name)).toEqual(['enemies', 'living', 'byHp'])
+    expect(orderVariables.find((item) => item.name === 'byHp')?.value).toEqual([
+      { name: 'Goblin', hp: 38, attackDamage: 14 },
+      { name: 'Knight', hp: 82, attackDamage: 10 },
+    ])
+    expect(safeVariables.map((item) => item.name)).toEqual(['enemies', 'living', 'wrapped'])
+    expect(safeVariables.find((item) => item.name === 'wrapped')?.value).toEqual([
+      { name: 'Goblin', 'stats.hp': 38 },
+      { name: 'Knight', 'stats.hp': 82 },
+    ])
+    expect(snapshot.derived).toEqual([
+      { name: 'in living', expression: 'enemy.hp > 0', value: true },
+      { name: 'stats.hp', expression: 'enemy.hp', value: 38 },
+    ])
+  })
+
   it('TypeScriptのlimit / scan由来のruntime値を確認できる', () => {
     const limit = createCodeDataVariables(
       enemies,
