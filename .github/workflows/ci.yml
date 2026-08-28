@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, feat/205-js-forest-logic-route]
+    branches: [main]
   pull_request:
 
 jobs:
