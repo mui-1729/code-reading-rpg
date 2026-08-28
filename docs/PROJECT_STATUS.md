@@ -77,9 +77,23 @@ CODE WORLDでは、monster / village / Gold / Equipment / Shop / Inn等を普通
 
 ## 4. JavaScript地方 — 拡張中
 
-既存JavaScript Battle 1〜3は現在動作しているbaselineだが、**JavaScript編を最終的に3戦で完結させる前提は撤回した**。
+既存JavaScript Battle 1〜3は現在動作しているmain story baselineだが、**JavaScript編を最終的に3戦で完結させる前提は撤回した**。
 
-現在採用する方向:
+Issue #203で、その前段に`GREENFIELD VILLAGE`のbeginner Training Battle 7〜9を追加した。
+
+```text
+Training 7: enemy.hp + < / >
+↓
+Training 8: enemy.name + ===
+↓
+Training 9: enemies + find()
+↓
+既存JavaScript地方へ
+```
+
+Trainingでは新しいTargetRuleを増やさず、既存`TRACE` / `PULSE` / `NOVA`を再利用する。各Battleは8 EXP / 0 Goldで、既存Economy / level curveへの影響を小さくする。
+
+現在採用する地域方向:
 
 ```text
 Central Hub
@@ -129,9 +143,13 @@ Overworldを1枚mapのまま無限に広げるのではなく、classic JRPG型�
 - OverworldのVillage入口から`GREENFIELD VILLAGE`へ遷移
 - Villageは21 × 15の別map
 - Village内はRandom Encounterなし
+- Village中央に固定`TRAIN` object
+- Training進捗に応じて7 → 8 → 9をinteractionから開始
 - 南のEXITからOverworldへ戻る
 - current map / positionはsave / reloadで保持
 - BYTE / Shop / Inn / Treasure / Bossは所属map外で誤発火しない
+
+Village入口へ向かう主要導線はroadとして確保し、onboardingへ向かう途中にRandom Encounterを強制しない。
 
 今後同じ仕組みで、Villageの先にForest / Deep Forest / Boss area等を追加できる。
 
@@ -158,12 +176,25 @@ TypeScriptをJavaScript Forestの色違いとして固定しない。
 
 - REAL WORLD → CONNECT → CODE WORLD Opening
 - JavaScript既存3Battleのstory
+- JavaScript Village Training 7〜9のbeginner-first pre-Battle Story
 - TypeScript既存3Battleのstory
 - pre / post Battle story event
 - REAL WORLD / CODE WORLD / REMOTE / RETURN presentation metadata
 - World Objective / progress feedback
 - Tutorial: MOVE → INTERACT → SELECT → EXECUTE
 - Tutorial skip / replay
+
+Village Trainingでは、
+
+```text
+普通の言葉
+→ enemy.hp / enemy.name
+→ < / > / ===
+→ enemiesという集まり
+→ find()は前から探して最初で止まる
+```
+
+の順で説明する。Storyは構文の読み方を説明するが、現在盤面の正解Enemy名は直接言わない。
 
 現在の改善方針:
 
@@ -178,8 +209,11 @@ TypeScriptをJavaScript Forestの色違いとして固定しない。
 
 現在:
 
-- JavaScript Battle 1〜3
+- JavaScript main Battle 1〜3
+- JavaScript Village Training Battle 7〜9
 - TypeScript Battle 4〜6
+- Training 7 → 8 → 9 first-clear unlock
+- Training reward: 8 EXP / 0 Gold each
 - SELECT → EXECUTE
 - safe internal `TargetRule`。表示コードを`eval()`しない
 - seeded Enemy / Skill / code variation
@@ -222,6 +256,7 @@ PATCH KIT:
 - insufficient Gold no mutation
 - first-clear Gold 100%
 - replay Gold 50% floor
+- Village TrainingはGold 0で通常進行Gold budgetから分離
 
 RPG Economyはcodeの正解targetを変えず、探索・準備・survivabilityへ使う。
 
@@ -235,6 +270,8 @@ RPG Economyはcodeの正解targetを変えず、探索・準備・survivability�
 - v1〜v3の旧worldPositionは`overworld`の同座標として復元
 - v4はcurrent `worldMapId + local worldPosition`を保存
 - unknown map / bounds外locationはHub開始地点へfallback
+- Training 7をinitial stage baselineへ追加し、既存PlayerProgress saveにもrestore時に補う
+- Training 7 / 8 / 9のclear / unlockは既存`PlayerProgress`へ保存しschema bumpしない
 - Tutorial state別storage
 - Sound settingsをprogress resetから分離
 - old save migration / invalid value normalization
@@ -243,7 +280,7 @@ RPG Economyはcodeの正解targetを変えず、探索・準備・survivability�
 - GitHub Actions
 - Cloudflare Workers Preview / Production
 
-multi-map migration / portal / no-encounter Village / reload persistenceのtestを追加済み。
+multi-map migration / portal / no-encounter Village / reload persistenceに加え、Village TRAIN → 7 → 8 → 9 → TRAINING COMPLETEの回帰E2Eを持つ。
 
 ## 11. 現在残っている整理対象
 
@@ -267,36 +304,36 @@ unused UIと、互換・test fixtureとして必要なdataを分ける。
 
 ## 12. 次に実装する優先候補
 
-### P0 — JavaScript learning route expansion
+### P0 — JavaScript Forest / boolean condition expansion
 
-Databaseへ急がずJavaScriptを先に深掘る。
+Village onboardingの次は、JavaScript地方を西へ進める意味を増やす。
 
-候補:
+次candidate:
 
 ```text
-value / comparison
-→ object property
-→ array
-→ find
-→ && / ||
-→ filter
-→ map
-→ some / every
-→ sort
-→ optional / nullish
-→ multiline
-→ aggregate
+Village Trainingで既習:
+comparison / property / collection / find
+↓
+Forest入口:
+&& / ||
+↓
+Random Encounterでfind + && / ||を反復
+↓
+filter
+↓
+最初の中Boss
+↓
+Deep Forest
 ```
 
 実装では、
 
-- beginner-first Story dialogue
-- fixed learning Battles
-- repeated Encounter variation
-- Village / Forest / Deep Forest進行
-- 中Boss
+- Village以西のForest進行
+- `&&` / `||`をbeginner-first Storyで導入
+- 既習conceptと組み合わせたrepeated Encounter variation
+- 最初の中Boss
 
-を段階的に追加する。
+を小さいsliceへ分ける。
 
 ### P1 — Battle runtime responsibility split (#196)
 
@@ -370,7 +407,8 @@ JavaScript
 - JavaScript = 自然系地方
 - TypeScript = stone / crystal / ruins方向
 - Database = underground / archive方向
-- JavaScript既存3Battleはbaselineであり、最終的なBattle数の上限ではない
+- JavaScript既存3Battleはmain story baselineであり、最終的なBattle数の上限ではない
+- JavaScript Village Training 7〜9をmain story前段のbeginner onboardingとして使う
 - JSは同じconceptを何度も異なる盤面で反復する
 - JavaScript地方には中Bossを置いてよい
 - 3つ目の新規技術region候補はDatabase
