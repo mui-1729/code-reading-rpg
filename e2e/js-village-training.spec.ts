@@ -128,6 +128,7 @@ test('Village TRAINで初心者Storyを読みながらBattle 7→8→9を順にc
   const findStory = page.getByRole('dialog', { name: '前から探して、最初で止まる' })
   await expect(findStory).toBeVisible()
   await expect(findStory).toContainText('enemies')
+  await findStory.getByRole('button', { name: /NEXT/ }).click()
   await expect(findStory).toContainText('find()')
   await findStory.getByRole('button', { name: 'SKIP' }).click()
 
