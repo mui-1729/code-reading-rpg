@@ -228,4 +228,20 @@ export const battles: Battle[] = [
     ],
     skillIds: ['trace', 'pulse', 'nova', 'link', 'fork'],
   },
+  {
+    id: 13,
+    areaId: JAVASCRIPT_AREA_ID,
+    label: 'FOREST MID-BOSS',
+    title: '森を塞ぐ番人',
+    subtitle: '新しい記号はない。comparison / name / find() / && / ||を一つずつ読み、Forest Guardianの群れを突破しよう',
+    recommendedLevel: 3,
+    expReward: 36,
+    goldReward: 18,
+    enemies: [
+      enemy('sprout-forest-midboss', 'Sprout', 36, 'Thorn Tap', 5, '♣'),
+      enemy('goblin-forest-midboss', 'Goblin', 68, 'Bark Slash', 8, '▲'),
+      enemy('guardian-forest-midboss', 'Guardian', 126, 'Root Crash', 10, '◆'),
+    ],
+    skillIds: ['trace', 'pulse', 'nova', 'link', 'fork'],
+  },
 ]
