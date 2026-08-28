@@ -91,12 +91,29 @@ describe('getTargets', () => {
 
 describe('battle skill progression', () => {
   it('JavaScript Battle 1→2→3で既習Skillを維持しつつ新構文Skillが累積する', () => {
-    const javascriptBattles = getBattlesForArea(JAVASCRIPT_AREA_ID)
+    const javascriptBattles = getBattlesForArea(JAVASCRIPT_AREA_ID).filter((battle) =>
+      [1, 2, 3].includes(battle.id),
+    )
     expect(javascriptBattles.map((battle) => battle.skillIds.length)).toEqual([3, 6, 9])
     expect(javascriptBattles[1].skillIds).toEqual(expect.arrayContaining(javascriptBattles[0].skillIds))
     expect(javascriptBattles[2].skillIds).toEqual(expect.arrayContaining(javascriptBattles[1].skillIds))
     expect(javascriptBattles[1].skillIds).toEqual(expect.arrayContaining(['lock', 'alert']))
     expect(javascriptBattles[2].skillIds).toEqual(expect.arrayContaining(['sweep', 'judge']))
+  })
+
+  it('Village Training 7→8→9は既存Skillだけでcomparison / property / findを反復する', () => {
+    const trainingBattles = getBattlesForArea(JAVASCRIPT_AREA_ID).filter((battle) =>
+      [7, 8, 9].includes(battle.id),
+    )
+
+    expect(trainingBattles.map((battle) => battle.id)).toEqual([7, 8, 9])
+    expect(trainingBattles.map((battle) => battle.skillIds)).toEqual([
+      ['trace', 'nova'],
+      ['pulse', 'nova', 'trace'],
+      ['trace', 'pulse', 'nova'],
+    ])
+    expect(trainingBattles.every((battle) => battle.goldReward === 0)).toBe(true)
+    expect(trainingBattles.every((battle) => battle.expReward === 8)).toBe(true)
   })
 
   it('TypeScript Battle 4→5→6でも既習Skillを維持して型概念を追加する', () => {
