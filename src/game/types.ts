@@ -17,6 +17,7 @@ export type TargetRule =
   | { kind: 'allAbove'; hp: number }
   | { kind: 'allBelowAndAttackAtLeast'; hp: number; attackDamage: number }
   | { kind: 'firstAttackAtLeastOrAbove'; hp: number; attackDamage: number }
+  | { kind: 'firstBelowOrAbove'; below: number; above: number }
   | { kind: 'allIfAnyBelow'; hp: number }
   | { kind: 'highestAttack' }
 
