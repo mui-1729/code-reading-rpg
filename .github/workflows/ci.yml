@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/203-js-village-training]
   pull_request:
 
 jobs:
