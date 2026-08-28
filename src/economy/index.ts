@@ -14,7 +14,12 @@ export {
   itemDefinitions,
   patchKitItem,
 } from './items'
-export { getShopItemPrice, purchaseShopItem, worldShopItems } from './shop'
+export {
+  getShopItemPrice,
+  getShopItemQuote,
+  purchaseShopItem,
+  worldShopItems,
+} from './shop'
 export type { ConsumePatchKitResult, PurchaseResult } from './economy'
 export type {
   BattleItemUseReason,
@@ -22,4 +27,10 @@ export type {
   ItemDefinition,
   ItemId,
 } from './items'
-export type { ShopItemDefinition, ShopPurchaseReason, ShopPurchaseResult } from './shop'
+export type {
+  ShopItemDefinition,
+  ShopItemQuote,
+  ShopItemState,
+  ShopPurchaseReason,
+  ShopPurchaseResult,
+} from './shop'
