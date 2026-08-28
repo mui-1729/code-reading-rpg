@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, feat/215-js-final-route]
+    branches: [main]
   pull_request:
 
 jobs:
