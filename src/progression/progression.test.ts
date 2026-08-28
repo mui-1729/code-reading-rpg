@@ -14,7 +14,7 @@ import {
 } from './progression'
 
 describe('player progression', () => {
-  it('初期進行はLv1相当で各Areaの入口Stageと初期Skillだけを解放する', () => {
+  it('初期進行はLv1相当で各Areaの入口StageとVillage Trainingだけを解放する', () => {
     const progress = createInitialPlayerProgress()
 
     expect(progress).toEqual({
@@ -24,7 +24,7 @@ describe('player progression', () => {
       clearedStageIds: [],
       clearedAreaIds: [],
       completedSideQuestIds: [],
-      unlockedStageIds: [1, 4],
+      unlockedStageIds: [1, 4, 7],
       unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
     })
     expect(getPlayerStats(progress.exp)).toEqual({
@@ -112,7 +112,7 @@ describe('player progression', () => {
       clearedStageIds: [1],
       clearedAreaIds: [],
       completedSideQuestIds: [],
-      unlockedStageIds: [1, 4, 2],
+      unlockedStageIds: [1, 4, 7, 2],
       unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label', 'viper'],
     })
     expect(result.reward).toEqual({
@@ -126,6 +126,47 @@ describe('player progression', () => {
       clearedAreaId: undefined,
     })
     expect(initial).toEqual(createInitialPlayerProgress())
+  })
+
+  it('Village Training 7→8→9は低EXP・Gold 0のまま順番に解放する', () => {
+    const initial = createInitialPlayerProgress()
+    const first = applyBattleVictory(initial, {
+      stageId: 7,
+      expReward: 8,
+      goldReward: 0,
+      nextStageId: 8,
+    })
+
+    expect(first.progress.exp).toBe(8)
+    expect(first.progress.gold).toBe(0)
+    expect(first.progress.clearedStageIds).toEqual([7])
+    expect(first.progress.unlockedStageIds).toEqual([1, 4, 7, 8])
+    expect(first.reward.unlockedStageId).toBe(8)
+    expect(first.reward.newLevel).toBe(1)
+
+    const second = applyBattleVictory(first.progress, {
+      stageId: 8,
+      expReward: 8,
+      goldReward: 0,
+      nextStageId: 9,
+    })
+    expect(second.progress.exp).toBe(16)
+    expect(second.progress.gold).toBe(0)
+    expect(second.progress.clearedStageIds).toEqual([7, 8])
+    expect(second.progress.unlockedStageIds).toEqual([1, 4, 7, 8, 9])
+    expect(second.reward.unlockedStageId).toBe(9)
+
+    const third = applyBattleVictory(second.progress, {
+      stageId: 9,
+      expReward: 8,
+      goldReward: 0,
+      nextStageId: 1,
+    })
+    expect(third.progress.exp).toBe(24)
+    expect(third.progress.gold).toBe(0)
+    expect(third.progress.clearedStageIds).toEqual([7, 8, 9])
+    expect(third.progress.unlockedStageIds).toEqual([1, 4, 7, 8, 9])
+    expect(third.reward.unlockedStageId).toBeUndefined()
   })
 
   it('再クリアはEXPを再獲得しGoldだけ50%へ減衰、CLEARやunlockは重複させない', () => {
@@ -150,7 +191,7 @@ describe('player progression', () => {
     expect(replay.progress.clearedStageIds).toEqual([1])
     expect(replay.progress.clearedAreaIds).toEqual([])
     expect(replay.progress.completedSideQuestIds).toEqual([])
-    expect(replay.progress.unlockedStageIds).toEqual([1, 4, 2])
+    expect(replay.progress.unlockedStageIds).toEqual([1, 4, 7, 2])
     expect(replay.progress.unlockedSkillIds).toEqual([
       'trace',
       'pulse',
