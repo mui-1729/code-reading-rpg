@@ -22,7 +22,8 @@ async function seedForestGate(page: Page, clearedTraining: boolean) {
             clearedStageIds: cleared ? [7, 8, 9] : [7, 8],
             clearedAreaIds: [],
             completedSideQuestIds: [],
-            unlockedStageIds: cleared ? [1, 4, 7, 8, 9, 10] : [1, 4, 7, 8, 9],
+            // #203時点のsave相当。Battle 10はまだ存在しないためrestoreで補完する。
+            unlockedStageIds: [1, 4, 7, 8, 9],
             unlockedSkillIds: skills,
           },
         }),
@@ -92,6 +93,21 @@ test('Training完了後はForestへ入りreload後もlocal mapを保持する', 
   await expect(page.getByRole('heading', { name: 'JAVASCRIPT FOREST' })).toBeVisible()
 })
 
+test('Forest最初のWoodsはRandom抽選ではなくBattle 10の固定Lessonになる', async ({ page }) => {
+  await seedForestGate(page, true)
+
+  await page.getByRole('button', { name: 'Move left' }).click()
+  await expect(page.getByLabel('Forest map')).toHaveAttribute('data-world-map', 'js-forest')
+
+  await page.getByRole('button', { name: 'Move left' }).click()
+  await page.getByRole('button', { name: 'Move left' }).click()
+  await page.getByRole('button', { name: 'Move left' }).click()
+  await page.getByRole('button', { name: 'Move up' }).click()
+
+  await expect(page).toHaveURL(/\/javascript\/battle\/10\?/)
+  await expect(page.getByRole('dialog', { name: '二つともtrueなら通る' })).toBeVisible()
+})
+
 test('Forest Battle 10 / 11は初心者Storyで&& / ||を順に説明しfilterを先取りしない', async ({ page }) => {
   await seedForestGate(page, true)
 
@@ -99,6 +115,8 @@ test('Forest Battle 10 / 11は初心者Storyで&& / ||を順に説明しfilter�
   const andStory = page.getByRole('dialog', { name: '二つともtrueなら通る' })
   await expect(andStory).toBeVisible()
   await expect(andStory).toContainText('&&')
+  await expect(andStory).not.toContainText('filter()')
+  await andStory.getByRole('button', { name: /NEXT/ }).click()
   await expect(andStory).toContainText('左もtrue、右もtrue')
   await expect(andStory).not.toContainText('filter()')
 
@@ -106,6 +124,8 @@ test('Forest Battle 10 / 11は初心者Storyで&& / ||を順に説明しfilter�
   const orStory = page.getByRole('dialog', { name: 'どちらかtrueなら通る' })
   await expect(orStory).toBeVisible()
   await expect(orStory).toContainText('||')
+  await expect(orStory).not.toContainText('filter()')
+  await orStory.getByRole('button', { name: /NEXT/ }).click()
   await expect(orStory).toContainText('どちらか一方でもtrue')
   await expect(orStory).not.toContainText('filter()')
 })

@@ -150,16 +150,15 @@ describe('open world map', () => {
     expect(getEncounterBattleId('hub', [1, 4, 7], [], 0.2)).toBeNull()
   })
 
-  it('ForestではTraining 9後に10→11→12を段階的に混ぜて反復する', () => {
+  it('Forest Random Encounterは固定Lessonでclear済みのBattleだけを反復する', () => {
     expect(getEncounterBattleId('javascript', [10], [7, 8], 0.9, JS_FOREST_MAP_ID)).toBeNull()
-    expect(getEncounterBattleId('javascript', [10], [7, 8, 9], 0.9, JS_FOREST_MAP_ID)).toBe(10)
+    expect(getEncounterBattleId('javascript', [10], [7, 8, 9], 0.9, JS_FOREST_MAP_ID)).toBeNull()
 
     expect(getEncounterBattleId('javascript', [10, 11], [7, 8, 9, 10], 0.2, JS_FOREST_MAP_ID)).toBe(10)
-    expect(getEncounterBattleId('javascript', [10, 11], [7, 8, 9, 10], 0.9, JS_FOREST_MAP_ID)).toBe(11)
+    expect(getEncounterBattleId('javascript', [10, 11], [7, 8, 9, 10], 0.9, JS_FOREST_MAP_ID)).toBe(10)
 
     expect(getEncounterBattleId('javascript', [10, 11, 12], [7, 8, 9, 10, 11], 0.2, JS_FOREST_MAP_ID)).toBe(10)
-    expect(getEncounterBattleId('javascript', [10, 11, 12], [7, 8, 9, 10, 11], 0.6, JS_FOREST_MAP_ID)).toBe(11)
-    expect(getEncounterBattleId('javascript', [10, 11, 12], [7, 8, 9, 10, 11], 0.9, JS_FOREST_MAP_ID)).toBe(12)
+    expect(getEncounterBattleId('javascript', [10, 11, 12], [7, 8, 9, 10, 11], 0.9, JS_FOREST_MAP_ID)).toBe(11)
 
     expect(getEncounterBattleId('javascript', [10, 11, 12], [7, 8, 9, 10, 11, 12], 0.1, JS_FOREST_MAP_ID)).toBe(10)
     expect(getEncounterBattleId('javascript', [10, 11, 12], [7, 8, 9, 10, 11, 12], 0.5, JS_FOREST_MAP_ID)).toBe(11)

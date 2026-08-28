@@ -58,6 +58,21 @@ const mergeUnique = <T,>(baseline: readonly T[], stored: readonly T[]): T[] => [
   ...new Set([...baseline, ...stored]),
 ]
 
+function getDerivedForestStageUnlocks(clearedStageIds: readonly number[]): number[] {
+  const stageIds: number[] = []
+  if (clearedStageIds.includes(9)) stageIds.push(10)
+  if (clearedStageIds.includes(10)) stageIds.push(11)
+  if (clearedStageIds.includes(11)) stageIds.push(12)
+  return stageIds
+}
+
+function getDerivedForestSkillUnlocks(clearedStageIds: readonly number[]): string[] {
+  const skillIds: string[] = []
+  if (clearedStageIds.includes(10)) skillIds.push('link')
+  if (clearedStageIds.includes(11)) skillIds.push('fork')
+  return skillIds
+}
+
 function parseCommonProgressFields(value: unknown) {
   if (!isRecord(value)) return null
   if (!isNonNegativeInteger(value.exp)) return null
@@ -66,12 +81,21 @@ function parseCommonProgressFields(value: unknown) {
   if (!isStringIdArray(value.unlockedSkillIds)) return null
 
   const baseline = createInitialPlayerProgress()
+  const clearedStageIds = [...value.clearedStageIds]
+  const derivedStageUnlocks = getDerivedForestStageUnlocks(clearedStageIds)
+  const derivedSkillUnlocks = getDerivedForestSkillUnlocks(clearedStageIds)
 
   return {
     exp: value.exp,
-    clearedStageIds: [...value.clearedStageIds],
-    unlockedStageIds: mergeUnique(baseline.unlockedStageIds, value.unlockedStageIds),
-    unlockedSkillIds: mergeUnique(baseline.unlockedSkillIds, value.unlockedSkillIds),
+    clearedStageIds,
+    unlockedStageIds: mergeUnique(
+      baseline.unlockedStageIds,
+      [...value.unlockedStageIds, ...derivedStageUnlocks],
+    ),
+    unlockedSkillIds: mergeUnique(
+      baseline.unlockedSkillIds,
+      [...value.unlockedSkillIds, ...derivedSkillUnlocks],
+    ),
   }
 }
 
