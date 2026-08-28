@@ -55,9 +55,10 @@ test('Overworld Random Encounterから逃走すると同じWorld位置/HPへ戻�
   await seed(page)
   await page.goto('/javascript/battle/1?seed=encounter%3A5%3A10%3A11&returnTo=%2Fworld')
 
-  const run = page.getByRole('button', { name: 'RUN · RETURN TO WORLD' })
+  const run = page.getByRole('button', { name: 'RUN · ESCAPE' })
   await expect(run).toBeVisible()
   await expect(run).toBeEnabled()
+  await expect(page.getByText(/元いたWorld位置へ戻る/)).toBeVisible()
   await run.click()
 
   await expect(page).toHaveURL(/\/world$/)
@@ -90,5 +91,5 @@ test('clear済みlocal map Random復習Battleは逃走できる', async ({ page 
   await seed(page, [10])
   await page.goto('/javascript/battle/10?seed=encounter%3Ajs-forest%3A7%3A20%3A9&returnTo=%2Fworld')
 
-  await expect(page.getByRole('button', { name: 'RUN · RETURN TO WORLD' })).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'RUN · ESCAPE' })).toBeEnabled()
 })
