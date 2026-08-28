@@ -157,7 +157,7 @@ describe('RPG state storage', () => {
 
     const restored = restoreRpgState(raw)
     expect(restored.worldMapId).toBe(OVERWORLD_MAP_ID)
-    expect(restored.worldPosition).toEqual({ x: 10, y: 12 })
+    expect(restored.worldPosition).toEqual(WORLD_START)
   })
 
   it('Village範囲外の座標はOverworld開始位置へ戻す', () => {
