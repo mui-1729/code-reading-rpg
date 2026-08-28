@@ -113,17 +113,17 @@ JavaScript編は3戦で完結させる前提にしない。
 
 重要なのは、**新概念の数ではなく反復回数を増やすこと**。
 
-例:
+現在の序盤〜中盤例:
 
 ```text
 comparison
 → comparisonを数戦
 → find
-→ findをHP / attack / nameで数戦
+→ findをHP / name / enemy順で数戦
 → && / ||
-→ find + &&
-→ 中Boss
-→ filter
+→ find + && / ||を反復
+→ 中Bossで既習内容だけを確認
+→ filterをfindとの違いから導入
 → filterを数戦
 → map
 → some / every
@@ -297,6 +297,26 @@ final targetそのものは書かない。
 
 表示codeを`eval()`しない。
 
+### `find()` と `filter()` の導入
+
+`filter()`は「複数targetになるSkill」とだけ説明しない。まず同じ条件で`find()`と比較する。
+
+```js
+enemies.find((enemy) => enemy.hp < 45)
+enemies.filter((enemy) => enemy.hp < 45)
+```
+
+初心者向けには、
+
+```text
+find()   = 前から見て、最初に見つけた1つで止まる
+filter() = 最後まで見て、条件に合うものを全部集める
+```
+
+と説明する。
+
+Story / CODE HELPは「何を見るか」までは教えるが、現在盤面で何体・誰が該当するかはPlayerに残す。
+
 ---
 
 ## 11. JavaScriptの複合読解
@@ -409,23 +429,23 @@ Generatorは反復学習に使う。
 
 新conceptはWorld進行と結びつける。
 
-JavaScriptの例:
+現在のJavaScript序盤〜中盤:
 
 ```text
-草原: 値 / comparison
+草原 / Village: 値 / comparison / property / array / find
 ↓
-林: object / array / find
+Forest東〜中盤: && / ||
 ↓
-Village: 既習内容の会話・休憩・小イベント
+Forest西側: 中Bossでfind + conditionの理解確認
 ↓
-森: && / || / filter
+中Bossの先のWoods: filterをfindとの違いから導入
 ↓
-中Boss: find / filter + condition
-↓
-深い森: map / some / every / sort
+Deep Forest: filter反復 → map / some / every / sort
 ↓
 Final: multi-line / aggregate
 ```
+
+新conceptはRandom Encounterで初登場させない。固定Lessonで導入したあと、clear済みconceptだけをRandom poolへ加える。
 
 地名を`FILTER FOREST`のような教材名にする必要はない。
 
@@ -450,6 +470,8 @@ Final: multi-line / aggregate
 - 同conceptの反復が単なる同一問題copyになっていない
 - map / Battle / progress整合
 - old save migration
+- 新conceptがfixed Lesson前のRandom poolへ混ざらない
+- fixed Lesson clear後はRandom Encounterで反復できる
 
 PR前:
 
