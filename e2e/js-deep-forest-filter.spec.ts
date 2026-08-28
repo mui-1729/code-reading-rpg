@@ -99,12 +99,18 @@ test('Battle 14 clear済みsaveはDeep Forestへ入りBattle 15を固定導入�
   await expect(page.getByText('FOREST COMPLETE', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Move left' }).click()
 
-  const deepForest = page.getByLabel('Deep Forest map')
+  let deepForest = page.getByLabel('Deep Forest map')
   await expect(deepForest).toHaveAttribute('data-world-map', 'js-deep-forest')
   await expect(deepForest).toHaveAttribute('data-world-x', '24')
   await expect(deepForest).toHaveAttribute('data-world-y', '9')
   await expect(page.getByRole('heading', { name: 'JAVASCRIPT DEEP FOREST' })).toBeVisible()
   await expect(page.getByText('DEEP FOREST · 1 / 1', { exact: true })).toBeVisible()
+
+  await page.reload()
+  deepForest = page.getByLabel('Deep Forest map')
+  await expect(deepForest).toHaveAttribute('data-world-map', 'js-deep-forest')
+  await expect(deepForest).toHaveAttribute('data-world-x', '24')
+  await expect(deepForest).toHaveAttribute('data-world-y', '9')
 
   await page.getByRole('button', { name: 'Move up' }).click()
 
