@@ -97,7 +97,7 @@ test.describe('Inn / Rest', () => {
     await expect(inn.getByText('40 / 108', { exact: true })).toBeVisible()
     await expect(inn.getByText('+68 HP', { exact: true })).toBeVisible()
     await expect(inn.getByText('7 G → —', { exact: true })).toBeVisible()
-    await expect(inn.getByText('SHORT 13 G', { exact: true })).toBeVisible()
+    await expect(inn.locator('.inn-cost-card em')).toHaveText('SHORT 13 G')
     await expect(inn.getByRole('button', { name: 'SHORT 13 G' })).toBeDisabled()
 
     const stored = await storedInnState(page)
