@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/201-multi-map-js-region]
   pull_request:
 
 jobs:
