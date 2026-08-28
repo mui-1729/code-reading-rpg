@@ -261,4 +261,21 @@ export const battles: Battle[] = [
     skillIds: ['trace', 'gather', 'nova'],
     unlockSkillId: 'gather',
   },
+  {
+    id: 15,
+    areaId: JAVASCRIPT_AREA_ID,
+    label: 'DEEP FOREST LESSON 01',
+    title: '条件の向きが変わっても全部集める',
+    subtitle: 'filter()の意味はそのまま。今度は`>`を読み、HPが65より大きい相手を最後まで見て全部集めよう',
+    recommendedLevel: 3,
+    expReward: 30,
+    goldReward: 14,
+    enemies: [
+      enemy('boar-deep-filter', 'Boar', 92, 'Root Tackle', 7, '♠'),
+      enemy('slime-deep-filter', 'Slime', 34, 'Moss Bite', 4, '●'),
+      enemy('golem-deep-filter', 'Golem', 78, 'Stone Root', 8, '■'),
+    ],
+    skillIds: ['gather', 'echo', 'trace'],
+    unlockSkillId: 'echo',
+  },
 ]
