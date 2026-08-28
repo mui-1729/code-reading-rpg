@@ -67,6 +67,7 @@ test('Village保存状態からBattleで敗北するとOverworld Hubへ戻る', 
   const trace = page.getByRole('button', { name: /^TRACE\b/ })
   await expect(trace).toBeEnabled()
   await trace.click()
+  await expect(trace).toHaveClass(/selected/)
   await trace.click()
   await expect(page.getByText('DEFEAT', { exact: true })).toBeVisible()
 
