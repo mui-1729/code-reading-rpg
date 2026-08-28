@@ -22,45 +22,112 @@ Battle中の余裕・Player buildの選択
 
 このloopはコード読解を代替しない。
 
-## Gold
+## Gold source
 
-各Battleの`goldReward`がsource of truth。
+各Battleの`goldReward`がBattle Goldのsource of truth。
 
-- Battle 1: 20 G
-- Battle 2: 30 G
-- JavaScript Boss: 50 G
-- Battle 4: 25 G
-- Battle 5: 35 G
-- TypeScript Boss: 60 G
+| Source | Gold | Role |
+| --- | ---: | --- |
+| JavaScript Chapter 1 | 20 G | early reward |
+| JavaScript Chapter 2 | 30 G | first purchase budgetへ到達 |
+| JavaScript Final | 50 G | area-clear budget |
+| DEBUG CACHE | 20 G | optional exploration reward |
+| TypeScript Chapter 1 | 25 G | next-area reward |
+| TypeScript Chapter 2 | 35 G | preparation budget |
+| TypeScript Final | 60 G | area-clear budget |
+| TYPE CACHE | 35 G + PATCH KIT ×1 | optional exploration reward |
 
-replayでもGoldは獲得できる。CLEAR / unlockは初回だけ。
+JavaScriptのBattle初回進行だけで:
+
+```text
+20 + 30 + 50 = 100 G
+```
+
+DEBUG CACHEも取ると:
+
+```text
+120 G + Debug Charm
+```
+
+100 Gあれば「PATCH KIT 30 G + 最安Equipment 50 G」のように回復と恒久強化を組み合わせられる。一方、DEBUG CACHE込み120 Gでも現在のShop全商品195 Gを一度に買えないため、選択が残る。
+
+### Replay
+
+現状はreplayでも同じBattle Goldを獲得できる。CLEAR / unlock / Area clearは初回だけ。
+
+replay farmingを通常進行の前提にはしない。replay Gold減衰は#184でinflationを検証し、必要な場合だけ別途調整する。
+
+## Gold sink
+
+| Sink | Price | Persistence | Role |
+| --- | ---: | --- | --- |
+| PATCH KIT | 30 G | consumable | Battle中のportable recovery |
+| Guard Edge | 55 G | permanent | ATK + DEF型Weapon |
+| Vital Coat | 60 G | permanent | Max HP型Armor |
+| Life Charm | 50 G | permanent | Max HP特化Accessory |
+| Inn / Rest | 20 G target | per use | Hubでのfull recovery。#183で実装 |
+
+ShopとInnを合わせてもmandatory purchaseにはしない。正しくコードを読めば初期装備のままclear可能であることを維持する。
 
 ## Shop
 
-Central Hubの`SHOP` objectへ隣接してINTERACTするとcompactなShop UIを開く。
+Central Hubの`SHOP` objectへ隣接してINTERACTするとShop UIを開く。
 
-現在の商品:
+ItemとEquipmentはvisual hierarchyを分ける。
 
-| 商品 | Price | 役割 |
-| --- | ---: | --- |
-| PATCH KIT | 30 G | 最大24 HP回復、1Battle 1回 |
-| Guard Edge | 55 G | ATK +4 / DEF +2 の安定型Weapon |
-| Vital Coat | 60 G | HP +22 / DEF +1 のHP重視Armor |
-| Life Charm | 50 G | HP +16 の耐久特化Accessory |
+```text
+CONSUMABLE
+└─ PATCH KIT
 
-購入時:
+EQUIPMENT
+├─ Guard Edge
+├─ Vital Coat
+└─ Life Charm
+```
 
-- current Gold / price / ownedをShop内に表示
-- Gold不足なら購入不可
-- Equipment所有済みなら再購入不可
-- PATCH KIT成功時はGoldを減らしInventory +1
-- Equipment成功時はGoldを減らし`ownedEquipmentIds`へ追加
-- Equipmentは購入時に自動装備しない。Pause > EQUIPMENTで比較して選ぶ
-- PATCH KITはItem catalogのicon / effect / usage ruleをShopでも表示する
-- 結果はshort FIELD LOGへ出す
-- World常設HUDへShop情報を追加しない
+### Purchase quote
 
-Open World移行前のArea header Shop UIは削除済み。新しいShop featureは`WorldShop.tsx`を基準にする。
+各商品は購入前に同時に次を表示する。
+
+```text
+WALLET 70 G
+PRICE  55 G
+AFTER  15 G
+```
+
+不足時:
+
+```text
+WALLET 42 G
+PRICE  60 G
+AFTER  —
+SHORT 18 G
+```
+
+`price / wallet / afterPurchaseGold / shortage / owned / equipped / affordable`の判定は`getShopItemQuote()`で一括算出する。React componentへGold計算を重複させない。
+
+### Purchase state
+
+- `AVAILABLE`: 購入可能
+- `UNAVAILABLE`: Gold不足。`SHORT X G`を表示
+- `OWNED`: 所有済み。再購入不可
+- `EQUIPPED`: 現在装備中
+
+Equipment購入成功時は:
+
+1. Goldを減らす
+2. `ownedEquipmentIds`へ追加
+3. loadoutは変更しない
+4. Shop内に`EQUIP NOW`を出す
+5. Playerが明示的に押した時だけ装備する
+
+購入しただけでloadoutが勝手に変わる挙動は作らない。Pause > EQUIPMENTから後で装備することもできる。
+
+PATCH KIT購入成功時はGoldを減らし、既存`inventory.patchKit`を+1する。
+
+結果はshort FIELD LOGへ出す。World常設HUDへShop情報を追加しない。
+
+Open World移行前のArea header Shop UIは削除済み。Shop featureは`WorldShop.tsx`を基準にする。
 
 ## Equipment role
 
@@ -184,8 +251,8 @@ Equipment / Party / World positionはEconomyではなくRpgStateの責務。
 src/economy/
 ├── items.ts              # Item catalog / visual / usage presentation / use-state
 ├── economy.ts            # PATCH KIT purchase / consume
-├── shop.ts               # Shop listing / pure purchase resolver
-├── WorldShop.tsx         # Open World Shop UI
+├── shop.ts               # Shop listing / quote / pure purchase resolver
+├── WorldShop.tsx         # Open World Shop UI / Provider commit / EQUIP NOW
 ├── BattleItemPanel.tsx   # Battle Item presentation / Provider adapter
 ├── items.test.ts
 ├── economy.test.ts
@@ -196,7 +263,7 @@ public/pixel-art/items/
 └── patch-kit.svg
 ```
 
-`shop.ts`はPlayerProgress / RpgStateを受け取り、購入後stateをpureに返す。UIはその結果を各Providerへ反映するだけにする。
+`shop.ts`はPlayerProgress / RpgStateを受け取り、購入前quoteと購入後stateをpureに返す。UIはその結果を各Providerへ反映するだけにする。
 
 paid Inn実装時も同様に、Gold / HPのtransactionはpure resolverへ置き、`WorldPage.tsx`へ価格判定を直書きしない。
 
@@ -217,21 +284,25 @@ PATCH KITとEquipmentは「間違えても少し耐えられる」「火力か�
 
 PlayerProgress schema v4 / RpgState v3。
 
-Shop / visual metadata / Item catalog / paid Innの追加だけではschema versionを上げない。PATCH KITは既存`inventory.patchKit`、購入Equipmentは既存`ownedEquipmentIds`へ保存する。
+Shop quote / visual metadata / Item catalog / paid Innの追加だけではschema versionを上げない。PATCH KITは既存`inventory.patchKit`、購入Equipmentは既存`ownedEquipmentIds`へ保存する。
 
 generic inventory等、保存shape自体を変更する場合のみmigrationとversion bumpを同時に行う。
 
 ## Tests
 
+- Shop price table / Battle Gold table / JavaScript 100 G + DEBUG CACHE 120 G budget
+- `getShopItemQuote()` wallet / price / after / shortage / state
+- PATCH KIT purchase success / insufficient Gold
+- Equipment purchase / Gold deduction / ownedEquipmentIds
+- owned / equipped / affordable presentation state
+- Shop purchase → Gold減少 → owned → `EQUIP NOW` → reload persistence
+- Gold不足 → stat comparison維持 + exact `SHORT X G`
 - PATCH KIT catalog / visual / effect / usage rule
 - Battle Item `READY / NO STOCK / HP FULL / USED / ACTION LOCKED`
-- PATCH KIT purchase success / insufficient Gold
 - consume / heal cap / full HP / no stock / one-use per Battle
 - existing v4 `inventory.patchKit` compatibility
 - Shop purchase → Pause ITEMS count / shared visual
 - Battle use → HP recovery / stock consume / reload storage
 - TYPE CACHE → PATCH KIT reward / shared visual feedback
-- Equipment purchase / Gold deduction / ownedEquipmentIds
-- World Shop open / purchase / reload persistence / Pause比較
-- paid Inn success / full HP no-charge / insufficient Gold
-- Gold獲得 → purchase → equip → Rest → reloadの統合E2E
+- paid Inn success / full HP no-charge / insufficient Gold (#183)
+- Gold獲得 → purchase → equip → Rest → reloadの統合E2E (#184)
