@@ -343,17 +343,22 @@ describe('World action resolver', () => {
     expect(result.nextState.encounterCount).toBe(7)
   })
 
-  it('cooldown後の草むらでrollが当たるとJS Encounter intentを返す', () => {
+  it('Battle 22後の草むらでrollが当たるとJS Encounter intentを返す', () => {
     const state = {
       ...createInitialRpgState(),
       worldPosition: { x: 10, y: 10 },
       stepsSinceEncounter: 4,
       encounterCount: 0,
     }
+    const initialProgress = createInitialPlayerProgress()
+    const progress = {
+      ...initialProgress,
+      clearedStageIds: [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22],
+    }
 
     const result = resolveWorldMove({
       rpgState: state,
-      progress: createInitialPlayerProgress(),
+      progress,
       dx: 0,
       dy: 1,
       encounterRolls: { trigger: 0, battle: 0 },
@@ -449,7 +454,10 @@ describe('World action resolver', () => {
     expect(
       resolveWorldInteraction(
         { ...initialState, worldPosition: { x: 8, y: 4 }, encounterCount: 3 },
-        { ...initialProgress, unlockedStageIds: [...initialProgress.unlockedStageIds, 3] },
+        {
+          ...initialProgress,
+          clearedStageIds: [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 1, 2],
+        },
       ),
     ).toEqual({
       kind: 'boss',

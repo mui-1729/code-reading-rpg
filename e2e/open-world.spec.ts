@@ -99,6 +99,9 @@ async function storedProgress(page: Page) {
 test.describe('Open World RPG loop', () => {
   test('Title → deterministic Encounter → Battle victory → World returnで位置と残HPを保持する', async ({ page }) => {
     await seedStorage(page, {
+      progress: createProgress({
+        clearedStageIds: [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22],
+      }),
       rpg: createRpgState({
         worldPosition: { x: 10, y: 10 },
         stepsSinceEncounter: 4,

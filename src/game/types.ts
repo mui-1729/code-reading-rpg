@@ -20,6 +20,7 @@ export type TargetRule =
   | { kind: 'firstAttackAtLeastOrAbove'; hp: number; attackDamage: number }
   | { kind: 'firstBelowOrAbove'; below: number; above: number }
   | { kind: 'allIfAnyBelow'; hp: number }
+  | { kind: 'allIfEveryBelow'; hp: number }
   | { kind: 'highestAttack' }
 
 export type SkillCard = {

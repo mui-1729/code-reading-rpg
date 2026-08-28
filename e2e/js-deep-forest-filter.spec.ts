@@ -91,13 +91,13 @@ test('Battle 14未clearではDeep Forest入口が閉じている', async ({ page
 test('Battle 14 clear後はDeep Forestへ入りreload後もmapを保持する', async ({ page }) => {
   await seedDeepForestGate(page, true)
 
-  await expect(page.getByText('DEEP FOREST OPEN', { exact: true })).toBeVisible()
+  await expect(page.getByText('DEEP FOREST ROUTE', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Move left' }).click()
 
   const deepForest = page.getByLabel('Deep Forest map')
   await expect(deepForest).toHaveAttribute('data-world-map', 'js-deep-forest')
   await expect(page.getByRole('heading', { name: 'JAVASCRIPT DEEP FOREST' })).toBeVisible()
-  await expect(page.getByText('DEEP FOREST · 1 / 1', { exact: true })).toBeVisible()
+  await expect(page.getByText('DEEP FOREST · 1 / 8', { exact: true })).toBeVisible()
 
   await page.reload()
   await expect(page.getByLabel('Deep Forest map')).toHaveAttribute('data-world-map', 'js-deep-forest')

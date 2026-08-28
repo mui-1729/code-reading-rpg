@@ -49,8 +49,13 @@ export function createEnemyInspectionSnapshot(
 
   const derived: CodeDataVariable[] = []
 
-  if (code.includes('const alive')) {
-    derived.push({ name: 'in alive', expression: 'enemy.hp > 0', value: enemy.hp > 0 })
+  if (code.includes('const alive') || code.includes('const living')) {
+    const collectionName = code.includes('const living') ? 'living' : 'alive'
+    derived.push({
+      name: `in ${collectionName}`,
+      expression: 'enemy.hp > 0',
+      value: enemy.hp > 0,
+    })
   }
 
   if (code.includes('score:') && code.includes('attackDamage')) {
@@ -95,6 +100,14 @@ export function createCodeDataVariables(
     })
   }
 
+  if (code.includes('const living')) {
+    values.push({
+      name: 'living',
+      expression: 'enemies.filter(enemy => enemy.hp > 0)',
+      value: alive.map(enemyRef),
+    })
+  }
+
   if (code.includes('const ordered')) {
     values.push({
       name: 'ordered',
@@ -103,10 +116,19 @@ export function createCodeDataVariables(
     })
   }
 
+  if (code.includes('const byHp')) {
+    values.push({
+      name: 'byHp',
+      expression: '[...living].sort((a, b) => a.hp - b.hp)',
+      value: [...alive].sort((left, right) => left.hp - right.hp).map(enemyRef),
+    })
+  }
+
   if (code.includes('const wrapped')) {
+    const sourceName = code.includes('const living') ? 'living' : 'alive'
     values.push({
       name: 'wrapped',
-      expression: 'alive.map(enemy => ({ enemy, stats: { hp: enemy.hp } }))',
+      expression: `${sourceName}.map(enemy => ({ enemy, stats: { hp: enemy.hp } }))`,
       value: alive.map((enemy) => ({ name: enemy.name, 'stats.hp': enemy.hp })),
     })
   }
