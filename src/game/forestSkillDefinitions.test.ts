@@ -1,18 +1,42 @@
 import { describe, expect, it } from 'vitest'
 import { forestSkillDefinitions } from './forestSkillDefinitions'
 import { allSkillDefinitionById, skills } from './skills'
+import { getTargets } from './targeting'
+import type { Enemy } from './types'
+
+const enemy = (id: string, name: string, hp: number): Enemy => ({
+  id,
+  name,
+  hp,
+  maxHp: Math.max(hp, 1),
+  attackName: 'Test Attack',
+  attackDamage: 1,
+  glyph: '•',
+})
 
 describe('forest skill definitions', () => {
-  it('LINKはfind() + &&だけで既習property条件を組み合わせる', () => {
+  it('LINKはfind() + &&でHPとnameの両条件を読む', () => {
     const link = allSkillDefinitionById.link
 
     expect(link).toBeDefined()
-    expect(link.rule).toEqual({ kind: 'named', name: 'Goblin' })
+    expect(link.rule).toEqual({ kind: 'firstAboveAndNamed', hp: 50, name: 'Goblin' })
     expect(link.concept).toBe('find() + &&')
     expect(link.codeVariants.every((variant) => variant.code.includes('find('))).toBe(true)
     expect(link.codeVariants.every((variant) => variant.code.includes('&&'))).toBe(true)
+    expect(link.codeVariants.every((variant) => variant.code.includes('> 50'))).toBe(true)
+    expect(link.codeVariants.every((variant) => variant.code.includes('=== "Goblin"'))).toBe(true)
     expect(link.codeVariants.every((variant) => !variant.code.includes('filter('))).toBe(true)
     expect(skills.link.rule).toEqual(link.rule)
+
+    const targets = getTargets(
+      [
+        enemy('low-goblin', 'Goblin', 42),
+        enemy('high-slime', 'Slime', 80),
+        enemy('high-goblin', 'Goblin', 64),
+      ],
+      link.rule,
+    )
+    expect(targets.map((target) => target.id)).toEqual(['high-goblin'])
   })
 
   it('FORKはfind()の内側で||を読み、filter()を先取りしない', () => {
