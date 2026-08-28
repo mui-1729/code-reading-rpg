@@ -89,23 +89,33 @@ export const deepForestSkillDefinitions: readonly SkillDefinition[] = [
       'sort() は配列の順番を並べ替えます。HPの小さい順に並べたあと[0]で先頭を取ると、現在HPが最も低いEnemyを選べます。',
     codeVariants: [
       {
+        id: 'single-short',
+        code: '[...enemies.filter(e => e.hp > 0)].sort((left, right) => left.hp - right.hp)[0]',
+        lineMode: 'single',
+      },
+      {
+        id: 'single-enemy',
+        code: '[...enemies.filter(enemy => enemy.hp > 0)].sort((first, second) => first.hp - second.hp)[0]',
+        lineMode: 'single',
+      },
+      {
         id: 'ordered-short',
-        code: 'const alive = enemies.filter(e => e.hp > 0)\nconst ordered = [...alive].sort((a, b) => a.hp - b.hp)\nordered[0]',
+        code: 'const living = enemies.filter(e => e.hp > 0)\nconst byHp = [...living].sort((a, b) => a.hp - b.hp)\nbyHp[0]',
         lineMode: 'multi',
         codeHelpLines: [
-          'まずfilter()で生存Enemyだけをaliveへ集める。',
-          'sort()のa.hp - b.hpでHPの小さい順へ並べ、orderedへ入れる。',
-          '[0]は配列の先頭。ordered[0]が現在HPの最も低いEnemy。',
+          'まずfilter()で生存Enemyだけをlivingへ集める。',
+          'sort()のa.hp - b.hpでHPの小さい順へ並べ、byHpへ入れる。',
+          '[0]は配列の先頭。byHp[0]が現在HPの最も低いEnemy。',
         ],
       },
       {
         id: 'ordered-named',
-        code: 'const alive = enemies.filter(enemy => enemy.hp > 0)\nconst ordered = [...alive].sort((left, right) => left.hp - right.hp)\nordered[0]',
+        code: 'const living = enemies.filter(enemy => enemy.hp > 0)\nconst byHp = [...living].sort((left, right) => left.hp - right.hp)\nbyHp[0]',
         lineMode: 'multi',
         codeHelpLines: [
-          'filter()で撃破済みEnemyを除き、aliveを作る。',
+          'filter()で撃破済みEnemyを除き、livingを作る。',
           'left.hp - right.hpが負ならleftを前へ置くので、HP昇順になる。',
-          '並べ替えた配列の[0]、つまり先頭を選ぶ。',
+          '並べ替えたbyHpの[0]、つまり先頭を選ぶ。',
         ],
       },
     ],
@@ -120,23 +130,33 @@ export const deepForestSkillDefinitions: readonly SkillDefinition[] = [
       '?. は左側がnull / undefinedならそこで止まり、?? は左側がnull / undefinedのときだけ右側を使います。この技ではHPが読めない場合をInfinityとして扱い、安全に昇順へ並べます。',
     codeVariants: [
       {
+        id: 'single-short',
+        code: '[...enemies.filter(e => e.hp > 0)].sort((left, right) => (left?.hp ?? Infinity) - (right?.hp ?? Infinity))[0]',
+        lineMode: 'single',
+      },
+      {
+        id: 'single-enemy',
+        code: '[...enemies.filter(enemy => enemy.hp > 0)].sort((first, second) => (first?.hp ?? Infinity) - (second?.hp ?? Infinity))[0]',
+        lineMode: 'single',
+      },
+      {
         id: 'safe-short',
-        code: 'const alive = enemies.filter(e => e.hp > 0)\nconst ordered = [...alive].sort((a, b) => (a?.hp ?? Infinity) - (b?.hp ?? Infinity))\nordered[0]',
+        code: 'const living = enemies.filter(e => e.hp > 0)\nconst safeOrder = [...living].sort((a, b) => (a?.hp ?? Infinity) - (b?.hp ?? Infinity))\nsafeOrder[0]',
         lineMode: 'multi',
         codeHelpLines: [
-          '生存Enemyだけをaliveへ残す。',
+          '生存Enemyだけをlivingへ残す。',
           'a?.hpで安全にhpを読み、値がないときだけ?? Infinityを使って後ろへ送る。',
-          '最後にordered[0]を取り、HPが最も低いEnemyを選ぶ。',
+          '最後にsafeOrder[0]を取り、HPが最も低いEnemyを選ぶ。',
         ],
       },
       {
         id: 'safe-named',
-        code: 'const alive = enemies.filter(enemy => enemy.hp > 0)\nconst ordered = [...alive].sort((left, right) => (left?.hp ?? Infinity) - (right?.hp ?? Infinity))\nordered[0]',
+        code: 'const living = enemies.filter(enemy => enemy.hp > 0)\nconst safeOrder = [...living].sort((left, right) => (left?.hp ?? Infinity) - (right?.hp ?? Infinity))\nsafeOrder[0]',
         lineMode: 'multi',
         codeHelpLines: [
-          'まずaliveへ生存Enemyを集める。',
+          'まずlivingへ生存Enemyを集める。',
           '?.は値がなければundefinedで止まり、??はその場合だけInfinityへ置き換える。',
-          'sort()後の先頭を[0]で取る。',
+          'sort()後のsafeOrderの先頭を[0]で取る。',
         ],
       },
     ],
@@ -151,23 +171,33 @@ export const deepForestSkillDefinitions: readonly SkillDefinition[] = [
       'reduce() は配列を左から順に見ながら、途中結果を一つにまとめていきます。この技はbestへ攻撃力が高い方を残し続け、最後に最も攻撃力が高いEnemyを一体だけ返します。',
     codeVariants: [
       {
+        id: 'single-destructured',
+        code: 'enemies.filter(({ hp }) => hp > 0).reduce((best, enemy) => enemy.attackDamage > best.attackDamage ? enemy : best)',
+        lineMode: 'single',
+      },
+      {
+        id: 'single-candidate',
+        code: 'enemies.filter(({ hp }) => hp > 0).reduce((best, candidate) => candidate.attackDamage > best.attackDamage ? candidate : best)',
+        lineMode: 'single',
+      },
+      {
         id: 'reduce-short',
-        code: 'const alive = enemies.filter(e => e.hp > 0)\nalive.reduce((best, e) => e.attackDamage > best.attackDamage ? e : best)',
+        code: 'const living = enemies.filter(e => e.hp > 0)\nconst strongest = living.reduce((best, e) => e.attackDamage > best.attackDamage ? e : best)\nstrongest',
         lineMode: 'multi',
         codeHelpLines: [
-          'filter()で生存Enemyだけをaliveへ残す。',
-          'reduce()はbestと次のeを比べ、攻撃力が高い方を次のbestとして残す。? : はtrueなら左、falseなら右を返す。',
-          '最後まで比べ終わったbestが、攻撃力最大のEnemy。',
+          'filter()で生存Enemyだけをlivingへ残す。',
+          'reduce()はbestと次のeを比べ、攻撃力が高い方をstrongest候補として残し続ける。? : はtrueなら左、falseなら右を返す。',
+          '最後まで比べ終わったstrongestが、攻撃力最大のEnemy。',
         ],
       },
       {
         id: 'reduce-named',
-        code: 'const alive = enemies.filter(enemy => enemy.hp > 0)\nalive.reduce((best, enemy) => enemy.attackDamage > best.attackDamage ? enemy : best)',
+        code: 'const living = enemies.filter(enemy => enemy.hp > 0)\nconst strongest = living.reduce((best, enemy) => enemy.attackDamage > best.attackDamage ? enemy : best)\nstrongest',
         lineMode: 'multi',
         codeHelpLines: [
-          'まず生存Enemyだけのaliveを作る。',
-          'reduce()でbestとenemyを一体ずつ比較し、attackDamageが大きい方を残す。',
-          '最後に残った一体がtargetになる。',
+          'まず生存Enemyだけのlivingを作る。',
+          'reduce()でbestとenemyを一体ずつ比較し、attackDamageが大きい方をstrongest候補として残す。',
+          '最後に残ったstrongestがtargetになる。',
         ],
       },
     ],
