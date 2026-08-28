@@ -139,5 +139,5 @@ test('Village TRAINで初心者Storyを読みながらBattle 7→8→9を順にc
   expect(progress.progress.exp).toBe(24)
   expect(progress.progress.gold).toBe(0)
   expect(progress.progress.clearedStageIds).toEqual([7, 8, 9])
-  expect(progress.progress.unlockedStageIds).toEqual([1, 4, 7, 8, 9])
+  expect(progress.progress.unlockedStageIds).toEqual([1, 4, 7, 8, 9, 10])
 })

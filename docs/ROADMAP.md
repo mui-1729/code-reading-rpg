@@ -39,8 +39,11 @@ REAL WORLDでは新人エンジニアとしてproblemを受けるが、technical
 - multi-map対応: `worldMapId + local worldPosition`
 - JavaScript側にGrassland / Woods / Deep Woods
 - `GREENFIELD VILLAGE` 21 × 15の別map
-- Overworld ↔ Village transition
+- `JAVASCRIPT FOREST` 31 × 21の別map
+- Overworld ↔ Village / Forest transition
+- Forest入口はVillage Training 9 clearで解放
 - VillageはRandom Encounterなし
+- Forestは学習済みconceptだけをRandom Encounterで反復
 - Village中央に`TRAIN` learning checkpoint
 - Central Hub / TypeScript側の既存導線
 - Random Encounter / cooldown / fixed Boss
@@ -59,10 +62,16 @@ REAL WORLDでは新人エンジニアとしてproblemを受けるが、technical
   - 7: `enemy.hp` + `<` / `>`
   - 8: `enemy.name` + `===`
   - 9: `enemies` + `find()`
+- JavaScript Forest Learning Battle 10〜12
+  - 10: `find()` + `&&`
+  - 11: `find()` + `||`
+  - 12: comparison / `find()` / `&&` / `||`の組み合わせ
 - TypeScript Battle 4〜6
-- Training 7 → 8 → 9をfirst clearで順にunlock
+- Training 7 → 8 → 9 → Forest 10 → 11 → 12をfirst clearで順にunlock
 - Trainingは各8 EXP / 0 Goldで既存economyを崩さない
-- Storyで「普通の言葉 → 小さい記号 / property → find()」の順に説明し、correct targetはPlayerへ残す
+- Forestは少量のEXP / Goldを持ち、同じBattleを値 / enemy順 / code variant違いで再Encounterできる
+- Storyで「普通の言葉 → 小さい記号 / property → syntax」の順に説明し、correct targetはPlayerへ残す
+- `filter()`はForest 10〜12ではまだ導入しない
 - SELECT → EXECUTE
 - safe `TargetRule`; display codeを`eval()`しない
 - seeded generation / solvability
@@ -72,7 +81,7 @@ REAL WORLDでは新人エンジニアとしてproblemを受けるが、technical
 - Boss GUARD
 - staged result sequence
 
-既存JS Battle 1〜3は**現在動くmain story baselineであって、JavaScript編の最終Battle数ではない**。Village Training 7〜9はその前段のbeginner onboardingとして追加した。
+既存JS Battle 1〜3は**現在動くmain story baselineであって、JavaScript編の最終Battle数ではない**。Village Training 7〜9とForest Learning 10〜12を、その前段のbeginner learning routeとして追加した。
 
 ### RPG / Economy
 
@@ -189,16 +198,23 @@ value
    - Training進捗に応じたWorld objective
    - 旧saveにもTraining 7をbaseline unlockとして補う
    - TrainingのGold rewardは0
+3. Village以西に`JAVASCRIPT FOREST`を追加し、`&&` / `||`を導入（#205）
+   - Training 9 clearでForest入口を解放
+   - Battle 10: `find()` + `&&`
+   - Battle 11: `find()` + `||`
+   - Battle 12: `&&` / `||`の組み合わせ
+   - Forest Random Encounterは導入済み10〜12だけを段階的に反復
+   - `filter()`はまだ先取りしない
+   - Forest map / positionはRpgState v4のまま保存
 
 次:
 
-3. Village以西のForest進行を作り、`&&` / `||`をStoryで導入する
-4. 既習comparison / `find()`と`&&` / `||`をRandom Encounterで複数回反復する
-5. 最初の中Bossを配置し、直前conceptを組み合わせる
-6. `filter()`以降をForest / Deep Forestへ段階的に追加する
+4. 最初の中Bossを配置し、Village〜Forestで学んだcomparison / property / `find()` / `&&` / `||`だけを組み合わせて確認する
+5. `filter()`を中Boss後のForest / Deep Forestで導入する
+6. `map()` / `some()` / `every()`等を反復しながらDeep Forestへ進める
 7. existing Battle 1〜3を長いprogression内へ再配置 / 再役割化する
 
-Battle engine / TargetRule / generatorを作り直さない。
+Battle engine / generatorを作り直さない。TargetRule追加が必要な場合も、表示codeの意味をsafe domainへ写す最小追加にする。
 
 ---
 

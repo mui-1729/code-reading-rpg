@@ -12,6 +12,9 @@ const javascriptBattles = battles.filter(
 const villageTrainingBattles = battles.filter(
   (battle) => battle.areaId === JAVASCRIPT_AREA_ID && [7, 8, 9].includes(battle.id),
 )
+const forestLearningBattles = battles.filter(
+  (battle) => battle.areaId === JAVASCRIPT_AREA_ID && [10, 11, 12].includes(battle.id),
+)
 const javascriptQuest = mainQuests.find((quest) => quest.areaId === JAVASCRIPT_AREA_ID)
 
 describe('JavaScript story progression', () => {
@@ -45,6 +48,20 @@ describe('JavaScript story progression', () => {
       '名前を見比べる',
       '前から最初の一体を探す',
     ])
+  })
+
+  it('Forest Learningはfind()を維持して&& → || → 組み合わせへ進む', () => {
+    expect(forestLearningBattles.map((battle) => battle.label)).toEqual([
+      'FOREST LESSON 01',
+      'FOREST LESSON 02',
+      'FOREST LESSON 03',
+    ])
+    expect(forestLearningBattles.map((battle) => battle.title)).toEqual([
+      '二つとも当てはまる相手',
+      'どちらか一つでも当てはまる相手',
+      '森の分かれ道を読み切る',
+    ])
+    expect(forestLearningBattles.every((battle) => !battle.skillIds.includes('viper'))).toBe(true)
   })
 
   it('uses programmer characters without incident-management jargon', () => {

@@ -66,6 +66,47 @@ describe('JavaScript battle story events', () => {
     expect(text).not.toMatch(/Slime|Goblin|Golem/)
   })
 
+  it('Forest 10は&&を「左右ともtrue」と説明しfilterを先取りしない', () => {
+    const event = getJavaScriptPreBattleEvent(10)
+    const text = event?.lines.map((line) => line.text).join('\n') ?? ''
+
+    expect(event?.title).toBe('二つともtrueなら通る')
+    expect(text).toContain('`&&`')
+    expect(text).toContain('左もtrue、右もtrue')
+    expect(text).toContain('find()')
+    expect(text).not.toContain('filter()')
+    expect(text).not.toMatch(/Sprout|Goblin|Boar/)
+  })
+
+  it('Forest 11は||を「どちらか一方でもtrue」と説明し正解Enemyを直接教えない', () => {
+    const event = getJavaScriptPreBattleEvent(11)
+    const text = event?.lines.map((line) => line.text).join('\n') ?? ''
+
+    expect(text).toContain('`||`')
+    expect(text).toContain('どちらか一方でもtrue')
+    expect(text).toContain('かっこ')
+    expect(text).not.toContain('filter()')
+    expect(text).not.toMatch(/Slime|Goblin|Boar/)
+  })
+
+  it('Forest 12は新syntaxを増やさず&& / ||を小さく分けて読む', () => {
+    const before = getJavaScriptPreBattleEvent(12)
+    const after = getJavaScriptPostBattleEvent(12)
+    const beforeText = before?.lines.map((line) => line.text).join('\n') ?? ''
+    const afterText = after?.lines.map((line) => line.text).join('\n') ?? ''
+
+    expect(beforeText).toContain('新しい記号は増えない')
+    expect(beforeText).toContain('&&と||')
+    expect(beforeText).toContain('find()')
+    expect(beforeText).not.toContain('filter()')
+    expect(afterText).toContain('読む順番')
+  })
+
+  it('Forest 10 / 11は戦闘後も&& / ||の違いを短く復習する', () => {
+    expect(getJavaScriptPostBattleEvent(10)?.lines[0]?.text).toContain('&&')
+    expect(getJavaScriptPostBattleEvent(11)?.lines[0]?.text).toContain('||')
+  })
+
   it('non-story battles do not get unrelated JavaScript story events', () => {
     expect(getJavaScriptPreBattleEvent(1)).toBeUndefined()
     expect(getJavaScriptPostBattleEvent(4)).toBeUndefined()

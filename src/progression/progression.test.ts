@@ -128,7 +128,7 @@ describe('player progression', () => {
     expect(initial).toEqual(createInitialPlayerProgress())
   })
 
-  it('Village Training 7→8→9は低EXP・Gold 0のまま順番に解放する', () => {
+  it('Village Training 7→8→9は低EXP・Gold 0のままForest 10へつなぐ', () => {
     const initial = createInitialPlayerProgress()
     const first = applyBattleVictory(initial, {
       stageId: 7,
@@ -160,13 +160,56 @@ describe('player progression', () => {
       stageId: 9,
       expReward: 8,
       goldReward: 0,
-      nextStageId: 1,
+      nextStageId: 10,
     })
     expect(third.progress.exp).toBe(24)
     expect(third.progress.gold).toBe(0)
     expect(third.progress.clearedStageIds).toEqual([7, 8, 9])
-    expect(third.progress.unlockedStageIds).toEqual([1, 4, 7, 8, 9])
-    expect(third.reward.unlockedStageId).toBeUndefined()
+    expect(third.progress.unlockedStageIds).toEqual([1, 4, 7, 8, 9, 10])
+    expect(third.reward.unlockedStageId).toBe(10)
+  })
+
+  it('Forest 10→11→12はLINK / FORKを順に解放して学習routeを完了する', () => {
+    const initial = {
+      ...createInitialPlayerProgress(),
+      exp: 24,
+      clearedStageIds: [7, 8, 9],
+      unlockedStageIds: [1, 4, 7, 8, 9, 10],
+    }
+
+    const andResult = applyBattleVictory(initial, {
+      stageId: 10,
+      expReward: 16,
+      goldReward: 6,
+      nextStageId: 11,
+      unlockSkillId: 'link',
+    })
+    expect(andResult.progress.exp).toBe(40)
+    expect(andResult.progress.gold).toBe(6)
+    expect(andResult.progress.unlockedStageIds).toEqual([1, 4, 7, 8, 9, 10, 11])
+    expect(andResult.progress.unlockedSkillIds).toContain('link')
+    expect(andResult.reward.unlockedSkillId).toBe('link')
+
+    const orResult = applyBattleVictory(andResult.progress, {
+      stageId: 11,
+      expReward: 20,
+      goldReward: 8,
+      nextStageId: 12,
+      unlockSkillId: 'fork',
+    })
+    expect(orResult.progress.exp).toBe(60)
+    expect(orResult.progress.gold).toBe(14)
+    expect(orResult.progress.unlockedStageIds).toEqual([1, 4, 7, 8, 9, 10, 11, 12])
+    expect(orResult.progress.unlockedSkillIds).toEqual(expect.arrayContaining(['link', 'fork']))
+
+    const combinedResult = applyBattleVictory(orResult.progress, {
+      stageId: 12,
+      expReward: 24,
+      goldReward: 10,
+    })
+    expect(combinedResult.progress.exp).toBe(84)
+    expect(combinedResult.progress.gold).toBe(24)
+    expect(combinedResult.progress.clearedStageIds).toEqual([7, 8, 9, 10, 11, 12])
   })
 
   it('再クリアはEXPを再獲得しGoldだけ50%へ減衰、CLEARやunlockは重複させない', () => {

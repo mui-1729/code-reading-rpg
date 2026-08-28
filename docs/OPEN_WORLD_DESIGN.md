@@ -35,19 +35,19 @@ Reward / Story / Progress
 
 ## 2. Current implementation baseline
 
-既存baseline:
-
 - Overworld 40 × 28 tile
 - camera viewport 11 × 9
 - 4方向移動
-- JavaScript = grass / tall grass
+- JavaScript = grass / tall grass / woods / deep woods
 - TypeScript = forest
 - Hub / road = safe
 - mountain / water等のnon-walkable terrain
 - Playerはviewport overlay
 - joined BYTEはprevious tileへ追従
+- `GREENFIELD VILLAGE` 21 × 15
+- `JAVASCRIPT FOREST` 31 × 21
 
-このbaselineを壊さず、**current map ID + local position**を持つmulti-map構造へ拡張する。
+このbaselineを壊さず、**current map ID + local position**を持つmulti-map構造で拡張する。
 
 ## 3. Multi-map model
 
@@ -58,9 +58,7 @@ worldMapId
 worldPosition
 ```
 
-を現在地として保存する。
-
-`worldPosition`は現在map内のlocal coordinate。
+を現在地として保存する。`worldPosition`は現在map内のlocal coordinate。
 
 各mapは最低限次を定義する。
 
@@ -70,17 +68,21 @@ worldPosition
 - terrain resolver
 - portal / exit
 - encounter可否
-- fixed objectがある場合はその定義
+- progress gateが必要ならその条件
+- fixed object / fixed learning triggerがある場合はその定義
 
-最初の実証mapはJavaScript側のVillage。
+現在のJavaScript側実装:
 
 ```text
 Overworld
-  ↓ village entrance
-JavaScript Village
-  ↓ exit
-Overworld
+├─ GREENFIELD VILLAGE (`js-village`)
+│   └─ TRAIN: Battle 7 → 8 → 9
+└─ JAVASCRIPT FOREST (`js-forest`)
+    ├─ Fixed Lesson: Battle 10 → 11 → 12
+    └─ Random Encounter: clear済みLessonだけを反復
 ```
+
+VillageとForestは同じ`/world` route上で`worldMapId`を切り替える。
 
 将来は同じ仕組みで、
 
@@ -103,9 +105,9 @@ Tall Grass
 ↓
 Village
 ↓
-森
+Forest
 ↓
-深い森
+Deep Forest
 ↓
 中Boss
 ↓
@@ -114,20 +116,51 @@ Village
 
 洞窟・遺跡・地下・城塞をJavaScriptだけで使い切らない。
 
-現在のOverworldでは、まず草原の西奥へ`woods` / `deep-woods`等の自然terrainを増やして奥行きを出す。
+### GREENFIELD VILLAGE
 
 Villageは別mapへ遷移する。
 
-Village内へは、
-
+- 21 × 15
+- stable ID: `js-village`
 - 家 / 壁はnon-walkable
 - 道 / 広場はwalkable
-- 出口tileから元mapへtransition
 - Random Encounterなし
+- 中央のTRAINでBattle 7 → 8 → 9
+- 南のEXITからOverworldへ戻る
 
-を基本とする。
+Villageへのonboarding中にRandom Encounterを挟まないよう、入口までの主要導線はroadとして確保する。
 
-Shop / Inn / NPCは今後Villageへ配置できるが、mapを作るためだけに空のbuildingを大量配置しない。
+### JAVASCRIPT FOREST
+
+Issue #205でVillageの次の学習fieldとして追加する。
+
+- 31 × 21
+- stable ID: `js-forest`
+- JavaScriptの自然系visual identityを維持
+- road / woods / deep-woods / grass / river / mountainで構成
+- Overworld西側の入口から入る
+- Village Training 9 clear前は入口を通れない
+- 東のEXITからOverworldへ戻る
+- current map / positionはRpgState v4のまま保存・reload可能
+- woods / deep-woodsは学習BattleとRandom Encounterのfield
+
+Forestは大きさだけを増やすmapではなく、**地理的に奥へ進むほど新しいlogicを固定Lessonで導入し、その途中で既習conceptだけをRandom Encounter反復するmap**とする。
+
+```text
+東側 / 最初のWoods
+→ Fixed Battle 10: &&
+→ 東〜中盤でRandom Battle 10を反復
+
+中盤のWoods
+→ Fixed Battle 11: ||
+→ 中盤〜奥でRandom Battle 10 / 11を反復
+
+最深側のWoods
+→ Fixed Battle 12: && / || combined
+→ clear後はRandom Battle 10 / 11 / 12を反復
+```
+
+新しいsyntaxをRandom抽選で偶然先に見せない。
 
 ## 5. TypeScript以降の景観を温存する
 
@@ -148,8 +181,9 @@ World全体として、技術編が変わると景色も変わる設計を優先
 - walkable
 - viewport
 - Encounter terrain / chance
-- portal / map transition
+- portal / map transition / progress gate metadata
 - fixed object positions
+- Random Encounter pool
 - adjacency
 
 WorldPageへmap固有座標`if`を積まない。
@@ -159,9 +193,10 @@ WorldPageへmap固有座標`if`を積まない。
 UI / Routerへ依存しないpure resolver。
 
 - movement / blocked
-- map transition
+- map transition / progress gate
+- fixed learning Battle trigger
 - steps / Encounter cooldown
-- deterministic Encounter intent
+- deterministic Random Encounter intent
 - BYTE / Shop / Recovery / Treasure / Boss interaction
 
 ### `RpgState`
@@ -192,26 +227,67 @@ Move先がportalの場合、resolverはBattleやRouter navigationではなく、
 
 ```text
 fromMap / fromPosition
+→ progress gate確認
 → toMap / toPosition
 ```
 
 を含むtransition resultを返す。
 
-WorldPageはそのnext RpgStateを保存して同じ`/world`上で別mapを描画する。
-
-mapごとにrouteを大量追加しない。
+WorldPageはそのnext RpgStateを保存して同じ`/world`上で別mapを描画する。mapごとにrouteを大量追加しない。
 
 Battleの`returnTo=/world`も、RpgStateに保存されたmap / positionへ戻るためそのまま利用できる。
 
-## 8. Random Encounter
+現在のprogress gate:
 
-Encounterはmap + terrainで決まる。
+```text
+Overworld → JAVASCRIPT FOREST
+requires: Training Battle 9 clear
+```
 
-- JavaScript tall grass / woods / deep woods → JavaScript normal Battle
-- TypeScript encounter terrain → TypeScript normal Battle
-- road / Hub / Village → Encounterなし
+## 8. Fixed learning Battle と Random Encounter
+
+Forestでは**新conceptの導入**と**既習conceptの反復**を分ける。
+
+### Fixed learning Battle
+
+Battle 10〜12はRandom抽選で初登場させない。
+
+- 9 clear後、最初にEncounter terrainへ踏み込むとBattle 10を固定導入
+- 10 clear後、西の中盤まで進んでEncounter terrainへ踏み込むとBattle 11を固定導入
+- 11 clear後、最深側まで進んでEncounter terrainへ踏み込むとBattle 12を固定導入
+- fixed LessonはRandom chance / minimum-step cooldownより優先する
+- Battle後は同じForest map / positionへ戻る
+
+### Random Encounter pool
+
+```text
+Training 9未clear
+→ Forestへ入れない
+
+9 clear / 10未clear
+→ Random Encounterなし
+→ Fixed Battle 10で&&を導入
+
+10 clear / 11未clear
+→ RandomはBattle 10のみ
+→ Forest中盤でFixed Battle 11を導入
+
+11 clear / 12未clear
+→ RandomはBattle 10 / 11のみ
+→ Forest最深側でFixed Battle 12を導入
+
+12 clear後
+→ Random Battle 10 / 11 / 12を反復
+```
+
+これにより、`&&`を理解する前に`||`が突然出たり、`||`を学ぶ前にcombined Battleが出たりしない。
+
+Random Encounter共通rule:
+
 - minimum 5 steps cooldown
+- terrainごとのEncounter chance
 - `encounterCount`をseedへ含める
+- local map IDもForest seedへ含める
 - Battle後は同じmap / positionへ戻る
 - fixed Bossとは別intent
 
@@ -246,11 +322,11 @@ Defeat時だけ、
 
 Inn / Equipmentによる既存HPルールは維持する。
 
-## 10. Save migration
+## 10. Save migration / normalization
 
-multi-map導入でRpgState schemaを更新する。
+multi-map導入でRpgState schemaはv4。
 
-旧save v1〜v3は、
+旧RpgState v1〜v3は、
 
 ```text
 worldMapId = overworld
@@ -261,7 +337,19 @@ worldPosition = 旧worldPosition
 
 既存座標は互換性のため維持する。未知map ID / map bounds外座標はOverworld開始地点へfallbackする。
 
-新saveはmap IDとlocal positionをreload後も保持する。
+新saveはVillage / Forestを含むstable map IDとlocal positionをreload後も保持する。
+
+Forest追加だけではschema versionを上げない。`isWorldMapId` / bounds定義を拡張して既存v4形式へ追加する。
+
+PlayerProgressもschema v4を維持する。#203時点でTraining 9をclear済みだったsaveにはBattle 10がまだ存在しなかったため、restore時に進行からderived unlockを補う。
+
+```text
+9 clear  → Stage 10 unlock
+10 clear → Stage 11 + LINK unlock
+11 clear → Stage 12 + FORK unlock
+```
+
+これにより既存v4 saveをschema bumpなしでForest routeへ接続する。
 
 ## 11. Treasure / Shop / Party / Boss
 
@@ -277,23 +365,40 @@ worldPosition = 旧worldPosition
 
 fixed objectは所属mapを明確にする。別mapで同じcoordinateになってもinteractionが誤発火しないようにする。
 
+ForestにはIssue #205時点でShop / Inn / Treasure / Bossを置かない。学習fieldとしての役割を優先する。
+
 今後BossをDeep Forest等へ移す場合も、Battle rule自体をWorldへ持ち込まない。
 
 ## 12. Progress guidance
 
 current guideはWorld Objective。
 
-将来JavaScript進行を長くするときは、
+現在のJavaScript beginner route:
 
 ```text
-草原へ向かう
-→ Villageへ入る
-→ 森を抜ける
-→ 中Bossを倒す
-→ 深い森へ
+BYTEと合流
+→ GREENFIELD VILLAGE
+→ Training 7: comparison
+→ Training 8: property / equality
+→ Training 9: collection / find
+→ JAVASCRIPT FOREST
+→ Fixed 10: &&
+→ Fixed 11: ||
+→ Fixed 12: && / || combined
+→ Overworld main Battle
 ```
 
-のようにmap / landmark単位の短い目的をderiveできるようにする。
+ForestではObjectiveも「次に学ぶlogic」を示すが、correct targetは示さない。
+
+将来は、
+
+```text
+Forestを抜ける
+→ 中Bossを倒す
+→ Deep Forestへ
+```
+
+のようにmap / landmark単位の短い目的をderiveする。
 
 常設Quest Trackerを復活させない。
 
@@ -335,12 +440,15 @@ Unit:
 - map dimensions / bounds
 - terrain / viewport
 - movement / blocked
-- portal transition
+- portal transition / progress gate
 - mapごとのEncounter可否
+- Forest fixed learning trigger 10 → 11 → 12
+- Forest Random poolがclear済みLessonだけを返すこと
 - cooldown / selection
 - fixed objectが所属map以外で誤発火しない
 - Treasure / Shop / Party / Recovery / Boss intent
 - RpgState v1〜v4 migration / normalization
+- #203-era PlayerProgress v4からForest unlockをderivedできること
 
 E2E:
 
@@ -348,7 +456,11 @@ E2E:
 - Overworld movement
 - Overworld → Village transition
 - Village movement → exit → Overworld return
-- current map / position reload persistence
+- Training 9未clearでForest入口blocked
+- Training完了後のOverworld → Forest transition
+- Forest current map / position reload persistence
+- 最初のWoodsでBattle 10固定Lessonへ入ること
+- Forest beginner Storyで`&&` / `||`をページ送りしながら説明し`filter()`を先取りしないこと
 - Random Encounter → Battle → same map return
 - HP persistence / Recovery / Defeat
 - Treasure / Shop / Equipment / BYTE / Boss regression

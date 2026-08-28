@@ -14,9 +14,11 @@ export type TargetRule =
   | { kind: 'named'; name: string }
   | { kind: 'lowestHp' }
   | { kind: 'firstAbove'; hp: number }
+  | { kind: 'firstAboveAndNamed'; hp: number; name: string }
   | { kind: 'allAbove'; hp: number }
   | { kind: 'allBelowAndAttackAtLeast'; hp: number; attackDamage: number }
   | { kind: 'firstAttackAtLeastOrAbove'; hp: number; attackDamage: number }
+  | { kind: 'firstBelowOrAbove'; below: number; above: number }
   | { kind: 'allIfAnyBelow'; hp: number }
   | { kind: 'highestAttack' }
 

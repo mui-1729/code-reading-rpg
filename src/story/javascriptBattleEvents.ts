@@ -84,6 +84,51 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
       },
     ],
   },
+  10: {
+    id: 'js-forest-after-and',
+    label: 'FOREST NOTE',
+    title: '「両方」を一つずつ読む',
+    lines: [
+      {
+        speaker: 'BYTE',
+        role: 'DEBUGGER',
+        layer: 'code-world',
+        text: '&&が出ても、いっぺんに考えなくて大丈夫。左をtrueかfalseか決めて、次に右を見る。それから「両方trueか」を確かめれば読める。',
+      },
+    ],
+  },
+  11: {
+    id: 'js-forest-after-or',
+    label: 'FOREST NOTE',
+    title: '「どちらか」を見分ける',
+    lines: [
+      {
+        speaker: 'BYTE',
+        role: 'DEBUGGER',
+        layer: 'code-world',
+        text: '||は「どちらか一つでもtrueなら通る」。&&の「両方必要」と並べると違いが分かりやすいね。',
+      },
+    ],
+  },
+  12: {
+    id: 'js-forest-after-combined',
+    label: 'FOREST ROUTE OPEN',
+    title: '記号が増えても読む順番は同じ',
+    lines: [
+      {
+        speaker: 'BYTE',
+        role: 'DEBUGGER',
+        layer: 'code-world',
+        text: 'かっこの内側を先に読み、&&と||を小さな条件へ分ければ追えた。新しい記号を丸暗記するより、読む順番を守る方が大事だ。',
+      },
+      {
+        speaker: 'BYTE',
+        role: 'DEBUGGER',
+        layer: 'code-world',
+        text: 'この森では同じruleでも敵のHPや並びが変わる。何度か戦うと、条件を自分で追う感覚を確かめられるよ。',
+      },
+    ],
+  },
 }
 
 const preBattleEvents: Record<number, BattleStoryEvent> = {
@@ -184,6 +229,81 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
         role: 'DEBUGGER',
         layer: 'code-world',
         text: '読む順番は「条件を読む → enemies を前から見る → 最初の true で止まる」。答えは言わないから、今の並びとHPで追ってみよう。',
+      },
+    ],
+  },
+  10: {
+    id: 'js-forest-and',
+    label: 'FOREST LESSON',
+    title: '二つともtrueなら通る',
+    lines: [
+      {
+        speaker: 'BYTE',
+        role: 'DEBUGGER',
+        layer: 'code-world',
+        text: '森に入ると、条件が一つ増えたみたい。でも読むやり方は変えなくていい。まず `&&` の左と右を別々に見よう。',
+      },
+      {
+        speaker: 'BYTE',
+        role: 'DEBUGGER',
+        layer: 'code-world',
+        text: '`&&` は「左もtrue、右もtrue」のときだけ全体がtrueになる。日本語なら「A かつ B」に近い。',
+      },
+      {
+        speaker: 'BYTE',
+        role: 'DEBUGGER',
+        layer: 'code-world',
+        text: '今回はもう知っている hp、name、===、find()しか使っていない。敵を前から見て、二つの条件を一体ずつ確かめよう。',
+      },
+    ],
+  },
+  11: {
+    id: 'js-forest-or',
+    label: 'FOREST LESSON',
+    title: 'どちらかtrueなら通る',
+    lines: [
+      {
+        speaker: 'BYTE',
+        role: 'DEBUGGER',
+        layer: 'code-world',
+        text: '次の記号は `||`。見た目は似てるけど、&&とは通り方が違う。',
+      },
+      {
+        speaker: 'BYTE',
+        role: 'DEBUGGER',
+        layer: 'code-world',
+        text: '`||` は左右のどちらか一方でもtrueなら、全体がtrueになる。日本語なら「A または B」に近い。',
+      },
+      {
+        speaker: 'BYTE',
+        role: 'DEBUGGER',
+        layer: 'code-world',
+        text: 'かっこがあったら、まずその内側の「HPが40未満 || 80より大きい」を見る。そのあと外側の&&へ戻ればいい。どの敵になるかは今のHPで追ってみよう。',
+      },
+    ],
+  },
+  12: {
+    id: 'js-forest-combined',
+    label: 'FOREST LESSON',
+    title: '小さく分ければ読める',
+    lines: [
+      {
+        speaker: 'BYTE',
+        role: 'DEBUGGER',
+        layer: 'code-world',
+        text: 'ここでは新しい記号は増えないよ。&&と||、比較、find()が一緒に出るだけ。',
+      },
+      {
+        speaker: 'BYTE',
+        role: 'DEBUGGER',
+        layer: 'code-world',
+        text: '長く見えたら、かっこの中 → その外 → find()で前から、の順に小さく分ける。コードを一行丸ごと暗記する必要はない。',
+      },
+      {
+        speaker: 'BYTE',
+        role: 'DEBUGGER',
+        layer: 'code-world',
+        text: 'この森を抜ける練習として、敵の並びとHPだけを見て自分で対象を決めてみよう。',
       },
     ],
   },

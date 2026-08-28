@@ -6,16 +6,19 @@ export const WORLD_START = { x: 20, y: 14 } as const
 
 export const OVERWORLD_MAP_ID = 'overworld' as const
 export const JS_VILLAGE_MAP_ID = 'js-village' as const
-export type WorldMapId = typeof OVERWORLD_MAP_ID | typeof JS_VILLAGE_MAP_ID
+export const JS_FOREST_MAP_ID = 'js-forest' as const
+export type WorldMapId = typeof OVERWORLD_MAP_ID | typeof JS_VILLAGE_MAP_ID | typeof JS_FOREST_MAP_ID
 
 const WORLD_MAP_DIMENSIONS: Record<WorldMapId, { width: number; height: number }> = {
   [OVERWORLD_MAP_ID]: { width: WORLD_WIDTH, height: WORLD_HEIGHT },
   [JS_VILLAGE_MAP_ID]: { width: 21, height: 15 },
+  [JS_FOREST_MAP_ID]: { width: 31, height: 21 },
 }
 
 export const WORLD_MAP_STARTS: Record<WorldMapId, { x: number; y: number }> = {
   [OVERWORLD_MAP_ID]: { ...WORLD_START },
   [JS_VILLAGE_MAP_ID]: { x: 10, y: 12 },
+  [JS_FOREST_MAP_ID]: { x: 28, y: 10 },
 }
 
 export type WorldRegion = 'javascript' | 'hub' | 'typescript'
@@ -55,6 +58,8 @@ export const RECOVERY_POSITION = { x: 21, y: 16 } as const
 export const JS_VILLAGE_POSITION = { x: 14, y: 12 } as const
 export const JS_VILLAGE_EXIT_POSITION = { x: 10, y: 14 } as const
 export const JS_VILLAGE_TRAINING_POSITION = { x: 12, y: 7 } as const
+export const JS_FOREST_POSITION = { x: 7, y: 14 } as const
+export const JS_FOREST_EXIT_POSITION = { x: 30, y: 10 } as const
 
 export const WORLD_TREASURES = [
   {
@@ -79,6 +84,7 @@ type WorldPortal = {
   toMapId: WorldMapId
   targetPosition: { x: number; y: number }
   label: string
+  requiredClearedStageId?: number
 }
 
 export const WORLD_PORTALS: readonly WorldPortal[] = [
@@ -96,13 +102,28 @@ export const WORLD_PORTALS: readonly WorldPortal[] = [
     targetPosition: { x: 14, y: 13 },
     label: 'JAVASCRIPT GRASSLAND',
   },
+  {
+    fromMapId: OVERWORLD_MAP_ID,
+    position: JS_FOREST_POSITION,
+    toMapId: JS_FOREST_MAP_ID,
+    targetPosition: WORLD_MAP_STARTS[JS_FOREST_MAP_ID],
+    label: 'JAVASCRIPT FOREST',
+    requiredClearedStageId: 9,
+  },
+  {
+    fromMapId: JS_FOREST_MAP_ID,
+    position: JS_FOREST_EXIT_POSITION,
+    toMapId: OVERWORLD_MAP_ID,
+    targetPosition: { x: 8, y: 14 },
+    label: 'JAVASCRIPT GRASSLAND',
+  },
 ]
 
 const samePosition = (a: { x: number; y: number }, b: { x: number; y: number }) =>
   a.x === b.x && a.y === b.y
 
 export function isWorldMapId(value: unknown): value is WorldMapId {
-  return value === OVERWORLD_MAP_ID || value === JS_VILLAGE_MAP_ID
+  return value === OVERWORLD_MAP_ID || value === JS_VILLAGE_MAP_ID || value === JS_FOREST_MAP_ID
 }
 
 export function getWorldMapDimensions(mapId: WorldMapId) {
@@ -111,6 +132,7 @@ export function getWorldMapDimensions(mapId: WorldMapId) {
 
 export function getWorldMapLabel(mapId: WorldMapId) {
   if (mapId === JS_VILLAGE_MAP_ID) return 'GREENFIELD VILLAGE'
+  if (mapId === JS_FOREST_MAP_ID) return 'JAVASCRIPT FOREST'
   return 'CODE WORLD OVERWORLD'
 }
 
@@ -144,7 +166,7 @@ export function getWorldRegion(
   x: number,
   mapId: WorldMapId = OVERWORLD_MAP_ID,
 ): WorldRegion {
-  if (mapId === JS_VILLAGE_MAP_ID) return 'javascript'
+  if (mapId === JS_VILLAGE_MAP_ID || mapId === JS_FOREST_MAP_ID) return 'javascript'
   if (x <= 17) return 'javascript'
   if (x >= 23) return 'typescript'
   return 'hub'
@@ -170,6 +192,28 @@ function getVillageTerrain(x: number, y: number): Terrain {
   return 'town'
 }
 
+function getForestTerrain(x: number, y: number): Terrain {
+  if (x <= 0 || y <= 0 || x >= 30 || y >= 20) return 'mountain'
+
+  // 東西を結ぶmain trailと、北側の小さなclearingsへ伸びるbranch。
+  if (y === 10 || (x === 22 && y >= 4 && y <= 10) || (y === 4 && x >= 14 && x <= 22)) {
+    return 'road'
+  }
+
+  // 森の中を横切る川。main trailの1マスだけ橋としてroadを残す。
+  if (x === 18) return 'water'
+
+  if (
+    (x >= 21 && x <= 25 && y >= 7 && y <= 13) ||
+    (x >= 12 && x <= 16 && y >= 2 && y <= 6) ||
+    (x >= 3 && x <= 8 && y >= 7 && y <= 13)
+  ) {
+    return (x + y) % 3 === 0 ? 'grass' : 'woods'
+  }
+
+  return (x * 5 + y * 3) % 5 <= 1 ? 'deep-woods' : 'woods'
+}
+
 export function getTerrain(
   x: number,
   y: number,
@@ -177,9 +221,14 @@ export function getTerrain(
 ): Terrain {
   const position = { x, y }
   const portal = getWorldPortalAtPosition(mapId, position)
-  if (portal) return mapId === OVERWORLD_MAP_ID ? 'village' : 'exit'
+  if (portal) {
+    if (mapId === JS_VILLAGE_MAP_ID || mapId === JS_FOREST_MAP_ID) return 'exit'
+    if (portal.toMapId === JS_VILLAGE_MAP_ID) return 'village'
+    return 'woods'
+  }
 
   if (mapId === JS_VILLAGE_MAP_ID) return getVillageTerrain(x, y)
+  if (mapId === JS_FOREST_MAP_ID) return getForestTerrain(x, y)
 
   if (x <= 0 || y <= 0 || x >= WORLD_WIDTH - 1 || y >= WORLD_HEIGHT - 1) return 'mountain'
   if (samePosition(position, JS_BOSS_POSITION) || samePosition(position, TS_BOSS_POSITION)) return 'boss'
@@ -270,7 +319,17 @@ export function getEncounterBattleId(
   unlockedStageIds: readonly number[],
   clearedStageIds: readonly number[],
   roll: number,
+  mapId: WorldMapId = OVERWORLD_MAP_ID,
 ): number | null {
+  if (mapId === JS_FOREST_MAP_ID) {
+    if (!clearedStageIds.includes(9) || !clearedStageIds.includes(10)) return null
+    if (!clearedStageIds.includes(11)) return 10
+    if (!clearedStageIds.includes(12)) return roll < 0.5 ? 10 : 11
+    if (roll < 1 / 3) return 10
+    if (roll < 2 / 3) return 11
+    return 12
+  }
+
   if (region === 'javascript') {
     if (!clearedStageIds.includes(1)) return 1
     if (unlockedStageIds.includes(2) && !clearedStageIds.includes(2)) return 2

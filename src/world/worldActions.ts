@@ -12,6 +12,7 @@ import {
   isEncounterTerrain,
   isWalkableTerrain,
   JS_BOSS_POSITION,
+  JS_FOREST_MAP_ID,
   JS_VILLAGE_MAP_ID,
   JS_VILLAGE_TRAINING_POSITION,
   OVERWORLD_MAP_ID,
@@ -27,6 +28,7 @@ import {
 
 type BattleRegion = Exclude<WorldRegion, 'hub'>
 type JavaScriptTrainingBattleId = 7 | 8 | 9
+type JavaScriptForestBattleId = 10 | 11 | 12
 
 export type EncounterRolls = {
   trigger: number
@@ -90,6 +92,47 @@ function createEncounterRolls(
   return { trigger: random.next(), battle: random.next() }
 }
 
+function getForestLearningBattleId(
+  mapId: WorldMapId,
+  position: { x: number; y: number },
+  clearedStageIds: readonly number[],
+): JavaScriptForestBattleId | null {
+  if (mapId !== JS_FOREST_MAP_ID || !clearedStageIds.includes(9)) return null
+
+  // 最初のWoodsで&&を固定導入。その後は西へ進むほど次の固定Lessonへ進む。
+  // Random Encounterは、この固定Lessonでclear済みのconceptだけを復習する。
+  if (!clearedStageIds.includes(10)) return 10
+  if (!clearedStageIds.includes(11) && position.x <= 17) return 11
+  if (!clearedStageIds.includes(12) && position.x <= 8) return 12
+  return null
+}
+
+function createForestLessonEncounter(
+  rpgState: RpgState,
+  movedState: RpgState,
+  next: { x: number; y: number },
+  battleId: JavaScriptForestBattleId,
+): WorldMoveResult {
+  const encounterNumber = rpgState.encounterCount + 1
+  const encounterState: RpgState = {
+    ...movedState,
+    stepsSinceEncounter: 0,
+    encounterCount: encounterNumber,
+  }
+
+  return {
+    kind: 'encounter',
+    nextState: encounterState,
+    terrain: getTerrain(next.x, next.y, rpgState.worldMapId),
+    region: 'javascript',
+    battle: {
+      battleId,
+      region: 'javascript',
+      seed: `encounter:${rpgState.worldMapId}:${encounterNumber}:${next.x}:${next.y}`,
+    },
+  }
+}
+
 export function resolveWorldMove({
   rpgState,
   progress,
@@ -111,6 +154,13 @@ export function resolveWorldMove({
   const nextSteps = rpgState.stepsSinceEncounter + 1
   const portal = getWorldPortalAtPosition(mapId, next)
   if (portal) {
+    if (
+      portal.requiredClearedStageId !== undefined &&
+      !progress.clearedStageIds.includes(portal.requiredClearedStageId)
+    ) {
+      return { kind: 'blocked', nextState: rpgState, terrain }
+    }
+
     const region = getWorldRegion(portal.targetPosition.x, portal.toMapId)
     return {
       kind: 'transition',
@@ -135,12 +185,14 @@ export function resolveWorldMove({
     stepsSinceEncounter: nextSteps,
   }
 
-  if (
-    mapId !== OVERWORLD_MAP_ID ||
-    !isEncounterTerrain(terrain) ||
-    nextSteps < 5 ||
-    region === 'hub'
-  ) {
+  if (isEncounterTerrain(terrain)) {
+    const lessonBattleId = getForestLearningBattleId(mapId, next, progress.clearedStageIds)
+    if (lessonBattleId !== null) {
+      return createForestLessonEncounter(rpgState, movedState, next, lessonBattleId)
+    }
+  }
+
+  if (!isEncounterTerrain(terrain) || nextSteps < 5 || region === 'hub') {
     return { kind: 'moved', nextState: movedState, terrain, region }
   }
 
@@ -154,6 +206,7 @@ export function resolveWorldMove({
     progress.unlockedStageIds,
     progress.clearedStageIds,
     rolls.battle,
+    mapId,
   )
   if (battleId === null) {
     return { kind: 'moved', nextState: movedState, terrain, region }

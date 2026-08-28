@@ -13,6 +13,12 @@ describe('battle story event resolver', () => {
     expect(getBattleStoryEvent('/javascript/battle/9', 'pre')?.title).toBe('前から探して、最初で止まる')
   })
 
+  it('resolves JavaScript Forest story events', () => {
+    expect(getBattleStoryEvent('/javascript/battle/10', 'pre')?.title).toBe('二つともtrueなら通る')
+    expect(getBattleStoryEvent('/javascript/battle/11', 'pre')?.title).toBe('どちらかtrueなら通る')
+    expect(getBattleStoryEvent('/javascript/battle/12', 'post')?.title).toBe('記号が増えても読む順番は同じ')
+  })
+
   it('resolves TypeScript story events', () => {
     expect(getBattleStoryEvent('/typescript/battle/4', 'pre')?.title).toBe('API更新後の型ずれ')
     expect(getBattleStoryEvent('/typescript/battle/5', 'post')?.title).toBe('Shared Contractにつながった')
