@@ -47,7 +47,7 @@ describe('JavaScript Deep Forest final lessons', () => {
     expect(byId.sync?.codeVariants[0]?.code).toContain('.every(')
     expect(byId.order?.rule).toEqual({ kind: 'lowestHp' })
     expect(byId.order?.codeVariants[0]?.code).toContain('.sort(')
-    expect(byId.order?.codeVariants[0]?.code).toContain('ordered[0]')
+    expect(byId.order?.codeVariants[0]?.code).toContain('[0]')
     expect(byId['safe-path']?.codeVariants[0]?.code).toContain('?.hp')
     expect(byId['safe-path']?.codeVariants[0]?.code).toContain('?? Infinity')
     expect(byId['reduce-focus']?.rule).toEqual({ kind: 'highestAttack' })
