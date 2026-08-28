@@ -125,38 +125,38 @@ export const deepForestSkillDefinitions: readonly SkillDefinition[] = [
     name: 'SAFE PATH',
     power: 60,
     rule: { kind: 'lowestHp' },
-    concept: 'optional chaining ?. + nullish coalescing ??',
+    concept: 'map() + optional chaining ?. + nullish coalescing ??',
     explanation:
-      '?. は左側がnull / undefinedならそこで止まり、?? は左側がnull / undefinedのときだけ右側を使います。この技ではHPが読めない場合をInfinityとして扱い、安全に昇順へ並べます。',
+      '?. は左側がnull / undefinedならそこで止まり、?? は左側がnull / undefinedのときだけ右側を使います。この技はEnemyをnestedなstats.hpへ包み、stats?.hpが読めない場合をInfinityとして扱って安全に並べます。',
     codeVariants: [
       {
         id: 'single-short',
-        code: '[...enemies.filter(e => e.hp > 0)].sort((left, right) => (left?.hp ?? Infinity) - (right?.hp ?? Infinity))[0]',
+        code: 'enemies.filter(e => e.hp > 0).map(e => ({ enemy: e, stats: { hp: e.hp } })).sort((left, right) => (left.stats?.hp ?? Infinity) - (right.stats?.hp ?? Infinity))[0].enemy',
         lineMode: 'single',
       },
       {
         id: 'single-enemy',
-        code: '[...enemies.filter(enemy => enemy.hp > 0)].sort((first, second) => (first?.hp ?? Infinity) - (second?.hp ?? Infinity))[0]',
+        code: 'enemies.filter(enemy => enemy.hp > 0).map(enemy => ({ enemy, stats: { hp: enemy.hp } })).sort((first, second) => (first.stats?.hp ?? Infinity) - (second.stats?.hp ?? Infinity))[0].enemy',
         lineMode: 'single',
       },
       {
         id: 'safe-short',
-        code: 'const living = enemies.filter(e => e.hp > 0)\nconst safeOrder = [...living].sort((a, b) => (a?.hp ?? Infinity) - (b?.hp ?? Infinity))\nsafeOrder[0]',
+        code: 'const living = enemies.filter(e => e.hp > 0)\nconst wrapped = living.map(e => ({ enemy: e, stats: { hp: e.hp } }))\nwrapped.sort((a, b) => (a.stats?.hp ?? Infinity) - (b.stats?.hp ?? Infinity))[0].enemy',
         lineMode: 'multi',
         codeHelpLines: [
           '生存Enemyだけをlivingへ残す。',
-          'a?.hpで安全にhpを読み、値がないときだけ?? Infinityを使って後ろへ送る。',
-          '最後にsafeOrder[0]を取り、HPが最も低いEnemyを選ぶ。',
+          'map()でEnemyをnestedなstats.hpを持つwrapped要素へ変換する。',
+          'stats?.hpで安全に値を読み、なければ?? Infinityを使ってHP昇順に並べ、先頭の.enemyへ戻る。',
         ],
       },
       {
         id: 'safe-named',
-        code: 'const living = enemies.filter(enemy => enemy.hp > 0)\nconst safeOrder = [...living].sort((left, right) => (left?.hp ?? Infinity) - (right?.hp ?? Infinity))\nsafeOrder[0]',
+        code: 'const living = enemies.filter(enemy => enemy.hp > 0)\nconst wrapped = living.map(enemy => ({ enemy, stats: { hp: enemy.hp } }))\nwrapped.sort((left, right) => (left.stats?.hp ?? Infinity) - (right.stats?.hp ?? Infinity))[0].enemy',
         lineMode: 'multi',
         codeHelpLines: [
           'まずlivingへ生存Enemyを集める。',
-          '?.は値がなければundefinedで止まり、??はその場合だけInfinityへ置き換える。',
-          'sort()後のsafeOrderの先頭を[0]で取る。',
+          'map()で各Enemyを{ enemy, stats: { hp } }の形へ包む。',
+          '?.でnestedなhpを安全に読み、??で欠けた値だけInfinityへ置き換えてから先頭の.enemyを取る。',
         ],
       },
     ],
