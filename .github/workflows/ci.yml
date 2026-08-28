@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/183-paid-inn-rest]
   pull_request:
 
 jobs:
