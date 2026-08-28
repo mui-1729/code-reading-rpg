@@ -377,7 +377,7 @@ export function WorldPage() {
       return {
         label: 'DEEP FOREST · 6 / 8',
         title: 'sort()で並べ替え、[0]で先頭を取る',
-        detail: '最深部へ進もう。alive → ordered → ordered[0]と途中結果へ分け、複数行codeを一行ずつ追う。',
+        detail: '最深部へ進もう。living → byHp → byHp[0]と途中結果へ分け、複数行codeを一行ずつ追う。',
         clear: false,
       }
     }
@@ -385,7 +385,7 @@ export function WorldPage() {
       return {
         label: 'DEEP FOREST · 7 / 8',
         title: '?. と ??で安全に値を読む',
-        detail: 'sort()の大きな流れはそのまま。?.で安全に止まり、??で値がない場合だけ代わりの値を使う部分を読む。',
+        detail: 'livingをmap()でnestedなwrappedへ変換し、stats?.hpで安全に読み、??で欠けた値だけInfinityへ置き換える。',
         clear: false,
       }
     }
@@ -568,9 +568,9 @@ export function WorldPage() {
         } else if (!progress.clearedStageIds.includes(19)) {
           setMessage('BYTE: Deep Forestの第二の守り人へ。新しいsyntaxはないから、既習内容だけで挑もう。')
         } else if (!progress.clearedStageIds.includes(20)) {
-          setMessage('BYTE: 最深部でsort()を読む。alive → ordered → [0]と途中結果へ分ければ大丈夫。')
+          setMessage('BYTE: 最深部でsort()を読む。living → byHp → byHp[0]と途中結果へ分ければ大丈夫。')
         } else if (!progress.clearedStageIds.includes(21)) {
-          setMessage('BYTE: sort()の次は?.と??。値がない場合にも安全に読む部分だけを足そう。')
+          setMessage('BYTE: sort()の次は?.と??。map()で作ったnestedなstats.hpを安全に読む部分だけを足そう。')
         } else if (!progress.clearedStageIds.includes(22)) {
           setMessage('BYTE: Deep Forest最後のLessonはreduce()。bestへ途中結果を一つずつ残して読む。')
         } else if (!progress.clearedStageIds.includes(1)) {
