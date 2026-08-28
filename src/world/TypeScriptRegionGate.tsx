@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useProgress } from '../progression'
 import { useRpg } from '../rpg'
 import {
@@ -14,7 +14,6 @@ export function TypeScriptRegionGate() {
   const { progress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
   const [message, setMessage] = useState<string | null>(null)
-  const normalizedOldSaveRef = useRef(false)
   const unlocked = isTypeScriptRegionUnlocked(progress)
 
   useEffect(() => {
@@ -29,7 +28,6 @@ export function TypeScriptRegionGate() {
       normalized.x !== rpgState.worldPosition.x ||
       normalized.y !== rpgState.worldPosition.y
     ) {
-      normalizedOldSaveRef.current = true
       setRpgState((current) => ({ ...current, worldPosition: normalized }))
     }
   }, [progress, rpgState.worldMapId, rpgState.worldPosition, setRpgState, unlocked])
@@ -76,11 +74,11 @@ export function TypeScriptRegionGate() {
     }
   }, [progress, rpgState.worldMapId, rpgState.worldPosition.x, unlocked])
 
-  if (unlocked || (!message && !normalizedOldSaveRef.current)) return null
+  if (!message || unlocked) return null
 
   return (
     <aside className="pixel-window world-region-gate-message" role="status" aria-live="polite">
-      {message ?? LOCKED_MESSAGE}
+      {message}
     </aside>
   )
 }
