@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useRpg } from '../rpg'
 import { useTutorial } from './useTutorial'
 
 type RouteKind = 'field' | 'battle' | 'other'
@@ -106,6 +107,21 @@ function hasInteractionNearby() {
   return tiles[targetIndex]?.classList.contains('field-object') ?? false
 }
 
+function hasByteNearby() {
+  const map = getFieldMap()
+  if (!map?.classList.contains('world-viewport')) return false
+  const player = getWorldPlayerPosition()
+  if (!player) return false
+
+  return getFieldTiles().some((tile) => {
+    const x = Number(tile.dataset.worldX)
+    const y = Number(tile.dataset.worldY)
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return false
+    const adjacent = Math.abs(x - player.x) + Math.abs(y - player.y) === 1
+    return adjacent && Boolean(tile.querySelector('.npc-object[aria-label="BYTE NPC"]'))
+  })
+}
+
 function clearHighlights() {
   document
     .querySelectorAll('.tutorial-highlight, .tutorial-highlight-soft')
@@ -113,6 +129,7 @@ function clearHighlights() {
 }
 
 export function TutorialPrompt() {
+  const { rpgState } = useRpg()
   const {
     state,
     completeFieldMove,
@@ -125,7 +142,9 @@ export function TutorialPrompt() {
   const initialPlayerPositionRef = useRef<string | number | null>(null)
   const routeKind = typeof window === 'undefined' ? 'other' : getRouteKind()
   const worldRoute = typeof window !== 'undefined' && window.location.pathname === '/world'
-  const interactionReady = routeKind === 'field' && hasInteractionNearby()
+  const byteJoined = rpgState.partyMemberIds.includes('byte')
+  const interactionReady =
+    routeKind === 'field' && (worldRoute ? hasByteNearby() : hasInteractionNearby())
   const selectedSkill =
     routeKind === 'battle'
       ? document.querySelector<HTMLButtonElement>('.skill-card.selected')
@@ -164,6 +183,17 @@ export function TutorialPrompt() {
   }, [enterBattle, routeKind, state.phase, state.status])
 
   useEffect(() => {
+    if (
+      state.status === 'active' &&
+      state.phase === 'field-interact' &&
+      worldRoute &&
+      byteJoined
+    ) {
+      completeFieldInteraction()
+    }
+  }, [byteJoined, completeFieldInteraction, state.phase, state.status, worldRoute])
+
+  useEffect(() => {
     if (state.status !== 'active' || state.phase !== 'field-move' || routeKind !== 'field') {
       initialPlayerPositionRef.current = null
       return
@@ -190,9 +220,9 @@ export function TutorialPrompt() {
       if (
         state.phase === 'field-interact' &&
         target.closest('.field-interact, .world-interact') &&
-        hasInteractionNearby()
+        interactionReady
       ) {
-        completeFieldInteraction()
+        if (!worldRoute) completeFieldInteraction()
         return
       }
 
@@ -211,7 +241,8 @@ export function TutorialPrompt() {
         state.status === 'active' &&
         state.phase === 'field-interact' &&
         (event.key === 'Enter' || event.key === ' ') &&
-        hasInteractionNearby()
+        interactionReady &&
+        !worldRoute
       ) {
         completeFieldInteraction()
       }
@@ -223,7 +254,7 @@ export function TutorialPrompt() {
       document.removeEventListener('click', onClick, true)
       document.removeEventListener('keydown', onKeyDown)
     }
-  }, [completeBattle, completeFieldInteraction, state.phase, state.status])
+  }, [completeBattle, completeFieldInteraction, interactionReady, state.phase, state.status, worldRoute])
 
   useEffect(() => {
     clearHighlights()
@@ -237,8 +268,12 @@ export function TutorialPrompt() {
         document.querySelector('.field-interact, .world-interact')?.classList.add('tutorial-highlight')
       }
       if (worldRoute) {
-        document.querySelector('.world-object')?.classList.add('tutorial-highlight-soft')
+        document
+          .querySelector('.npc-object[aria-label="BYTE NPC"]')
+          ?.classList.add('tutorial-highlight-soft')
       }
+    } else if (state.phase === 'party-join' && routeKind === 'field') {
+      document.querySelector('.world-follower-sprite')?.classList.add('tutorial-highlight-soft')
     } else if (state.phase === 'battle' && routeKind === 'battle' && battleReady) {
       if (selectedSkill) selectedSkill.classList.add('tutorial-highlight')
       else document.querySelector('.skill-grid')?.classList.add('tutorial-highlight')
@@ -256,28 +291,39 @@ export function TutorialPrompt() {
   if (state.phase === 'field-move' && routeKind === 'field') {
     copy = {
       label: 'MOVE',
-      title: coarsePointer ? 'D-Padで歩いてみよう' : 'WASD / Arrowで歩いてみよう',
+      title: coarsePointer ? 'D-PadでBYTEの近くへ歩こう' : 'WASD / ArrowでBYTEの近くへ歩こう',
+      detail: '開始地点から左か上へ1歩でBYTEの隣へ行ける',
       className: 'tutorial-prompt-field',
     }
   } else if (state.phase === 'field-interact' && routeKind === 'field') {
     copy = interactionReady
       ? {
           label: 'INTERACT',
-          title: coarsePointer ? 'INTERACTを押して調べる' : 'Enter / Spaceで調べる',
+          title: coarsePointer ? 'INTERACTでBYTEに話しかける' : 'Enter / SpaceでBYTEに話しかける',
+          detail: '実際にPartyへ加入させよう',
           className: 'tutorial-prompt-field',
         }
       : {
           label: 'INTERACT',
-          title: worldRoute ? 'BYTE / SHOP / BOSSの隣まで歩こう' : '調べられるものの前まで歩こう',
-          detail: '隣まで来るとINTERACTできる',
+          title: worldRoute ? 'BYTEの隣まで歩こう' : '調べられるものの前まで歩こう',
+          detail: 'BYTEの隣まで来るとINTERACTできる',
           className: 'tutorial-prompt-field',
         }
+  } else if (state.phase === 'party-join' && routeKind === 'field') {
+    copy = {
+      label: 'PARTY',
+      title: byteJoined ? 'BYTE joined! 仲間になった' : 'BYTEをPartyへ加入させよう',
+      detail: byteJoined
+        ? 'Worldでは後ろから追従する。PauseのPARTYで確認でき、Battleではあなたが読んだ同じtargetへ追撃する。'
+        : 'BYTEの隣でINTERACTしてPartyへ加入させる',
+      className: 'tutorial-prompt-field',
+    }
   } else if (state.phase === 'battle' && routeKind === 'battle' && battleReady) {
     copy = selectedSkill
       ? {
           label: 'EXECUTE',
           title: '選んだSkillをもう一度押して実行',
-          detail: '別のSkillを選び直してもOK',
+          detail: 'BYTEは答えを選ばず、あなたが読んだ同じtargetへ追撃する',
           className: 'tutorial-prompt-battle',
         }
       : {
@@ -297,6 +343,9 @@ export function TutorialPrompt() {
         <strong>{copy.title}</strong>
         {copy.detail && <small>{copy.detail}</small>}
       </div>
+      {state.phase === 'party-join' && byteJoined && (
+        <button type="button" className="tutorial-skip" onClick={enterBattle}>NEXT · BATTLE</button>
+      )}
       <button type="button" className="tutorial-skip" onClick={skip}>SKIP</button>
     </aside>
   )
