@@ -1,5 +1,4 @@
 import { RouterProvider } from '@tanstack/react-router'
-import { BattleItemPanel } from './economy/BattleItemPanel'
 import { BattleCodeData } from './inspector'
 import { ProgressProvider } from './progression'
 import { BattleResultSequence } from './results/BattleResultSequence'
@@ -15,7 +14,6 @@ export function AppRouter() {
           <RouterProvider router={router} />
           <TutorialPrompt />
           <BattleCodeData />
-          <BattleItemPanel />
           <BattleResultSequence />
         </TutorialProvider>
       </RpgProvider>
