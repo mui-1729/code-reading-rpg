@@ -49,8 +49,16 @@ function hashString(value: string): number {
 
 function getEncounterOrdinal(seed: Seed): number | null {
   const value = String(seed)
-  const encounter = /^encounter:(?:(?:[^:]+):)?(\d+):/.exec(value)
-  if (encounter?.[1]) return Number(encounter[1])
+  const parts = value.split(':')
+
+  if (parts[0] === 'encounter') {
+    if (parts.length === 4 && /^\d+$/.test(parts[1] ?? '')) {
+      return Number(parts[1])
+    }
+    if (parts.length >= 5 && /^\d+$/.test(parts[2] ?? '')) {
+      return Number(parts[2])
+    }
+  }
 
   const boss = /^boss:[^:]+:(\d+)$/.exec(value)
   if (boss?.[1]) return Number(boss[1])
@@ -58,42 +66,36 @@ function getEncounterOrdinal(seed: Seed): number | null {
   return null
 }
 
-function getVariationNumber(seed: Seed, battleId: number, skillId: string): number {
-  const encounterOrdinal = getEncounterOrdinal(seed)
-  const skillOffset = hashString(`${battleId}:${skillId}:offset`)
-  if (encounterOrdinal !== null) return encounterOrdinal + skillOffset
-  return hashString(`${battleId}:${String(seed)}:${skillId}:semantic`)
+function greatestCommonDivisor(a: number, b: number): number {
+  let left = Math.abs(a)
+  let right = Math.abs(b)
+  while (right !== 0) {
+    const next = left % right
+    left = right
+    right = next
+  }
+  return left
 }
 
-function getBattleVariantPool(
+function getCoprimeStride(candidateCount: number): number {
+  if (candidateCount <= 2) return 1
+  for (let stride = 2; stride < candidateCount; stride += 1) {
+    if (greatestCommonDivisor(stride, candidateCount) === 1) return stride
+  }
+  return 1
+}
+
+function getBattleAppearanceIndex(
   definition: SkillDefinition,
   battleId: number,
   lineMode: CodeVariant['lineMode'],
-): CodeVariant[] {
-  const eligibleVariants = definition.codeVariants.filter(
-    (variant) => variant.lineMode === lineMode,
-  )
-  if (eligibleVariants.length === 0) {
-    throw new Error(`Skill ${definition.id} has no ${lineMode} code variant`)
-  }
-
+): number {
   const appearances = battles.filter((battle) => {
     if (!battle.skillIds.includes(definition.id)) return false
     const multiLine = battle.multiLineSkillIds?.includes(definition.id) ?? false
     return (lineMode === 'multi') === multiLine
   })
-  const appearanceIndex = appearances.findIndex((battle) => battle.id === battleId)
-  if (appearanceIndex < 0 || appearances.length <= 1) return eligibleVariants
-
-  // 同じSkillを別Battleで使う場合、base variantの集合自体を分離する。
-  // これによりseed variationを増やしてもBattle間で同一base codeを共有しない。
-  const pool = eligibleVariants.filter(
-    (_variant, index) => index % appearances.length === appearanceIndex,
-  )
-  if (pool.length > 0) return pool
-
-  const fallback = eligibleVariants[appearanceIndex % eligibleVariants.length]
-  return fallback ? [fallback] : eligibleVariants
+  return Math.max(0, appearances.findIndex((battle) => battle.id === battleId))
 }
 
 const reversedOperators: Record<string, string> = {
@@ -174,12 +176,27 @@ function getEncounterVariant(
   seed: Seed,
   lineMode: CodeVariant['lineMode'],
 ): CodeVariant {
-  const basePool = getBattleVariantPool(definition, battleId, lineMode)
-  const candidates = basePool.flatMap(getSemanticCandidates)
+  const eligibleVariants = definition.codeVariants.filter(
+    (variant) => variant.lineMode === lineMode,
+  )
+  if (eligibleVariants.length === 0) {
+    throw new Error(`Skill ${definition.id} has no ${lineMode} code variant`)
+  }
+
+  const candidates = eligibleVariants.flatMap(getSemanticCandidates)
   const uniqueCandidates = Array.from(
     new Map(candidates.map((candidate) => [candidate.code, candidate])).values(),
   )
-  const variationNumber = getVariationNumber(seed, battleId, definition.id)
+  if (uniqueCandidates.length === 0) {
+    throw new Error(`Skill ${definition.id} has no generated code variant`)
+  }
+
+  const encounterOrdinal = getEncounterOrdinal(seed)
+  const appearanceIndex = getBattleAppearanceIndex(definition, battleId, lineMode)
+  const stride = getCoprimeStride(uniqueCandidates.length)
+  const base =
+    encounterOrdinal ?? hashString(`${battleId}:${String(seed)}:${definition.id}:semantic`)
+  const variationNumber = base + appearanceIndex * stride
   const selected = uniqueCandidates[variationNumber % uniqueCandidates.length]
   if (!selected) throw new Error(`Skill ${definition.id} has no generated code variant`)
   return selected
