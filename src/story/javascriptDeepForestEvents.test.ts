@@ -43,10 +43,12 @@ describe('JavaScript Deep Forest final story', () => {
 
     expect(sort).toContain('sort()')
     expect(sort).toContain('[0]')
-    expect(sort).toContain('ordered')
+    expect(sort).toContain('byHp')
     expect(safe).toContain('?.')
     expect(safe).toContain('??')
     expect(safe).toContain('optional chaining')
+    expect(safe).toContain('stats.hp')
+    expect(safe).toContain('nested')
     expect(reduce).toContain('reduce()')
     expect(reduce).toContain('best')
   })
