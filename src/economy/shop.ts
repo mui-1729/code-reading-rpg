@@ -18,6 +18,17 @@ export type ShopItemDefinition =
     }
 
 export type ShopPurchaseReason = 'purchased' | 'insufficient-gold' | 'owned' | 'unknown-item'
+export type ShopItemState = 'available' | 'unavailable' | 'owned' | 'equipped'
+
+export type ShopItemQuote = {
+  item: ShopItemDefinition
+  state: ShopItemState
+  wallet: number
+  price: number
+  afterPurchaseGold: number | null
+  shortage: number
+  affordable: boolean
+}
 
 export type ShopPurchaseResult = {
   progress: PlayerProgress
@@ -37,20 +48,62 @@ export function getShopItemPrice(item: ShopItemDefinition) {
   return item.kind === 'consumable' ? itemById[item.itemId].price : item.price
 }
 
+export function getShopItemQuote(
+  progress: PlayerProgress,
+  rpgState: RpgState,
+  itemId: string,
+): ShopItemQuote | null {
+  const item = worldShopItems.find((entry) => entry.id === itemId)
+  if (!item) return null
+
+  const price = getShopItemPrice(item)
+  const affordable = progress.gold >= price
+  const shortage = Math.max(0, price - progress.gold)
+
+  let state: ShopItemState = affordable ? 'available' : 'unavailable'
+
+  if (item.kind === 'equipment') {
+    const equipment = equipmentById[item.equipmentId]
+    if (!equipment) return null
+
+    if (rpgState.equipment[equipment.slot] === equipment.id) {
+      state = 'equipped'
+    } else if (rpgState.ownedEquipmentIds.includes(equipment.id)) {
+      state = 'owned'
+    }
+  }
+
+  return {
+    item,
+    state,
+    wallet: progress.gold,
+    price,
+    afterPurchaseGold: state === 'available' ? progress.gold - price : null,
+    shortage: state === 'unavailable' ? shortage : 0,
+    affordable,
+  }
+}
+
 export function purchaseShopItem(
   progress: PlayerProgress,
   rpgState: RpgState,
   itemId: string,
 ): ShopPurchaseResult {
-  const item = worldShopItems.find((entry) => entry.id === itemId)
-  if (!item) {
+  const quote = getShopItemQuote(progress, rpgState, itemId)
+  if (!quote) {
     return { progress, rpgState, purchased: false, reason: 'unknown-item' }
   }
 
+  if (quote.state === 'owned' || quote.state === 'equipped') {
+    return { progress, rpgState, purchased: false, reason: 'owned' }
+  }
+
+  if (quote.state === 'unavailable') {
+    return { progress, rpgState, purchased: false, reason: 'insufficient-gold' }
+  }
+
+  const item = quote.item
   if (item.kind === 'consumable') {
-    if (!itemById[item.itemId]) {
-      return { progress, rpgState, purchased: false, reason: 'unknown-item' }
-    }
     const result = purchasePatchKit(progress)
     return {
       progress: result.progress,
@@ -65,18 +118,10 @@ export function purchaseShopItem(
     return { progress, rpgState, purchased: false, reason: 'unknown-item' }
   }
 
-  if (rpgState.ownedEquipmentIds.includes(equipment.id)) {
-    return { progress, rpgState, purchased: false, reason: 'owned' }
-  }
-
-  if (progress.gold < item.price) {
-    return { progress, rpgState, purchased: false, reason: 'insufficient-gold' }
-  }
-
   return {
     purchased: true,
     reason: 'purchased',
-    progress: { ...progress, gold: progress.gold - item.price },
+    progress: { ...progress, gold: quote.afterPurchaseGold ?? progress.gold },
     rpgState: {
       ...rpgState,
       ownedEquipmentIds: [...rpgState.ownedEquipmentIds, equipment.id],
