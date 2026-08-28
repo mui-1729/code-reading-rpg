@@ -147,7 +147,7 @@ export function resolveWorldMove({
     progress.clearedStageIds,
     rolls.battle,
   )
-  if (battleId === null || region === 'hub') {
+  if (battleId === null) {
     return { kind: 'moved', nextState: movedState, terrain, region }
   }
 
