@@ -63,6 +63,7 @@ function getDerivedForestStageUnlocks(clearedStageIds: readonly number[]): numbe
   if (clearedStageIds.includes(9)) stageIds.push(10)
   if (clearedStageIds.includes(10)) stageIds.push(11)
   if (clearedStageIds.includes(11)) stageIds.push(12)
+  if (clearedStageIds.includes(12)) stageIds.push(13)
   return stageIds
 }
 
