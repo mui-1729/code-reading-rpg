@@ -33,6 +33,7 @@ export type Terrain =
   | 'deep-woods'
   | 'forest'
   | 'boss'
+  | 'midboss'
   | 'shop'
   | 'npc'
   | 'recovery'
@@ -60,6 +61,7 @@ export const JS_VILLAGE_EXIT_POSITION = { x: 10, y: 14 } as const
 export const JS_VILLAGE_TRAINING_POSITION = { x: 12, y: 7 } as const
 export const JS_FOREST_POSITION = { x: 7, y: 14 } as const
 export const JS_FOREST_EXIT_POSITION = { x: 30, y: 10 } as const
+export const JS_FOREST_MIDBOSS_POSITION = { x: 5, y: 10 } as const
 
 export const WORLD_TREASURES = [
   {
@@ -194,6 +196,7 @@ function getVillageTerrain(x: number, y: number): Terrain {
 
 function getForestTerrain(x: number, y: number): Terrain {
   if (x <= 0 || y <= 0 || x >= 30 || y >= 20) return 'mountain'
+  if (samePosition({ x, y }, JS_FOREST_MIDBOSS_POSITION)) return 'midboss'
 
   // 東西を結ぶmain trailと、北側の小さなclearingsへ伸びるbranch。
   if (y === 10 || (x === 22 && y >= 4 && y <= 10) || (y === 4 && x >= 14 && x <= 22)) {
@@ -268,6 +271,7 @@ export function isWalkableTerrain(terrain: Terrain): boolean {
     'mountain',
     'water',
     'boss',
+    'midboss',
     'shop',
     'npc',
     'recovery',
