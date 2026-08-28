@@ -1,4 +1,5 @@
 import { getJavaScriptPostBattleEvent, getJavaScriptPreBattleEvent } from './javascriptBattleEvents'
+import { getJavaScriptMidbossStoryEvent } from './javascriptMidbossEvents'
 import { getTypeScriptPostBattleEvent, getTypeScriptPreBattleEvent } from './typescriptBattleEvents'
 import type { BattleStoryEvent } from './types'
 
@@ -18,9 +19,12 @@ export function getBattleStoryEvent(
   if (!Number.isFinite(battleId)) return undefined
 
   if (area === 'javascript') {
-    return phase === 'pre'
-      ? getJavaScriptPreBattleEvent(battleId)
-      : getJavaScriptPostBattleEvent(battleId)
+    return (
+      getJavaScriptMidbossStoryEvent(battleId, phase) ??
+      (phase === 'pre'
+        ? getJavaScriptPreBattleEvent(battleId)
+        : getJavaScriptPostBattleEvent(battleId))
+    )
   }
 
   return phase === 'pre'

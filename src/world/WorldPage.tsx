@@ -42,6 +42,7 @@ const terrainLabels: Record<string, string> = {
   'deep-woods': 'Deep Woods · JavaScript encounter',
   forest: 'Forest · TypeScript encounter',
   boss: 'Boss',
+  midboss: 'Forest Mid-Boss',
   shop: 'Shop',
   npc: 'NPC',
   recovery: 'Inn / Rest',
@@ -87,8 +88,11 @@ export function WorldPage() {
     if (progress.clearedAreaIds.includes('javascript') || progress.clearedStageIds.includes(3)) {
       return '西の異変は収まった。技は狙った相手へ飛ぶようになった。'
     }
+    if (progress.clearedStageIds.includes(13)) {
+      return 'BYTE // 森の守り人を突破した。次の異変は「条件に合うものをまとめて集める」動きにつながっていそうだ。'
+    }
     if (progress.clearedStageIds.includes(12)) {
-      return 'BYTE // 森で&&と||の読み方を確認できた。次は草原側の異変を、同じように小さく分けて追おう。'
+      return 'BYTE // &&と||までは読めた。森の西側で道を塞ぐ守り人に、今までの読み方だけで挑んでみよう。'
     }
     if (progress.clearedStageIds.includes(9)) {
       return 'BYTE // 村の基礎訓練は完了。西の森では、条件が二つに増えたruleを読んでみよう。'
@@ -140,6 +144,14 @@ export function WorldPage() {
         clear: false,
       }
     }
+    if (!progress.clearedStageIds.includes(13)) {
+      return {
+        label: 'NEXT OBJECTIVE · MID-BOSS',
+        title: '森の守り人を突破する',
+        detail: 'FORESTのmain trailを西へ進もう。MID BOSSの隣でINTERACTし、今まで学んだ条件だけでBattle 13を読み切る。',
+        clear: false,
+      }
+    }
     if (progress.clearedStageIds.includes(2)) {
       return {
         label: 'NEXT OBJECTIVE · 4 / 4',
@@ -159,7 +171,7 @@ export function WorldPage() {
     return {
       label: 'NEXT OBJECTIVE · 2 / 4',
       title: '草原の異変を調べる',
-      detail: '森で基礎を確認した。Overworldの草むらへ戻り、最初のmain Battleで実際の異変を追おう。',
+      detail: '森の守り人を突破した。Overworldの草むらへ戻り、main Battleで実際の異変を追おう。',
       clear: false,
     }
   }, [byteJoined, nextTrainingBattleId, progress.clearedAreaIds, progress.clearedStageIds])
@@ -222,10 +234,18 @@ export function WorldPage() {
         clear: false,
       }
     }
+    if (!progress.clearedStageIds.includes(13)) {
+      return {
+        label: 'FOREST MID-BOSS',
+        title: '今までの読み方だけで守り人へ挑む',
+        detail: 'main trailを西へ進み、MID BOSSの隣でINTERACT。新しいsyntaxは使わず、Battle 13で理解を確認する。',
+        clear: false,
+      }
+    }
     return {
-      label: 'FOREST ROUTE CLEAR',
-      title: '森の論理条件を読み切った',
-      detail: 'WoodsではBattle 10〜12を値や並び違いで反復できる。東のEXITから草原へ戻り、main Battleへ進もう。',
+      label: 'FOREST MID-BOSS CLEAR',
+      title: '森の守り人を突破した',
+      detail: 'Battle 10〜12はWoodsで反復できる。次は「条件に合うものをまとめて集める」読み方へ進む。',
       clear: true,
     }
   }, [progress.clearedStageIds])
@@ -294,17 +314,19 @@ export function WorldPage() {
         setMessage(
           result.terrain === 'boss'
             ? '強い魔物が道を塞いでいる。隣からINTERACT。'
-            : result.terrain === 'recovery'
-              ? 'INN。隣からINTERACTすると休める。'
-              : result.terrain === 'treasure'
-                ? 'Treasure。隣からINTERACTして調べる。'
-                : result.terrain === 'house'
-                  ? '家がある。今は中へは入れない。'
-                  : result.terrain === 'training'
-                    ? 'TRAIN。隣からINTERACTするとJavaScriptの基礎訓練を始められる。'
-                    : result.terrain === 'woods'
-                      ? '森へ進む前に、GREENFIELD VILLAGEのTRAINを3つ終わらせよう。'
-                      : 'そこへは進めない。',
+            : result.terrain === 'midboss'
+              ? '森の守り人が道を塞いでいる。隣からINTERACT。'
+              : result.terrain === 'recovery'
+                ? 'INN。隣からINTERACTすると休める。'
+                : result.terrain === 'treasure'
+                  ? 'Treasure。隣からINTERACTして調べる。'
+                  : result.terrain === 'house'
+                    ? '家がある。今は中へは入れない。'
+                    : result.terrain === 'training'
+                      ? 'TRAIN。隣からINTERACTするとJavaScriptの基礎訓練を始められる。'
+                      : result.terrain === 'woods'
+                        ? '森へ進む前に、GREENFIELD VILLAGEのTRAINを3つ終わらせよう。'
+                        : 'そこへは進めない。',
         )
         return
       }
@@ -356,12 +378,24 @@ export function WorldPage() {
       return
     }
 
+    if (intent.kind === 'midboss') {
+      if (!intent.unlocked) {
+        gameAudio.playSe('cancel')
+        setMessage('BYTE: まず森のLesson 10〜12を終わらせよう。今までの読み方が揃えば、この守り人にも挑める。')
+        return
+      }
+      enterBattle(intent.battleId, intent.region, intent.seed)
+      return
+    }
+
     if (intent.kind === 'party') {
       if (intent.alreadyJoined) {
         if (nextTrainingBattleId !== null) {
           setMessage('BYTE: まずGREENFIELD VILLAGEのTRAINで、コードを小さいところから読んでみよう。')
         } else if (!progress.clearedStageIds.includes(12)) {
           setMessage('BYTE: 次は西のFOREST。&&と||も、小さな条件へ分ければ読めるよ。')
+        } else if (!progress.clearedStageIds.includes(13)) {
+          setMessage('BYTE: 森の西側に守り人がいる。新しい記号はないから、今までの読み方だけで挑もう。')
         } else if (!progress.clearedStageIds.includes(1)) {
           setMessage('BYTE: 敵のHPと、技の横に出るコードを順番に見てみよう。')
         } else if (!progress.clearedStageIds.includes(2)) {
@@ -443,7 +477,7 @@ export function WorldPage() {
       isVillage
         ? '静かな村だ。中央のTRAINか、南のEXITを調べてみよう。'
         : isForest
-          ? '木々の間に道が続いている。Woodsを歩くとJavaScriptのBattleが起こる。'
+          ? '木々の間に道が続いている。Woodsでは復習Battle、main trailの西側には守り人がいる。'
           : '近くに調べられるものはない。',
     )
   }, [
@@ -499,7 +533,7 @@ export function WorldPage() {
               {isVillage
                 ? 'JavaScript地方の小さな村。中央のTRAINでコードの読み方を練習し、南の出口から草原へ戻れる。'
                 : isForest
-                  ? 'JavaScript地方の森。道を外れるとEncounterが起こり、&&と||を既習のfind()と一緒に読む。東のEXITから草原へ戻れる。'
+                  ? 'JavaScript地方の森。Woodsで&& / ||を反復し、main trailの西側では既習内容だけを使う守り人が道を塞いでいる。'
                   : region === 'javascript'
                     ? javascriptStoryBrief
                     : region === 'typescript'
@@ -541,6 +575,11 @@ export function WorldPage() {
                 data-world-y={cell.y}
               >
                 {cell.terrain === 'boss' && <span className="world-object boss-object">BOSS</span>}
+                {cell.terrain === 'midboss' && (
+                  <span className="world-object midboss-object" aria-label="JavaScript Forest Mid-Boss">
+                    MID BOSS
+                  </span>
+                )}
                 {cell.terrain === 'shop' && <span className="world-object shop-object">SHOP</span>}
                 {cell.terrain === 'village' && (
                   <span className="world-object village-object">VILLAGE</span>

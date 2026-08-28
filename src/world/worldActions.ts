@@ -13,6 +13,7 @@ import {
   isWalkableTerrain,
   JS_BOSS_POSITION,
   JS_FOREST_MAP_ID,
+  JS_FOREST_MIDBOSS_POSITION,
   JS_VILLAGE_MAP_ID,
   JS_VILLAGE_TRAINING_POSITION,
   OVERWORLD_MAP_ID,
@@ -145,7 +146,12 @@ export function resolveWorldMove({
     y: rpgState.worldPosition.y + dy,
   }
   const mapId = rpgState.worldMapId
-  const terrain = getTerrain(next.x, next.y, mapId)
+  const rawTerrain = getTerrain(next.x, next.y, mapId)
+  const midbossCleared =
+    mapId === JS_FOREST_MAP_ID &&
+    rawTerrain === 'midboss' &&
+    progress.clearedStageIds.includes(13)
+  const terrain: Terrain = midbossCleared ? 'road' : rawTerrain
 
   if (!isWalkableTerrain(terrain)) {
     return { kind: 'blocked', nextState: rpgState, terrain }
@@ -267,6 +273,13 @@ export type WorldInteractionIntent =
       battleId: JavaScriptTrainingBattleId | null
     }
   | {
+      kind: 'midboss'
+      battleId: 13
+      region: 'javascript'
+      unlocked: boolean
+      seed: string
+    }
+  | {
       kind: 'boss'
       battleId: 3 | 6
       region: BattleRegion
@@ -288,6 +301,20 @@ export function resolveWorldInteraction(
       return {
         kind: 'training',
         battleId: getNextJavaScriptTrainingBattleId(progress.clearedStageIds),
+      }
+    }
+    return { kind: 'none' }
+  }
+
+  if (rpgState.worldMapId === JS_FOREST_MAP_ID) {
+    if (progress.clearedStageIds.includes(13)) return { kind: 'none' }
+    if (isAdjacent(position, JS_FOREST_MIDBOSS_POSITION)) {
+      return {
+        kind: 'midboss',
+        battleId: 13,
+        region: 'javascript',
+        unlocked: progress.clearedStageIds.includes(12),
+        seed: `midboss:js-forest:${rpgState.encounterCount}`,
       }
     }
     return { kind: 'none' }
