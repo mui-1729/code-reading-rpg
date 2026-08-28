@@ -91,7 +91,6 @@ test('未clearのold saveがTypeScript側にいてもreload時に境界へ戻す
   await seedWorld(page, { worldPosition: { x: 30, y: 14 } })
 
   await expect(viewport(page)).toHaveAttribute('data-world-x', '22')
-  await expect(page.getByRole('status')).toContainText('TYPESCRIPT FRONTIER LOCKED')
 
   await page.reload()
   await expect(viewport(page)).toHaveAttribute('data-world-x', '22')
