@@ -85,7 +85,7 @@ test('Training完了後はForestへ入りreload後もlocal mapを保持する', 
   const forest = page.getByLabel('Forest map')
   await expect(forest).toHaveAttribute('data-world-map', 'js-forest')
   await expect(page.getByRole('heading', { name: 'JAVASCRIPT FOREST' })).toBeVisible()
-  await expect(page.getByText('FOREST · 1 / 3', { exact: true })).toBeVisible()
+  await expect(page.getByText('FOREST · 1 / 4', { exact: true })).toBeVisible()
   await expect(page.getByText(/&& — 二つともtrueを読む/)).toBeVisible()
 
   await page.reload()
