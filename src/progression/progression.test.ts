@@ -3,12 +3,14 @@ import {
   addExp,
   applyBattleVictory,
   createInitialPlayerProgress,
+  getBattleGoldReward,
   getLevelForExp,
   getMaxHpForLevel,
   getPlayerStats,
   getPowerMultiplierForLevel,
   getSkillPowerForLevel,
   getTotalExpForLevel,
+  REPLAY_GOLD_MULTIPLIER,
 } from './progression'
 
 describe('player progression', () => {
@@ -126,7 +128,7 @@ describe('player progression', () => {
     expect(initial).toEqual(createInitialPlayerProgress())
   })
 
-  it('再クリアでもEXPとGoldを再獲得し、CLEARやunlockを重複させない', () => {
+  it('再クリアはEXPを再獲得しGoldだけ50%へ減衰、CLEARやunlockは重複させない', () => {
     const first = applyBattleVictory(createInitialPlayerProgress(), {
       stageId: 1,
       expReward: 40,
@@ -142,8 +144,9 @@ describe('player progression', () => {
       unlockSkillId: 'viper',
     })
 
+    expect(REPLAY_GOLD_MULTIPLIER).toBe(0.5)
     expect(replay.progress.exp).toBe(80)
-    expect(replay.progress.gold).toBe(40)
+    expect(replay.progress.gold).toBe(30)
     expect(replay.progress.clearedStageIds).toEqual([1])
     expect(replay.progress.clearedAreaIds).toEqual([])
     expect(replay.progress.completedSideQuestIds).toEqual([])
@@ -159,7 +162,7 @@ describe('player progression', () => {
     ])
     expect(replay.reward).toEqual({
       expGained: 40,
-      goldGained: 20,
+      goldGained: 10,
       previousLevel: 2,
       newLevel: 2,
       firstClear: false,
@@ -167,6 +170,12 @@ describe('player progression', () => {
       unlockedSkillId: undefined,
       clearedAreaId: undefined,
     })
+  })
+
+  it('replay Goldは端数を切り捨て、負のrewardは0へ正規化する', () => {
+    expect(getBattleGoldReward(25, true)).toBe(25)
+    expect(getBattleGoldReward(25, false)).toBe(12)
+    expect(getBattleGoldReward(-10, false)).toBe(0)
   })
 
   it('Boss初回クリアでArea CLEARを記録する', () => {

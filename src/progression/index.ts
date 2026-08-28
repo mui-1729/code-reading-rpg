@@ -10,12 +10,14 @@ export {
   addExp,
   applyBattleVictory,
   createInitialPlayerProgress,
+  getBattleGoldReward,
   getLevelForExp,
   getMaxHpForLevel,
   getPlayerStats,
   getPowerMultiplierForLevel,
   getSkillPowerForLevel,
   getTotalExpForLevel,
+  REPLAY_GOLD_MULTIPLIER,
 } from './progression'
 export {
   migrateStoredPlayerProgress,

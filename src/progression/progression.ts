@@ -13,6 +13,8 @@ import type {
   PlayerStats,
 } from './types'
 
+export const REPLAY_GOLD_MULTIPLIER = 0.5
+
 export function createInitialPlayerProgress(): PlayerProgress {
   return {
     exp: 0,
@@ -69,14 +71,21 @@ export function addExp(progress: PlayerProgress, amount: number): PlayerProgress
   }
 }
 
+export function getBattleGoldReward(goldReward: number, firstClear: boolean): number {
+  const normalizedReward = Math.max(0, Math.floor(goldReward))
+  return firstClear
+    ? normalizedReward
+    : Math.floor(normalizedReward * REPLAY_GOLD_MULTIPLIER)
+}
+
 export function applyBattleVictory(
   progress: PlayerProgress,
   input: BattleVictoryInput,
 ): BattleVictoryResult {
   const previousLevel = getLevelForExp(progress.exp)
   const expGained = Math.max(0, input.expReward)
-  const goldGained = Math.max(0, input.goldReward ?? 0)
   const firstClear = !progress.clearedStageIds.includes(input.stageId)
+  const goldGained = getBattleGoldReward(input.goldReward ?? 0, firstClear)
   const next = {
     ...addExp(progress, expGained),
     gold: progress.gold + goldGained,
