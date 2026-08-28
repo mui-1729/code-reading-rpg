@@ -14,6 +14,10 @@ export function getTargets(enemies: Enemy[], rule: TargetRule): Enemy[] {
       const target = alive.find((enemy) => enemy.hp > rule.hp)
       return target ? [target] : []
     }
+    case 'firstAboveAndNamed': {
+      const target = alive.find((enemy) => enemy.hp > rule.hp && enemy.name === rule.name)
+      return target ? [target] : []
+    }
     case 'allAbove':
       return alive.filter((enemy) => enemy.hp > rule.hp)
     case 'named': {
