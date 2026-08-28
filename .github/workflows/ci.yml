@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, feat/197-full-reset-opening]
+    branches: [main]
   pull_request:
 
 jobs:
