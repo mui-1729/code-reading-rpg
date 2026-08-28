@@ -12,6 +12,8 @@ import {
   isEncounterTerrain,
   isWalkableTerrain,
   JS_BOSS_POSITION,
+  JS_VILLAGE_MAP_ID,
+  JS_VILLAGE_TRAINING_POSITION,
   OVERWORLD_MAP_ID,
   RECOVERY_POSITION,
   SHOP_POSITION,
@@ -24,6 +26,7 @@ import {
 } from './worldMap'
 
 type BattleRegion = Exclude<WorldRegion, 'hub'>
+type JavaScriptTrainingBattleId = 7 | 8 | 9
 
 export type EncounterRolls = {
   trigger: number
@@ -180,6 +183,15 @@ export function resolveWorldMove({
   }
 }
 
+export function getNextJavaScriptTrainingBattleId(
+  clearedStageIds: readonly number[],
+): JavaScriptTrainingBattleId | null {
+  if (!clearedStageIds.includes(7)) return 7
+  if (!clearedStageIds.includes(8)) return 8
+  if (!clearedStageIds.includes(9)) return 9
+  return null
+}
+
 export type WorldInteractionIntent =
   | {
       kind: 'party'
@@ -198,6 +210,10 @@ export type WorldInteractionIntent =
       opened: boolean
     }
   | {
+      kind: 'training'
+      battleId: JavaScriptTrainingBattleId | null
+    }
+  | {
       kind: 'boss'
       battleId: 3 | 6
       region: BattleRegion
@@ -212,9 +228,19 @@ export function resolveWorldInteraction(
   rpgState: RpgState,
   progress: PlayerProgress,
 ): WorldInteractionIntent {
-  if (rpgState.worldMapId !== OVERWORLD_MAP_ID) return { kind: 'none' }
-
   const position = rpgState.worldPosition
+
+  if (rpgState.worldMapId === JS_VILLAGE_MAP_ID) {
+    if (isAdjacent(position, JS_VILLAGE_TRAINING_POSITION)) {
+      return {
+        kind: 'training',
+        battleId: getNextJavaScriptTrainingBattleId(progress.clearedStageIds),
+      }
+    }
+    return { kind: 'none' }
+  }
+
+  if (rpgState.worldMapId !== OVERWORLD_MAP_ID) return { kind: 'none' }
 
   if (isAdjacent(position, BYTE_POSITION)) {
     return {
