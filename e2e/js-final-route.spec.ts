@@ -91,7 +91,7 @@ test('Battle 15後のDeep ForestでBattle 16 map()を固定導入する', async 
   await seedWorld(page, {
     clearedStageIds: baseCleared,
     mapId: 'js-deep-forest',
-    position: { x: 25, y: 8 },
+    position: { x: 24, y: 8 },
   })
 
   await page.getByRole('button', { name: 'Move left' }).click()
@@ -148,7 +148,7 @@ test('Battle 22前はJavaScript Final Boss 3へ挑戦できない', async ({ pag
   await page.getByRole('button', { name: 'Interact' }).click()
 
   await expect(page).toHaveURL(/\/world$/)
-  await expect(page.getByText('まだ奥へは進めない。西でBattleを重ねて、異変をもう少し確かめよう。')).toBeVisible()
+  await expect(page.getByText('Code Coreへ挑む前に、Deep ForestのLesson 15〜22を最後まで読み切ろう。')).toBeVisible()
 })
 
 test('Battle 22と既存Battle 1 / 2完了後だけFinal Boss 3を開始できる', async ({ page }) => {
