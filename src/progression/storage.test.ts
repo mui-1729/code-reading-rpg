@@ -20,10 +20,10 @@ describe('player progress storage', () => {
       exp: 520,
       gold: 75,
       inventory: { patchKit: 2 },
-      clearedStageIds: [1, 2, 3, 4, 5, 6],
+      clearedStageIds: [1, 2, 3, 4, 5, 6, 7, 8, 9],
       clearedAreaIds: ['javascript', 'typescript'],
       completedSideQuestIds: ['javascript-second-pass'],
-      unlockedStageIds: [1, 4, 2, 3, 5, 6],
+      unlockedStageIds: [1, 4, 7, 2, 3, 5, 6, 8, 9],
       unlockedSkillIds: [
         ...initialSkills,
         'viper',
@@ -42,7 +42,7 @@ describe('player progress storage', () => {
     expect(restorePlayerProgress(raw)).toEqual(progress)
   })
 
-  it('schema v1をv4へmigrationし、既存進行を維持してEconomyは0から始める', () => {
+  it('schema v1をv4へmigrationし、既存進行を維持してTraining 7を追加する', () => {
     const raw = JSON.stringify({
       version: 1,
       progress: {
@@ -59,7 +59,7 @@ describe('player progress storage', () => {
       clearedStageIds: [1, 2],
       clearedAreaIds: [],
       completedSideQuestIds: [],
-      unlockedStageIds: [1, 4, 2, 3],
+      unlockedStageIds: [1, 4, 7, 2, 3],
       unlockedSkillIds: [...initialSkills, 'viper', 'moon-edge'],
     })
   })
@@ -80,9 +80,10 @@ describe('player progress storage', () => {
     expect(restored.completedSideQuestIds).toEqual([])
     expect(restored.gold).toBe(0)
     expect(restored.inventory.patchKit).toBe(0)
+    expect(restored.unlockedStageIds).toContain(7)
   })
 
-  it('schema v2をv4へmigrationし、Area進行を維持してEconomyは0から始める', () => {
+  it('schema v2をv4へmigrationし、Area進行を維持してTraining 7を追加する', () => {
     const raw = JSON.stringify({
       version: 2,
       progress: {
@@ -100,11 +101,11 @@ describe('player progress storage', () => {
     expect(restored.completedSideQuestIds).toEqual([])
     expect(restored.gold).toBe(0)
     expect(restored.inventory.patchKit).toBe(0)
-    expect(restored.unlockedStageIds).toEqual([1, 4, 2, 3])
+    expect(restored.unlockedStageIds).toEqual([1, 4, 7, 2, 3])
     expect(restored.unlockedSkillIds).toEqual([...initialSkills, 'viper', 'moon-edge'])
   })
 
-  it('schema v3をv4へmigrationし、Side Quest進行を維持してEconomyは0から始める', () => {
+  it('schema v3をv4へmigrationし、Side Quest進行を維持してTraining 7を追加する', () => {
     const raw = JSON.stringify({
       version: 3,
       progress: {
@@ -123,6 +124,7 @@ describe('player progress storage', () => {
     expect(restored.completedSideQuestIds).toEqual(['javascript-second-pass'])
     expect(restored.gold).toBe(0)
     expect(restored.inventory.patchKit).toBe(0)
+    expect(restored.unlockedStageIds).toContain(7)
   })
 
   it('保存データがない場合は初期状態へfallbackする', () => {
@@ -169,7 +171,7 @@ describe('player progress storage', () => {
     expect(restorePlayerProgress(raw)).toEqual(createInitialPlayerProgress())
   })
 
-  it('現行schemaはGold・Inventoryを含む有効なPlayerProgressだけを受け入れる', () => {
+  it('現行schemaはGold・Inventoryを含む有効なPlayerProgressだけを受け入れTraining 7を補う', () => {
     const stored = {
       version: PLAYER_PROGRESS_SCHEMA_VERSION,
       progress: {
@@ -186,7 +188,7 @@ describe('player progress storage', () => {
 
     expect(migrateStoredPlayerProgress(stored)).toEqual({
       ...stored.progress,
-      unlockedStageIds: [1, 4, 2],
+      unlockedStageIds: [1, 4, 7, 2],
       unlockedSkillIds: [...initialSkills, 'viper'],
     })
     expect(
