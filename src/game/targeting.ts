@@ -34,6 +34,10 @@ export function getTargets(enemies: Enemy[], rule: TargetRule): Enemy[] {
       )
       return target ? [target] : []
     }
+    case 'firstBelowOrAbove': {
+      const target = alive.find((enemy) => enemy.hp < rule.below || enemy.hp > rule.above)
+      return target ? [target] : []
+    }
     case 'allIfAnyBelow':
       return alive.some((enemy) => enemy.hp < rule.hp) ? alive : []
     case 'highestAttack': {
