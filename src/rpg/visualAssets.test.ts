@@ -4,6 +4,7 @@ import {
   characterVisuals,
   equipmentVisuals,
   getEquipmentVisual,
+  getStorySpeakerVisual,
   getWeaponVisual,
 } from './visualAssets'
 
@@ -13,6 +14,15 @@ describe('pixel visual assets', () => {
     expect(characterVisuals.player.battle).toContain('code-knight-battle')
     expect(characterVisuals.byte.field).toContain('byte-field')
     expect(characterVisuals.byte.battle).toContain('byte-battle')
+  })
+
+  it('maps story speakers to intended character portraits', () => {
+    expect(getStorySpeakerVisual('BYTE')).toContain('byte-field')
+    expect(getStorySpeakerVisual('LEAD ADA')).toContain('lead-ada-portrait')
+    expect(getStorySpeakerVisual('LEAD ADA // REMOTE')).toContain('lead-ada-portrait')
+    expect(getStorySpeakerVisual('TRAINER MIO')).toContain('trainer-mio-portrait')
+    expect(getStorySpeakerVisual('TYPE WARDEN')).toContain('type-warden-portrait')
+    expect(getStorySpeakerVisual('SYSTEM')).toBeNull()
   })
 
   it('maps every equipment definition to the generic equipment registry', () => {
