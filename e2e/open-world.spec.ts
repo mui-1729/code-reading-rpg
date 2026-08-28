@@ -163,8 +163,9 @@ test.describe('Open World RPG loop', () => {
     expect(progress.progress.inventory.patchKit).toBe(0)
   })
 
-  test('Hub RESTでfull recoveryしreload後もHPを保持する', async ({ page }) => {
+  test('Hub INNで20Gを支払いfull recoveryしreload後もGold / HPを保持する', async ({ page }) => {
     await seedStorage(page, {
+      progress: createProgress({ gold: 50 }),
       rpg: createRpgState({
         worldPosition: { x: 20, y: 16 },
         currentHp: 40,
@@ -172,18 +173,29 @@ test.describe('Open World RPG loop', () => {
     })
 
     await page.goto('/world')
-    await page.getByRole('button', { name: 'Pause menuを開く' }).click()
-    const dialog = page.getByRole('dialog', { name: 'Pause menu' })
-    await expect(dialog.getByText('40 / 108', { exact: true })).toBeVisible()
-    await page.keyboard.press('Escape')
-
+    await expect(page.getByLabel('Inn / Rest')).toBeVisible()
     await page.getByRole('button', { name: 'INTERACT' }).click()
+
+    const inn = page.getByRole('dialog', { name: 'Inn / Rest' })
+    await expect(inn).toBeVisible()
+    await expect(inn.getByText('40 / 108', { exact: true })).toBeVisible()
+    await expect(inn.getByText('+68 HP', { exact: true })).toBeVisible()
+    await expect(inn.getByText('20 G', { exact: true })).toBeVisible()
+    await expect(inn.getByText('50 G → 30 G', { exact: true })).toBeVisible()
+
+    expect((await storedRpgState(page)).state.currentHp).toBe(40)
+    expect((await storedProgress(page)).progress.gold).toBe(50)
+
+    await inn.getByRole('button', { name: '▶ REST' }).click()
     await expect(page.getByText(/FULL RECOVERY/)).toBeVisible()
     await expect.poll(async () => (await storedRpgState(page)).state.currentHp).toBe(108)
+    await expect.poll(async () => (await storedProgress(page)).progress.gold).toBe(30)
 
     await page.reload()
     await page.getByRole('button', { name: 'Pause menuを開く' }).click()
-    await expect(page.getByRole('dialog', { name: 'Pause menu' }).getByText('108 / 108', { exact: true })).toBeVisible()
+    const dialog = page.getByRole('dialog', { name: 'Pause menu' })
+    await expect(dialog.getByText('108 / 108', { exact: true })).toBeVisible()
+    await expect(dialog.getByText('30 G', { exact: true })).toBeVisible()
   })
 
   test('JS TreasureはDebug CharmとGoldを一度だけ付与しreload後もOPENを維持する', async ({ page }) => {
