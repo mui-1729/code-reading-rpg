@@ -2,13 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { gameAudio } from '../audio/gameAudio'
 import { useBgm } from '../audio/useBgm'
-import { WorldShop } from '../economy'
+import { WorldInn, WorldShop } from '../economy'
 import { useProgress } from '../progression'
 import {
   characterVisuals,
   emptyPartyEquipment,
   equipmentById,
-  getCombatStats,
   useRpg,
 } from '../rpg'
 import { openWorldTreasure } from './treasures'
@@ -32,7 +31,7 @@ const terrainLabels: Record<string, string> = {
   boss: 'Boss',
   shop: 'Shop',
   npc: 'NPC',
-  recovery: 'Recovery Point',
+  recovery: 'Inn / Rest',
   treasure: 'Treasure',
 }
 
@@ -43,10 +42,11 @@ type Position = { x: number; y: number }
 
 export function WorldPage() {
   const navigate = useNavigate()
-  const { progress, stats, setProgress } = useProgress()
+  const { progress, setProgress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
   const [message, setMessage] = useState('草むらではJavaScript、森ではTypeScriptのEnemyが出現する。')
   const [shopOpen, setShopOpen] = useState(false)
+  const [innOpen, setInnOpen] = useState(false)
   useBgm('field')
 
   const position = rpgState.worldPosition
@@ -56,7 +56,6 @@ export function WorldPage() {
   }))
   const region = getWorldRegion(position.x)
   const visibleCells = useMemo(() => getVisibleWorldCells(position), [position])
-  const combatStats = getCombatStats(stats, rpgState)
   const byteJoined = rpgState.partyMemberIds.includes('byte')
   const viewportStart = visibleCells[0] ?? position
 
@@ -164,7 +163,7 @@ export function WorldPage() {
 
   const move = useCallback(
     (dx: number, dy: number) => {
-      if (shopOpen || document.body.dataset.rpgPaused === 'true') return
+      if (shopOpen || innOpen || document.body.dataset.rpgPaused === 'true') return
 
       const result = resolveWorldMove({ rpgState, progress, dx, dy })
       if (result.kind === 'blocked') {
@@ -173,7 +172,7 @@ export function WorldPage() {
           result.terrain === 'boss'
             ? 'Bossが道を塞いでいる。隣からINTERACT。'
             : result.terrain === 'recovery'
-              ? 'REST地点。隣からINTERACTするとHPを全回復できる。'
+              ? 'INN。隣からINTERACTして、20 Gでfull recoveryできる。'
               : result.terrain === 'treasure'
                 ? 'Treasure。隣からINTERACTして調べる。'
                 : 'そこへは進めない。',
@@ -191,11 +190,11 @@ export function WorldPage() {
 
       setMessage(terrainLabels[result.terrain] ?? result.terrain)
     },
-    [byteJoined, enterBattle, position, progress, rpgState, setRpgState, shopOpen],
+    [byteJoined, enterBattle, innOpen, position, progress, rpgState, setRpgState, shopOpen],
   )
 
   const interact = useCallback(() => {
-    if (shopOpen || document.body.dataset.rpgPaused === 'true') return
+    if (shopOpen || innOpen || document.body.dataset.rpgPaused === 'true') return
 
     const intent = resolveWorldInteraction(rpgState, progress)
 
@@ -234,14 +233,9 @@ export function WorldPage() {
     }
 
     if (intent.kind === 'recovery') {
-      if (rpgState.currentHp >= combatStats.maxHp) {
-        gameAudio.playSe('confirm')
-        setMessage('REST: HPはすでに満タン。')
-        return
-      }
-      gameAudio.playSe('levelUp')
-      setRpgState((current) => ({ ...current, currentHp: combatStats.maxHp }))
-      setMessage(`REST: HP ${combatStats.maxHp} / ${combatStats.maxHp} · FULL RECOVERY`)
+      gameAudio.playSe('confirm')
+      setInnOpen(true)
+      setMessage('INN: HP / PRICE / Gold残額を確認してRESTできる。')
       return
     }
 
@@ -284,11 +278,11 @@ export function WorldPage() {
     }
 
     setMessage('近くに調べられるものはない。')
-  }, [combatStats.maxHp, enterBattle, position, progress, rpgState, setProgress, setRpgState, shopOpen])
+  }, [enterBattle, innOpen, position, progress, rpgState, setProgress, setRpgState, shopOpen])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (shopOpen || document.body.dataset.rpgPaused === 'true') return
+      if (shopOpen || innOpen || document.body.dataset.rpgPaused === 'true') return
       const key = event.key.toLowerCase()
       if (key === 'arrowup' || key === 'w') {
         event.preventDefault()
@@ -309,7 +303,7 @@ export function WorldPage() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [interact, move, shopOpen])
+  }, [innOpen, interact, move, shopOpen])
 
   return (
     <main className="app-shell world-shell title-screen">
@@ -361,7 +355,11 @@ export function WorldPage() {
                     <img src={characterVisuals.byte.field} alt="" />
                   </span>
                 )}
-                {cell.terrain === 'recovery' && <span className="world-object recovery-object">REST</span>}
+                {cell.terrain === 'recovery' && (
+                  <span className="world-object recovery-object" aria-label="Inn / Rest">
+                    INN
+                  </span>
+                )}
                 {treasure && (
                   <span
                     className={`world-object treasure-object ${treasureOpened ? 'opened' : ''}`}
@@ -437,6 +435,7 @@ export function WorldPage() {
       </section>
 
       <WorldShop open={shopOpen} onClose={() => setShopOpen(false)} onMessage={setMessage} />
+      <WorldInn open={innOpen} onClose={() => setInnOpen(false)} onMessage={setMessage} />
     </main>
   )
 }
