@@ -12,27 +12,38 @@ import {
 } from '../rpg'
 import { openWorldTreasure } from './treasures'
 import { resolveWorldInteraction, resolveWorldMove } from './worldActions'
-import { getTreasureAtPosition, getVisibleWorldCells, getWorldRegion } from './worldMap'
+import {
+  getTreasureAtPosition,
+  getVisibleWorldCells,
+  getWorldMapLabel,
+  getWorldRegion,
+  JS_VILLAGE_MAP_ID,
+} from './worldMap'
 
 const regionLabels = {
-  javascript: 'JAVASCRIPT GRASSLAND',
+  javascript: 'JAVASCRIPT WEST',
   hub: 'CENTRAL HUB',
-  typescript: 'TYPESCRIPT FOREST',
+  typescript: 'TYPESCRIPT FRONTIER',
 } as const
 
 const terrainLabels: Record<string, string> = {
   mountain: 'Mountain',
   water: 'Water',
   road: 'Road',
-  town: 'Hub',
+  town: 'Town',
   grass: 'Grassland',
   'tall-grass': 'Tall Grass · JavaScript encounter',
+  woods: 'Woods · JavaScript encounter',
+  'deep-woods': 'Deep Woods · JavaScript encounter',
   forest: 'Forest · TypeScript encounter',
   boss: 'Boss',
   shop: 'Shop',
   npc: 'NPC',
   recovery: 'Inn / Rest',
   treasure: 'Treasure',
+  village: 'Village entrance',
+  exit: 'Village exit',
+  house: 'House',
 }
 
 const VIEWPORT_COLUMNS = 11
@@ -44,56 +55,60 @@ export function WorldPage() {
   const navigate = useNavigate()
   const { progress, setProgress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
-  const [message, setMessage] = useState('草むらではJavaScript、森ではTypeScriptのEnemyが出現する。')
+  const [message, setMessage] = useState(
+    '西の草原ではJavaScript、東側ではTypeScriptのBattleが起こる。',
+  )
   const [shopOpen, setShopOpen] = useState(false)
   const [innOpen, setInnOpen] = useState(false)
   useBgm('field')
 
+  const mapId = rpgState.worldMapId
   const position = rpgState.worldPosition
   const [followerPosition, setFollowerPosition] = useState<Position>(() => ({
     x: position.x,
     y: position.y + 1,
   }))
-  const region = getWorldRegion(position.x)
-  const visibleCells = useMemo(() => getVisibleWorldCells(position), [position])
+  const region = getWorldRegion(position.x, mapId)
+  const visibleCells = useMemo(() => getVisibleWorldCells(position, mapId), [mapId, position])
   const byteJoined = rpgState.partyMemberIds.includes('byte')
   const viewportStart = visibleCells[0] ?? position
+  const isVillage = mapId === JS_VILLAGE_MAP_ID
 
   const javascriptStoryBrief = useMemo(() => {
     if (progress.clearedAreaIds.includes('javascript') || progress.clearedStageIds.includes(3)) {
-      return 'SYSTEM RESTORED // Code Coreは安定した。JavaScript王国の戦闘システムは正常に戻った。'
+      return '西の異変は収まった。技は狙った相手へ飛ぶようになった。'
     }
     if (progress.clearedStageIds.includes(2)) {
-      return 'LEAD ADA // 異常は西のCode Coreにつながっている。Coreへ入り、暴走した共通処理を止めよう。'
+      return 'BYTE // おかしな動きの原因は、もっと西の奥にあるみたいだ。Code Coreまで確かめに行こう。'
     }
     if (progress.clearedStageIds.includes(1)) {
-      return 'BYTE // 同じエラーが別の戦闘機能にも出ている。ログを追って共通するコードを探そう。'
+      return 'BYTE // 別の技でも同じようなズレが起きている。どの敵を選ぶruleなのか、もう少し見てみよう。'
     }
-    return 'LEAD ADA // 新人Code Knightの最初の仕事だ。西の草原で戦闘システムのターゲットバグを直そう。'
+    return 'LEAD ADA // 西の草原で、技が違う魔物へ飛ぶことがある。まず何を見て相手を選んでいるか確かめよう。'
   }, [progress.clearedAreaIds, progress.clearedStageIds])
 
   const javascriptNextObjective = useMemo(() => {
     if (progress.clearedAreaIds.includes('javascript') || progress.clearedStageIds.includes(3)) {
       return {
         label: 'JAVASCRIPT CLEAR',
-        title: 'Code Coreの復旧完了',
-        detail: 'JavaScript編はクリア。王国の戦闘システムは正常に戻った。',
+        title: '西の異変は解決した',
+        detail: 'JavaScript地方は落ち着いた。次の地方へ進める。',
         clear: true,
       }
     }
     if (progress.clearedStageIds.includes(2)) {
       return {
         label: 'NEXT OBJECTIVE · 4 / 4',
-        title: 'Code Coreへ向かう',
-        detail: '北西の道を進み、BOSSの隣まで行ってINTERACT。暴走した共通処理を止めよう。',
+        title: '西の最深部へ向かう',
+        detail: '北西の道を進み、BOSSの隣でINTERACT。異変の原因を確かめよう。',
         clear: false,
       }
     }
     if (progress.clearedStageIds.includes(1)) {
       return {
         label: 'NEXT OBJECTIVE · 3 / 4',
-        title: '草原でもう一つのバグを追う',
-        detail: '西のJavaScript草原で濃い草むらを歩き、次のBattleを発生させよう。',
+        title: '西でもう少し戦って確かめる',
+        detail: '草むらを歩き、別のBattleでも「どの敵が選ばれるか」を読んでみよう。',
         clear: false,
       }
     }
@@ -101,17 +116,26 @@ export function WorldPage() {
       return {
         label: 'NEXT OBJECTIVE · 1 / 4',
         title: 'BYTEと合流する',
-        detail: '開始地点から左か上へ1歩進み、BYTEの隣でINTERACT。仲間になったら西へ向かおう。',
+        detail: '開始地点の近くにいるBYTEの隣でINTERACT。仲間になったら西へ向かおう。',
         clear: false,
       }
     }
     return {
       label: 'NEXT OBJECTIVE · 2 / 4',
-      title: '西のJavaScript草原へ向かう',
-      detail: 'Hubから西へ進み、濃い草むらを歩いて最初のBattleを発生させよう。',
+      title: '西のJavaScript地方へ向かう',
+      detail: 'Hubから西へ進もう。道の途中には村もある。濃い草むらではBattleが起こる。',
       clear: false,
     }
   }, [byteJoined, progress.clearedAreaIds, progress.clearedStageIds])
+
+  const currentObjective = isVillage
+    ? {
+        label: 'GREENFIELD VILLAGE',
+        title: '村を歩いてみる',
+        detail: 'ここではBattleは起きない。南のEXITからJavaScript地方へ戻れる。',
+        clear: false,
+      }
+    : javascriptNextObjective
 
   const spriteStyle = useCallback(
     (spritePosition: Position) => ({
@@ -170,12 +194,31 @@ export function WorldPage() {
         gameAudio.playSe('cancel')
         setMessage(
           result.terrain === 'boss'
-            ? 'Bossが道を塞いでいる。隣からINTERACT。'
+            ? '強い魔物が道を塞いでいる。隣からINTERACT。'
             : result.terrain === 'recovery'
-              ? 'INN。隣からINTERACTして、20 Gでfull recoveryできる。'
+              ? 'INN。隣からINTERACTすると休める。'
               : result.terrain === 'treasure'
                 ? 'Treasure。隣からINTERACTして調べる。'
-                : 'そこへは進めない。',
+                : result.terrain === 'house'
+                  ? '家がある。今は中へは入れない。'
+                  : 'そこへは進めない。',
+        )
+        return
+      }
+
+      if (result.kind === 'transition') {
+        if (byteJoined) {
+          setFollowerPosition({
+            x: result.nextState.worldPosition.x,
+            y: result.nextState.worldPosition.y + 1,
+          })
+        }
+        setRpgState(result.nextState)
+        gameAudio.playSe('confirm')
+        setMessage(
+          result.toMapId === JS_VILLAGE_MAP_ID
+            ? `${result.label}へ入った。村の中ではBattleは起きない。`
+            : `${result.label}へ戻った。西へ進むほど森が深くなっていく。`,
         )
         return
       }
@@ -201,13 +244,13 @@ export function WorldPage() {
     if (intent.kind === 'party') {
       if (intent.alreadyJoined) {
         if (!progress.clearedStageIds.includes(1)) {
-          setMessage('BYTE: 最初のバグを見に行こう。敵のHPと技のコードを順番に見れば読めるよ。')
+          setMessage('BYTE: 敵のHPと、技の横に出るコードを順番に見てみよう。')
         } else if (!progress.clearedStageIds.includes(2)) {
-          setMessage('BYTE: ログに同じエラーが増えてる。西側の戦闘機能をもう少し調べよう。')
+          setMessage('BYTE: 別の技でも同じようなズレがあるみたい。西でもう少し確かめよう。')
         } else if (!progress.clearedAreaIds.includes('javascript')) {
-          setMessage('BYTE: ログの行き先はCode Coreだ。ここを止めれば全部直せるはず。')
+          setMessage('BYTE: 原因はもっと西の奥につながってる。Code Coreまで行ってみよう。')
         } else {
-          setMessage('BYTE: JavaScript側は全部green。次は森のTypeScriptエリアを見に行こう。')
+          setMessage('BYTE: 西は落ち着いたね。東にはTypeScript地方が広がっている。')
         }
         return
       }
@@ -221,7 +264,7 @@ export function WorldPage() {
           [intent.memberId]: emptyPartyEquipment(),
         },
       }))
-      setMessage('BYTE joined the party! デバッグを手伝い、Battleでは追撃してくれる。')
+      setMessage('BYTE joined the party! Battleでは、同じ相手へ追撃してくれる。')
       return
     }
 
@@ -235,7 +278,7 @@ export function WorldPage() {
     if (intent.kind === 'recovery') {
       gameAudio.playSe('confirm')
       setInnOpen(true)
-      setMessage('INN: HP / PRICE / Gold残額を確認してRESTできる。')
+      setMessage('INN: Goldを払ってHPを全回復できる。')
       return
     }
 
@@ -268,8 +311,8 @@ export function WorldPage() {
       if (!intent.unlocked) {
         setMessage(
           intent.region === 'javascript'
-            ? 'Code Coreへのアクセスはまだ開かない。西の草むらでバグ調査を進めよう。'
-            : 'TS Bossへの道はまだ開かない。森のEncounterを進めよう。',
+            ? 'まだ奥へは進めない。西でBattleを重ねて、異変をもう少し確かめよう。'
+            : '東の奥へ進む前に、TypeScript地方のBattleをもう少し確かめよう。',
         )
         return
       }
@@ -277,8 +320,22 @@ export function WorldPage() {
       return
     }
 
-    setMessage('近くに調べられるものはない。')
-  }, [enterBattle, innOpen, position, progress, rpgState, setProgress, setRpgState, shopOpen])
+    setMessage(
+      isVillage
+        ? '静かな村だ。今は南のEXITから外へ戻れる。'
+        : '近くに調べられるものはない。',
+    )
+  }, [
+    enterBattle,
+    innOpen,
+    isVillage,
+    position,
+    progress,
+    rpgState,
+    setProgress,
+    setRpgState,
+    shopOpen,
+  ])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -310,46 +367,60 @@ export function WorldPage() {
       <section className="pixel-window world-panel">
         <header className="world-header">
           <div>
-            <div className="eyebrow">OPEN WORLD // {regionLabels[region]}</div>
-            <h1>CODE WORLD</h1>
+            <div className="eyebrow">
+              {isVillage ? 'LOCAL MAP' : 'OPEN WORLD'} //{' '}
+              {isVillage ? getWorldMapLabel(mapId) : regionLabels[region]}
+            </div>
+            <h1>{isVillage ? 'GREENFIELD VILLAGE' : 'CODE WORLD'}</h1>
             <p>
-              {region === 'javascript'
-                ? javascriptStoryBrief
-                : '上下左右へ探索。草むら=JS、森=TS。Bossは固定地点にいる。'}
+              {isVillage
+                ? 'JavaScript地方の小さな村。道を歩き、南の出口から草原へ戻れる。'
+                : region === 'javascript'
+                  ? javascriptStoryBrief
+                  : region === 'typescript'
+                    ? '東側はTypeScript地方。西とは違うruleを読みながら進む。'
+                    : '中央のHubから、西のJavaScript地方と東のTypeScript地方へ進める。'}
             </p>
           </div>
         </header>
 
         <section
-          className={`world-next-objective pixel-inner-window ${javascriptNextObjective.clear ? 'is-clear' : ''}`}
+          className={`world-next-objective pixel-inner-window ${currentObjective.clear ? 'is-clear' : ''}`}
           aria-label="Next objective"
         >
-          <span>{javascriptNextObjective.label}</span>
-          <strong>{javascriptNextObjective.title}</strong>
-          <p>{javascriptNextObjective.detail}</p>
+          <span>{currentObjective.label}</span>
+          <strong>{currentObjective.title}</strong>
+          <p>{currentObjective.detail}</p>
         </section>
 
         <div
           className="world-viewport pixel-inner-window"
-          aria-label="Open world map"
+          aria-label={isVillage ? 'Village map' : 'Open world map'}
+          data-world-map={mapId}
           data-world-x={position.x}
           data-world-y={position.y}
         >
           {visibleCells.map((cell) => {
-            const treasure = cell.terrain === 'treasure' ? getTreasureAtPosition(cell) : undefined
+            const treasure =
+              cell.terrain === 'treasure' ? getTreasureAtPosition(cell, mapId) : undefined
             const treasureOpened = treasure
               ? rpgState.openedTreasureIds.includes(treasure.id)
               : false
             return (
               <div
-                key={`${cell.x}:${cell.y}`}
+                key={`${cell.mapId}:${cell.x}:${cell.y}`}
                 className={`world-tile terrain-${cell.terrain}`}
                 title={terrainLabels[cell.terrain]}
+                data-world-map={cell.mapId}
                 data-world-x={cell.x}
                 data-world-y={cell.y}
               >
                 {cell.terrain === 'boss' && <span className="world-object boss-object">BOSS</span>}
                 {cell.terrain === 'shop' && <span className="world-object shop-object">SHOP</span>}
+                {cell.terrain === 'village' && (
+                  <span className="world-object village-object">VILLAGE</span>
+                )}
+                {cell.terrain === 'exit' && <span className="world-object exit-object">EXIT</span>}
                 {cell.terrain === 'npc' && !byteJoined && (
                   <span className="world-object npc-object" aria-label="BYTE NPC">
                     <img src={characterVisuals.byte.field} alt="" />
@@ -375,6 +446,7 @@ export function WorldPage() {
           <div
             className="world-character-layer"
             aria-hidden="true"
+            data-world-map={mapId}
             data-world-x={position.x}
             data-world-y={position.y}
           >
@@ -382,6 +454,7 @@ export function WorldPage() {
               <span
                 className="world-follower-sprite world-character-overlay"
                 style={spriteStyle(followerPosition)}
+                data-world-map={mapId}
                 data-world-x={followerPosition.x}
                 data-world-y={followerPosition.y}
               >
@@ -396,6 +469,7 @@ export function WorldPage() {
             <span
               className="world-player-sprite world-character-overlay"
               style={spriteStyle(position)}
+              data-world-map={mapId}
               data-world-x={position.x}
               data-world-y={position.y}
             >
