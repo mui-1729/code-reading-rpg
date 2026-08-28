@@ -6,11 +6,16 @@ import { mainQuests } from '../quests/quests'
 import { JAVASCRIPT_AREA_ID } from './areas'
 import { battles } from './battles'
 
-const javascriptBattles = battles.filter((battle) => battle.areaId === JAVASCRIPT_AREA_ID)
+const javascriptBattles = battles.filter(
+  (battle) => battle.areaId === JAVASCRIPT_AREA_ID && [1, 2, 3].includes(battle.id),
+)
+const villageTrainingBattles = battles.filter(
+  (battle) => battle.areaId === JAVASCRIPT_AREA_ID && [7, 8, 9].includes(battle.id),
+)
 const javascriptQuest = mainQuests.find((quest) => quest.areaId === JAVASCRIPT_AREA_ID)
 
 describe('JavaScript story progression', () => {
-  it('3 chapters follow a programmer RPG story from bug to Code Core', () => {
+  it('3 main chapters follow a programmer RPG story from bug to Code Core', () => {
     expect(javascriptBattles.map((battle) => battle.label)).toEqual([
       'CHAPTER 01',
       'CHAPTER 02',
@@ -27,6 +32,19 @@ describe('JavaScript story progression', () => {
     expect(javascriptBattles[2]?.subtitle).toContain('共通処理')
     expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.name === 'Boss')).toBe(true)
     expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.attackName === 'Runtime Cascade')).toBe(true)
+  })
+
+  it('Village Trainingはmain 3 chaptersと分離した初心者向け導入として定義する', () => {
+    expect(villageTrainingBattles.map((battle) => battle.label)).toEqual([
+      'VILLAGE TRAINING 01',
+      'VILLAGE TRAINING 02',
+      'VILLAGE TRAINING 03',
+    ])
+    expect(villageTrainingBattles.map((battle) => battle.title)).toEqual([
+      '数字を見比べる',
+      '名前を見比べる',
+      '前から最初の一体を探す',
+    ])
   })
 
   it('uses programmer characters without incident-management jargon', () => {
@@ -55,7 +73,7 @@ describe('JavaScript story progression', () => {
     expect(byteEnding?.lines.join(' ')).toContain('全部green')
   })
 
-  it('shows the three chapters as simple story gates on the field', () => {
+  it('shows the three chapters as simple story gates on the legacy field fixture', () => {
     const battleLabels = javascriptField.interactions
       .filter((interaction) => interaction.kind === 'battle')
       .map((interaction) => interaction.label)
@@ -67,7 +85,7 @@ describe('JavaScript story progression', () => {
     ])
   })
 
-  it('each chapter keeps every syntax learned in earlier chapters', () => {
+  it('each main chapter keeps every syntax learned in earlier chapters', () => {
     const chapter1 = new Set(javascriptBattles[0]?.skillIds ?? [])
     const chapter2 = new Set(javascriptBattles[1]?.skillIds ?? [])
     const finalChapter = new Set(javascriptBattles[2]?.skillIds ?? [])
@@ -82,7 +100,7 @@ describe('JavaScript story progression', () => {
     }
   })
 
-  it('later chapters add new syntax instead of replacing old syntax', () => {
+  it('later main chapters add new syntax instead of replacing old syntax', () => {
     expect(javascriptBattles[0]?.skillIds).toEqual(['trace', 'pulse', 'nova'])
     expect(javascriptBattles[1]?.skillIds).toEqual([
       'trace', 'pulse', 'nova', 'viper', 'lock', 'alert',
@@ -94,7 +112,7 @@ describe('JavaScript story progression', () => {
     ])
   })
 
-  it('first clears naturally reach the next chapter level', () => {
+  it('main chapter first clears naturally reach the next chapter level', () => {
     const chapter1Exp = javascriptBattles[0]?.expReward ?? 0
     const chapter2Exp = javascriptBattles[1]?.expReward ?? 0
 
