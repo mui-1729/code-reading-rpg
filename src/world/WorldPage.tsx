@@ -21,6 +21,7 @@ import {
   getVisibleWorldCells,
   getWorldMapLabel,
   getWorldRegion,
+  JS_FOREST_MAP_ID,
   JS_VILLAGE_MAP_ID,
 } from './worldMap'
 
@@ -46,7 +47,7 @@ const terrainLabels: Record<string, string> = {
   recovery: 'Inn / Rest',
   treasure: 'Treasure',
   village: 'Village entrance',
-  exit: 'Village exit',
+  exit: 'Area exit',
   house: 'House',
   training: 'JavaScript Training Ground',
 }
@@ -78,11 +79,19 @@ export function WorldPage() {
   const byteJoined = rpgState.partyMemberIds.includes('byte')
   const viewportStart = visibleCells[0] ?? position
   const isVillage = mapId === JS_VILLAGE_MAP_ID
+  const isForest = mapId === JS_FOREST_MAP_ID
+  const isLocalMap = isVillage || isForest
   const nextTrainingBattleId = getNextJavaScriptTrainingBattleId(progress.clearedStageIds)
 
   const javascriptStoryBrief = useMemo(() => {
     if (progress.clearedAreaIds.includes('javascript') || progress.clearedStageIds.includes(3)) {
       return '西の異変は収まった。技は狙った相手へ飛ぶようになった。'
+    }
+    if (progress.clearedStageIds.includes(12)) {
+      return 'BYTE // 森で&&と||の読み方を確認できた。次は草原側の異変を、同じように小さく分けて追おう。'
+    }
+    if (progress.clearedStageIds.includes(9)) {
+      return 'BYTE // 村の基礎訓練は完了。西の森では、条件が二つに増えたruleを読んでみよう。'
     }
     if (progress.clearedStageIds.includes(2)) {
       return 'BYTE // おかしな動きの原因は、もっと西の奥にあるみたいだ。Code Coreまで確かめに行こう。'
@@ -102,22 +111,6 @@ export function WorldPage() {
         clear: true,
       }
     }
-    if (progress.clearedStageIds.includes(2)) {
-      return {
-        label: 'NEXT OBJECTIVE · 4 / 4',
-        title: '西の最深部へ向かう',
-        detail: '北西の道を進み、BOSSの隣でINTERACT。異変の原因を確かめよう。',
-        clear: false,
-      }
-    }
-    if (progress.clearedStageIds.includes(1)) {
-      return {
-        label: 'NEXT OBJECTIVE · 3 / 4',
-        title: '西でもう少し戦って確かめる',
-        detail: '草むらを歩き、別のBattleでも「どの敵が選ばれるか」を読んでみよう。',
-        clear: false,
-      }
-    }
     if (!byteJoined) {
       return {
         label: 'NEXT OBJECTIVE · 1 / 4',
@@ -134,10 +127,39 @@ export function WorldPage() {
         clear: false,
       }
     }
+    if (!progress.clearedStageIds.includes(12)) {
+      const forestStep = progress.clearedStageIds.includes(11)
+        ? '&&と||を一緒に読む'
+        : progress.clearedStageIds.includes(10)
+          ? '||を読む'
+          : '&&を読む'
+      return {
+        label: 'NEXT OBJECTIVE · FOREST',
+        title: `西の森で${forestStep}`,
+        detail: '村を出て西の道を進み、FORESTへ入ろう。森の道を外れて歩くと、学んだ範囲だけのBattleが起こる。',
+        clear: false,
+      }
+    }
+    if (progress.clearedStageIds.includes(2)) {
+      return {
+        label: 'NEXT OBJECTIVE · 4 / 4',
+        title: '西の最深部へ向かう',
+        detail: '北西の道を進み、BOSSの隣でINTERACT。異変の原因を確かめよう。',
+        clear: false,
+      }
+    }
+    if (progress.clearedStageIds.includes(1)) {
+      return {
+        label: 'NEXT OBJECTIVE · 3 / 4',
+        title: '西でもう少し戦って確かめる',
+        detail: '草むらを歩き、別のBattleでも「どの敵が選ばれるか」を読んでみよう。',
+        clear: false,
+      }
+    }
     return {
       label: 'NEXT OBJECTIVE · 2 / 4',
-      title: '西のJavaScript地方へ向かう',
-      detail: '村で基礎を確認した。南の道から草原へ戻り、濃い草むらで最初のBattleを発生させよう。',
+      title: '草原の異変を調べる',
+      detail: '森で基礎を確認した。Overworldの草むらへ戻り、最初のmain Battleで実際の異変を追おう。',
       clear: false,
     }
   }, [byteJoined, nextTrainingBattleId, progress.clearedAreaIds, progress.clearedStageIds])
@@ -170,12 +192,49 @@ export function WorldPage() {
     return {
       label: 'TRAINING COMPLETE',
       title: '村の基礎訓練を完了した',
-      detail: '南のEXITから草原へ戻ろう。これからは同じ読み方を、敵の値や並びが変わるBattleで繰り返す。',
+      detail: '南のEXITから草原へ戻り、西の道を進もう。FORESTでは&&と||を、今までのfind()に足して読む。',
       clear: true,
     }
   }, [nextTrainingBattleId])
 
-  const currentObjective = isVillage ? villageObjective : javascriptNextObjective
+  const forestObjective = useMemo(() => {
+    if (!progress.clearedStageIds.includes(10)) {
+      return {
+        label: 'FOREST · 1 / 3',
+        title: '&& — 二つともtrueを読む',
+        detail: '道を外れてWoodsを歩こう。最初のEncounterでは、find()の条件に&&が加わる。',
+        clear: false,
+      }
+    }
+    if (!progress.clearedStageIds.includes(11)) {
+      return {
+        label: 'FOREST · 2 / 3',
+        title: '|| — どちらかtrueを読む',
+        detail: 'Woodsを歩いてEncounterを続けよう。&&を反復しながら、次は||の違いを読む。',
+        clear: false,
+      }
+    }
+    if (!progress.clearedStageIds.includes(12)) {
+      return {
+        label: 'FOREST · 3 / 3',
+        title: '&&と||を小さく分けて読む',
+        detail: '新しいsyntaxは増えない。かっこの内側から順に読み、find()が最初に止まる相手を追おう。',
+        clear: false,
+      }
+    }
+    return {
+      label: 'FOREST ROUTE CLEAR',
+      title: '森の論理条件を読み切った',
+      detail: 'WoodsではBattle 10〜12を値や並び違いで反復できる。東のEXITから草原へ戻り、main Battleへ進もう。',
+      clear: true,
+    }
+  }, [progress.clearedStageIds])
+
+  const currentObjective = isVillage
+    ? villageObjective
+    : isForest
+      ? forestObjective
+      : javascriptNextObjective
 
   const spriteStyle = useCallback(
     (spritePosition: Position) => ({
@@ -243,7 +302,9 @@ export function WorldPage() {
                   ? '家がある。今は中へは入れない。'
                   : result.terrain === 'training'
                     ? 'TRAIN。隣からINTERACTするとJavaScriptの基礎訓練を始められる。'
-                    : 'そこへは進めない。',
+                    : result.terrain === 'woods'
+                      ? '森へ進む前に、GREENFIELD VILLAGEのTRAINを3つ終わらせよう。'
+                      : 'そこへは進めない。',
         )
         return
       }
@@ -260,7 +321,9 @@ export function WorldPage() {
         setMessage(
           result.toMapId === JS_VILLAGE_MAP_ID
             ? `${result.label}へ入った。中央のTRAINでJavaScriptの基礎を練習できる。`
-            : `${result.label}へ戻った。西へ進むほど森が深くなっていく。`,
+            : result.toMapId === JS_FOREST_MAP_ID
+              ? `${result.label}へ入った。道を外れてWoodsを歩くと、学習済み範囲のBattleが起こる。`
+              : `${result.label}へ戻った。西へ進むほど森が深くなっていく。`,
         )
         return
       }
@@ -286,7 +349,7 @@ export function WorldPage() {
     if (intent.kind === 'training') {
       if (intent.battleId === null) {
         gameAudio.playSe('confirm')
-        setMessage('TRAINER MIO: 基礎訓練は全部クリア。草原で実際の値や並びが変わるコードを読んでみよう。')
+        setMessage('TRAINER MIO: 基礎訓練は全部クリア。草原へ戻って、西のFORESTへ進んでみよう。')
         return
       }
       enterBattle(intent.battleId, 'javascript', `village-training:${intent.battleId}`)
@@ -295,7 +358,11 @@ export function WorldPage() {
 
     if (intent.kind === 'party') {
       if (intent.alreadyJoined) {
-        if (!progress.clearedStageIds.includes(1)) {
+        if (nextTrainingBattleId !== null) {
+          setMessage('BYTE: まずGREENFIELD VILLAGEのTRAINで、コードを小さいところから読んでみよう。')
+        } else if (!progress.clearedStageIds.includes(12)) {
+          setMessage('BYTE: 次は西のFOREST。&&と||も、小さな条件へ分ければ読めるよ。')
+        } else if (!progress.clearedStageIds.includes(1)) {
           setMessage('BYTE: 敵のHPと、技の横に出るコードを順番に見てみよう。')
         } else if (!progress.clearedStageIds.includes(2)) {
           setMessage('BYTE: 別の技でも同じようなズレがあるみたい。西でもう少し確かめよう。')
@@ -375,12 +442,16 @@ export function WorldPage() {
     setMessage(
       isVillage
         ? '静かな村だ。中央のTRAINか、南のEXITを調べてみよう。'
-        : '近くに調べられるものはない。',
+        : isForest
+          ? '木々の間に道が続いている。Woodsを歩くとJavaScriptのBattleが起こる。'
+          : '近くに調べられるものはない。',
     )
   }, [
     enterBattle,
     innOpen,
+    isForest,
     isVillage,
+    nextTrainingBattleId,
     position,
     progress,
     rpgState,
@@ -420,18 +491,20 @@ export function WorldPage() {
         <header className="world-header">
           <div>
             <div className="eyebrow">
-              {isVillage ? 'LOCAL MAP' : 'OPEN WORLD'} //{' '}
-              {isVillage ? getWorldMapLabel(mapId) : regionLabels[region]}
+              {isLocalMap ? 'LOCAL MAP' : 'OPEN WORLD'} //{' '}
+              {isLocalMap ? getWorldMapLabel(mapId) : regionLabels[region]}
             </div>
-            <h1>{isVillage ? 'GREENFIELD VILLAGE' : 'CODE WORLD'}</h1>
+            <h1>{isVillage ? 'GREENFIELD VILLAGE' : isForest ? 'JAVASCRIPT FOREST' : 'CODE WORLD'}</h1>
             <p>
               {isVillage
                 ? 'JavaScript地方の小さな村。中央のTRAINでコードの読み方を練習し、南の出口から草原へ戻れる。'
-                : region === 'javascript'
-                  ? javascriptStoryBrief
-                  : region === 'typescript'
-                    ? '東側はTypeScript地方。西とは違うruleを読みながら進む。'
-                    : '中央のHubから、西のJavaScript地方と東のTypeScript地方へ進める。'}
+                : isForest
+                  ? 'JavaScript地方の森。道を外れるとEncounterが起こり、&&と||を既習のfind()と一緒に読む。東のEXITから草原へ戻れる。'
+                  : region === 'javascript'
+                    ? javascriptStoryBrief
+                    : region === 'typescript'
+                      ? '東側はTypeScript地方。西とは違うruleを読みながら進む。'
+                      : '中央のHubから、西のJavaScript地方と東のTypeScript地方へ進める。'}
             </p>
           </div>
         </header>
@@ -447,7 +520,7 @@ export function WorldPage() {
 
         <div
           className="world-viewport pixel-inner-window"
-          aria-label={isVillage ? 'Village map' : 'Open world map'}
+          aria-label={isVillage ? 'Village map' : isForest ? 'Forest map' : 'Open world map'}
           data-world-map={mapId}
           data-world-x={position.x}
           data-world-y={position.y}
