@@ -90,8 +90,35 @@ export function WorldPage() {
     if (progress.clearedAreaIds.includes('javascript') || progress.clearedStageIds.includes(3)) {
       return '西の異変は収まった。技は狙った相手へ飛ぶようになった。'
     }
+    if (progress.clearedStageIds.includes(22)) {
+      if (progress.clearedStageIds.includes(2)) {
+        return 'BYTE // 二つの異変が同じCode Coreへつながった。北西のFinal Bossを止めればJavaScript地方を復旧できる。'
+      }
+      if (progress.clearedStageIds.includes(1)) {
+        return 'BYTE // 一つ目の異変を確認した。同じ症状が残る草原でもう一戦、実際のcodeを追おう。'
+      }
+      return 'BYTE // Deep Forestの学習は完了。草原へ戻り、最初に起きていたtarget異変を実際のBattleで追おう。'
+    }
+    if (progress.clearedStageIds.includes(21)) {
+      return 'BYTE // ?. と ??まで読めた。Deep Forest最深部でreduce()を一行ずつ追おう。'
+    }
+    if (progress.clearedStageIds.includes(20)) {
+      return 'BYTE // sort()と[0]を読めた。次は値がない場合にも安全に読む?. と ??だ。'
+    }
+    if (progress.clearedStageIds.includes(19)) {
+      return 'BYTE // 第二の守り人を突破した。最深部でsort()から複数行codeの読み方を広げよう。'
+    }
+    if (progress.clearedStageIds.includes(18)) {
+      return 'BYTE // some()とevery()を区別できた。Deep Forestの第二の守り人へ既習内容だけで挑もう。'
+    }
+    if (progress.clearedStageIds.includes(17)) {
+      return 'BYTE // some()は「一つでも」をbooleanで返す。次はevery()の「全員」を比べよう。'
+    }
+    if (progress.clearedStageIds.includes(16)) {
+      return 'BYTE // map()で各要素を変換する流れを読めた。次はsome()でtrue / falseを調べる。'
+    }
     if (progress.clearedStageIds.includes(15)) {
-      return 'BYTE // Deep Forestで、filter()は条件の向きが変わっても最後まで見て全部集めると確認できた。'
+      return 'BYTE // filter()を条件違いでも読めた。Deep Forestを西へ進み、次はmap()で各要素を変換しよう。'
     }
     if (progress.clearedStageIds.includes(14)) {
       return 'BYTE // filter()の基本は読めた。Forest西端からDeep Forestへ進んで、別の条件でも同じ読み方を試そう。'
@@ -105,13 +132,7 @@ export function WorldPage() {
     if (progress.clearedStageIds.includes(9)) {
       return 'BYTE // 村の基礎訓練は完了。西の森では、条件が二つに増えたruleを読んでみよう。'
     }
-    if (progress.clearedStageIds.includes(2)) {
-      return 'BYTE // おかしな動きの原因は、もっと西の奥にあるみたいだ。Code Coreまで確かめに行こう。'
-    }
-    if (progress.clearedStageIds.includes(1)) {
-      return 'BYTE // 別の技でも同じようなズレが起きている。どの敵を選ぶruleなのか、もう少し見てみよう。'
-    }
-    return 'LEAD ADA // 西の草原で、技が違う魔物へ飛ぶことがある。まず何を見て相手を選んでいるか確かめよう。'
+    return 'LEAD ADA // 西の草原で、技が違う魔物へ飛ぶことがある。まず村と森で、コードを小さいところから読む練習をしよう。'
   }, [progress.clearedAreaIds, progress.clearedStageIds])
 
   const javascriptNextObjective = useMemo(() => {
@@ -176,26 +197,47 @@ export function WorldPage() {
         clear: false,
       }
     }
-    if (progress.clearedStageIds.includes(2)) {
+    if (!progress.clearedStageIds.includes(22)) {
+      const nextLesson = !progress.clearedStageIds.includes(16)
+        ? 'map()'
+        : !progress.clearedStageIds.includes(17)
+          ? 'some()'
+          : !progress.clearedStageIds.includes(18)
+            ? 'every()'
+            : !progress.clearedStageIds.includes(19)
+              ? '第二MID BOSS'
+              : !progress.clearedStageIds.includes(20)
+                ? 'sort()'
+                : !progress.clearedStageIds.includes(21)
+                  ? '?. / ??'
+                  : 'reduce()'
       return {
-        label: 'NEXT OBJECTIVE · 4 / 4',
-        title: '西の最深部へ向かう',
-        detail: 'Deep Forestでfilter()を反復できた。次の学習ルートを進みながら、西の異変の根へ近づこう。',
+        label: 'NEXT OBJECTIVE · DEEP FOREST',
+        title: `Deep Forestを西へ進み${nextLesson}を読む`,
+        detail: 'Forest西端のEXITからDeep Forestへ戻り、西へ進もう。新conceptは固定Lessonで先に学び、Woodsではclear済み内容だけを復習できる。',
         clear: false,
       }
     }
-    if (progress.clearedStageIds.includes(1)) {
+    if (!progress.clearedStageIds.includes(1)) {
       return {
-        label: 'NEXT OBJECTIVE · 3 / 4',
-        title: '西でもう少し戦って確かめる',
-        detail: '草むらを歩き、別のBattleでも「どの敵が選ばれるか」を読んでみよう。',
+        label: 'FINAL INCIDENT · 1 / 2',
+        title: '草原へ戻って最初の異変を追う',
+        detail: 'Deep Forestの学習は完了。Forest東端からOverworldへ戻り、JavaScript側の草むらで実際のtarget異変を調べよう。',
+        clear: false,
+      }
+    }
+    if (!progress.clearedStageIds.includes(2)) {
+      return {
+        label: 'FINAL INCIDENT · 2 / 2',
+        title: 'もう一つの異変を追う',
+        detail: '一つ目の異変は確認できた。JavaScript側の草むらでもう一戦し、共通するCode Coreへのつながりを確かめよう。',
         clear: false,
       }
     }
     return {
-      label: 'NEXT OBJECTIVE · 2 / 4',
-      title: '草原の異変を調べる',
-      detail: 'Deep Forestでfilter()を別条件でも確認した。Overworldの草むらへ戻り、main Battleで実際の異変を追おう。',
+      label: 'FINAL BOSS',
+      title: '北西のCode Coreへ向かう',
+      detail: '二つの異変が同じroot causeへつながった。北西のBOSSの隣でINTERACTし、JavaScript Final Boss Battle 3へ挑もう。',
       clear: false,
     }
   }, [byteJoined, nextTrainingBattleId, progress.clearedAreaIds, progress.clearedStageIds])
@@ -274,18 +316,18 @@ export function WorldPage() {
         clear: false,
       }
     }
-    if (!progress.clearedStageIds.includes(15)) {
+    if (!progress.clearedStageIds.includes(22)) {
       return {
-        label: 'DEEP FOREST OPEN',
+        label: 'DEEP FOREST ROUTE',
         title: '西端のEXITからDeep Forestへ進む',
-        detail: 'filter()の基本は読めた。main trailをさらに西へ進み、EXITからDeep Forestへ入って別条件でも反復しよう。',
+        detail: 'Forest側の学習は完了。西端のEXITからDeep Forestへ入り、map()以降の学習routeを最後まで進めよう。',
         clear: false,
       }
     }
     return {
       label: 'FOREST ROUTE COMPLETE',
-      title: 'Deep Forestへの学習ルートを開いた',
-      detail: 'ForestではBattle 10〜12と14を復習できる。西端のEXITからDeep Forestへ行き来できる。',
+      title: 'Deep Forestの学習まで完了した',
+      detail: '東のEXITからOverworldへ戻り、草原で残っている実際の異変を追おう。',
       clear: true,
     }
   }, [progress.clearedStageIds])
@@ -293,16 +335,72 @@ export function WorldPage() {
   const deepForestObjective = useMemo(() => {
     if (!progress.clearedStageIds.includes(15)) {
       return {
-        label: 'DEEP FOREST · 1 / 1',
+        label: 'DEEP FOREST · 1 / 8',
         title: 'filter()を反対向きの条件でも読む',
         detail: 'main trailを外れてWoods / Deep Woodsへ入ろう。最初のLessonでhp > 65を最後まで見て、当てはまるもの全部を集める。',
         clear: false,
       }
     }
+    if (!progress.clearedStageIds.includes(16)) {
+      return {
+        label: 'DEEP FOREST · 2 / 8',
+        title: 'map()で一つずつ別の形へ変える',
+        detail: '西へ進みWoods / Deep Woodsへ入ろう。各Enemyを新しいobjectへ変換してから、既習のfind()へ戻る流れを読む。',
+        clear: false,
+      }
+    }
+    if (!progress.clearedStageIds.includes(17)) {
+      return {
+        label: 'DEEP FOREST · 3 / 8',
+        title: 'some()で「一体でも」をtrue / falseにする',
+        detail: 'さらに西へ進もう。some()の結果を先にbooleanとして決め、その値を外側の処理へ戻す。',
+        clear: false,
+      }
+    }
+    if (!progress.clearedStageIds.includes(18)) {
+      return {
+        label: 'DEEP FOREST · 4 / 8',
+        title: 'every()で「全員」をtrue / falseにする',
+        detail: 'some()の「一体でも」とevery()の「全員」を比べる。内側のbooleanから順番に読む。',
+        clear: false,
+      }
+    }
+    if (!progress.clearedStageIds.includes(19)) {
+      return {
+        label: 'DEEP FOREST · 5 / 8 · MID-BOSS',
+        title: '第二の守り人を既習内容だけで突破する',
+        detail: '西へ進むとRoot Guardianとの固定Battle 19。filter() / map() / some() / every()だけで理解を確認する。',
+        clear: false,
+      }
+    }
+    if (!progress.clearedStageIds.includes(20)) {
+      return {
+        label: 'DEEP FOREST · 6 / 8',
+        title: 'sort()で並べ替え、[0]で先頭を取る',
+        detail: '最深部へ進もう。alive → ordered → ordered[0]と途中結果へ分け、複数行codeを一行ずつ追う。',
+        clear: false,
+      }
+    }
+    if (!progress.clearedStageIds.includes(21)) {
+      return {
+        label: 'DEEP FOREST · 7 / 8',
+        title: '?. と ??で安全に値を読む',
+        detail: 'sort()の大きな流れはそのまま。?.で安全に止まり、??で値がない場合だけ代わりの値を使う部分を読む。',
+        clear: false,
+      }
+    }
+    if (!progress.clearedStageIds.includes(22)) {
+      return {
+        label: 'DEEP FOREST · 8 / 8',
+        title: 'reduce()で最後に一つへまとめる',
+        detail: 'bestと次のEnemyを一体ずつ比べ、途中結果を更新しながら最後まで進むreduce()を読む。',
+        clear: false,
+      }
+    }
     return {
-      label: 'FILTER PRACTICE CLEAR',
-      title: 'filter()を別条件でも読み切った',
-      detail: 'Deep ForestではBattle 14 / 15を値・並び違いで反復できる。次は集めたものを変換したり、true / falseを調べる読み方へ進む。',
+      label: 'DEEP FOREST COMPLETE',
+      title: 'JavaScriptの学習routeを最後まで読み切った',
+      detail: '東へ戻ってForestを抜け、Overworldの草原へ戻ろう。残る二つの実際の異変を追った先にFinal Bossがいる。',
       clear: true,
     }
   }, [progress.clearedStageIds])
@@ -403,7 +501,7 @@ export function WorldPage() {
           result.toMapId === JS_VILLAGE_MAP_ID
             ? `${result.label}へ入った。中央のTRAINでJavaScriptの基礎を練習できる。`
             : result.toMapId === JS_DEEP_FOREST_MAP_ID
-              ? `${result.label}へ入った。道を外れた最初のWoodsで、filter()を別条件でもう一度読む。`
+              ? `${result.label}へ入った。西へ進むほど新しい固定Lessonが続き、Woodsではclear済み内容だけを復習できる。`
               : result.toMapId === JS_FOREST_MAP_ID
                 ? `${result.label}へ入った。道を外れてWoodsを歩くと、学習済み範囲のBattleが起こる。`
                 : `${result.label}へ戻った。西へ進むほど森が深くなっていく。`,
@@ -461,12 +559,26 @@ export function WorldPage() {
           setMessage('BYTE: 守り人の先のWoodsへ行こう。次はfind()の「最初の一体」と、filter()の「全部集める」を比べる。')
         } else if (!progress.clearedStageIds.includes(15)) {
           setMessage('BYTE: Forest西端のEXITからDeep Forestへ進もう。filter()を別の条件でもう一度読んでみる。')
+        } else if (!progress.clearedStageIds.includes(16)) {
+          setMessage('BYTE: Deep Forestを西へ。次はmap()で各Enemyを一つずつ別の形へ変える流れを読む。')
+        } else if (!progress.clearedStageIds.includes(17)) {
+          setMessage('BYTE: map()は読めた。さらに西でsome()の「一つでも」をtrue / falseとして確かめよう。')
+        } else if (!progress.clearedStageIds.includes(18)) {
+          setMessage('BYTE: 次はevery()。「一つでも」ではなく「全員」が条件に合うかを読む。')
+        } else if (!progress.clearedStageIds.includes(19)) {
+          setMessage('BYTE: Deep Forestの第二の守り人へ。新しいsyntaxはないから、既習内容だけで挑もう。')
+        } else if (!progress.clearedStageIds.includes(20)) {
+          setMessage('BYTE: 最深部でsort()を読む。alive → ordered → [0]と途中結果へ分ければ大丈夫。')
+        } else if (!progress.clearedStageIds.includes(21)) {
+          setMessage('BYTE: sort()の次は?.と??。値がない場合にも安全に読む部分だけを足そう。')
+        } else if (!progress.clearedStageIds.includes(22)) {
+          setMessage('BYTE: Deep Forest最後のLessonはreduce()。bestへ途中結果を一つずつ残して読む。')
         } else if (!progress.clearedStageIds.includes(1)) {
-          setMessage('BYTE: 敵のHPと、技の横に出るコードを順番に見てみよう。')
+          setMessage('BYTE: 学習routeは完了。草原へ戻って、最初に起きていた実際のtarget異変を追おう。')
         } else if (!progress.clearedStageIds.includes(2)) {
-          setMessage('BYTE: 別の技でも同じようなズレがあるみたい。西でもう少し確かめよう。')
+          setMessage('BYTE: 一つ目の異変は確認した。同じ症状が残る草原でもう一戦追おう。')
         } else if (!progress.clearedAreaIds.includes('javascript')) {
-          setMessage('BYTE: 原因はもっと西の奥につながってる。Code Coreまで行ってみよう。')
+          setMessage('BYTE: 二つの異変がCode Coreへつながった。北西のBOSSがJavaScript地方のFinal Bossだ。')
         } else {
           setMessage('BYTE: 西は落ち着いたね。東にはTypeScript地方が広がっている。')
         }
@@ -529,7 +641,9 @@ export function WorldPage() {
       if (!intent.unlocked) {
         setMessage(
           intent.region === 'javascript'
-            ? 'まだ奥へは進めない。西でBattleを重ねて、異変をもう少し確かめよう。'
+            ? !progress.clearedStageIds.includes(22)
+              ? 'Code Coreへ挑む前に、Deep ForestのLesson 15〜22を最後まで読み切ろう。'
+              : 'Code Coreへ入る前に、草原に残る二つのtarget異変をBattle 1 / 2で確認しよう。'
             : '東の奥へ進む前に、TypeScript地方のBattleをもう少し確かめよう。',
         )
         return
@@ -542,9 +656,11 @@ export function WorldPage() {
       isVillage
         ? '静かな村だ。中央のTRAINか、南のEXITを調べてみよう。'
         : isDeepForest
-          ? progress.clearedStageIds.includes(15)
-            ? 'Deep WoodsではBattle 14 / 15を反復できる。次の学習ルートはさらに西へ続く。'
-            : '道を外れてWoodsへ入ろう。最初のLessonでfilter()を別条件でもう一度読む。'
+          ? progress.clearedStageIds.includes(22)
+            ? 'Deep Forestの学習は完了。東へ戻り、Overworldの草原で残る異変を追おう。'
+            : progress.clearedStageIds.includes(15)
+              ? 'main trailを西へ進み、Woods / Deep Woodsへ入ると次の固定Lessonが始まる。Randomはclear済み内容だけだ。'
+              : '道を外れてWoodsへ入ろう。最初のLessonでfilter()を別条件でもう一度読む。'
           : isForest
             ? progress.clearedStageIds.includes(14)
               ? '西端のEXITからDeep Forestへ進める。ForestのWoodsではfilter()も復習できる。'
@@ -615,7 +731,7 @@ export function WorldPage() {
               {isVillage
                 ? 'JavaScript地方の小さな村。中央のTRAINでコードの読み方を練習し、南の出口から草原へ戻れる。'
                 : isDeepForest
-                  ? 'JavaScript地方の深い森。filter()を条件違いで反復し、次の配列処理へ進むための読み方を固める。東のEXITからForestへ戻れる。'
+                  ? 'JavaScript地方の深い森。filter()からmap() / some() / every()、最深部のsort() / ?. / ?? / reduce()まで固定Lessonで順番に読む。東のEXITからForestへ戻れる。'
                   : isForest
                     ? 'JavaScript地方の森。東側で&& / ||を読み、守り人の先ではfind()とfilter()の違いを学ぶ。'
                     : region === 'javascript'
