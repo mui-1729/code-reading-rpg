@@ -1,9 +1,11 @@
 import { BASE_PLAYER_HP } from '../progression/constants'
 import {
-  WORLD_HEIGHT,
-  WORLD_START,
+  isWorldMapId,
+  isWorldPositionInBounds,
+  OVERWORLD_MAP_ID,
+  WORLD_MAP_STARTS,
   WORLD_TREASURES,
-  WORLD_WIDTH,
+  type WorldMapId,
   type WorldTreasureId,
 } from '../world/worldMap'
 import {
@@ -22,6 +24,7 @@ export type RpgState = {
   ownedEquipmentIds: string[]
   partyMemberIds: string[]
   partyEquipment: Record<string, EquipmentLoadout>
+  worldMapId: WorldMapId
   worldPosition: WorldPosition
   stepsSinceEncounter: number
   encounterCount: number
@@ -30,22 +33,27 @@ export type RpgState = {
 }
 
 export type StoredRpgState = {
-  version: 3
+  version: 4
   state: RpgState
+}
+
+type LegacyStoredRpgStateV3 = {
+  version: 3
+  state: Omit<RpgState, 'worldMapId'>
 }
 
 type LegacyStoredRpgStateV2 = {
   version: 2
-  state: Omit<RpgState, 'openedTreasureIds'>
+  state: Omit<RpgState, 'worldMapId' | 'openedTreasureIds'>
 }
 
 type LegacyStoredRpgStateV1 = {
   version: 1
-  state: Omit<RpgState, 'currentHp' | 'openedTreasureIds'>
+  state: Omit<RpgState, 'worldMapId' | 'currentHp' | 'openedTreasureIds'>
 }
 
 export const RPG_STORAGE_KEY = 'code-reading-rpg:rpg-state'
-export const RPG_STATE_SCHEMA_VERSION = 3
+export const RPG_STATE_SCHEMA_VERSION = 4
 
 const equipmentSlots: EquipmentSlot[] = ['weapon', 'armor', 'accessory']
 
@@ -68,7 +76,8 @@ export function createInitialRpgState(baseMaxHp = BASE_PLAYER_HP): RpgState {
     ownedEquipmentIds: [...starterEquipmentIds],
     partyMemberIds: [],
     partyEquipment: {},
-    worldPosition: { ...WORLD_START },
+    worldMapId: OVERWORLD_MAP_ID,
+    worldPosition: { ...WORLD_MAP_STARTS[OVERWORLD_MAP_ID] },
     stepsSinceEncounter: 8,
     encounterCount: 0,
     currentHp,
@@ -136,15 +145,36 @@ function normalizeLoadout(
   ) as EquipmentLoadout
 }
 
-function normalizeWorldPosition(value: unknown): WorldPosition {
-  if (!value || typeof value !== 'object') return { ...WORLD_START }
-  const position = value as Partial<WorldPosition>
-  if (!Number.isInteger(position.x) || !Number.isInteger(position.y)) return { ...WORLD_START }
+function normalizeWorldLocation(
+  mapIdValue: unknown,
+  positionValue: unknown,
+): { mapId: WorldMapId; position: WorldPosition } {
+  const mapId = isWorldMapId(mapIdValue) ? mapIdValue : OVERWORLD_MAP_ID
 
-  const x = position.x as number
-  const y = position.y as number
-  if (x < 0 || x >= WORLD_WIDTH || y < 0 || y >= WORLD_HEIGHT) return { ...WORLD_START }
-  return { x, y }
+  if (!positionValue || typeof positionValue !== 'object') {
+    return {
+      mapId: OVERWORLD_MAP_ID,
+      position: { ...WORLD_MAP_STARTS[OVERWORLD_MAP_ID] },
+    }
+  }
+
+  const position = positionValue as Partial<WorldPosition>
+  if (!Number.isInteger(position.x) || !Number.isInteger(position.y)) {
+    return {
+      mapId: OVERWORLD_MAP_ID,
+      position: { ...WORLD_MAP_STARTS[OVERWORLD_MAP_ID] },
+    }
+  }
+
+  const normalized = { x: position.x as number, y: position.y as number }
+  if (!isWorldPositionInBounds(mapId, normalized)) {
+    return {
+      mapId: OVERWORLD_MAP_ID,
+      position: { ...WORLD_MAP_STARTS[OVERWORLD_MAP_ID] },
+    }
+  }
+
+  return { mapId, position: normalized }
 }
 
 function normalizeCurrentHp(value: unknown, maxHp: number): number {
@@ -163,10 +193,13 @@ export function restoreRpgState(raw: string | null, baseMaxHp = BASE_PLAYER_HP):
 
   try {
     const parsed = JSON.parse(raw) as Partial<
-      StoredRpgState | LegacyStoredRpgStateV2 | LegacyStoredRpgStateV1
+      StoredRpgState | LegacyStoredRpgStateV3 | LegacyStoredRpgStateV2 | LegacyStoredRpgStateV1
     >
     if (
-      (parsed.version !== 1 && parsed.version !== 2 && parsed.version !== RPG_STATE_SCHEMA_VERSION) ||
+      (parsed.version !== 1 &&
+        parsed.version !== 2 &&
+        parsed.version !== 3 &&
+        parsed.version !== RPG_STATE_SCHEMA_VERSION) ||
       !parsed.state
     ) {
       return initial
@@ -179,23 +212,28 @@ export function restoreRpgState(raw: string | null, baseMaxHp = BASE_PLAYER_HP):
     const equipment = normalizeLoadout(state.equipment, ownedEquipmentIds)
     const partyEquipment =
       state.partyEquipment && typeof state.partyEquipment === 'object'
-        ? Object.fromEntries(
+        ? (Object.fromEntries(
             Object.entries(state.partyEquipment)
               .filter(([memberId]) => joinedPartyMembers.has(memberId))
               .map(([memberId, loadout]) => [
                 memberId,
                 normalizeLoadout(loadout, ownedEquipmentIds),
               ]),
-          ) as Record<string, EquipmentLoadout>
+          ) as Record<string, EquipmentLoadout>)
         : {}
     const maxHp = getMaxHpForRpgState(baseMaxHp, { equipment })
+    const worldLocation = normalizeWorldLocation(
+      parsed.version === RPG_STATE_SCHEMA_VERSION ? state.worldMapId : OVERWORLD_MAP_ID,
+      state.worldPosition,
+    )
 
     return {
       equipment,
       ownedEquipmentIds,
       partyMemberIds,
       partyEquipment,
-      worldPosition: normalizeWorldPosition(state.worldPosition),
+      worldMapId: worldLocation.mapId,
+      worldPosition: worldLocation.position,
       stepsSinceEncounter:
         typeof state.stepsSinceEncounter === 'number' && Number.isInteger(state.stepsSinceEncounter)
           ? Math.max(0, state.stepsSinceEncounter)
@@ -207,7 +245,7 @@ export function restoreRpgState(raw: string | null, baseMaxHp = BASE_PLAYER_HP):
       currentHp:
         parsed.version === 1 ? maxHp : normalizeCurrentHp(state.currentHp, maxHp),
       openedTreasureIds:
-        parsed.version === RPG_STATE_SCHEMA_VERSION
+        parsed.version === 3 || parsed.version === RPG_STATE_SCHEMA_VERSION
           ? uniqueKnownTreasureIds(state.openedTreasureIds)
           : [],
     }
