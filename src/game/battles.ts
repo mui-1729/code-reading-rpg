@@ -192,7 +192,7 @@ export const battles: Battle[] = [
       enemy('goblin-forest-a-high', 'Goblin', 64, 'Branch Slash', 7, '▲'),
       enemy('boar-forest-a', 'Boar', 86, 'Tackle', 6, '♠'),
     ],
-    skillIds: ['trace', 'pulse', 'link'],
+    skillIds: ['trace', 'pulse', 'nova', 'link'],
     unlockSkillId: 'link',
   },
   {
