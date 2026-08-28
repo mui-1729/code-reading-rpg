@@ -7,6 +7,7 @@ import {
   resolveWorldMove,
 } from './worldActions'
 import {
+  JS_FOREST_MAP_ID,
   JS_VILLAGE_MAP_ID,
   JS_VILLAGE_TRAINING_POSITION,
   OVERWORLD_MAP_ID,
@@ -151,6 +152,59 @@ describe('World action resolver', () => {
     expect(result.nextState.worldPosition).toEqual({ x: 14, y: 13 })
   })
 
+  it('Training 9未clearではForest入口を通れない', () => {
+    const state = {
+      ...createInitialRpgState(),
+      worldPosition: { x: 8, y: 14 },
+      stepsSinceEncounter: 8,
+    }
+
+    const result = resolveWorldMove({
+      rpgState: state,
+      progress: createInitialPlayerProgress(),
+      dx: -1,
+      dy: 0,
+    })
+
+    expect(result.kind).toBe('blocked')
+    expect(result.terrain).toBe('woods')
+    expect(result.nextState).toBe(state)
+  })
+
+  it('Training 9 clear後はOverworldからForestへ入り、東口から戻れる', () => {
+    const initialProgress = createInitialPlayerProgress()
+    const progress = {
+      ...initialProgress,
+      clearedStageIds: [7, 8, 9],
+      unlockedStageIds: [...initialProgress.unlockedStageIds, 8, 9, 10],
+    }
+    const state = {
+      ...createInitialRpgState(),
+      worldPosition: { x: 8, y: 14 },
+      stepsSinceEncounter: 8,
+    }
+
+    const enter = resolveWorldMove({ rpgState: state, progress, dx: -1, dy: 0 })
+    expect(enter.kind).toBe('transition')
+    if (enter.kind !== 'transition') return
+    expect(enter.toMapId).toBe(JS_FOREST_MAP_ID)
+    expect(enter.nextState.worldPosition).toEqual({ x: 28, y: 10 })
+
+    const exit = resolveWorldMove({
+      rpgState: {
+        ...enter.nextState,
+        worldPosition: { x: 29, y: 10 },
+      },
+      progress,
+      dx: 1,
+      dy: 0,
+    })
+    expect(exit.kind).toBe('transition')
+    if (exit.kind !== 'transition') return
+    expect(exit.toMapId).toBe(OVERWORLD_MAP_ID)
+    expect(exit.nextState.worldPosition).toEqual({ x: 8, y: 14 })
+  })
+
   it('Village内はrollを強制してもRandom Encounterを開始しない', () => {
     const state = {
       ...createInitialRpgState(),
@@ -172,6 +226,40 @@ describe('World action resolver', () => {
     expect(result.nextState.worldMapId).toBe(JS_VILLAGE_MAP_ID)
     expect(result.nextState.worldPosition).toEqual({ x: 10, y: 11 })
     expect(result.nextState.encounterCount).toBe(7)
+  })
+
+  it('ForestではTraining 9後の最初のEncounterとしてBattle 10を返す', () => {
+    const initialProgress = createInitialPlayerProgress()
+    const progress = {
+      ...initialProgress,
+      clearedStageIds: [7, 8, 9],
+      unlockedStageIds: [...initialProgress.unlockedStageIds, 8, 9, 10],
+    }
+    const state = {
+      ...createInitialRpgState(),
+      worldMapId: JS_FOREST_MAP_ID,
+      worldPosition: { x: 25, y: 10 },
+      stepsSinceEncounter: 4,
+      encounterCount: 2,
+    }
+
+    const result = resolveWorldMove({
+      rpgState: state,
+      progress,
+      dx: 0,
+      dy: -1,
+      encounterRolls: { trigger: 0, battle: 0.9 },
+    })
+
+    expect(result.kind).toBe('encounter')
+    if (result.kind !== 'encounter') return
+    expect(result.terrain).toBe('woods')
+    expect(result.nextState.worldMapId).toBe(JS_FOREST_MAP_ID)
+    expect(result.battle).toEqual({
+      battleId: 10,
+      region: 'javascript',
+      seed: 'encounter:js-forest:3:25:9',
+    })
   })
 
   it('Village TRAIN tileへ直接moveせず隣からinteractionする', () => {
@@ -372,20 +460,22 @@ describe('World action resolver', () => {
     })
   })
 
-  it('VillageではOverworldと同じ座標でもfixed object interactionが発火しない', () => {
+  it('Village / ForestではOverworldと同じ座標でもfixed object interactionが発火しない', () => {
     const initialState = createInitialRpgState()
     const initialProgress = createInitialPlayerProgress()
 
-    expect(
-      resolveWorldInteraction(
-        {
-          ...initialState,
-          worldMapId: JS_VILLAGE_MAP_ID,
-          worldPosition: { x: 19, y: 13 },
-        },
-        initialProgress,
-      ),
-    ).toEqual({ kind: 'none' })
+    for (const worldMapId of [JS_VILLAGE_MAP_ID, JS_FOREST_MAP_ID] as const) {
+      expect(
+        resolveWorldInteraction(
+          {
+            ...initialState,
+            worldMapId,
+            worldPosition: { x: 19, y: 13 },
+          },
+          initialProgress,
+        ),
+      ).toEqual({ kind: 'none' })
+    }
   })
 
   it('周囲にobjectがない場合はnoneを返す', () => {
