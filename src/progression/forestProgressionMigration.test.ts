@@ -41,4 +41,12 @@ describe('Forest progression save normalization', () => {
     expect(restored.unlockedStageIds).toContain(12)
     expect(restored.unlockedSkillIds).toContain('fork')
   })
+
+  it('#205時点でBattle 12までclearしたv4 saveへBattle 13 unlockを補う', () => {
+    const restored = restorePlayerProgress(storedProgress([7, 8, 9, 10, 11, 12]))
+
+    expect(restored.unlockedStageIds).toContain(13)
+    expect(restored.unlockedSkillIds).toContain('link')
+    expect(restored.unlockedSkillIds).toContain('fork')
+  })
 })
