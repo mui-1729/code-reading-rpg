@@ -113,7 +113,7 @@ test('RESET PROGRESSはOpeningを含め最初からに戻しSoundだけ保持す
   await expect.poll(async () =>
     page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), RPG_KEY),
   ).toMatchObject({
-    version: 3,
+    version: 4,
     state: {
       equipment: {
         weapon: 'training-blade',
@@ -122,6 +122,7 @@ test('RESET PROGRESSはOpeningを含め最初からに戻しSoundだけ保持す
       },
       ownedEquipmentIds: ['training-blade', 'traveler-coat'],
       partyMemberIds: [],
+      worldMapId: 'overworld',
       worldPosition: { x: 20, y: 14 },
       currentHp: 108,
     },
