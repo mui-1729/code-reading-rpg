@@ -21,6 +21,7 @@ import {
   getVisibleWorldCells,
   getWorldMapLabel,
   getWorldRegion,
+  JS_DEEP_FOREST_MAP_ID,
   JS_FOREST_MAP_ID,
   JS_VILLAGE_MAP_ID,
 } from './worldMap'
@@ -81,15 +82,19 @@ export function WorldPage() {
   const viewportStart = visibleCells[0] ?? position
   const isVillage = mapId === JS_VILLAGE_MAP_ID
   const isForest = mapId === JS_FOREST_MAP_ID
-  const isLocalMap = isVillage || isForest
+  const isDeepForest = mapId === JS_DEEP_FOREST_MAP_ID
+  const isLocalMap = isVillage || isForest || isDeepForest
   const nextTrainingBattleId = getNextJavaScriptTrainingBattleId(progress.clearedStageIds)
 
   const javascriptStoryBrief = useMemo(() => {
     if (progress.clearedAreaIds.includes('javascript') || progress.clearedStageIds.includes(3)) {
       return '西の異変は収まった。技は狙った相手へ飛ぶようになった。'
     }
+    if (progress.clearedStageIds.includes(15)) {
+      return 'BYTE // Deep Forestで、filter()は条件の向きが変わっても最後まで見て全部集めると確認できた。'
+    }
     if (progress.clearedStageIds.includes(14)) {
-      return 'BYTE // filter()で、条件に合うものを最後まで見て全部集める読み方まで確認できた。'
+      return 'BYTE // filter()の基本は読めた。Forest西端からDeep Forestへ進んで、別の条件でも同じ読み方を試そう。'
     }
     if (progress.clearedStageIds.includes(13)) {
       return 'BYTE // 森の守り人を突破した。次は「条件に合うものをまとめて集める」動きを読んでみよう。'
@@ -163,11 +168,19 @@ export function WorldPage() {
         clear: false,
       }
     }
+    if (!progress.clearedStageIds.includes(15)) {
+      return {
+        label: 'NEXT OBJECTIVE · DEEP FOREST',
+        title: 'Deep Forestでfilter()をもう一度読む',
+        detail: 'Forestの西端にあるEXITからDEEP FORESTへ入ろう。最初のWoodsで、今度はhp > 65のfilter()を読む。',
+        clear: false,
+      }
+    }
     if (progress.clearedStageIds.includes(2)) {
       return {
         label: 'NEXT OBJECTIVE · 4 / 4',
         title: '西の最深部へ向かう',
-        detail: '北西の道を進み、BOSSの隣でINTERACT。異変の原因を確かめよう。',
+        detail: 'Deep Forestでfilter()を反復できた。次の学習ルートを進みながら、西の異変の根へ近づこう。',
         clear: false,
       }
     }
@@ -182,7 +195,7 @@ export function WorldPage() {
     return {
       label: 'NEXT OBJECTIVE · 2 / 4',
       title: '草原の異変を調べる',
-      detail: 'Forestでfilter()まで確認した。Overworldの草むらへ戻り、main Battleで実際の異変を追おう。',
+      detail: 'Deep Forestでfilter()を別条件でも確認した。Overworldの草むらへ戻り、main Battleで実際の異変を追おう。',
       clear: false,
     }
   }, [byteJoined, nextTrainingBattleId, progress.clearedAreaIds, progress.clearedStageIds])
@@ -261,19 +274,46 @@ export function WorldPage() {
         clear: false,
       }
     }
+    if (!progress.clearedStageIds.includes(15)) {
+      return {
+        label: 'DEEP FOREST OPEN',
+        title: '西端のEXITからDeep Forestへ進む',
+        detail: 'filter()の基本は読めた。main trailをさらに西へ進み、EXITからDeep Forestへ入って別条件でも反復しよう。',
+        clear: false,
+      }
+    }
     return {
-      label: 'FILTER LEARNED',
-      title: '条件に合うものを全部集める読み方を覚えた',
-      detail: 'ForestのRandom EncounterではBattle 10〜12と14を反復できる。次のconceptへ進む準備ができた。',
+      label: 'FOREST ROUTE COMPLETE',
+      title: 'Deep Forestへの学習ルートを開いた',
+      detail: 'ForestではBattle 10〜12と14を復習できる。西端のEXITからDeep Forestへ行き来できる。',
+      clear: true,
+    }
+  }, [progress.clearedStageIds])
+
+  const deepForestObjective = useMemo(() => {
+    if (!progress.clearedStageIds.includes(15)) {
+      return {
+        label: 'DEEP FOREST · 1 / 1',
+        title: 'filter()を反対向きの条件でも読む',
+        detail: 'main trailを外れてWoods / Deep Woodsへ入ろう。最初のLessonでhp > 65を最後まで見て、当てはまるもの全部を集める。',
+        clear: false,
+      }
+    }
+    return {
+      label: 'FILTER PRACTICE CLEAR',
+      title: 'filter()を別条件でも読み切った',
+      detail: 'Deep ForestではBattle 14 / 15を値・並び違いで反復できる。次は集めたものを変換したり、true / falseを調べる読み方へ進む。',
       clear: true,
     }
   }, [progress.clearedStageIds])
 
   const currentObjective = isVillage
     ? villageObjective
-    : isForest
-      ? forestObjective
-      : javascriptNextObjective
+    : isDeepForest
+      ? deepForestObjective
+      : isForest
+        ? forestObjective
+        : javascriptNextObjective
 
   const spriteStyle = useCallback(
     (spritePosition: Position) => ({
@@ -362,9 +402,11 @@ export function WorldPage() {
         setMessage(
           result.toMapId === JS_VILLAGE_MAP_ID
             ? `${result.label}へ入った。中央のTRAINでJavaScriptの基礎を練習できる。`
-            : result.toMapId === JS_FOREST_MAP_ID
-              ? `${result.label}へ入った。道を外れてWoodsを歩くと、学習済み範囲のBattleが起こる。`
-              : `${result.label}へ戻った。西へ進むほど森が深くなっていく。`,
+            : result.toMapId === JS_DEEP_FOREST_MAP_ID
+              ? `${result.label}へ入った。道を外れた最初のWoodsで、filter()を別条件でもう一度読む。`
+              : result.toMapId === JS_FOREST_MAP_ID
+                ? `${result.label}へ入った。道を外れてWoodsを歩くと、学習済み範囲のBattleが起こる。`
+                : `${result.label}へ戻った。西へ進むほど森が深くなっていく。`,
         )
         return
       }
@@ -417,6 +459,8 @@ export function WorldPage() {
           setMessage('BYTE: 森の西側に守り人がいる。新しい記号はないから、今までの読み方だけで挑もう。')
         } else if (!progress.clearedStageIds.includes(14)) {
           setMessage('BYTE: 守り人の先のWoodsへ行こう。次はfind()の「最初の一体」と、filter()の「全部集める」を比べる。')
+        } else if (!progress.clearedStageIds.includes(15)) {
+          setMessage('BYTE: Forest西端のEXITからDeep Forestへ進もう。filter()を別の条件でもう一度読んでみる。')
         } else if (!progress.clearedStageIds.includes(1)) {
           setMessage('BYTE: 敵のHPと、技の横に出るコードを順番に見てみよう。')
         } else if (!progress.clearedStageIds.includes(2)) {
@@ -497,17 +541,22 @@ export function WorldPage() {
     setMessage(
       isVillage
         ? '静かな村だ。中央のTRAINか、南のEXITを調べてみよう。'
-        : isForest
-          ? progress.clearedStageIds.includes(14)
-            ? 'Woodsでは、&& / ||に加えてfilter()の復習Battleも起こる。'
-            : progress.clearedStageIds.includes(13)
-              ? '守り人の先へ進める。西側のWoodsで、次の読み方を確かめよう。'
-              : '木々の間に道が続いている。Woodsでは復習Battle、main trailの西側には守り人がいる。'
-          : '近くに調べられるものはない。',
+        : isDeepForest
+          ? progress.clearedStageIds.includes(15)
+            ? 'Deep WoodsではBattle 14 / 15を反復できる。次の学習ルートはさらに西へ続く。'
+            : '道を外れてWoodsへ入ろう。最初のLessonでfilter()を別条件でもう一度読む。'
+          : isForest
+            ? progress.clearedStageIds.includes(14)
+              ? '西端のEXITからDeep Forestへ進める。ForestのWoodsではfilter()も復習できる。'
+              : progress.clearedStageIds.includes(13)
+                ? '守り人の先へ進める。西側のWoodsで、次の読み方を確かめよう。'
+                : '木々の間に道が続いている。Woodsでは復習Battle、main trailの西側には守り人がいる。'
+            : '近くに調べられるものはない。',
     )
   }, [
     enterBattle,
     innOpen,
+    isDeepForest,
     isForest,
     isVillage,
     nextTrainingBattleId,
@@ -553,17 +602,27 @@ export function WorldPage() {
               {isLocalMap ? 'LOCAL MAP' : 'OPEN WORLD'} //{' '}
               {isLocalMap ? getWorldMapLabel(mapId) : regionLabels[region]}
             </div>
-            <h1>{isVillage ? 'GREENFIELD VILLAGE' : isForest ? 'JAVASCRIPT FOREST' : 'CODE WORLD'}</h1>
+            <h1>
+              {isVillage
+                ? 'GREENFIELD VILLAGE'
+                : isDeepForest
+                  ? 'JAVASCRIPT DEEP FOREST'
+                  : isForest
+                    ? 'JAVASCRIPT FOREST'
+                    : 'CODE WORLD'}
+            </h1>
             <p>
               {isVillage
                 ? 'JavaScript地方の小さな村。中央のTRAINでコードの読み方を練習し、南の出口から草原へ戻れる。'
-                : isForest
-                  ? 'JavaScript地方の森。東側で&& / ||を読み、守り人の先ではfind()とfilter()の違いを学ぶ。'
-                  : region === 'javascript'
-                    ? javascriptStoryBrief
-                    : region === 'typescript'
-                      ? '東側はTypeScript地方。西とは違うruleを読みながら進む。'
-                      : '中央のHubから、西のJavaScript地方と東のTypeScript地方へ進める。'}
+                : isDeepForest
+                  ? 'JavaScript地方の深い森。filter()を条件違いで反復し、次の配列処理へ進むための読み方を固める。東のEXITからForestへ戻れる。'
+                  : isForest
+                    ? 'JavaScript地方の森。東側で&& / ||を読み、守り人の先ではfind()とfilter()の違いを学ぶ。'
+                    : region === 'javascript'
+                      ? javascriptStoryBrief
+                      : region === 'typescript'
+                        ? '東側はTypeScript地方。西とは違うruleを読みながら進む。'
+                        : '中央のHubから、西のJavaScript地方と東のTypeScript地方へ進める。'}
             </p>
           </div>
         </header>
@@ -579,7 +638,15 @@ export function WorldPage() {
 
         <div
           className="world-viewport pixel-inner-window"
-          aria-label={isVillage ? 'Village map' : isForest ? 'Forest map' : 'Open world map'}
+          aria-label={
+            isVillage
+              ? 'Village map'
+              : isDeepForest
+                ? 'Deep Forest map'
+                : isForest
+                  ? 'Forest map'
+                  : 'Open world map'
+          }
           data-world-map={mapId}
           data-world-x={position.x}
           data-world-y={position.y}
