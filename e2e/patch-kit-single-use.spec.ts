@@ -60,31 +60,32 @@ async function storedProgress(page: import('@playwright/test').Page) {
   return page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), PROGRESS_KEY)
 }
 
-test('PATCH KITは在庫2個でも同一Battleで1回だけ使用できる', async ({ page }) => {
+test('PATCH KITは在庫2個でも同一Battleで見える操作1つ・使用1回に制限する', async ({ page }) => {
   await seedBattle(page)
   await page.goto('/javascript/battle/1?seed=patch-kit-single-use&returnTo=%2Fworld')
 
-  const actions = page.locator('.patch-kit-action')
-  await expect(actions).toHaveCount(1)
+  const item = page.locator('.battle-item-row[data-item-id="patch-kit"]')
+  await expect(item).toHaveAttribute('data-item-state', 'available')
+  await expect(page.locator('.patch-kit-action:visible')).toHaveCount(1)
 
-  const patchKit = actions.first()
+  const patchKit = item.getByRole('button', { name: /PATCH KIT ×2/ })
   await expect(patchKit).toBeEnabled()
   await patchKit.click()
 
   await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
+  await expect(item).toHaveAttribute('data-item-state', 'already-used')
   await expect(patchKit).toBeDisabled()
-  await expect(page.getByText('USED THIS BATTLE', { exact: true })).toBeVisible()
   await expect.poll(async () => (await storedProgress(page)).progress.inventory.patchKit).toBe(1)
 
-  // 同じBattleでは2回目を消費できない。
+  // 同じBattleでは再消費できない。
   await patchKit.click({ force: true })
   await expect.poll(async () => (await storedProgress(page)).progress.inventory.patchKit).toBe(1)
   await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
 
   // seedが変われば別Battle session。残り1個を再び使える。
   await page.goto('/javascript/battle/1?seed=patch-kit-next-battle&returnTo=%2Fworld')
-  const nextBattlePatchKit = page.locator('.patch-kit-action')
-  await expect(nextBattlePatchKit).toHaveCount(1)
-  await expect(nextBattlePatchKit).toBeEnabled()
-  await expect(nextBattlePatchKit).toContainText('PATCH KIT ×1')
+  const nextItem = page.locator('.battle-item-row[data-item-id="patch-kit"]')
+  await expect(nextItem).toHaveAttribute('data-item-state', 'available')
+  await expect(page.locator('.patch-kit-action:visible')).toHaveCount(1)
+  await expect(nextItem.getByRole('button', { name: /PATCH KIT ×1/ })).toBeEnabled()
 })
