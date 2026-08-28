@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createInitialPlayerProgress } from '../progression'
 import { OVERWORLD_MAP_ID } from './worldMap'
-import {
-  isTypeScriptRegionUnlocked,
-  normalizeLockedTypeScriptPosition,
-  shouldBlockTypeScriptRegionMove,
-} from './regionAccess'
+import { isTypeScriptRegionUnlocked, shouldBlockTypeScriptRegionMove } from './regionAccess'
 
 describe('TypeScript region access', () => {
   it('Battle 3 clear前はOverworldのTypeScript境界を越えられない', () => {
@@ -24,12 +20,9 @@ describe('TypeScript region access', () => {
     expect(shouldBlockTypeScriptRegionMove(OVERWORLD_MAP_ID, 22, 23, progress)).toBe(false)
   })
 
-  it('未clearのold saveがTypeScript側にいる場合は境界へ戻す', () => {
+  it('既にTypeScript側にいるold saveは通常導線gateで破壊しない', () => {
     const progress = createInitialPlayerProgress()
 
-    expect(normalizeLockedTypeScriptPosition(OVERWORLD_MAP_ID, { x: 30, y: 14 }, progress)).toEqual({
-      x: 22,
-      y: 14,
-    })
+    expect(shouldBlockTypeScriptRegionMove(OVERWORLD_MAP_ID, 30, 31, progress)).toBe(false)
   })
 })
