@@ -12,6 +12,7 @@ const BATTLE_PATH = /^\/(javascript|typescript)\/battle\/(\d+)$/
 export function getBattleStoryEvent(
   pathname: string,
   phase: BattleStoryPhase,
+  clearedStageIds: readonly number[] = [],
 ): BattleStoryEvent | undefined {
   const match = BATTLE_PATH.exec(pathname)
   if (!match) return undefined
@@ -19,6 +20,7 @@ export function getBattleStoryEvent(
   const area = match[1]
   const battleId = Number(match[2])
   if (!Number.isFinite(battleId)) return undefined
+  if (phase === 'pre' && clearedStageIds.includes(battleId)) return undefined
 
   if (area === 'javascript') {
     return (
