@@ -271,9 +271,9 @@ export const battles: Battle[] = [
     expReward: 30,
     goldReward: 14,
     enemies: [
-      enemy('boar-deep-filter', 'Boar', 92, 'Root Tackle', 7, '♠'),
+      enemy('boar-deep-filter', 'Boar', 70, 'Root Tackle', 7, '♠'),
       enemy('slime-deep-filter', 'Slime', 34, 'Moss Bite', 4, '●'),
-      enemy('golem-deep-filter', 'Golem', 78, 'Stone Root', 8, '■'),
+      enemy('golem-deep-filter', 'Golem', 68, 'Stone Root', 8, '■'),
     ],
     skillIds: ['gather', 'echo', 'trace'],
     unlockSkillId: 'echo',
