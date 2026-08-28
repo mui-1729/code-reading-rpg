@@ -71,7 +71,7 @@ export function WorldInn({ open, onClose, onMessage }: WorldInnProps) {
         </button>
         <div className="eyebrow">CENTRAL HUB // SAFE HOUSE</div>
         <h2>INN / REST</h2>
-        <p className="inn-description">Hubへ戻る代わりに、PATCH KITより安く全回復できる。</p>
+        <p className="inn-description">Hubで休んで、PATCH KITより安く全回復できる。</p>
 
         <div className="inn-hp-card pixel-inner-window">
           <span>
