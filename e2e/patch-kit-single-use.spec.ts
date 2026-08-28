@@ -65,16 +65,17 @@ test('PATCH KITは在庫2個でも同一Battleで見える操作1つ・使用1�
   await page.goto('/javascript/battle/1?seed=patch-kit-single-use&returnTo=%2Fworld')
 
   const item = page.locator('.battle-item-row[data-item-id="patch-kit"]')
+  const patchKit = item.locator('.patch-kit-action')
   await expect(item).toHaveAttribute('data-item-state', 'available')
   await expect(page.locator('.patch-kit-action:visible')).toHaveCount(1)
-
-  const patchKit = item.getByRole('button', { name: /PATCH KIT ×2/ })
   await expect(patchKit).toBeEnabled()
+  await expect(patchKit).toContainText('PATCH KIT ×2')
   await patchKit.click()
 
   await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
   await expect(item).toHaveAttribute('data-item-state', 'already-used')
   await expect(patchKit).toBeDisabled()
+  await expect(patchKit).toContainText('PATCH KIT ×1')
   await expect.poll(async () => (await storedProgress(page)).progress.inventory.patchKit).toBe(1)
 
   // 同じBattleでは再消費できない。
@@ -85,7 +86,9 @@ test('PATCH KITは在庫2個でも同一Battleで見える操作1つ・使用1�
   // seedが変われば別Battle session。残り1個を再び使える。
   await page.goto('/javascript/battle/1?seed=patch-kit-next-battle&returnTo=%2Fworld')
   const nextItem = page.locator('.battle-item-row[data-item-id="patch-kit"]')
+  const nextPatchKit = nextItem.locator('.patch-kit-action')
   await expect(nextItem).toHaveAttribute('data-item-state', 'available')
   await expect(page.locator('.patch-kit-action:visible')).toHaveCount(1)
-  await expect(nextItem.getByRole('button', { name: /PATCH KIT ×1/ })).toBeEnabled()
+  await expect(nextPatchKit).toBeEnabled()
+  await expect(nextPatchKit).toContainText('PATCH KIT ×1')
 })
