@@ -99,8 +99,10 @@ test('Battle Gold → Shop purchase/equip → Inn → reload → next Battleを1
   await page.getByRole('button', { name: 'INTERACT' }).click()
   const shop = page.getByRole('dialog', { name: 'World shop' })
   const lifeCharm = shop.locator('[data-equipment-id="life-charm"]')
-  await expect(lifeCharm.getByText('50 G', { exact: true })).toBeVisible()
-  await expect(lifeCharm.getByText('20 G', { exact: true })).toBeVisible()
+  const quote = lifeCharm.locator('.shop-cost-preview')
+  await expect(quote.getByText('70 G', { exact: true })).toBeVisible()
+  await expect(quote.getByText('50 G', { exact: true })).toBeVisible()
+  await expect(quote.getByText('20 G', { exact: true })).toBeVisible()
   await lifeCharm.getByRole('button', { name: '▶ BUY' }).click()
   await expect(lifeCharm.getByRole('button', { name: '▶ EQUIP NOW' })).toBeEnabled()
 
