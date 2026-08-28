@@ -59,9 +59,41 @@ describe('Forest progression save normalization', () => {
     expect(restored.unlockedSkillIds).not.toContain('echo')
   })
 
-  it('Battle 15 clear済みsaveではECHO unlockも復元する', () => {
+  it('#214時点でBattle 15までclearしたv4 saveへBattle 16とECHO unlockを補う', () => {
     const restored = restorePlayerProgress(storedProgress([7, 8, 9, 10, 11, 12, 13, 14, 15]))
-    expect(restored.unlockedSkillIds).toContain('gather')
+    expect(restored.unlockedStageIds).toContain(16)
     expect(restored.unlockedSkillIds).toContain('echo')
+    expect(restored.unlockedSkillIds).not.toContain('project')
+  })
+
+  it('Battle 16〜18 clear済みsaveは次Lessonとmap/some/every Skillを復元する', () => {
+    const restored = restorePlayerProgress(
+      storedProgress([7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]),
+    )
+
+    expect(restored.unlockedStageIds).toContain(19)
+    expect(restored.unlockedSkillIds).toEqual(
+      expect.arrayContaining(['project', 'signal', 'sync']),
+    )
+  })
+
+  it('Battle 19〜21 clear済みsaveは最深部Lesson 20〜22を復元する', () => {
+    const restored = restorePlayerProgress(
+      storedProgress([7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]),
+    )
+
+    expect(restored.unlockedStageIds).toEqual(expect.arrayContaining([20, 21, 22]))
+    expect(restored.unlockedSkillIds).toEqual(
+      expect.arrayContaining(['order', 'safe-path']),
+    )
+    expect(restored.unlockedSkillIds).not.toContain('reduce-focus')
+  })
+
+  it('Battle 22 clear済みsaveはREDUCE FOCUSまで復元する', () => {
+    const restored = restorePlayerProgress(
+      storedProgress([7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]),
+    )
+
+    expect(restored.unlockedSkillIds).toContain('reduce-focus')
   })
 })
