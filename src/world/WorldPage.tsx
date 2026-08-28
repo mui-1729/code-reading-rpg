@@ -116,7 +116,7 @@ export function WorldPage() {
       return {
         label: 'NEXT OBJECTIVE · 1 / 4',
         title: 'BYTEと合流する',
-        detail: '開始地点の近くにいるBYTEの隣でINTERACT。仲間になったら西へ向かおう。',
+        detail: '開始地点から左か上へ1歩進むとBYTEの隣。INTERACTで話しかけ、仲間になったら西へ向かおう。',
         clear: false,
       }
     }
