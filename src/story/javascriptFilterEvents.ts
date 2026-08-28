@@ -1,6 +1,6 @@
 import type { BattleStoryEvent } from './types'
 
-const preBattleEvent: BattleStoryEvent = {
+const firstFilterPreBattleEvent: BattleStoryEvent = {
   id: 'js-filter-before',
   label: 'FOREST LESSON 04',
   title: '最初の一体ではなく、全部を見る',
@@ -26,7 +26,7 @@ const preBattleEvent: BattleStoryEvent = {
   ],
 }
 
-const postBattleEvent: BattleStoryEvent = {
+const firstFilterPostBattleEvent: BattleStoryEvent = {
   id: 'js-filter-after',
   label: 'FILTER LEARNED',
   title: '条件に合うものを全部集める',
@@ -46,10 +46,61 @@ const postBattleEvent: BattleStoryEvent = {
   ],
 }
 
+const deepForestFilterPreBattleEvent: BattleStoryEvent = {
+  id: 'js-deep-filter-before',
+  label: 'DEEP FOREST LESSON 01',
+  title: '条件の向きが変わっても、全部を見る',
+  lines: [
+    {
+      speaker: 'BYTE',
+      role: 'DEBUGGER',
+      layer: 'code-world',
+      text: 'Deep Forestでもfilter()の動きは同じ。条件に合う相手を一体見つけても止まらず、最後まで見て全部集める。',
+    },
+    {
+      speaker: 'BYTE',
+      role: 'DEBUGGER',
+      layer: 'code-world',
+      text: '前は「HPが45未満」だったけど、ECHOは「HPが65より大きい」を見る。< と > の向きだけを先に確かめよう。',
+    },
+    {
+      speaker: 'BYTE',
+      role: 'DEBUGGER',
+      layer: 'code-world',
+      text: '条件を読んだら、enemiesを最初から最後まで見る。何体当てはまるかと、どの相手かは今の盤面から自分で決めてね。',
+    },
+  ],
+}
+
+const deepForestFilterPostBattleEvent: BattleStoryEvent = {
+  id: 'js-deep-filter-after',
+  label: 'DEEP FOREST ROUTE OPEN',
+  title: 'filter()は条件が変わっても同じ',
+  lines: [
+    {
+      speaker: 'BYTE',
+      role: 'DEBUGGER',
+      layer: 'code-world',
+      text: 'できたね。<でも>でも、filter()は「条件を確認して、最後まで見て、当てはまるものを全部集める」。読む順番は変わらない。',
+    },
+    {
+      speaker: 'BYTE',
+      role: 'DEBUGGER',
+      layer: 'code-world',
+      text: 'この先は、集めたEnemyを別の形へ変える処理や、「一体でもいるか」「全員そうか」を確かめる処理が待っていそうだ。',
+    },
+  ],
+}
+
 export function getJavaScriptFilterStoryEvent(
   battleId: number,
   phase: 'pre' | 'post',
 ): BattleStoryEvent | undefined {
-  if (battleId !== 14) return undefined
-  return phase === 'pre' ? preBattleEvent : postBattleEvent
+  if (battleId === 14) {
+    return phase === 'pre' ? firstFilterPreBattleEvent : firstFilterPostBattleEvent
+  }
+  if (battleId === 15) {
+    return phase === 'pre' ? deepForestFilterPreBattleEvent : deepForestFilterPostBattleEvent
+  }
+  return undefined
 }
