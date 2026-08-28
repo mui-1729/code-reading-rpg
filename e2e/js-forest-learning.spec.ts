@@ -99,7 +99,7 @@ test('Forest Battle 10 / 11は初心者Storyで&& / ||を順に説明しfilter�
   const andStory = page.getByRole('dialog', { name: '二つともtrueなら通る' })
   await expect(andStory).toBeVisible()
   await expect(andStory).toContainText('&&')
-  await expect(andStory).toContainText('両方true')
+  await expect(andStory).toContainText('左もtrue、右もtrue')
   await expect(andStory).not.toContainText('filter()')
 
   await page.goto('/javascript/battle/11?seed=forest-e2e-or&returnTo=%2Fworld')
