@@ -132,7 +132,12 @@ export function resolveWorldMove({
     stepsSinceEncounter: nextSteps,
   }
 
-  if (!isEncounterTerrain(terrain) || nextSteps < 5 || region === 'hub') {
+  if (
+    mapId !== OVERWORLD_MAP_ID ||
+    !isEncounterTerrain(terrain) ||
+    nextSteps < 5 ||
+    region === 'hub'
+  ) {
     return { kind: 'moved', nextState: movedState, terrain, region }
   }
 
