@@ -1,4 +1,5 @@
 import { battles } from './battles'
+import { deepForestSkillDefinitions } from './deepForestSkillDefinitions'
 import { forestSkillDefinitions } from './forestSkillDefinitions'
 import type { Seed } from './random'
 import {
@@ -12,6 +13,7 @@ import type { Battle, SkillCard } from './types'
 export const allSkillDefinitions: readonly SkillDefinition[] = [
   ...javascriptSkillDefinitions,
   ...forestSkillDefinitions,
+  ...deepForestSkillDefinitions,
   ...typescriptSkillDefinitions,
 ]
 
