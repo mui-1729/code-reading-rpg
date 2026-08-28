@@ -72,11 +72,11 @@ export function BattleEscapePanel() {
         onClick={escape}
         disabled={!allowed}
       >
-        {allowed ? 'RUN · RETURN TO WORLD' : 'RUN LOCKED · FIXED BATTLE'}
+        {allowed ? 'RUN · ESCAPE' : 'RUN LOCKED · FIXED BATTLE'}
       </button>
       <span className="battle-item-state">
         {allowed
-          ? 'Random Encounterから離脱する · reward / clearなし'
+          ? 'Random Encounterから離脱し、元いたWorld位置へ戻る · reward / clearなし'
           : 'Fixed Lesson / Bossは最後まで挑戦する'}
       </span>
     </div>,
