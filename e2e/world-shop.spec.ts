@@ -67,13 +67,15 @@ async function storedState(page: Page) {
 }
 
 test.describe('World Shop', () => {
-  test('Hub SHOPでEquipmentを購入しPauseで装備、reload後も装備状態を維持する', async ({ page }) => {
+  test('wallet→price→afterを確認してEquipment購入しEQUIP NOW、reload後も維持する', async ({ page }) => {
     await seedShopState(page)
 
     await page.getByRole('button', { name: 'INTERACT' }).click()
     const shop = page.getByRole('dialog', { name: 'World shop' })
     await expect(shop).toBeVisible()
-    await expect(shop.getByText('200 G', { exact: true })).toBeVisible()
+    await expect(shop.locator('.shop-wallet').getByText('200 G', { exact: true })).toBeVisible()
+    await expect(shop.getByRole('region', { name: 'Consumables' })).toBeVisible()
+    await expect(shop.getByRole('region', { name: 'Equipment' })).toBeVisible()
 
     const guardEdge = shop.locator('[data-equipment-id="guard-edge"]')
     await expect(guardEdge).toHaveAttribute('data-equipment-state', 'available')
@@ -85,48 +87,44 @@ test.describe('World Shop', () => {
       '/pixel-art/equipment/weapons/guard-edge.svg',
     )
 
+    const quote = guardEdge.locator('.shop-cost-preview')
+    await expect(quote.getByText('WALLET', { exact: true })).toBeVisible()
+    await expect(quote.getByText('200 G', { exact: true })).toBeVisible()
+    await expect(quote.getByText('55 G', { exact: true })).toBeVisible()
+    await expect(quote.getByText('145 G', { exact: true })).toBeVisible()
+
     await guardEdge.getByRole('button', { name: '▶ BUY' }).click()
     await expect(guardEdge).toHaveAttribute('data-equipment-state', 'owned')
-    await expect(guardEdge.getByRole('button', { name: 'OWNED' })).toBeDisabled()
-    await expect(shop.getByText('145 G', { exact: true })).toBeVisible()
+    await expect(guardEdge.getByRole('button', { name: '▶ EQUIP NOW' })).toBeEnabled()
+    await expect(shop.locator('.shop-wallet').getByText('145 G', { exact: true })).toBeVisible()
 
     let stored = await storedState(page)
     expect(stored.progress.progress.gold).toBe(145)
     expect(stored.rpg.state.ownedEquipmentIds).toContain('guard-edge')
     expect(stored.rpg.state.equipment.weapon).toBe('training-blade')
 
-    await shop.getByRole('button', { name: 'ショップを閉じる' }).click()
-    await page.getByRole('button', { name: 'Pause menuを開く' }).click()
-    let pause = page.getByRole('dialog', { name: 'Pause menu' })
-    await pause.getByRole('button', { name: 'EQUIPMENT' }).click()
-
-    const guardEdgeOption = pause.locator('button[data-equipment-id="guard-edge"]')
-    await expect(guardEdgeOption).toHaveAttribute('data-equipment-state', 'owned')
-    await expect(guardEdgeOption.getByText('VS Training Blade · ATK +1 · DEF +2', { exact: true })).toBeVisible()
-    await expect(guardEdgeOption.locator('img')).toHaveAttribute(
-      'src',
-      '/pixel-art/equipment/weapons/guard-edge.svg',
-    )
-    await guardEdgeOption.click()
-    await expect(guardEdgeOption).toHaveAttribute('data-equipment-state', 'equipped')
-    await expect(guardEdgeOption.getByText('CURRENT LOADOUT', { exact: true })).toBeVisible()
+    await guardEdge.getByRole('button', { name: '▶ EQUIP NOW' }).click()
+    await expect(guardEdge).toHaveAttribute('data-equipment-state', 'equipped')
+    await expect(guardEdge.getByRole('button', { name: 'EQUIPPED' })).toBeDisabled()
 
     stored = await storedState(page)
+    expect(stored.progress.progress.gold).toBe(145)
     expect(stored.rpg.state.equipment.weapon).toBe('guard-edge')
-    await page.keyboard.press('Escape')
 
+    await shop.getByRole('button', { name: 'ショップを閉じる' }).click()
     await page.reload()
     await page.getByRole('button', { name: 'Pause menuを開く' }).click()
-    pause = page.getByRole('dialog', { name: 'Pause menu' })
+    const pause = page.getByRole('dialog', { name: 'Pause menu' })
     await pause.getByRole('button', { name: 'EQUIPMENT' }).click()
     const reloadedGuardEdge = pause.locator('button[data-equipment-id="guard-edge"]')
     await expect(reloadedGuardEdge).toHaveAttribute('data-equipment-state', 'equipped')
+
     stored = await storedState(page)
     expect(stored.rpg.state.ownedEquipmentIds.filter((id: string) => id === 'guard-edge')).toHaveLength(1)
     expect(stored.rpg.state.equipment.weapon).toBe('guard-edge')
   })
 
-  test('Gold不足のEquipmentはvisualと比較を見せたまま購入できない', async ({ page }) => {
+  test('Gold不足のEquipmentはvisualと比較を残しSHORT不足額を明示する', async ({ page }) => {
     await seedShopState(page, 10)
 
     await page.getByRole('button', { name: 'INTERACT' }).click()
@@ -139,7 +137,13 @@ test.describe('World Shop', () => {
       'src',
       '/pixel-art/equipment/armor/vital-coat.svg',
     )
-    await expect(vitalCoat.getByRole('button', { name: 'GOLD SHORTAGE' })).toBeDisabled()
+
+    const quote = vitalCoat.locator('.shop-cost-preview')
+    await expect(quote.getByText('10 G', { exact: true })).toBeVisible()
+    await expect(quote.getByText('60 G', { exact: true })).toBeVisible()
+    await expect(quote.getByText('—', { exact: true })).toBeVisible()
+    await expect(quote.locator('em')).toHaveText('SHORT 50 G')
+    await expect(vitalCoat.getByRole('button', { name: 'SHORT 50 G' })).toBeDisabled()
 
     const stored = await storedState(page)
     expect(stored.progress.progress.gold).toBe(10)
