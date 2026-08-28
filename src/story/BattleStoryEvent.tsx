@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { getStorySpeakerVisual } from '../rpg'
 import type {
   BattleStoryEvent as BattleStoryEventData,
   StoryWorldLayer,
@@ -45,6 +46,7 @@ export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEvent
   if (!line) return null
 
   const layer = line.layer ?? 'code-world'
+  const speakerVisual = getStorySpeakerVisual(line.speaker)
 
   return (
     <div className="overlay modal-overlay battle-story-overlay" role="presentation">
@@ -61,9 +63,18 @@ export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEvent
         </div>
         <div className={`story-world-layer is-${layer}`}>{storyLayerLabels[layer]}</div>
         <div className="dialogue-speaker">
-          <div>
-            <span>{line.role}</span>
-            <strong>{line.speaker}</strong>
+          <div className="dialogue-speaker-main">
+            {speakerVisual && (
+              <img
+                className="story-speaker-portrait"
+                src={speakerVisual}
+                alt={`${line.speaker} portrait`}
+              />
+            )}
+            <div>
+              <span>{line.role}</span>
+              <strong>{line.speaker}</strong>
+            </div>
           </div>
           <span className="dialogue-progress">{lineIndex + 1}/{event.lines.length}</span>
         </div>
