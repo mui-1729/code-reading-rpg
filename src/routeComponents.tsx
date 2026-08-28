@@ -12,6 +12,7 @@ import {
   JAVASCRIPT_OPENING_STORAGE_KEY,
   javascriptOpeningScenes,
 } from './story/javascriptOpening'
+import type { StoryWorldLayer } from './story/types'
 
 const javascriptBattleRouteApi = getRouteApi('/javascript/battle/$battleId')
 const typescriptBattleRouteApi = getRouteApi('/typescript/battle/$battleId')
@@ -20,11 +21,19 @@ const createRunSeed = () => crypto.randomUUID()
 type SupportedAreaId = typeof JAVASCRIPT_AREA_ID | typeof TYPESCRIPT_AREA_ID
 
 const openingSystemLines: Record<string, string> = {
-  kingdom: 'SYSTEM STATUS // ALL SERVICES ONLINE',
-  error: 'ALERT // combat.target -> unexpected enemy',
-  ada: 'TASK // read existing code -> explain behavior -> fix',
-  byte: 'DEBUG LOG // values OK / target selection WRONG',
+  briefing: 'REAL WORLD // TASK ASSIGNED // investigate unexpected target selection',
+  incident: 'INCIDENT // values OK / selected target WRONG',
+  connect: 'CONNECT // runtime model -> CODE WORLD // code = world rule',
+  grassland: 'CODE WORLD // symptom synchronized with REAL WORLD incident',
   mission: 'OBJECTIVE // HUB: BYTE -> WEST: JAVASCRIPT GRASSLAND',
+}
+
+const storyLayerLabels: Record<StoryWorldLayer, string> = {
+  'real-world': 'REAL WORLD',
+  connect: 'CONNECT',
+  'code-world': 'CODE WORLD',
+  remote: 'REMOTE LINK',
+  return: 'RETURN // REAL WORLD',
 }
 
 const hasExistingRun = () => {
@@ -99,7 +108,7 @@ export function HomePage() {
       <main className="app-shell opening-shell title-screen">
         <section className="opening-panel pixel-window" aria-label="JavaScript opening story">
           <div className="opening-progress">
-            <span>OPENING // JAVASCRIPT KINGDOM</span>
+            <span>OPENING // REAL WORLD → CODE WORLD</span>
             <span>{openingIndex + 1} / {javascriptOpeningScenes.length}</span>
           </div>
 
@@ -112,7 +121,14 @@ export function HomePage() {
             ))}
           </div>
 
-          <section className="opening-scene pixel-inner-window" key={scene.id}>
+          <section
+            className={`opening-scene pixel-inner-window is-${scene.layer}`}
+            key={scene.id}
+            data-story-layer={scene.layer}
+          >
+            <div className={`opening-layer-badge is-${scene.layer}`}>
+              {storyLayerLabels[scene.layer]}
+            </div>
             <div className="opening-kicker">{scene.kicker}</div>
             <div className="opening-speaker">{scene.speaker}</div>
             <div className="opening-copy">
@@ -126,7 +142,7 @@ export function HomePage() {
               SKIP
             </button>
             <button type="button" className="primary-button" onClick={next}>
-              {isLast ? '▶ Hubへ出発' : 'NEXT ▶'}
+              {isLast ? '▶ EXPLORE CODE WORLD' : 'NEXT ▶'}
             </button>
           </div>
         </section>
@@ -138,11 +154,11 @@ export function HomePage() {
     <main className="app-shell intro-shell title-screen">
       <section className="hero-panel pixel-window title-window">
         <div className="title-stars" aria-hidden="true">✦ · ✧ · ✦</div>
-        <div className="eyebrow">JAVASCRIPT + TYPESCRIPT // CODE READING</div>
+        <div className="eyebrow">REAL WORLD × CODE WORLD // CODE READING RPG</div>
         <h1>
           CODE<span>//</span>READ <em>RPG</em>
         </h1>
-        <p className="hero-copy">技の説明はない。コードを読んで、戦況を変えろ。</p>
+        <p className="hero-copy">現実のincidentを、CODE WORLDでコードを読んで解決する。</p>
 
         <div className="title-scene" aria-hidden="true">
           <div className="pixel-moon" />
@@ -176,7 +192,7 @@ export function HomePage() {
           )}
         </nav>
 
-        <div className="title-footer">8-BIT CODE READING SYSTEM // RPG LOOP</div>
+        <div className="title-footer">REAL INCIDENT // CODE WORLD // READ THE RULES</div>
       </section>
     </main>
   )

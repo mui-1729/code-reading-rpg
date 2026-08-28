@@ -1,10 +1,21 @@
 import { useEffect, useState } from 'react'
-import type { BattleStoryEvent as BattleStoryEventData } from './types'
+import type {
+  BattleStoryEvent as BattleStoryEventData,
+  StoryWorldLayer,
+} from './types'
 
 type BattleStoryEventProps = {
   event: BattleStoryEventData
   onComplete: () => void
   onSkip?: () => void
+}
+
+const storyLayerLabels: Record<StoryWorldLayer, string> = {
+  'real-world': 'REAL WORLD',
+  connect: 'CONNECT',
+  'code-world': 'CODE WORLD',
+  remote: 'REMOTE LINK',
+  return: 'RETURN // REAL WORLD',
 }
 
 export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEventProps) {
@@ -33,18 +44,22 @@ export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEvent
 
   if (!line) return null
 
+  const layer = line.layer ?? 'code-world'
+
   return (
     <div className="overlay modal-overlay battle-story-overlay" role="presentation">
       <section
-        className="dialogue-window pixel-window battle-story-window"
+        className={`dialogue-window pixel-window battle-story-window story-layer-${layer}`}
         role="dialog"
         aria-modal="true"
         aria-label={event.title}
+        data-story-layer={layer}
       >
         <div className="battle-story-heading">
           <span>{event.label}</span>
           <strong>{event.title}</strong>
         </div>
+        <div className={`story-world-layer is-${layer}`}>{storyLayerLabels[layer]}</div>
         <div className="dialogue-speaker">
           <div>
             <span>{line.role}</span>
