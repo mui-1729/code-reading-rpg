@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, feat/182-gold-shop-flow]
+    branches: [main]
   pull_request:
 
 jobs:
