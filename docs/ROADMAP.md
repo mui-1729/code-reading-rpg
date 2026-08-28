@@ -2,52 +2,61 @@
 
 この文書は**次に何を作るか**を管理する。
 
-- 現在の実装一覧: [`PROJECT_STATUS.md`](./PROJECT_STATUS.md)
-- game design原則: [`GAME_DESIGN.md`](./GAME_DESIGN.md)
-- 世界観 / theme: [`WORLD_DIRECTION.md`](./WORLD_DIRECTION.md)
-- 長期的な学習編: [`ENGINEER_STORY_ROADMAP.md`](./ENGINEER_STORY_ROADMAP.md)
-- Economy current rule: [`ECONOMY.md`](./ECONOMY.md)
+- current snapshot: [`PROJECT_STATUS.md`](./PROJECT_STATUS.md)
+- game design: [`GAME_DESIGN.md`](./GAME_DESIGN.md)
+- world / theme: [`WORLD_DIRECTION.md`](./WORLD_DIRECTION.md)
+- world structure: [`OPEN_WORLD_DESIGN.md`](./OPEN_WORLD_DESIGN.md)
+- learning content rule: [`CONTENT_GUIDE.md`](./CONTENT_GUIDE.md)
+- long-term chapters: [`ENGINEER_STORY_ROADMAP.md`](./ENGINEER_STORY_ROADMAP.md)
 
 ## North Star
 
 `CODE//READ RPG`を、
 
-> **新人エンジニアがREAL WORLDでproblem / incidentを受け、fantasyなCODE WORLDへ潜り、実際のコードを読んで世界の異変とsystem障害のroot causeを解決するRPG**
+> **コードを知らない人でもfantasy RPGとして入り、世界のruleとしてコードを少しずつ読み、遊んでいるうちに自分でJavaScriptを追えるようになるRPG**
 
 として育てる。
 
-優先順位は機能数ではなく次で決める。
+REAL WORLDでは新人エンジニアとしてproblemを受けるが、technical jargonの理解を開始条件にしない。
+
+優先順位:
 
 1. code readingが実際のgame decisionになっているか
-2. REAL WORLDのproblemとCODE WORLDの異変が同じ原因としてつながっているか
-3. fantasy RPGとして探索・戦闘・成長する面白さがあるか
-4. RPG成長がcode readingを代替していないか
-5. current runtime / save / testsを壊さず拡張できるか
-6. 同じ仕事・同じmental modelでまとめられる概念を細かく分割しすぎていないか
+2. コード未経験者がStory / dialogueを理解できるか
+3. fantasy RPGとして探索・戦闘・成長が楽しいか
+4. REAL WORLD problemとCODE WORLD symptomが同じ原因へつながるか
+5. RPG成長がcode readingを代替していないか
+6. current runtime / save / testsを壊さず拡張できるか
+7. 同じconceptを十分反復してから次へ進めているか
 
 ---
 
-## Baseline — 実装済み
+## Current foundation
 
 ### World / progression
 
-- 40 × 28 Open World + 11 × 9 camera viewport
-- JavaScript Grassland / Central Hub / TypeScript Forest
+- Overworld 40 × 28 + camera 11 × 9
+- multi-map対応: `worldMapId + local worldPosition`
+- JavaScript側にGrassland / Woods / Deep Woods
+- `GREENFIELD VILLAGE` 21 × 15の別map
+- Overworld ↔ Village transition
+- VillageはRandom Encounterなし
+- Central Hub / TypeScript側の既存導線
 - Random Encounter / cooldown / fixed Boss
 - World action pure resolver
 - World Objective / progress feedback
 - persistent HP
-- one-shot Treasure
-- selectable Hub Shop
-- paid Hub Inn / Rest
+- Treasure / Shop / paid Inn
 - BYTE join / follower
-- `PlayerProgress v4` / `RpgState v3` + migration / validation
+- `PlayerProgress v4` / `RpgState v4`
+- RpgState v1〜v3 migration / validation
 
 ### Battle / learning
 
-- JavaScript Battle 1〜3
-- TypeScript Battle 4〜6
+- existing JavaScript Battle 1〜3
+- existing TypeScript Battle 4〜6
 - SELECT → EXECUTE
+- safe `TargetRule`; display codeを`eval()`しない
 - seeded generation / solvability
 - Encounterごとのsemantic code variation
 - multiline + line-by-line CODE HELP
@@ -55,193 +64,177 @@
 - Boss GUARD
 - staged result sequence
 
+既存JS Battle 1〜3は**現在動くbaselineであって、JavaScript編の最終Battle数ではない**。
+
 ### RPG / Economy
 
-Issue #178は**完了**。
-
-```text
-探索 / Battle
-→ Gold / Treasure
-→ Shopで比較・購入
-→ Item / Equipmentを準備
-→ InnでGoldを使って回復
-→ 次の探索 / Battle
-```
-
-実装済み:
-
-- Weapon / Armor / Accessory全8装備の共通pixel visual registry
-- Shop / Pause / Rewardで共通Equipment presentation
-- current装備との差分
-- AVAILABLE / OWNED / EQUIPPED / UNAVAILABLE
-- purchase → owned → explicit equip
-- PATCH KIT共通Item catalog / visual / usage reason
-- Shop quote: WALLET / PRICE / AFTER / SHORT
-- Inn 20 G fixed full recovery
-- HP full no charge / insufficient Gold no mutation
-- first-clear Gold 100% / replay Gold 50% floor
-- Battle → Shop → Equip → Inn → reload → next Battleの統合E2E
-- legacy save / reset / mobile dialog regression
-
-#179〜#184はすべてcompleted。
+- Weapon / Armor / Accessory
+- common pixel visual registry
+- purchase / explicit equip
+- PATCH KIT
+- first-clear / replay Gold
+- Shop quote
+- Inn 20 G full recovery
+- Battle → Shop → Equip → Inn → reload → next Battle E2E
 
 ---
 
-## P0.5 — CODE WORLD framing pass
+## P0 — JavaScript地方 / learning route expansion
 
-Issue #194。
+multi-map foundationの次は、Databaseへ急がず**JavaScriptをRPGの1地方として十分に深掘る**。
 
-`WORLD_DIRECTION.md`で決めた二層構造を、既存Story systemを再利用して**プレイヤーが実際に理解できるpresentation**へする。
+### World
 
-### 実装する最小flow
+JavaScriptのvisual identityは自然系で統一する。
 
 ```text
-REAL WORLD
-新人エンジニアとしてincidentを受ける
-↓ CONNECT
-CODE WORLD
-同じproblemがfantasy worldの異変として見える
+Central Hub
 ↓
-code / stateを読んでroot causeへ進む
-↓ RETURN
-REAL WORLD
-修復結果が同期されincident close
+草原
+↓
+林 / 川辺
+↓
+Village
+↓
+森
+↓
+深い森
+↓
+中Boss
+↓
+最深部
+↓
+Final Boss
 ```
 
-### Opening
+遺跡 / 地下 / 城塞等をJavaScriptで使い切らない。
 
-- first STARTはREAL WORLDのDevelopment Roomから始める
-- 新人エンジニアとして最初のtaskを受ける
-- incident monitor / logを確認する
-- `CONNECT`を明示する
-- CODE WORLDではcodeがworld ruleであると伝える
-- JavaScript Grasslandへ入った理由を同じincidentへ接続する
+Village / Forest / Deep Forest等を必要に応じて別mapとして追加し、classic JRPG型に行き来できるようにする。
 
-### Story presentation
+### Beginner-first Story
 
-既存`BattleStoryEvent`を再利用する。
+新conceptは、
 
-lineごとに次のlayerを表示可能にする。
+```text
+普通の言葉
+→ 小さい式 / 記号
+→ syntaxの意味
+→ current dataへ適用
+→ 反復
+→ 必要ならtechnical term
+```
 
-- `REAL WORLD`
-- `CONNECT`
-- `CODE WORLD`
-- `REMOTE LINK`
-- `RETURN // REAL WORLD`
+の順で導入する。
 
-Story engineを新設せず、既存event dataへpresentation metadataを足す。
+Story / NPCは「どう読むか」を教えてよいが、correct targetは教えない。
 
-### JavaScript / TypeScript
+`incident` / `target selection` / `API contract`等を初説明として置かない。
 
-JavaScript:
+### JavaScript learning ladder candidate
 
-- 草原のtarget異常 = REAL WORLD戦闘systemのtarget bug
-- Chapter間はCODE WORLD symptomとREAL WORLD traceを同じroot causeへ寄せる
-- Code Core修復後にRETURN
-- REAL WORLDで最初のincidentをclose
+```text
+value
+→ comparison (< / > / ===)
+→ object property
+→ array / collection
+→ find
+→ && / ||
+→ filter
+→ map
+→ some / every
+→ sort
+→ optional chaining / nullish coalescing
+→ multiline / intermediate value
+→ reduce / aggregate
+```
 
-TypeScript:
+この順番はprototypeで調整してよい。
 
-- Battle 4開始前に別のREAL WORLD incidentとしてbriefing
-- API update後の異常とTypeScript Frontierの症状を同じproblemとして扱う
-- Frontier Compiler修復後にRETURN
-- REAL WORLDでincident close
+### Battle rhythm
 
-### World Objective
+最終目安:
 
-単なる「次のBattle」ではなく:
+- normal Battle / Encounter: 20〜30回程度
+- fixed learning Battle: 8〜12程度を候補
+- mid-boss: 2〜3体候補
+- final boss: 1体
 
-- `INVESTIGATE`
-- `ROOT CAUSE`
-- `INCIDENT CLOSED / RETURN`
+数値はquotaではない。
 
-として調査目的を明示する。
+```text
+新conceptを知る
+→ 2〜4戦で値 / enemy順 / code variantを変えて反復
+→ 既習conceptと組み合わせる
+→ 中Boss
+→ 次のconcept
+```
 
-### Preserve
+同じ問題をそのまま20回出すことはしない。
 
-変更しない:
+### First implementation slices
 
-- JavaScript Grassland / TypeScript Forest
-- monster / Treasure / Gold / Equipment / Shop / Inn
-- Open World map構造
-- Battle resolver
-- `TargetRule`
-- generator / correct target / solvability
-- save schema
+1. 草原入口のStoryをcomparison / propertyから理解できる形へ変更
+2. beginner learning Battleを追加
+3. VillageをStory / learning上のcheckpointとして使う
+4. Village以西にForest mapを追加
+5. 最初の中Bossを配置
+6. Deep Forest /後半conceptへ拡張
+7. existing Battle 1〜3を長いprogression内へ再配置 / 再役割化
+
+Battle engine / TargetRule / generatorを作り直さない。
 
 ---
 
-## P1 — Battle runtime responsibility split
+## P1 — Battle runtime responsibility split (#196)
 
-`src/App.tsx`はBattle session / action / enemy turn / story / result handoff / presentationのorchestrationが集まっている。
+`src/App.tsx`へ集まっているBattle session / action / enemy turn / story / result handoff責務を、gameplay-neutralに分離する。
 
-分割候補:
+候補:
 
-- battle session state / transitions
+- battle session identity / transition
 - player action execution
 - enemy turn
-- story event bridge
-- result handoff
-- Battle presentation
+- HP result handoff
+- story / result presentation bridge
 
 条件:
 
 - gameplay変更と混ぜない
-- `TargetRule` / generator / solvability / save schemaを変更しない
-- Unit / E2Eを境界として先に使う
-- abstract化自体を目的にしない
+- TargetRule / generator / solvability semanticsを変えない
+- save schemaを不要に変えない
+- Unit / E2Eを境界として使う
+
+大きな新規技術regionを追加する前にはこの整理を完了させる。
 
 ---
 
-## P1 — Database編 prototype
+## P1 — TypeScript visual / beginner Story pass
 
-**次に追加する新規learning regionはDatabase編を優先する。**
+JavaScript自然地域の色違いにしない。
 
-Battle mechanicだけでなく、technical modelとCODE WORLD表現を同時にprototypeする。
+visual direction:
 
-### 学習candidate
+- stone road
+- crystal
+- rune
+- ruins
+- temple / structured architecture
 
-Chapter 1:
+Storyでは、
 
-- table / row / column
-- `SELECT`
-- `WHERE`
-- `AND` / `OR`
-- `ORDER BY`
-- `LIMIT`
+> API契約が壊れた
 
-Chapter 2:
+から始めず、
 
-- `JOIN`
-- `NULL`
-- `GROUP BY`
-- aggregate
+> 送られてくるdataの形の約束が変わった
 
-Final:
+のように意味を理解してからtechnical termへ接続する。
 
-- index入口
-- transaction
-- 複数queryの依存関係
+既存Battle 4〜6のlearning内容は活かす。
 
-### prototypeで確認するもの
+### TypeScript-specific Boss mechanic
 
-- queryを読まないとresult rowを判断できないか
-- current `TargetRule`相当のsafe domainへ落とせるか
-- `WHERE → ORDER BY → LIMIT`をgame resultへ自然に反映できるか
-- CODE HELP / CODE DATAをDB向けに一般化できるか
-- rowをmonster / record / card / world objectのどれで見せるか
-- underground archive / library / mine等の表現が理解を助けるか
-- REAL WORLDのdata issueとCODE WORLDの異変を同じ原因へ接続できるか
-
-prototype成功後に3 Chapter + full Regionへ広げる。
-
----
-
-## P1 — TypeScript固有Boss mechanic
-
-現在のGUARDはJS / TS Boss共通。
-
-TypeScriptでは型情報そのものを読む意味が出るmechanicを検討する。
+現在のGUARDはJS / TS共通。
 
 候補:
 
@@ -249,11 +242,58 @@ TypeScriptでは型情報そのものを読む意味が出るmechanicを検討�
 - optional property有無でBoss stateが変わる
 - `keyof` / indexed accessで読む値を切り替える
 
-Shared Contract / Frontier Compilerというroot causeをgameplayへ寄せるための候補であり、単に難易度を上げるためには追加しない。
+単に難易度を上げるためには追加しない。
 
 ---
 
-## 長期learning順序
+## P2 — Database編 prototype
+
+次の**新規技術region**候補はDatabase。
+
+JavaScript / TypeScriptを十分に整え、Battle runtime boundaryを整理したあとprototypeする。
+
+### learning candidate
+
+Chapter 1:
+
+- table / row / column
+- SELECT
+- WHERE
+- AND / OR
+- ORDER BY
+- LIMIT
+
+Chapter 2:
+
+- JOIN
+- NULL
+- GROUP BY
+- aggregate
+
+Final candidate:
+
+- index入口
+- transaction
+- 複数query依存
+
+### CODE WORLD candidate
+
+地下 / mine / archive / libraryをDatabase用に温存する。
+
+prototypeで確認:
+
+- queryを読まないとresult rowを判断できないか
+- safe domainへ落とせるか
+- WHERE → ORDER BY → LIMITをgame resultへ反映できるか
+- CODE HELP / CODE DATAを一般化できるか
+- rowを何として見せると自然か
+- REAL WORLD data problemと同じroot causeへつながるか
+
+成功後にfull Regionへ広げる。
+
+---
+
+## Long-term learning order
 
 ```text
 JavaScript
@@ -269,39 +309,38 @@ JavaScript
 → Architecture / Refactoring
 ```
 
-詳細は[`ENGINEER_STORY_ROADMAP.md`](./ENGINEER_STORY_ROADMAP.md)。
-
-World / RPG基盤改善はこのlearning順序とは別軸で進めてよい。
+World / RPG improvementsはlearning順序とは別軸で進めてよい。
 
 ---
 
 ## Party / Equipment depth
 
-Economy loopは完成済み。追加は必要性が出た場合だけ行う。
+追加は必要性が出た場合だけ行う。
 
 候補:
 
 - 2人目companion
 - heal / support role
-- party equipmentの意味を強化
+- party equipmentの意味強化
 - trade-offのある少数Equipment
 
 追加しない:
 
 - auto target
 - auto battle
-- 完全上位互換Equipmentの大量追加
-- grindだけでcode readingを無視できる成長
+- 完全上位互換Equipment大量追加
+- grindでcode readingを無視できる成長
 
 ---
 
 ## Maintenance backlog
 
-- legacy Field / Quest content definitionの残存参照を段階的に減らす
-- `WorldPage.tsx` / `PauseMenu.tsx`のpresentation分割は変更理由が明確なIssueで行う
-- `App.tsx`の責務分割をgameplay変更と混ぜない
-- historical docsはcurrent source of truthと混ざらないよう分類する
-- save compatibility fieldはunusedだけを理由に即削除しない
+- legacy Field / Quest definitionの残存参照を段階的に減らす
+- WorldPage / PauseMenu presentation分割は専用Issueで行う
+- App.tsx責務分割をgameplay変更と混ぜない
+- historical docsとcurrent source of truthを混ぜない
+- save compatibility fieldをunusedだけで削除しない
+- World objective presentationの重複を解消する
 
 ---
 
@@ -310,14 +349,17 @@ Economy loopは完成済み。追加は必要性が出た場合だけ行う。
 - Stage Select / Area Select
 - 複雑なQuest Log
 - 大量の常設HUD
-- Worldサイズだけを増やすmap expansion
+- 空白だけ増える巨大map
+- Random Encounter回数だけの水増し
 - Login / Cloud Save / Ranking
-- office map / meeting / Slack等をmain gameplayにするreal-world simulator
-- 全Enemy / Gold / Inn等をengineering metaphorへ置換するredesign
+- office map / meeting / Slack simulator
+- fantasy entityの全面engineering metaphor化
+- JavaScriptだけで全biomeを消費すること
+- Storyによるcorrect target公開
 
 ---
 
-## 新機能のQuality gate
+## Quality gate
 
 PR前:
 
@@ -339,3 +381,5 @@ Squash Merge
 main CI
 Cloudflare Production
 ```
+
+GitHub Actionsを最初のtest runとして使わない。local executionが利用できない場合のみ、development workflowで定義した一時branch CIを使い、PR前にtrigger変更を戻す。
