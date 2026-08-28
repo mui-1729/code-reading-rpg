@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { createInitialPlayerProgress } from '../progression'
 import { createInitialRpgState } from '../rpg'
-import { resolveWorldMove } from './worldActions'
+import { getDeepForestReviewBattleId, resolveWorldMove } from './worldActions'
 import {
-  getEncounterBattleId,
   getTerrain,
   JS_DEEP_FOREST_MAP_ID,
   JS_FOREST_DEEP_FOREST_POSITION,
@@ -82,12 +81,10 @@ describe('JavaScript Deep Forest', () => {
   })
 
   it('Battle 15 clear前はRandomが14だけ、clear後は14 / 15を反復する', () => {
-    const unlocked = [14, 15]
-
-    expect(getEncounterBattleId('javascript', unlocked, clearedThrough14, 0.99, JS_DEEP_FOREST_MAP_ID)).toBe(14)
+    expect(getDeepForestReviewBattleId(clearedThrough14, 0.99)).toBe(14)
 
     const cleared15 = [...clearedThrough14, 15]
-    expect(getEncounterBattleId('javascript', unlocked, cleared15, 0.1, JS_DEEP_FOREST_MAP_ID)).toBe(14)
-    expect(getEncounterBattleId('javascript', unlocked, cleared15, 0.9, JS_DEEP_FOREST_MAP_ID)).toBe(15)
+    expect(getDeepForestReviewBattleId(cleared15, 0.1)).toBe(14)
+    expect(getDeepForestReviewBattleId(cleared15, 0.9)).toBe(15)
   })
 })
