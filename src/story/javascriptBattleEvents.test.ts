@@ -66,13 +66,13 @@ describe('JavaScript battle story events', () => {
     expect(text).not.toMatch(/Slime|Goblin|Golem/)
   })
 
-  it('Forest 10は&&を「両方true」と説明しfilterを先取りしない', () => {
+  it('Forest 10は&&を「左右ともtrue」と説明しfilterを先取りしない', () => {
     const event = getJavaScriptPreBattleEvent(10)
     const text = event?.lines.map((line) => line.text).join('\n') ?? ''
 
     expect(event?.title).toBe('二つともtrueなら通る')
     expect(text).toContain('`&&`')
-    expect(text).toContain('両方true')
+    expect(text).toContain('左もtrue、右もtrue')
     expect(text).toContain('find()')
     expect(text).not.toContain('filter()')
     expect(text).not.toMatch(/Sprout|Goblin|Boar/)
