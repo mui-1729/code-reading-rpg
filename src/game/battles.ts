@@ -261,4 +261,21 @@ export const battles: Battle[] = [
     skillIds: ['trace', 'gather', 'nova'],
     unlockSkillId: 'gather',
   },
+  {
+    id: 15,
+    areaId: JAVASCRIPT_AREA_ID,
+    label: 'DEEP FOREST LESSON 01',
+    title: '大きい相手も全部集める',
+    subtitle: 'filter()の読み方は条件が反対向きでも同じ。`hp > 65`を満たす相手を最後まで見て、全部集める流れを追おう',
+    recommendedLevel: 3,
+    expReward: 30,
+    goldReward: 14,
+    enemies: [
+      enemy('slime-filter-b', 'Slime', 32, 'Moss Bite', 4, '●'),
+      enemy('boar-filter-b', 'Boar', 74, 'Tackle', 6, '♠'),
+      enemy('guardian-filter-b', 'Guardian', 96, 'Root Crash', 8, '◆'),
+    ],
+    skillIds: ['gather', 'echo', 'nova'],
+    unlockSkillId: 'echo',
+  },
 ]
