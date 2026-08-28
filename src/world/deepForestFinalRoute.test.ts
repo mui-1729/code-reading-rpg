@@ -58,7 +58,7 @@ function expectFixedBattle(
 
 describe('JavaScript Deep Forest final world route', () => {
   it('Battle 15後は東から西へ16 → 17 → 18を固定導入する', () => {
-    expectFixedBattle(clearedThrough15, { x: 25, y: 8 }, 16)
+    expectFixedBattle(clearedThrough15, { x: 24, y: 8 }, 16)
     expectFixedBattle([...clearedThrough15, 16], { x: 20, y: 9 }, 17)
     expectFixedBattle([...clearedThrough15, 16, 17], { x: 15, y: 9 }, 18)
   })
