@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, fix/199-reset-title-race]
+    branches: [main]
   pull_request:
 
 jobs:
