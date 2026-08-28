@@ -105,7 +105,8 @@ test('Village TRAINで初心者Storyを読みながらBattle 7→8→9を順にc
   await expect(comparisonStory).toContainText('enemy.hp')
   await comparisonStory.getByRole('button', { name: 'SKIP' }).click()
 
-  await finishBattle(page, ['TRACE', 'TRACE', 'NOVA', 'NOVA'])
+  // NOVAで高HP敵を削ると60未満になり、次はTRACEの条件へ入る。
+  await finishBattle(page, ['TRACE', 'NOVA', 'TRACE'])
   await expect(page.getByText('TRAINING · 2 / 3', { exact: true })).toBeVisible()
   expect((await storedProgress(page)).progress.clearedStageIds).toEqual([7])
   expect((await storedProgress(page)).progress.unlockedStageIds).toEqual([1, 4, 7, 8])
@@ -117,7 +118,7 @@ test('Village TRAINで初心者Storyを読みながらBattle 7→8→9を順にc
   await expect(equalityStory).toContainText('enemy.name')
   await equalityStory.getByRole('button', { name: 'SKIP' }).click()
 
-  await finishBattle(page, ['PULSE', 'NOVA', 'NOVA'])
+  await finishBattle(page, ['PULSE', 'NOVA', 'TRACE'])
   await expect(page.getByText('TRAINING · 3 / 3', { exact: true })).toBeVisible()
   expect((await storedProgress(page)).progress.clearedStageIds).toEqual([7, 8])
   expect((await storedProgress(page)).progress.unlockedStageIds).toEqual([1, 4, 7, 8, 9])
@@ -130,7 +131,7 @@ test('Village TRAINで初心者Storyを読みながらBattle 7→8→9を順にc
   await expect(findStory).toContainText('find()')
   await findStory.getByRole('button', { name: 'SKIP' }).click()
 
-  await finishBattle(page, ['PULSE', 'TRACE', 'TRACE', 'NOVA', 'NOVA'])
+  await finishBattle(page, ['PULSE', 'TRACE', 'NOVA', 'TRACE'])
   await expect(page.getByText('TRAINING COMPLETE', { exact: true })).toBeVisible()
 
   const progress = await storedProgress(page)
