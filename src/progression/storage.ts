@@ -64,6 +64,7 @@ function getDerivedForestStageUnlocks(clearedStageIds: readonly number[]): numbe
   if (clearedStageIds.includes(10)) stageIds.push(11)
   if (clearedStageIds.includes(11)) stageIds.push(12)
   if (clearedStageIds.includes(12)) stageIds.push(13)
+  if (clearedStageIds.includes(13)) stageIds.push(14)
   return stageIds
 }
 
@@ -71,6 +72,7 @@ function getDerivedForestSkillUnlocks(clearedStageIds: readonly number[]): strin
   const skillIds: string[] = []
   if (clearedStageIds.includes(10)) skillIds.push('link')
   if (clearedStageIds.includes(11)) skillIds.push('fork')
+  if (clearedStageIds.includes(14)) skillIds.push('gather')
   return skillIds
 }
 

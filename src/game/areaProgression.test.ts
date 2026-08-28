@@ -23,6 +23,7 @@ describe('area progression lookup', () => {
       11,
       12,
       13,
+      14,
     ])
     expect(getBattlesForArea(TYPESCRIPT_AREA_ID).map((battle) => battle.id)).toEqual([4, 5, 6])
   })

@@ -1,4 +1,5 @@
 import { getJavaScriptPostBattleEvent, getJavaScriptPreBattleEvent } from './javascriptBattleEvents'
+import { getJavaScriptFilterStoryEvent } from './javascriptFilterEvents'
 import { getJavaScriptMidbossStoryEvent } from './javascriptMidbossEvents'
 import { getTypeScriptPostBattleEvent, getTypeScriptPreBattleEvent } from './typescriptBattleEvents'
 import type { BattleStoryEvent } from './types'
@@ -20,6 +21,7 @@ export function getBattleStoryEvent(
 
   if (area === 'javascript') {
     return (
+      getJavaScriptFilterStoryEvent(battleId, phase) ??
       getJavaScriptMidbossStoryEvent(battleId, phase) ??
       (phase === 'pre'
         ? getJavaScriptPreBattleEvent(battleId)

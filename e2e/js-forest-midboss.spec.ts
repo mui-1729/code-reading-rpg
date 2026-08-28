@@ -117,7 +117,8 @@ test('Battle 13 clear後は守り人がいたmain trailを西へ通過できる'
 
   const forest = page.getByLabel('Forest map')
   await expect(forest).toHaveAttribute('data-world-x', '6')
-  await expect(page.getByText('FOREST MID-BOSS CLEAR', { exact: true })).toBeVisible()
+  await expect(page.getByText('FOREST · 4 / 4', { exact: true })).toBeVisible()
+  await expect(page.getByText(/find\(\)とfilter\(\)の違いを読む/)).toBeVisible()
 
   await page.getByRole('button', { name: 'Move left' }).click()
 
