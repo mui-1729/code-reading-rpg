@@ -1,6 +1,6 @@
 import type { BattleStoryEvent } from './types'
 
-const preBattleEvent: BattleStoryEvent = {
+const filterIntroPreBattleEvent: BattleStoryEvent = {
   id: 'js-filter-before',
   label: 'FOREST LESSON 04',
   title: '最初の一体ではなく、全部を見る',
@@ -26,7 +26,7 @@ const preBattleEvent: BattleStoryEvent = {
   ],
 }
 
-const postBattleEvent: BattleStoryEvent = {
+const filterIntroPostBattleEvent: BattleStoryEvent = {
   id: 'js-filter-after',
   label: 'FILTER LEARNED',
   title: '条件に合うものを全部集める',
@@ -46,10 +46,61 @@ const postBattleEvent: BattleStoryEvent = {
   ],
 }
 
+const filterRepeatPreBattleEvent: BattleStoryEvent = {
+  id: 'js-filter-repeat-before',
+  label: 'DEEP FOREST LESSON 01',
+  title: '条件が変わっても、全部を見る',
+  lines: [
+    {
+      speaker: 'BYTE',
+      role: 'DEBUGGER',
+      layer: 'code-world',
+      text: 'Deep Forestでもfilter()の動き自体は同じ。enemiesを最後まで見て、条件に合ったものを全部集める。',
+    },
+    {
+      speaker: 'BYTE',
+      role: 'DEBUGGER',
+      layer: 'code-world',
+      text: '前は「45未満」だったけど、今度は「65より大きい」を見る。変わったのは条件の向きで、filter()の意味は変わらない。',
+    },
+    {
+      speaker: 'BYTE',
+      role: 'DEBUGGER',
+      layer: 'code-world',
+      text: 'GATHERとECHOのコードを見比べて、まず<と>の向きを確認しよう。どの相手が当てはまるかは、今のHPを自分で読んで決めて。',
+    },
+  ],
+}
+
+const filterRepeatPostBattleEvent: BattleStoryEvent = {
+  id: 'js-filter-repeat-after',
+  label: 'FILTER REPEATED',
+  title: '条件が変わっても同じ順番で読める',
+  lines: [
+    {
+      speaker: 'BYTE',
+      role: 'DEBUGGER',
+      layer: 'code-world',
+      text: 'filter()は条件そのものではなく、「条件に合うものを全部集める」動きだった。だから<が>に変わっても、読む順番は同じだ。',
+    },
+    {
+      speaker: 'BYTE',
+      role: 'DEBUGGER',
+      layer: 'code-world',
+      text: 'これでfilter()は一度きりの形じゃなく、条件を変えても追えるようになった。Deep Forestの次は、集めたものを別の形へ変える読み方へ進めそうだ。',
+    },
+  ],
+}
+
 export function getJavaScriptFilterStoryEvent(
   battleId: number,
   phase: 'pre' | 'post',
 ): BattleStoryEvent | undefined {
-  if (battleId !== 14) return undefined
-  return phase === 'pre' ? preBattleEvent : postBattleEvent
+  if (battleId === 14) {
+    return phase === 'pre' ? filterIntroPreBattleEvent : filterIntroPostBattleEvent
+  }
+  if (battleId === 15) {
+    return phase === 'pre' ? filterRepeatPreBattleEvent : filterRepeatPostBattleEvent
+  }
+  return undefined
 }
