@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, feat/207-js-forest-midboss]
+    branches: [main]
   pull_request:
 
 jobs:
