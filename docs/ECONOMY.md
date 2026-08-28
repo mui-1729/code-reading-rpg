@@ -4,20 +4,18 @@
 
 Battle報酬を次のBattleの余裕や装備選択へ変換するeconomy loopを定義する。
 
-この文書は**現在実装されているGold / PATCH KIT / Shop仕様**を中心に扱う。Equipment visual / Inventory / Gold balance / paid Innまで含む#178のtarget designは[`RPG_ECONOMY_EQUIPMENT_DESIGN.md`](./RPG_ECONOMY_EQUIPMENT_DESIGN.md)をsource of truthとする。
+この文書は**現在実装されているGold / Shop / Item / Equipment / Inn**を扱う。#178全体の設計判断は[`RPG_ECONOMY_EQUIPMENT_DESIGN.md`](./RPG_ECONOMY_EQUIPMENT_DESIGN.md)をsource of truthとする。
 
 ```text
 Battle Victory / Treasure
 ↓
 Gold / Item / Equipment
 ↓
-Open World Hub SHOP
+Hub SHOP / INN
 ↓
-PATCH KIT / Equipment
+購入・装備・回復
 ↓
-PauseでInventory / Equipment確認
-↓
-Battle中の余裕・Player buildの選択
+次の探索 / Battle
 ```
 
 このloopはコード読解を代替しない。
@@ -37,43 +35,33 @@ Battle中の余裕・Player buildの選択
 | TypeScript Final | 60 G | area-clear budget |
 | TYPE CACHE | 35 G + PATCH KIT ×1 | optional exploration reward |
 
-JavaScriptのBattle初回進行だけで:
+JavaScriptのBattle初回進行だけで100 G、DEBUG CACHEも取ると120 G + Debug Charmになる。
 
-```text
-20 + 30 + 50 = 100 G
-```
-
-DEBUG CACHEも取ると:
-
-```text
-120 G + Debug Charm
-```
-
-100 Gあれば「PATCH KIT 30 G + 最安Equipment 50 G」のように回復と恒久強化を組み合わせられる。一方、DEBUG CACHE込み120 Gでも現在のShop全商品195 Gを一度に買えないため、選択が残る。
+100 Gあれば「PATCH KIT 30 G + 最安Equipment 50 G」や「Inn 20 G + Equipment」のような準備を選べる。一方、Shop全商品を一度に買えないため選択が残る。
 
 ### Replay
 
 現状はreplayでも同じBattle Goldを獲得できる。CLEAR / unlock / Area clearは初回だけ。
 
-replay farmingを通常進行の前提にはしない。replay Gold減衰は#184でinflationを検証し、必要な場合だけ別途調整する。
+replay farmingを通常進行の前提にはしない。replay Gold減衰は#184でinflationを検証し、必要な場合だけ調整する。
 
 ## Gold sink
 
 | Sink | Price | Persistence | Role |
 | --- | ---: | --- | --- |
+| Inn / Rest | 20 G | per use | Hubでfull recovery |
 | PATCH KIT | 30 G | consumable | Battle中のportable recovery |
+| Life Charm | 50 G | permanent | Max HP特化Accessory |
 | Guard Edge | 55 G | permanent | ATK + DEF型Weapon |
 | Vital Coat | 60 G | permanent | Max HP型Armor |
-| Life Charm | 50 G | permanent | Max HP特化Accessory |
-| Inn / Rest | 20 G target | per use | Hubでのfull recovery。#183で実装 |
+
+InnはPATCH KITより10 G安い。Hubへ戻って安全に回復する代わりに安く、Battle中に使えるPATCH KITにはportable recovery分の価格差を持たせる。
 
 ShopとInnを合わせてもmandatory purchaseにはしない。正しくコードを読めば初期装備のままclear可能であることを維持する。
 
 ## Shop
 
 Central Hubの`SHOP` objectへ隣接してINTERACTするとShop UIを開く。
-
-ItemとEquipmentはvisual hierarchyを分ける。
 
 ```text
 CONSUMABLE
@@ -104,7 +92,7 @@ AFTER  —
 SHORT 18 G
 ```
 
-`price / wallet / afterPurchaseGold / shortage / owned / equipped / affordable`の判定は`getShopItemQuote()`で一括算出する。React componentへGold計算を重複させない。
+`price / wallet / afterPurchaseGold / shortage / owned / equipped / affordable`は`getShopItemQuote()`で一括算出する。React componentへGold計算を重複させない。
 
 ### Purchase state
 
@@ -113,21 +101,9 @@ SHORT 18 G
 - `OWNED`: 所有済み。再購入不可
 - `EQUIPPED`: 現在装備中
 
-Equipment購入成功時は:
-
-1. Goldを減らす
-2. `ownedEquipmentIds`へ追加
-3. loadoutは変更しない
-4. Shop内に`EQUIP NOW`を出す
-5. Playerが明示的に押した時だけ装備する
-
-購入しただけでloadoutが勝手に変わる挙動は作らない。Pause > EQUIPMENTから後で装備することもできる。
+Equipment購入成功時はGoldを減らして`ownedEquipmentIds`へ追加するが、loadoutは変更しない。Shop内の`EQUIP NOW`またはPause > EQUIPMENTから明示的に装備する。
 
 PATCH KIT購入成功時はGoldを減らし、既存`inventory.patchKit`を+1する。
-
-結果はshort FIELD LOGへ出す。World常設HUDへShop情報を追加しない。
-
-Open World移行前のArea header Shop UIは削除済み。Shop featureは`WorldShop.tsx`を基準にする。
 
 ## Equipment role
 
@@ -148,13 +124,11 @@ Accessory:
 - Debug Charm: Attack + Defenseの小さな複合補助
 - Life Charm: 最大HPだけを伸ばす耐久特化
 
-全既存Equipmentは`getEquipmentVisual()`の共通visual registryを持ち、Shop / Pause / Area-clear Rewardで同じpixel SVGを使う。現在装備との差分も共通presentation helperから表示する。
+全既存Equipmentは共通visual registryを持ち、Shop / Pause / Area-clear Rewardで同じpixel SVGを使う。現在装備との差分も共通presentation helperから表示する。
 
 ## Item catalog / Inventory
 
 Itemの名前・価格・visual・effect・usage ruleは`src/economy/items.ts`をsingle source of truthとする。
-
-現在のItem:
 
 ```text
 PATCH KIT
@@ -167,14 +141,7 @@ PATCH KIT
 
 `PlayerProgress.inventory.patchKit`は保存形式として維持し、UI整理だけのためにgeneric inventoryへmigrationしない。
 
-同じItem definitionを次で共有する。
-
-- Hub Shop
-- Pause > ITEMS
-- Battle Item panel
-- TYPE CACHEのItem reward表示
-
-Pause > ITEMSではicon / owned count / effect / usage / descriptionをItem cardとして確認できる。stock 0でもItem自体は表示し、`NO STOCK`を明示する。
+同じItem definitionをHub Shop / Pause > ITEMS / Battle Item panel / TYPE CACHE rewardで共有する。
 
 ## Battle Item
 
@@ -196,44 +163,51 @@ UI state:
 - `USED THIS BATTLE`
 - `ACTION LOCKED`
 
-使用成功時:
-
-- 最大24 HP回復
-- maxHPを超えない
-- stock -1
-- 同Battle2回目不可
-- `RECOVERED +N HP`を表示
-
-Itemの状態判定は`getBattleItemUseState()`、実際のconsumeは`consumePatchKit()`へ分離する。BattleのTargetRule / Skill / target判定には触れない。
+使用成功時は最大24 HP回復、stock -1。同Battle2回目は使用できない。
 
 ## Treasure Item reward
 
-TYPE CACHEは現在:
+TYPE CACHEは+35 G + PATCH KIT ×1を付与する。Item取得時はShop / Pause / Battleと同じPATCH KIT visual / nameを使う。
 
-- +35 G
-- PATCH KIT ×1
+## Inn / Rest
 
-を付与する。
+Central Hubの`INN` objectへ隣接してINTERACTすると確認dialogを開く。以前の無料即時Recovery Pointは廃止済み。
 
-Item取得時はShop / Pause / Battleと同じPATCH KIT visual / nameを使って`ITEM ACQUIRED` feedbackを表示する。Shop購入はTreasure rewardとして扱わない。
+価格は**fixed 20 G**。
 
-## Recovery / Inn
+```text
+INTERACT
+↓
+CURRENT HP / RECOVER / PRICE / GOLD → AFTER を確認
+↓
+REST
+↓
+成功時だけ Gold -20 + HP full recovery
+```
 
-現在のHub Recovery Pointは、HPが減っていれば**無料で即full recovery**する。
+### Quote
 
-これはcurrent implementationであり、target designではGold economyへ接続するため#183でpaid Innへ置き換える。
+例: HP 40 / 108、Gold 50 Gの場合:
 
-初期target:
+```text
+CURRENT HP 40 / 108
+RECOVER    +68 HP
+PRICE      20 G
+GOLD       50 G → 30 G
+```
 
-- fixed 20 G
-- Rest前にcurrent HP / max HP / price / Goldを表示
-- full HPならchargeしない
-- Gold不足ならstateを変更しない
-- success時だけGold減少 + full recovery
+### State rule
 
-詳細は[`RPG_ECONOMY_EQUIPMENT_DESIGN.md`](./RPG_ECONOMY_EQUIPMENT_DESIGN.md)を参照する。
+- HPが減っていてGold >= 20 G: `REST`可能
+- HP full: `HP FULL`、`NO CHARGE`、Goldを減らさない
+- Gold不足: `SHORT X G`、HP / Goldを変更しない
+- 成功時のみGold減少とHP回復を同時にcommitする
 
-## PlayerProgress
+価格・可否・不足額は`getInnRestQuote()`で算出する。transactionは`resolveInnRest()`が`PlayerProgress`と`RpgState`の両方をpure resultとして返す。UIが片方だけ先に更新する構造にはしない。
+
+Innの20 GはPATCH KIT 30 Gより安く、Hub回復とportable Battle回復の役割差を維持する。
+
+## PlayerProgress / RpgState
 
 Gold / consumableはPlayerProgress v4へ保存する。
 
@@ -243,7 +217,9 @@ inventory: {
 }
 ```
 
-Equipment / Party / World positionはEconomyではなくRpgStateの責務。
+current HP / Equipment / Party / World positionはRpgState v3の責務。
+
+Inn導入でもschema versionは上げない。
 
 ## Architecture
 
@@ -251,25 +227,23 @@ Equipment / Party / World positionはEconomyではなくRpgStateの責務。
 src/economy/
 ├── items.ts              # Item catalog / visual / usage presentation / use-state
 ├── economy.ts            # PATCH KIT purchase / consume
-├── shop.ts               # Shop listing / quote / pure purchase resolver
-├── WorldShop.tsx         # Open World Shop UI / Provider commit / EQUIP NOW
-├── BattleItemPanel.tsx   # Battle Item presentation / Provider adapter
+├── shop.ts               # Shop listing / quote / purchase resolver
+├── inn.ts                # Inn quote / Gold+HP pure transaction
+├── WorldShop.tsx         # Open World Shop UI / EQUIP NOW
+├── WorldInn.tsx          # Inn confirmation / Provider commit
+├── BattleItemPanel.tsx   # Battle Item presentation
 ├── items.test.ts
 ├── economy.test.ts
 ├── shop.test.ts
+├── inn.test.ts
 └── index.ts
-
-public/pixel-art/items/
-└── patch-kit.svg
 ```
 
-`shop.ts`はPlayerProgress / RpgStateを受け取り、購入前quoteと購入後stateをpureに返す。UIはその結果を各Providerへ反映するだけにする。
-
-paid Inn実装時も同様に、Gold / HPのtransactionはpure resolverへ置き、`WorldPage.tsx`へ価格判定を直書きしない。
+WorldPageはShop / Innを開く責務だけ持ち、価格判定やGold transactionを直書きしない。
 
 ## Boundaries
 
-Economy / Equipment / Itemが変更してはいけないもの:
+Economy / Equipment / Item / Innが変更してはいけないもの:
 
 - TargetRule
 - code variant
@@ -278,31 +252,26 @@ Economy / Equipment / Itemが変更してはいけないもの:
 - correct target
 - Party target
 
-PATCH KITとEquipmentは「間違えても少し耐えられる」「火力か耐久かを選ぶ」余裕だけを作る。
+Gold sinkは攻略の余裕を作るが、code reading自体を飛ばせる仕組みにはしない。
 
 ## Save
 
 PlayerProgress schema v4 / RpgState v3。
 
-Shop quote / visual metadata / Item catalog / paid Innの追加だけではschema versionを上げない。PATCH KITは既存`inventory.patchKit`、購入Equipmentは既存`ownedEquipmentIds`へ保存する。
-
-generic inventory等、保存shape自体を変更する場合のみmigrationとversion bumpを同時に行う。
+Shop / Inn / visual metadata / Item catalogの追加だけではschema versionを上げない。generic inventory等、保存shape自体を変更する場合のみmigrationとversion bumpを同時に行う。
 
 ## Tests
 
 - Shop price table / Battle Gold table / JavaScript 100 G + DEBUG CACHE 120 G budget
 - `getShopItemQuote()` wallet / price / after / shortage / state
-- PATCH KIT purchase success / insufficient Gold
-- Equipment purchase / Gold deduction / ownedEquipmentIds
-- owned / equipped / affordable presentation state
 - Shop purchase → Gold減少 → owned → `EQUIP NOW` → reload persistence
 - Gold不足 → stat comparison維持 + exact `SHORT X G`
-- PATCH KIT catalog / visual / effect / usage rule
-- Battle Item `READY / NO STOCK / HP FULL / USED / ACTION LOCKED`
-- consume / heal cap / full HP / no stock / one-use per Battle
+- PATCH KIT purchase / consume / one-use per Battle
 - existing v4 `inventory.patchKit` compatibility
-- Shop purchase → Pause ITEMS count / shared visual
-- Battle use → HP recovery / stock consume / reload storage
 - TYPE CACHE → PATCH KIT reward / shared visual feedback
-- paid Inn success / full HP no-charge / insufficient Gold (#183)
+- `getInnRestQuote()` current HP / heal / price / Gold / after / shortage
+- `resolveInnRest()` success → Gold -20 + full HP
+- full HP → no-charge / state unchanged
+- insufficient Gold → HP / Gold unchanged
+- World INN confirmation → REST → reload persistence
 - Gold獲得 → purchase → equip → Rest → reloadの統合E2E (#184)

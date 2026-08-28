@@ -1,3 +1,4 @@
+export { WorldInn } from './WorldInn'
 export { WorldShop } from './WorldShop'
 export {
   consumePatchKit,
@@ -5,6 +6,11 @@ export {
   PATCH_KIT_PRICE,
   purchasePatchKit,
 } from './economy'
+export {
+  getInnRestQuote,
+  INN_REST_PRICE,
+  resolveInnRest,
+} from './inn'
 export {
   getBattleItemUseState,
   getItemCount,
@@ -21,6 +27,7 @@ export {
   worldShopItems,
 } from './shop'
 export type { ConsumePatchKitResult, PurchaseResult } from './economy'
+export type { InnRestQuote, InnRestReason, InnRestResult } from './inn'
 export type {
   BattleItemUseReason,
   BattleItemUseState,
