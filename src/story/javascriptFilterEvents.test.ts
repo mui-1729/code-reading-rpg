@@ -14,7 +14,7 @@ describe('JavaScript filter lesson story', () => {
     expect(text).toContain('HPが45未満')
   })
 
-  it('Storyで現在盤面のcorrect target名を直接教えない', () => {
+  it('Battle 14 Storyで現在盤面のcorrect target名を直接教えない', () => {
     const event = getBattleStoryEvent('/javascript/battle/14', 'pre')
     const text = event?.lines.map((line) => line.text).join('\n') ?? ''
 
@@ -30,5 +30,26 @@ describe('JavaScript filter lesson story', () => {
     expect(text).toContain('find()')
     expect(text).toContain('filter()')
     expect(text).toContain('全部')
+  })
+
+  it('Battle 15はfilter()の意味を保ったまま<から>へ条件だけ変えると説明する', () => {
+    const event = getBattleStoryEvent('/javascript/battle/15', 'pre')
+    const text = event?.lines.map((line) => line.text).join('\n') ?? ''
+
+    expect(event?.title).toBe('条件が変わっても、全部を見る')
+    expect(text).toContain('filter()')
+    expect(text).toContain('45未満')
+    expect(text).toContain('65より大きい')
+    expect(text).toContain('意味は変わらない')
+  })
+
+  it('Battle 15 Storyでもcorrect target名や対象数を直接教えない', () => {
+    const event = getBattleStoryEvent('/javascript/battle/15', 'pre')
+    const text = event?.lines.map((line) => line.text).join('\n') ?? ''
+
+    expect(text).not.toContain('Slime')
+    expect(text).not.toContain('Boar')
+    expect(text).not.toContain('Golem')
+    expect(text).not.toContain('2体')
   })
 })
