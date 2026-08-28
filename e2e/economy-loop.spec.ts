@@ -76,7 +76,7 @@ async function storedState(page: Page) {
 test('Battle Gold → Shop purchase/equip → Inn → reload → next Battleを1本で維持する', async ({ page }) => {
   await seedEconomyLoop(page)
 
-  await page.goto('/javascript/battle/1?seed=economy-loop&returnTo=%2Fworld')
+  await page.goto('/javascript/battle/1?seed=encounter%3A5%3A10%3A11&returnTo=%2Fworld')
   await expect(page.getByText('CHAPTER 01', { exact: false })).toBeVisible()
 
   await executeSkill(page, 'TRACE')
