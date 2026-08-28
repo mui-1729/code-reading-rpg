@@ -112,6 +112,81 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
       },
     ],
   },
+  7: {
+    id: 'js-village-training-comparison',
+    label: 'VILLAGE TRAINING',
+    title: 'まず、数字を一つ読む',
+    lines: [
+      {
+        speaker: 'TRAINER MIO',
+        role: 'VILLAGE GUIDE',
+        layer: 'code-world',
+        text: '長いコードを全部いっぺんに読む必要はないよ。まず enemy.hp を見よう。点の右にある hp は、その敵が今持っているHPの数字だ。',
+      },
+      {
+        speaker: 'TRAINER MIO',
+        role: 'VILLAGE GUIDE',
+        layer: 'code-world',
+        text: '`<` は左の数字が右より小さいか、`>` は左の数字が右より大きいかを見る記号。まずこの小さな比べ方だけ追えばいい。',
+      },
+      {
+        speaker: 'BYTE',
+        role: 'DEBUGGER',
+        layer: 'code-world',
+        text: '技の行には find() も見えるけど、今は中の「HPをどう比べているか」に注目しよう。どの敵が条件に合うかは、画面のHPを見て自分で確かめてみて。',
+      },
+    ],
+  },
+  8: {
+    id: 'js-village-training-equality',
+    label: 'VILLAGE TRAINING',
+    title: '文字も値として読む',
+    lines: [
+      {
+        speaker: 'TRAINER MIO',
+        role: 'VILLAGE GUIDE',
+        layer: 'code-world',
+        text: '次は enemy.name。hp が数字を読むのと同じで、name はその敵の名前という値を読む。',
+      },
+      {
+        speaker: 'TRAINER MIO',
+        role: 'VILLAGE GUIDE',
+        layer: 'code-world',
+        text: '`===` は左右が同じ値かを確かめる。コードの右側に書かれた名前と、今いる敵の name を一体ずつ見比べれば読めるよ。',
+      },
+      {
+        speaker: 'BYTE',
+        role: 'DEBUGGER',
+        layer: 'code-world',
+        text: '前に見たHPの比較も一緒に出る。新しいことだけに飛びつかず、知っている部分から順番に読んでみよう。',
+      },
+    ],
+  },
+  9: {
+    id: 'js-village-training-find',
+    label: 'VILLAGE TRAINING',
+    title: '前から探して、最初で止まる',
+    lines: [
+      {
+        speaker: 'TRAINER MIO',
+        role: 'VILLAGE GUIDE',
+        layer: 'code-world',
+        text: 'enemies は、画面にいる敵たちを順番に並べた集まりだと思えばいい。左から順に一体ずつ見ていける。',
+      },
+      {
+        speaker: 'TRAINER MIO',
+        role: 'VILLAGE GUIDE',
+        layer: 'code-world',
+        text: 'find() はその集まりを前から調べて、カッコの中の条件に最初に合った一体で止まる。条件に合う敵が二体いても、選ばれるのは先に見つかった方だ。',
+      },
+      {
+        speaker: 'BYTE',
+        role: 'DEBUGGER',
+        layer: 'code-world',
+        text: '読む順番は「条件を読む → enemies を前から見る → 最初の true で止まる」。答えは言わないから、今の並びとHPで追ってみよう。',
+      },
+    ],
+  },
 }
 
 export const getJavaScriptPostBattleEvent = (battleId: number) => postBattleEvents[battleId]
