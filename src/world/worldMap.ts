@@ -37,6 +37,7 @@ export type Terrain =
   | 'village'
   | 'exit'
   | 'house'
+  | 'training'
 
 export type WorldCell = {
   mapId: WorldMapId
@@ -53,6 +54,7 @@ export const BYTE_POSITION = { x: 19, y: 13 } as const
 export const RECOVERY_POSITION = { x: 21, y: 16 } as const
 export const JS_VILLAGE_POSITION = { x: 14, y: 12 } as const
 export const JS_VILLAGE_EXIT_POSITION = { x: 10, y: 14 } as const
+export const JS_VILLAGE_TRAINING_POSITION = { x: 12, y: 7 } as const
 
 export const WORLD_TREASURES = [
   {
@@ -151,6 +153,7 @@ export function getWorldRegion(
 function getVillageTerrain(x: number, y: number): Terrain {
   const position = { x, y }
   if (samePosition(position, JS_VILLAGE_EXIT_POSITION)) return 'exit'
+  if (samePosition(position, JS_VILLAGE_TRAINING_POSITION)) return 'training'
   if (x <= 0 || y <= 0 || x >= 20 || y >= 14) return 'house'
 
   if (
@@ -185,7 +188,12 @@ export function getTerrain(
   if (samePosition(position, RECOVERY_POSITION)) return 'recovery'
   if (getTreasureAtPosition(position, mapId)) return 'treasure'
 
-  if (y === 14 || (x === 8 && y >= 3 && y <= 14) || (x === 32 && y >= 3 && y <= 14)) {
+  if (
+    y === 14 ||
+    (x === 8 && y >= 3 && y <= 14) ||
+    (x === 32 && y >= 3 && y <= 14) ||
+    (x === 14 && y >= 12 && y <= 14)
+  ) {
     return 'road'
   }
 
@@ -216,6 +224,7 @@ export function isWalkableTerrain(terrain: Terrain): boolean {
     'recovery',
     'treasure',
     'house',
+    'training',
   ].includes(terrain)
 }
 
