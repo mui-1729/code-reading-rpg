@@ -244,4 +244,21 @@ export const battles: Battle[] = [
     ],
     skillIds: ['trace', 'pulse', 'nova', 'link', 'fork'],
   },
+  {
+    id: 14,
+    areaId: JAVASCRIPT_AREA_ID,
+    label: 'FOREST LESSON 04',
+    title: '条件に合う相手を全部集める',
+    subtitle: 'find()は最初の一体で止まる。filter()は最後まで見て、条件に合う相手を全部集める。同じ条件で違いを比べよう',
+    recommendedLevel: 3,
+    expReward: 28,
+    goldReward: 12,
+    enemies: [
+      enemy('slime-filter-a', 'Slime', 30, 'Moss Bite', 4, '●'),
+      enemy('sprout-filter-a', 'Sprout', 36, 'Thorn Tap', 5, '♣'),
+      enemy('boar-filter-a', 'Boar', 88, 'Tackle', 6, '♠'),
+    ],
+    skillIds: ['trace', 'gather', 'nova'],
+    unlockSkillId: 'gather',
+  },
 ]
