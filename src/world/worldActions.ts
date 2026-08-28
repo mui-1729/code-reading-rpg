@@ -146,7 +146,12 @@ export function resolveWorldMove({
     y: rpgState.worldPosition.y + dy,
   }
   const mapId = rpgState.worldMapId
-  const terrain = getTerrain(next.x, next.y, mapId)
+  const rawTerrain = getTerrain(next.x, next.y, mapId)
+  const midbossCleared =
+    mapId === JS_FOREST_MAP_ID &&
+    rawTerrain === 'midboss' &&
+    progress.clearedStageIds.includes(13)
+  const terrain: Terrain = midbossCleared ? 'road' : rawTerrain
 
   if (!isWalkableTerrain(terrain)) {
     return { kind: 'blocked', nextState: rpgState, terrain }
@@ -302,6 +307,7 @@ export function resolveWorldInteraction(
   }
 
   if (rpgState.worldMapId === JS_FOREST_MAP_ID) {
+    if (progress.clearedStageIds.includes(13)) return { kind: 'none' }
     if (isAdjacent(position, JS_FOREST_MIDBOSS_POSITION)) {
       return {
         kind: 'midboss',
