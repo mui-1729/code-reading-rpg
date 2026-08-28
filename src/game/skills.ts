@@ -1,4 +1,5 @@
 import { battles } from './battles'
+import { forestSkillDefinitions } from './forestSkillDefinitions'
 import type { Seed } from './random'
 import {
   skillDefinitions as javascriptSkillDefinitions,
@@ -10,6 +11,7 @@ import type { Battle, SkillCard } from './types'
 
 export const allSkillDefinitions: readonly SkillDefinition[] = [
   ...javascriptSkillDefinitions,
+  ...forestSkillDefinitions,
   ...typescriptSkillDefinitions,
 ]
 
@@ -47,7 +49,7 @@ function hashString(value: string): number {
 
 function getEncounterOrdinal(seed: Seed): number | null {
   const value = String(seed)
-  const encounter = /^encounter:(\d+):/.exec(value)
+  const encounter = /^encounter:(?:(?:[^:]+):)?(\d+):/.exec(value)
   if (encounter?.[1]) return Number(encounter[1])
 
   const boss = /^boss:[^:]+:(\d+)$/.exec(value)
