@@ -41,6 +41,7 @@ REAL WORLDでは新人エンジニアとしてproblemを受けるが、technical
 - `GREENFIELD VILLAGE` 21 × 15の別map
 - Overworld ↔ Village transition
 - VillageはRandom Encounterなし
+- Village中央に`TRAIN` learning checkpoint
 - Central Hub / TypeScript側の既存導線
 - Random Encounter / cooldown / fixed Boss
 - World action pure resolver
@@ -53,8 +54,15 @@ REAL WORLDでは新人エンジニアとしてproblemを受けるが、technical
 
 ### Battle / learning
 
-- existing JavaScript Battle 1〜3
-- existing TypeScript Battle 4〜6
+- JavaScript main Battle 1〜3
+- JavaScript Village Training Battle 7〜9
+  - 7: `enemy.hp` + `<` / `>`
+  - 8: `enemy.name` + `===`
+  - 9: `enemies` + `find()`
+- TypeScript Battle 4〜6
+- Training 7 → 8 → 9をfirst clearで順にunlock
+- Trainingは各8 EXP / 0 Goldで既存economyを崩さない
+- Storyで「普通の言葉 → 小さい記号 / property → find()」の順に説明し、correct targetはPlayerへ残す
 - SELECT → EXECUTE
 - safe `TargetRule`; display codeを`eval()`しない
 - seeded generation / solvability
@@ -64,7 +72,7 @@ REAL WORLDでは新人エンジニアとしてproblemを受けるが、technical
 - Boss GUARD
 - staged result sequence
 
-既存JS Battle 1〜3は**現在動くbaselineであって、JavaScript編の最終Battle数ではない**。
+既存JS Battle 1〜3は**現在動くmain story baselineであって、JavaScript編の最終Battle数ではない**。Village Training 7〜9はその前段のbeginner onboardingとして追加した。
 
 ### RPG / Economy
 
@@ -171,15 +179,24 @@ value
 
 同じ問題をそのまま20回出すことはしない。
 
-### First implementation slices
+### Implementation slices
 
-1. 草原入口のStoryをcomparison / propertyから理解できる形へ変更
-2. beginner learning Battleを追加
-3. VillageをStory / learning上のcheckpointとして使う
-4. Village以西にForest mapを追加
-5. 最初の中Bossを配置
-6. Deep Forest /後半conceptへ拡張
-7. existing Battle 1〜3を長いprogression内へ再配置 / 再役割化
+完了:
+
+1. multi-map基盤と`GREENFIELD VILLAGE`を追加（#201）
+2. Villageにbeginner Training 7〜9を追加（#203）
+   - comparison / property / collection / `find()`
+   - Training進捗に応じたWorld objective
+   - 旧saveにもTraining 7をbaseline unlockとして補う
+   - TrainingのGold rewardは0
+
+次:
+
+3. Village以西のForest進行を作り、`&&` / `||`をStoryで導入する
+4. 既習comparison / `find()`と`&&` / `||`をRandom Encounterで複数回反復する
+5. 最初の中Bossを配置し、直前conceptを組み合わせる
+6. `filter()`以降をForest / Deep Forestへ段階的に追加する
+7. existing Battle 1〜3を長いprogression内へ再配置 / 再役割化する
 
 Battle engine / TargetRule / generatorを作り直さない。
 

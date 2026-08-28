@@ -33,7 +33,40 @@ describe('JavaScript battle story events', () => {
     expect(after?.lines.some((line) => line.text.includes('初仕事'))).toBe(true)
   })
 
-  it('non-story battles do not get JavaScript story events', () => {
+  it('Village Training 7はenemy.hpと比較記号を普通の言葉から説明する', () => {
+    const event = getJavaScriptPreBattleEvent(7)
+    const text = event?.lines.map((line) => line.text).join('\n') ?? ''
+
+    expect(event?.title).toBe('まず、数字を一つ読む')
+    expect(text).toContain('enemy.hp')
+    expect(text).toContain('`<`')
+    expect(text).toContain('`>`')
+    expect(text).toContain('find()')
+    expect(text).toContain('今は中の「HPをどう比べているか」に注目')
+    expect(text).not.toMatch(/Sprout|Boar/)
+  })
+
+  it('Village Training 8はenemy.nameと===を説明し正解Enemyを直接教えない', () => {
+    const event = getJavaScriptPreBattleEvent(8)
+    const text = event?.lines.map((line) => line.text).join('\n') ?? ''
+
+    expect(text).toContain('enemy.name')
+    expect(text).toContain('`===`')
+    expect(text).not.toMatch(/Goblin|Golem/)
+  })
+
+  it('Village Training 9はenemiesとfind()を前から最初の一体として説明する', () => {
+    const event = getJavaScriptPreBattleEvent(9)
+    const text = event?.lines.map((line) => line.text).join('\n') ?? ''
+
+    expect(text).toContain('enemies')
+    expect(text).toContain('find()')
+    expect(text).toContain('前から')
+    expect(text).toContain('最初')
+    expect(text).not.toMatch(/Slime|Goblin|Golem/)
+  })
+
+  it('non-story battles do not get unrelated JavaScript story events', () => {
     expect(getJavaScriptPreBattleEvent(1)).toBeUndefined()
     expect(getJavaScriptPostBattleEvent(4)).toBeUndefined()
   })

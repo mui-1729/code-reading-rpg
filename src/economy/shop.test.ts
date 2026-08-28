@@ -115,7 +115,16 @@ describe('world shop', () => {
       'life-charm': 50,
     })
 
-    expect(battles.map((battle) => battle.goldReward)).toEqual([20, 30, 50, 25, 35, 60])
+    expect(
+      battles
+        .filter((battle) => battle.id >= 1 && battle.id <= 6)
+        .map((battle) => battle.goldReward),
+    ).toEqual([20, 30, 50, 25, 35, 60])
+    expect(
+      battles
+        .filter((battle) => [7, 8, 9].includes(battle.id))
+        .map((battle) => battle.goldReward),
+    ).toEqual([0, 0, 0])
 
     const javascriptFirstClearGold = battles
       .filter((battle) => battle.id >= 1 && battle.id <= 3)

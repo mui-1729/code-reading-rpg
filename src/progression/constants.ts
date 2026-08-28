@@ -3,7 +3,7 @@ export const HP_PER_LEVEL = 8
 export const POWER_MULTIPLIER_PER_LEVEL = 0.02
 export const EXP_CURVE_FACTOR = 20
 
-export const DEFAULT_INITIAL_STAGE_IDS = [1, 4] as const
+export const DEFAULT_INITIAL_STAGE_IDS = [1, 4, 7] as const
 export const DEFAULT_INITIAL_SKILL_IDS = [
   'trace',
   'pulse',

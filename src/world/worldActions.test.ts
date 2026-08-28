@@ -1,8 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { createInitialPlayerProgress } from '../progression'
 import { createInitialRpgState } from '../rpg'
-import { resolveWorldInteraction, resolveWorldMove } from './worldActions'
-import { JS_VILLAGE_MAP_ID, OVERWORLD_MAP_ID } from './worldMap'
+import {
+  getNextJavaScriptTrainingBattleId,
+  resolveWorldInteraction,
+  resolveWorldMove,
+} from './worldActions'
+import {
+  JS_VILLAGE_MAP_ID,
+  JS_VILLAGE_TRAINING_POSITION,
+  OVERWORLD_MAP_ID,
+} from './worldMap'
 
 describe('World action resolver', () => {
   it('blocked terrainではpositionとencounter stateを変えない', () => {
@@ -164,6 +172,65 @@ describe('World action resolver', () => {
     expect(result.nextState.worldMapId).toBe(JS_VILLAGE_MAP_ID)
     expect(result.nextState.worldPosition).toEqual({ x: 10, y: 11 })
     expect(result.nextState.encounterCount).toBe(7)
+  })
+
+  it('Village TRAIN tileへ直接moveせず隣からinteractionする', () => {
+    const state = {
+      ...createInitialRpgState(),
+      worldMapId: JS_VILLAGE_MAP_ID,
+      worldPosition: { x: JS_VILLAGE_TRAINING_POSITION.x - 1, y: JS_VILLAGE_TRAINING_POSITION.y },
+    }
+
+    const result = resolveWorldMove({
+      rpgState: state,
+      progress: createInitialPlayerProgress(),
+      dx: 1,
+      dy: 0,
+    })
+
+    expect(result.kind).toBe('blocked')
+    expect(result.terrain).toBe('training')
+    expect(result.nextState.worldPosition).toEqual({ x: 11, y: 7 })
+  })
+
+  it('Training進捗は7→8→9の順で次の未clear Battleを返す', () => {
+    expect(getNextJavaScriptTrainingBattleId([])).toBe(7)
+    expect(getNextJavaScriptTrainingBattleId([7])).toBe(8)
+    expect(getNextJavaScriptTrainingBattleId([7, 8])).toBe(9)
+    expect(getNextJavaScriptTrainingBattleId([7, 8, 9])).toBeNull()
+    expect(getNextJavaScriptTrainingBattleId([1, 2, 7, 8, 9])).toBeNull()
+  })
+
+  it('Village TRAIN interactionはclear状況に応じてBattle 7→8→9を返す', () => {
+    const initialState = {
+      ...createInitialRpgState(),
+      worldMapId: JS_VILLAGE_MAP_ID,
+      worldPosition: { x: 11, y: 7 },
+    }
+    const initialProgress = createInitialPlayerProgress()
+
+    expect(resolveWorldInteraction(initialState, initialProgress)).toEqual({
+      kind: 'training',
+      battleId: 7,
+    })
+    expect(
+      resolveWorldInteraction(initialState, {
+        ...initialProgress,
+        clearedStageIds: [7],
+      }),
+    ).toEqual({ kind: 'training', battleId: 8 })
+    expect(
+      resolveWorldInteraction(initialState, {
+        ...initialProgress,
+        clearedStageIds: [7, 8],
+      }),
+    ).toEqual({ kind: 'training', battleId: 9 })
+    expect(
+      resolveWorldInteraction(initialState, {
+        ...initialProgress,
+        clearedStageIds: [7, 8, 9],
+      }),
+    ).toEqual({ kind: 'training', battleId: null })
   })
 
   it('cooldown中はEncounter terrainでも戦闘を開始しない', () => {

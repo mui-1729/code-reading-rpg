@@ -11,8 +11,15 @@ describe('area progression lookup', () => {
     }
   })
 
-  it('各AreaのBattleを順序どおり取得する', () => {
-    expect(getBattlesForArea(JAVASCRIPT_AREA_ID).map((battle) => battle.id)).toEqual([1, 2, 3])
+  it('各AreaのBattleを定義順どおり取得する', () => {
+    expect(getBattlesForArea(JAVASCRIPT_AREA_ID).map((battle) => battle.id)).toEqual([
+      1,
+      2,
+      3,
+      7,
+      8,
+      9,
+    ])
     expect(getBattlesForArea(TYPESCRIPT_AREA_ID).map((battle) => battle.id)).toEqual([4, 5, 6])
   })
 
