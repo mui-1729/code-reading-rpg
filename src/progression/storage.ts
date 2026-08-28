@@ -66,6 +66,13 @@ function getDerivedForestStageUnlocks(clearedStageIds: readonly number[]): numbe
   if (clearedStageIds.includes(12)) stageIds.push(13)
   if (clearedStageIds.includes(13)) stageIds.push(14)
   if (clearedStageIds.includes(14)) stageIds.push(15)
+  if (clearedStageIds.includes(15)) stageIds.push(16)
+  if (clearedStageIds.includes(16)) stageIds.push(17)
+  if (clearedStageIds.includes(17)) stageIds.push(18)
+  if (clearedStageIds.includes(18)) stageIds.push(19)
+  if (clearedStageIds.includes(19)) stageIds.push(20)
+  if (clearedStageIds.includes(20)) stageIds.push(21)
+  if (clearedStageIds.includes(21)) stageIds.push(22)
   return stageIds
 }
 
@@ -75,6 +82,12 @@ function getDerivedForestSkillUnlocks(clearedStageIds: readonly number[]): strin
   if (clearedStageIds.includes(11)) skillIds.push('fork')
   if (clearedStageIds.includes(14)) skillIds.push('gather')
   if (clearedStageIds.includes(15)) skillIds.push('echo')
+  if (clearedStageIds.includes(16)) skillIds.push('project')
+  if (clearedStageIds.includes(17)) skillIds.push('signal')
+  if (clearedStageIds.includes(18)) skillIds.push('sync')
+  if (clearedStageIds.includes(20)) skillIds.push('order')
+  if (clearedStageIds.includes(21)) skillIds.push('safe-path')
+  if (clearedStageIds.includes(22)) skillIds.push('reduce-focus')
   return skillIds
 }
 
