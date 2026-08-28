@@ -63,4 +63,35 @@ export const forestSkillDefinitions: readonly SkillDefinition[] = [
       },
     ],
   },
+  {
+    id: 'gather',
+    name: 'GATHER',
+    power: 22,
+    rule: { kind: 'allBelow', hp: 45 },
+    concept: 'filter()',
+    explanation:
+      'filter() は条件を満たすものを途中で止まらず最後まで調べ、当てはまったものを全部集めます。この技はHPが45未満の敵全員を対象にします。',
+    codeVariants: [
+      {
+        id: 'short',
+        code: 'enemies.filter(e => e.hp < 45)',
+        lineMode: 'single',
+      },
+      {
+        id: 'enemy',
+        code: 'enemies.filter(enemy => enemy.hp < 45)',
+        lineMode: 'single',
+      },
+      {
+        id: 'target',
+        code: 'enemies.filter(target => target.hp < 45)',
+        lineMode: 'single',
+      },
+      {
+        id: 'foe',
+        code: 'enemies.filter(foe => foe.hp < 45)',
+        lineMode: 'single',
+      },
+    ],
+  },
 ]
