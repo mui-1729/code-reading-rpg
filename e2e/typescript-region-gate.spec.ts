@@ -87,11 +87,11 @@ test('Battle 3 clear後はTypeScript地方へ進める', async ({ page }) => {
   await expect(page.getByText('TYPESCRIPT FRONTIER LOCKED')).toHaveCount(0)
 })
 
-test('未clearのold saveがTypeScript側にいてもreload時に境界へ戻す', async ({ page }) => {
+test('既にTypeScript側にいるold saveは位置を壊さずreloadできる', async ({ page }) => {
   await seedWorld(page, { worldPosition: { x: 30, y: 14 } })
 
-  await expect(viewport(page)).toHaveAttribute('data-world-x', '22')
+  await expect(viewport(page)).toHaveAttribute('data-world-x', '30')
 
   await page.reload()
-  await expect(viewport(page)).toHaveAttribute('data-world-x', '22')
+  await expect(viewport(page)).toHaveAttribute('data-world-x', '30')
 })
