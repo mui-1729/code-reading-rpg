@@ -115,17 +115,17 @@ JavaScriptは自然系visualで統一し、遺跡・地下・城塞等を最初�
 
 20〜30個の新syntaxを覚えさせる意味ではない。
 
-## 5. Multi-map World — Issue #201で基盤実装中
+## 5. Multi-map World — Issue #201で基盤導入
 
 Overworldを1枚mapのまま無限に広げるのではなく、classic JRPG型のmap transitionを導入する。
 
-現在の実装slice:
+現在のbaseline:
 
 - Overworldは既存save / coordinate互換のため40 × 28を維持
 - viewport 11 × 9
 - `worldMapId + local worldPosition`で現在地を管理
 - `overworld` / `js-village`のstable map ID
-- JavaScript側に`woods` / `deep-woods` terrainを追加
+- JavaScript側に`woods` / `deep-woods` terrain
 - OverworldのVillage入口から`GREENFIELD VILLAGE`へ遷移
 - Villageは21 × 15の別map
 - Village内はRandom Encounterなし
@@ -243,7 +243,7 @@ RPG Economyはcodeの正解targetを変えず、探索・準備・survivability�
 - GitHub Actions
 - Cloudflare Workers Preview / Production
 
-Issue #201ではmulti-map migration / portal / no-encounter Village / reload persistenceのtestを追加している。
+multi-map migration / portal / no-encounter Village / reload persistenceのtestを追加済み。
 
 ## 11. 現在残っている整理対象
 
@@ -267,19 +267,9 @@ unused UIと、互換・test fixtureとして必要なdataを分ける。
 
 ## 12. 次に実装する優先候補
 
-### P0 — Issue #201 Multi-map JS foundation
+### P0 — JavaScript learning route expansion
 
-現在進行中。
-
-- beginner-first / Region identity / multi-map docs
-- RpgState v4
-- first Village map
-- JS natural terrain depth
-- transition / persistence tests
-
-### P1 — JavaScript learning route expansion
-
-Issue #201の基盤後、Databaseへ急がずJavaScriptを先に深掘る。
+Databaseへ急がずJavaScriptを先に深掘る。
 
 候補:
 
