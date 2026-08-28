@@ -1,0 +1,93 @@
+.inn-overlay {
+  z-index: 215;
+}
+
+.inn-panel {
+  position: relative;
+  width: min(460px, calc(100vw - 32px));
+  padding: 20px;
+}
+
+.inn-panel h2 {
+  margin: 8px 0 8px;
+}
+
+.inn-description {
+  margin: 0 0 16px;
+  color: #aaa6ba;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.inn-hp-card,
+.inn-cost-card {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+  padding: 12px;
+}
+
+.inn-hp-card > span,
+.inn-cost-card > span {
+  display: grid;
+  gap: 5px;
+}
+
+.inn-hp-card small,
+.inn-cost-card small {
+  color: #858196;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: .1em;
+}
+
+.inn-hp-card strong,
+.inn-cost-card strong {
+  color: #f5f2ff;
+  font-size: 12px;
+}
+
+.inn-hp-card > span:last-child strong {
+  color: var(--green);
+}
+
+.inn-cost-card {
+  border-color: var(--gold);
+}
+
+.inn-cost-card em {
+  grid-column: 1 / -1;
+  padding: 5px 6px;
+  border: 1px solid #735052;
+  color: #ffaaa4;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-align: center;
+}
+
+.inn-cost-card em.is-safe {
+  border-color: #3f785e;
+  color: var(--green);
+}
+
+.inn-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+@media (max-width: 520px) {
+  .inn-panel {
+    width: min(420px, calc(100vw - 20px));
+  }
+
+  .inn-hp-card,
+  .inn-cost-card,
+  .inn-actions {
+    grid-template-columns: 1fr;
+  }
+}
