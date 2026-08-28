@@ -13,6 +13,12 @@ describe('battle story event resolver', () => {
     expect(getBattleStoryEvent('/javascript/battle/9', 'pre')?.title).toBe('前から探して、最初で止まる')
   })
 
+  it('does not replay a pre-story after that Battle is cleared', () => {
+    expect(getBattleStoryEvent('/javascript/battle/7', 'pre', [7])).toBeUndefined()
+    expect(getBattleStoryEvent('/javascript/battle/8', 'pre', [7])).toBeDefined()
+    expect(getBattleStoryEvent('/javascript/battle/7', 'post', [7])).toBeDefined()
+  })
+
   it('resolves JavaScript Forest story events', () => {
     expect(getBattleStoryEvent('/javascript/battle/10', 'pre')?.title).toBe('二つともtrueなら通る')
     expect(getBattleStoryEvent('/javascript/battle/11', 'pre')?.title).toBe('どちらかtrueなら通る')
