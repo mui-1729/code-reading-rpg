@@ -111,6 +111,13 @@ export function resolveWorldMove({
   const nextSteps = rpgState.stepsSinceEncounter + 1
   const portal = getWorldPortalAtPosition(mapId, next)
   if (portal) {
+    if (
+      portal.requiredClearedStageId !== undefined &&
+      !progress.clearedStageIds.includes(portal.requiredClearedStageId)
+    ) {
+      return { kind: 'blocked', nextState: rpgState, terrain }
+    }
+
     const region = getWorldRegion(portal.targetPosition.x, portal.toMapId)
     return {
       kind: 'transition',
@@ -135,12 +142,7 @@ export function resolveWorldMove({
     stepsSinceEncounter: nextSteps,
   }
 
-  if (
-    mapId !== OVERWORLD_MAP_ID ||
-    !isEncounterTerrain(terrain) ||
-    nextSteps < 5 ||
-    region === 'hub'
-  ) {
+  if (!isEncounterTerrain(terrain) || nextSteps < 5 || region === 'hub') {
     return { kind: 'moved', nextState: movedState, terrain, region }
   }
 
@@ -154,6 +156,7 @@ export function resolveWorldMove({
     progress.unlockedStageIds,
     progress.clearedStageIds,
     rolls.battle,
+    mapId,
   )
   if (battleId === null) {
     return { kind: 'moved', nextState: movedState, terrain, region }
