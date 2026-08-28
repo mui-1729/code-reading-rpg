@@ -16,7 +16,7 @@ describe('battle story event resolver', () => {
   it('does not replay a pre-story after that Battle is cleared', () => {
     expect(getBattleStoryEvent('/javascript/battle/7', 'pre', [7])).toBeUndefined()
     expect(getBattleStoryEvent('/javascript/battle/8', 'pre', [7])).toBeDefined()
-    expect(getBattleStoryEvent('/javascript/battle/7', 'post', [7])).toBeDefined()
+    expect(getBattleStoryEvent('/javascript/battle/1', 'post', [1])).toBeDefined()
   })
 
   it('resolves JavaScript Forest story events', () => {
