@@ -1,7 +1,10 @@
+import type { StoryWorldLayer } from './types'
+
 export const JAVASCRIPT_OPENING_STORAGE_KEY = 'code-read-rpg:javascript-opening:v1'
 
 export type JavaScriptOpeningScene = {
   id: string
+  layer: StoryWorldLayer
   kicker: string
   speaker: string
   lines: readonly string[]
@@ -9,48 +12,53 @@ export type JavaScriptOpeningScene = {
 
 export const javascriptOpeningScenes: readonly JavaScriptOpeningScene[] = [
   {
-    id: 'kingdom',
-    kicker: 'JAVASCRIPT KINGDOM',
-    speaker: 'NARRATION',
-    lines: [
-      'JavaScript王国では、門も店も戦闘システムも、たくさんのコードで動いている。',
-      '人々はその仕組みを意識することなく、今日もいつも通り暮らしていた。',
-    ],
-  },
-  {
-    id: 'error',
-    kicker: 'SYSTEM ERROR',
-    speaker: 'NARRATION',
-    lines: [
-      'ところがある朝、西の草原で戦闘システムが突然おかしな敵を狙い始めた。',
-      '誰もコードを変えた覚えはない。小さなバグに見えた異常は、少しずつ広がっていく。',
-    ],
-  },
-  {
-    id: 'ada',
+    id: 'briefing',
+    layer: 'real-world',
     kicker: 'DEVELOPMENT ROOM',
     speaker: 'LEAD ADA',
     lines: [
-      '君が今日からチームに入る新人Code Knightだね。ちょうどいい、最初の仕事を頼みたい。',
-      '壊れた戦闘システムのコードを読んで、なぜ違う敵を選ぶのか突き止めてくれ。',
+      '今日から開発チームに入る新人エンジニアだね。さっそく最初のincidentを見てもらいたい。',
+      '戦闘システムが、本来とは違う敵をtargetに選ぶようになった。まず既存コードを読んで原因を追おう。',
     ],
   },
   {
-    id: 'byte',
-    kicker: 'DEBUG LOG',
+    id: 'incident',
+    layer: 'real-world',
+    kicker: 'INCIDENT MONITOR',
     speaker: 'BYTE',
     lines: [
-      '僕はBYTE。ログを集めておいた。値はちゃんと入ってるのに、選ばれる敵だけがおかしい。',
-      '一緒に追えばきっと見つかる。出発したらHubで僕と合流して、西のJavaScript草原へ行こう。',
+      'ログ上の値は入っているのに、選ばれる敵だけがおかしい。変更履歴だけでは原因を絞れなかった。',
+      'このシステムはCODE WORLDへCONNECTすると、実行中のstateとコードの関係を探索できる。',
+    ],
+  },
+  {
+    id: 'connect',
+    layer: 'connect',
+    kicker: 'CONNECT',
+    speaker: 'SYSTEM',
+    lines: [
+      'REAL WORLDのシステムを、人が歩いて調べられるfantasy worldとして展開する。',
+      'ここではコードが世界のruleだ。誰を狙うか、何が起きるかは、表示されたコードそのものが決める。',
+    ],
+  },
+  {
+    id: 'grassland',
+    layer: 'code-world',
+    kicker: 'JAVASCRIPT GRASSLAND',
+    speaker: 'BYTE',
+    lines: [
+      'CONNECT complete。ここがCODE WORLDのJavaScript草原だ。現実側のtarget bugが、この世界では戦闘の異変として見えている。',
+      'まずHubで僕と合流して、西の草原へ行こう。同じincidentをCODE WORLD側から追うんだ。',
     ],
   },
   {
     id: 'mission',
+    layer: 'code-world',
     kicker: 'MISSION START',
-    speaker: 'LEAD ADA',
+    speaker: 'LEAD ADA // REMOTE',
     lines: [
-      'コードは嘘をつかない。でも、読み方を間違えれば本当の動きは見えない。',
-      'まずHubでBYTEと合流する。そのあと西の草原へ向かい、最初のバグを直しておいで。',
+      'コードは嘘をつかない。現在のstateと処理順を追えば、異変と現実のbugは同じ原因につながる。',
+      'HubでBYTEと合流し、西のJavaScript草原で最初の症状を調査してくれ。',
     ],
   },
 ]
