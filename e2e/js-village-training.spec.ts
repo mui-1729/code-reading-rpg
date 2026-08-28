@@ -94,8 +94,10 @@ test('Village TRAINで初心者Storyを読みながらBattle 7→8→9を順にc
   await seedVillageTraining(page)
 
   const viewport = page.getByLabel('Village map')
+  const objective = page.getByLabel('Next objective')
   await expect(viewport).toHaveAttribute('data-world-map', 'js-village')
-  await expect(page.getByText('TRAINING · 1 / 3', { exact: true })).toBeVisible()
+  await expect(objective).toContainText('TRAINING · 1 / 3')
+  await expect(objective).not.toContainText('FORESTでは&&と||')
   await expect(page.getByText('TRAIN', { exact: true })).toBeVisible()
 
   await page.getByRole('button', { name: 'INTERACT' }).click()
@@ -107,7 +109,8 @@ test('Village TRAINで初心者Storyを読みながらBattle 7→8→9を順にc
 
   // NOVAで高HP敵を削ると60未満になり、次はTRACEの条件へ入る。
   await finishBattle(page, ['TRACE', 'NOVA', 'TRACE'])
-  await expect(page.getByText('TRAINING · 2 / 3', { exact: true })).toBeVisible()
+  await expect(objective).toContainText('TRAINING · 2 / 3')
+  await expect(objective).not.toContainText('FORESTでは&&と||')
   expect((await storedProgress(page)).progress.clearedStageIds).toEqual([7])
   expect((await storedProgress(page)).progress.unlockedStageIds).toEqual([1, 4, 7, 8])
 
@@ -119,7 +122,8 @@ test('Village TRAINで初心者Storyを読みながらBattle 7→8→9を順にc
   await equalityStory.getByRole('button', { name: 'SKIP' }).click()
 
   await finishBattle(page, ['PULSE', 'NOVA', 'TRACE'])
-  await expect(page.getByText('TRAINING · 3 / 3', { exact: true })).toBeVisible()
+  await expect(objective).toContainText('TRAINING · 3 / 3')
+  await expect(objective).not.toContainText('FORESTでは&&と||')
   expect((await storedProgress(page)).progress.clearedStageIds).toEqual([7, 8])
   expect((await storedProgress(page)).progress.unlockedStageIds).toEqual([1, 4, 7, 8, 9])
 
@@ -133,11 +137,19 @@ test('Village TRAINで初心者Storyを読みながらBattle 7→8→9を順にc
   await findStory.getByRole('button', { name: 'SKIP' }).click()
 
   await finishBattle(page, ['PULSE', 'TRACE', 'NOVA', 'TRACE'])
-  await expect(page.getByText('TRAINING COMPLETE', { exact: true })).toBeVisible()
+  await expect(objective).toContainText('TRAINING COMPLETE')
+  await expect(objective).toContainText('南のEXITから草原へ戻り、西の道を進もう')
+  await expect(objective).toContainText('FORESTでは&&と||')
 
   const progress = await storedProgress(page)
   expect(progress.progress.exp).toBe(24)
   expect(progress.progress.gold).toBe(0)
   expect(progress.progress.clearedStageIds).toEqual([7, 8, 9])
   expect(progress.progress.unlockedStageIds).toEqual([1, 4, 7, 8, 9, 10])
+
+  await page.reload()
+  await expect(page.getByLabel('Village map')).toHaveAttribute('data-world-map', 'js-village')
+  await expect(page.getByLabel('Next objective')).toContainText('TRAINING COMPLETE')
+  await expect(page.getByLabel('Next objective')).toContainText('南のEXITから草原へ戻り、西の道を進もう')
+  await expect(page.getByLabel('Next objective')).toContainText('FORESTでは&&と||')
 })
