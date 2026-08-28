@@ -149,7 +149,13 @@ function normalizeWorldLocation(
   mapIdValue: unknown,
   positionValue: unknown,
 ): { mapId: WorldMapId; position: WorldPosition } {
-  const mapId = isWorldMapId(mapIdValue) ? mapIdValue : OVERWORLD_MAP_ID
+  if (!isWorldMapId(mapIdValue)) {
+    return {
+      mapId: OVERWORLD_MAP_ID,
+      position: { ...WORLD_MAP_STARTS[OVERWORLD_MAP_ID] },
+    }
+  }
+  const mapId = mapIdValue
 
   if (!positionValue || typeof positionValue !== 'object') {
     return {
