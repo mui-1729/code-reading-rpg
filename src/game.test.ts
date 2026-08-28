@@ -41,6 +41,11 @@ describe('getTargets', () => {
     expect(targetIds(enemies, { kind: 'firstAbove', hp: 50 })).toEqual(['b'])
   })
 
+  it('firstAboveAndNamedはHPとnameの両条件に一致した最初の生存敵を返す', () => {
+    expect(targetIds(enemies, { kind: 'firstAboveAndNamed', hp: 50, name: 'Goblin' })).toEqual(['b'])
+    expect(targetIds(enemies, { kind: 'firstAboveAndNamed', hp: 80, name: 'Goblin' })).toEqual([])
+  })
+
   it('allAboveは条件に一致した生存敵全員を返す', () => {
     expect(targetIds(enemies, { kind: 'allAbove', hp: 35 })).toEqual(['a', 'b'])
   })
@@ -86,6 +91,7 @@ describe('getTargets', () => {
     expect(targetIds(withDefeated, { kind: 'lowestHp' })).toEqual(['c'])
     expect(targetIds(withDefeated, { kind: 'highestAttack' })).toEqual(['b'])
     expect(targetIds(withDefeated, { kind: 'firstBelowOrAbove', below: 35, above: 80 })).toEqual(['c'])
+    expect(targetIds(withDefeated, { kind: 'firstAboveAndNamed', hp: 50, name: 'Goblin' })).toEqual(['b'])
   })
 
   it('対象が存在しない場合は空配列を返す', () => {
