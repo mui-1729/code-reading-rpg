@@ -26,7 +26,7 @@ REAL WORLDでは新人エンジニアとしてproblemを受けるが、専門用
 - fantasy RPGらしい探索・村・戦闘・成長を残す
 - RPG成長は読解を代替しない
 - 同じconceptを値 / enemy順 / code variantを変えて反復する
-- Open Worldを1枚gridへ固定せず、意味のある複数mapを行き来できるようにする
+- Worldを1枚gridへ固定せず、意味のある複数mapを行き来できるようにする
 
 ## 2. 現在のプレイ構造
 
@@ -39,7 +39,7 @@ REAL WORLD briefing
 CODE WORLD
 Overworld / Village / Forest等を探索
 ↓
-Random Encounter / Fixed Battle / Boss
+Fixed Learning Battle / Random Encounter / Boss
 ↓
 Code Reading Battle
 ↓
@@ -88,11 +88,11 @@ Training 8: enemy.name + ===
 Training 9: enemies + find()
 ↓
 JAVASCRIPT FOREST
-Battle 10: find() + &&
+Fixed Battle 10: find() + &&
 ↓
-Battle 11: find() + ||
+Fixed Battle 11: find() + ||
 ↓
-Battle 12: comparison / find() / && / || combined
+Fixed Battle 12: comparison / find() / && / || combined
 ↓
 既存JavaScript main story
 ```
@@ -104,7 +104,8 @@ Forestでは新しい`LINK` / `FORK` Skillを使うが、`filter()`はまだ導�
 - `LINK`: `find()` + `&&`
 - `FORK`: `find()` + `||`
 - 表示codeは既習のproperty / comparison / `find()`に論理条件を足す
-- Forest 10〜12は値 / enemy順 / code variant違いでRandom Encounter反復できる
+- Battle 10〜12はForestを奥へ進む途中の固定Lessonとして順番に導入する
+- Random Encounterはclear済みLessonだけを値 / enemy順 / code variant違いで反復する
 - 未学習conceptはRandom Encounterで先に出さない
 
 JavaScript地方のvisual identityは自然系で統一する。
@@ -150,19 +151,30 @@ Issue #201でmulti-map基盤を導入し、Issue #203でVillage Training、Issue
 - `JAVASCRIPT FOREST`: 31 × 21
 - Village内Random Encounterなし
 - Forest入口はTraining 9 clearで解放
-- Forest内はwoods / deep-woodsでRandom Encounter
 - Village / Forestとも同じ`/world`上でmap transition
 - current map / positionはsave / reloadで保持
 - fixed objectは所属map外で誤発火しない
 
-Forest内のEncounter pool:
+Forestのlearning / Encounter順:
 
 ```text
-9 clear / 10未clear → 10のみ
-10 clear / 11未clear → 10 / 11
-11 clear / 12未clear → 10 / 11 / 12
-12 clear後 → 10 / 11 / 12を反復
+9 clear / 10未clear
+→ Randomなし
+→ 最初のWoodsでFixed Battle 10
+
+10 clear / 11未clear
+→ Random 10のみ
+→ Forest中盤でFixed Battle 11
+
+11 clear / 12未clear
+→ Random 10 / 11のみ
+→ Forest最深側でFixed Battle 12
+
+12 clear後
+→ Random 10 / 11 / 12を反復
 ```
+
+新conceptをRandom抽選で初登場させない。
 
 ## 6. Region visual identity
 
@@ -262,6 +274,8 @@ RPG Economyはcodeの正解targetを変えず、探索・準備・survivability�
 - unknown map / bounds外locationはHub開始地点へfallback
 - Training 7をinitial stage baselineへ追加
 - Training / Forest clear・unlockは既存PlayerProgressへ保存
+- #203時点のv4 saveでTraining 9 clear済みならrestore時にStage 10を補う
+- 10 clear済みならStage 11 + LINK、11 clear済みならStage 12 + FORKをderivedして補う
 - Tutorial state別storage
 - Sound settingsをprogress resetから分離
 - Vitest Unit Test
@@ -269,7 +283,7 @@ RPG Economyはcodeの正解targetを変えず、探索・準備・survivability�
 - GitHub Actions
 - Cloudflare Workers Preview / Production
 
-回帰対象には、Village TRAIN → 7 → 8 → 9、Forest gate / transition / reload persistence、Forest Storyの`&&` / `||`導入を含める。
+回帰対象には、Village TRAIN → 7 → 8 → 9、Forest gate / transition / reload persistence、Fixed Battle 10導入、Forest Random pool、Forest Storyの`&&` / `||`ページ送り、旧v4 save normalizationを含める。
 
 ## 11. 現在残っている整理対象
 
@@ -395,7 +409,7 @@ JavaScript
 - Database = underground / archive方向
 - JavaScript既存3Battleはmain story baselineであり、最終的なBattle数の上限ではない
 - Village Training 7〜9をbeginner onboardingとして使う
-- Forest Learning 10〜12で`&&` / `||`を反復する
+- Forest Learning 10〜12は固定Lessonで順番に導入し、Randomはclear済みconceptだけを反復する
 - `filter()`はForest 10〜12では先取りしない
 - JSは同じconceptを何度も異なる盤面で反復する
 - JavaScript地方には中Bossを置く
