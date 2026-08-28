@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, test/184-rpg-economy-integration]
   pull_request:
 
 jobs:
