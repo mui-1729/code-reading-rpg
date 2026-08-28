@@ -6,16 +6,19 @@ import {
   getEncounterBattleId,
   getEncounterChance,
   getTerrain,
+  getWorldPortalAtPosition,
   getWorldRegion,
   isAdjacent,
   isEncounterTerrain,
   isWalkableTerrain,
   JS_BOSS_POSITION,
+  OVERWORLD_MAP_ID,
   RECOVERY_POSITION,
   SHOP_POSITION,
   TS_BOSS_POSITION,
   WORLD_TREASURES,
   type Terrain,
+  type WorldMapId,
   type WorldRegion,
   type WorldTreasureId,
 } from './worldMap'
@@ -46,6 +49,15 @@ export type WorldMoveResult =
       region: WorldRegion
     }
   | {
+      kind: 'transition'
+      nextState: RpgState
+      terrain: Terrain
+      region: WorldRegion
+      fromMapId: WorldMapId
+      toMapId: WorldMapId
+      label: string
+    }
+  | {
       kind: 'encounter'
       nextState: RpgState
       terrain: Terrain
@@ -67,7 +79,10 @@ function createEncounterRolls(
   nextY: number,
   nextSteps: number,
 ): EncounterRolls {
-  const seedBase = `${rpgState.encounterCount}:${nextX}:${nextY}:${nextSteps}`
+  const seedBase =
+    rpgState.worldMapId === OVERWORLD_MAP_ID
+      ? `${rpgState.encounterCount}:${nextX}:${nextY}:${nextSteps}`
+      : `${rpgState.worldMapId}:${rpgState.encounterCount}:${nextX}:${nextY}:${nextSteps}`
   const random = createSeededRandom(seedBase)
   return { trigger: random.next(), battle: random.next() }
 }
@@ -83,21 +98,46 @@ export function resolveWorldMove({
     x: rpgState.worldPosition.x + dx,
     y: rpgState.worldPosition.y + dy,
   }
-  const terrain = getTerrain(next.x, next.y)
+  const mapId = rpgState.worldMapId
+  const terrain = getTerrain(next.x, next.y, mapId)
 
   if (!isWalkableTerrain(terrain)) {
     return { kind: 'blocked', nextState: rpgState, terrain }
   }
 
   const nextSteps = rpgState.stepsSinceEncounter + 1
-  const region = getWorldRegion(next.x)
+  const portal = getWorldPortalAtPosition(mapId, next)
+  if (portal) {
+    const region = getWorldRegion(portal.targetPosition.x, portal.toMapId)
+    return {
+      kind: 'transition',
+      terrain,
+      region,
+      fromMapId: mapId,
+      toMapId: portal.toMapId,
+      label: portal.label,
+      nextState: {
+        ...rpgState,
+        worldMapId: portal.toMapId,
+        worldPosition: { ...portal.targetPosition },
+        stepsSinceEncounter: nextSteps,
+      },
+    }
+  }
+
+  const region = getWorldRegion(next.x, mapId)
   const movedState: RpgState = {
     ...rpgState,
     worldPosition: next,
     stepsSinceEncounter: nextSteps,
   }
 
-  if (!isEncounterTerrain(terrain) || nextSteps < 5 || region === 'hub') {
+  if (
+    mapId !== OVERWORLD_MAP_ID ||
+    !isEncounterTerrain(terrain) ||
+    nextSteps < 5 ||
+    region === 'hub'
+  ) {
     return { kind: 'moved', nextState: movedState, terrain, region }
   }
 
@@ -122,6 +162,10 @@ export function resolveWorldMove({
     stepsSinceEncounter: 0,
     encounterCount: encounterNumber,
   }
+  const encounterSeed =
+    mapId === OVERWORLD_MAP_ID
+      ? `encounter:${encounterNumber}:${next.x}:${next.y}`
+      : `encounter:${mapId}:${encounterNumber}:${next.x}:${next.y}`
 
   return {
     kind: 'encounter',
@@ -131,7 +175,7 @@ export function resolveWorldMove({
     battle: {
       battleId,
       region,
-      seed: `encounter:${encounterNumber}:${next.x}:${next.y}`,
+      seed: encounterSeed,
     },
   }
 }
@@ -168,6 +212,8 @@ export function resolveWorldInteraction(
   rpgState: RpgState,
   progress: PlayerProgress,
 ): WorldInteractionIntent {
+  if (rpgState.worldMapId !== OVERWORLD_MAP_ID) return { kind: 'none' }
+
   const position = rpgState.worldPosition
 
   if (isAdjacent(position, BYTE_POSITION)) {
@@ -186,7 +232,10 @@ export function resolveWorldInteraction(
     return { kind: 'recovery' }
   }
 
-  const treasure = WORLD_TREASURES.find((candidate) => isAdjacent(position, candidate.position))
+  const treasure = WORLD_TREASURES.find(
+    (candidate) =>
+      candidate.mapId === rpgState.worldMapId && isAdjacent(position, candidate.position),
+  )
   if (treasure) {
     return {
       kind: 'treasure',

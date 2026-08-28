@@ -2,98 +2,205 @@
 
 ## 1. この文書の役割
 
-新しいBattle、Skill、code variant、Field学習ヒントを追加するときの基準を定義する。
+新しいBattle、Skill、code variant、Story上のコード説明、Field / World learning contentを追加するときの基準を定義する。
 
-コンテンツが増えても、次を崩さない。
+コンテンツが増えても次を崩さない。
 
-- 学習意図
-- JavaScript / TypeScript上の意味
-- Battleとしての戦略
-- seed再現性
-- RPG進行
-- display codeと内部効果の一致
-- Fieldの到達可能性
+- コード未経験者でも意味を追える
+- code readingがgame decisionになる
+- JavaScript / TypeScript上の意味が正しい
+- display codeと内部効果が一致する
+- seed再現性 / solvability
+- RPG進行と反復学習
+- Storyが答えを直接教えない
 
 ---
 
 ## 2. 基本原則
 
-新しい要素は「構文を増やしたい」だけで追加しない。実装前に最低限決める。
+新しい要素は「構文を増やしたい」だけで追加しない。
+
+実装前に最低限決める。
 
 1. 何を読めるようにしたいか
-2. 既習として扱うsyntax / type concept
+2. その前に何を既習として扱うか
 3. Playerが盤面のどの情報を見るか
-4. 読み間違えると何が起こるか
-5. 正しく読んだ結果がどのgame decisionへつながるか
-6. Stage内での難易度と役割
-7. TargetRule / effectで安全に表現できるか
+4. 初心者へ普通の言葉ならどう説明するか
+5. 読み間違えると何が起こるか
+6. 正しく読んだ結果がどのgame decisionへつながるか
+7. 何戦くらい反復してから次へ進むか
+8. TargetRule / effectで安全に表現できるか
 
-構文や型の意味がゲーム結果に現れないなら、Battleへ入れる優先度は低い。
+構文の意味がgame resultへ出ないならBattleへ入れる優先度は低い。
 
 ---
 
-## 3. 学習の役割分担
+## 3. 初心者向け説明の順番
+
+新概念は、technical termを先に暗記させない。
+
+基本順:
 
 ```text
-Field看板 = 単体概念を任意確認
-通常Battle = 1〜2概念を盤面へ適用
-後半Battle = 複数概念 + 中間値
-Boss = 複数行・複合読解
+普通の言葉
+→ 小さい式 / 記号
+→ syntaxの意味
+→ 現在dataへ適用
+→ 反復
+→ 必要なら正式名称
 ```
 
-看板は必須ではない。知っているPlayerはそのままGateへ進める。
+例:
 
-現在のField看板:
+```js
+enemy.hp < 50
+```
 
-### JavaScript Kingdom
+Story / NPC:
 
-- `find()` / `filter()` / `map()` / `sort()`
-- comparison
-- `&&` / `||`
-- `some()` / `reduce()`
+> `<` は、左の数字が右より小さいかを見る記号だ。ここではHPが50より少ないかを見てる。
 
-### TypeScript Frontier
+次に:
 
-- type annotation
-- union type
-- optional property
-- narrowing
-- `keyof` / indexed access
+```js
+enemies.find((enemy) => enemy.hp < 50)
+```
 
-看板を増やすときは**通路へ置かない**。すべてのGate / 看板 / Exitへ到達できることをreachability testで確認する。
+> `enemies`は敵たちの集まり。`find()`は前から見て、条件に合うものを1つ探す。
+
+ここで「正解はSlime」とは言わない。targetを現在値から決める部分はPlayerに残す。
+
+### technical term
+
+`callback`、`target selection`、`API contract`、`narrowing`等を使う場合、初登場時は普通の言葉を先に置く。
+
+例:
+
+> 送られてくるdataの形の約束――API contract
+
+のように意味から名前へ進む。
 
 ---
 
-## 4. コンテンツ構造
+## 4. 学習の役割分担
 
 ```text
-AreaDefinition
-  = Area名 / availability / routes / bossBattleId
+Story / NPC = 新概念を会話として最初に噛み砕く
+CODE HELP = 読み方を任意で再確認
+CODE DATA = 現在値 / 中間値を確認
+通常Battle = 1〜2概念を盤面へ適用
+反復Encounter = 同じ概念を値 / 順番 / variant差で練習
+中Boss = 直前の複数概念を組み合わせる
+Final Boss = 編全体の既習概念を複数行で追う
+```
 
+Field看板は補助として残してよいが、最初の説明を看板だけへ押し込まない。
+
+---
+
+## 5. JavaScript編の長さ
+
+JavaScript編は3戦で完結させる前提にしない。
+
+最終的な目安:
+
+- 通常戦闘 / Encounter: 20〜30回程度
+- fixed learning Battle: 8〜12程度まで候補
+- 中Boss: 2〜3体候補
+- Final Boss: 1体
+
+数値は固定quotaではない。
+
+重要なのは、**新概念の数ではなく反復回数を増やすこと**。
+
+例:
+
+```text
+comparison
+→ comparisonを数戦
+→ find
+→ findをHP / attack / nameで数戦
+→ && / ||
+→ find + &&
+→ 中Boss
+→ filter
+→ filterを数戦
+→ map
+→ some / every
+→ sort
+→ multi-line
+→ Final
+```
+
+同じcode文字列を暗記させない。
+
+---
+
+## 6. Difficulty ladder
+
+JavaScriptの入口は、`find()`から始める必要もない。
+
+より小さい単位から進めてよい。
+
+```text
+値を見る
+↓
+comparison (`<`, `>`, `===`)
+↓
+object property (`enemy.hp`)
+↓
+array / enemiesという集合
+↓
+find()
+↓
+&& / ||
+↓
+filter()
+↓
+map()
+↓
+some() / every()
+↓
+sort()
+↓
+optional chaining / nullish coalescing等の既習範囲
+↓
+複数行 / 中間値
+↓
+reduce()等の集約
+```
+
+Bossで未習conceptを突然出さない。
+
+---
+
+## 7. Content structure
+
+```text
 Battle
-  = areaId / Enemy / Skill構成 / reward
+  = areaId / Enemy / Skill / reward
 
 SkillDefinition
   = Skillの意味 / TargetRule / codeVariants / explanation
 
 CodeVariant
-  = display code / single or multi / optional codeHelpLines
+  = display code / line mode / code help
 
-LearningHint
-  = Fieldで読む任意の構文・型解説
+Story learning beat
+  = 初登場conceptを普通の言葉で説明するevent
 
 Seeded Generator
-  = 同じ学習意図を保った盤面variation
+  = 同じlearning intentを保った盤面variation
 
 Solvability
   = 生成 / 設計品質の検証
 ```
 
-JavaScript Skillは`skillDefinitions.ts`、TypeScript Skillは`typescriptSkillDefinitions.ts`へ分け、`skills.ts`で統合する。Battle engineはArea固有の構文を知らない。
+Battle engineはArea固有syntaxを知らない。
 
 ---
 
-## 5. SkillDefinition
+## 8. SkillDefinition
 
 ```ts
 {
@@ -114,33 +221,29 @@ JavaScript Skillは`skillDefinitions.ts`、TypeScript Skillは`typescriptSkillDe
 }
 ```
 
-### `id`
-
-stable identifier。表示名変更では変えない。Areaを跨いでも重複させない。
-
-### `power`
-
-base damage。Player Level倍率とは分ける。
-
 ### `rule`
 
 display codeの結果に対応する内部TargetRule。
 
 ### `concept`
 
-CODE HELPや学習内容を示す短い名前。
+CODE HELPやStory learning beatが参照する短い概念名。
 
 ### `explanation`
 
-1. 構文 / 型が一般に何を示すか
+原則として、
+
+1. syntaxが一般に何をするか
 2. このSkillでは何を見るか
-3. どの中間値を追うか
+3. 中間値があるならどこを追うか
 
 を短く説明する。
 
+final targetそのものは書かない。
+
 ---
 
-## 6. CodeVariant
+## 9. CodeVariant
 
 ```ts
 {
@@ -150,8 +253,6 @@ CODE HELPや学習内容を示す短い名前。
   codeHelpLines?: readonly string[]
 }
 ```
-
-同じSkillには複数variantを持たせる。
 
 変えてよいもの:
 
@@ -168,29 +269,17 @@ CODE HELPや学習内容を示す短い名前。
 - conceptの本質
 - target集合
 
-表面の文字列だけを暗記して攻略できないようにする。
+文字列暗記で攻略できないようにする。
 
-### `codeHelpLines`
-
-- `code.split('\n').length`と同じ件数
-- 1項目は対応する1行だけを説明
-- 最終targetを最初から答えとして書かない
-- callback名が変わっても意味を維持
-- TypeScriptでは「型として何が確定したか」と「runtimeで何を実行するか」を混同しない
+`codeHelpLines`は物理行数と一致させ、各行の意味だけを説明する。
 
 ---
 
-## 7. Display codeと内部効果
+## 10. Display codeと内部効果
 
-最重要ルール。表示コードとTargetRuleは同じ結果を指さなければならない。
+最重要ルール。
 
-JavaScript例:
-
-```js
-enemies.filter((enemy) => enemy.hp > 0 && enemy.hp < 100)
-```
-
-なら内部ruleも「生存中かつHP100未満のEnemy全員」。
+表示codeとTargetRule / effectは同じ結果を指す。
 
 確認するずれ:
 
@@ -201,27 +290,50 @@ enemies.filter((enemy) => enemy.hp > 0 && enemy.hp < 100)
 - current HP / max HP
 - array order / sorted order
 - dead Enemy
-- `some()`が返すboolean
-- `map()`後のobject property
+- `some()` / `every()`のboolean
+- `map()`後のproperty
 - `reduce()`のaccumulator / tie
-- `.enemy` / `[0]`など最終取り出し
+- `.enemy` / `[0]`等の最終取り出し
 
-Display code自体を`eval()`しない。
+表示codeを`eval()`しない。
 
 ---
 
-## 8. TypeScript固有ルール
+## 11. JavaScriptの複合読解
 
-TypeScriptは「型用語クイズ」にしない。型情報を手がかりに**最終的なruntimeの対象や値を読む**問題にする。
+複数行は長さを増やすためでなく、中間結果を追わせるために使う。
 
-読む順番の基本:
+```js
+const alive = enemies.filter((enemy) => enemy.hp > 0)
+const ordered = [...alive].sort((a, b) => a.hp - b.hp)
+ordered[0]
+```
+
+良い構造:
 
 ```text
-型が許す候補を確認
-→ 現在値 / objectの形を確認
-→ narrowingで何が確定したか確認
-→ JavaScriptとして実行される式を追う
-→ targetを判断
+1行目: 対象集合を準備
+2行目: 絞る / 変換 / 並べる
+3行目以降: 集約
+最終行: targetを取り出す
+```
+
+新概念はStory / 前段Battleで単体経験してから組み合わせる。
+
+---
+
+## 12. TypeScript固有ルール
+
+TypeScriptは型用語クイズにしない。
+
+読む順番:
+
+```text
+型が許す候補
+→ 現在値 / objectの形
+→ narrowingで何が確定したか
+→ JavaScriptとして実行される式
+→ target / value
 ```
 
 例:
@@ -233,99 +345,25 @@ const targets = enemies.filter((enemy: Enemy) => enemy.hp < limit)
 targets
 ```
 
-ここでは`45 | 60`を見ただけでは答えにならない。`limit`へ実際に`60`が入っていることまで読む。
+`45 | 60`を見ただけで答えにしない。現在値`60`まで読む。
 
-### optional property
+TypeScript Storyでも、
 
-```ts
-type Scan = { limit?: number }
-const scan: Scan = { limit: 55 }
-const limit = scan.limit ?? 0
-```
+> 型の契約が壊れた
 
-`?`は「必ずundefined」ではなく「存在しない可能性がある」。現在のobjectとfallbackまで追わせる。
+から始めず、
 
-### narrowing / type predicate
+> 受け取るdataの形の約束が変わった
 
-```ts
-const ready = candidates.filter(
-  (candidate): candidate is Candidate & { score: number } =>
-    candidate.score !== undefined,
-)
-```
-
-CODE HELPでは、条件がtrueの要素だけが残るruntimeの意味と、その後`score`を`number`として扱える型の意味を分けて説明する。
-
-### `keyof` / indexed access
-
-```ts
-const key = 'hp' as const satisfies keyof Enemy
-enemy[key]
-```
-
-`keyof Enemy`だけを問わず、現在`key`が`'hp'`なので`enemy[key]`が`enemy.hp`を読むことへ接続する。
+と説明してから正式名称へ接続する。
 
 ---
 
-## 9. JavaScriptの複合読解
-
-複数行は長さを増やすためではなく、**中間結果を追わせるため**に使う。
-
-```js
-const alive = enemies.filter((enemy) => enemy.hp > 0)
-const ordered = [...alive].sort((a, b) => a.hp - b.hp)
-ordered[0]
-```
-
-```js
-const alive = enemies.filter((enemy) => enemy.hp > 0)
-const scored = alive.map((enemy) => ({ enemy, score: enemy.attackDamage }))
-scored.reduce((best, candidate) => candidate.score > best.score ? candidate : best).enemy
-```
-
-良い構造:
-
-```text
-1行目: 対象集合 / 型を準備
-2行目: 絞る・変換する・型を確定する
-3行目以降: 並べる / 集約する
-最終行: targetを取り出す
-```
-
-未習概念を一度に大量投入しない。新概念はField看板で単体確認できるようにする。
-
----
-
-## 10. LearningHint
-
-```ts
-{
-  id,
-  concept,
-  title,
-  summary,
-  codeLines,
-  notes,
-}
-```
-
-ルール:
-
-- 1看板1概念を基本
-- summaryは短く
-- code例はBattleに近づける
-- notesで誤読しやすい点を補足
-- 読まなくても進行可能
-- `learningHintId`はunit testで存在確認
-- 看板はMain routeの脇へ置く
-
----
-
-## 11. Seeded Generator / Solvability
+## 13. Seeded Generator / Solvability
 
 現在のvariation:
 
-- Enemy HP: base maxHPの85〜115%
+- Enemy HP variation
 - Enemy順shuffle
 - Skill順shuffle
 - code variant選択
@@ -333,32 +371,25 @@ scored.reduce((best, candidate) => candidate.score > best.score ? candidate : be
 候補盤面は、
 
 1. initial valid targetがある
-2. base Battleで初期targetがあったSkillが生成後もtargetを持つ
+2. base BattleでtargetがあったSkillが生成後も意味を持つ
 3. `isBattleSolvable()`を満たす
 
-場合のみ採用する。最大32回で成立しなければbase Battle cloneへfallbackする。
+場合のみ採用する。
 
-新Areaでもgenerator / solvabilityを共有する。Area固有の別generatorを安易に作らない。
+Generatorは反復学習に使う。
 
----
+同じconceptを、
 
-## 12. GeneratorとRPG Levelを混ぜない
+- HPが違う
+- enemy orderが違う
+- callback名が違う
+- thresholdが同じでも盤面が違う
 
-seed generationは同じStage内のvariation。
-
-```text
-Player Levelが低い
-→ 過去Stageへ戻る
-→ EXP
-→ Level Up
-→ 再挑戦
-```
-
-Enemy HPをPlayer Levelへ自動追従させない。
+状態で読み直させる。
 
 ---
 
-## 13. Battle balance
+## 14. Battle balance
 
 確認する。
 
@@ -369,102 +400,67 @@ Enemy HPをPlayer Levelへ自動追従させない。
 - highest POWERだけで解けない
 - multi-targetが完全上位互換にならない
 - 中間値に盤面差が反映される
-- recommended Levelで合理的な勝ち筋がある
+- 初心者が「何を見ればよいか」まではStory / HELPから理解できる
+- targetそのものは自分で判断する
 
 ---
 
-## 14. RPG reward / Area
+## 15. Worldとlearning progression
 
-新Battle追加時:
+新conceptはWorld進行と結びつける。
 
-- `areaId`
-- Stage IDの全体一意性
-- EXP
-- next Stage
-- Skill unlock
-- Boss / Area CLEAR
-- Stage Select / Field Gate
-- save復元時のcompatibility
+JavaScriptの例:
 
-を確認する。
+```text
+草原: 値 / comparison
+↓
+林: object / array / find
+↓
+Village: 既習内容の会話・休憩・小イベント
+↓
+森: && / || / filter
+↓
+中Boss: find / filter + condition
+↓
+深い森: map / some / every / sort
+↓
+Final: multi-line / aggregate
+```
 
-各Areaの入口Stageを初期解放する場合、既存saveにも不足分だけ補完し、過去CLEARを失わせない。
+地名を`FILTER FOREST`のような教材名にする必要はない。
+
+普通のfantasy locationとして成立させ、そこで出るBattleがlearning progressionを担う。
 
 ---
 
-## 15. Test
+## 16. Test / PR checklist
 
 最低限:
 
-- Skill ID重複なし
-- Battle ID重複なし
+- Skill ID / Battle ID重複なし
 - code variant複数
 - variantでTargetRule / POWER不変
-- multi variantの行数
-- `codeHelpLines`と物理行数一致
-- display code / internal rule対応
-- generated battleのvalid target
+- multi code行数とCODE HELP一致
+- display code / internal rule一致
+- generated battle valid target
 - solvability
 - seed再現性
-- LearningHint参照整合性
-- Area / Battle / Boss整合性
-- Field全interactionの到達可能性
-- old save migration / baseline補完
+- Storyがfinal targetを明示していない
+- 新conceptが未説明のままBossへ出ていない
+- 同conceptの反復が単なる同一問題copyになっていない
+- map / Battle / progress整合
+- old save migration
 
-PR前は必ず次を成功させる。
+PR前:
 
 ```bash
 npm ci
 npm run lint
 npm test
 npm run build
+npm run test:e2e
 ```
 
-PR CIはこの確認の代替ではなく二重確認。
+GitHub Actionsは最初の実行環境にしない。local実行できない場合だけrepository workflowで定義された代替手順を使い、その制約をPRへ明記する。
 
----
-
-## 16. 追加チェックリスト
-
-実装前:
-
-- [ ] learning themeを1文で説明できる
-- [ ] 未習syntax / type conceptを詰め込みすぎていない
-- [ ] game resultへ意味が出る
-- [ ] TargetRule / effectで安全に表せる
-- [ ] Field看板が必要か判断した
-
-実装後:
-
-- [ ] display codeと内部効果一致
-- [ ] code variant複数
-- [ ] multi codeの各行に役割がある
-- [ ] 行別CODE HELPが対応
-- [ ] valid target / solvability / seed再現性
-- [ ] Field学習ヒント整合
-- [ ] Fieldの通路を塞いでいない
-- [ ] old saveを壊していない
-- [ ] unit test
-- [ ] docs更新
-- [ ] PR前lint / test / build
-- [ ] Cloudflare Preview
-
----
-
-## 17. 現在の難易度順
-
-```text
-JavaScript単体構文
-↓
-JavaScript複数構文・中間変数
-↓
-TypeScript型注釈 / primitive
-↓
-union / optional / narrowing
-↓
-JavaScript実行読解 + 複数の型情報
-↓
-TypeScript Boss
-```
-
-最終目的は構文名を覚えることではなく、**実際のコードを上から追い、中間結果と型情報を使って最終結果を判断できること**。
+最終目的はsyntax名の暗記ではなく、**コードを上から追い、現在値と中間結果から何が起きるか自分で判断できること**。

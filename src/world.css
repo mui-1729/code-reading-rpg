@@ -93,6 +93,32 @@
   box-shadow: -12px 3px 0 #4b9445, 11px -2px 0 #70b65a, 20px 5px 0 #4b9445;
 }
 
+.terrain-woods,
+.terrain-deep-woods {
+  overflow: hidden;
+}
+.terrain-woods { background: #356f3d; }
+.terrain-deep-woods { background: #23512f; }
+.terrain-woods::before,
+.terrain-woods::after,
+.terrain-deep-woods::before,
+.terrain-deep-woods::after {
+  content: '';
+  position: absolute;
+  bottom: 6%;
+  width: 28%;
+  height: 54%;
+  background: #1f512b;
+  clip-path: polygon(50% 0, 92% 44%, 72% 44%, 100% 72%, 66% 72%, 86% 100%, 14% 100%, 34% 72%, 0 72%, 28% 44%, 8% 44%);
+}
+.terrain-woods::before,
+.terrain-deep-woods::before { left: 11%; }
+.terrain-woods::after,
+.terrain-deep-woods::after { right: 9%; transform: scale(.82); transform-origin: bottom center; }
+.terrain-woods::after { background: #285f33; }
+.terrain-deep-woods::before { background: #153a23; }
+.terrain-deep-woods::after { background: #193f26; }
+
 .terrain-forest { background: #285d32; }
 .terrain-forest::before,
 .terrain-forest::after {
@@ -115,6 +141,32 @@
     linear-gradient(90deg, rgba(255,255,255,.055) 50%, transparent 50%) 0 0 / 10px 10px,
     linear-gradient(rgba(255,255,255,.045) 50%, transparent 50%) 0 0 / 10px 10px,
     #62645d;
+}
+.terrain-village {
+  background:
+    linear-gradient(135deg, transparent 0 32%, #8b5539 33% 66%, transparent 67%),
+    #6f764e;
+}
+.terrain-village::after {
+  content: '';
+  width: 58%;
+  height: 48%;
+  background: #d7c189;
+  box-shadow: inset 0 -7px 0 #9b7d53;
+  clip-path: polygon(50% 0, 100% 34%, 88% 34%, 88% 100%, 12% 100%, 12% 34%, 0 34%);
+}
+.terrain-exit {
+  background: repeating-linear-gradient(90deg, #8c744e 0 9px, #a4895d 9px 12px, #7e6746 12px 16px);
+}
+.terrain-house {
+  background: linear-gradient(135deg, #8d4e3d 0 48%, #6b352e 49% 56%, #a9654c 57% 100%);
+}
+.terrain-house::after {
+  content: '';
+  position: absolute;
+  inset: 42% 12% 8%;
+  background: #c7ae79;
+  box-shadow: inset 0 -6px 0 #89734e;
 }
 .terrain-mountain { background: #414a51; }
 .terrain-mountain::after {
@@ -153,6 +205,8 @@
 }
 .boss-object { color: #ff6688; }
 .shop-object { color: var(--gold); }
+.village-object { color: #fff0ac; font-size: clamp(5px, 1vw, 8px); }
+.exit-object { color: #f5e4b8; font-size: clamp(6px, 1vw, 9px); }
 .npc-object { color: #7fcaff; font-size: clamp(12px, 2vw, 20px); }
 .recovery-object { color: #a8ffe9; font-size: clamp(6px, 1vw, 9px); letter-spacing: .04em; }
 .treasure-object { color: #ffe07b; font-size: clamp(6px, 1vw, 9px); letter-spacing: .03em; }

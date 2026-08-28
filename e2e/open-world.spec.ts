@@ -133,7 +133,8 @@ test.describe('Open World RPG loop', () => {
     await expect.poll(() => playerPosition(page)).toEqual({ x: 10, y: 11 })
 
     const stored = await storedRpgState(page)
-    expect(stored.version).toBe(3)
+    expect(stored.version).toBe(4)
+    expect(stored.state.worldMapId).toBe('overworld')
     expect(stored.state.worldPosition).toEqual({ x: 10, y: 11 })
     expect(stored.state.encounterCount).toBe(5)
     expect(stored.state.stepsSinceEncounter).toBe(0)

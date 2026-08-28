@@ -1,83 +1,180 @@
 # CODE//READ RPG Open World Design
 
-この文書は、**現在のOpen World設計**だけを扱う。project全体の現状は[`PROJECT_STATUS.md`](./PROJECT_STATUS.md)、今後の優先順位は[`ROADMAP.md`](./ROADMAP.md)を参照する。
+この文書は、**現在採用するWorld構造と拡張ルール**を扱う。project全体の現状は[`PROJECT_STATUS.md`](./PROJECT_STATUS.md)、世界観は[`WORLD_DIRECTION.md`](./WORLD_DIRECTION.md)、優先順位は[`ROADMAP.md`](./ROADMAP.md)を参照する。
 
 ## 1. 目的
 
-Stage Select / Area Selectを繰り返すのではなく、**1つのWorldを歩くこと自体をRPGの進行にする**。
+Stage Select / Area Selectを繰り返すのではなく、**Worldを歩き、村や地域へ入り、Battleを重ねること自体をRPGの進行にする**。
+
+Open Worldを「1枚の巨大grid」とは定義しない。
 
 ```text
 Title / Opening
 ↓
-Open World
-├─ JavaScript Grassland
-├─ Central Hub
-└─ TypeScript Forest
+CODE WORLD
+├─ Overworld
+│  ├─ JavaScript側の自然地域
+│  ├─ Central Hub
+│  └─ TypeScript側
+├─ Village map
+├─ Forest / local field map
+└─ future Interior / Dungeon map
 ↓
-Explore / Shop / Recovery / Treasure / Party
+Explore / NPC / Shop / Inn / Treasure
 または
-Random Encounter / Fixed Boss
+Encounter / Fixed Battle / Boss
 ↓
 Code Reading Battle
 ↓
 Reward / Story / Progress
 ↓
-同じWorldへ戻る
+元いたmapへ戻る
 ```
 
-通常導線へStage Select / Area Select /専用Complete画面を戻さない。
+通常導線へStage Select / Area Selectを戻さない。
 
-## 2. World layout
+## 2. Current implementation baseline
 
-現在:
+既存baseline:
 
-- 40 × 28 tile
+- Overworld 40 × 28 tile
 - camera viewport 11 × 9
 - 4方向移動
 - JavaScript = grass / tall grass
 - TypeScript = forest
-- Hub / road = safe zone
+- Hub / road = safe
 - mountain / water等のnon-walkable terrain
-- 8-bit terrain。内部grid境界をvisualとして強調しない
-- Playerはviewport overlayとして常駐し、移動時は座標を更新
-- joined BYTEはPlayerのprevious tileへ追従
+- Playerはviewport overlay
+- joined BYTEはprevious tileへ追従
 
-mapを広げること自体を目的にしない。新しい空間にはlearning / story / RPG上の意味を持たせる。
+このbaselineを壊さず、**current map ID + local position**を持つmulti-map構造へ拡張する。
 
-## 3. World domain boundary
+## 3. Multi-map model
+
+RpgStateは、
+
+```text
+worldMapId
+worldPosition
+```
+
+を現在地として保存する。
+
+`worldPosition`は現在map内のlocal coordinate。
+
+各mapは最低限次を定義する。
+
+- stable map ID
+- width / height
+- region identity
+- terrain resolver
+- portal / exit
+- encounter可否
+- fixed objectがある場合はその定義
+
+最初の実証mapはJavaScript側のVillage。
+
+```text
+Overworld
+  ↓ village entrance
+JavaScript Village
+  ↓ exit
+Overworld
+```
+
+将来は同じ仕組みで、
+
+```text
+Overworld → Village → Forest → Deep Forest → Boss area
+```
+
+のようにJavaScript地方を伸ばせる。
+
+## 4. JavaScript地方のmap構成
+
+JavaScriptは自然系で統一する。
+
+```text
+Hub寄り: 開けた草原
+↓
+Tall Grass
+↓
+林
+↓
+Village
+↓
+森
+↓
+深い森
+↓
+中Boss
+↓
+最深部 / Final Boss
+```
+
+洞窟・遺跡・地下・城塞をJavaScriptだけで使い切らない。
+
+現在のOverworldでは、まず草原の西奥へ`woods` / `deep-woods`等の自然terrainを増やして奥行きを出す。
+
+Villageは別mapへ遷移する。
+
+Village内へは、
+
+- 家 / 壁はnon-walkable
+- 道 / 広場はwalkable
+- 出口tileから元mapへtransition
+- Random Encounterなし
+
+を基本とする。
+
+Shop / Inn / NPCは今後Villageへ配置できるが、mapを作るためだけに空のbuildingを大量配置しない。
+
+## 5. TypeScript以降の景観を温存する
+
+JavaScriptの自然地域を越えてTypeScriptへ入ったら、石造・crystal・rune・ruins等を増やし、同じ森の色違いにしない。
+
+Database用の地下 / mine / archive / libraryもJavaScriptでは大量消費しない。
+
+World全体として、技術編が変わると景色も変わる設計を優先する。
+
+## 6. World domain boundary
 
 ### `worldMap.ts`
 
-- World size
+担当:
+
+- map ID / dimensions
 - region / terrain
 - walkable
 - viewport
 - Encounter terrain / chance
+- portal / map transition
 - fixed object positions
 - adjacency
+
+WorldPageへmap固有座標`if`を積まない。
 
 ### `worldActions.ts`
 
 UI / Routerへ依存しないpure resolver。
 
 - movement / blocked
+- map transition
 - steps / Encounter cooldown
 - deterministic Encounter intent
-- BYTE interaction
-- Shop interaction
-- Recovery interaction
-- Treasure interaction
-- JS / TS Boss interaction
+- BYTE / Shop / Recovery / Treasure / Boss interaction
 
-### `treasures.ts`
+### `RpgState`
 
-- one-shot reward
-- opened判定
-- current stateへreward適用
+- current map ID
+- local position
+- Encounter pacing
+- current HP
+- RPG persistent state
 
 ### `WorldPage.tsx`
 
-resolver結果を
+resolver結果を、
 
 - RpgState update
 - navigation
@@ -87,149 +184,124 @@ resolver結果を
 
 へ接続するadapter。
 
-新しいobjectを追加する時も`WorldPage.tsx`へ座標`if`を積まない。
+## 7. Map transition
 
-## 4. Random Encounter
+PortalはWorld domainで解決する。
 
-- JS tall grass → JavaScript normal Battle
-- TS forest → TypeScript normal Battle
-- road / HubはEncounterなし
+Move先がportalの場合、resolverはBattleやRouter navigationではなく、
+
+```text
+fromMap / fromPosition
+→ toMap / toPosition
+```
+
+を含むtransition resultを返す。
+
+WorldPageはそのnext RpgStateを保存して同じ`/world`上で別mapを描画する。
+
+mapごとにrouteを大量追加しない。
+
+Battleの`returnTo=/world`も、RpgStateに保存されたmap / positionへ戻るためそのまま利用できる。
+
+## 8. Random Encounter
+
+Encounterはmap + terrainで決まる。
+
+- JavaScript tall grass / woods / deep woods → JavaScript normal Battle
+- TypeScript encounter terrain → TypeScript normal Battle
+- road / Hub / Village → Encounterなし
 - minimum 5 steps cooldown
 - `encounterCount`をseedへ含める
-- Battle後は元のWorld位置へ戻る
-- fixed Bossとは別intentとして扱う
+- Battle後は同じmap / positionへ戻る
+- fixed Bossとは別intent
 
-同じEncounter seedは再現可能にし、次Encounterではdisplay codeのsemantic variationを変える。
+同じEncounter seedは再現可能にし、次Encounterではsemantic-equivalent code variationを変える。
 
-## 5. Persistent HP / Recovery
+JavaScript編は最終的に20〜30戦程度を想定するが、Encounter回数の水増しはしない。同じconceptでも値 / enemy順 / code variant / 組み合わせが変わることに意味を持たせる。
 
-Battle開始HPは毎回full resetしない。
+## 9. Persistent HP / Defeat / Recovery
+
+Battle開始HPはfull resetしない。
 
 ```text
 RpgState.currentHp
 ↓
-Battle start
-↓
-damage / PATCH KIT
+Battle
 ↓
 RpgState.currentHpへ反映
 ↓
 Victory
 ↓
-残HPでWorld return
+同じmapへ戻る
 ```
 
-- Defeat → Hub start + full HP
-- Hub `REST`へ隣接INTERACT → full HP
-- Equipment等でmax HPが変わったらcurrent HPを上限へclamp
-- current / max HPはPause STATUSで確認
-- World常設HUDへHP panelを増やさない
+Defeat時だけ、
 
-## 6. Treasure
+- `worldMapId = overworld`
+- `worldPosition = WORLD_START`
+- full HP
+- Encounter cooldown reset
 
-現在:
+としてHubへ戻す。
 
-- JS `DEBUG CACHE`: Gold + Debug Charm
-- TS `TYPE CACHE`: Gold + PATCH KIT
+Inn / Equipmentによる既存HPルールは維持する。
 
-原則:
+## 10. Save migration
 
-- adjacent INTERACT
-- one-shot
-- `openedTreasureIds`をsave
-- reloadしても復活しない
-- learning answerは報酬にしない
-- mapを埋めるために大量配置しない
+multi-map導入でRpgState schemaを更新する。
 
-## 7. Shop
+旧save v1〜v3は、
 
-Central HubのSHOPはcurrent economy entry point。
+```text
+worldMapId = overworld
+worldPosition = 旧worldPosition
+```
 
-- PATCH KIT
-- role差のある少数Equipment
-- current Gold / price / ownedを表示
-- Gold不足 / ownedをresolverで判定
-- 購入したEquipmentはPause EQUIPMENTから変更
-- Areaごとのlegacy Shop UIはcurrent runtimeで使わない
+としてmigrationする。
 
-## 8. Party
+既存座標は互換性のため維持する。未知map ID / map bounds外座標はOverworld開始地点へfallbackする。
 
-現在のcompanionはBYTE。
+新saveはmap IDとlocal positionをreload後も保持する。
 
-World:
+## 11. Treasure / Shop / Party / Boss
 
-- Hub NPCとしてjoin
-- join後はprevious tile follower
+既存の、
 
-Battle:
+- JS / TS Treasure
+- Central Hub Shop
+- Inn
+- BYTE
+- Fixed Boss
 
-- codeが決めた同じtargetへfollow-up
-- Partyがcorrect targetを自動選択しない
+はmulti-map化で壊さない。
 
-Party追加は人数より「読解を壊さない役割差」を優先する。
+fixed objectは所属mapを明確にする。別mapで同じcoordinateになってもinteractionが誤発火しないようにする。
 
-## 9. Fixed Boss
+今後BossをDeep Forest等へ移す場合も、Battle rule自体をWorldへ持ち込まない。
 
-Battle 3 / 6はWorld上の固定地点。
+## 12. Progress guidance
 
-unlock判定はPlayerProgressからderiveする。
+current guideはWorld Objective。
 
-Boss GUARD:
+将来JavaScript進行を長くするときは、
 
-- minion生存中はBoss damageを抑える
--解除条件codeをBattle UIへ表示
-- minion全滅でOPEN
-- current target ruleを変更しない
+```text
+草原へ向かう
+→ Villageへ入る
+→ 森を抜ける
+→ 中Bossを倒す
+→ 深い森へ
+```
 
-将来TypeScript固有mechanicを追加する場合も、World側へBattle ruleを持ち込まない。
-
-## 10. Progress guidance
-
-current guideは**World Objective**。
-
-PlayerProgressからpureにderiveし、次へ使う。
-
-- World上のNEXT OBJECTIVE
-- Pause STATUS
-- Battle後のshort progress feedback
-
-JavaScriptは現在のstoryに合わせて、BYTE join → JavaScript Grassland → Chapter progression → Code Coreへ案内する。
-
-TypeScriptも同じ仕組みを使うが、story copyの統一は今後のcontent task。
+のようにmap / landmark単位の短い目的をderiveできるようにする。
 
 常設Quest Trackerを復活させない。
 
-## 11. State ownership
+## 13. Pause / fixed UI
 
-### PlayerProgress v4
+World常設UIは最小限。
 
-- EXP / Gold
-- inventory
-- clear / unlock
-- legacy `completedSideQuestIds`
-
-### RpgState v3
-
-- current HP
-- Equipment / owned Equipment
-- Party / Party Equipment
-- World position
-- Encounter pacing
-- opened Treasure
-
-restore時にbounds / known IDs / slot consistency / HPをnormalizeする。
-
-### TutorialState v1
-
-World / RPG saveと分離。
-
-`RESET PROGRESS`はgeneric reset eventでProgress / RPG / Tutorialをそれぞれresetし、Sound settingsは保持する。
-
-## 12. Pause / fixed UI
-
-Worldで常設するのは現在地理解と操作に必要な最小情報だけ。
-
-詳細はPauseへ集約する。
+map名 / region理解に必要な情報だけをWorld headerへ出し、詳細はPauseへ集約する。
 
 ```text
 STATUS
@@ -240,9 +312,7 @@ CODEX
 SYSTEM
 ```
 
-独立SOUND / CODEX常設buttonへ戻さない。
-
-## 13. Legacy Area / Field
+## 14. Legacy Area / Field
 
 互換redirect:
 
@@ -256,42 +326,44 @@ SYSTEM
 → /world
 ```
 
-旧Field content definitionは一部test fixtureとして残るが、current runtimeのsource of truthではない。
+旧Field definitionはtest fixture / migration都合で残る場合があるが、current runtimeのsource of truthではない。
 
-新featureは`world/`へ実装する。
-
-## 14. Testing
+## 15. Testing
 
 Unit:
 
-- terrain / bounds / viewport
+- map dimensions / bounds
+- terrain / viewport
 - movement / blocked
-- Encounter cooldown / selection
-- Shop / Party / Recovery / Treasure / Boss intent
-- Treasure reward
-- World Objective
-- RpgState migration / normalization
+- portal transition
+- mapごとのEncounter可否
+- cooldown / selection
+- fixed objectが所属map以外で誤発火しない
+- Treasure / Shop / Party / Recovery / Boss intent
+- RpgState v1〜v4 migration / normalization
 
 E2E:
 
 - Opening / World entry
-- move / interaction
-- Random Encounter → Battle → same position return
-- HP persistence / PATCH KIT / Recovery / Defeat
-- Treasure persistence
-- Shop / Equipment
-- BYTE join / follow-up
-- Tutorial controls
-- Boss flow
+- Overworld movement
+- Overworld → Village transition
+- Village movement → exit → Overworld return
+- current map / position reload persistence
+- Random Encounter → Battle → same map return
+- HP persistence / Recovery / Defeat
+- Treasure / Shop / Equipment / BYTE / Boss regression
 
-## 15. Expansion rule
+## 16. Expansion rule
 
-新region / landmark / companion等を増やす前に確認する。
+新mapを増やす前に確認する。
 
-1. 歩いて到達する意味があるか
-2. code reading contentと結びつくか
-3. WorldPageへad-hoc条件を増やしていないか
-4. Pause / HUDを詰め込みすぎていないか
-5. Unit / E2Eで主要接続を固定できるか
+1. その場所へ歩いて到達する意味があるか
+2. 学習progressと結びつくか
+3. 既存mapとの差がvisualで分かるか
+4. 空白を増やすだけになっていないか
+5. WorldPageへad-hoc条件を増やしていないか
+6. Battle resolverを複製していないか
+7. save migration / boundsをtestできるか
+8. その技術編で後の景観categoryまで使い切っていないか
 
-World sizeではなく、**意味のある地点と学習contentの密度**を増やす。
+目標は「巨大なmap」ではなく、**RPGとして意味のある複数mapをつないだ広い地方**。

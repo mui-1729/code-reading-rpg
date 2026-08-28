@@ -37,7 +37,7 @@ import {
   partyMemberById,
   useRpg,
 } from './rpg'
-import { WORLD_START } from './world/worldMap'
+import { OVERWORLD_MAP_ID, WORLD_START } from './world/worldMap'
 
 type Phase = 'battle' | 'victory' | 'defeat'
 
@@ -178,6 +178,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
             setRpgState((current) => ({
               ...current,
               currentHp: playerStats.maxHp,
+              worldMapId: OVERWORLD_MAP_ID,
               worldPosition: { ...WORLD_START },
               stepsSinceEncounter: 8,
             }))
