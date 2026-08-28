@@ -88,8 +88,11 @@ export function WorldPage() {
     if (progress.clearedAreaIds.includes('javascript') || progress.clearedStageIds.includes(3)) {
       return '西の異変は収まった。技は狙った相手へ飛ぶようになった。'
     }
+    if (progress.clearedStageIds.includes(14)) {
+      return 'BYTE // filter()で、条件に合うものを最後まで見て全部集める読み方まで確認できた。'
+    }
     if (progress.clearedStageIds.includes(13)) {
-      return 'BYTE // 森の守り人を突破した。次の異変は「条件に合うものをまとめて集める」動きにつながっていそうだ。'
+      return 'BYTE // 森の守り人を突破した。次は「条件に合うものをまとめて集める」動きを読んでみよう。'
     }
     if (progress.clearedStageIds.includes(12)) {
       return 'BYTE // &&と||までは読めた。森の西側で道を塞ぐ守り人に、今までの読み方だけで挑んでみよう。'
@@ -152,6 +155,14 @@ export function WorldPage() {
         clear: false,
       }
     }
+    if (!progress.clearedStageIds.includes(14)) {
+      return {
+        label: 'NEXT OBJECTIVE · FILTER',
+        title: '最初の一体ではなく、全部集める読み方を知る',
+        detail: '守り人を越えてForest西側へ進み、main trailからWoodsへ入ろう。Battle 14でfind()とfilter()の違いを読む。',
+        clear: false,
+      }
+    }
     if (progress.clearedStageIds.includes(2)) {
       return {
         label: 'NEXT OBJECTIVE · 4 / 4',
@@ -171,7 +182,7 @@ export function WorldPage() {
     return {
       label: 'NEXT OBJECTIVE · 2 / 4',
       title: '草原の異変を調べる',
-      detail: '森の守り人を突破した。Overworldの草むらへ戻り、main Battleで実際の異変を追おう。',
+      detail: 'Forestでfilter()まで確認した。Overworldの草むらへ戻り、main Battleで実際の異変を追おう。',
       clear: false,
     }
   }, [byteJoined, nextTrainingBattleId, progress.clearedAreaIds, progress.clearedStageIds])
@@ -212,7 +223,7 @@ export function WorldPage() {
   const forestObjective = useMemo(() => {
     if (!progress.clearedStageIds.includes(10)) {
       return {
-        label: 'FOREST · 1 / 3',
+        label: 'FOREST · 1 / 4',
         title: '&& — 二つともtrueを読む',
         detail: '道を外れてWoodsを歩こう。最初のEncounterでは、find()の条件に&&が加わる。',
         clear: false,
@@ -220,7 +231,7 @@ export function WorldPage() {
     }
     if (!progress.clearedStageIds.includes(11)) {
       return {
-        label: 'FOREST · 2 / 3',
+        label: 'FOREST · 2 / 4',
         title: '|| — どちらかtrueを読む',
         detail: 'Woodsを歩いてEncounterを続けよう。&&を反復しながら、次は||の違いを読む。',
         clear: false,
@@ -228,7 +239,7 @@ export function WorldPage() {
     }
     if (!progress.clearedStageIds.includes(12)) {
       return {
-        label: 'FOREST · 3 / 3',
+        label: 'FOREST · 3 / 4',
         title: '&&と||を小さく分けて読む',
         detail: '新しいsyntaxは増えない。かっこの内側から順に読み、find()が最初に止まる相手を追おう。',
         clear: false,
@@ -242,10 +253,18 @@ export function WorldPage() {
         clear: false,
       }
     }
+    if (!progress.clearedStageIds.includes(14)) {
+      return {
+        label: 'FOREST · 4 / 4',
+        title: 'find()とfilter()の違いを読む',
+        detail: '守り人の先へ進み、西側のWoodsへ入ろう。同じhp < 45でも、一体で止まるか全部集めるかを比べる。',
+        clear: false,
+      }
+    }
     return {
-      label: 'FOREST MID-BOSS CLEAR',
-      title: '森の守り人を突破した',
-      detail: 'Battle 10〜12はWoodsで反復できる。次は「条件に合うものをまとめて集める」読み方へ進む。',
+      label: 'FILTER LEARNED',
+      title: '条件に合うものを全部集める読み方を覚えた',
+      detail: 'ForestのRandom EncounterではBattle 10〜12と14を反復できる。次のconceptへ進む準備ができた。',
       clear: true,
     }
   }, [progress.clearedStageIds])
@@ -396,6 +415,8 @@ export function WorldPage() {
           setMessage('BYTE: 次は西のFOREST。&&と||も、小さな条件へ分ければ読めるよ。')
         } else if (!progress.clearedStageIds.includes(13)) {
           setMessage('BYTE: 森の西側に守り人がいる。新しい記号はないから、今までの読み方だけで挑もう。')
+        } else if (!progress.clearedStageIds.includes(14)) {
+          setMessage('BYTE: 守り人の先のWoodsへ行こう。次はfind()の「最初の一体」と、filter()の「全部集める」を比べる。')
         } else if (!progress.clearedStageIds.includes(1)) {
           setMessage('BYTE: 敵のHPと、技の横に出るコードを順番に見てみよう。')
         } else if (!progress.clearedStageIds.includes(2)) {
@@ -477,7 +498,11 @@ export function WorldPage() {
       isVillage
         ? '静かな村だ。中央のTRAINか、南のEXITを調べてみよう。'
         : isForest
-          ? '木々の間に道が続いている。Woodsでは復習Battle、main trailの西側には守り人がいる。'
+          ? progress.clearedStageIds.includes(14)
+            ? 'Woodsでは、&& / ||に加えてfilter()の復習Battleも起こる。'
+            : progress.clearedStageIds.includes(13)
+              ? '守り人の先へ進める。西側のWoodsで、次の読み方を確かめよう。'
+              : '木々の間に道が続いている。Woodsでは復習Battle、main trailの西側には守り人がいる。'
           : '近くに調べられるものはない。',
     )
   }, [
@@ -533,7 +558,7 @@ export function WorldPage() {
               {isVillage
                 ? 'JavaScript地方の小さな村。中央のTRAINでコードの読み方を練習し、南の出口から草原へ戻れる。'
                 : isForest
-                  ? 'JavaScript地方の森。Woodsで&& / ||を反復し、main trailの西側では既習内容だけを使う守り人が道を塞いでいる。'
+                  ? 'JavaScript地方の森。東側で&& / ||を読み、守り人の先ではfind()とfilter()の違いを学ぶ。'
                   : region === 'javascript'
                     ? javascriptStoryBrief
                     : region === 'typescript'
@@ -560,42 +585,46 @@ export function WorldPage() {
           data-world-y={position.y}
         >
           {visibleCells.map((cell) => {
+            const renderedTerrain =
+              cell.terrain === 'midboss' && progress.clearedStageIds.includes(13)
+                ? 'road'
+                : cell.terrain
             const treasure =
-              cell.terrain === 'treasure' ? getTreasureAtPosition(cell, mapId) : undefined
+              renderedTerrain === 'treasure' ? getTreasureAtPosition(cell, mapId) : undefined
             const treasureOpened = treasure
               ? rpgState.openedTreasureIds.includes(treasure.id)
               : false
             return (
               <div
                 key={`${cell.mapId}:${cell.x}:${cell.y}`}
-                className={`world-tile terrain-${cell.terrain}`}
-                title={terrainLabels[cell.terrain]}
+                className={`world-tile terrain-${renderedTerrain}`}
+                title={terrainLabels[renderedTerrain]}
                 data-world-map={cell.mapId}
                 data-world-x={cell.x}
                 data-world-y={cell.y}
               >
-                {cell.terrain === 'boss' && <span className="world-object boss-object">BOSS</span>}
-                {cell.terrain === 'midboss' && (
+                {renderedTerrain === 'boss' && <span className="world-object boss-object">BOSS</span>}
+                {renderedTerrain === 'midboss' && (
                   <span className="world-object midboss-object" aria-label="JavaScript Forest Mid-Boss">
                     MID BOSS
                   </span>
                 )}
-                {cell.terrain === 'shop' && <span className="world-object shop-object">SHOP</span>}
-                {cell.terrain === 'village' && (
+                {renderedTerrain === 'shop' && <span className="world-object shop-object">SHOP</span>}
+                {renderedTerrain === 'village' && (
                   <span className="world-object village-object">VILLAGE</span>
                 )}
-                {cell.terrain === 'exit' && <span className="world-object exit-object">EXIT</span>}
-                {cell.terrain === 'training' && (
+                {renderedTerrain === 'exit' && <span className="world-object exit-object">EXIT</span>}
+                {renderedTerrain === 'training' && (
                   <span className="world-object training-object" aria-label="JavaScript Training Ground">
                     TRAIN
                   </span>
                 )}
-                {cell.terrain === 'npc' && !byteJoined && (
+                {renderedTerrain === 'npc' && !byteJoined && (
                   <span className="world-object npc-object" aria-label="BYTE NPC">
                     <img src={characterVisuals.byte.field} alt="" />
                   </span>
                 )}
-                {cell.terrain === 'recovery' && (
+                {renderedTerrain === 'recovery' && (
                   <span className="world-object recovery-object" aria-label="Inn / Rest">
                     INN
                   </span>
