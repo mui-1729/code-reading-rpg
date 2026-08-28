@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/209-js-filter-lesson]
   pull_request:
 
 jobs:
