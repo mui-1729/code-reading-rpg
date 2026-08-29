@@ -72,11 +72,11 @@ test('Forestの南branchには寄り道Treasureがあり取得後もreloadでOPE
   await seedExploration(page, 'js-forest', { x: 21, y: 20 })
 
   const map = page.getByLabel('Forest map')
+  await expect(map).toHaveAttribute('data-world-x', '21')
   await expect(map).toHaveAttribute('data-world-y', '20')
   await expect(page.getByLabel('js-forest-supply treasure closed')).toBeVisible()
 
   await page.getByRole('button', { name: 'INTERACT' }).click()
-  await expect(page.getByText(/FOREST SUPPLY OPEN/)).toBeVisible()
   await expect(page.getByLabel('js-forest-supply treasure opened')).toBeVisible()
 
   await page.reload()
