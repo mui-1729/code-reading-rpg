@@ -83,6 +83,18 @@ const typescriptCompleteRoute = createRoute({
   beforeLoad: () => { throw redirect({ to: '/world' }) },
 })
 
+const databaseRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'database',
+  beforeLoad: () => { throw redirect({ to: '/world' }) },
+})
+
+const databaseFieldRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'database/field',
+  beforeLoad: () => { throw redirect({ to: '/world' }) },
+})
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   worldRoute,
@@ -94,6 +106,8 @@ const routeTree = rootRoute.addChildren([
   typescriptFieldRoute,
   typescriptBattleRoute,
   typescriptCompleteRoute,
+  databaseRoute,
+  databaseFieldRoute,
 ])
 
 export const router = createRouter({
