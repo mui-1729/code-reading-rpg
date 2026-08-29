@@ -133,7 +133,7 @@ test('390px幅でもMAPタブがdocumentの横overflowを発生させない', as
   expect(documentOverflows).toBe(false)
 })
 
-test('スマホAtlasでは本編terrainの疑似装飾がカード前面へ漏れない', async ({ page }) => {
+test('スマホAtlasでは本編terrainの疑似装飾をmini mapと凡例へ漏らさない', async ({ page }) => {
   await page.setViewportSize({ width: 393, height: 852 })
   await seedWorldAtlas(page)
   const atlas = await openAtlas(page)
@@ -141,16 +141,20 @@ test('スマホAtlasでは本編terrainの疑似装飾がカード前面へ漏�
   const woodsCell = atlas.locator('.atlas-terrain-cell.terrain-woods').first()
   const deepWoodsCell = atlas.locator('.atlas-terrain-cell.terrain-deep-woods').first()
   const mountainCell = atlas.locator('.atlas-terrain-cell.terrain-mountain').first()
+  const woodsLegend = atlas.locator('.atlas-terrain-legend .atlas-legend-woods')
 
   await expect(woodsCell).toBeVisible()
   await expect(deepWoodsCell).toBeVisible()
   await expect(mountainCell).toBeVisible()
+  await expect(woodsLegend).toBeVisible()
+  await expect(atlas.locator('.atlas-terrain-legend [class*="terrain-"]')).toHaveCount(0)
 
   const pseudoContents = await page.evaluate(() => {
     const selectors = [
       '.atlas-terrain-cell.terrain-woods',
       '.atlas-terrain-cell.terrain-deep-woods',
       '.atlas-terrain-cell.terrain-mountain',
+      '.atlas-terrain-legend .atlas-legend-woods',
     ]
 
     return selectors.map((selector) => {
@@ -167,10 +171,44 @@ test('スマホAtlasでは本編terrainの疑似装飾がカード前面へ漏�
     { before: 'none', after: 'none' },
     { before: 'none', after: 'none' },
     { before: 'none', after: 'none' },
+    { before: 'none', after: 'none' },
   ])
+})
 
-  await page.getByRole('button', { name: 'Zoom in world atlas' }).click()
+test('393px幅でもzoomがAtlas canvasの実寸を75〜150%で変更する', async ({ page }) => {
+  await page.setViewportSize({ width: 393, height: 852 })
+  await seedWorldAtlas(page)
+  const atlas = await openAtlas(page)
+  const canvas = atlas.locator('.atlas-canvas')
+  const zoomIn = page.getByRole('button', { name: 'Zoom in world atlas' })
+  const zoomOut = page.getByRole('button', { name: 'Zoom out world atlas' })
+
+  const widthAt100 = await canvas.evaluate((element) => element.getBoundingClientRect().width)
+  expect(widthAt100).toBeGreaterThan(600)
+
+  await zoomIn.click()
   await expect(atlas).toHaveAttribute('data-atlas-zoom', '125')
+  await expect.poll(() => canvas.evaluate((element) => element.getBoundingClientRect().width))
+    .toBeGreaterThan(widthAt100)
+  const widthAt125 = await canvas.evaluate((element) => element.getBoundingClientRect().width)
+
+  await zoomIn.click()
+  await expect(atlas).toHaveAttribute('data-atlas-zoom', '150')
+  await expect.poll(() => canvas.evaluate((element) => element.getBoundingClientRect().width))
+    .toBeGreaterThan(widthAt125)
+
+  const scrollportHasHorizontalScroll = await atlas.locator('.atlas-scrollport').evaluate(
+    (element) => element.scrollWidth > element.clientWidth,
+  )
+  expect(scrollportHasHorizontalScroll).toBe(true)
+
+  await zoomOut.click()
+  await zoomOut.click()
+  await zoomOut.click()
+  await expect(atlas).toHaveAttribute('data-atlas-zoom', '75')
+  await expect.poll(() => canvas.evaluate((element) => element.getBoundingClientRect().width))
+    .toBeLessThan(widthAt100)
+
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
