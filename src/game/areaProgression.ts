@@ -1,5 +1,5 @@
 import { areaById, type AreaDefinition } from './areas'
-import { battles } from './battles'
+import { battles } from './battleCatalog'
 import type { Battle } from './types'
 
 export function getBattlesForArea(areaId: string): Battle[] {
