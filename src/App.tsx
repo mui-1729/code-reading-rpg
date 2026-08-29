@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { gameAudio } from './audio/gameAudio'
+import { createDefeatRecoveryState, withBattleHp } from './battle/resultHandoff'
+import { createBattleSession, type BattleReturnPath } from './battle/session'
 import { consumePatchKit, PATCH_KIT_HEAL } from './economy'
 import {
   areaById,
-  battles,
-  generateBattle,
   getSkillCardsForBattle,
   getTargets,
   JAVASCRIPT_AREA_ID,
@@ -37,7 +37,6 @@ import {
   partyMemberById,
   useRpg,
 } from './rpg'
-import { OVERWORLD_MAP_ID, WORLD_START } from './world/worldMap'
 
 type Phase = 'battle' | 'victory' | 'defeat'
 
@@ -46,8 +45,6 @@ type LogEntry = {
   tone: 'player' | 'enemy' | 'system'
   text: string
 }
-
-type BattleReturnPath = '/world' | '/javascript/field' | '/typescript/field'
 
 type AppProps = {
   battleId: number
@@ -66,15 +63,12 @@ function App({ battleId, seed, returnTo }: AppProps) {
   const playerHp = Math.max(0, Math.min(playerStats.maxHp, rpgState.currentHp))
   const partyFollowUpDamage = getPartyFollowUpDamage(rpgState.partyMemberIds, playerStats.level)
   const equippedWeaponVisual = getWeaponVisual(rpgState.equipment.weapon)
-  const battle = useMemo(() => {
-    const generated = generateBattle(battleId, seed)
-    if (!generated) throw new Error(`Unknown battle: ${battleId}`)
-    return generated
-  }, [battleId, seed])
+  const session = useMemo(
+    () => createBattleSession(battleId, seed, returnTo),
+    [battleId, returnTo, seed],
+  )
+  const { battle, nextBattle } = session
   const battleArea = areaById[battle.areaId]
-  const battleIndex = battles.findIndex((candidate) => candidate.id === battleId)
-  const nextBattleCandidate = battles[battleIndex + 1]
-  const nextBattle = nextBattleCandidate?.areaId === battle.areaId ? nextBattleCandidate : undefined
 
   const [phase, setPhase] = useState<Phase>('battle')
   const [enemies, setEnemies] = useState<Enemy[]>(cloneEnemies(battle.enemies))
@@ -164,7 +158,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
       gameAudio.playSe('playerHit')
       setPlayerHit(true)
       setPlayerDamagePopup(totalDamage)
-      setRpgState((current) => ({ ...current, currentHp: nextPlayerHp }))
+      setRpgState((current) => withBattleHp(current, nextPlayerHp))
 
       setTimeout(() => {
         setPlayerHit(false)
@@ -175,13 +169,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
           setTimeout(() => {
             gameAudio.stopBgm()
             gameAudio.playSe('defeat')
-            setRpgState((current) => ({
-              ...current,
-              currentHp: playerStats.maxHp,
-              worldMapId: OVERWORLD_MAP_ID,
-              worldPosition: { ...WORLD_START },
-              stepsSinceEncounter: 8,
-            }))
+            setRpgState((current) => createDefeatRecoveryState(current, playerStats.maxHp))
             setPhase('defeat')
           }, BATTLE_MOTION.resultDelayMs)
         } else {
@@ -285,7 +273,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
 
     gameAudio.playSe('confirm')
     setProgress(result.progress)
-    setRpgState((current) => ({ ...current, currentHp: result.hp }))
+    setRpgState((current) => withBattleHp(current, result.hp))
     setPatchKitUsed(true)
     addLog('system', `PATCH KIT → +${result.healed} HP`)
   }
