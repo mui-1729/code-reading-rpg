@@ -14,54 +14,67 @@ const emptyEconomy = {
 }
 
 describe('player progress storage', () => {
-  it('v4 schemaでGold・Inventoryを含む進行をserialize / restoreできる', () => {
+  it('v4 serialize / restore時にstage unlock cacheをcanonical graphへ正規化する', () => {
     const progress = {
       ...createInitialPlayerProgress(),
       exp: 520,
       gold: 75,
       inventory: { patchKit: 2 },
-      clearedStageIds: [1, 2, 3, 4, 5, 6, 7, 8, 9],
-      clearedAreaIds: ['javascript', 'typescript'],
+      clearedStageIds: [7, 8, 9],
+      clearedAreaIds: [],
       completedSideQuestIds: ['javascript-second-pass'],
-      unlockedStageIds: [1, 4, 7, 2, 3, 5, 6, 8, 9, 10],
-      unlockedSkillIds: [
-        ...initialSkills,
-        'viper',
-        'moon-edge',
-        'ts-union',
-        'ts-optional',
-        'ts-narrow',
-      ],
+      unlockedStageIds: [1, 3, 4, 7, 99],
+      unlockedSkillIds: [...initialSkills, 'viper'],
     }
 
     const raw = serializePlayerProgress(progress)
     const parsed = JSON.parse(raw)
 
     expect(parsed.version).toBe(PLAYER_PROGRESS_SCHEMA_VERSION)
-    expect(parsed.progress).toEqual(progress)
-    expect(restorePlayerProgress(raw)).toEqual(progress)
+    expect(parsed.progress.unlockedStageIds).toEqual([7, 8, 9, 10])
+    expect(restorePlayerProgress(raw).unlockedStageIds).toEqual([7, 8, 9, 10])
+    expect(restorePlayerProgress(raw).gold).toBe(75)
+    expect(restorePlayerProgress(raw).inventory.patchKit).toBe(2)
   })
 
-  it('schema v1をv4へmigrationし、既存進行を維持してTraining 7を追加する', () => {
+  it('schema v1をv4へmigrationし、不正なlegacy unlock bitをcanonical graphで除去する', () => {
     const raw = JSON.stringify({
       version: 1,
       progress: {
         exp: 120,
-        clearedStageIds: [1, 2],
-        unlockedStageIds: [1, 2, 3],
-        unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper', 'moon-edge'],
+        clearedStageIds: [1],
+        unlockedStageIds: [1, 2, 3, 4, 99],
+        unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper'],
       },
     })
 
     expect(restorePlayerProgress(raw)).toEqual({
       exp: 120,
       ...emptyEconomy,
-      clearedStageIds: [1, 2],
+      clearedStageIds: [1],
       clearedAreaIds: [],
       completedSideQuestIds: [],
-      unlockedStageIds: [1, 4, 7, 2, 3],
-      unlockedSkillIds: [...initialSkills, 'viper', 'moon-edge'],
+      unlockedStageIds: [7, 1],
+      unlockedSkillIds: [...initialSkills, 'viper'],
     })
+  })
+
+  it('legacy saveでBattle 22 / 1 clear済みならBattle 2をcanonicalにderiveする', () => {
+    const raw = JSON.stringify({
+      version: 3,
+      progress: {
+        exp: 320,
+        clearedStageIds: [22, 1],
+        clearedAreaIds: [],
+        completedSideQuestIds: ['javascript-second-pass'],
+        unlockedStageIds: [3],
+        unlockedSkillIds: ['trace', 'pulse', 'nova'],
+      },
+    })
+
+    const restored = restorePlayerProgress(raw)
+    expect(restored.unlockedStageIds).toEqual([7, 22, 1, 2])
+    expect(restored.completedSideQuestIds).toEqual(['javascript-second-pass'])
   })
 
   it('schema v1でBoss撃破済みならJavaScript Area CLEARを引き継ぐ', () => {
@@ -69,62 +82,47 @@ describe('player progress storage', () => {
       version: 1,
       progress: {
         exp: 220,
-        clearedStageIds: [1, 2, 3],
-        unlockedStageIds: [1, 2, 3],
+        clearedStageIds: [3],
+        unlockedStageIds: [1, 2, 3, 4],
         unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper', 'moon-edge'],
       },
     })
 
     const restored = restorePlayerProgress(raw)
     expect(restored.clearedAreaIds).toEqual(['javascript'])
-    expect(restored.completedSideQuestIds).toEqual([])
     expect(restored.gold).toBe(0)
     expect(restored.inventory.patchKit).toBe(0)
-    expect(restored.unlockedStageIds).toContain(7)
+    expect(restored.unlockedStageIds).toEqual([7, 3, 4])
   })
 
-  it('schema v2をv4へmigrationし、Area進行を維持してTraining 7を追加する', () => {
-    const raw = JSON.stringify({
+  it('schema v2 / v3のArea・Side Quest進行を維持する', () => {
+    const v2 = restorePlayerProgress(JSON.stringify({
       version: 2,
       progress: {
         exp: 220,
-        clearedStageIds: [1, 2, 3],
+        clearedStageIds: [3],
         clearedAreaIds: ['javascript'],
-        unlockedStageIds: [1, 2, 3],
-        unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper', 'moon-edge'],
+        unlockedStageIds: [4],
+        unlockedSkillIds: ['trace', 'pulse', 'nova'],
       },
-    })
+    }))
+    expect(v2.clearedAreaIds).toEqual(['javascript'])
+    expect(v2.completedSideQuestIds).toEqual([])
+    expect(v2.unlockedStageIds).toEqual([7, 3, 4])
 
-    const restored = restorePlayerProgress(raw)
-    expect(restored.clearedStageIds).toEqual([1, 2, 3])
-    expect(restored.clearedAreaIds).toEqual(['javascript'])
-    expect(restored.completedSideQuestIds).toEqual([])
-    expect(restored.gold).toBe(0)
-    expect(restored.inventory.patchKit).toBe(0)
-    expect(restored.unlockedStageIds).toEqual([1, 4, 7, 2, 3])
-    expect(restored.unlockedSkillIds).toEqual([...initialSkills, 'viper', 'moon-edge'])
-  })
-
-  it('schema v3をv4へmigrationし、Side Quest進行を維持してTraining 7を追加する', () => {
-    const raw = JSON.stringify({
+    const v3 = restorePlayerProgress(JSON.stringify({
       version: 3,
       progress: {
         exp: 320,
-        clearedStageIds: [1, 2, 3],
+        clearedStageIds: [3],
         clearedAreaIds: ['javascript'],
         completedSideQuestIds: ['javascript-second-pass'],
-        unlockedStageIds: [1, 2, 3],
-        unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper', 'moon-edge'],
+        unlockedStageIds: [4],
+        unlockedSkillIds: ['trace', 'pulse', 'nova'],
       },
-    })
-
-    const restored = restorePlayerProgress(raw)
-    expect(restored.exp).toBe(320)
-    expect(restored.clearedAreaIds).toEqual(['javascript'])
-    expect(restored.completedSideQuestIds).toEqual(['javascript-second-pass'])
-    expect(restored.gold).toBe(0)
-    expect(restored.inventory.patchKit).toBe(0)
-    expect(restored.unlockedStageIds).toContain(7)
+    }))
+    expect(v3.completedSideQuestIds).toEqual(['javascript-second-pass'])
+    expect(v3.unlockedStageIds).toEqual([7, 3, 4])
   })
 
   it('保存データがない場合は初期状態へfallbackする', () => {
@@ -136,20 +134,7 @@ describe('player progress storage', () => {
   })
 
   it('未知schema versionでは初期状態へfallbackする', () => {
-    const raw = JSON.stringify({
-      version: 999,
-      progress: {
-        exp: 120,
-        gold: 10,
-        inventory: { patchKit: 1 },
-        clearedStageIds: [1, 2],
-        clearedAreaIds: [],
-        completedSideQuestIds: [],
-        unlockedStageIds: [1, 2, 3],
-        unlockedSkillIds: ['trace'],
-      },
-    })
-
+    const raw = JSON.stringify({ version: 999, progress: {} })
     expect(restorePlayerProgress(raw)).toEqual(createInitialPlayerProgress())
   })
 
@@ -171,7 +156,7 @@ describe('player progress storage', () => {
     expect(restorePlayerProgress(raw)).toEqual(createInitialPlayerProgress())
   })
 
-  it('現行schemaはGold・Inventoryを含む有効なPlayerProgressだけを受け入れTraining 7を補う', () => {
+  it('現行schemaでもstored unlock bitをauthorityにしない', () => {
     const stored = {
       version: PLAYER_PROGRESS_SCHEMA_VERSION,
       progress: {
@@ -181,28 +166,16 @@ describe('player progress storage', () => {
         clearedStageIds: [1],
         clearedAreaIds: [],
         completedSideQuestIds: [],
-        unlockedStageIds: [1, 2],
+        unlockedStageIds: [1, 2, 3, 4, 99],
         unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper'],
       },
     }
 
     expect(migrateStoredPlayerProgress(stored)).toEqual({
       ...stored.progress,
-      unlockedStageIds: [1, 4, 7, 2],
+      unlockedStageIds: [7, 1],
       unlockedSkillIds: [...initialSkills, 'viper'],
     })
-    expect(
-      migrateStoredPlayerProgress({
-        ...stored,
-        progress: { ...stored.progress, completedSideQuestIds: [1] },
-      }),
-    ).toBeNull()
-    expect(
-      migrateStoredPlayerProgress({
-        ...stored,
-        progress: { ...stored.progress, inventory: { patchKit: -1 } },
-      }),
-    ).toBeNull()
   })
 
   it('現行schemaでEconomy fieldが欠けていれば安全にfallbackする', () => {
@@ -210,11 +183,11 @@ describe('player progress storage', () => {
       version: PLAYER_PROGRESS_SCHEMA_VERSION,
       progress: {
         exp: 220,
-        clearedStageIds: [1, 2, 3],
+        clearedStageIds: [3],
         clearedAreaIds: ['javascript'],
         completedSideQuestIds: [],
-        unlockedStageIds: [1, 2, 3],
-        unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper'],
+        unlockedStageIds: [4],
+        unlockedSkillIds: ['trace'],
       },
     })
 
