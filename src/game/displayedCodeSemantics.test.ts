@@ -30,7 +30,6 @@ function evaluateDisplayedTargets(code: string, allEnemies: Enemy[]): string[] {
   // displayed expression itself and does not reuse TargetRule/getTargets implementation details.
   const enemies = allEnemies.filter((candidate) => candidate.hp > 0)
   const executable = stripSupportedTypeScriptSyntax(code)
-  // eslint-disable-next-line no-new-func
   const evaluate = new Function('enemies', `"use strict"; return (${executable});`) as (
     enemies: Enemy[],
   ) => Enemy | Enemy[] | undefined
