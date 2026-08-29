@@ -74,6 +74,26 @@ test('MENUのMAPから5地域と現在地を確認できる', async ({ page }) =
   await expect(atlas.getByLabel('YOU at 20, 20')).toBeVisible()
 })
 
+test('各regionはworldMap定義と同じterrain gridで道と分岐を表示する', async ({ page }) => {
+  await seedWorldAtlas(page)
+  const atlas = await openAtlas(page)
+
+  const forest = atlas.locator('[data-atlas-map="js-forest"]')
+  const forestGrid = forest.locator('.atlas-terrain-grid')
+  await expect(forestGrid).toHaveAttribute('data-terrain-width', '31')
+  await expect(forestGrid).toHaveAttribute('data-terrain-height', '27')
+  await expect(forest.locator('.atlas-terrain-cell')).toHaveCount(31 * 27)
+  await expect(forest.locator('.atlas-terrain-cell.terrain-road').first()).toBeVisible()
+  await expect(forest.locator('.atlas-terrain-cell.terrain-water').first()).toBeVisible()
+  await expect(forest.locator('.atlas-terrain-cell.terrain-treasure').first()).toBeVisible()
+  await expect(forest.locator('.atlas-terrain-cell.is-player')).toHaveCount(1)
+
+  const overworld = atlas.locator('[data-atlas-map="overworld"]')
+  await expect(overworld.locator('.atlas-terrain-grid')).toHaveAttribute('data-terrain-width', '40')
+  await expect(overworld.locator('.atlas-terrain-grid')).toHaveAttribute('data-terrain-height', '28')
+  await expect(overworld.locator('.atlas-terrain-cell.terrain-boss').first()).toBeVisible()
+})
+
 test('進行条件付きregionはLOCKED表示になりclear後はOPENになる', async ({ page }) => {
   await seedWorldAtlas(page)
   let atlas = await openAtlas(page)
@@ -105,6 +125,7 @@ test('390px幅でもMAPタブがdocumentの横overflowを発生させない', as
   await seedWorldAtlas(page)
   const atlas = await openAtlas(page)
   await expect(atlas).toBeVisible()
+  await expect(atlas.locator('.atlas-terrain-grid').first()).toBeVisible()
 
   const documentOverflows = await page.evaluate(
     () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
