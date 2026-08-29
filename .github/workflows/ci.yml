@@ -8,6 +8,7 @@ on:
       - 'fix/**'
       - 'test/**'
       - 'ux/**'
+      - 'refactor/**'
   pull_request:
 
 jobs:
