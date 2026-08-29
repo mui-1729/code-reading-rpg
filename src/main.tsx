@@ -22,6 +22,7 @@ import './items.css'
 import './item-toast.css'
 import './simplify.css'
 import './pause.css'
+import './world-atlas.css'
 import './boss-guard.css'
 import './pixel-art.css'
 
