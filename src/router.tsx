@@ -1,6 +1,11 @@
 import { createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router'
 import { RootLayout } from './RootLayout'
-import { BattleRoutePage, HomePage, TypeScriptBattleRoutePage } from './routeComponents'
+import {
+  BattleRoutePage,
+  DatabaseBattleRoutePage,
+  HomePage,
+  TypeScriptBattleRoutePage,
+} from './routeComponents'
 import { WorldRoutePage } from './world/WorldRoutePage'
 
 const rootRoute = createRootRoute({ component: RootLayout })
@@ -95,6 +100,21 @@ const databaseFieldRoute = createRoute({
   beforeLoad: () => { throw redirect({ to: '/world' }) },
 })
 
+const databaseBattleRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'database/battle/$battleId',
+  validateSearch: (search: Record<string, unknown>) => ({
+    seed: typeof search.seed === 'string' && search.seed.length > 0 ? search.seed : undefined,
+    returnTo:
+      search.returnTo === '/world'
+        ? '/world' as const
+        : search.returnTo === '/database/field'
+          ? '/database/field' as const
+          : undefined,
+  }),
+  component: DatabaseBattleRoutePage,
+})
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   worldRoute,
@@ -108,6 +128,7 @@ const routeTree = rootRoute.addChildren([
   typescriptCompleteRoute,
   databaseRoute,
   databaseFieldRoute,
+  databaseBattleRoute,
 ])
 
 export const router = createRouter({
