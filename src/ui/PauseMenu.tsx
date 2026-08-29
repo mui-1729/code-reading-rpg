@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { writeStoredAudioSettings } from '../audio/audioSettingsStorage'
 import { gameAudio, type AudioSettings } from '../audio/gameAudio'
@@ -46,6 +46,8 @@ export function PauseMenu() {
   const [tab, setTab] = useState<PauseTab>('status')
   const [resetArmed, setResetArmed] = useState(false)
   const [audioSettings, setAudioSettings] = useState<AudioSettings>(() => gameAudio.getSettings())
+  const dialogRef = useRef<HTMLElement>(null)
+  const restoreFocusRef = useRef<HTMLElement | null>(null)
   const combatStats = getCombatStats(stats, rpgState)
   const nextLevelExp = getTotalExpForLevel(stats.level + 1)
   const worldObjectives = getWorldObjectives(progress)
@@ -60,14 +62,43 @@ export function PauseMenu() {
 
   useEffect(() => {
     if (!open) return
+    restoreFocusRef.current ??= document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null
+    const dialog = dialogRef.current
+    const focusableSelector =
+      'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    const focusable = () =>
+      dialog ? Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelector)) : []
+    queueMicrotask(() => focusable()[0]?.focus())
+
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return
-      event.preventDefault()
-      setOpen(false)
-      setResetArmed(false)
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        setOpen(false)
+        setResetArmed(false)
+        return
+      }
+      if (event.key !== 'Tab') return
+
+      const elements = focusable()
+      const first = elements[0]
+      const last = elements[elements.length - 1]
+      if (!first || !last) return
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
     }
     window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      restoreFocusRef.current?.focus()
+      restoreFocusRef.current = null
+    }
   }, [open])
 
   const ownedEquipment = useMemo(
@@ -113,7 +144,13 @@ export function PauseMenu() {
       <button
         type="button"
         className="pause-trigger secondary-button"
-        onClick={() => {
+        onClick={(event) => {
+          if (
+            document.body.dataset.battleResolving === 'true' ||
+            document.body.dataset.battlePhase === 'victory' ||
+            document.body.dataset.battlePhase === 'defeat'
+          ) return
+          restoreFocusRef.current = event.currentTarget
           setAudioSettings(gameAudio.getSettings())
           setOpen(true)
         }}
@@ -125,6 +162,7 @@ export function PauseMenu() {
       {open && (
         <div className="pause-overlay" role="presentation" onClick={closeMenu}>
           <section
+            ref={dialogRef}
             className="pause-menu pixel-window"
             role="dialog"
             aria-modal="true"

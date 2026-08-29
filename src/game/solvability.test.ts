@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { generateBattle } from './generator'
 import { hasInitialValidTarget, isBattleSolvable } from './solvability'
+import type { Battle } from './types'
 
 const battleIds = [1, 2, 3, 4, 5, 6] as const
 const seeds = Array.from({ length: 100 }, (_, index) => `solvability-${index}`)
@@ -50,5 +51,50 @@ describe('variable battle validation', () => {
         }
       }
     }
+  })
+
+  it('persistent HP・Defense・Party・PATCH KITをactual turn resolverと同じprofileで扱う', () => {
+    const battle: Battle = {
+      id: 99,
+      areaId: 'javascript',
+      label: 'PROFILE TEST',
+      title: 'PROFILE TEST',
+      subtitle: 'PROFILE TEST',
+      recommendedLevel: 1,
+      expReward: 0,
+      goldReward: 0,
+      enemies: [
+        {
+          id: 'durable-goblin',
+          name: 'Goblin',
+          hp: 90,
+          maxHp: 90,
+          attackName: 'TEST',
+          attackDamage: 10,
+          glyph: '•',
+        },
+      ],
+      skillIds: ['pulse'],
+    }
+    const lowHpProfile = {
+      playerStats: {
+        level: 1,
+        maxHp: 100,
+        powerMultiplier: 1,
+        attack: 0,
+        defense: 0,
+      },
+      initialPlayerHp: 5,
+    }
+
+    expect(isBattleSolvable(battle, lowHpProfile)).toBe(false)
+    expect(isBattleSolvable(battle, { ...lowHpProfile, patchKitCount: 1 })).toBe(true)
+    expect(
+      isBattleSolvable(battle, {
+        ...lowHpProfile,
+        playerStats: { ...lowHpProfile.playerStats, attack: 120, defense: 30 },
+        partyFollowUpDamage: 7,
+      }),
+    ).toBe(true)
   })
 })

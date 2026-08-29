@@ -132,15 +132,19 @@ PRは日本語を基本とし、Issueと同じtypeを使う。
 Closes #123
 
 ## 概要
+
 - ...
 
 ## 変更
+
 - ...
 
 ## 削除 / compatibility
+
 - ...
 
 ## Validation
+
 - npm ci ✅
 - npm run lint ✅
 - npm test ✅
@@ -148,6 +152,7 @@ Closes #123
 - npm run test:e2e ✅
 
 ## Preview
+
 - Cloudflare Preview: ...
 ```
 
@@ -194,11 +199,15 @@ npm run build
 
 ```bash
 npm ci
-npx playwright install --with-deps chromium
+npx playwright install --with-deps chromium webkit
 npm run test:e2e
 ```
 
 CI failure中はmergeしない。
+
+workflowはtop-level `permissions: contents: read`をdefaultとする。追加権限が必要なjobだけjob-levelで最小権限を明示する。
+
+third-party / official Actionもrelease tagだけで参照せず、review済みreleaseのfull commit SHAへpinし、末尾commentへ対応versionを書く。更新時はrelease notesとSHAを確認してDependabotまたは専用PRで更新する。shell commandから使うCLIはpackage lockへpinし、bare `npx`による未固定downloadをdeploy pathへ置かない。
 
 ## 8. Cloudflare Preview
 

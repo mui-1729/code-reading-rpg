@@ -121,6 +121,7 @@ unused React UIは削除してよいが、migration / regression testに意味�
 - code variant generation
 - code uniqueness
 - solvability
+- runtimeとsolvabilityが共有するpure combat turn resolver
 - Boss guard resolver
 
 ```text
@@ -134,6 +135,8 @@ target Enemy[]
 ```
 
 表示文字列をparse / evalしてtargetを決めない。
+
+表示codeとの一致は`TargetRule`実装を再利用しないreview-owned fixtureで検証する。fixtureはcode fingerprint、expected target、POWERを明示し、semantic変更時に意図的なreview更新を要求する。
 
 ### Variation
 
@@ -259,13 +262,14 @@ Story eventがtarget rule / damage / generatorを変更してはいけない。
 
 LevelはEXPから導出する。
 
-### RpgState v3
+### RpgState v4
 
 担当:
 
 - current HP
 - Equipment / owned Equipment
 - Party / Party Equipment
+- current World map ID
 - World position
 - Encounter pacing
 - opened Treasure
@@ -278,7 +282,7 @@ restore時に次をnormalizeする。
 - non-negative Encounter counters
 - current HP upper bound
 
-v1 / v2からv3へmigrationする。
+v1 / v2 / v3からv4へmigrationする。旧Overworld上のTypeScript座標は`ts-frontier`へ移す。
 
 ### TutorialState v1
 
@@ -376,6 +380,7 @@ Unit Test:
 
 - TargetRule / Skill definition
 - generator / solvability / code uniqueness
+- independent displayed-code oracle / shared combat turn resolver
 - progression / migration
 - RpgState normalization
 - World resolver
@@ -394,6 +399,8 @@ Playwright E2E:
 - Pause / CODEX / SYSTEM
 - Tutorial
 - Boss mechanic / story flow
+- built `dist` smoke / Chromium / WebKit / portrait / short / landscape
+- visual visibility / Pause interaction・focus invariant
 
 Unitはdomainの意味、E2Eはsystem間の接続を担当する。
 

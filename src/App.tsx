@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { gameAudio } from './audio/gameAudio'
 import { createDefeatRecoveryState, withBattleHp } from './battle/resultHandoff'
@@ -6,9 +6,11 @@ import { createBattleSession, type BattleReturnPath } from './battle/session'
 import { consumePatchKit, PATCH_KIT_HEAL } from './economy'
 import {
   areaById,
+  getEnemyVisualId,
   getSkillCardsForBattle,
-  getTargets,
   JAVASCRIPT_AREA_ID,
+  resolveEnemyAttack,
+  resolvePlayerAction,
   skills,
   TYPESCRIPT_AREA_ID,
   type Enemy,
@@ -19,7 +21,6 @@ import {
   BOSS_GUARD_CONDITION_CODE,
   hasBossGuard,
   isBossGuardActive,
-  resolveBossGuardDamage,
 } from './game/bossGuard'
 import { BattleCodeData, type RuntimeEnemy } from './inspector'
 import { BATTLE_MOTION, getNewlyDefeatedIds } from './motion/battleMotion'
@@ -38,6 +39,7 @@ import {
   partyMemberById,
   useRpg,
 } from './rpg'
+import { useModalFocus } from './ui/useModalFocus'
 
 type Phase = 'battle' | 'victory' | 'defeat'
 
@@ -54,13 +56,15 @@ type AppProps = {
 }
 
 const cloneEnemies = (enemies: Enemy[]) => enemies.map((enemy) => ({ ...enemy }))
-const spriteClassName = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
 
 function App({ battleId, seed, returnTo }: AppProps) {
   const navigate = useNavigate()
   const { progress, stats: baseStats, setProgress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
-  const playerStats = getCombatStats(baseStats, rpgState)
+  const playerStats = useMemo(
+    () => getCombatStats(baseStats, rpgState),
+    [baseStats, rpgState],
+  )
   const playerHp = Math.max(0, Math.min(playerStats.maxHp, rpgState.currentHp))
   const partyFollowUpDamage = getPartyFollowUpDamage(rpgState.partyMemberIds, playerStats.level)
   const equippedWeaponVisual = getWeaponVisual(rpgState.equipment.weapon)
@@ -108,7 +112,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
         attackDamage: enemy.attackDamage,
         incomingDamage: getIncomingDamage(enemy.attackDamage, playerStats.defense),
       })),
-    [enemies, playerStats.defense],
+    [enemies, playerStats],
   )
   const bossGuardEnabled = hasBossGuard(battle)
   const bossGuardActive = isBossGuardActive(battle, enemies)
@@ -117,6 +121,15 @@ function App({ battleId, seed, returnTo }: AppProps) {
     gameAudio.requestBgm('battle')
     return () => gameAudio.stopBgm()
   }, [battleId])
+
+  useLayoutEffect(() => {
+    document.body.dataset.battlePhase = phase
+    document.body.dataset.battleResolving = isResolving ? 'true' : 'false'
+    return () => {
+      delete document.body.dataset.battlePhase
+      delete document.body.dataset.battleResolving
+    }
+  }, [isResolving, phase])
 
   const addLog = (tone: LogEntry['tone'], text: string) => {
     setLogs((current) => [...current.slice(-4), { id: Date.now() + Math.random(), tone, text }])
@@ -152,16 +165,21 @@ function App({ battleId, seed, returnTo }: AppProps) {
   }
 
   const runEnemyTurn = (nextEnemies: Enemy[]) => {
-    const survivors = nextEnemies.filter((enemy) => enemy.hp > 0)
+    const attack = resolveEnemyAttack({
+      enemies: nextEnemies,
+      playerHp,
+      defense: playerStats.defense,
+    })
+    const survivors = attack.attackers.map(({ enemy }) => enemy)
 
     if (survivors.length === 0) {
       setTimeout(completeVictory, BATTLE_MOTION.resultDelayMs)
       return
     }
 
-    const damages = survivors.map((enemy) => getIncomingDamage(enemy.attackDamage, playerStats.defense))
-    const totalDamage = damages.reduce((total, damage) => total + damage, 0)
-    const nextPlayerHp = Math.max(0, playerHp - totalDamage)
+    const damages = attack.attackers.map(({ damage }) => damage)
+    const totalDamage = attack.totalDamage
+    const nextPlayerHp = attack.playerHp
     setEnemyTurnActive(true)
     gameAudio.playSe('enemyAttack')
 
@@ -203,9 +221,14 @@ function App({ battleId, seed, returnTo }: AppProps) {
     setSkillWindup(true)
     setSelectedSkillId(null)
 
-    const targets = getTargets(enemies, skill.rule)
-    const skillPower = getSkillDamage(skill.power, playerStats)
-    const totalPower = skillPower + partyFollowUpDamage
+    const action = resolvePlayerAction({
+      battle,
+      enemies,
+      skill,
+      playerStats: { ...playerStats },
+      partyFollowUpDamage,
+    })
+    const { targets, skillDamage: skillPower } = action
 
     setTimeout(() => {
       setSkillWindup(false)
@@ -218,21 +241,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
       }
 
       const targetIds = targets.map((target) => target.id)
-      const damageByTargetId: Record<string, number> = Object.fromEntries(
-        targets.map((target) => [
-          target.id,
-          resolveBossGuardDamage(battle, enemies, target, totalPower),
-        ]),
-      )
-      const guardedBossTargeted = targets.some(
-        (target) =>
-          target.name === 'Boss' && (damageByTargetId[target.id] ?? totalPower) < totalPower,
-      )
-      const nextEnemies = enemies.map((enemy) =>
-        targetIds.includes(enemy.id)
-          ? { ...enemy, hp: Math.max(0, enemy.hp - (damageByTargetId[enemy.id] ?? 0)) }
-          : enemy,
-      )
+      const { damageByTargetId, guardedBossTargeted, enemies: nextEnemies } = action
       const newlyDefeatedIds = getNewlyDefeatedIds(enemies, nextEnemies)
 
       gameAudio.playSe('enemyHit')
@@ -358,6 +367,14 @@ function App({ battleId, seed, returnTo }: AppProps) {
     gameAudio.playSe('cancel')
     setExplainedSkill(null)
   }
+  const codeHelpDialogRef = useModalFocus<HTMLElement>({
+    open: explainedSkill !== null,
+    onEscape: closeCodeHelp,
+  })
+  const resultDialogRef = useModalFocus<HTMLElement>({
+    open: phase !== 'battle',
+    onEscape: goReturnDestination,
+  })
 
   const unlockedSkill = victoryReward?.unlockedSkillId
     ? skills[victoryReward.unlockedSkillId]
@@ -445,8 +462,8 @@ function App({ battleId, seed, returnTo }: AppProps) {
           {enemies.map((enemy) => {
             const hpPercent = (enemy.hp / enemy.maxHp) * 100
             const defeated = enemy.hp <= 0
-            const spriteClass = spriteClassName(enemy.name)
-            const isBossEnemy = battle.isBoss && spriteClass === 'boss'
+            const visualId = getEnemyVisualId(enemy.name)
+            const isBossEnemy = battle.isBoss && visualId === 'boss'
             return (
               <article
                 className={`enemy-card ${defeated ? 'defeated' : ''} ${animatingIds.includes(enemy.id) ? 'hit' : ''} ${defeatingIds.includes(enemy.id) ? 'defeating' : ''} ${isBossEnemy ? 'is-boss-enemy' : ''}`}
@@ -455,7 +472,11 @@ function App({ battleId, seed, returnTo }: AppProps) {
                 {damagePopups[enemy.id] !== undefined && (
                   <span className="damage-number enemy-damage-number">-{damagePopups[enemy.id]}</span>
                 )}
-                <div className={`enemy-sprite ${spriteClass}`} aria-hidden="true">
+                <div
+                  className={`enemy-sprite ${visualId}`}
+                  data-enemy-visual-id={visualId}
+                  aria-hidden="true"
+                >
                   <span className="sprite-face">{enemy.glyph}</span>
                 </div>
                 <div className="enemy-name-row">
@@ -549,8 +570,15 @@ function App({ battleId, seed, returnTo }: AppProps) {
       )}
 
       {phase === 'victory' && (
-        <div className="overlay result-overlay victory-overlay">
-          <section className="result-card victory-card pixel-window result-card-enter">
+        <div className="overlay result-overlay victory-overlay" role="presentation">
+          <section
+            ref={resultDialogRef}
+            className="result-card victory-card pixel-window result-card-enter"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Victory result"
+            tabIndex={-1}
+          >
             <div className="eyebrow">VICTORY</div>
             <h2>{battle.title} cleared.</h2>
             {victoryReward && (
@@ -593,8 +621,15 @@ function App({ battleId, seed, returnTo }: AppProps) {
       )}
 
       {phase === 'defeat' && (
-        <div className="overlay result-overlay defeat-overlay">
-          <section className="result-card defeat-card pixel-window result-card-enter">
+        <div className="overlay result-overlay defeat-overlay" role="presentation">
+          <section
+            ref={resultDialogRef}
+            className="result-card defeat-card pixel-window result-card-enter"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Defeat result"
+            tabIndex={-1}
+          >
             <div className="eyebrow">DEFEAT</div>
             <div className="defeat-actions">
               <button className="primary-button" onClick={goReturnDestination}>▶ RETURN TO HUB</button>
@@ -606,8 +641,16 @@ function App({ battleId, seed, returnTo }: AppProps) {
 
       {explainedSkill && (
         <div className="overlay modal-overlay" onClick={closeCodeHelp}>
-          <section className="explain-modal pixel-window" onClick={(event) => event.stopPropagation()}>
-            <button className="close-button" onClick={closeCodeHelp}>×</button>
+          <section
+            ref={codeHelpDialogRef}
+            className="explain-modal pixel-window"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Code help"
+            tabIndex={-1}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button type="button" className="close-button" onClick={closeCodeHelp} aria-label="コード解説を閉じる">×</button>
             <div className="eyebrow">CODE EXPLANATION</div>
             <h2>{explainedSkill.concept}</h2>
             <pre><code>{explainedSkill.code}</code></pre>

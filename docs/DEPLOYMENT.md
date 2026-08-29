@@ -40,9 +40,6 @@ Static Assets / SPA fallbackは`wrangler.jsonc`をsource of truthにする。
 {
   "name": "code-reading-rpg",
   "compatibility_date": "2026-08-25",
-  "build": {
-    "command": "npm run build"
-  },
   "assets": {
     "directory": "./dist",
     "not_found_handling": "single-page-application"
@@ -57,24 +54,34 @@ Static Assets / SPA fallbackは`wrangler.jsonc`をsource of truthにする。
 - `single-page-application` fallbackで未知pathをSPAの`index.html`へ返す
 - TanStack Routerのdeep link / reloadを維持する
 
-`wrangler.jsonc`の`build.command`は、local/manualで`wrangler deploy`する場合のCustom Build設定として残す。
-
-一方、**Cloudflare Workers BuildsのBuild stepはWrangler Custom Build設定をsource of truthにしない**。Production / Preview triggerにはCloudflare側のBuild command設定が存在するため、`wrangler.jsonc`の`build.command`だけを頼りに`dist`生成を保証してはいけない。
-
-このrepoではProduction trigger側のBuild commandが空でもdeploy前に`dist`が存在するよう、`package.json`の`postinstall`で`npm run build`を実行するfallbackを持つ。
+`wrangler.jsonc`には`build.command`を定義しない。Cloudflare Workers BuildsのProduction / Preview triggerでBuild commandを`npm run build`へ明示し、deploy commandはnpm script経由の`npm run deploy` / `npm run deploy:preview`とする。Wrangler Custom BuildとCloudflare側Build commandの二重実行を避け、installとbuildの失敗責務を分けるため、`postinstall`でもbuildしない。
 
 ```json
 {
   "scripts": {
     "build": "tsc -b && vite build",
-    "postinstall": "npm run build"
+    "deploy": "wrangler deploy",
+    "deploy:preview": "wrangler versions upload"
+  },
+  "devDependencies": {
+    "wrangler": "4.127.1"
   }
 }
 ```
 
-これによりWorkers Buildsが依存関係をinstallした時点で`dist`が生成され、その後の`npx wrangler deploy` / `npx wrangler versions upload`がassetsを参照できる。
+Wranglerはexact versionを`package-lock.json`へ固定し、deploy pathでbare `npx wrangler`が別versionを取得しない。更新はrelease notesを確認する専用dependency PRで行う。
 
-将来Cloudflare側のProduction / Preview両triggerでBuild commandを明示的に`npm run build`へ統一できた場合は、このfallbackを削除してよい。その場合もPRでPreview / main Productionの両方を確認してから外す。
+local / manual deployでは、deploy commandの前にBuild commandを1回だけ実行する。
+
+```bash
+npm ci
+npm run build
+npm run deploy
+
+# Preview versionの場合
+npm run build
+npm run deploy:preview
+```
 
 ---
 
@@ -85,14 +92,15 @@ Cloudflare Workers Buildsでは次を基準にする。
 ```text
 Git repository: mui-1729/code-reading-rpg
 Production branch: main
-Production deploy command: npx wrangler deploy
-Non-production deploy command: npx wrangler versions upload
+Build command: npm run build
+Production deploy command: npm run deploy
+Non-production deploy command: npm run deploy:preview
 Root directory: /
 ```
 
-Productionでは`npx wrangler deploy`、PR / non-production branchでは`npx wrangler versions upload`が使われる。
+Productionではpackage lock済みの`wrangler deploy`、PR / non-production branchでは`wrangler versions upload`がnpm script経由で使われる。
 
-Build commandはCloudflare側trigger設定とrepo側fallbackの両方で考える。**`wrangler.jsonc`のCustom BuildだけをWorkers BuildsのBuild stepとして扱わない。**
+Build commandはCloudflare Production / Preview両triggerへ明示する。`wrangler.jsonc`にはCustom Buildを置かず、install side effectにも依存しない。
 
 ---
 
@@ -170,8 +178,8 @@ merge後は最低限、merge commitに対して次を確認する。
 
 `dist`不足の場合:
 
-- `npm ci`後に`dist`が生成されるか確認
-- `package.json`の`postinstall`が実行されているか確認
+- CloudflareのBuild commandが`npm run build`か確認
+- Build step後に`dist`が生成されるか確認
 - `wrangler.jsonc`の`assets.directory`が`./dist`か確認
 
 Deployingで失敗する場合:
@@ -193,7 +201,7 @@ Deployingで失敗する場合:
 - Build token
 - Root directory
 
-repo側fallbackを入れてもProductionだけ失敗する場合は、Cloudflare Dashboard / Builds API側の設定修正が必要。
+repo側commandが同じでもProductionだけ失敗する場合は、Cloudflare Dashboard / Builds API側の設定修正が必要。
 
 ---
 

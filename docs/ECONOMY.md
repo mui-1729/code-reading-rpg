@@ -233,7 +233,7 @@ REST
 | State | Version | Economy関連責務 |
 | --- | ---: | --- |
 | `PlayerProgress` | v4 | EXP / Gold / `inventory.patchKit` / progression |
-| `RpgState` | v3 | current HP / Equipment ownership・loadout / Party / World / Treasure |
+| `RpgState` | v4 | current HP / Equipment ownership・loadout / Party / World / Treasure |
 
 Economy loop追加のためだけにschema versionは上げない。
 
@@ -241,7 +241,7 @@ Legacy migration:
 
 - PlayerProgress v1 / v2 / v3 → v4
 - Economy fieldが存在しないlegacy saveはGold 0 / PATCH KIT 0で開始
-- RpgState v1 / v2 → v3
+- RpgState v1 / v2 / v3 → v4
 - legacy current HP / known Equipmentは可能な範囲で保持
 
 `RESET PROGRESS`はPlayerProgressとRpgStateを初期化する。Sound設定は別storageなので保持する。

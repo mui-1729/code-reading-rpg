@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { PlayerProgress } from '../progression'
 import type { RpgState } from '../rpg'
 import {
@@ -213,7 +213,22 @@ function AtlasTerrainMap({
 
 export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
   const [zoom, setZoom] = useState(100)
+  const scrollportRef = useRef<HTMLDivElement>(null)
   const canvasWidth = ATLAS_BASE_WIDTH * (zoom / 100)
+
+  useEffect(() => {
+    const scrollport = scrollportRef.current
+    const currentMap = scrollport?.querySelector<HTMLElement>('.atlas-map.is-current')
+    if (!scrollport || !currentMap) return
+    scrollport.scrollLeft = Math.max(
+      0,
+      currentMap.offsetLeft - (scrollport.clientWidth - currentMap.offsetWidth) / 2,
+    )
+    scrollport.scrollTop = Math.max(
+      0,
+      currentMap.offsetTop - (scrollport.clientHeight - currentMap.offsetHeight) / 2,
+    )
+  }, [rpgState.worldMapId])
 
   return (
     <section className="world-atlas" aria-label="World Atlas" data-atlas-zoom={zoom}>
@@ -247,7 +262,7 @@ export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
         </div>
       </header>
 
-      <div className="atlas-scrollport">
+      <div className="atlas-scrollport" ref={scrollportRef}>
         <div className="atlas-canvas" style={{ width: `${canvasWidth}px`, minWidth: 0 }}>
           <div className="atlas-connection atlas-connection-deep" aria-hidden="true">←→</div>
           <div className="atlas-connection atlas-connection-forest" aria-hidden="true">←→</div>

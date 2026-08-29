@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getStorySpeakerVisual } from '../rpg'
+import { useModalFocus } from '../ui/useModalFocus'
 import type {
   BattleStoryEvent as BattleStoryEventData,
   StoryWorldLayer,
@@ -23,6 +24,10 @@ export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEvent
   const [lineIndex, setLineIndex] = useState(0)
   const line = event.lines[lineIndex]
   const isLast = lineIndex === event.lines.length - 1
+  const dialogRef = useModalFocus<HTMLElement>({
+    open: true,
+    onEscape: onSkip ?? onComplete,
+  })
 
   const advance = () => {
     if (isLast) {
@@ -35,6 +40,10 @@ export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEvent
   useEffect(() => {
     const onKeyDown = (keyboardEvent: KeyboardEvent) => {
       if (keyboardEvent.key !== 'Enter' && keyboardEvent.key !== ' ') return
+      if (
+        keyboardEvent.target instanceof Element &&
+        keyboardEvent.target.closest('button, a, input, select, textarea')
+      ) return
       keyboardEvent.preventDefault()
       advance()
     }
@@ -49,13 +58,20 @@ export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEvent
   const speakerVisual = getStorySpeakerVisual(line.speaker)
 
   return (
-    <div className="overlay modal-overlay battle-story-overlay" role="presentation">
+    <div
+      className="overlay modal-overlay battle-story-overlay"
+      role="presentation"
+      onClick={onSkip ?? onComplete}
+    >
       <section
+        ref={dialogRef}
         className={`dialogue-window pixel-window battle-story-window story-layer-${layer}`}
         role="dialog"
         aria-modal="true"
         aria-label={event.title}
+        tabIndex={-1}
         data-story-layer={layer}
+        onClick={(event) => event.stopPropagation()}
       >
         <div className="battle-story-heading">
           <span>{event.label}</span>

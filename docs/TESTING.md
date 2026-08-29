@@ -4,6 +4,23 @@
 
 コード読解ロジックだけでなく、Open World探索・RPG state・進行導線を壊しにくくする。
 
+### Core invariants
+
+1. displayed codeのtarget / effectとruntimeのtarget / effectが一致する
+2. code評価に必要なdataが正しい名前 / 値でvisibleになる
+3. Lesson codeはその時点のlearned syntaxだけを使う
+4. route accessibilityがcanonical progression graphと一致する
+5. victoryがprerequisiteを無視したunlockを作らない
+6. World / Pause objectiveが同じprogression sourceを使う
+7. registered Areaでcross-cutting Battle featuresが利用できる
+8. save restore後はlogicalに到達可能なstateになる
+9. Level / Equipmentだけでcode-reading requirementを消さない
+10. Skill名だけでtarget semanticsを固定予測できない
+11. 全Enemy / NPC visual IDが有効なrenderまたはvisible fallbackを持つ
+12. modal / Pause中にbackground interaction・runtime progressionが起きない
+
+同じ実装をtest oracleへ流用してgreenにしない。display semanticsはcode fingerprint、expected target、POWERを持つreview-owned fixtureで独立検証し、表示codeを`eval()` / `new Function()`で実行しない。
+
 ## 2. CI
 
 Node.js 24で必ず:
@@ -15,10 +32,10 @@ npm test
 npm run build
 ```
 
-加えてPR / mainではChromiumを使ったPlaywright E2Eを実行する。
+加えてPR / mainではbuilt `dist`をVite previewでserveし、Playwright E2Eを実行する。
 
 ```bash
-npx playwright install --with-deps chromium
+npx playwright install --with-deps chromium webkit
 npm run test:e2e
 ```
 
@@ -34,6 +51,7 @@ PR前にも4項目を実行し、Open World / route / persistenceへ触れる変
 - SkillDefinition
 - code variant / multiline CODE HELP
 - solvability
+- actual combat turn resolver（damage / Defense / Equipment・Level profile / persistent HP / BYTE / PATCH KIT / Boss Guard）
 - JavaScript / TypeScript構文
 - Battle + seed code uniqueness
 - CODE DATA resolver
@@ -126,6 +144,8 @@ Party:
 
 ## 4. Generator / Solvability
 
+runtimeとsolvabilityは同じpure player-action / enemy-attack resolverを使う。solverはprofileでinitial HP、CombatStats、Party follow-up、PATCH KITを受け、defaultではbonusなしの保守的なbaselineを使う。
+
 保証する:
 
 - 同じBattle ID + seedで同じ盤面
@@ -153,7 +173,15 @@ Party:
 
 ## 6. Browser E2E
 
-Playwright + Chromiumを使用する。Unit Testを置き換えず、route・DOM・LocalStorageをまたぐ主要loopだけを固定する。
+Playwrightを使用する。Unit Testを置き換えず、route・DOM・LocalStorageをまたぐ主要loopだけを固定する。`npm run test:e2e`は必ずbuildしてから`npm run preview`で`dist`をserveするため、Vite dev serverだけでは検出できないartifact差も対象になる。
+
+Browser / viewport matrix:
+
+- Chromium Desktop — 全spec
+- WebKit Desktop — `@cross-browser` core invariant smoke
+- Chromium mobile portrait 390px相当 — `@responsive`
+- short viewport 1024×520 — `@responsive`
+- landscape 844×390 — `@responsive`
 
 ### Core loop
 
@@ -214,6 +242,12 @@ PRごとに最低限:
 - Battle→World returnが壊れていない
 - MobileでD-Pad / INTERACT / MENUが重ならない
 - persistence変更ならreload確認
+- Sprout / Boar / Guardian等のregistered visualが実際にvisible
+- current Atlas cardがopen直後scrollport内
+- short / landscapeでCODE HELPが読める
+- mobileでselected codeとEnemy dataを比較できる
+- Pauseがfocusをtrapし、background input / Battle progressionを止める
+- Victory / Defeat上にMENUを重ねない
 
 ## 8. Production
 

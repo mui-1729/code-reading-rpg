@@ -57,7 +57,7 @@ RPG側の目的は、**コード読解を代替することではなく、次の
 | State | Version | 責務 |
 | --- | ---: | --- |
 | `PlayerProgress` | v4 | EXP / Gold / PATCH KIT / Stage・Area clear / unlock |
-| `RpgState` | v3 | current HP / Equipment ownership・loadout / Party / World position / Treasure |
+| `RpgState` | v4 | current HP / Equipment ownership・loadout / Party / World position / Treasure |
 
 重要:
 
@@ -606,9 +606,9 @@ ShopとInnをHubの「準備地点」として視覚的にセットで理解で�
 
 - `PlayerProgress v4.gold`
 - `PlayerProgress v4.inventory.patchKit`
-- `RpgState v3.currentHp`
-- `RpgState v3.equipment`
-- `RpgState v3.ownedEquipmentIds`
+- `RpgState v4.currentHp`
+- `RpgState v4.equipment`
+- `RpgState v4.ownedEquipmentIds`
 
 ### No schema bump for
 

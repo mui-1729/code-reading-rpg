@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useModalFocus } from '../ui/useModalFocus'
 import {
   createCodeDataVariables,
   createEnemyInspectionSnapshot,
@@ -56,6 +57,10 @@ export function BattleCodeData({
   const enemySnapshot = selectedEnemy
     ? createEnemyInspectionSnapshot(selectedEnemy, selectedCode)
     : null
+  const dialogRef = useModalFocus<HTMLElement>({
+    open,
+    onEscape: () => setOpen(false),
+  })
 
   useEffect(() => {
     const resetTimer = window.setTimeout(() => {
@@ -81,6 +86,7 @@ export function BattleCodeData({
       const index = cards.indexOf(card as HTMLElement)
       const enemy = index >= 0 ? enemies[index] : undefined
       if (!enemy) return
+      if (card instanceof HTMLElement) card.focus()
       setSelectedEnemyKey(enemy.key)
       setOpen(true)
     }
@@ -94,10 +100,6 @@ export function BattleCodeData({
     }
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && open) {
-        setOpen(false)
-        return
-      }
       if (event.key !== 'Enter' && event.key !== ' ') return
       const target = event.target
       if (!(target instanceof Element)) return
@@ -119,7 +121,7 @@ export function BattleCodeData({
         card.removeAttribute('aria-label')
       })
     }
-  }, [enemies, open])
+  }, [enemies])
 
   useEffect(() => {
     const cards = Array.from(document.querySelectorAll<HTMLElement>('.enemy-card'))
@@ -143,7 +145,16 @@ export function BattleCodeData({
       </button>
 
       {open && (
-        <aside className="code-data-panel pixel-window" role="dialog" aria-label="Code data">
+        <div className="code-data-modal-layer" role="presentation" onClick={() => setOpen(false)}>
+        <aside
+          ref={dialogRef}
+          className="code-data-panel pixel-window"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Code data"
+          tabIndex={-1}
+          onClick={(event) => event.stopPropagation()}
+        >
           <header className="code-data-head">
             <div>
               <span className="eyebrow">CODE DATA</span>
@@ -217,6 +228,7 @@ export function BattleCodeData({
             )}
           </section>
         </aside>
+        </div>
       )}
     </>
   )

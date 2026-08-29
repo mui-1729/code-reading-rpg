@@ -21,7 +21,11 @@ export {
   typescriptSkillDefinitions,
 } from './typescriptSkillDefinitions'
 export { createSeededRandom } from './random'
+export { ENEMY_VISUAL_FALLBACK_ID, getEnemyVisualId } from './enemyVisuals'
+export { resolveEnemyAttack, resolvePlayerAction } from './combatTurn'
+export type { EnemyAttackResolution, PlayerActionResolution } from './combatTurn'
 export { hasInitialValidTarget, isBattleSolvable } from './solvability'
+export type { SolvabilityProfile } from './solvability'
 export { getTargets } from './targeting'
 export type { AreaAvailability, AreaDefinition, AreaRoutePath, AreaRoutes } from './areas'
 export type { CodeVariant, SkillDefinition } from './skillDefinitions'

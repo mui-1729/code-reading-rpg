@@ -9,22 +9,17 @@
 ```text
 Title
 ↓
-1つの大きなWorldを上下左右に探索
-├─ 左: JavaScript Grassland / 草むら
-├─ 中央: Hub / Shop / NPC
-└─ 右: TypeScript Forest / 森
+REAL WORLD briefingからCODE WORLDへCONNECT
 ↓
-草むら・森でRandom Encounter
+Overworldを入口にVillage / Forest / Deep Forest / TypeScript Frontierを行き来
 ↓
-コードを読む
+固定Lesson / Random Encounter / MID BOSS / Final Bossでコードを読む
 ↓
 SkillをSELECT → 同じSkillをもう一度押してEXECUTE
 ↓
 EXP / Gold / Level Up等を段階表示
 ↓
-元のWorld座標へ戻る
-↓
-地域のBossへ到達
+元のmap・座標へ戻り、次の地域やBossへ進む
 ```
 
 Stage SelectやArea Selectへ戻って進行する構造ではありません。旧Area / Field URLは`/world`へredirectします。
@@ -33,12 +28,13 @@ Stage SelectやArea Selectへ戻って進行する構造ではありません。
 
 ### Open World
 
-- 40×28の連続World
+- Overworld / Greenfield Village / Forest / Deep Forest / TypeScript Frontierの5 map
+- Overworldは40×28、各regionは独立した意味のあるmapとして接続
 - 11×9 viewport / Player追従camera
 - 上下左右の画面外へ移動可能
 - tileは固定正方形
-- JavaScript region = 草原 / 草むら
-- TypeScript region = 森
+- JavaScript地方 = Village → Forest → Deep Forest → Overworld final incident → Code Core
+- TypeScript地方 = TypeScript Frontier
 - Central Hub / Road / Water / Mountain
 - 固定Boss地点
 - HubのShop / 仲間NPC BYTE
@@ -47,13 +43,13 @@ Stage SelectやArea Selectへ戻って進行する構造ではありません。
 
 ### Random Encounter
 
-- JavaScriptの草むらでBattle 1 / 2
-- TypeScriptの森でBattle 4 / 5
+- JavaScript Forest / Deep Forestではclear済みLessonを段階的に再出題
+- TypeScript FrontierではBattle 4 / 5を進行に応じて出題
 - 最低5歩のcooldown
 - terrainごとの遭遇率
 - Road / Hubは安全地帯
 - Battle後は元のWorld位置へ復帰
-- Boss Battle 3 / 6は固定地点
+- JavaScriptはBattle 7〜22 → 1 → 2 → Boss 3、TypeScriptは4 → 5 → Boss 6
 
 ### Battle / code reading
 
@@ -176,8 +172,9 @@ npm ci
 npm run lint
 npm test
 npm run build
+npm run test:e2e
 ```
 
 ## Production
 
-Cloudflare Workers Static Assetsで配信します。
+Cloudflare Workers Static Assetsで`dist`を配信します。WranglerはrepoのdevDependencyへexact pinし、`npm run deploy` / `npm run deploy:preview`から同じversionを使います。
