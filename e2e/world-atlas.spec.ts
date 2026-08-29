@@ -132,3 +132,48 @@ test('390px幅でもMAPタブがdocumentの横overflowを発生させない', as
   )
   expect(documentOverflows).toBe(false)
 })
+
+test('スマホAtlasでは本編terrainの疑似装飾がカード前面へ漏れない', async ({ page }) => {
+  await page.setViewportSize({ width: 393, height: 852 })
+  await seedWorldAtlas(page)
+  const atlas = await openAtlas(page)
+
+  const forestCell = atlas.locator('.atlas-terrain-cell.terrain-forest').first()
+  const woodsCell = atlas.locator('.atlas-terrain-cell.terrain-woods').first()
+  const mountainCell = atlas.locator('.atlas-terrain-cell.terrain-mountain').first()
+
+  await expect(forestCell).toBeVisible()
+  await expect(woodsCell).toBeVisible()
+  await expect(mountainCell).toBeVisible()
+
+  const pseudoContents = await page.evaluate(() => {
+    const selectors = [
+      '.atlas-terrain-cell.terrain-forest',
+      '.atlas-terrain-cell.terrain-woods',
+      '.atlas-terrain-cell.terrain-mountain',
+    ]
+
+    return selectors.map((selector) => {
+      const element = document.querySelector(selector)
+      if (!element) return null
+      return {
+        before: getComputedStyle(element, '::before').content,
+        after: getComputedStyle(element, '::after').content,
+      }
+    })
+  })
+
+  expect(pseudoContents).toEqual([
+    { before: 'none', after: 'none' },
+    { before: 'none', after: 'none' },
+    { before: 'none', after: 'none' },
+  ])
+
+  await page.getByRole('button', { name: 'Zoom in world atlas' }).click()
+  await expect(atlas).toHaveAttribute('data-atlas-zoom', '125')
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    ),
+  ).toBe(false)
+})
