@@ -1,4 +1,5 @@
 import { battles, generateBattle, type Battle, type Seed } from '../game'
+import { getNextBattleId, type ProgressionArea } from '../progression'
 
 export type BattleReturnPath = '/world' | '/javascript/field' | '/typescript/field'
 
@@ -10,6 +11,10 @@ export type BattleSession = {
   nextBattle?: Battle
 }
 
+function isProgressionArea(areaId: string): areaId is ProgressionArea {
+  return areaId === 'javascript' || areaId === 'typescript'
+}
+
 export function createBattleSession(
   battleId: number,
   seed: Seed,
@@ -18,9 +23,12 @@ export function createBattleSession(
   const battle = generateBattle(battleId, seed)
   if (!battle) throw new Error(`Unknown battle: ${battleId}`)
 
-  const battleIndex = battles.findIndex((candidate) => candidate.id === battleId)
-  const nextBattleCandidate = battles[battleIndex + 1]
-  const nextBattle = nextBattleCandidate?.areaId === battle.areaId ? nextBattleCandidate : undefined
+  const nextBattleId = isProgressionArea(battle.areaId)
+    ? getNextBattleId(battle.areaId, battleId)
+    : undefined
+  const nextBattle = nextBattleId === undefined
+    ? undefined
+    : battles.find((candidate) => candidate.id === nextBattleId)
 
   return {
     battleId,
