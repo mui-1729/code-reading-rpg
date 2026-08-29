@@ -4,7 +4,10 @@ export type RuntimeEnemy = {
   hp: number
   maxHp: number
   attackName: string
+  /** Raw Enemy model value used by displayed code / TargetRule. */
   attackDamage: number
+  /** Player-defense-adjusted damage shown by NEXT. */
+  incomingDamage: number
 }
 
 export type CodeDataValue =
@@ -29,6 +32,7 @@ const enemyRef = (enemy: RuntimeEnemy) => ({
   name: enemy.name,
   hp: enemy.hp,
   attackDamage: enemy.attackDamage,
+  incomingDamage: enemy.incomingDamage,
 })
 
 const aliveEnemies = (enemies: readonly RuntimeEnemy[]) => enemies.filter((enemy) => enemy.hp > 0)
@@ -42,7 +46,12 @@ export function createEnemyInspectionSnapshot(
     { name: 'hp', expression: 'enemy.hp', value: enemy.hp },
     { name: 'maxHp', expression: 'enemy.maxHp', value: enemy.maxHp },
     { name: 'attackName', expression: 'enemy.attackName', value: enemy.attackName },
-    { name: 'attackDamage', expression: 'enemy.attackDamage', value: enemy.attackDamage },
+    { name: 'attackDamage', expression: 'enemy.attackDamage (raw)', value: enemy.attackDamage },
+    {
+      name: 'incomingDamage',
+      expression: 'damage after player DEF',
+      value: enemy.incomingDamage,
+    },
   ]
 
   if (!code) return { base, derived: [] }
@@ -81,16 +90,16 @@ export function createCodeDataVariables(
   enemies: readonly RuntimeEnemy[],
   code: string | null,
 ): readonly CodeDataVariable[] {
+  const alive = aliveEnemies(enemies)
   const values: CodeDataVariable[] = [
     {
       name: 'enemies',
-      value: enemies.map(enemyRef),
+      expression: 'current living enemies (hp > 0)',
+      value: alive.map(enemyRef),
     },
   ]
 
   if (!code) return values
-
-  const alive = aliveEnemies(enemies)
 
   if (code.includes('const alive')) {
     values.push({
