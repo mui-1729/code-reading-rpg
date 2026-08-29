@@ -1,11 +1,7 @@
 import { createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router'
+import { DatabaseBattleRoutePage } from './database/DatabaseBattleRoutePage'
 import { RootLayout } from './RootLayout'
-import {
-  BattleRoutePage,
-  DatabaseBattleRoutePage,
-  HomePage,
-  TypeScriptBattleRoutePage,
-} from './routeComponents'
+import { BattleRoutePage, HomePage, TypeScriptBattleRoutePage } from './routeComponents'
 import { WorldRoutePage } from './world/WorldRoutePage'
 
 const rootRoute = createRootRoute({ component: RootLayout })
