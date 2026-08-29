@@ -21,11 +21,13 @@ import {
 } from '../rpg'
 import { useTutorial } from '../tutorial/useTutorial'
 import { getWorldObjectives } from '../world/worldObjective'
+import { WorldAtlas } from './WorldAtlas'
 
-type PauseTab = 'status' | 'items' | 'equipment' | 'party' | 'codex' | 'system'
+type PauseTab = 'status' | 'map' | 'items' | 'equipment' | 'party' | 'codex' | 'system'
 
 const tabs: Array<{ id: PauseTab; label: string }> = [
   { id: 'status', label: 'STATUS' },
+  { id: 'map', label: 'MAP' },
   { id: 'items', label: 'ITEMS' },
   { id: 'equipment', label: 'EQUIPMENT' },
   { id: 'party', label: 'PARTY' },
@@ -181,6 +183,8 @@ export function PauseMenu() {
                   </div>
                 </section>
               )}
+
+              {tab === 'map' && <WorldAtlas progress={progress} rpgState={rpgState} />}
 
               {tab === 'items' && (
                 <section className="pause-section item-inventory-grid" aria-label="Item inventory">
