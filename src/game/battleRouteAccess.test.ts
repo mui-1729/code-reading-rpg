@@ -15,9 +15,9 @@ describe('battle route progression guard', () => {
     expect(isBattleRouteUnlocked('javascript', 22, progress([21], [1, 4, 7, 22]))).toBe(true)
   })
 
-  it('keeps the JavaScript Boss behind both unlock state and Deep Forest completion', () => {
-    expect(isBattleRouteUnlocked('javascript', 3, progress([], [1, 3, 4, 7]))).toBe(false)
-    expect(isBattleRouteUnlocked('javascript', 3, progress([22], [1, 3, 4, 7]))).toBe(true)
+  it('blocks the JavaScript Boss until progression explicitly unlocks it', () => {
+    expect(isBattleRouteUnlocked('javascript', 3, progress([]))).toBe(false)
+    expect(isBattleRouteUnlocked('javascript', 3, progress([2], [1, 3, 4, 7]))).toBe(true)
   })
 
   it('blocks TypeScript until JavaScript Boss clear even when Battle 4 is initially listed as unlocked', () => {
