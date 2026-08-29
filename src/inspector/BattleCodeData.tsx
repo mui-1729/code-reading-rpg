@@ -58,8 +58,11 @@ export function BattleCodeData({
     : null
 
   useEffect(() => {
-    setOpen(false)
-    setSelectedEnemyKey(null)
+    const resetTimer = window.setTimeout(() => {
+      setOpen(false)
+      setSelectedEnemyKey(null)
+    }, 0)
+    return () => window.clearTimeout(resetTimer)
   }, [battleKey])
 
   useEffect(() => {
