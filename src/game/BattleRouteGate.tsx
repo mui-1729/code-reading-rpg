@@ -17,9 +17,6 @@ function readRoute(): RouteSnapshot {
 export function BattleRouteGate() {
   const { progress } = useProgress()
   const [route, setRoute] = useState<RouteSnapshot>(() => readRoute())
-  const [notice, setNotice] = useState<string | null>(() =>
-    window.location.hash === '#battle-locked' ? window.sessionStorage.getItem(FLASH_KEY) : null,
-  )
 
   useEffect(() => {
     const sync = () => setRoute(readRoute())
@@ -34,12 +31,7 @@ export function BattleRouteGate() {
 
   useEffect(() => {
     const match = BATTLE_PATH.exec(route.pathname)
-    if (!match) {
-      if (route.pathname === '/world' && route.hash === '#battle-locked') {
-        setNotice(window.sessionStorage.getItem(FLASH_KEY))
-      }
-      return
-    }
+    if (!match) return
 
     const area = match[1] as BattleRouteArea
     const battleId = Number(match[2])
@@ -48,9 +40,14 @@ export function BattleRouteGate() {
     const reason = getBattleRouteLockReason(area, battleId)
     window.sessionStorage.setItem(FLASH_KEY, reason)
     window.location.replace('/world#battle-locked')
-  }, [progress, route.hash, route.pathname])
+  }, [progress, route.pathname])
 
-  if (route.pathname !== '/world' || route.hash !== '#battle-locked' || !notice) return null
+  const notice =
+    route.pathname === '/world' && route.hash === '#battle-locked'
+      ? window.sessionStorage.getItem(FLASH_KEY)
+      : null
+
+  if (!notice) return null
 
   return (
     <aside
