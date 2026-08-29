@@ -22,8 +22,7 @@ async function seedVillageTraining(page: Page) {
             clearedStageIds: [],
             clearedAreaIds: [],
             completedSideQuestIds: [],
-            // #203以前の現行save相当。restore時にTraining 7がbaselineとして補われる。
-            unlockedStageIds: [1, 4],
+            unlockedStageIds: [7],
             unlockedSkillIds: skills,
           },
         }),
@@ -107,12 +106,11 @@ test('Village TRAINで初心者Storyを読みながらBattle 7→8→9を順にc
   await expect(comparisonStory).toContainText('enemy.hp')
   await comparisonStory.getByRole('button', { name: 'SKIP' }).click()
 
-  // NOVAで高HP敵を削ると60未満になり、次はTRACEの条件へ入る。
   await finishBattle(page, ['TRACE', 'NOVA', 'TRACE'])
   await expect(objective).toContainText('TRAINING · 2 / 3')
   await expect(objective).not.toContainText('FORESTでは&&と||')
   expect((await storedProgress(page)).progress.clearedStageIds).toEqual([7])
-  expect((await storedProgress(page)).progress.unlockedStageIds).toEqual([1, 4, 7, 8])
+  expect((await storedProgress(page)).progress.unlockedStageIds).toEqual([7, 8])
 
   await page.getByRole('button', { name: 'INTERACT' }).click()
   await expect(page).toHaveURL(/\/javascript\/battle\/8\?/)
@@ -125,7 +123,7 @@ test('Village TRAINで初心者Storyを読みながらBattle 7→8→9を順にc
   await expect(objective).toContainText('TRAINING · 3 / 3')
   await expect(objective).not.toContainText('FORESTでは&&と||')
   expect((await storedProgress(page)).progress.clearedStageIds).toEqual([7, 8])
-  expect((await storedProgress(page)).progress.unlockedStageIds).toEqual([1, 4, 7, 8, 9])
+  expect((await storedProgress(page)).progress.unlockedStageIds).toEqual([7, 8, 9])
 
   await page.getByRole('button', { name: 'INTERACT' }).click()
   await expect(page).toHaveURL(/\/javascript\/battle\/9\?/)
@@ -145,7 +143,7 @@ test('Village TRAINで初心者Storyを読みながらBattle 7→8→9を順にc
   expect(progress.progress.exp).toBe(24)
   expect(progress.progress.gold).toBe(0)
   expect(progress.progress.clearedStageIds).toEqual([7, 8, 9])
-  expect(progress.progress.unlockedStageIds).toEqual([1, 4, 7, 8, 9, 10])
+  expect(progress.progress.unlockedStageIds).toEqual([7, 8, 9, 10])
 
   await page.reload()
   await expect(page.getByLabel('Village map')).toHaveAttribute('data-world-map', 'js-village')
