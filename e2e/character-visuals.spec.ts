@@ -2,12 +2,31 @@ import { expect, test, type Page } from '@playwright/test'
 
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
+const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 
 async function skipTutorial(page: Page) {
   await page.goto('/')
   await page.evaluate((key) => {
     localStorage.setItem(key, JSON.stringify({ version: 1, status: 'skipped', phase: 'battle' }))
   }, TUTORIAL_KEY)
+}
+
+async function seedTypeScriptAccess(page: Page) {
+  await page.evaluate((key) => {
+    localStorage.setItem(key, JSON.stringify({
+      version: 4,
+      progress: {
+        exp: 0,
+        gold: 0,
+        inventory: { patchKit: 0 },
+        clearedStageIds: [3],
+        clearedAreaIds: ['javascript'],
+        completedSideQuestIds: [],
+        unlockedStageIds: [1, 4, 7],
+        unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
+      },
+    }))
+  }, PROGRESS_KEY)
 }
 
 async function seedVillage(page: Page) {
@@ -52,6 +71,7 @@ test('VillageのTRAIN地点にTRAINER MIOのfield spriteを表示する', async 
 test('TypeScript StoryでLEAD ADAとTYPE WARDENに固有portraitを表示する', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await skipTutorial(page)
+  await seedTypeScriptAccess(page)
   await page.goto('/typescript/battle/4?seed=character-visual-mobile&returnTo=%2Fworld')
 
   const ada = page.getByAltText('LEAD ADA portrait')
