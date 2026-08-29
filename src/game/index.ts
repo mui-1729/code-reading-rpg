@@ -2,11 +2,13 @@ export {
   areaById,
   areas,
   availableAreas,
+  DATABASE_AREA_ID,
   JAVASCRIPT_AREA_ID,
   TYPESCRIPT_AREA_ID,
 } from './areas'
 export { getAreaForBattle, getBattlesForArea, getBossBattleForArea } from './areaProgression'
 export { battles } from './battles'
+export { databaseSkillDefinitionById, databaseSkillDefinitions } from './databaseSkillDefinitions'
 export { generateBattle } from './generator'
 export { skillDefinitionById, skillDefinitions } from './skillDefinitions'
 export {
