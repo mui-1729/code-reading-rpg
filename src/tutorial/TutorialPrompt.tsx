@@ -144,7 +144,8 @@ export function TutorialPrompt() {
   const worldRoute = typeof window !== 'undefined' && window.location.pathname === '/world'
   const byteJoined = rpgState.partyMemberIds.includes('byte')
   const interactionReady =
-    routeKind === 'field' && (worldRoute ? hasByteNearby() : hasInteractionNearby())
+    routeKind === 'field' &&
+    (worldRoute ? byteJoined || hasByteNearby() : hasInteractionNearby())
   const selectedSkill =
     routeKind === 'battle'
       ? document.querySelector<HTMLButtonElement>('.skill-card.selected')
@@ -181,17 +182,6 @@ export function TutorialPrompt() {
     if (state.status !== 'active' || routeKind !== 'battle' || state.phase === 'battle') return
     enterBattle()
   }, [enterBattle, routeKind, state.phase, state.status])
-
-  useEffect(() => {
-    if (
-      state.status === 'active' &&
-      state.phase === 'field-interact' &&
-      worldRoute &&
-      byteJoined
-    ) {
-      completeFieldInteraction()
-    }
-  }, [byteJoined, completeFieldInteraction, state.phase, state.status, worldRoute])
 
   useEffect(() => {
     if (state.status !== 'active' || state.phase !== 'field-move' || routeKind !== 'field') {
@@ -268,9 +258,13 @@ export function TutorialPrompt() {
         document.querySelector('.field-interact, .world-interact')?.classList.add('tutorial-highlight')
       }
       if (worldRoute) {
-        document
-          .querySelector('.npc-object[aria-label="BYTE NPC"]')
-          ?.classList.add('tutorial-highlight-soft')
+        if (byteJoined) {
+          document.querySelector('.world-follower-sprite')?.classList.add('tutorial-highlight-soft')
+        } else {
+          document
+            .querySelector('.npc-object[aria-label="BYTE NPC"]')
+            ?.classList.add('tutorial-highlight-soft')
+        }
       }
     } else if (state.phase === 'party-join' && routeKind === 'field') {
       document.querySelector('.world-follower-sprite')?.classList.add('tutorial-highlight-soft')
@@ -281,7 +275,7 @@ export function TutorialPrompt() {
     }
 
     return clearHighlights
-  }, [battleReady, interactionReady, routeKind, selectedSkill, state.phase, state.status, worldRoute])
+  }, [battleReady, byteJoined, interactionReady, routeKind, selectedSkill, state.phase, state.status, worldRoute])
 
   if (state.status !== 'active') return null
 
@@ -291,16 +285,30 @@ export function TutorialPrompt() {
   if (state.phase === 'field-move' && routeKind === 'field') {
     copy = {
       label: 'MOVE',
-      title: coarsePointer ? 'D-PadでBYTEの近くへ歩こう' : 'WASD / ArrowでBYTEの近くへ歩こう',
-      detail: '開始地点から左か上へ1歩でBYTEの隣へ行ける',
+      title: byteJoined
+        ? coarsePointer
+          ? 'D-Padで1歩動いて操作を確認しよう'
+          : 'WASD / Arrowで1歩動いて操作を確認しよう'
+        : coarsePointer
+          ? 'D-PadでBYTEの近くへ歩こう'
+          : 'WASD / ArrowでBYTEの近くへ歩こう',
+      detail: byteJoined
+        ? 'BYTEは加入済み。移動のあとINTERACTももう一度確認する'
+        : '開始地点から左か上へ1歩でBYTEの隣へ行ける',
       className: 'tutorial-prompt-field',
     }
   } else if (state.phase === 'field-interact' && routeKind === 'field') {
     copy = interactionReady
       ? {
           label: 'INTERACT',
-          title: coarsePointer ? 'INTERACTでBYTEに話しかける' : 'Enter / SpaceでBYTEに話しかける',
-          detail: '実際にPartyへ加入させよう',
+          title: byteJoined
+            ? coarsePointer
+              ? 'INTERACTで加入済みBYTEに声をかける'
+              : 'Enter / Spaceで加入済みBYTEに声をかける'
+            : coarsePointer
+              ? 'INTERACTでBYTEに話しかける'
+              : 'Enter / SpaceでBYTEに話しかける',
+          detail: byteJoined ? '再加入はせず、Party操作だけ確認する' : '実際にPartyへ加入させよう',
           className: 'tutorial-prompt-field',
         }
       : {
