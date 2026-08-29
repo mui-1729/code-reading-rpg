@@ -12,19 +12,25 @@ describe('battle route progression guard', () => {
     expect(isBattleRouteUnlocked('javascript', 7, progress([]))).toBe(true)
     expect(isBattleRouteUnlocked('javascript', 8, progress([]))).toBe(false)
     expect(isBattleRouteUnlocked('javascript', 8, progress([7], [1, 4, 7, 8]))).toBe(true)
-    expect(isBattleRouteUnlocked('javascript', 22, progress([21], [1, 4, 7, 22]))).toBe(true)
   })
 
-  it('blocks the JavaScript Boss until progression explicitly unlocks it', () => {
+  it('derives sequential JavaScript unlocks for compatible saves', () => {
+    expect(isBattleRouteUnlocked('javascript', 11, progress([10]))).toBe(true)
+    expect(isBattleRouteUnlocked('javascript', 22, progress([21]))).toBe(true)
+    expect(isBattleRouteUnlocked('javascript', 2, progress([1]))).toBe(true)
+  })
+
+  it('allows the JavaScript Boss only after the final lesson and Battle 1 / 2 are complete', () => {
     expect(isBattleRouteUnlocked('javascript', 3, progress([]))).toBe(false)
-    expect(isBattleRouteUnlocked('javascript', 3, progress([2], [1, 3, 4, 7]))).toBe(true)
+    expect(isBattleRouteUnlocked('javascript', 3, progress([22, 1]))).toBe(false)
+    expect(isBattleRouteUnlocked('javascript', 3, progress([22, 1, 2]))).toBe(true)
   })
 
-  it('blocks TypeScript until JavaScript Boss clear even when Battle 4 is initially listed as unlocked', () => {
+  it('blocks TypeScript until JavaScript Boss clear and derives later chapter unlocks', () => {
     expect(isBattleRouteUnlocked('typescript', 4, progress([]))).toBe(false)
     expect(isBattleRouteUnlocked('typescript', 4, progress([3]))).toBe(true)
-    expect(isBattleRouteUnlocked('typescript', 5, progress([3], [1, 4, 5, 7]))).toBe(true)
-    expect(isBattleRouteUnlocked('typescript', 6, progress([3], [1, 4, 5, 7]))).toBe(false)
+    expect(isBattleRouteUnlocked('typescript', 5, progress([3, 4]))).toBe(true)
+    expect(isBattleRouteUnlocked('typescript', 6, progress([3, 5]))).toBe(true)
   })
 
   it('allows replay of an already-cleared battle and rejects unknown IDs', () => {
