@@ -29,6 +29,7 @@ export {
   characterVisuals,
   equipmentVisuals,
   getEquipmentVisual,
+  getStorySpeakerVisual,
   getWeaponVisual,
 } from './visualAssets'
 export { RpgProvider } from './RpgProvider'

@@ -6,8 +6,27 @@ export const characterVisuals = {
   byte: {
     field: '/pixel-art/characters/byte-field.svg',
     battle: '/pixel-art/characters/byte-battle.svg',
+    portrait: '/pixel-art/characters/byte-field.svg',
+  },
+  leadAda: {
+    portrait: '/pixel-art/characters/lead-ada-portrait.svg',
+  },
+  trainerMio: {
+    field: '/pixel-art/characters/trainer-mio-field.svg',
+    portrait: '/pixel-art/characters/trainer-mio-portrait.svg',
+  },
+  typeWarden: {
+    portrait: '/pixel-art/characters/type-warden-portrait.svg',
   },
 } as const
+
+export function getStorySpeakerVisual(speaker: string): string | null {
+  if (speaker === 'BYTE') return characterVisuals.byte.portrait
+  if (speaker.startsWith('LEAD ADA')) return characterVisuals.leadAda.portrait
+  if (speaker.startsWith('TRAINER MIO')) return characterVisuals.trainerMio.portrait
+  if (speaker.startsWith('TYPE WARDEN')) return characterVisuals.typeWarden.portrait
+  return null
+}
 
 export const equipmentVisuals: Record<string, string> = {
   'training-blade': '/pixel-art/equipment/weapons/training-blade.svg',
