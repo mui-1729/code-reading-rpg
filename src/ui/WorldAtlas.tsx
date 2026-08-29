@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { PlayerProgress } from '../progression'
 import type { RpgState } from '../rpg'
 import {
+  getTerrain,
   getWorldMapDimensions,
   JS_DEEP_FOREST_MAP_ID,
   JS_FOREST_MAP_ID,
@@ -10,6 +11,7 @@ import {
   TS_FRONTIER_MAP_ID,
   WORLD_PORTALS,
   WORLD_TREASURES,
+  type Terrain,
   type WorldMapId,
 } from '../world/worldMap'
 
@@ -23,6 +25,13 @@ type AtlasMap = {
   label: string
   subtitle: string
   landmarks: string[]
+}
+
+type AtlasCell = {
+  x: number
+  y: number
+  terrain: Terrain
+  locked: boolean
 }
 
 const atlasMaps: AtlasMap[] = [
@@ -66,14 +75,19 @@ const mapClassById: Record<WorldMapId, string> = {
   [JS_VILLAGE_MAP_ID]: 'atlas-map-village',
 }
 
-const clampPercent = (value: number) => Math.max(4, Math.min(96, value))
-
-function getMarkerStyle(mapId: WorldMapId, position: { x: number; y: number }) {
-  const dimensions = getWorldMapDimensions(mapId)
-  return {
-    left: `${clampPercent((position.x / Math.max(1, dimensions.width - 1)) * 100)}%`,
-    top: `${clampPercent((position.y / Math.max(1, dimensions.height - 1)) * 100)}%`,
-  }
+const TERRAIN_LABEL: Partial<Record<Terrain, string>> = {
+  road: 'ROAD',
+  stone: 'PATH',
+  town: 'TOWN',
+  village: 'VILLAGE',
+  gate: 'GATE',
+  exit: 'EXIT',
+  training: 'TRAIN',
+  boss: 'BOSS',
+  midboss: 'MID BOSS',
+  treasure: 'TREASURE',
+  shop: 'SHOP',
+  recovery: 'INN',
 }
 
 function getMapGateStatus(mapId: WorldMapId, clearedStageIds: readonly number[]) {
@@ -84,6 +98,115 @@ function getMapGateStatus(mapId: WorldMapId, clearedStageIds: readonly number[])
   return clearedStageIds.includes(entrance.requiredClearedStageId)
     ? 'OPEN'
     : `LOCKED · CLEAR BATTLE ${entrance.requiredClearedStageId}`
+}
+
+function buildMapCells(mapId: WorldMapId, clearedStageIds: readonly number[]): AtlasCell[] {
+  const dimensions = getWorldMapDimensions(mapId)
+  const cells: AtlasCell[] = []
+
+  for (let y = 0; y < dimensions.height; y += 1) {
+    for (let x = 0; x < dimensions.width; x += 1) {
+      const terrain = getTerrain(x, y, mapId)
+      const portal = WORLD_PORTALS.find(
+        (candidate) =>
+          candidate.fromMapId === mapId &&
+          candidate.position.x === x &&
+          candidate.position.y === y,
+      )
+      cells.push({
+        x,
+        y,
+        terrain,
+        locked:
+          portal?.requiredClearedStageId !== undefined &&
+          !clearedStageIds.includes(portal.requiredClearedStageId),
+      })
+    }
+  }
+
+  return cells
+}
+
+function AtlasTerrainMap({
+  map,
+  progress,
+  rpgState,
+}: {
+  map: AtlasMap
+  progress: PlayerProgress
+  rpgState: RpgState
+}) {
+  const dimensions = getWorldMapDimensions(map.id)
+  const cells = useMemo(
+    () => buildMapCells(map.id, progress.clearedStageIds),
+    [map.id, progress.clearedStageIds],
+  )
+  const isCurrent = map.id === rpgState.worldMapId
+  const gateStatus = getMapGateStatus(map.id, progress.clearedStageIds)
+  const unopenedTreasureCount = WORLD_TREASURES.filter(
+    (treasure) =>
+      treasure.mapId === map.id && !rpgState.openedTreasureIds.includes(treasure.id),
+  ).length
+
+  return (
+    <article
+      className={`atlas-map ${mapClassById[map.id]} ${isCurrent ? 'is-current' : ''}`}
+      data-atlas-map={map.id}
+    >
+      <header>
+        <div>
+          <strong>{map.label}</strong>
+          <span>{map.subtitle}</span>
+        </div>
+        {isCurrent && <em>CURRENT MAP</em>}
+      </header>
+
+      <div className="atlas-map-field atlas-terrain-field" aria-label={`${map.label} terrain map`}>
+        <div
+          className="atlas-terrain-grid"
+          style={{
+            gridTemplateColumns: `repeat(${dimensions.width}, 1fr)`,
+            gridTemplateRows: `repeat(${dimensions.height}, 1fr)`,
+            aspectRatio: `${dimensions.width} / ${dimensions.height}`,
+          }}
+          data-terrain-width={dimensions.width}
+          data-terrain-height={dimensions.height}
+        >
+          {cells.map((cell) => {
+            const playerHere =
+              isCurrent &&
+              rpgState.worldPosition.x === cell.x &&
+              rpgState.worldPosition.y === cell.y
+            const label = cell.locked
+              ? 'LOCKED GATE'
+              : TERRAIN_LABEL[cell.terrain] ?? cell.terrain.toUpperCase()
+
+            return (
+              <span
+                key={`${cell.x}:${cell.y}`}
+                className={`atlas-terrain-cell terrain-${cell.terrain} ${cell.locked ? 'is-locked' : ''} ${playerHere ? 'is-player' : ''}`}
+                title={`${cell.x},${cell.y} · ${label}`}
+                aria-label={playerHere ? `YOU at ${cell.x}, ${cell.y}` : undefined}
+                aria-hidden={playerHere ? undefined : true}
+              >
+                {playerHere ? '•' : ''}
+              </span>
+            )
+          })}
+        </div>
+        <div className="atlas-landmark-list" aria-label={`${map.label} landmarks`}>
+          {map.landmarks.map((landmark) => (
+            <span key={landmark} className="atlas-landmark">◆ {landmark}</span>
+          ))}
+        </div>
+      </div>
+
+      <footer>
+        <span>{unopenedTreasureCount > 0 ? `TREASURE ×${unopenedTreasureCount}` : 'TREASURE CHECKED'}</span>
+        {gateStatus && <strong className={gateStatus === 'OPEN' ? 'is-open' : 'is-locked'}>{gateStatus}</strong>}
+      </footer>
+    </article>
+  )
 }
 
 export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
@@ -128,54 +251,27 @@ export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
           <div className="atlas-connection atlas-connection-ts" aria-hidden="true">←→</div>
           <div className="atlas-connection atlas-connection-village" aria-hidden="true">↕</div>
 
-          {atlasMaps.map((map) => {
-            const isCurrent = map.id === rpgState.worldMapId
-            const gateStatus = getMapGateStatus(map.id, progress.clearedStageIds)
-            const unopenedTreasureCount = WORLD_TREASURES.filter(
-              (treasure) =>
-                treasure.mapId === map.id && !rpgState.openedTreasureIds.includes(treasure.id),
-            ).length
-
-            return (
-              <article
-                key={map.id}
-                className={`atlas-map ${mapClassById[map.id]} ${isCurrent ? 'is-current' : ''}`}
-                data-atlas-map={map.id}
-              >
-                <header>
-                  <div>
-                    <strong>{map.label}</strong>
-                    <span>{map.subtitle}</span>
-                  </div>
-                  {isCurrent && <em>CURRENT MAP</em>}
-                </header>
-
-                <div className="atlas-map-field" aria-label={`${map.label} landmarks`}>
-                  {map.landmarks.map((landmark) => (
-                    <span key={landmark} className="atlas-landmark">◆ {landmark}</span>
-                  ))}
-                  {isCurrent && (
-                    <span
-                      className="atlas-player-marker"
-                      style={getMarkerStyle(map.id, rpgState.worldPosition)}
-                      aria-label={`YOU at ${rpgState.worldPosition.x}, ${rpgState.worldPosition.y}`}
-                    >
-                      YOU
-                    </span>
-                  )}
-                </div>
-
-                <footer>
-                  <span>{unopenedTreasureCount > 0 ? `TREASURE ×${unopenedTreasureCount}` : 'TREASURE CHECKED'}</span>
-                  {gateStatus && <strong className={gateStatus === 'OPEN' ? 'is-open' : 'is-locked'}>{gateStatus}</strong>}
-                </footer>
-              </article>
-            )
-          })}
+          {atlasMaps.map((map) => (
+            <AtlasTerrainMap
+              key={map.id}
+              map={map}
+              progress={progress}
+              rpgState={rpgState}
+            />
+          ))}
         </div>
       </div>
 
-      <p className="atlas-legend">◆ LANDMARK · YOU CURRENT POSITION · LOCKED means its entrance needs story progress.</p>
+      <div className="atlas-terrain-legend" aria-label="Terrain legend">
+        <span><b className="terrain-road" />ROAD</span>
+        <span><b className="terrain-woods" />WOODS</span>
+        <span><b className="terrain-water" />WATER</span>
+        <span><b className="terrain-gate" />GATE / EXIT</span>
+        <span><b className="terrain-boss" />BOSS</span>
+        <span><b className="terrain-treasure" />TREASURE</span>
+        <span><b className="legend-player" />YOU</span>
+      </div>
+      <p className="atlas-legend">Real terrain from the playable maps · LOCKED means its entrance needs story progress.</p>
     </section>
   )
 }
