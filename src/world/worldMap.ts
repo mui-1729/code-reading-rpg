@@ -9,12 +9,14 @@ export const JS_VILLAGE_MAP_ID = 'js-village' as const
 export const JS_FOREST_MAP_ID = 'js-forest' as const
 export const JS_DEEP_FOREST_MAP_ID = 'js-deep-forest' as const
 export const TS_FRONTIER_MAP_ID = 'ts-frontier' as const
+export const DATABASE_ARCHIVE_MAP_ID = 'database-archive' as const
 export type WorldMapId =
   | typeof OVERWORLD_MAP_ID
   | typeof JS_VILLAGE_MAP_ID
   | typeof JS_FOREST_MAP_ID
   | typeof JS_DEEP_FOREST_MAP_ID
   | typeof TS_FRONTIER_MAP_ID
+  | typeof DATABASE_ARCHIVE_MAP_ID
 
 const WORLD_MAP_DIMENSIONS: Record<WorldMapId, { width: number; height: number }> = {
   [OVERWORLD_MAP_ID]: { width: WORLD_WIDTH, height: WORLD_HEIGHT },
@@ -22,6 +24,7 @@ const WORLD_MAP_DIMENSIONS: Record<WorldMapId, { width: number; height: number }
   [JS_FOREST_MAP_ID]: { width: 31, height: 27 },
   [JS_DEEP_FOREST_MAP_ID]: { width: 31, height: 27 },
   [TS_FRONTIER_MAP_ID]: { width: 31, height: 21 },
+  [DATABASE_ARCHIVE_MAP_ID]: { width: 21, height: 15 },
 }
 
 export const WORLD_MAP_STARTS: Record<WorldMapId, { x: number; y: number }> = {
@@ -30,9 +33,10 @@ export const WORLD_MAP_STARTS: Record<WorldMapId, { x: number; y: number }> = {
   [JS_FOREST_MAP_ID]: { x: 28, y: 10 },
   [JS_DEEP_FOREST_MAP_ID]: { x: 28, y: 10 },
   [TS_FRONTIER_MAP_ID]: { x: 2, y: 10 },
+  [DATABASE_ARCHIVE_MAP_ID]: { x: 2, y: 7 },
 }
 
-export type WorldRegion = 'javascript' | 'hub' | 'typescript'
+export type WorldRegion = 'javascript' | 'hub' | 'typescript' | 'database'
 export type Terrain =
   | 'mountain'
   | 'water'
@@ -40,6 +44,9 @@ export type Terrain =
   | 'stone'
   | 'crystal'
   | 'ruins'
+  | 'archive'
+  | 'shelf'
+  | 'terminal'
   | 'gate'
   | 'town'
   | 'grass'
@@ -81,6 +88,9 @@ export const JS_FOREST_DEEP_FOREST_POSITION = { x: 1, y: 10 } as const
 export const JS_DEEP_FOREST_EXIT_POSITION = { x: 30, y: 10 } as const
 export const TS_FRONTIER_GATE_POSITION = { x: 23, y: 14 } as const
 export const TS_FRONTIER_EXIT_POSITION = { x: 1, y: 10 } as const
+export const DATABASE_ARCHIVE_GATE_POSITION = { x: 20, y: 18 } as const
+export const DATABASE_ARCHIVE_EXIT_POSITION = { x: 1, y: 7 } as const
+export const DATABASE_QUERY_TERMINAL_POSITION = { x: 16, y: 7 } as const
 
 export const WORLD_TREASURES = [
   {
@@ -180,6 +190,21 @@ export const WORLD_PORTALS: readonly WorldPortal[] = [
     targetPosition: { x: 22, y: 14 },
     label: 'CENTRAL HUB',
   },
+  {
+    fromMapId: OVERWORLD_MAP_ID,
+    position: DATABASE_ARCHIVE_GATE_POSITION,
+    toMapId: DATABASE_ARCHIVE_MAP_ID,
+    targetPosition: WORLD_MAP_STARTS[DATABASE_ARCHIVE_MAP_ID],
+    label: 'DATABASE ARCHIVE',
+    requiredClearedStageId: 6,
+  },
+  {
+    fromMapId: DATABASE_ARCHIVE_MAP_ID,
+    position: DATABASE_ARCHIVE_EXIT_POSITION,
+    toMapId: OVERWORLD_MAP_ID,
+    targetPosition: { x: 20, y: 17 },
+    label: 'CENTRAL HUB',
+  },
 ]
 
 const samePosition = (a: { x: number; y: number }, b: { x: number; y: number }) =>
@@ -191,7 +216,8 @@ export function isWorldMapId(value: unknown): value is WorldMapId {
     value === JS_VILLAGE_MAP_ID ||
     value === JS_FOREST_MAP_ID ||
     value === JS_DEEP_FOREST_MAP_ID ||
-    value === TS_FRONTIER_MAP_ID
+    value === TS_FRONTIER_MAP_ID ||
+    value === DATABASE_ARCHIVE_MAP_ID
   )
 }
 
@@ -204,6 +230,7 @@ export function getWorldMapLabel(mapId: WorldMapId) {
   if (mapId === JS_FOREST_MAP_ID) return 'JAVASCRIPT FOREST'
   if (mapId === JS_DEEP_FOREST_MAP_ID) return 'JAVASCRIPT DEEP FOREST'
   if (mapId === TS_FRONTIER_MAP_ID) return 'TYPESCRIPT FRONTIER'
+  if (mapId === DATABASE_ARCHIVE_MAP_ID) return 'DATABASE ARCHIVE'
   return 'CODE WORLD OVERWORLD'
 }
 
@@ -238,6 +265,7 @@ export function getWorldRegion(
   mapId: WorldMapId = OVERWORLD_MAP_ID,
 ): WorldRegion {
   if (mapId === TS_FRONTIER_MAP_ID) return 'typescript'
+  if (mapId === DATABASE_ARCHIVE_MAP_ID) return 'database'
   if (
     mapId === JS_VILLAGE_MAP_ID ||
     mapId === JS_FOREST_MAP_ID ||
@@ -354,6 +382,28 @@ function getTypeScriptFrontierTerrain(x: number, y: number): Terrain {
   return (x * 5 + y * 7) % 5 <= 1 ? 'crystal' : 'ruins'
 }
 
+function getDatabaseArchiveTerrain(x: number, y: number): Terrain {
+  const position = { x, y }
+  if (x <= 0 || y <= 0 || x >= 20 || y >= 14) return 'shelf'
+  if (samePosition(position, DATABASE_QUERY_TERMINAL_POSITION)) return 'terminal'
+
+  if (
+    y === 7 ||
+    (x === 6 && y >= 3 && y <= 11) ||
+    (x === 11 && y >= 3 && y <= 11) ||
+    (y === 3 && x >= 6 && x <= 16) ||
+    (y === 11 && x >= 6 && x <= 16)
+  ) {
+    return 'archive'
+  }
+
+  if ((x >= 3 && x <= 5) || (x >= 7 && x <= 10) || (x >= 12 && x <= 18)) {
+    return 'shelf'
+  }
+
+  return 'archive'
+}
+
 export function getTerrain(
   x: number,
   y: number,
@@ -363,6 +413,7 @@ export function getTerrain(
   const portal = getWorldPortalAtPosition(mapId, position)
   if (portal) {
     if (mapId === TS_FRONTIER_MAP_ID) return 'gate'
+    if (mapId === DATABASE_ARCHIVE_MAP_ID) return 'exit'
     if (
       mapId === JS_VILLAGE_MAP_ID ||
       mapId === JS_FOREST_MAP_ID ||
@@ -371,7 +422,7 @@ export function getTerrain(
       return 'exit'
     }
     if (portal.toMapId === JS_VILLAGE_MAP_ID) return 'village'
-    if (portal.toMapId === TS_FRONTIER_MAP_ID) return 'gate'
+    if (portal.toMapId === TS_FRONTIER_MAP_ID || portal.toMapId === DATABASE_ARCHIVE_MAP_ID) return 'gate'
     return 'woods'
   }
 
@@ -379,6 +430,7 @@ export function getTerrain(
   if (mapId === JS_FOREST_MAP_ID) return getForestTerrain(x, y)
   if (mapId === JS_DEEP_FOREST_MAP_ID) return getDeepForestTerrain(x, y)
   if (mapId === TS_FRONTIER_MAP_ID) return getTypeScriptFrontierTerrain(x, y)
+  if (mapId === DATABASE_ARCHIVE_MAP_ID) return getDatabaseArchiveTerrain(x, y)
 
   if (x <= 0 || y <= 0 || x >= WORLD_WIDTH - 1 || y >= WORLD_HEIGHT - 1) return 'mountain'
   if (samePosition(position, JS_BOSS_POSITION)) return 'boss'
@@ -390,7 +442,8 @@ export function getTerrain(
   if (
     y === 14 ||
     (x === 8 && y >= 3 && y <= 14) ||
-    (x === 14 && y >= 12 && y <= 14)
+    (x === 14 && y >= 12 && y <= 14) ||
+    (x === 20 && y >= 14 && y <= 18)
   ) {
     return 'road'
   }
@@ -422,6 +475,8 @@ export function isWalkableTerrain(terrain: Terrain): boolean {
     'treasure',
     'house',
     'training',
+    'shelf',
+    'terminal',
   ].includes(terrain)
 }
 
@@ -471,6 +526,8 @@ export function getEncounterBattleId(
   roll: number,
   mapId: WorldMapId = OVERWORLD_MAP_ID,
 ): number | null {
+  if (mapId === DATABASE_ARCHIVE_MAP_ID) return null
+
   if (mapId === JS_DEEP_FOREST_MAP_ID) {
     if (!clearedStageIds.includes(14)) return null
     return clearedStageIds.includes(15) && roll >= 0.5 ? 15 : 14
