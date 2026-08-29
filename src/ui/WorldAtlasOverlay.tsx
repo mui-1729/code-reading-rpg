@@ -11,6 +11,14 @@ export function WorldAtlasOverlay() {
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
+    if (typeof document === 'undefined') return
+    document.body.dataset.rpgPaused = open ? 'true' : 'false'
+    return () => {
+      document.body.dataset.rpgPaused = 'false'
+    }
+  }, [open])
+
+  useEffect(() => {
     if (!open) return
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return
