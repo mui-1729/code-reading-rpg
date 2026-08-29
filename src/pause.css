@@ -7,6 +7,16 @@
   padding: 9px 12px;
 }
 
+body[data-battle-resolving='true'] .pause-trigger {
+  pointer-events: none;
+  opacity: .55;
+}
+
+body[data-battle-phase='victory'] .pause-trigger,
+body[data-battle-phase='defeat'] .pause-trigger {
+  display: none;
+}
+
 .pause-overlay {
   position: fixed;
   inset: 0;

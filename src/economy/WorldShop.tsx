@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
 import { gameAudio } from '../audio/gameAudio'
 import { useProgress } from '../progression'
+import { useModalFocus } from '../ui/useModalFocus'
 import {
   equipItem,
   equipmentById,
@@ -31,16 +31,7 @@ export function WorldShop({ open, onClose, onMessage }: WorldShopProps) {
   const { progress, setProgress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
 
-  useEffect(() => {
-    if (!open) return
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return
-      event.preventDefault()
-      onClose()
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [onClose, open])
+  const dialogRef = useModalFocus<HTMLElement>({ open, onEscape: onClose })
 
   if (!open) return null
 
@@ -230,10 +221,12 @@ export function WorldShop({ open, onClose, onMessage }: WorldShopProps) {
   return (
     <div className="overlay shop-overlay" onClick={onClose}>
       <section
+        ref={dialogRef}
         className="shop-panel pixel-window world-shop-panel"
         role="dialog"
         aria-modal="true"
         aria-label="World shop"
+        tabIndex={-1}
         onClick={(event) => event.stopPropagation()}
       >
         <button type="button" className="close-button" onClick={onClose} aria-label="ショップを閉じる">

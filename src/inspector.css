@@ -25,6 +25,12 @@
   letter-spacing: .08em;
 }
 
+.code-data-modal-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 74;
+}
+
 .code-data-panel {
   position: fixed;
   z-index: 75;

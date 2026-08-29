@@ -1,7 +1,7 @@
-import { useEffect } from 'react'
 import { gameAudio } from '../audio/gameAudio'
 import { useProgress } from '../progression'
 import { getCombatStats, useRpg } from '../rpg'
+import { useModalFocus } from '../ui/useModalFocus'
 import { getInnRestQuote, resolveInnRest } from './inn'
 
 type WorldInnProps = {
@@ -16,16 +16,7 @@ export function WorldInn({ open, onClose, onMessage }: WorldInnProps) {
   const combatStats = getCombatStats(stats, rpgState)
   const quote = getInnRestQuote(progress, rpgState, combatStats.maxHp)
 
-  useEffect(() => {
-    if (!open) return
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return
-      event.preventDefault()
-      onClose()
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [onClose, open])
+  const dialogRef = useModalFocus<HTMLElement>({ open, onEscape: onClose })
 
   if (!open) return null
 
@@ -60,10 +51,12 @@ export function WorldInn({ open, onClose, onMessage }: WorldInnProps) {
   return (
     <div className="overlay inn-overlay" onClick={onClose}>
       <section
+        ref={dialogRef}
         className="inn-panel pixel-window"
         role="dialog"
         aria-modal="true"
         aria-label="Inn / Rest"
+        tabIndex={-1}
         onClick={(event) => event.stopPropagation()}
       >
         <button type="button" className="close-button" onClick={onClose} aria-label="Innを閉じる">

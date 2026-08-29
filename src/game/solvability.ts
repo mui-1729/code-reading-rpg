@@ -1,8 +1,24 @@
 import { skills } from './skills'
+import { resolveEnemyAttack, resolvePlayerAction } from './combatTurn'
 import { getTargets } from './targeting'
 import type { Battle, Enemy } from './types'
+import type { CombatStats } from '../rpg/combat'
 
-const PLAYER_MAX_HP = 100
+const DEFAULT_COMBAT_STATS: CombatStats = {
+  level: 1,
+  maxHp: 100,
+  powerMultiplier: 1,
+  attack: 0,
+  defense: 0,
+}
+
+export type SolvabilityProfile = {
+  playerStats?: CombatStats
+  initialPlayerHp?: number
+  partyFollowUpDamage?: number
+  patchKitCount?: number
+  patchKitHeal?: number
+}
 
 export function hasInitialValidTarget(battle: Battle): boolean {
   return battle.skillIds.some((skillId) => {
@@ -11,40 +27,57 @@ export function hasInitialValidTarget(battle: Battle): boolean {
   })
 }
 
-export function isBattleSolvable(battle: Battle): boolean {
+export function isBattleSolvable(battle: Battle, profile: SolvabilityProfile = {}): boolean {
   const memo = new Map<string, boolean>()
+  const playerStats = profile.playerStats ?? DEFAULT_COMBAT_STATS
+  const initialPlayerHp = Math.max(
+    0,
+    Math.min(playerStats.maxHp, profile.initialPlayerHp ?? playerStats.maxHp),
+  )
+  const initialPatchKits = Math.max(0, Math.floor(profile.patchKitCount ?? 0))
+  const patchKitHeal = Math.max(0, Math.floor(profile.patchKitHeal ?? 24))
 
-  const search = (playerHp: number, enemies: Enemy[]): boolean => {
+  const search = (playerHp: number, enemies: Enemy[], patchKits: number): boolean => {
     if (enemies.every((enemy) => enemy.hp <= 0)) return true
     if (playerHp <= 0) return false
 
-    const stateKey = `${playerHp}|${enemies.map((enemy) => enemy.hp).join(',')}`
+    const stateKey = `${playerHp}|${patchKits}|${enemies.map((enemy) => enemy.hp).join(',')}`
     const cached = memo.get(stateKey)
     if (cached !== undefined) return cached
+
+    if (patchKits > 0 && playerHp < playerStats.maxHp && patchKitHeal > 0) {
+      const healedHp = Math.min(playerStats.maxHp, playerHp + patchKitHeal)
+      if (healedHp > playerHp && search(healedHp, enemies, patchKits - 1)) {
+        memo.set(stateKey, true)
+        return true
+      }
+    }
 
     for (const skillId of battle.skillIds) {
       const skill = skills[skillId]
       if (!skill) continue
 
-      const targets = getTargets(enemies, skill.rule)
-      const targetIds = new Set(targets.map((target) => target.id))
-      const nextEnemies = enemies.map((enemy) =>
-        targetIds.has(enemy.id)
-          ? { ...enemy, hp: Math.max(0, enemy.hp - skill.power) }
-          : enemy,
-      )
+      const playerAction = resolvePlayerAction({
+        battle,
+        enemies,
+        skill,
+        playerStats,
+        partyFollowUpDamage: profile.partyFollowUpDamage,
+      })
+      const nextEnemies = playerAction.enemies
 
       if (nextEnemies.every((enemy) => enemy.hp <= 0)) {
         memo.set(stateKey, true)
         return true
       }
 
-      const incomingDamage = nextEnemies
-        .filter((enemy) => enemy.hp > 0)
-        .reduce((total, enemy) => total + enemy.attackDamage, 0)
-      const nextPlayerHp = Math.max(0, playerHp - incomingDamage)
+      const enemyAttack = resolveEnemyAttack({
+        enemies: nextEnemies,
+        playerHp,
+        defense: playerStats.defense,
+      })
 
-      if (nextPlayerHp > 0 && search(nextPlayerHp, nextEnemies)) {
+      if (enemyAttack.playerHp > 0 && search(enemyAttack.playerHp, nextEnemies, patchKits)) {
         memo.set(stateKey, true)
         return true
       }
@@ -55,7 +88,8 @@ export function isBattleSolvable(battle: Battle): boolean {
   }
 
   return search(
-    PLAYER_MAX_HP,
+    initialPlayerHp,
     battle.enemies.map((enemy) => ({ ...enemy })),
+    initialPatchKits,
   )
 }
