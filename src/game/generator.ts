@@ -1,4 +1,4 @@
-import { battles } from './battles'
+import { battles } from './battleCatalog'
 import { createSeededRandom, type Seed, type SeededRandom } from './random'
 import { skills } from './skills'
 import { hasInitialValidTarget, isBattleSolvable } from './solvability'
