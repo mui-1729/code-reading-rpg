@@ -6,20 +6,6 @@ const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
 const initialSkills = ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label']
 
-const progress = {
-  version: 4,
-  progress: {
-    exp: 0,
-    gold: 0,
-    inventory: { patchKit: 0 },
-    clearedStageIds: [],
-    clearedAreaIds: [],
-    completedSideQuestIds: [],
-    unlockedStageIds: [1, 4],
-    unlockedSkillIds: initialSkills,
-  },
-}
-
 const rpg = {
   version: 3,
   state: {
@@ -39,7 +25,25 @@ const rpg = {
   },
 }
 
-async function seedStorage(page: Page) {
+async function seedStorage(
+  page: Page,
+  clearedStageIds: number[],
+  unlockedStageIds: number[],
+) {
+  const progress = {
+    version: 4,
+    progress: {
+      exp: 0,
+      gold: 0,
+      inventory: { patchKit: 0 },
+      clearedStageIds,
+      clearedAreaIds: clearedStageIds.includes(3) ? ['javascript'] : [],
+      completedSideQuestIds: [],
+      unlockedStageIds,
+      unlockedSkillIds: initialSkills,
+    },
+  }
+
   await page.goto('/')
   await page.evaluate(
     ({ progressValue, rpgValue, progressKey, rpgKey, tutorialKey }) => {
@@ -76,7 +80,7 @@ async function enemyHp(card: ReturnType<Page['locator']>) {
 
 test.describe('Boss GUARD', () => {
   test('JS Bossはminion生存中1 damageに抑え、全滅直後にOPENになる', async ({ page }) => {
-    await seedStorage(page)
+    await seedStorage(page, [], [1, 3, 4, 7])
     await page.goto('/javascript/battle/3?seed=boss-guard-js-e2e&returnTo=%2Fworld')
 
     const briefing = page.getByRole('dialog', { name: 'Code Coreへ' })
@@ -111,7 +115,7 @@ test.describe('Boss GUARD', () => {
   })
 
   test('TS BossでもGUARDがBossだけを1 damageへ抑える', async ({ page }) => {
-    await seedStorage(page)
+    await seedStorage(page, [3], [1, 4, 6, 7])
     await page.goto('/typescript/battle/6?seed=boss-guard-ts-e2e&returnTo=%2Fworld')
 
     const briefing = page.getByRole('dialog', { name: 'Frontier Compilerへ' })
