@@ -10,6 +10,11 @@ describe('tutorial storage', () => {
     expect(restoreTutorialState(raw)).toEqual(state)
   })
 
+  it('party-join phaseをreload後も保持する', () => {
+    const state = { version: 1 as const, status: 'active' as const, phase: 'party-join' as const }
+    expect(restoreTutorialState(serializeTutorialState(state))).toEqual(state)
+  })
+
   it('completed / skippedを保持する', () => {
     expect(
       restoreTutorialState(JSON.stringify({ version: 1, status: 'completed', phase: 'battle' })),

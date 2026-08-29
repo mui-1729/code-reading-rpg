@@ -9,7 +9,7 @@ import {
 export const TUTORIAL_STORAGE_KEY = 'code-reading-rpg:tutorial'
 
 const tutorialStatuses: TutorialStatus[] = ['active', 'completed', 'skipped']
-const tutorialPhases: TutorialPhase[] = ['field-move', 'field-interact', 'battle']
+const tutorialPhases: TutorialPhase[] = ['field-move', 'field-interact', 'party-join', 'battle']
 
 const isTutorialStatus = (value: unknown): value is TutorialStatus =>
   typeof value === 'string' && tutorialStatuses.includes(value as TutorialStatus)

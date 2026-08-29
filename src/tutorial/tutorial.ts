@@ -1,7 +1,7 @@
 export const TUTORIAL_SCHEMA_VERSION = 1
 
 export type TutorialStatus = 'active' | 'completed' | 'skipped'
-export type TutorialPhase = 'field-move' | 'field-interact' | 'battle'
+export type TutorialPhase = 'field-move' | 'field-interact' | 'party-join' | 'battle'
 
 export type TutorialState = {
   version: typeof TUTORIAL_SCHEMA_VERSION
@@ -24,7 +24,7 @@ export function completeFieldMove(state: TutorialState): TutorialState {
 
 export function completeFieldInteraction(state: TutorialState): TutorialState {
   if (state.status !== 'active' || state.phase !== 'field-interact') return state
-  return { ...state, phase: 'battle' }
+  return { ...state, phase: 'party-join' }
 }
 
 export function enterBattleTutorial(state: TutorialState): TutorialState {
