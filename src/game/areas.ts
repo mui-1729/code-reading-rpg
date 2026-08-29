@@ -1,9 +1,10 @@
 export const JAVASCRIPT_AREA_ID = 'javascript'
 export const TYPESCRIPT_AREA_ID = 'typescript'
+export const DATABASE_AREA_ID = 'database'
 
 export type AreaAvailability = 'available' | 'comingSoon'
 
-export type AreaRoutePath = '/javascript/field' | '/typescript/field'
+export type AreaRoutePath = '/javascript/field' | '/typescript/field' | '/database/field'
 
 export type AreaRoutes = {
   field: AreaRoutePath | null
@@ -41,6 +42,16 @@ export const areas: AreaDefinition[] = [
       field: '/typescript/field',
     },
     bossBattleId: 6,
+  },
+  {
+    id: DATABASE_AREA_ID,
+    label: 'WORLD 03 · PROTOTYPE',
+    title: 'Database Archive',
+    description: 'tableのrowとSQL queryを照らし合わせ、どのrecordが結果になるかを追う地下書庫。',
+    availability: 'available',
+    routes: {
+      field: '/database/field',
+    },
   },
 ]
 
