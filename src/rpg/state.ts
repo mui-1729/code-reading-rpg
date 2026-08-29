@@ -183,17 +183,25 @@ function normalizeWorldLocation(
   }
 
   const normalized = { x: position.x as number, y: position.y as number }
-  if (mapId === OVERWORLD_MAP_ID && normalized.x >= 23) {
-    return {
-      mapId: TS_FRONTIER_MAP_ID,
-      position: migrateLegacyTypeScriptPosition(normalized),
-    }
-  }
-
   if (!isWorldPositionInBounds(mapId, normalized)) {
     return {
       mapId: OVERWORLD_MAP_ID,
       position: { ...WORLD_MAP_STARTS[OVERWORLD_MAP_ID] },
+    }
+  }
+
+  if (mapId === OVERWORLD_MAP_ID) {
+    const { width, height } = getWorldMapDimensions(OVERWORLD_MAP_ID)
+    const wasPlayableTypeScriptSide =
+      normalized.x >= 23 &&
+      normalized.x < width - 1 &&
+      normalized.y > 0 &&
+      normalized.y < height - 1
+    if (wasPlayableTypeScriptSide) {
+      return {
+        mapId: TS_FRONTIER_MAP_ID,
+        position: migrateLegacyTypeScriptPosition(normalized),
+      }
     }
   }
 
