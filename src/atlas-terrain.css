@@ -17,14 +17,23 @@
 }
 
 .atlas-terrain-cell {
+  position: relative;
   display: grid;
   place-items: center;
   min-width: 0;
   min-height: 0;
+  overflow: hidden;
   background: #26302b;
   color: #08080d;
   font-size: 6px;
   line-height: 1;
+}
+
+/* world.css uses terrain pseudo-elements for the playable map. Atlas cells only
+   need compact color blocks, so keep those world decorations out of the atlas. */
+.atlas-terrain-cell::before,
+.atlas-terrain-cell::after {
+  content: none;
 }
 
 .atlas-terrain-cell.terrain-mountain,
