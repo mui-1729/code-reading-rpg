@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useRpg } from '../rpg'
+import { OVERWORLD_MAP_ID, WORLD_START } from '../world/worldMap'
 import { TutorialContext } from './TutorialContext'
 import { restoreTutorialState, serializeTutorialState, TUTORIAL_STORAGE_KEY } from './storage'
 import {
@@ -27,7 +29,9 @@ function loadInitialTutorialState() {
 }
 
 export function TutorialProvider({ children }: TutorialProviderProps) {
+  const { setRpgState } = useRpg()
   const [state, setState] = useState(loadInitialTutorialState)
+  const worldInteractionConfirmed = useRef(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -44,7 +48,19 @@ export function TutorialProvider({ children }: TutorialProviderProps) {
   }, [])
 
   const completeFieldInteraction = useCallback(() => {
-    setState((current) => advanceFieldInteraction(current))
+    setState((current) => {
+      if (
+        current.status === 'active' &&
+        current.phase === 'field-interact' &&
+        typeof window !== 'undefined' &&
+        window.location.pathname === '/world' &&
+        !worldInteractionConfirmed.current
+      ) {
+        return current
+      }
+      worldInteractionConfirmed.current = false
+      return advanceFieldInteraction(current)
+    })
   }, [])
 
   const enterBattle = useCallback(() => {
@@ -59,6 +75,31 @@ export function TutorialProvider({ children }: TutorialProviderProps) {
     setState((current) => skipTutorial(current))
   }, [])
 
+  useEffect(() => {
+    const confirmWorldInteraction = (target: EventTarget | null) => {
+      if (!(target instanceof Element)) return
+      if (!target.closest('.world-interact.tutorial-highlight')) return
+      worldInteractionConfirmed.current = true
+      setState((current) => advanceFieldInteraction(current))
+    }
+
+    const onClick = (event: MouseEvent) => confirmWorldInteraction(event.target)
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return
+      const highlighted = document.querySelector('.world-interact.tutorial-highlight')
+      if (!highlighted) return
+      worldInteractionConfirmed.current = true
+      setState((current) => advanceFieldInteraction(current))
+    }
+
+    document.addEventListener('click', onClick, true)
+    document.addEventListener('keydown', onKeyDown, true)
+    return () => {
+      document.removeEventListener('click', onClick, true)
+      document.removeEventListener('keydown', onKeyDown, true)
+    }
+  }, [])
+
   const reset = useCallback(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -67,8 +108,21 @@ export function TutorialProvider({ children }: TutorialProviderProps) {
         // Reset in-memory state even when storage is unavailable.
       }
     }
+
+    worldInteractionConfirmed.current = false
+    setRpgState((current) => ({
+      ...current,
+      worldMapId: OVERWORLD_MAP_ID,
+      worldPosition: { ...WORLD_START },
+      stepsSinceEncounter: 0,
+    }))
     setState(createInitialTutorialState())
-  }, [])
+
+    if (typeof window !== 'undefined' && window.location.pathname !== '/world') {
+      window.history.replaceState(null, '', '/world')
+      window.dispatchEvent(new PopStateEvent('popstate'))
+    }
+  }, [setRpgState])
 
   useEffect(() => {
     window.addEventListener(PROGRESS_RESET_EVENT, reset)

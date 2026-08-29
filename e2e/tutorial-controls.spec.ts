@@ -82,7 +82,7 @@ test('party-joinはreload後もBYTE加入状態を保ち重複加入しない', 
   expect((await storedRpg(page))?.state?.partyMemberIds).toEqual(['byte'])
 })
 
-test('SYSTEMからTutorialを最初からやり直しても加入済みBYTEを壊さない', async ({ page }) => {
+test('SYSTEMからTutorialを最初からやり直しても加入済みBYTEを壊さずINTERACTを再体験する', async ({ page }) => {
   await page.goto('/')
   await page.evaluate(({ tutorialKey, rpgKey }) => {
     localStorage.clear()
@@ -113,6 +113,9 @@ test('SYSTEMからTutorialを最初からやり直しても加入済みBYTEを�
 
   await expect(page.locator('.tutorial-prompt-field')).toContainText('MOVE')
   await page.getByRole('button', { name: 'Move left' }).click()
+  await expect.poll(async () => (await storedTutorial(page))?.phase).toBe('field-interact')
+  await expect(page.locator('.tutorial-prompt-field')).toContainText('INTERACT')
+  await page.getByRole('button', { name: 'INTERACT' }).click()
   await expect.poll(async () => (await storedTutorial(page))?.phase).toBe('party-join')
   expect((await storedRpg(page))?.state?.partyMemberIds).toEqual(['byte'])
 })
