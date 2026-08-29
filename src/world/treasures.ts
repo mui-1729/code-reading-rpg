@@ -21,6 +21,16 @@ export const worldTreasureDefinitions: Record<WorldTreasureId, WorldTreasureDefi
     name: 'DEBUG CACHE',
     reward: { gold: 20, patchKit: 0, equipmentId: 'debug-charm' },
   },
+  'js-forest-supply': {
+    id: 'js-forest-supply',
+    name: 'FOREST SUPPLY',
+    reward: { gold: 25, patchKit: 1 },
+  },
+  'js-deep-forest-cache': {
+    id: 'js-deep-forest-cache',
+    name: 'DEEP CACHE',
+    reward: { gold: 40, patchKit: 1 },
+  },
   'ts-supply-cache': {
     id: 'ts-supply-cache',
     name: 'TYPE CACHE',
