@@ -138,18 +138,18 @@ test('スマホAtlasでは本編terrainの疑似装飾がカード前面へ漏�
   await seedWorldAtlas(page)
   const atlas = await openAtlas(page)
 
-  const forestCell = atlas.locator('.atlas-terrain-cell.terrain-forest').first()
   const woodsCell = atlas.locator('.atlas-terrain-cell.terrain-woods').first()
+  const deepWoodsCell = atlas.locator('.atlas-terrain-cell.terrain-deep-woods').first()
   const mountainCell = atlas.locator('.atlas-terrain-cell.terrain-mountain').first()
 
-  await expect(forestCell).toBeVisible()
   await expect(woodsCell).toBeVisible()
+  await expect(deepWoodsCell).toBeVisible()
   await expect(mountainCell).toBeVisible()
 
   const pseudoContents = await page.evaluate(() => {
     const selectors = [
-      '.atlas-terrain-cell.terrain-forest',
       '.atlas-terrain-cell.terrain-woods',
+      '.atlas-terrain-cell.terrain-deep-woods',
       '.atlas-terrain-cell.terrain-mountain',
     ]
 
