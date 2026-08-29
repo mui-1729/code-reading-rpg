@@ -1,5 +1,9 @@
 import { createSeededRandom } from '../game/random'
-import type { PlayerProgress } from '../progression'
+import {
+  getCanonicalUnlockedStageIds,
+  isBattleAccessible,
+  type PlayerProgress,
+} from '../progression'
 import type { RpgState } from '../rpg'
 import {
   BYTE_POSITION,
@@ -255,7 +259,7 @@ export function resolveWorldMove({
       ? getDeepForestReviewBattleId(progress.clearedStageIds, rolls.battle)
       : getEncounterBattleId(
           region,
-          progress.unlockedStageIds,
+          getCanonicalUnlockedStageIds(progress.clearedStageIds),
           progress.clearedStageIds,
           rolls.battle,
           mapId,
@@ -291,9 +295,9 @@ export function resolveWorldMove({
 export function getNextJavaScriptTrainingBattleId(
   clearedStageIds: readonly number[],
 ): JavaScriptTrainingBattleId | null {
-  if (!clearedStageIds.includes(7)) return 7
-  if (!clearedStageIds.includes(8)) return 8
-  if (!clearedStageIds.includes(9)) return 9
+  if (!clearedStageIds.includes(7) && isBattleAccessible(7, clearedStageIds)) return 7
+  if (!clearedStageIds.includes(8) && isBattleAccessible(8, clearedStageIds)) return 8
+  if (!clearedStageIds.includes(9) && isBattleAccessible(9, clearedStageIds)) return 9
   return null
 }
 
@@ -376,7 +380,7 @@ export function resolveWorldInteraction(
         kind: 'midboss',
         battleId: 13,
         region: 'javascript',
-        unlocked: progress.clearedStageIds.includes(12),
+        unlocked: isBattleAccessible(13, progress.clearedStageIds),
         seed: `midboss:js-forest:${rpgState.encounterCount}`,
       }
     }
@@ -389,7 +393,7 @@ export function resolveWorldInteraction(
         kind: 'boss',
         battleId: 6,
         region: 'typescript',
-        unlocked: progress.unlockedStageIds.includes(6),
+        unlocked: isBattleAccessible(6, progress.clearedStageIds),
         seed: `boss:ts:${rpgState.encounterCount}`,
       }
     }
@@ -428,10 +432,7 @@ export function resolveWorldInteraction(
       kind: 'boss',
       battleId: 3,
       region: 'javascript',
-      unlocked:
-        progress.clearedStageIds.includes(22) &&
-        progress.clearedStageIds.includes(1) &&
-        progress.clearedStageIds.includes(2),
+      unlocked: isBattleAccessible(3, progress.clearedStageIds),
       seed: `boss:js:${rpgState.encounterCount}`,
     }
   }
