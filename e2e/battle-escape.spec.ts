@@ -18,7 +18,7 @@ async function seed(page: Page, clearedStageIds: number[] = []) {
           clearedStageIds: cleared,
           clearedAreaIds: [],
           completedSideQuestIds: [],
-          unlockedStageIds: [1, 4, 7, 8, 9, 10, 13],
+          unlockedStageIds: [1, 3, 4, 7, 8, 9, 10, 13],
           unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
         },
       }))
