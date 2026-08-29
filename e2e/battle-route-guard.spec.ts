@@ -4,10 +4,10 @@ const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
-async function seed(page: Page, clearedStageIds: number[]) {
+async function seed(page: Page, clearedStageIds: number[], unlockedStageIds = [1, 4, 7]) {
   await page.goto('/')
   await page.evaluate(
-    ({ progressKey, rpgKey, tutorialKey, cleared }) => {
+    ({ progressKey, rpgKey, tutorialKey, cleared, unlocked }) => {
       localStorage.clear()
       sessionStorage.clear()
       localStorage.setItem(progressKey, JSON.stringify({
@@ -19,7 +19,7 @@ async function seed(page: Page, clearedStageIds: number[]) {
           clearedStageIds: cleared,
           clearedAreaIds: [],
           completedSideQuestIds: [],
-          unlockedStageIds: [1, 4, 7],
+          unlockedStageIds: unlocked,
           unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
         },
       }))
@@ -40,7 +40,13 @@ async function seed(page: Page, clearedStageIds: number[]) {
       }))
       localStorage.setItem(tutorialKey, JSON.stringify({ version: 1, status: 'skipped', phase: 'battle' }))
     },
-    { progressKey: PROGRESS_KEY, rpgKey: RPG_KEY, tutorialKey: TUTORIAL_KEY, cleared: clearedStageIds },
+    {
+      progressKey: PROGRESS_KEY,
+      rpgKey: RPG_KEY,
+      tutorialKey: TUTORIAL_KEY,
+      cleared: clearedStageIds,
+      unlocked: unlockedStageIds,
+    },
   )
 }
 
@@ -50,15 +56,15 @@ test('未解放JavaScript Battleの直URLをWorldへ戻しprogressを変更し�
 
   await expect(page).toHaveURL(/\/world#battle-locked$/)
   await expect(page.getByRole('status')).toContainText('BATTLE LOCKED')
-  await expect(page.getByRole('status')).toContainText('前のLesson')
+  await expect(page.getByRole('status')).toContainText('まだ解放されていない')
   const stored = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), PROGRESS_KEY)
   expect(stored.progress.exp).toBe(0)
   expect(stored.progress.gold).toBe(0)
   expect(stored.progress.clearedStageIds).toEqual([])
 })
 
-test('前提clear済みJavaScript Battleのdeep linkは開始できる', async ({ page }) => {
-  await seed(page, [21])
+test('progressionで解放済みJavaScript Battleのdeep linkは開始できる', async ({ page }) => {
+  await seed(page, [21], [1, 4, 7, 22])
   await page.goto('/javascript/battle/22?seed=unlocked-direct&returnTo=%2Fworld')
 
   await expect(page).toHaveURL(/\/javascript\/battle\/22/)
@@ -73,7 +79,7 @@ test('JavaScript未clearではTypeScript Battleへ直URL侵入できない', asy
   await expect(page.getByRole('status')).toContainText('Final Boss')
 })
 
-test('JavaScript Boss clear後はTypeScript Battle 4のdeep linkを許可する', async ({ page }) => {
+test('JavaScript Boss clear後はunlockedなTypeScript Battle 4のdeep linkを許可する', async ({ page }) => {
   await seed(page, [3])
   await page.goto('/typescript/battle/4?seed=unlocked-ts&returnTo=%2Fworld')
 
