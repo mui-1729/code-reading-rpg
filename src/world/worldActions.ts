@@ -21,6 +21,7 @@ import {
   RECOVERY_POSITION,
   SHOP_POSITION,
   TS_BOSS_POSITION,
+  TS_FRONTIER_MAP_ID,
   WORLD_TREASURES,
   type Terrain,
   type WorldMapId,
@@ -101,8 +102,6 @@ function getForestLearningBattleId(
 ): JavaScriptLearningBattleId | null {
   if (mapId !== JS_FOREST_MAP_ID || !clearedStageIds.includes(9)) return null
 
-  // 新conceptはRandom Encounterではなく、東から西へ進む固定Lessonで順番に導入する。
-  // 中Boss後のfilter()も、守り人を突破して西側のWoodsへ入ってから初登場させる。
   if (!clearedStageIds.includes(10)) return 10
   if (!clearedStageIds.includes(11) && position.x <= 17) return 11
   if (!clearedStageIds.includes(12) && position.x <= 8) return 12
@@ -122,11 +121,7 @@ function getDeepForestLearningBattleId(
   if (!clearedStageIds.includes(16) && position.x <= 24) return 16
   if (!clearedStageIds.includes(17) && position.x <= 19) return 17
   if (!clearedStageIds.includes(18) && position.x <= 14) return 18
-
-  // 第二MID BOSSもnew syntaxを持たない固定Battleとして扱う。
   if (!clearedStageIds.includes(19) && position.x <= 10) return 19
-
-  // 第二MID BOSSの先を最深部として、advanced syntaxを順番に固定導入する。
   if (!clearedStageIds.includes(20) && position.x <= 9) return 20
   if (!clearedStageIds.includes(21) && position.x <= 7) return 21
   if (!clearedStageIds.includes(22) && position.x <= 5) return 22
@@ -242,7 +237,6 @@ export function resolveWorldMove({
     return { kind: 'moved', nextState: movedState, terrain, region }
   }
 
-  // 旧main Battle 1 / 2はJavaScript学習routeを最後まで終えてから最終異変として再接続する。
   if (
     mapId === OVERWORLD_MAP_ID &&
     region === 'javascript' &&
@@ -342,6 +336,21 @@ export type WorldInteractionIntent =
       kind: 'none'
     }
 
+function resolveTreasureInteraction(rpgState: RpgState): WorldInteractionIntent | null {
+  const treasure = WORLD_TREASURES.find(
+    (candidate) =>
+      candidate.mapId === rpgState.worldMapId &&
+      isAdjacent(rpgState.worldPosition, candidate.position),
+  )
+  if (!treasure) return null
+
+  return {
+    kind: 'treasure',
+    treasureId: treasure.id,
+    opened: rpgState.openedTreasureIds.includes(treasure.id),
+  }
+}
+
 export function resolveWorldInteraction(
   rpgState: RpgState,
   progress: PlayerProgress,
@@ -372,6 +381,23 @@ export function resolveWorldInteraction(
     return { kind: 'none' }
   }
 
+  if (rpgState.worldMapId === TS_FRONTIER_MAP_ID) {
+    const treasure = resolveTreasureInteraction(rpgState)
+    if (treasure) return treasure
+
+    if (isAdjacent(position, TS_BOSS_POSITION)) {
+      return {
+        kind: 'boss',
+        battleId: 6,
+        region: 'typescript',
+        unlocked: progress.unlockedStageIds.includes(6),
+        seed: `boss:ts:${rpgState.encounterCount}`,
+      }
+    }
+
+    return { kind: 'none' }
+  }
+
   if (rpgState.worldMapId !== OVERWORLD_MAP_ID) return { kind: 'none' }
 
   if (isAdjacent(position, BYTE_POSITION)) {
@@ -390,15 +416,14 @@ export function resolveWorldInteraction(
     return { kind: 'recovery' }
   }
 
-  const treasure = WORLD_TREASURES.find(
-    (candidate) =>
-      candidate.mapId === rpgState.worldMapId && isAdjacent(position, candidate.position),
-  )
-  if (treasure) {
+  const treasure = resolveTreasureInteraction(rpgState)
+  if (treasure) return treasure
+
+  if (position.x === 30 && position.y === 18) {
     return {
       kind: 'treasure',
-      treasureId: treasure.id,
-      opened: rpgState.openedTreasureIds.includes(treasure.id),
+      treasureId: 'ts-supply-cache',
+      opened: rpgState.openedTreasureIds.includes('ts-supply-cache'),
     }
   }
 
@@ -412,16 +437,6 @@ export function resolveWorldInteraction(
         progress.clearedStageIds.includes(1) &&
         progress.clearedStageIds.includes(2),
       seed: `boss:js:${rpgState.encounterCount}`,
-    }
-  }
-
-  if (isAdjacent(position, TS_BOSS_POSITION)) {
-    return {
-      kind: 'boss',
-      battleId: 6,
-      region: 'typescript',
-      unlocked: progress.unlockedStageIds.includes(6),
-      seed: `boss:ts:${rpgState.encounterCount}`,
     }
   }
 
