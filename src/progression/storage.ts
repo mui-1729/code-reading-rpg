@@ -1,4 +1,5 @@
 import { createInitialPlayerProgress } from './progression'
+import { getCanonicalUnlockedStageIds } from './progressionGraph'
 import type { PlayerProgress } from './types'
 
 export const PLAYER_PROGRESS_STORAGE_KEY = 'code-reading-rpg:player-progress'
@@ -58,24 +59,6 @@ const mergeUnique = <T,>(baseline: readonly T[], stored: readonly T[]): T[] => [
   ...new Set([...baseline, ...stored]),
 ]
 
-function getDerivedForestStageUnlocks(clearedStageIds: readonly number[]): number[] {
-  const stageIds: number[] = []
-  if (clearedStageIds.includes(9)) stageIds.push(10)
-  if (clearedStageIds.includes(10)) stageIds.push(11)
-  if (clearedStageIds.includes(11)) stageIds.push(12)
-  if (clearedStageIds.includes(12)) stageIds.push(13)
-  if (clearedStageIds.includes(13)) stageIds.push(14)
-  if (clearedStageIds.includes(14)) stageIds.push(15)
-  if (clearedStageIds.includes(15)) stageIds.push(16)
-  if (clearedStageIds.includes(16)) stageIds.push(17)
-  if (clearedStageIds.includes(17)) stageIds.push(18)
-  if (clearedStageIds.includes(18)) stageIds.push(19)
-  if (clearedStageIds.includes(19)) stageIds.push(20)
-  if (clearedStageIds.includes(20)) stageIds.push(21)
-  if (clearedStageIds.includes(21)) stageIds.push(22)
-  return stageIds
-}
-
 function getDerivedForestSkillUnlocks(clearedStageIds: readonly number[]): string[] {
   const skillIds: string[] = []
   if (clearedStageIds.includes(10)) skillIds.push('link')
@@ -100,16 +83,13 @@ function parseCommonProgressFields(value: unknown) {
 
   const baseline = createInitialPlayerProgress()
   const clearedStageIds = [...value.clearedStageIds]
-  const derivedStageUnlocks = getDerivedForestStageUnlocks(clearedStageIds)
   const derivedSkillUnlocks = getDerivedForestSkillUnlocks(clearedStageIds)
 
   return {
     exp: value.exp,
     clearedStageIds,
-    unlockedStageIds: mergeUnique(
-      baseline.unlockedStageIds,
-      [...value.unlockedStageIds, ...derivedStageUnlocks],
-    ),
+    // Stored unlock bits are not authoritative. Rebuild them from the canonical prerequisite graph.
+    unlockedStageIds: getCanonicalUnlockedStageIds(clearedStageIds),
     unlockedSkillIds: mergeUnique(
       baseline.unlockedSkillIds,
       [...value.unlockedSkillIds, ...derivedSkillUnlocks],
@@ -208,7 +188,7 @@ export function serializePlayerProgress(progress: PlayerProgress): string {
       clearedStageIds: [...progress.clearedStageIds],
       clearedAreaIds: [...progress.clearedAreaIds],
       completedSideQuestIds: [...progress.completedSideQuestIds],
-      unlockedStageIds: [...progress.unlockedStageIds],
+      unlockedStageIds: getCanonicalUnlockedStageIds(progress.clearedStageIds),
       unlockedSkillIds: [...progress.unlockedSkillIds],
     },
   }
