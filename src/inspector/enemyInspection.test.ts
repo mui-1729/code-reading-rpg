@@ -7,33 +7,43 @@ import {
 
 const enemies: RuntimeEnemy[] = [
   {
-    key: '0:Goblin',
+    key: 'goblin',
     name: 'Goblin',
     hp: 38,
     maxHp: 60,
     attackName: 'Slash',
     attackDamage: 14,
+    incomingDamage: 11,
   },
   {
-    key: '1:Slime',
+    key: 'slime',
     name: 'Slime',
     hp: 0,
     maxHp: 42,
     attackName: 'Bounce',
     attackDamage: 6,
+    incomingDamage: 3,
   },
   {
-    key: '2:Knight',
+    key: 'knight',
     name: 'Knight',
     hp: 82,
     maxHp: 82,
     attackName: 'Cut',
     attackDamage: 10,
+    incomingDamage: 7,
   },
 ]
 
+const runtimeRef = (name: string, hp: number, attackDamage: number, incomingDamage: number) => ({
+  name,
+  hp,
+  attackDamage,
+  incomingDamage,
+})
+
 describe('runtime code data', () => {
-  it('Enemy objectの現在値を確認できる', () => {
+  it('Enemy objectのraw値とPlayer DEF適用後damageを別項目で確認できる', () => {
     const snapshot = createEnemyInspectionSnapshot(enemies[0], null)
 
     expect(Object.fromEntries(snapshot.base.map((item) => [item.name, item.value]))).toEqual({
@@ -42,10 +52,11 @@ describe('runtime code data', () => {
       maxHp: 60,
       attackName: 'Slash',
       attackDamage: 14,
+      incomingDamage: 11,
     })
   })
 
-  it('score = enemy.attackDamageの中間値を確認できる', () => {
+  it('score = enemy.attackDamageはincomingDamageではなくraw値を使う', () => {
     const code = 'const alive = enemies.filter(enemy => enemy.hp > 0)\nconst scored = alive.map(enemy => ({ enemy, score: enemy.attackDamage }))'
     const snapshot = createEnemyInspectionSnapshot(enemies[0], code)
 
@@ -55,14 +66,25 @@ describe('runtime code data', () => {
     ])
   })
 
+  it('code contextのenemiesは生存Enemyだけを公開する', () => {
+    const variables = createCodeDataVariables(enemies, null)
+    const runtimeEnemies = variables.find((item) => item.name === 'enemies')
+
+    expect(runtimeEnemies?.expression).toBe('current living enemies (hp > 0)')
+    expect(runtimeEnemies?.value).toEqual([
+      runtimeRef('Goblin', 38, 14, 11),
+      runtimeRef('Knight', 82, 10, 7),
+    ])
+  })
+
   it('enemies / alive / scoredを現在値から作れる', () => {
     const code = 'const alive = enemies.filter(enemy => enemy.hp > 0)\nconst scored = alive.map(enemy => ({ enemy, score: enemy.attackDamage }))'
     const variables = createCodeDataVariables(enemies, code)
 
     expect(variables.map((item) => item.name)).toEqual(['enemies', 'alive', 'scored'])
     expect(variables.find((item) => item.name === 'alive')?.value).toEqual([
-      { name: 'Goblin', hp: 38, attackDamage: 14 },
-      { name: 'Knight', hp: 82, attackDamage: 10 },
+      runtimeRef('Goblin', 38, 14, 11),
+      runtimeRef('Knight', 82, 10, 7),
     ])
     expect(variables.find((item) => item.name === 'scored')?.value).toEqual([
       { name: 'Goblin', score: 14 },
@@ -91,8 +113,8 @@ describe('runtime code data', () => {
     )
 
     expect(variables.find((item) => item.name === 'ordered')?.value).toEqual([
-      { name: 'Goblin', hp: 38, attackDamage: 14 },
-      { name: 'Knight', hp: 82, attackDamage: 10 },
+      runtimeRef('Goblin', 38, 14, 11),
+      runtimeRef('Knight', 82, 10, 7),
     ])
   })
 
@@ -107,8 +129,8 @@ describe('runtime code data', () => {
 
     expect(orderVariables.map((item) => item.name)).toEqual(['enemies', 'living', 'byHp'])
     expect(orderVariables.find((item) => item.name === 'byHp')?.value).toEqual([
-      { name: 'Goblin', hp: 38, attackDamage: 14 },
-      { name: 'Knight', hp: 82, attackDamage: 10 },
+      runtimeRef('Goblin', 38, 14, 11),
+      runtimeRef('Knight', 82, 10, 7),
     ])
     expect(safeVariables.map((item) => item.name)).toEqual(['enemies', 'living', 'wrapped'])
     expect(safeVariables.find((item) => item.name === 'wrapped')?.value).toEqual([

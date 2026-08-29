@@ -21,6 +21,7 @@ import {
   isBossGuardActive,
   resolveBossGuardDamage,
 } from './game/bossGuard'
+import { BattleCodeData, type RuntimeEnemy } from './inspector'
 import { BATTLE_MOTION, getNewlyDefeatedIds } from './motion/battleMotion'
 import {
   applyBattleVictory,
@@ -91,6 +92,23 @@ function App({ battleId, seed, returnTo }: AppProps) {
   const availableSkills = useMemo(
     () => getSkillCardsForBattle(battle, seed),
     [battle, seed],
+  )
+  const selectedSkill = useMemo(
+    () => availableSkills.find((skill) => skill.id === selectedSkillId) ?? null,
+    [availableSkills, selectedSkillId],
+  )
+  const codeDataEnemies = useMemo<RuntimeEnemy[]>(
+    () =>
+      enemies.map((enemy) => ({
+        key: enemy.id,
+        name: enemy.name,
+        hp: enemy.hp,
+        maxHp: enemy.maxHp,
+        attackName: enemy.attackName,
+        attackDamage: enemy.attackDamage,
+        incomingDamage: getIncomingDamage(enemy.attackDamage, playerStats.defense),
+      })),
+    [enemies, playerStats.defense],
   )
   const bossGuardEnabled = hasBossGuard(battle)
   const bossGuardActive = isBossGuardActive(battle, enemies)
@@ -520,6 +538,15 @@ function App({ battleId, seed, returnTo }: AppProps) {
           </div>
         )}
       </section>
+
+      {phase === 'battle' && (
+        <BattleCodeData
+          battleKey={`${battle.id}:${String(seed)}`}
+          enemies={codeDataEnemies}
+          selectedCode={selectedSkill?.code ?? null}
+          selectedSkillName={selectedSkill?.name ?? null}
+        />
+      )}
 
       {phase === 'victory' && (
         <div className="overlay result-overlay victory-overlay">
