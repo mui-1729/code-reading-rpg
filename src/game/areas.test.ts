@@ -3,6 +3,7 @@ import {
   areaById,
   areas,
   availableAreas,
+  DATABASE_AREA_ID,
   JAVASCRIPT_AREA_ID,
   TYPESCRIPT_AREA_ID,
 } from './areas'
@@ -20,6 +21,7 @@ describe('area definitions', () => {
     expect(availableAreas.map((area) => area.id)).toEqual([
       JAVASCRIPT_AREA_ID,
       TYPESCRIPT_AREA_ID,
+      DATABASE_AREA_ID,
     ])
 
     for (const area of areas) {
@@ -31,7 +33,7 @@ describe('area definitions', () => {
     }
   })
 
-  it('Area選択から直接Fieldへ入る', () => {
+  it('Area定義が各regionのField入口を持つ', () => {
     expect(areaById[JAVASCRIPT_AREA_ID]).toMatchObject({
       availability: 'available',
       routes: { field: '/javascript/field' },
@@ -41,6 +43,10 @@ describe('area definitions', () => {
       availability: 'available',
       routes: { field: '/typescript/field' },
       bossBattleId: 6,
+    })
+    expect(areaById[DATABASE_AREA_ID]).toMatchObject({
+      availability: 'available',
+      routes: { field: '/database/field' },
     })
   })
 })
