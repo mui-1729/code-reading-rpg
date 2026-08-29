@@ -71,6 +71,22 @@ test('TypeScript Chapter 1 starts as a new real world incident and enters CODE W
       'code-reading-rpg:tutorial',
       JSON.stringify({ version: 1, status: 'skipped', phase: 'battle' }),
     )
+    localStorage.setItem(
+      'code-reading-rpg:player-progress',
+      JSON.stringify({
+        version: 4,
+        progress: {
+          exp: 0,
+          gold: 0,
+          inventory: { patchKit: 0 },
+          clearedStageIds: [3],
+          clearedAreaIds: ['javascript'],
+          completedSideQuestIds: [],
+          unlockedStageIds: [1, 4, 7],
+          unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
+        },
+      }),
+    )
   })
 
   await page.goto('/typescript/battle/4?seed=world-framing-ts&returnTo=%2Fworld')
