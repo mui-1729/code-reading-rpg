@@ -20,7 +20,6 @@ export function isBattleRouteUnlocked(
   if (progress.clearedStageIds.includes(battleId)) return true
 
   if (area === 'typescript' && !progress.clearedStageIds.includes(3)) return false
-  if (area === 'javascript' && battleId === 3 && !progress.clearedStageIds.includes(22)) return false
 
   return progress.unlockedStageIds.includes(battleId)
 }
@@ -30,6 +29,6 @@ export function getBattleRouteLockReason(area: BattleRouteArea, battleId: number
     return 'JavaScript地方のFinal Bossと、TypeScript地方の前のBattleを先に完了しよう。'
   }
 
-  if (battleId === 3) return 'JavaScript地方のLessonとBattle 1 / 2を先に完了しよう。'
+  if (battleId === 3) return 'JavaScript地方のBattle 1 / 2を先に完了しよう。'
   return 'このBattleはまだ解放されていない。WorldのNEXT OBJECTIVEから順に進もう。'
 }
