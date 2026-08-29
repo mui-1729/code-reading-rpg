@@ -6,12 +6,26 @@ const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
 async function seedWorld(
   page: Page,
-  options: { clearedStageIds?: number[]; worldPosition?: { x: number; y: number } } = {},
+  options: {
+    clearedStageIds?: number[]
+    unlockedStageIds?: number[]
+    worldMapId?: 'overworld' | 'ts-frontier'
+    worldPosition?: { x: number; y: number }
+  } = {},
 ) {
   await page.goto('/')
   await page.evaluate(
-    ({ progressKey, rpgKey, tutorialKey, clearedStageIds, worldPosition }) => {
+    ({
+      progressKey,
+      rpgKey,
+      tutorialKey,
+      clearedStageIds,
+      unlockedStageIds,
+      worldMapId,
+      worldPosition,
+    }) => {
       localStorage.clear()
+      sessionStorage.clear()
       localStorage.setItem(
         progressKey,
         JSON.stringify({
@@ -23,7 +37,7 @@ async function seedWorld(
             clearedStageIds,
             clearedAreaIds: clearedStageIds.includes(3) ? ['javascript'] : [],
             completedSideQuestIds: [],
-            unlockedStageIds: [1, 4],
+            unlockedStageIds,
             unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
           },
         }),
@@ -39,9 +53,9 @@ async function seedWorld(
               accessory: null,
             },
             ownedEquipmentIds: ['training-blade', 'traveler-coat'],
-            partyMemberIds: [],
-            partyEquipment: {},
-            worldMapId: 'overworld',
+            partyMemberIds: ['byte'],
+            partyEquipment: { byte: { weapon: null, armor: null, accessory: null } },
+            worldMapId,
             worldPosition,
             stepsSinceEncounter: 8,
             encounterCount: 0,
@@ -60,38 +74,85 @@ async function seedWorld(
       rpgKey: RPG_KEY,
       tutorialKey: TUTORIAL_KEY,
       clearedStageIds: options.clearedStageIds ?? [],
+      unlockedStageIds: options.unlockedStageIds ?? [1, 4, 7],
+      worldMapId: options.worldMapId ?? 'overworld',
       worldPosition: options.worldPosition ?? { x: 22, y: 14 },
     },
   )
   await page.goto('/world')
 }
 
-const viewport = (page: Page) => page.getByLabel('Open world map')
+const overworld = (page: Page) => page.getByLabel('Open world map')
+const frontier = (page: Page) => page.getByLabel('TypeScript Frontier map')
 
-test('JavaScript未clearではTypeScript地方へ進めず理由を表示する', async ({ page }) => {
+test('JavaScript未clearではTypeScript GATEへ進めず理由を表示する', async ({ page }) => {
   await seedWorld(page)
 
   await page.getByRole('button', { name: 'Move right' }).click()
 
-  await expect(viewport(page)).toHaveAttribute('data-world-x', '22')
+  await expect(overworld(page)).toHaveAttribute('data-world-x', '22')
   await expect(page.getByRole('status')).toContainText('TYPESCRIPT FRONTIER LOCKED')
   await expect(page.getByRole('status')).toContainText('Final Boss')
 })
 
-test('Battle 3 clear後はTypeScript地方へ進める', async ({ page }) => {
+test('Battle 3 clear後はOverworldから専用TypeScript Frontier mapへ遷移する', async ({ page }) => {
   await seedWorld(page, { clearedStageIds: [3] })
 
   await page.getByRole('button', { name: 'Move right' }).click()
 
-  await expect(viewport(page)).toHaveAttribute('data-world-x', '23')
+  await expect(frontier(page)).toHaveAttribute('data-world-map', 'ts-frontier')
+  await expect(frontier(page)).toHaveAttribute('data-world-x', '2')
+  await expect(frontier(page)).toHaveAttribute('data-world-y', '10')
+  await expect(page.getByRole('heading', { name: 'TYPESCRIPT FRONTIER' })).toBeVisible()
   await expect(page.getByText('TYPESCRIPT FRONTIER LOCKED')).toHaveCount(0)
 })
 
-test('既にTypeScript側にいるold saveは位置を壊さずreloadできる', async ({ page }) => {
-  await seedWorld(page, { worldPosition: { x: 30, y: 14 } })
+test('TypeScript Frontierの西GATEからCentral Hubへ往復できる', async ({ page }) => {
+  await seedWorld(page, {
+    clearedStageIds: [3],
+    worldMapId: 'ts-frontier',
+    worldPosition: { x: 2, y: 10 },
+  })
 
-  await expect(viewport(page)).toHaveAttribute('data-world-x', '30')
+  await page.getByRole('button', { name: 'Move left' }).click()
+
+  await expect(overworld(page)).toHaveAttribute('data-world-map', 'overworld')
+  await expect(overworld(page)).toHaveAttribute('data-world-x', '22')
+  await expect(overworld(page)).toHaveAttribute('data-world-y', '14')
+
+  await page.getByRole('button', { name: 'Move right' }).click()
+  await expect(frontier(page)).toHaveAttribute('data-world-map', 'ts-frontier')
+})
+
+test('旧overworld TypeScript側saveは専用mapへmigrationしreload後も保持する', async ({ page }) => {
+  await seedWorld(page, {
+    worldMapId: 'overworld',
+    worldPosition: { x: 30, y: 14 },
+  })
+
+  await expect(frontier(page)).toHaveAttribute('data-world-map', 'ts-frontier')
+  await expect(frontier(page)).toHaveAttribute('data-world-x', '9')
+  await expect(frontier(page)).toHaveAttribute('data-world-y', '14')
 
   await page.reload()
-  await expect(viewport(page)).toHaveAttribute('data-world-x', '30')
+  await expect(frontier(page)).toHaveAttribute('data-world-x', '9')
+  await expect(frontier(page)).toHaveAttribute('data-world-y', '14')
+})
+
+test('TypeScript local encounterから逃走すると同じFrontier位置へ戻る', async ({ page }) => {
+  await seedWorld(page, {
+    clearedStageIds: [3, 4],
+    unlockedStageIds: [1, 4, 5, 7],
+    worldMapId: 'ts-frontier',
+    worldPosition: { x: 5, y: 10 },
+  })
+
+  await page.goto('/typescript/battle/4?seed=encounter:ts-frontier:1:5:10&returnTo=%2Fworld')
+  const run = page.getByRole('button', { name: 'RUN · RETURN TO WORLD' })
+  await expect(run).toBeEnabled()
+  await run.click()
+
+  await expect(page).toHaveURL(/\/world$/)
+  await expect(frontier(page)).toHaveAttribute('data-world-x', '5')
+  await expect(frontier(page)).toHaveAttribute('data-world-y', '10')
 })
