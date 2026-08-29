@@ -12,7 +12,6 @@ import {
   isAdjacent,
   TS_BOSS_POSITION,
   TS_FRONTIER_MAP_ID,
-  type Terrain,
 } from './worldMap'
 
 const VIEWPORT_COLUMNS = 11
@@ -20,30 +19,49 @@ const VIEWPORT_ROWS = 9
 
 type Position = { x: number; y: number }
 
-const terrainLabels: Record<Terrain, string> = {
-  mountain: 'Boundary wall',
-  water: 'Water',
-  road: 'Road',
+const terrainLabels: Record<string, string> = {
+  mountain: 'Collapsed Boundary',
   stone: 'Rune Stone Road',
   crystal: 'Crystal Field · TypeScript encounter',
   ruins: 'Ancient Ruins · TypeScript encounter',
-  gate: 'Frontier Gate',
-  town: 'Town',
-  grass: 'Grassland',
-  'tall-grass': 'Tall Grass',
-  woods: 'Woods',
-  'deep-woods': 'Deep Woods',
-  forest: 'Forest',
+  gate: 'Region Gate',
   boss: 'Type Warden',
-  midboss: 'Mid-Boss',
-  shop: 'Shop',
-  npc: 'NPC',
-  recovery: 'Inn / Rest',
   treasure: 'Type Cache',
-  village: 'Village entrance',
-  exit: 'Area exit',
-  house: 'House',
-  training: 'Training Ground',
+  grass: 'Frontier Grass',
+  forest: 'Typed Forest · TypeScript encounter',
+}
+
+function getObjective(clearedStageIds: readonly number[]) {
+  if (!clearedStageIds.includes(4)) {
+    return {
+      label: 'TYPESCRIPT · 1 / 3',
+      title: '型ラベルがtarget ruleへどう影響するか読む',
+      detail: 'GATEから東のCrystal Field / Ruinsへ進もう。最初のEncounterはBattle 4。',
+      clear: false,
+    }
+  }
+  if (!clearedStageIds.includes(5)) {
+    return {
+      label: 'TYPESCRIPT · 2 / 3',
+      title: 'もう一つの型ruleを読み比べる',
+      detail: 'さらに東へ進み、Battle 5で型情報を使った別のtarget ruleを読む。',
+      clear: false,
+    }
+  }
+  if (!clearedStageIds.includes(6)) {
+    return {
+      label: 'TYPESCRIPT · 3 / 3 · BOSS',
+      title: '北東のTYPE WARDENへ向かう',
+      detail: '二つのTypeScript Battleを読み終えた。北東のBOSSの隣でINTERACTし、Battle 6へ挑もう。',
+      clear: false,
+    }
+  }
+  return {
+    label: 'TYPESCRIPT CLEAR',
+    title: 'TypeScript Frontierの異変を止めた',
+    detail: '西のGATEからCentral Hubへ戻れる。',
+    clear: true,
+  }
 }
 
 export function TypeScriptFrontierPage() {
@@ -51,54 +69,22 @@ export function TypeScriptFrontierPage() {
   const { progress, setProgress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
   const [message, setMessage] = useState(
-    'TYPE GATEの先はTypeScript Frontier。石畳を東へ進み、結晶と遺跡で型のruleを読む。',
+    'Rune Stone Roadを進み、Crystal / RuinsでTypeScriptのruleを読もう。',
   )
   useBgm('field')
 
   const position = rpgState.worldPosition
+  const [followerPosition, setFollowerPosition] = useState<Position>(() => ({
+    x: position.x,
+    y: position.y + 1,
+  }))
   const visibleCells = useMemo(
     () => getVisibleWorldCells(position, TS_FRONTIER_MAP_ID),
     [position],
   )
   const viewportStart = visibleCells[0] ?? position
   const byteJoined = rpgState.partyMemberIds.includes('byte')
-  const [followerPosition, setFollowerPosition] = useState<Position>(() => ({
-    x: position.x,
-    y: position.y + 1,
-  }))
-
-  const objective = useMemo(() => {
-    if (progress.clearedAreaIds.includes('typescript') || progress.clearedStageIds.includes(6)) {
-      return {
-        label: 'TYPESCRIPT CLEAR',
-        title: 'Frontier Compilerを復旧した',
-        detail: 'TypeScript地方の異変は解決した。西のGATEからCentral Hubへ戻れる。',
-        clear: true,
-      }
-    }
-    if (!progress.clearedStageIds.includes(4)) {
-      return {
-        label: 'TYPESCRIPT · 1 / 3',
-        title: '結晶地帯で型の違いを読む',
-        detail: '石畳を外れてCRYSTAL / RUINSへ入ろう。最初のEncounterでBattle 4を読む。',
-        clear: false,
-      }
-    }
-    if (!progress.clearedStageIds.includes(5)) {
-      return {
-        label: 'TYPESCRIPT · 2 / 3',
-        title: '型のruleをもう一段深く読む',
-        detail: 'さらに東へ進み、CRYSTAL / RUINSでBattle 5を読む。clear済みBattleは復習として再登場する。',
-        clear: false,
-      }
-    }
-    return {
-      label: 'TYPESCRIPT · FINAL BOSS',
-      title: '北東のTYPE WARDENへ向かう',
-      detail: 'Battle 4 / 5でruleを確認した。北東のBOSSの隣でINTERACTし、Battle 6へ挑もう。',
-      clear: false,
-    }
-  }, [progress.clearedAreaIds, progress.clearedStageIds])
+  const objective = getObjective(progress.clearedStageIds)
 
   const spriteStyle = useCallback(
     (spritePosition: Position) => ({
@@ -178,7 +164,7 @@ export function TypeScriptFrontierPage() {
       const result = openWorldTreasure(progress, rpgState, target.id)
       if (!result.opened) {
         gameAudio.playSe('cancel')
-        setMessage(`${result.definition.name}: もう開けてある。`)
+        setMessage(`${result.definition.name}: すでに空だ。`)
         return
       }
       setProgress(result.progress)
@@ -258,35 +244,40 @@ export function TypeScriptFrontierPage() {
         </section>
 
         <div
-          className="world-viewport typescript-frontier-viewport pixel-inner-window"
+          className="world-viewport pixel-inner-window typescript-frontier-viewport"
           aria-label="TypeScript Frontier map"
           data-world-map={TS_FRONTIER_MAP_ID}
           data-world-x={position.x}
           data-world-y={position.y}
         >
           {visibleCells.map((cell) => {
-            const treasure =
+            const treasureDefinition =
               cell.terrain === 'treasure'
                 ? getTreasureAtPosition(cell, TS_FRONTIER_MAP_ID)
                 : undefined
-            const treasureOpened = treasure
-              ? rpgState.openedTreasureIds.includes(treasure.id)
+            const treasureOpened = treasureDefinition
+              ? rpgState.openedTreasureIds.includes(treasureDefinition.id)
               : false
+
             return (
               <div
                 key={`${cell.mapId}:${cell.x}:${cell.y}`}
                 className={`world-tile terrain-${cell.terrain}`}
-                title={terrainLabels[cell.terrain]}
+                title={terrainLabels[cell.terrain] ?? cell.terrain}
                 data-world-map={cell.mapId}
                 data-world-x={cell.x}
                 data-world-y={cell.y}
               >
-                {cell.terrain === 'gate' && <span className="world-object gate-object">GATE</span>}
-                {cell.terrain === 'boss' && <span className="world-object boss-object">TYPE WARDEN</span>}
-                {treasure && (
+                {cell.terrain === 'gate' && (
+                  <span className="world-object ts-gate-object">GATE</span>
+                )}
+                {cell.terrain === 'boss' && (
+                  <span className="world-object boss-object">TYPE WARDEN</span>
+                )}
+                {treasureDefinition && (
                   <span
                     className={`world-object treasure-object ${treasureOpened ? 'opened' : ''}`}
-                    aria-label={`${treasure.id} treasure ${treasureOpened ? 'opened' : 'closed'}`}
+                    aria-label={`${treasureDefinition.id} treasure ${treasureOpened ? 'opened' : 'closed'}`}
                   >
                     {treasureOpened ? 'OPEN' : 'TYPE CACHE'}
                   </span>
@@ -313,6 +304,7 @@ export function TypeScriptFrontierPage() {
                 <img className="world-follower-pixel" src={characterVisuals.byte.field} alt="" />
               </span>
             )}
+
             <span
               className="world-player-sprite world-character-overlay"
               style={spriteStyle(position)}
@@ -332,10 +324,18 @@ export function TypeScriptFrontierPage() {
 
         <div className="world-controls" aria-label="World controls">
           <div className="world-dpad">
-            <button type="button" aria-label="Move up" onClick={() => move(0, -1)}>▲</button>
-            <button type="button" aria-label="Move left" onClick={() => move(-1, 0)}>◀</button>
-            <button type="button" aria-label="Move down" onClick={() => move(0, 1)}>▼</button>
-            <button type="button" aria-label="Move right" onClick={() => move(1, 0)}>▶</button>
+            <button type="button" aria-label="Move up" onClick={() => move(0, -1)}>
+              ▲
+            </button>
+            <button type="button" aria-label="Move left" onClick={() => move(-1, 0)}>
+              ◀
+            </button>
+            <button type="button" aria-label="Move down" onClick={() => move(0, 1)}>
+              ▼
+            </button>
+            <button type="button" aria-label="Move right" onClick={() => move(1, 0)}>
+              ▶
+            </button>
           </div>
           <button type="button" className="primary-button world-interact" onClick={interact}>
             INTERACT
