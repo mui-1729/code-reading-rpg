@@ -1,4 +1,5 @@
 import { battles } from './battles'
+import { DATABASE_PROTOTYPE_BATTLE_ID, databasePrototypeBattle } from './databasePrototype'
 import { createSeededRandom, type Seed, type SeededRandom } from './random'
 import { skills } from './skills'
 import { hasInitialValidTarget, isBattleSolvable } from './solvability'
@@ -10,7 +11,10 @@ const HP_MULTIPLIER_MAX_PERCENT = 115
 const MAX_GENERATION_ATTEMPTS = 32
 
 export function generateBattle(battleId: number, seed: Seed): Battle | undefined {
-  const template = battles.find((battle) => battle.id === battleId)
+  const template =
+    battleId === DATABASE_PROTOTYPE_BATTLE_ID
+      ? databasePrototypeBattle
+      : battles.find((battle) => battle.id === battleId)
   if (!template) return undefined
 
   const random = createSeededRandom(`${String(seed)}:battle:${template.id}`)
