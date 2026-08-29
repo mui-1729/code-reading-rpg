@@ -1,0 +1,115 @@
+.atlas-terrain-field {
+  display: grid;
+  align-content: stretch;
+  gap: 7px;
+  min-height: 0;
+  padding: 8px;
+}
+
+.atlas-terrain-grid {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #343447;
+  background: #07070d;
+  image-rendering: pixelated;
+}
+
+.atlas-terrain-cell {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+  background: #26302b;
+  color: #08080d;
+  font-size: 6px;
+  line-height: 1;
+}
+
+.atlas-terrain-cell.terrain-mountain,
+.atlas-terrain-cell.terrain-house { background: #292830; }
+.atlas-terrain-cell.terrain-water { background: #285a78; }
+.atlas-terrain-cell.terrain-road { background: #b3925f; }
+.atlas-terrain-cell.terrain-stone { background: #858997; }
+.atlas-terrain-cell.terrain-crystal { background: #7756a4; }
+.atlas-terrain-cell.terrain-ruins { background: #51495f; }
+.atlas-terrain-cell.terrain-town { background: #68865b; }
+.atlas-terrain-cell.terrain-grass { background: #4f8247; }
+.atlas-terrain-cell.terrain-tall-grass { background: #39643b; }
+.atlas-terrain-cell.terrain-woods { background: #2e6039; }
+.atlas-terrain-cell.terrain-deep-woods,
+.atlas-terrain-cell.terrain-forest { background: #1d432b; }
+.atlas-terrain-cell.terrain-village { background: #82b970; }
+.atlas-terrain-cell.terrain-gate,
+.atlas-terrain-cell.terrain-exit { background: #6796df; }
+.atlas-terrain-cell.terrain-training { background: #ee9a48; }
+.atlas-terrain-cell.terrain-boss,
+.atlas-terrain-cell.terrain-midboss { background: #db525a; }
+.atlas-terrain-cell.terrain-treasure { background: #efc94e; }
+.atlas-terrain-cell.terrain-shop { background: #67c3a1; }
+.atlas-terrain-cell.terrain-npc { background: #d185d7; }
+.atlas-terrain-cell.terrain-recovery { background: #82bed5; }
+
+.atlas-terrain-cell.is-locked {
+  background: #301820;
+  box-shadow: inset 0 0 0 1px #ff6f88;
+}
+
+.atlas-terrain-cell.is-player {
+  position: relative;
+  z-index: 2;
+  overflow: visible;
+  background: #fff;
+  box-shadow: 0 0 0 1px #ff4f8b, 0 0 5px #ff4f8b;
+  font-weight: 900;
+}
+
+.atlas-landmark-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 7px;
+  min-height: 11px;
+}
+
+.atlas-terrain-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  color: #aaa7ba;
+  font-size: 7px;
+  font-weight: 900;
+}
+
+.atlas-terrain-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.atlas-terrain-legend b {
+  width: 9px;
+  height: 9px;
+  border: 1px solid #59586d;
+}
+
+.atlas-terrain-legend .terrain-road { background: #b3925f; }
+.atlas-terrain-legend .terrain-woods { background: #2e6039; }
+.atlas-terrain-legend .terrain-water { background: #285a78; }
+.atlas-terrain-legend .terrain-gate { background: #6796df; }
+.atlas-terrain-legend .terrain-boss { background: #db525a; }
+.atlas-terrain-legend .terrain-treasure { background: #efc94e; }
+.atlas-terrain-legend .legend-player {
+  background: #fff;
+  box-shadow: 0 0 0 1px #ff4f8b;
+}
+
+@media (max-width: 620px) {
+  .atlas-terrain-field {
+    padding: 7px;
+  }
+
+  .atlas-terrain-cell.is-player {
+    box-shadow: 0 0 0 1px #ff4f8b;
+  }
+}
