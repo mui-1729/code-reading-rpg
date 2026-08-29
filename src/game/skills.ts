@@ -1,4 +1,5 @@
 import { battles } from './battles'
+import { databaseSkillDefinitions } from './databasePrototype'
 import { deepForestSkillDefinitions } from './deepForestSkillDefinitions'
 import { forestSkillDefinitions } from './forestSkillDefinitions'
 import type { Seed } from './random'
@@ -15,6 +16,7 @@ export const allSkillDefinitions: readonly SkillDefinition[] = [
   ...forestSkillDefinitions,
   ...deepForestSkillDefinitions,
   ...typescriptSkillDefinitions,
+  ...databaseSkillDefinitions,
 ]
 
 export const allSkillDefinitionById: Record<string, SkillDefinition> = Object.fromEntries(
