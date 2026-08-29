@@ -120,6 +120,12 @@ test('Forest Battle 10 / 11は初心者Storyで&& / ||を順に説明しfilter�
   await expect(andStory).toContainText('左もtrue、右もtrue')
   await expect(andStory).not.toContainText('filter()')
 
+  await page.evaluate((progressKey) => {
+    const stored = JSON.parse(localStorage.getItem(progressKey) ?? 'null')
+    stored.progress.clearedStageIds = [...new Set([...stored.progress.clearedStageIds, 10])]
+    localStorage.setItem(progressKey, JSON.stringify(stored))
+  }, PROGRESS_KEY)
+
   await page.goto('/javascript/battle/11?seed=forest-e2e-or&returnTo=%2Fworld')
   const orStory = page.getByRole('dialog', { name: 'どちらかtrueなら通る' })
   await expect(orStory).toBeVisible()
