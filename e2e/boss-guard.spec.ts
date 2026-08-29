@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { JS_BOSS_PREREQS, TS_BOSS_PREREQS } from './canonical-progress-fixtures'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -25,11 +26,7 @@ const rpg = {
   },
 }
 
-async function seedStorage(
-  page: Page,
-  clearedStageIds: number[],
-  unlockedStageIds: number[],
-) {
+async function seedStorage(page: Page, clearedStageIds: number[]) {
   const progress = {
     version: 4,
     progress: {
@@ -39,7 +36,7 @@ async function seedStorage(
       clearedStageIds,
       clearedAreaIds: clearedStageIds.includes(3) ? ['javascript'] : [],
       completedSideQuestIds: [],
-      unlockedStageIds,
+      unlockedStageIds: [7],
       unlockedSkillIds: initialSkills,
     },
   }
@@ -80,7 +77,7 @@ async function enemyHp(card: ReturnType<Page['locator']>) {
 
 test.describe('Boss GUARD', () => {
   test('JS Bossはminion生存中1 damageに抑え、全滅直後にOPENになる', async ({ page }) => {
-    await seedStorage(page, [], [1, 3, 4, 7])
+    await seedStorage(page, [...JS_BOSS_PREREQS])
     await page.goto('/javascript/battle/3?seed=boss-guard-js-e2e&returnTo=%2Fworld')
 
     const briefing = page.getByRole('dialog', { name: 'Code Coreへ' })
@@ -115,7 +112,7 @@ test.describe('Boss GUARD', () => {
   })
 
   test('TS BossでもGUARDがBossだけを1 damageへ抑える', async ({ page }) => {
-    await seedStorage(page, [3], [1, 4, 6, 7])
+    await seedStorage(page, [...TS_BOSS_PREREQS])
     await page.goto('/typescript/battle/6?seed=boss-guard-ts-e2e&returnTo=%2Fworld')
 
     const briefing = page.getByRole('dialog', { name: 'Frontier Compilerへ' })

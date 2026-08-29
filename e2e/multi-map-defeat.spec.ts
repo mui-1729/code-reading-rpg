@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { JS_BATTLE_1_PREREQS } from './canonical-progress-fixtures'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -9,7 +10,7 @@ const initialSkills = ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-labe
 test('Village保存状態からBattleで敗北するとOverworld Hubへ戻る', async ({ page }) => {
   await page.goto('/')
   await page.evaluate(
-    ({ progressKey, rpgKey, tutorialKey, skills }) => {
+    ({ progressKey, rpgKey, tutorialKey, skills, clearedStageIds }) => {
       localStorage.clear()
       localStorage.setItem(
         progressKey,
@@ -19,10 +20,10 @@ test('Village保存状態からBattleで敗北するとOverworld Hubへ戻る', 
             exp: 0,
             gold: 0,
             inventory: { patchKit: 0 },
-            clearedStageIds: [],
+            clearedStageIds,
             clearedAreaIds: [],
             completedSideQuestIds: [],
-            unlockedStageIds: [1, 4],
+            unlockedStageIds: [7],
             unlockedSkillIds: skills,
           },
         }),
@@ -59,6 +60,7 @@ test('Village保存状態からBattleで敗北するとOverworld Hubへ戻る', 
       rpgKey: RPG_KEY,
       tutorialKey: TUTORIAL_KEY,
       skills: initialSkills,
+      clearedStageIds: [...JS_BATTLE_1_PREREQS],
     },
   )
 

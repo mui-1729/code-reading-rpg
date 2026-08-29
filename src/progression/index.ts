@@ -20,6 +20,20 @@ export {
   REPLAY_GOLD_MULTIPLIER,
 } from './progression'
 export {
+  areBattlePrerequisitesMet,
+  getAreaBattleSequence,
+  getAreaClearedBattleCount,
+  getCanonicalUnlockedStageIds,
+  getNextAccessibleBattleId,
+  getNextBattleId,
+  getProgressionNode,
+  isAreaProgressionComplete,
+  isBattleAccessible,
+  JAVASCRIPT_BATTLE_SEQUENCE,
+  progressionNodes,
+  TYPESCRIPT_BATTLE_SEQUENCE,
+} from './progressionGraph'
+export {
   migrateStoredPlayerProgress,
   PLAYER_PROGRESS_SCHEMA_VERSION,
   PLAYER_PROGRESS_STORAGE_KEY,
@@ -28,6 +42,7 @@ export {
 } from './storage'
 export { ProgressProvider } from './ProgressProvider'
 export { useProgress } from './useProgress'
+export type { ProgressionArea, ProgressionNode } from './progressionGraph'
 export type {
   StoredPlayerProgressV1,
   StoredPlayerProgressV2,

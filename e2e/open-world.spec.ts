@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { JS_BATTLE_1_PREREQS } from './canonical-progress-fixtures'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -12,10 +13,10 @@ const createProgress = (overrides: Record<string, unknown> = {}) => ({
     exp: 0,
     gold: 0,
     inventory: { patchKit: 0 },
-    clearedStageIds: [],
+    clearedStageIds: [...JS_BATTLE_1_PREREQS],
     clearedAreaIds: [],
     completedSideQuestIds: [],
-    unlockedStageIds: [1, 4],
+    unlockedStageIds: [7],
     unlockedSkillIds: initialSkills,
     ...overrides,
   },
@@ -99,9 +100,7 @@ async function storedProgress(page: Page) {
 test.describe('Open World RPG loop', () => {
   test('Title → deterministic Encounter → Battle victory → World returnで位置と残HPを保持する', async ({ page }) => {
     await seedStorage(page, {
-      progress: createProgress({
-        clearedStageIds: [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22],
-      }),
+      progress: createProgress(),
       rpg: createRpgState({
         worldPosition: { x: 10, y: 10 },
         stepsSinceEncounter: 4,

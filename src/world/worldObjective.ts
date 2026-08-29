@@ -1,4 +1,10 @@
-import type { PlayerProgress } from '../progression'
+import {
+  getAreaBattleSequence,
+  getAreaClearedBattleCount,
+  getNextAccessibleBattleId,
+  isBattleAccessible,
+  type PlayerProgress,
+} from '../progression'
 
 export type WorldObjectiveRegion = 'javascript' | 'typescript'
 export type WorldObjectiveStatus = 'encounter' | 'boss' | 'clear'
@@ -7,7 +13,7 @@ export type WorldObjective = {
   region: WorldObjectiveRegion
   label: string
   clearedBattles: number
-  totalBattles: 3
+  totalBattles: number
   status: WorldObjectiveStatus
   next: string
   bossUnlocked: boolean
@@ -30,11 +36,8 @@ type WorldProgressSnapshot = Pick<
 type RegionDefinition = {
   region: WorldObjectiveRegion
   label: string
-  stageIds: readonly [number, number, number]
   areaId: string
-  encounterFirst: string
-  encounterNext: string
-  bossNext: string
+  bossBattleId: number
   clearNext: string
 }
 
@@ -42,21 +45,15 @@ const definitions: readonly RegionDefinition[] = [
   {
     region: 'javascript',
     label: 'JAVASCRIPT KINGDOM',
-    stageIds: [1, 2, 3],
     areaId: 'javascript',
-    encounterFirst: 'INVESTIGATE // 誤targetの再現地点を確認する',
-    encounterNext: 'INVESTIGATE // ログから共通処理を特定する',
-    bossNext: 'ROOT CAUSE // 西のCode Coreを確認する',
-    clearNext: 'INCIDENT CLOSED // REAL WORLDへRETURN済み',
+    bossBattleId: 3,
+    clearNext: 'INCIDENT CLOSED // TypeScript地方へ進む',
   },
   {
     region: 'typescript',
     label: 'TYPESCRIPT FRONTIER',
-    stageIds: [4, 5, 6],
     areaId: 'typescript',
-    encounterFirst: 'INVESTIGATE // API更新後のtargetずれを再現する',
-    encounterNext: 'INVESTIGATE // optional / unionの波及経路を追う',
-    bossNext: 'ROOT CAUSE // 東のFrontier Compilerを確認する',
+    bossBattleId: 6,
     clearNext: 'INCIDENT CLOSED // REAL WORLDへRETURN済み',
   },
 ]
@@ -65,42 +62,58 @@ function getDefinition(region: WorldObjectiveRegion): RegionDefinition {
   return definitions.find((definition) => definition.region === region) ?? definitions[0]
 }
 
+function getNextLabel(region: WorldObjectiveRegion, battleId: number | undefined): string {
+  if (battleId === undefined) return 'NEXT // Worldを探索する'
+
+  if (region === 'typescript') {
+    if (battleId === 4) return 'INVESTIGATE // API更新後のtargetずれを再現する'
+    if (battleId === 5) return 'INVESTIGATE // optional / unionの波及経路を追う'
+    return 'ROOT CAUSE // 東のFrontier Compilerを確認する'
+  }
+
+  if (battleId >= 7 && battleId <= 9) return `TRAINING // Battle ${battleId}を完了する`
+  if (battleId >= 10 && battleId <= 12) return `FOREST // Battle ${battleId}の条件を読む`
+  if (battleId === 13) return 'MID-BOSS // 森の守り人を突破する'
+  if (battleId >= 14 && battleId <= 22) return `DEEP FOREST // Battle ${battleId}を読む`
+  if (battleId === 1) return 'INCIDENT // 草原で最初のtarget異変を追う'
+  if (battleId === 2) return 'INCIDENT // 二つ目のtarget異変を追う'
+  return 'ROOT CAUSE // 北西のCode Coreを確認する'
+}
+
 export function getWorldObjective(
   region: WorldObjectiveRegion,
   progress: WorldProgressSnapshot,
 ): WorldObjective {
   const definition = getDefinition(region)
-  const clearedBattles = definition.stageIds.filter((stageId) =>
-    progress.clearedStageIds.includes(stageId),
-  ).length
+  const totalBattles = getAreaBattleSequence(region).length
+  const clearedBattles = getAreaClearedBattleCount(region, progress.clearedStageIds)
   const areaCleared =
     progress.clearedAreaIds.includes(definition.areaId) ||
-    progress.clearedStageIds.includes(definition.stageIds[2])
+    progress.clearedStageIds.includes(definition.bossBattleId)
   const bossUnlocked =
-    areaCleared ||
-    progress.unlockedStageIds.includes(definition.stageIds[2]) ||
-    progress.clearedStageIds.includes(definition.stageIds[1])
+    areaCleared || isBattleAccessible(definition.bossBattleId, progress.clearedStageIds)
+  const nextBattleId = getNextAccessibleBattleId(region, progress.clearedStageIds)
 
   if (areaCleared) {
     return {
       region,
       label: definition.label,
-      clearedBattles: 3,
-      totalBattles: 3,
+      clearedBattles,
+      totalBattles,
       status: 'clear',
       next: definition.clearNext,
       bossUnlocked: true,
     }
   }
 
-  if (bossUnlocked) {
+  if (bossUnlocked && nextBattleId === definition.bossBattleId) {
     return {
       region,
       label: definition.label,
-      clearedBattles: Math.max(2, clearedBattles),
-      totalBattles: 3,
+      clearedBattles,
+      totalBattles,
       status: 'boss',
-      next: definition.bossNext,
+      next: getNextLabel(region, nextBattleId),
       bossUnlocked: true,
     }
   }
@@ -109,10 +122,10 @@ export function getWorldObjective(
     region,
     label: definition.label,
     clearedBattles,
-    totalBattles: 3,
+    totalBattles,
     status: 'encounter',
-    next: clearedBattles === 0 ? definition.encounterFirst : definition.encounterNext,
-    bossUnlocked: false,
+    next: getNextLabel(region, nextBattleId),
+    bossUnlocked,
   }
 }
 
@@ -134,7 +147,7 @@ export function getWorldProgressChange(
         region: current.region,
         heading: 'WORLD COMPLETE',
         label: current.label,
-        progressLabel: '3 / 3',
+        progressLabel: `${current.clearedBattles} / ${current.totalBattles}`,
         next: current.next,
       }
     }

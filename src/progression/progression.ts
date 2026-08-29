@@ -6,6 +6,7 @@ import {
   HP_PER_LEVEL,
   POWER_MULTIPLIER_PER_LEVEL,
 } from './constants'
+import { getCanonicalUnlockedStageIds } from './progressionGraph'
 import type {
   BattleVictoryInput,
   BattleVictoryResult,
@@ -96,9 +97,24 @@ export function applyBattleVictory(
   let unlockedSkillId: string | undefined
   let clearedAreaId: string | undefined
 
-  if (firstClear && input.nextStageId && !next.unlockedStageIds.includes(input.nextStageId)) {
-    next.unlockedStageIds = [...next.unlockedStageIds, input.nextStageId]
-    unlockedStageId = input.nextStageId
+  if (firstClear) {
+    next.clearedStageIds = [...next.clearedStageIds, input.stageId]
+  }
+
+  const beforeCanonicalUnlocks = new Set(getCanonicalUnlockedStageIds(progress.clearedStageIds))
+  const canonicalUnlocks = getCanonicalUnlockedStageIds(next.clearedStageIds)
+  const newlyUnlocked = canonicalUnlocks.filter(
+    (battleId) =>
+      !beforeCanonicalUnlocks.has(battleId) &&
+      !next.clearedStageIds.includes(battleId),
+  )
+  next.unlockedStageIds = canonicalUnlocks
+
+  if (firstClear) {
+    unlockedStageId =
+      input.nextStageId && newlyUnlocked.includes(input.nextStageId)
+        ? input.nextStageId
+        : newlyUnlocked[0]
   }
 
   if (firstClear && input.unlockSkillId && !next.unlockedSkillIds.includes(input.unlockSkillId)) {
@@ -109,10 +125,6 @@ export function applyBattleVictory(
   if (firstClear && input.clearAreaId && !next.clearedAreaIds.includes(input.clearAreaId)) {
     next.clearedAreaIds = [...next.clearedAreaIds, input.clearAreaId]
     clearedAreaId = input.clearAreaId
-  }
-
-  if (firstClear) {
-    next.clearedStageIds = [...next.clearedStageIds, input.stageId]
   }
 
   return {

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { JS_BATTLE_1_PREREQS } from './canonical-progress-fixtures'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -7,7 +8,7 @@ const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 async function seedPixelParty(page: Page) {
   await page.goto('/')
   await page.evaluate(
-    ({ progressKey, rpgKey, tutorialKey }) => {
+    ({ progressKey, rpgKey, tutorialKey, clearedStageIds }) => {
       localStorage.clear()
       localStorage.setItem(
         progressKey,
@@ -17,10 +18,10 @@ async function seedPixelParty(page: Page) {
             exp: 0,
             gold: 0,
             inventory: { patchKit: 0 },
-            clearedStageIds: [],
+            clearedStageIds,
             clearedAreaIds: [],
             completedSideQuestIds: [],
-            unlockedStageIds: [1, 4],
+            unlockedStageIds: [7],
             unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
           },
         }),
@@ -53,7 +54,12 @@ async function seedPixelParty(page: Page) {
         JSON.stringify({ version: 1, status: 'skipped', phase: 'battle' }),
       )
     },
-    { progressKey: PROGRESS_KEY, rpgKey: RPG_KEY, tutorialKey: TUTORIAL_KEY },
+    {
+      progressKey: PROGRESS_KEY,
+      rpgKey: RPG_KEY,
+      tutorialKey: TUTORIAL_KEY,
+      clearedStageIds: [...JS_BATTLE_1_PREREQS],
+    },
   )
 }
 

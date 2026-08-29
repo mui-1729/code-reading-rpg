@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { JS_BATTLE_1_PREREQS } from './canonical-progress-fixtures'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -15,7 +16,7 @@ async function seedItemState(
 ) {
   await page.goto('/')
   await page.evaluate(
-    ({ progressKey, rpgKey, tutorialKey, gold, patchKit, currentHp, worldPosition }) => {
+    ({ progressKey, rpgKey, tutorialKey, gold, patchKit, currentHp, worldPosition, clearedStageIds }) => {
       localStorage.clear()
       localStorage.setItem(
         progressKey,
@@ -25,10 +26,10 @@ async function seedItemState(
             exp: 0,
             gold,
             inventory: { patchKit },
-            clearedStageIds: [],
+            clearedStageIds,
             clearedAreaIds: [],
             completedSideQuestIds: [],
-            unlockedStageIds: [1, 4],
+            unlockedStageIds: [7],
             unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
           },
         }),
@@ -67,6 +68,7 @@ async function seedItemState(
       patchKit: options.patchKit ?? 0,
       currentHp: options.currentHp ?? 108,
       worldPosition: options.worldPosition ?? { x: 20, y: 14 },
+      clearedStageIds: [...JS_BATTLE_1_PREREQS],
     },
   )
 }
