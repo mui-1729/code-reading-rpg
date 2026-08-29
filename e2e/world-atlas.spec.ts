@@ -78,7 +78,7 @@ test('MAPから全5地域と現在地を確認しzoomできる', async ({ page }
   await dialog.getByRole('button', { name: 'Zoom in map' }).click()
   await expect(dialog.getByText('ZOOM 125%')).toBeVisible()
 
-  await dialog.getByLabel('Map zoom').fill('200')
+  await dialog.getByRole('slider', { name: 'Map zoom' }).fill('200')
   await expect(dialog.getByText('ZOOM 200%')).toBeVisible()
 })
 
