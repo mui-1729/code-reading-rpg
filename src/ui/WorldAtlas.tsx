@@ -34,6 +34,8 @@ type AtlasCell = {
   locked: boolean
 }
 
+const ATLAS_BASE_WIDTH = 650
+
 const atlasMaps: AtlasMap[] = [
   {
     id: JS_DEEP_FOREST_MAP_ID,
@@ -211,6 +213,7 @@ function AtlasTerrainMap({
 
 export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
   const [zoom, setZoom] = useState(100)
+  const canvasWidth = ATLAS_BASE_WIDTH * (zoom / 100)
 
   return (
     <section className="world-atlas" aria-label="World Atlas" data-atlas-zoom={zoom}>
@@ -245,7 +248,7 @@ export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
       </header>
 
       <div className="atlas-scrollport">
-        <div className="atlas-canvas" style={{ width: `${zoom}%` }}>
+        <div className="atlas-canvas" style={{ width: `${canvasWidth}px`, minWidth: 0 }}>
           <div className="atlas-connection atlas-connection-deep" aria-hidden="true">←→</div>
           <div className="atlas-connection atlas-connection-forest" aria-hidden="true">←→</div>
           <div className="atlas-connection atlas-connection-ts" aria-hidden="true">←→</div>
@@ -263,13 +266,13 @@ export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
       </div>
 
       <div className="atlas-terrain-legend" aria-label="Terrain legend">
-        <span><b className="terrain-road" />ROAD</span>
-        <span><b className="terrain-woods" />WOODS</span>
-        <span><b className="terrain-water" />WATER</span>
-        <span><b className="terrain-gate" />GATE / EXIT</span>
-        <span><b className="terrain-boss" />BOSS</span>
-        <span><b className="terrain-treasure" />TREASURE</span>
-        <span><b className="legend-player" />YOU</span>
+        <span><b className="atlas-legend-swatch atlas-legend-road" />ROAD</span>
+        <span><b className="atlas-legend-swatch atlas-legend-woods" />WOODS</span>
+        <span><b className="atlas-legend-swatch atlas-legend-water" />WATER</span>
+        <span><b className="atlas-legend-swatch atlas-legend-gate" />GATE / EXIT</span>
+        <span><b className="atlas-legend-swatch atlas-legend-boss" />BOSS</span>
+        <span><b className="atlas-legend-swatch atlas-legend-treasure" />TREASURE</span>
+        <span><b className="atlas-legend-swatch atlas-legend-player" />YOU</span>
       </div>
       <p className="atlas-legend">Real terrain from the playable maps · LOCKED means its entrance needs story progress.</p>
     </section>
