@@ -356,6 +356,8 @@ export function resolveWorldInteraction(
   progress: PlayerProgress,
 ): WorldInteractionIntent {
   const position = rpgState.worldPosition
+  const treasureInteraction = resolveTreasureInteraction(rpgState)
+  if (treasureInteraction) return treasureInteraction
 
   if (rpgState.worldMapId === JS_VILLAGE_MAP_ID) {
     if (isAdjacent(position, JS_VILLAGE_TRAINING_POSITION)) {
@@ -382,9 +384,6 @@ export function resolveWorldInteraction(
   }
 
   if (rpgState.worldMapId === TS_FRONTIER_MAP_ID) {
-    const treasure = resolveTreasureInteraction(rpgState)
-    if (treasure) return treasure
-
     if (isAdjacent(position, TS_BOSS_POSITION)) {
       return {
         kind: 'boss',
@@ -415,9 +414,6 @@ export function resolveWorldInteraction(
   if (isAdjacent(position, RECOVERY_POSITION)) {
     return { kind: 'recovery' }
   }
-
-  const treasure = resolveTreasureInteraction(rpgState)
-  if (treasure) return treasure
 
   if (position.x === 30 && position.y === 18) {
     return {
