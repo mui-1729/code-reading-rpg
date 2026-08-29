@@ -1,9 +1,10 @@
 export const JAVASCRIPT_AREA_ID = 'javascript'
 export const TYPESCRIPT_AREA_ID = 'typescript'
+export const DATABASE_AREA_ID = 'database'
 
 export type AreaAvailability = 'available' | 'comingSoon'
 
-export type AreaRoutePath = '/javascript/field' | '/typescript/field'
+export type AreaRoutePath = '/javascript/field' | '/typescript/field' | '/database/field'
 
 export type AreaRoutes = {
   field: AreaRoutePath | null
@@ -41,6 +42,16 @@ export const areas: AreaDefinition[] = [
       field: '/typescript/field',
     },
     bossBattleId: 6,
+  },
+  {
+    id: DATABASE_AREA_ID,
+    label: 'WORLD 03',
+    title: 'Database Archive',
+    description: 'archiveに蓄積されたrowとqueryを読み、条件・並び順・取得件数から結果を特定する保管区。',
+    availability: 'available',
+    routes: {
+      field: '/database/field',
+    },
   },
 ]
 
