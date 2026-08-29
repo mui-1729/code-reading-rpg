@@ -48,6 +48,10 @@ test('Battle中のREPLAY TUTORIALはWorld開始地点へ戻りMOVEから始め�
   await seedReplayState(page, 'overworld', { x: 8, y: 8 })
   await page.goto('/javascript/battle/7?seed=replay-from-battle&returnTo=%2Fworld')
 
+  const story = page.locator('.battle-story-overlay')
+  if (await story.isVisible()) {
+    await story.getByRole('button', { name: 'SKIP' }).click()
+  }
   await replayTutorial(page)
 
   await expect(page).toHaveURL(/\/world$/)
