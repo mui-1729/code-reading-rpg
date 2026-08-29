@@ -9,6 +9,7 @@ on:
       - 'test/**'
       - 'ux/**'
       - 'refactor/**'
+      - 'design/**'
   pull_request:
 
 jobs:
