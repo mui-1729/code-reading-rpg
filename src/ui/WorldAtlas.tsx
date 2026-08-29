@@ -130,7 +130,7 @@ function AtlasMap({
 
 export function WorldAtlas({ rpgState, progress }: { rpgState: RpgState; progress: PlayerProgress }) {
   const [zoom, setZoom] = useState(100)
-  const atlasStyle = { '--atlas-zoom': zoom / 100 } as CSSProperties
+  const atlasStyle = { '--atlas-cell': `${5 * (zoom / 100)}px` } as CSSProperties
 
   const updateZoom = (value: number) => setZoom(Math.min(200, Math.max(50, value)))
 
