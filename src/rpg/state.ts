@@ -1,8 +1,10 @@
 import { BASE_PLAYER_HP } from '../progression/constants'
 import {
+  getWorldMapDimensions,
   isWorldMapId,
   isWorldPositionInBounds,
   OVERWORLD_MAP_ID,
+  TS_FRONTIER_MAP_ID,
   WORLD_MAP_STARTS,
   WORLD_TREASURES,
   type WorldMapId,
@@ -145,6 +147,18 @@ function normalizeLoadout(
   ) as EquipmentLoadout
 }
 
+function migrateLegacyTypeScriptPosition(position: WorldPosition): WorldPosition {
+  if (position.x === 30 && position.y === 18) {
+    return { x: 19, y: 15 }
+  }
+
+  const { width, height } = getWorldMapDimensions(TS_FRONTIER_MAP_ID)
+  return {
+    x: Math.max(1, Math.min(width - 2, position.x - 21)),
+    y: Math.max(1, Math.min(height - 2, position.y)),
+  }
+}
+
 function normalizeWorldLocation(
   mapIdValue: unknown,
   positionValue: unknown,
@@ -177,6 +191,21 @@ function normalizeWorldLocation(
     return {
       mapId: OVERWORLD_MAP_ID,
       position: { ...WORLD_MAP_STARTS[OVERWORLD_MAP_ID] },
+    }
+  }
+
+  if (mapId === OVERWORLD_MAP_ID) {
+    const { width, height } = getWorldMapDimensions(OVERWORLD_MAP_ID)
+    const wasPlayableTypeScriptSide =
+      normalized.x >= 23 &&
+      normalized.x < width - 1 &&
+      normalized.y > 0 &&
+      normalized.y < height - 1
+    if (wasPlayableTypeScriptSide) {
+      return {
+        mapId: TS_FRONTIER_MAP_ID,
+        position: migrateLegacyTypeScriptPosition(normalized),
+      }
     }
   }
 
