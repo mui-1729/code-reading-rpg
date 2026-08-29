@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { JS_BATTLE_1_PREREQS, JS_BOSS_PREREQS } from './canonical-progress-fixtures'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -16,9 +17,9 @@ async function seed(page: Page, clearedStageIds: number[] = []) {
           gold: 0,
           inventory: { patchKit: 0 },
           clearedStageIds: cleared,
-          clearedAreaIds: [],
+          clearedAreaIds: cleared.includes(3) ? ['javascript'] : [],
           completedSideQuestIds: [],
-          unlockedStageIds: [1, 3, 4, 7, 8, 9, 10, 13],
+          unlockedStageIds: [7],
           unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
         },
       }))
@@ -52,7 +53,7 @@ async function storedRpg(page: Page) {
 }
 
 test('Overworld Random Encounterから逃走すると同じWorld位置/HPへ戻りrewardを得ない', async ({ page }) => {
-  await seed(page)
+  await seed(page, [...JS_BATTLE_1_PREREQS])
   await page.goto('/javascript/battle/1?seed=encounter%3A5%3A10%3A11&returnTo=%2Fworld')
 
   const run = page.getByRole('button', { name: 'RUN · ESCAPE' })
@@ -68,12 +69,12 @@ test('Overworld Random Encounterから逃走すると同じWorld位置/HPへ戻�
   const progress = await storedProgress(page)
   expect(progress.progress.exp).toBe(0)
   expect(progress.progress.gold).toBe(0)
-  expect(progress.progress.clearedStageIds).toEqual([])
+  expect(progress.progress.clearedStageIds).toEqual([...JS_BATTLE_1_PREREQS])
   expect((await storedRpg(page)).state.currentHp).toBe(73)
 })
 
 test('fixed Lesson / Training / Boss / Mid-Bossは逃走不可を明示する', async ({ page }) => {
-  await seed(page)
+  await seed(page, [...JS_BOSS_PREREQS])
 
   for (const url of [
     '/javascript/battle/7?seed=village-training%3A7&returnTo=%2Fworld',
