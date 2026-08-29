@@ -3,7 +3,7 @@ import { useProgress } from '../progression'
 import { getBattleRouteLockReason, isBattleRouteUnlocked, type BattleRouteArea } from './battleRouteAccess'
 
 const FLASH_KEY = 'code-reading-rpg:battle-route-lock'
-const BATTLE_PATH = /^\/(javascript|typescript)\/battle\/(\d+)$/
+const BATTLE_PATH = /^\/(javascript|typescript|database)\/battle\/(\d+)$/
 
 type RouteSnapshot = {
   pathname: string
