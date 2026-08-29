@@ -148,6 +148,10 @@ function normalizeLoadout(
 }
 
 function migrateLegacyTypeScriptPosition(position: WorldPosition): WorldPosition {
+  if (position.x === 30 && position.y === 18) {
+    return { x: 19, y: 15 }
+  }
+
   const { width, height } = getWorldMapDimensions(TS_FRONTIER_MAP_ID)
   return {
     x: Math.max(1, Math.min(width - 2, position.x - 21)),
