@@ -1,7 +1,7 @@
 import { createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router'
 import { RootLayout } from './RootLayout'
 import { BattleRoutePage, HomePage, TypeScriptBattleRoutePage } from './routeComponents'
-import { WorldPage } from './world/WorldPage'
+import { WorldRoutePage } from './world/WorldRoutePage'
 
 const rootRoute = createRootRoute({ component: RootLayout })
 
@@ -14,7 +14,7 @@ const indexRoute = createRoute({
 const worldRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'world',
-  component: WorldPage,
+  component: WorldRoutePage,
 })
 
 const javascriptRoute = createRoute({
