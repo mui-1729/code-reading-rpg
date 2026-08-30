@@ -13,10 +13,10 @@ async function seedMidboss(page: Page, state: MidbossProgress) {
       localStorage.clear()
       const clearedStageIds =
         midbossState === 'locked'
-          ? [7, 8, 9, 10, 11]
+          ? [7, 8, 9, 1, 10, 11]
           : midbossState === 'ready'
-            ? [7, 8, 9, 10, 11, 12]
-            : [7, 8, 9, 10, 11, 12, 13]
+            ? [7, 8, 9, 1, 10, 11, 12]
+            : [7, 8, 9, 1, 10, 11, 12, 13]
 
       localStorage.setItem(
         progressKey,
@@ -29,8 +29,7 @@ async function seedMidboss(page: Page, state: MidbossProgress) {
             clearedStageIds,
             clearedAreaIds: [],
             completedSideQuestIds: [],
-            // #205時点のsave相当。12 clear済みならrestoreで13 unlockを補完する。
-            unlockedStageIds: [1, 4, 7, 8, 9, 10, 11, 12],
+            unlockedStageIds: [7],
             unlockedSkillIds: [
               'trace',
               'pulse',
@@ -91,34 +90,35 @@ test('Battle 12未clearではForest MID BOSSを開始できない', async ({ pag
   await page.getByRole('button', { name: 'INTERACT' }).click()
 
   await expect(page).toHaveURL(/\/world$/)
-  await expect(page.getByText(/Lesson 10〜12を終わらせよう/)).toBeVisible()
+  await expect(page.getByText(/Forestで条件のtraceを最後まで追おう/)).toBeVisible()
 })
 
-test('Battle 12 clear済みsaveはMID BOSS objectiveからBattle 13へ進める', async ({ page }) => {
+test('Battle 12 clear済みsaveはtrace-blocked objectiveからBattle 13へ進める', async ({ page }) => {
   await seedMidboss(page, 'ready')
 
-  await expect(page.getByText('FOREST MID-BOSS', { exact: true })).toBeVisible()
-  await expect(page.getByText(/今までの読み方だけで守り人へ挑む/)).toBeVisible()
+  await expect(page.getByLabel('Next objective')).toContainText('TRACE BLOCKED')
+  await expect(page.getByLabel('Next objective')).toContainText('Forestの守り人を突破する')
   await expect(page.getByLabel('JavaScript Forest Mid-Boss')).toBeVisible()
 
   await page.getByRole('button', { name: 'INTERACT' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/13\?/)
-  const story = page.getByRole('dialog', { name: '今までの読み方だけで進む' })
+  const story = page.getByRole('dialog', { name: '異常の経路を守る相手を越える' })
   await expect(story).toBeVisible()
   await expect(story).toContainText('find()')
   await expect(story).toContainText('&&')
   await expect(story).toContainText('||')
+  await expect(story).toContainText('trace')
   await expect(story).not.toContainText('filter()')
 })
 
-test('Battle 13 clear後は守り人がいたmain trailを西へ通過できる', async ({ page }) => {
+test('Battle 13 clear後は守り人がいたmain trailを西へ通過できimpact range調査へ進む', async ({ page }) => {
   await seedMidboss(page, 'cleared')
 
   const forest = page.getByLabel('Forest map')
   await expect(forest).toHaveAttribute('data-world-x', '6')
-  await expect(page.getByText('FOREST · 4 / 4', { exact: true })).toBeVisible()
-  await expect(page.getByText(/find\(\)とfilter\(\)の違いを読む/)).toBeVisible()
+  await expect(page.getByLabel('Next objective')).toContainText('IMPACT RANGE')
+  await expect(page.getByLabel('Next objective')).toContainText('複数targetへ広がる影響')
 
   await page.getByRole('button', { name: 'Move left' }).click()
 
