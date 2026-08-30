@@ -24,7 +24,7 @@ const WORLD_MAP_DIMENSIONS: Record<WorldMapId, { width: number; height: number }
   [TS_FRONTIER_MAP_ID]: { width: 31, height: 21 },
 }
 
-export const WORLD_MAP_STARTS: Record<WorldMapId, { x: number; y: number }> = {
+export const WORLD_MAP_STARTS: Record<WorldMapId, { width?: never; height?: never; x: number; y: number }> = {
   [OVERWORLD_MAP_ID]: { ...WORLD_START },
   [JS_VILLAGE_MAP_ID]: { x: 10, y: 12 },
   [JS_FOREST_MAP_ID]: { x: 28, y: 10 },
@@ -79,6 +79,7 @@ export const JS_FOREST_EXIT_POSITION = { x: 30, y: 10 } as const
 export const JS_FOREST_MIDBOSS_POSITION = { x: 5, y: 10 } as const
 export const JS_FOREST_DEEP_FOREST_POSITION = { x: 1, y: 10 } as const
 export const JS_DEEP_FOREST_EXIT_POSITION = { x: 30, y: 10 } as const
+export const JS_DEEP_FOREST_CORE_EXIT_POSITION = { x: 1, y: 10 } as const
 export const TS_FRONTIER_GATE_POSITION = { x: 23, y: 14 } as const
 export const TS_FRONTIER_EXIT_POSITION = { x: 1, y: 10 } as const
 
@@ -141,7 +142,7 @@ export const WORLD_PORTALS: readonly WorldPortal[] = [
     toMapId: JS_FOREST_MAP_ID,
     targetPosition: WORLD_MAP_STARTS[JS_FOREST_MAP_ID],
     label: 'JAVASCRIPT FOREST',
-    requiredClearedStageId: 9,
+    requiredClearedStageId: 1,
   },
   {
     fromMapId: JS_FOREST_MAP_ID,
@@ -164,6 +165,14 @@ export const WORLD_PORTALS: readonly WorldPortal[] = [
     toMapId: JS_FOREST_MAP_ID,
     targetPosition: { x: 2, y: 10 },
     label: 'JAVASCRIPT FOREST',
+  },
+  {
+    fromMapId: JS_DEEP_FOREST_MAP_ID,
+    position: JS_DEEP_FOREST_CORE_EXIT_POSITION,
+    toMapId: OVERWORLD_MAP_ID,
+    targetPosition: { x: 8, y: 6 },
+    label: 'CODE CORE APPROACH',
+    requiredClearedStageId: 22,
   },
   {
     fromMapId: OVERWORLD_MAP_ID,
@@ -492,9 +501,15 @@ export function getEncounterBattleId(
   }
 
   if (region === 'javascript') {
-    if (!clearedStageIds.includes(1)) return 1
-    if (unlockedStageIds.includes(2) && !clearedStageIds.includes(2)) return 2
-    return roll < 0.5 ? 1 : 2
+    const pending = [1, 2].find(
+      (battleId) => unlockedStageIds.includes(battleId) && !clearedStageIds.includes(battleId),
+    )
+    if (pending !== undefined) return pending
+
+    const clearedCandidates = [1, 2].filter((battleId) => clearedStageIds.includes(battleId))
+    if (clearedCandidates.length === 0) return null
+    const normalizedRoll = Math.max(0, Math.min(0.999999, roll))
+    return clearedCandidates[Math.floor(normalizedRoll * clearedCandidates.length)] ?? null
   }
   if (region === 'typescript') {
     if (!clearedStageIds.includes(4)) return 4
