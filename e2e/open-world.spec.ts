@@ -71,6 +71,13 @@ async function seedStorage(
   await page.reload()
 }
 
+async function dismissStory(page: Page) {
+  const story = page.locator('.battle-story-window')
+  await expect(story).toBeVisible()
+  await story.getByRole('button', { name: 'SKIP' }).click()
+  await expect(story).toBeHidden()
+}
+
 async function executeSkill(page: Page, name: string) {
   const card = page.getByRole('button', { name: new RegExp(`^${name}\\b`) })
   await expect(card).toBeEnabled()
@@ -98,7 +105,7 @@ async function storedProgress(page: Page) {
 }
 
 test.describe('Open World RPG loop', () => {
-  test('Title → deterministic Encounter → Battle victory → World returnで位置と残HPを保持する', async ({ page }) => {
+  test('Title → fixed first incident → Battle victory → World returnで位置と残HPを保持する', async ({ page }) => {
     await seedStorage(page, {
       progress: createProgress(),
       rpg: createRpgState({
@@ -112,10 +119,11 @@ test.describe('Open World RPG loop', () => {
     await expect(page).toHaveURL(/\/world$/)
     await expect.poll(() => playerPosition(page)).toEqual({ x: 10, y: 10 })
 
-    // count=4, next=(10,11), steps=5 はseeded rollがTall Grassの18%を下回る。
+    // Village preparation後はRandom rollに依存せず、JavaScript側の次のmovementでfirst incidentを再現する。
     await page.getByRole('button', { name: 'Move down' }).click()
     await expect(page).toHaveURL(/\/javascript\/battle\/1\?/)
     await expect(page.getByText('CHAPTER 01', { exact: false })).toBeVisible()
+    await dismissStory(page)
 
     await executeSkill(page, 'TRACE')
     await expect(page.getByText('TURN 02')).toBeVisible()
@@ -143,6 +151,11 @@ test.describe('Open World RPG loop', () => {
     expect(stored.state.currentHp).toBeGreaterThan(0)
     expect(stored.state.currentHp).toBeLessThan(108)
 
+    const progress = await storedProgress(page)
+    expect(progress.progress.clearedStageIds).toContain(1)
+    expect(progress.progress.unlockedStageIds).toContain(10)
+    expect(progress.progress.unlockedStageIds).not.toContain(2)
+
     // Battle 1 clearでLV2になりmax HPは108→116へ増えるが、残HPは自動回復しない。
     await page.goto('/javascript/battle/1?seed=hp-carry-e2e&returnTo=%2Fworld')
     await expect(page.locator('.player-panel .status-label-row strong')).toHaveText(
@@ -157,6 +170,7 @@ test.describe('Open World RPG loop', () => {
     })
 
     await page.goto('/javascript/battle/1?seed=patch-hp-e2e&returnTo=%2Fworld')
+    await dismissStory(page)
     await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('40/108')
     await page.getByRole('button', { name: /PATCH KIT ×1/ }).click()
     await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
@@ -266,6 +280,7 @@ test.describe('Open World RPG loop', () => {
     })
 
     await page.goto('/javascript/battle/1?seed=defeat-hp-e2e&returnTo=%2Fworld')
+    await dismissStory(page)
     await executeSkill(page, 'TRACE')
     await expect(page.getByText('DEFEAT', { exact: true })).toBeVisible()
     await page.getByRole('button', { name: /RETURN TO HUB/ }).click()
@@ -335,6 +350,7 @@ test.describe('Open World RPG loop', () => {
     await page.keyboard.press('Escape')
 
     await page.goto('/javascript/battle/1?seed=party-e2e&returnTo=%2Fworld')
+    await dismissStory(page)
     await expect(page.getByText(/ALLY BYTE · FOLLOW-UP/)).toBeVisible()
   })
 
