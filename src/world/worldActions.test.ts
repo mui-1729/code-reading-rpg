@@ -171,12 +171,12 @@ describe('World action resolver', () => {
     expect(result.nextState).toBe(state)
   })
 
-  it('Training 9 clear後はOverworldからForestへ入り、東口から戻れる', () => {
+  it('最初のincident clear後はOverworldからForestへ入り、東口から戻れる', () => {
     const initialProgress = createInitialPlayerProgress()
     const progress = {
       ...initialProgress,
-      clearedStageIds: [7, 8, 9],
-      unlockedStageIds: [...initialProgress.unlockedStageIds, 8, 9, 10],
+      clearedStageIds: [7, 8, 9, 1],
+      unlockedStageIds: [...initialProgress.unlockedStageIds, 8, 9, 1, 10],
     }
     const state = {
       ...createInitialRpgState(),
@@ -228,12 +228,12 @@ describe('World action resolver', () => {
     expect(result.nextState.encounterCount).toBe(7)
   })
 
-  it('ForestではTraining 9後の最初のEncounterとしてBattle 10を返す', () => {
+  it('Forestでは最初のincident後の最初のEncounterとしてBattle 10を返す', () => {
     const initialProgress = createInitialPlayerProgress()
     const progress = {
       ...initialProgress,
-      clearedStageIds: [7, 8, 9],
-      unlockedStageIds: [...initialProgress.unlockedStageIds, 8, 9, 10],
+      clearedStageIds: [7, 8, 9, 1],
+      unlockedStageIds: [...initialProgress.unlockedStageIds, 8, 9, 1, 10],
     }
     const state = {
       ...createInitialRpgState(),
@@ -343,7 +343,7 @@ describe('World action resolver', () => {
     expect(result.nextState.encounterCount).toBe(7)
   })
 
-  it('Battle 22後の草むらでrollが当たるとJS Encounter intentを返す', () => {
+  it('Battle 22後はOverworldでRandom EncounterせずCode Coreへ向かえる', () => {
     const state = {
       ...createInitialRpgState(),
       worldPosition: { x: 10, y: 10 },
@@ -353,7 +353,7 @@ describe('World action resolver', () => {
     const initialProgress = createInitialPlayerProgress()
     const progress = {
       ...initialProgress,
-      clearedStageIds: [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22],
+      clearedStageIds: [7, 8, 9, 1, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22],
     }
 
     const result = resolveWorldMove({
@@ -364,17 +364,11 @@ describe('World action resolver', () => {
       encounterRolls: { trigger: 0, battle: 0 },
     })
 
-    expect(result.kind).toBe('encounter')
-    if (result.kind !== 'encounter') return
-
+    expect(result.kind).toBe('moved')
+    if (result.kind !== 'moved') return
     expect(result.nextState.worldPosition).toEqual({ x: 10, y: 11 })
-    expect(result.nextState.stepsSinceEncounter).toBe(0)
-    expect(result.nextState.encounterCount).toBe(1)
-    expect(result.battle).toEqual({
-      battleId: 1,
-      region: 'javascript',
-      seed: 'encounter:1:10:11',
-    })
+    expect(result.nextState.stepsSinceEncounter).toBe(5)
+    expect(result.nextState.encounterCount).toBe(0)
   })
 
   it('BYTE / Shop / Recovery / Treasure / Boss interactionをintentとして返す', () => {
