@@ -29,8 +29,14 @@ export function getBattleRouteLockReason(area: BattleRouteArea, battleId: number
     return 'JavaScript地方のFinal Bossと、TypeScript地方の前のBattleを先に完了しよう。'
   }
 
-  if (battleId === 1) return 'Deep Forestの学習Routeを最後まで進めてからIncident Battleへ向かおう。'
-  if (battleId === 2) return 'Deep Forestの学習RouteとBattle 1を先に完了しよう。'
-  if (battleId === 3) return 'Battle 22 / Battle 1 / Battle 2を先に完了しよう。'
+  if (battleId === 1) {
+    return 'Villageのincident preparation（Battle 7〜9）を完了し、草原で最初の症状を再現しよう。'
+  }
+  if (battleId === 2) {
+    return '最初のincidentからForestのtraceをBattle 14まで追い、Deep Forest入口へ進もう。'
+  }
+  if (battleId === 3) {
+    return '二つのincidentを確認し、Deep ForestのtraceをBattle 22までroot causeへ追おう。'
+  }
   return 'このBattleはまだ解放されていない。WorldのNEXT OBJECTIVEから順に進もう。'
 }
