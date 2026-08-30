@@ -22,13 +22,15 @@ function storedProgress(
 }
 
 describe('Forest progression save normalization', () => {
-  it('#203時点でBattle 9までclearしたv4 saveへBattle 10 unlockを補う', () => {
+  it('#203時点でBattle 9までclearしたv4 saveは最初のincident 1へ進む', () => {
     const restored = restorePlayerProgress(storedProgress([7, 8, 9]))
-    expect(restored.unlockedStageIds).toContain(10)
+    expect(restored.unlockedStageIds).toContain(1)
+    expect(restored.unlockedStageIds).not.toContain(10)
   })
 
-  it('Battle 10 clear済みsaveへBattle 11とLINK unlockを補う', () => {
+  it('Battle 10 clear済みsaveへBattle 11とLINK unlockを補い、通過済みincident 1も履歴化する', () => {
     const restored = restorePlayerProgress(storedProgress([7, 8, 9, 10]))
+    expect(restored.clearedStageIds).toContain(1)
     expect(restored.unlockedStageIds).toContain(11)
     expect(restored.unlockedSkillIds).toContain('link')
   })
@@ -52,15 +54,17 @@ describe('Forest progression save normalization', () => {
     expect(restored.unlockedSkillIds).not.toContain('gather')
   })
 
-  it('#209時点でBattle 14までclearしたv4 saveへBattle 15とGATHER unlockを補う', () => {
+  it('#209時点でBattle 14までclearしたv4 saveは二つ目のincident 2へ進みGATHERを復元する', () => {
     const restored = restorePlayerProgress(storedProgress([7, 8, 9, 10, 11, 12, 13, 14]))
-    expect(restored.unlockedStageIds).toContain(15)
+    expect(restored.unlockedStageIds).toContain(2)
+    expect(restored.unlockedStageIds).not.toContain(15)
     expect(restored.unlockedSkillIds).toContain('gather')
     expect(restored.unlockedSkillIds).not.toContain('echo')
   })
 
-  it('#214時点でBattle 15までclearしたv4 saveへBattle 16とECHO unlockを補う', () => {
+  it('#214時点でBattle 15までclearしたv4 saveへBattle 16とECHO unlockを補いincident 2も履歴化する', () => {
     const restored = restorePlayerProgress(storedProgress([7, 8, 9, 10, 11, 12, 13, 14, 15]))
+    expect(restored.clearedStageIds).toContain(2)
     expect(restored.unlockedStageIds).toContain(16)
     expect(restored.unlockedSkillIds).toContain('echo')
     expect(restored.unlockedSkillIds).not.toContain('project')
