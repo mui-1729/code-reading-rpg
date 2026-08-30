@@ -10,6 +10,9 @@ const V1_JAVASCRIPT_AREA_ID = 'javascript'
 
 const FOREST_OR_LATER_STAGE_IDS = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 3]
 const DEEP_FOREST_OR_LATER_STAGE_IDS = [15, 16, 17, 18, 19, 20, 21, 22, 3]
+const COMPLETE_JAVASCRIPT_STORY_IDS = [
+  7, 8, 9, 1, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22, 3,
+]
 
 type LegacyProgressV1 = {
   exp: number
@@ -68,8 +71,16 @@ const mergeUnique = <T,>(baseline: readonly T[], stored: readonly T[]): T[] => [
  * new location without having those IDs in clearedStageIds. Backfill only the
  * story beats the player has logically passed so an old save never has to
  * walk backwards through completed regions.
+ *
+ * Boss 3 was historically sufficient to mark JavaScript complete. If it is
+ * present, the save is normalized to the complete modern arc so TypeScript
+ * remains reachable without replaying a newly inserted prerequisite chain.
  */
 function normalizeIncidentStoryProgress(clearedStageIds: readonly number[]): number[] {
+  if (clearedStageIds.includes(V1_JAVASCRIPT_BOSS_STAGE_ID)) {
+    return mergeUnique(clearedStageIds, COMPLETE_JAVASCRIPT_STORY_IDS)
+  }
+
   const normalized = [...clearedStageIds]
   const hasAny = (ids: readonly number[]) => ids.some((id) => normalized.includes(id))
 
