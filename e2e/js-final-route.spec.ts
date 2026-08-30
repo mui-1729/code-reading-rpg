@@ -31,7 +31,7 @@ async function seedWorld(
             clearedStageIds,
             clearedAreaIds: [],
             completedSideQuestIds: [],
-            unlockedStageIds: [1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22],
+            unlockedStageIds: [7],
             unlockedSkillIds: [
               'trace',
               'pulse',
@@ -88,7 +88,7 @@ async function seedWorld(
   await page.goto('/world')
 }
 
-test('Battle 15後のDeep ForestでBattle 16 map()を固定導入する', async ({ page }) => {
+test('Battle 15後のDeep ForestでBattle 16 map()をtrace変換として固定導入する', async ({ page }) => {
   await seedWorld(page, {
     clearedStageIds: throughDeepFilter,
     mapId: 'js-deep-forest',
@@ -98,14 +98,15 @@ test('Battle 15後のDeep ForestでBattle 16 map()を固定導入する', async 
   await page.getByRole('button', { name: 'Move left' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/16\?/)
-  const story = page.getByRole('dialog', { name: '一つずつ、別の形へ変える' })
+  const story = page.getByRole('dialog', { name: '同じEnemyが別の形で渡されている' })
   await expect(story).toBeVisible()
   await expect(story).toContainText('map()')
+  await expect(story).toContainText('trace')
   await expect(story).not.toContainText('Slime')
   await expect(story).not.toContainText('Goblin')
 })
 
-test('Battle 18後のDeep Forestで第二MID BOSS Battle 19を固定する', async ({ page }) => {
+test('Battle 18後のDeep ForestでRoot Guardian Battle 19を固定する', async ({ page }) => {
   await seedWorld(page, {
     clearedStageIds: [...throughDeepFilter, 16, 17, 18],
     mapId: 'js-deep-forest',
@@ -115,14 +116,15 @@ test('Battle 18後のDeep Forestで第二MID BOSS Battle 19を固定する', asy
   await page.getByRole('button', { name: 'Move left' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/19\?/)
-  const story = page.getByRole('dialog', { name: '新しい記号なしで読み切る' })
+  const story = page.getByRole('dialog', { name: 'Root Guardianのjunctionを突破する' })
   await expect(story).toBeVisible()
   await expect(story).toContainText('新しいsyntaxはない')
   await expect(story).toContainText('some()')
   await expect(story).toContainText('every()')
+  await expect(story).toContainText('incident')
 })
 
-test('最深部ではBattle 22 reduce()を固定導入する', async ({ page }) => {
+test('最深部ではBattle 22 reduce()をfinal traceとして固定導入する', async ({ page }) => {
   await seedWorld(page, {
     clearedStageIds: throughBattle21,
     mapId: 'js-deep-forest',
@@ -132,10 +134,11 @@ test('最深部ではBattle 22 reduce()を固定導入する', async ({ page }) 
   await page.getByRole('button', { name: 'Move left' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/22\?/)
-  const story = page.getByRole('dialog', { name: '途中結果を一つへまとめる' })
+  const story = page.getByRole('dialog', { name: '複数の候補が最後に一つへ集約される' })
   await expect(story).toBeVisible()
   await expect(story).toContainText('reduce()')
   await expect(story).toContainText('best')
+  await expect(story).toContainText('Deep Forest最後のtrace')
   await expect(story).not.toContainText('Guardian')
 })
 
