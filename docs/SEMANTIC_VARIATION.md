@@ -44,7 +44,7 @@ PULSEはseedによりGoblinまたはSlimeを探すsemantic variantを持ちま�
 
 TypeScript Stage 5 / 6では`type-relevant`なsemantic variantだけを許可します。
 
-`Limit`の候補が`60 | 100`であるだけでは現在値は決まりません。`getLimit as () => 60`または`getLimit as () => 100`という戻り値contractまで読んで初めて現在のthresholdを確定できます。runtime expressionだけを追って型情報を無視すると、どちらのTargetRuleか判断できません。
+`Limit`の候補が`60 | 100`であるだけでは現在値は決まりません。`const readLimit: () => 60 = getLimit`または`const readLimit: () => 100 = getLimit`という、代入時にTypeScriptが適合性を検査する戻り値型注釈まで読んで初めて現在のthresholdを確定できます。runtime expressionだけを追って型情報を無視すると、どちらのTargetRuleか判断できません。
 
 ## Solvability
 
