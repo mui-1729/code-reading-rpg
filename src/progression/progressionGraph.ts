@@ -6,8 +6,13 @@ export type ProgressionNode = {
   prerequisites: readonly number[]
 }
 
+// Battle IDs are historical identifiers, not chapter numbers. The canonical
+// JavaScript route follows the incident: learn the minimum reading basics,
+// reproduce the first symptom, trace it through the Forest, confirm the
+// second symptom after filter() is known, then follow the shared cause through
+// Deep Forest into the Code Core.
 export const JAVASCRIPT_BATTLE_SEQUENCE = [
-  7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 1, 2, 3,
+  7, 8, 9, 1, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22, 3,
 ] as const
 
 export const TYPESCRIPT_BATTLE_SEQUENCE = [4, 5, 6] as const
@@ -16,12 +21,14 @@ const nodes: readonly ProgressionNode[] = [
   { battleId: 7, area: 'javascript', prerequisites: [] },
   { battleId: 8, area: 'javascript', prerequisites: [7] },
   { battleId: 9, area: 'javascript', prerequisites: [8] },
-  { battleId: 10, area: 'javascript', prerequisites: [9] },
+  { battleId: 1, area: 'javascript', prerequisites: [9] },
+  { battleId: 10, area: 'javascript', prerequisites: [9, 1] },
   { battleId: 11, area: 'javascript', prerequisites: [10] },
   { battleId: 12, area: 'javascript', prerequisites: [11] },
   { battleId: 13, area: 'javascript', prerequisites: [12] },
   { battleId: 14, area: 'javascript', prerequisites: [13] },
-  { battleId: 15, area: 'javascript', prerequisites: [14] },
+  { battleId: 2, area: 'javascript', prerequisites: [14] },
+  { battleId: 15, area: 'javascript', prerequisites: [14, 2] },
   { battleId: 16, area: 'javascript', prerequisites: [15] },
   { battleId: 17, area: 'javascript', prerequisites: [16] },
   { battleId: 18, area: 'javascript', prerequisites: [17] },
@@ -29,9 +36,7 @@ const nodes: readonly ProgressionNode[] = [
   { battleId: 20, area: 'javascript', prerequisites: [19] },
   { battleId: 21, area: 'javascript', prerequisites: [20] },
   { battleId: 22, area: 'javascript', prerequisites: [21] },
-  { battleId: 1, area: 'javascript', prerequisites: [22] },
-  { battleId: 2, area: 'javascript', prerequisites: [22, 1] },
-  { battleId: 3, area: 'javascript', prerequisites: [22, 1, 2] },
+  { battleId: 3, area: 'javascript', prerequisites: [1, 2, 22] },
   { battleId: 4, area: 'typescript', prerequisites: [3] },
   { battleId: 5, area: 'typescript', prerequisites: [3, 4] },
   { battleId: 6, area: 'typescript', prerequisites: [3, 4, 5] },
