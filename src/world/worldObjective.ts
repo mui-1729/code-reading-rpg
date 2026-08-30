@@ -2,6 +2,7 @@ import {
   getAreaBattleSequence,
   getAreaClearedBattleCount,
   getNextAccessibleBattleId,
+  getProgressionNode,
   isBattleAccessible,
   type PlayerProgress,
 } from '../progression'
@@ -65,19 +66,30 @@ function getDefinition(region: WorldObjectiveRegion): RegionDefinition {
 function getNextLabel(region: WorldObjectiveRegion, battleId: number | undefined): string {
   if (battleId === undefined) return 'NEXT // Worldを探索する'
 
+  const progressionKey = getProgressionNode(battleId)?.key
+
   if (region === 'typescript') {
-    if (battleId === 4) return 'INVESTIGATE // API更新後のtargetずれを再現する'
-    if (battleId === 5) return 'INVESTIGATE // optional / unionの波及経路を追う'
+    if (progressionKey === 'ts-api-contract') return 'INVESTIGATE // API更新後のtargetずれを再現する'
+    if (progressionKey === 'ts-optional-union') return 'INVESTIGATE // optional / unionの波及経路を追う'
     return 'ROOT CAUSE // 東のFrontier Compilerを確認する'
   }
 
-  if (battleId >= 7 && battleId <= 9) return `TRAINING // Battle ${battleId}を完了する`
-  if (battleId >= 10 && battleId <= 12) return `FOREST // Battle ${battleId}の条件を読む`
-  if (battleId === 13) return 'MID-BOSS // 森の守り人を突破する'
-  if (battleId >= 14 && battleId <= 22) return `DEEP FOREST // Battle ${battleId}を読む`
-  if (battleId === 1) return 'INCIDENT // 草原で最初のtarget異変を追う'
-  if (battleId === 2) return 'INCIDENT // 二つ目のtarget異変を追う'
-  return 'ROOT CAUSE // 北西のCode Coreを確認する'
+  if (progressionKey?.startsWith('js-training-')) {
+    return 'INCIDENT PREP // Villageで必要な読み方を確認する'
+  }
+  if (progressionKey === 'js-incident-first') {
+    return 'LIVE INCIDENT // 草原で最初のtarget異常を再現する'
+  }
+  if (progressionKey?.startsWith('js-forest-')) {
+    return 'FOLLOW TRACE // Forestでtarget条件の流れを追う'
+  }
+  if (progressionKey === 'js-incident-second') {
+    return 'SECOND SYMPTOM // Deep Forest入口で影響拡大を確認する'
+  }
+  if (progressionKey?.startsWith('js-deep-')) {
+    return 'ROOT TRACE // Deep Forestを西へ進み原因へ近づく'
+  }
+  return 'ROOT CAUSE // Code Coreを確認する'
 }
 
 export function getWorldObjective(
