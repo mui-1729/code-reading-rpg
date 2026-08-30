@@ -36,7 +36,8 @@ describe('pedagogical semantic variation', () => {
         if (!card) throw new Error('UNION CUT not found')
 
         expect(card.concept).toBe('union type + literal return contract')
-        expect(card.code).toContain('getLimit as () =>')
+        expect(card.code).toContain('const readLimit: () =>')
+        expect(card.code).toContain('= getLimit')
         expect(card.codeHelpLines).toHaveLength(card.code.split('\n').length)
       }
     }
@@ -56,7 +57,7 @@ describe('pedagogical semantic variation', () => {
         .split('\n')
         .filter((line) => !line.startsWith('type '))
         .join('\n')
-        .replace(/ as \(\) => (60|100)/g, '')
+        .replace(/: \(\) => (60|100)/g, '')
         .replace(/: Limit/g, '')
 
       expect(runtimeOnly).not.toContain(`hp < ${card.rule.hp}`)
