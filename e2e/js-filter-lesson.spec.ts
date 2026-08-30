@@ -29,12 +29,11 @@ async function seedFilterLesson(page: Page, clearedMidboss: boolean) {
             gold: 42,
             inventory: { patchKit: 0 },
             clearedStageIds: cleared13
-              ? [7, 8, 9, 10, 11, 12, 13]
-              : [7, 8, 9, 10, 11, 12],
+              ? [7, 8, 9, 1, 10, 11, 12, 13]
+              : [7, 8, 9, 1, 10, 11, 12],
             clearedAreaIds: [],
             completedSideQuestIds: [],
-            // #207時点のsave相当。Battle 14はrestore時にderived unlockする。
-            unlockedStageIds: [1, 4, 7, 8, 9, 10, 11, 12, 13],
+            unlockedStageIds: [7],
             unlockedSkillIds: skills,
           },
         }),
@@ -79,7 +78,7 @@ async function seedFilterLesson(page: Page, clearedMidboss: boolean) {
   await page.goto('/world')
 }
 
-test('Battle 13未clearでは西側Woodsへ入ってもfilter lessonを先取りしない', async ({ page }) => {
+test('Battle 13未clearでは西側Woodsへ入ってもfilter traceを先取りしない', async ({ page }) => {
   await seedFilterLesson(page, false)
 
   await expect(page.getByLabel('Forest map')).toHaveAttribute('data-world-map', 'js-forest')
@@ -90,18 +89,19 @@ test('Battle 13未clearでは西側Woodsへ入ってもfilter lessonを先取り
   await expect(page.getByLabel('Forest map')).toHaveAttribute('data-world-y', '9')
 })
 
-test('Battle 13 clear済みsaveは西側WoodsでBattle 14を固定導入する', async ({ page }) => {
+test('Battle 13 clear済みsaveは西側WoodsでBattle 14をimpact-range traceとして固定導入する', async ({ page }) => {
   await seedFilterLesson(page, true)
 
-  await expect(page.getByText('FOREST · 4 / 4', { exact: true })).toBeVisible()
-  await expect(page.getByText(/find\(\)とfilter\(\)の違いを読む/)).toBeVisible()
+  await expect(page.getByLabel('Next objective')).toContainText('IMPACT RANGE')
+  await expect(page.getByLabel('Next objective')).toContainText('複数targetへ広がる影響')
 
   await page.getByRole('button', { name: 'Move up' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/14\?/)
-  const story = page.getByRole('dialog', { name: '最初の一体ではなく、全部を見る' })
+  const story = page.getByRole('dialog', { name: '異常の影響を一体だけでなく全部追う' })
   await expect(story).toBeVisible()
   await expect(story).toContainText('find()')
+  await expect(story).toContainText('incident')
   await expect(story).not.toContainText('正解')
 
   await story.getByRole('button', { name: /NEXT/ }).click()
