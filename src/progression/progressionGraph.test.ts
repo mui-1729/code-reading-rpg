@@ -1,52 +1,63 @@
 import { describe, expect, it } from 'vitest'
 import {
   getAreaBattleSequence,
+  getAreaProgressionKeys,
   getCanonicalUnlockedStageIds,
   getNextAccessibleBattleId,
   getNextBattleId,
+  getProgressionNode,
   isBattleAccessible,
 } from './progressionGraph'
 
 describe('canonical progression graph', () => {
-  it('fresh saveはBattle 7だけに到達できる', () => {
+  it('fresh saveは最初のVillage preparationだけに到達できる', () => {
     expect(getCanonicalUnlockedStageIds([])).toEqual([7])
+    expect(getProgressionNode(7)?.key).toBe('js-training-hp')
     expect(isBattleAccessible(7, [])).toBe(true)
     expect(isBattleAccessible(1, [])).toBe(false)
     expect(isBattleAccessible(4, [])).toBe(false)
   })
 
-  it('Village Training 7〜9後に最初のincident Battle 1が開く', () => {
+  it('Village preparation完了後に最初のincidentが開く', () => {
     expect(isBattleAccessible(1, [7, 8])).toBe(false)
     expect(isBattleAccessible(1, [7, 8, 9])).toBe(true)
     expect(getNextAccessibleBattleId('javascript', [7, 8, 9])).toBe(1)
+    expect(getProgressionNode(1)?.key).toBe('js-incident-first')
   })
 
-  it('Battle 1を確認するまでForest本編へ進めない', () => {
+  it('最初のincidentを確認するまでForest traceへ進めない', () => {
     expect(isBattleAccessible(10, [7, 8, 9])).toBe(false)
     expect(isBattleAccessible(10, [7, 8, 9, 1])).toBe(true)
   })
 
-  it('filter()を学ぶBattle 14後に二つ目のincident Battle 2が開く', () => {
-    const through14 = [7, 8, 9, 1, 10, 11, 12, 13, 14]
-    expect(isBattleAccessible(2, through14)).toBe(true)
-    expect(isBattleAccessible(15, through14)).toBe(false)
-    expect(isBattleAccessible(15, [...through14, 2])).toBe(true)
+  it('Forestで影響範囲を追った後に二つ目のincidentが開く', () => {
+    const throughFilter = [7, 8, 9, 1, 10, 11, 12, 13, 14]
+    expect(isBattleAccessible(2, throughFilter)).toBe(true)
+    expect(isBattleAccessible(15, throughFilter)).toBe(false)
+    expect(isBattleAccessible(15, [...throughFilter, 2])).toBe(true)
+    expect(getProgressionNode(2)?.key).toBe('js-incident-second')
   })
 
-  it('Final Boss 3は両incidentとDeep Forest完了を要求する', () => {
+  it('Final Bossは両incidentとDeep Forest最終traceを要求する', () => {
     expect(isBattleAccessible(3, [1, 2, 22])).toBe(true)
     expect(isBattleAccessible(3, [1, 22])).toBe(false)
     expect(isBattleAccessible(3, [1, 2])).toBe(false)
+    expect(getProgressionNode(3)?.key).toBe('js-final-code-core')
   })
 
-  it('TypeScriptはJavaScript Final Bossのclearを要求する', () => {
+  it('TypeScriptは独立したsemantic keyを持ちJavaScript Final後に始まる', () => {
+    expect(getAreaProgressionKeys('typescript')).toEqual([
+      'ts-api-contract',
+      'ts-optional-union',
+      'ts-final-shared-contract',
+    ])
     expect(isBattleAccessible(4, [])).toBe(false)
     expect(isBattleAccessible(4, [3])).toBe(true)
     expect(isBattleAccessible(5, [4])).toBe(false)
     expect(isBattleAccessible(5, [3, 4])).toBe(true)
   })
 
-  it('next battle sequenceはincidentを追うWorld本編順を返す', () => {
+  it('story orderはlegacy battleIdの大小ではなくsemantic routeで決まる', () => {
     expect(getNextBattleId('javascript', 9)).toBe(1)
     expect(getNextBattleId('javascript', 1)).toBe(10)
     expect(getNextBattleId('javascript', 14)).toBe(2)
@@ -55,9 +66,28 @@ describe('canonical progression graph', () => {
     expect(getNextBattleId('typescript', 4)).toBe(5)
   })
 
-  it('JavaScript STATUS対象は19戦のままBattle IDではなく物語順で並ぶ', () => {
-    const sequence = getAreaBattleSequence('javascript')
-    expect(sequence).toHaveLength(19)
-    expect(sequence).toEqual([7, 8, 9, 1, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22, 3])
+  it('semantic keyは将来の追加でも番号を振り直さず読める', () => {
+    expect(getAreaProgressionKeys('javascript')).toEqual([
+      'js-training-hp',
+      'js-training-name',
+      'js-training-find',
+      'js-incident-first',
+      'js-forest-and',
+      'js-forest-or',
+      'js-forest-combined',
+      'js-forest-guardian',
+      'js-forest-filter',
+      'js-incident-second',
+      'js-deep-filter',
+      'js-deep-map',
+      'js-deep-some',
+      'js-deep-every',
+      'js-deep-guardian',
+      'js-deep-sort',
+      'js-deep-safe-read',
+      'js-deep-reduce',
+      'js-final-code-core',
+    ])
+    expect(getAreaBattleSequence('javascript')).toHaveLength(19)
   })
 })
