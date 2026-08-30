@@ -28,7 +28,7 @@ export const javascriptOpeningScenes: readonly JavaScriptOpeningScene[] = [
     speaker: 'BYTE',
     lines: [
       'ログ上の値は入っているのに、選ばれる敵だけがおかしい。変更履歴だけでは原因を絞れなかった。',
-      'このシステムはCODE WORLDへCONNECTすると、実行中のstateとコードの関係を探索できる。',
+      'このシステムはCODE WORLDへCONNECTすると、実行中のstateとcodeの関係を探索できる。',
     ],
   },
   {
@@ -38,7 +38,7 @@ export const javascriptOpeningScenes: readonly JavaScriptOpeningScene[] = [
     speaker: 'SYSTEM',
     lines: [
       'REAL WORLDのシステムを、人が歩いて調べられるfantasy worldとして展開する。',
-      'ここではコードが世界のruleだ。誰を狙うか、何が起きるかは、表示されたコードそのものが決める。',
+      'ここではcodeが世界のruleだ。誰を狙うか、何が起きるかは、表示されたcodeそのものが決める。',
     ],
   },
   {
@@ -47,8 +47,8 @@ export const javascriptOpeningScenes: readonly JavaScriptOpeningScene[] = [
     kicker: 'JAVASCRIPT GRASSLAND',
     speaker: 'BYTE',
     lines: [
-      'CONNECT complete。ここがCODE WORLDのJavaScript草原だ。現実側のtarget bugが、この世界では戦闘の異変として見えている。',
-      'まずHubで僕と合流して、西の草原へ行こう。同じincidentをCODE WORLD側から追うんだ。',
+      'CONNECT complete。現実側のtarget bugが、この世界では西の草原から続く戦闘の異変として見えている。',
+      'incidentのcodeには敵のHPや名前、複数の敵を順番に見る処理が出ている。僕と合流したら、近くのVillageにいるMIOへログを持っていこう。',
     ],
   },
   {
@@ -57,8 +57,8 @@ export const javascriptOpeningScenes: readonly JavaScriptOpeningScene[] = [
     kicker: 'MISSION START',
     speaker: 'LEAD ADA // REMOTE',
     lines: [
-      'コードは嘘をつかない。現在のstateと処理順を追えば、異変と現実のbugは同じ原因につながる。',
-      'HubでBYTEと合流し、西のJavaScript草原で最初の症状を調査してくれ。',
+      '目的は研修を終えることではない。実際のtarget異常を再現し、codeの流れをroot causeまで追うことだ。',
+      'BYTEと合流し、MIOと必要な読み方だけ確認したら西へ出ろ。そこからはincidentのtraceを途切れさせず追ってくれ。',
     ],
   },
 ]
