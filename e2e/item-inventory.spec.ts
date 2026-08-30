@@ -73,6 +73,13 @@ async function seedItemState(
   )
 }
 
+async function dismissStory(page: Page) {
+  const story = page.locator('.battle-story-window')
+  await expect(story).toBeVisible()
+  await story.getByRole('button', { name: 'SKIP' }).click()
+  await expect(story).toBeHidden()
+}
+
 async function storedState(page: Page) {
   return page.evaluate(
     ({ progressKey, rpgKey }) => ({
@@ -134,6 +141,7 @@ test.describe('Item / Inventory UX', () => {
   test('BattleでPATCH KITを使用するとHPとstockを更新しUSED理由を表示する', async ({ page }) => {
     await seedItemState(page, { patchKit: 1, currentHp: 40 })
     await page.goto('/javascript/battle/1?seed=item-use-e2e&returnTo=%2Fworld')
+    await dismissStory(page)
 
     const item = page.locator('.battle-item-row[data-item-id="patch-kit"]')
     await expect(item).toHaveAttribute('data-item-state', 'available')
@@ -157,6 +165,7 @@ test.describe('Item / Inventory UX', () => {
   test('同じStageを別seedでreplayするとBattle itemの使用回数をresetする', async ({ page }) => {
     await seedItemState(page, { patchKit: 2, currentHp: 40 })
     await page.goto('/javascript/battle/1?seed=item-replay-a&returnTo=%2Fworld')
+    await dismissStory(page)
 
     let item = page.locator('.battle-item-row[data-item-id="patch-kit"]')
     await item.getByRole('button', { name: /PATCH KIT ×2/ }).click()
@@ -164,6 +173,7 @@ test.describe('Item / Inventory UX', () => {
     await expect(item.getByText('PATCH KIT ×1', { exact: true })).toBeVisible()
 
     await page.goto('/javascript/battle/1?seed=item-replay-b&returnTo=%2Fworld')
+    await dismissStory(page)
     item = page.locator('.battle-item-row[data-item-id="patch-kit"]')
     await expect(item).toHaveAttribute('data-item-state', 'available')
     await expect(item.getByText('READY · BATTLE ONLY', { exact: true })).toBeVisible()
@@ -173,6 +183,7 @@ test.describe('Item / Inventory UX', () => {
   test('BattleでNO STOCK / HP FULLを明示して使用不可にする', async ({ page }) => {
     await seedItemState(page, { patchKit: 0, currentHp: 40 })
     await page.goto('/javascript/battle/1?seed=item-no-stock-e2e&returnTo=%2Fworld')
+    await dismissStory(page)
 
     let item = page.locator('.battle-item-row[data-item-id="patch-kit"]')
     await expect(item).toHaveAttribute('data-item-state', 'no-stock')
@@ -181,6 +192,7 @@ test.describe('Item / Inventory UX', () => {
 
     await seedItemState(page, { patchKit: 1, currentHp: 108 })
     await page.goto('/javascript/battle/1?seed=item-hp-full-e2e&returnTo=%2Fworld')
+    await dismissStory(page)
 
     item = page.locator('.battle-item-row[data-item-id="patch-kit"]')
     await expect(item).toHaveAttribute('data-item-state', 'hp-full')
