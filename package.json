@@ -9,11 +9,12 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "postinstall": "npm run build",
     "preview": "vite preview",
     "test": "vitest run src",
     "test:e2e": "npm run build && playwright test",
-    "deploy": "wrangler deploy",
-    "deploy:preview": "wrangler versions upload",
+    "deploy": "npm run build && wrangler deploy",
+    "deploy:preview": "npm run build && wrangler versions upload",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
