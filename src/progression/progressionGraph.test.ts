@@ -9,6 +9,11 @@ import {
   isBattleAccessible,
 } from './progressionGraph'
 
+const throughFilter = [7, 8, 9, 1, 10, 11, 12, 13, 14]
+const throughSecondIncident = [...throughFilter, 2]
+const throughDeepForest = [...throughSecondIncident, 15, 16, 17, 18, 19, 20, 21, 22]
+const javascriptComplete = [...throughDeepForest, 3]
+
 describe('canonical progression graph', () => {
   it('fresh saveは最初のVillage preparationだけに到達できる', () => {
     expect(getCanonicalUnlockedStageIds([])).toEqual([7])
@@ -31,17 +36,16 @@ describe('canonical progression graph', () => {
   })
 
   it('Forestで影響範囲を追った後に二つ目のincidentが開く', () => {
-    const throughFilter = [7, 8, 9, 1, 10, 11, 12, 13, 14]
     expect(isBattleAccessible(2, throughFilter)).toBe(true)
     expect(isBattleAccessible(15, throughFilter)).toBe(false)
-    expect(isBattleAccessible(15, [...throughFilter, 2])).toBe(true)
+    expect(isBattleAccessible(15, throughSecondIncident)).toBe(true)
     expect(getProgressionNode(2)?.key).toBe('js-incident-second')
   })
 
-  it('Final Bossは両incidentとDeep Forest最終traceを要求する', () => {
-    expect(isBattleAccessible(3, [1, 2, 22])).toBe(true)
-    expect(isBattleAccessible(3, [1, 22])).toBe(false)
-    expect(isBattleAccessible(3, [1, 2])).toBe(false)
+  it('Final Bossはsemantic ancestryを含む正規route全体を要求する', () => {
+    expect(isBattleAccessible(3, [1, 2, 22])).toBe(false)
+    expect(isBattleAccessible(3, throughDeepForest.slice(0, -1))).toBe(false)
+    expect(isBattleAccessible(3, throughDeepForest)).toBe(true)
     expect(getProgressionNode(3)?.key).toBe('js-final-code-core')
   })
 
@@ -51,10 +55,10 @@ describe('canonical progression graph', () => {
       'ts-optional-union',
       'ts-final-shared-contract',
     ])
-    expect(isBattleAccessible(4, [])).toBe(false)
-    expect(isBattleAccessible(4, [3])).toBe(true)
+    expect(isBattleAccessible(4, throughDeepForest)).toBe(false)
+    expect(isBattleAccessible(4, javascriptComplete)).toBe(true)
     expect(isBattleAccessible(5, [4])).toBe(false)
-    expect(isBattleAccessible(5, [3, 4])).toBe(true)
+    expect(isBattleAccessible(5, [...javascriptComplete, 4])).toBe(true)
   })
 
   it('story orderはlegacy battleIdの大小ではなくsemantic routeで決まる', () => {
