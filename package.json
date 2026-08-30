@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "postinstall": "npm run build",
     "preview": "vite preview",
     "test": "vitest run src",
     "test:e2e": "npm run build && playwright test",
