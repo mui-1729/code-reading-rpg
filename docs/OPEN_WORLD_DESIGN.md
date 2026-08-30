@@ -4,7 +4,7 @@
 
 ## 1. 目的
 
-Stage Select / Area Selectを繰り返すのではなく、**Worldを歩き、村や地域へ入り、Battleを重ねること自体をRPGの進行にする**。
+Stage Select / Area Selectを繰り返すのではなく、**Worldを歩き、村や地域へ入り、incidentを追いながらBattleを重ねること自体をRPGの進行にする**。
 
 Open Worldを「1枚の巨大grid」とは定義しない。
 
@@ -19,13 +19,13 @@ CODE WORLD
 ↓
 Explore / NPC / Shop / Inn / Treasure
 または
-Encounter / Fixed Learning Battle / Boss
+Story Incident / Encounter / Fixed Learning Battle / Boss
 ↓
 Code Reading Battle
 ↓
 Reward / Story / Progress
 ↓
-元いたmapへ戻る
+元いたmapへ戻る、またはtraceの先のmapへ進む
 ```
 
 通常導線へStage Select / Area Selectを戻さない。
@@ -45,6 +45,7 @@ Reward / Story / Progress
 - `JAVASCRIPT FOREST` 31 × 21
 - `JAVASCRIPT DEEP FOREST` 31 × 21
 - `worldMapId + local worldPosition`でmulti-map化
+- JavaScript Storyはnumeric Battle ID順ではなくsemantic progression keyで管理
 
 ## 3. Multi-map model
 
@@ -66,35 +67,44 @@ worldPosition
 - portal / exit
 - encounter可否
 - progress gate
-- fixed object / fixed learning trigger
+- fixed object / fixed story trigger / fixed learning trigger
 
 現在のJavaScript側:
 
 ```text
-Overworld
-├─ GREENFIELD VILLAGE (`js-village`)
-│   └─ TRAIN: 7 → 8 → 9
-└─ JAVASCRIPT FOREST (`js-forest`)
-    ├─ Fixed Lesson: 10 → 11 → 12
-    ├─ MID BOSS: 13
-    ├─ Fixed filter Lesson: 14
-    ├─ Random Encounter: clear済みLessonだけを反復
-    └─ west EXIT
-        ↓
-        JAVASCRIPT DEEP FOREST (`js-deep-forest`)
-        ├─ Fixed filter repetition: 15
-        ├─ Fixed Lesson: 16 map → 17 some → 18 every
-        ├─ second MID BOSS: 19
-        ├─ Fixed Lesson: 20 sort → 21 ?. / ?? → 22 reduce
-        └─ Random Encounter: clear済みLessonだけを反復
-            ↓
-Overworld final incident
-Battle 1 → Battle 2
+Opening incident
 ↓
-Code Core Final Boss 3
+Overworld
+└─ GREENFIELD VILLAGE (`js-village`)
+    └─ incident preparation: 7 → 8 → 9
+↓
+Overworld first live incident
+Battle 1
+↓
+JAVASCRIPT FOREST (`js-forest`)
+├─ Fixed trace: 10 → 11 → 12
+├─ MID BOSS: 13
+├─ Fixed impact-range trace: 14
+├─ Random Encounter: clear済みLessonだけを反復
+└─ west EXIT
+    ↓
+    JAVASCRIPT DEEP FOREST (`js-deep-forest`)
+    ├─ entrance live incident: Battle 2
+    ├─ Fixed trace repetition: 15
+    ├─ Fixed trace: 16 map → 17 some → 18 every
+    ├─ second MID BOSS: 19
+    ├─ Fixed trace: 20 sort → 21 ?. / ?? → 22 reduce
+    ├─ Random Encounter: clear済みLessonだけを反復
+    └─ west EXIT after 22
+        ↓
+        Code Core approach
+        ↓
+        Final Boss 3
 ```
 
 Village / Forest / Deep Forestは同じ`/world` route上でmapを切り替える。
+
+`battleId`はsave / URL / runtime互換のstable identifierであり、chapter番号としてStory順を決めない。
 
 ## 4. JavaScript地方のmap identity
 
@@ -103,21 +113,19 @@ JavaScriptは自然系で統一する。
 ```text
 Hub寄り: 開けた草原
 ↓
-Tall Grass / 林 / 川辺
+Village / incident preparation
 ↓
-Village
+草原で最初の症状
 ↓
-Forest
+Forest / trace investigation
 ↓
 中Boss
 ↓
-Deep Forest
+Deep Forest入口で二つ目の症状
 ↓
 第二MID BOSS
 ↓
-最深部
-↓
-Overworld final incident
+最深部 / root trace
 ↓
 Code Core Final Boss
 ```
@@ -130,6 +138,7 @@ Code Core Final Boss
 - stable ID: `js-village`
 - Random Encounterなし
 - 中央のTRAINでBattle 7 → 8 → 9
+- Trainingは独立したsyllabusではなく、Opening incidentのcodeを読むためのminimum preparation
 - 南のEXITからOverworldへ戻る
 - onboarding中にRandom Encounterを挟まないよう主要導線はroad
 
@@ -139,13 +148,13 @@ Code Core Final Boss
 - stable ID: `js-forest`
 - road / woods / deep-woods / grass / river / mountain
 - Overworld西側の入口から入る
-- Training 9 clear前は入口を通れない
+- first live incident Battle 1 clear前は入口を通れない
 - 東のEXITからOverworldへ戻る
 - 西端のEXITからDeep Forestへ進む
 - Deep Forest入口はBattle 14 clearで解放
 - current map / positionはRpgState v4のまま保存・reload可能
 
-Forestは空白を広げるmapではなく、**西へ進むほど新conceptを固定Lessonで導入し、その途中で既習conceptだけをRandom Encounter反復するmap**。
+Forestは空白を広げるmapではなく、**最初のincidentから伸びたtraceを西へ追い、新conceptが必要になった地点でfixed Battleを導入し、その途中で既習conceptだけをRandom Encounter反復するmap**。
 
 ### JAVASCRIPT DEEP FOREST
 
@@ -156,15 +165,29 @@ Forestは空白を広げるmapではなく、**西へ進むほど新conceptを�
 - 川はmain trail上だけ橋として通過できる
 - 東のEXITからForestへ戻る
 - Battle 14 clear前はForest側portalを通れない
-- Battle 15〜22を東→西の進行に合わせてfixed-firstで導入
+- 初回進入後の最初のmovementでBattle 2をfixed live incidentとして開始
+- Battle 2 clear後、Battle 15〜22を東→西のtraceに合わせてfixed-firstで導入
 - second MID BOSS 19はRandom poolへ入れない
+- Battle 22 clear後、西端のEXITからCode Core approachへ直接抜ける
 - current map / positionはRpgState v4のまま保存・reload可能
 
-Deep Forestは、`filter()`反復から始まり、`map()` / `some()` / `every()` / `sort()` / `?.` / `??` / `reduce()`までを一つずつ増やすJavaScript地方後半のlearning map。
+Deep Forestは、二つのincidentが同じcall pathへ合流した場所として、`filter()`反復から`map()` / `some()` / `every()` / `sort()` / `?.` / `??` / `reduce()`までをroot cause調査の流れで読むJavaScript地方後半map。
 
 ## 5. Forest / Deep Forest progression
 
+### Battle 1 — first live incident
+
+Village 7〜9を完了した後、Overworld JavaScript側へ戻ってmovementすると固定で発生する。
+
+- Random chance / minimum-step cooldownに依存しない
+- 未clear中は逃走不可のfixed Story Battle
+- clear後にForest入口を解放する
+- Trainingで読んだ`hp` / `name` / `find()`を実際のtarget異常へ適用する
+- Storyはcorrect targetを先に明かさない
+
 ### Battle 10〜12
+
+Battle 1から続くtraceをForest東側から追う。
 
 ```text
 東側 / 最初のWoods
@@ -190,7 +213,7 @@ Deep Forestは、`filter()`反復から始まり、`map()` / `some()` / `every()
 - JavaScript Area CLEARへ接続しない
 - clear後はMID BOSS tileをroad扱いにし、西側へ通過可能
 
-### Battle 14 — filter() fixed Lesson
+### Battle 14 — impact range / filter() trace
 
 MID BOSSを突破した後、西側main trailからWoodsへ入ると固定導入する。
 
@@ -202,12 +225,22 @@ filter() = 条件に合うものを最後まで見て全部集める
 - Battle 13 clear前はFixed 14を発火しない
 - Battle 14 clear前のRandom poolは10 / 11 / 12だけ
 - Battle 14 clear後だけForest Random poolへ14を追加
-- fixed LessonはRandom chance / minimum-step cooldownより優先
+- fixed BattleはRandom chance / minimum-step cooldownより優先
 - Battle後はsame Forest map / positionへ戻る
+
+### Battle 2 — second live incident
+
+Battle 14 clear後、Forest西端からDeep Forestへ入る。最初のmovementで固定発生する。
+
+- first incidentとForest traceを通過したことがcanonical prerequisite
+- 複数targetへ広がった二つ目の症状を実際のstateで確認する
+- 未clear中はDeep Forest learning route 15以降を始めない
+- Random chanceでは初登場させない
+- clear後、二つのincidentが同じDeep Forest traceへ入るStory roleを持つ
 
 ### Battle 15〜18 — Deep Forest前半
 
-Battle 14 clear後、Forest西端からDeep Forestへ入る。
+Battle 2 clear後に進行する。
 
 ```text
 15: filter()を hp > 65 で反復
@@ -216,8 +249,8 @@ Battle 14 clear後、Forest西端からDeep Forestへ入る。
 18: every() — 全員が条件に合うかをbooleanで確認
 ```
 
-- new conceptは東→西のfixed Lessonで初登場
-- fixed LessonはRandom chance / minimum-step cooldownより優先
+- new conceptは東→西のfixed Battleで初登場
+- fixed BattleはRandom chance / minimum-step cooldownより優先
 - Random poolにはclear済みBattleだけを加える
 
 ### Battle 19 — second MID BOSS
@@ -226,6 +259,7 @@ Battle 14 clear後、Forest西端からDeep Forestへ入る。
 - `filter()` / `map()` / `some()` / `every()`だけを使用
 - new syntaxを追加しない
 - Random Encounter poolへ入れない
+- 二つのincident traceが合流するjunctionを塞ぐStory roleを持つ
 - clear後に最深部側の20〜22へ進める
 
 ### Battle 20〜22 — Deep Forest最深部
@@ -240,29 +274,31 @@ Battle 14 clear後、Forest西端からDeep Forestへ入る。
 - Battle 21は既習`map()` / `sort()`へ`?.` / `??`だけを足し、nested dataを安全に読む
 - Battle 22は途中結果`best`を一つだけ持ちながら配列を集約する
 - CODE DATAでBattle 20 / 21のintermediate collectionを確認できる
-- 22 clear前にOverworld final incident / Final Bossを先出ししない
+- 22 clear前にFinal Bossを開始できない
+- 22 clear後は来た道を戻らずwest EXITからCode Coreへ直進する
 
-### Final incident / Final Boss
-
-Battle 22 clear後だけ、Overworld JavaScript Randomを終盤Storyへ再接続する。
+### Final Boss
 
 ```text
 22 clear
-→ existing Battle 1
-→ existing Battle 2
-→ Code Core Boss Battle 3
+→ Deep Forest west EXIT
+→ Code Core approach
+→ Boss Battle 3
 → JavaScript Area CLEAR
 → REAL WORLD RETURN
 ```
 
-Boss 3は、Battle 22・1・2がすべてclearされるまで開始不可。JavaScript Area CLEARはBoss 3 clear時だけ維持する。
+Boss 3は`js-incident-first` / `js-incident-second` / `js-deep-reduce`を含むcanonical prerequisite chainがすべて成立するまで開始不可。単に`1 / 2 / 22`のclear bitだけを偽装しても後続をauthorizeしない。
+
+JavaScript Area CLEARはBoss 3 clear時だけ維持する。
 
 ### Random Encounter pool
 
 Forest:
 
 ```text
-9 clear / 10未clear   → Randomなし → Fixed 10
+9 clear / 1未clear    → Forest未解放、OverworldでFixed Incident 1
+1 clear / 10未clear  → Randomなし → Fixed 10
 10 clear / 11未clear → Random 10 → Fixed 11
 11 clear / 12未clear → Random 10 / 11 → Fixed 12
 12 clear / 13未clear → Random 10 / 11 / 12 → MID BOSS 13
@@ -273,7 +309,8 @@ Forest:
 Deep Forest:
 
 ```text
-14 clear / 15未clear → Review 14 → Fixed 15
+14 clear / 2未clear  → 最初のmovementでFixed Incident 2
+2 clear / 15未clear  → Review 14 → Fixed 15
 15 clear / 16未clear → Review 14 / 15 → Fixed 16
 16 clear / 17未clear → +16 → Fixed 17
 17 clear / 18未clear → +17 → Fixed 18
@@ -281,10 +318,10 @@ Deep Forest:
 19 clear / 20未clear → review済みLesson → Fixed 20
 20 clear / 21未clear → +20 → Fixed 21
 21 clear / 22未clear → +21 → Fixed 22
-22 clear             → +22をreview可能、Overworld final incident解放
+22 clear             → +22をreview可能、west EXITからCode Core解放
 ```
 
-Battle 19はreview poolへ入れない。新conceptをRandom抽選で初登場させない。
+Battle 1 / 2 / 13 / 19 / 3を未clearのRandom初登場には使わない。新conceptをRandom抽選で初登場させない。
 
 ## 6. World domain boundary
 
@@ -308,6 +345,7 @@ UI / Routerへ依存しないpure resolver。
 
 - movement / blocked
 - map transition / progress gate
+- fixed story Battle trigger
 - fixed learning Battle trigger
 - steps / Encounter cooldown
 - deterministic Random Encounter intent
@@ -347,17 +385,20 @@ fromMap / fromPosition
 
 Battleの`returnTo=/world`は、RpgStateに保存されたcurrent map / positionへ戻るためそのまま利用する。
 
-現在のportal gate:
+現在の主要portal gate:
 
 ```text
 Overworld → JAVASCRIPT FOREST
-requires: Training 9 clear
+requires: first live incident Battle 1 clear
 
 JAVASCRIPT FOREST → JAVASCRIPT DEEP FOREST
 requires: Battle 14 clear
+
+JAVASCRIPT DEEP FOREST west EXIT → CODE CORE APPROACH
+requires: Battle 22 clear
 ```
 
-Final BossはportalではなくBoss interaction gateで、`22 + 1 + 2 clear`を要求する。
+Final Bossはportalだけでauthorizeせず、semantic canonical progression graphのtransitive prerequisiteもBoss interaction / route guardで確認する。
 
 ## 8. Encounter rules
 
@@ -368,9 +409,10 @@ Random Encounter共通rule:
 - `encounterCount`をseedへ含める
 - local map IDもlocal-map seedへ含める
 - same seedは再現可能
-- fixed learning BattleはRandom抽選より優先
+- fixed Story / learning BattleはRandom抽選より優先
 - fixed Boss / MID BOSSはRandom Encounterと別intentまたはfixed progression Battleとして扱う
 - 未学習conceptをRandomへ入れない
+- JavaScript main story中のOverworldはRandom replayよりStory movementを優先する
 
 Encounter回数だけを水増しせず、値 / enemy順 / code variant / concept組み合わせの差に意味を持たせる。
 
@@ -412,26 +454,24 @@ worldPosition = 旧worldPosition
 
 としてmigrationする。
 
-PlayerProgressもv4を維持し、schema bumpせず進行からderived unlockを補う。
+PlayerProgressもv4を維持する。restore時はcanonical graphからpresentation/cache用unlockを再導出する。
+
+#261以前のsaveは旧Story順でForest / Deep Forestへ到達済みの可能性があるため、次をnormalizeする。
 
 ```text
-9 clear  → Stage 10
-10 clear → Stage 11 + LINK
-11 clear → Stage 12 + FORK
-12 clear → Stage 13
-13 clear → Stage 14
-14 clear → Stage 15 + GATHER
-15 clear → Stage 16 + ECHO
-16 clear → Stage 17 + PROJECT
-17 clear → Stage 18 + SIGNAL
-18 clear → Stage 19 + SYNC
-19 clear → Stage 20
-20 clear → Stage 21 + ORDER
-21 clear → Stage 22 + SAFE PATH
-22 clear → REDUCE FOCUS
+Forest以降のstage clearあり
+→ first incident Battle 1を論理的に通過済みとして補完
+
+Deep Forest以降のstage clearあり
+→ second incident Battle 2を論理的に通過済みとして補完
+
+JavaScript Boss 3 clearあり
+→ modern JavaScript canonical arc全体をcompletedとして補完
 ```
 
-#203 / #205 / #207 / #209 / #212 / #214時点のv4 saveから後続routeへ進める。未知map ID / bounds外positionはOverworld開始地点へfallbackする。
+これにより、既存saveへ新しいStory beatを挿入しても、すでに通過した地域まで歩いて戻ることを強制しない。
+
+未知map ID / bounds外positionはOverworld開始地点へfallbackする。
 
 ## 11. World Objective
 
@@ -441,19 +481,21 @@ current guidanceはWorld Objective。
 
 ```text
 BYTEと合流
-→ GREENFIELD VILLAGE 7〜9
+→ GREENFIELD VILLAGE 7〜9: incident preparation
+→ Overworld Fixed Incident 1
 → JAVASCRIPT FOREST 10〜12
 → MID BOSS 13
-→ filter 14
+→ impact range / filter 14
+→ DEEP FOREST入口 Fixed Incident 2
 → JAVASCRIPT DEEP FOREST 15〜18
 → second MID BOSS 19
-→ deepest 20〜22
-→ Overworld Battle 1 → 2
-→ Code Core Final Boss 3
+→ root trace 20〜22
+→ west EXIT / Code Core approach
+→ Final Boss 3
 → REAL WORLD RETURN
 ```
 
-Objectiveは「次にどこへ行き、何を読むか」までは示してよいが、correct targetは示さない。
+Objectiveは「次にどこへ行き、なぜそのcodeを読む必要があるか」までは示してよいが、correct targetは示さない。
 
 常設Quest Trackerを復活させない。
 
@@ -473,27 +515,34 @@ Unit:
 - terrain / viewport
 - movement / blocked
 - portal transition / progress gate
-- fixed learning trigger 10 → 11 → 12 → 14 → 15 → 16 → 17 → 18 → 19 → 20 → 21 → 22
-- MID BOSS 13 / 19 progression
+- Fixed Incident 1 after Training 9 and before Forest
+- fixed learning trigger 10 → 11 → 12 → 14
+- MID BOSS 13
+- Fixed Incident 2 after Battle 14 and before Deep Forest 15
+- fixed Deep Forest trigger 15 → 16 → 17 → 18 → 19 → 20 → 21 → 22
 - Forest / Deep Forest Random poolがclear済みLessonだけを返す
-- Battle 19をRandomへ混ぜない
-- 22前にOverworld Battle 1 / 2を先出ししない
-- Final Boss 3 gate = 22 + 1 + 2
-- old save progression normalization
+- Battle 13 / 19をRandomへ混ぜない
+- Battle 1 / 2を未clear中のRandom replayへ混ぜない
+- Battle 22後のwest EXIT → Code Core approach
+- Final Boss 3 = full semantic/transitive prerequisite chain
+- forged partial clear bitsでは後続をbypass不可
+- old save incident normalization
 - fixed objectが所属map外で誤発火しない
 
 E2E:
 
-- Overworld → Village / Forest transition
+- Overworld → Village / first live incident / Forest transition
 - Village TRAIN 7 → 8 → 9
 - Forest / Deep Forest map reload persistence
 - Fixed 10〜12 / 14〜18 introduction
+- second live incident 2 before Deep Forest learning
 - MID BOSS 13 / 19 Story
 - Battle 20 multiline intermediate value
 - Battle 21 nested `stats?.hp ?? Infinity`
 - Battle 22 reduce Story
 - 22前Final Boss lock
-- 22 + 1 + 2後Final Boss 3 start
+- canonical route完了後Final Boss 3 start
+- deep-link transitive route guard
 - existing battle / HP / recovery / economy regression
 
 PR前は`npm ci` / lint / unit / build / E2Eを通す。
