@@ -7,7 +7,7 @@ multi-map探索・Battle・成長・装備・仲間を1つのRPG loopとして�
 ```text
 Overworld / Village / Forest / Deep Forest / TypeScript Frontier
 ↓
-Fixed Lesson / Random Encounter / MID BOSS / Final Boss
+Fixed Lesson / Story Incident / Random Encounter / MID BOSS / Final Boss
 ↓
 Code Reading Battle
 ↓
@@ -73,11 +73,23 @@ Level / Equipmentはdamageと生存余地を増やすが、`TargetRule`を変更
 JavaScript:
 
 ```text
+Village preparation
 7 → 8 → 9
-→ 10 → 11 → 12 → 13 MID BOSS → 14
-→ 15 → 16 → 17 → 18 → 19 MID BOSS → 20 → 21 → 22
-→ Overworld final incident 1 → 2
-→ Code Core Final Boss 3
+↓
+first live incident
+1
+↓
+Forest trace
+10 → 11 → 12 → 13 MID BOSS → 14
+↓
+second live incident
+2
+↓
+Deep Forest root trace
+15 → 16 → 17 → 18 → 19 MID BOSS → 20 → 21 → 22
+↓
+Code Core Final Boss
+3
 ```
 
 TypeScript:
@@ -86,19 +98,23 @@ TypeScript:
 JavaScript Boss 3 clear → 4 → 5 → Final Boss 6
 ```
 
-`src/progression/progressionGraph.ts`をroute accessibility / next Battle / unlockのcanonical sourceとする。勝利処理はprerequisiteを飛ばしたunlockを作らない。通常進行へStage Selectを戻さない。
+`battleId`はsave / URL / runtime互換のためのstable identifierであり、Story chapter番号ではない。Story順とprerequisiteは`src/progression/progressionGraph.ts`のsemantic keyをcanonical sourceとする。
+
+route accessibility / next Battle / unlockはcanonical graphから導出する。勝利処理はprerequisiteを飛ばしたunlockを作らず、clear bitを一部だけ偽装してもtransitive prerequisiteを満たさなければ後続Battleを解放しない。通常進行へStage Selectを戻さない。
 
 初回CLEARはEXP / Gold / clear / unlockを適用し、replayはEXP / Goldだけを再獲得できる。
 
 ## 5. Multi-map World / Encounter
 
-- `overworld` — Hub、final incident、Code Core接続
-- `js-village` — Battle 7〜9の固定Training。Random Encounterなし
-- `js-forest` — Battle 10〜14
-- `js-deep-forest` — Battle 15〜22
+- `overworld` — Hub、Village入口、最初のlive incident、Code Core接続
+- `js-village` — Battle 7〜9の固定Preparation。Random Encounterなし
+- `js-forest` — first incidentから続くtraceをBattle 10〜14で追う
+- `js-deep-forest` — 入口でsecond incident 2を確認し、Battle 15〜22でshared traceをroot causeまで追う
 - `ts-frontier` — Battle 4〜6
 
-Random Encounterは各mapで学習済みのLessonだけを反復し、MID BOSS / Final Bossを混ぜない。遭遇後はcooldownを持ち、安全地帯では遭遇しない。
+JavaScriptのBattle 1 / 2は未clear時にStory上のfixed incidentとして発生する。Forest / Deep ForestのRandom Encounterはその時点でclear済みのLessonだけを反復し、MID BOSS / Final Bossを混ぜない。遭遇後はcooldownを持ち、安全地帯では遭遇しない。
+
+Battle 22 clear後はDeep Forest西口からCode Core手前へ直接抜ける。旧`22 → Overworldへ戻る → 1 → 2`のbacktrackは行わない。
 
 ## 6. Equipment / Party / Economy
 
@@ -112,11 +128,13 @@ Equipment slotsは`weapon` / `armor` / `accessory`。Attack / Defense / maxHPへ
 
 ObjectiveはPlayerProgressからpureに導出し、World / Pause / Battle後feedbackが同じ`worldObjective` sourceを使う。
 
-JavaScriptは19 Battle、TypeScriptは3 Battleのcanonical graphに沿って、次のLesson / MID BOSS / incident / Final Boss / AREA CLEARを表示する。旧Gate表現のQuest Trackerは復活させない。
+JavaScriptは19 Battle、TypeScriptは3 Battleのcanonical graphに沿って、次のPreparation / live incident / trace / MID BOSS / Final Boss / AREA CLEARを表示する。単なるsyntax syllabusではなく、**現在のincidentを解決するために次のcodeを読む理由**を示す。旧Gate表現のQuest Trackerは復活させない。
 
 ## 8. Save restore / reset
 
 PlayerProgressはschema v4。旧v1 / v2 / v3からmigrationし、canonical progression graphからunlockを再導出する。
+
+#261以前のv4 saveについても、すでにForest以降へ進んでいる場合はfirst incident 1、Deep Forest以降へ進んでいる場合はsecond incident 2を「論理的に通過済み」として補完する。JavaScript Boss 3 clear済みsaveはmodern JavaScript arc全体をcompletedとしてnormalizeし、後戻りを強制しない。
 
 RpgStateはschema v4。旧v1 / v2 / v3からmigrationし、restore時に次をnormalizeする。
 
@@ -132,4 +150,4 @@ RpgStateはschema v4。旧v1 / v2 / v3からmigrationし、restore時に次をno
 
 負けた場合はWorldへ戻るかRETRYする。Random EncounterでEXP / Goldを得られるが、EnemyをLevel連動で弱くせず、Equipmentを極端に強くせず、Partyがtargetを自動決定しない。
 
-今後のprogression追加は先にcanonical graph、map gate、Objective、route guard、save normalizationを更新し、同じ到達可能性をUnit / E2Eで固定する。
+今後のprogression追加は先にsemantic canonical graph、map gate、Objective、route guard、save normalizationを更新し、同じ到達可能性をUnit / E2Eで固定する。
