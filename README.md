@@ -33,7 +33,7 @@ Stage SelectやArea Selectへ戻って進行する構造ではありません。
 - 11×9 viewport / Player追従camera
 - 上下左右の画面外へ移動可能
 - tileは固定正方形
-- JavaScript地方 = Village → Forest → Deep Forest → Overworld final incident → Code Core
+- JavaScript地方 = Village preparation → 最初のlive incident → Forest trace → 二つ目のincident → Deep Forest root trace → Code Core
 - TypeScript地方 = TypeScript Frontier
 - Central Hub / Road / Water / Mountain
 - 固定Boss地点
@@ -44,12 +44,14 @@ Stage SelectやArea Selectへ戻って進行する構造ではありません。
 ### Random Encounter
 
 - JavaScript Forest / Deep Forestではclear済みLessonを段階的に再出題
+- JavaScriptのincident Battle 1 / 2はStory上の固定beatとして発生し、未clear中はRandom復習にしない
 - TypeScript FrontierではBattle 4 / 5を進行に応じて出題
 - 最低5歩のcooldown
 - terrainごとの遭遇率
 - Road / Hubは安全地帯
 - Battle後は元のWorld位置へ復帰
-- JavaScriptはBattle 7〜22 → 1 → 2 → Boss 3、TypeScriptは4 → 5 → Boss 6
+- JavaScript Storyは`7 → 8 → 9 → 1 → 10 → 11 → 12 → 13 → 14 → 2 → 15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 3`
+- numeric `battleId`はsave / URL互換用IDであり、Story chapter順そのものには使わない
 
 ### Battle / code reading
 
@@ -108,7 +110,7 @@ World camera追従後も実World座標の変化でMOVE成功を判定します�
 
 ## Learning content
 
-### JavaScript Grassland
+### JavaScript地方
 
 - property access / 比較
 - `find()` / `filter()` / `map()` / `sort()`
@@ -119,7 +121,7 @@ World camera追従後も実World座標の変化でMOVE成功を判定します�
 - optional chaining / nullish coalescing
 - nested object / 中間変数 / 複数行code
 
-### TypeScript Forest
+### TypeScript Frontier
 
 - primitive / type annotation
 - function parameter / return type
