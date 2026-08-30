@@ -8,6 +8,9 @@ export const PLAYER_PROGRESS_SCHEMA_VERSION = 4
 const V1_JAVASCRIPT_BOSS_STAGE_ID = 3
 const V1_JAVASCRIPT_AREA_ID = 'javascript'
 
+const FOREST_OR_LATER_STAGE_IDS = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 3]
+const DEEP_FOREST_OR_LATER_STAGE_IDS = [15, 16, 17, 18, 19, 20, 21, 22, 3]
+
 type LegacyProgressV1 = {
   exp: number
   clearedStageIds: number[]
@@ -59,6 +62,23 @@ const mergeUnique = <T,>(baseline: readonly T[], stored: readonly T[]): T[] => [
   ...new Set([...baseline, ...stored]),
 ]
 
+/**
+ * Issue #261 moved the two legacy incident Battles into the middle of the
+ * JavaScript route. Saves created before that change may already be past the
+ * new location without having those IDs in clearedStageIds. Backfill only the
+ * story beats the player has logically passed so an old save never has to
+ * walk backwards through completed regions.
+ */
+function normalizeIncidentStoryProgress(clearedStageIds: readonly number[]): number[] {
+  const normalized = [...clearedStageIds]
+  const hasAny = (ids: readonly number[]) => ids.some((id) => normalized.includes(id))
+
+  if (hasAny(FOREST_OR_LATER_STAGE_IDS) && !normalized.includes(1)) normalized.push(1)
+  if (hasAny(DEEP_FOREST_OR_LATER_STAGE_IDS) && !normalized.includes(2)) normalized.push(2)
+
+  return normalized
+}
+
 function getDerivedForestSkillUnlocks(clearedStageIds: readonly number[]): string[] {
   const skillIds: string[] = []
   if (clearedStageIds.includes(10)) skillIds.push('link')
@@ -82,7 +102,7 @@ function parseCommonProgressFields(value: unknown) {
   if (!isStringIdArray(value.unlockedSkillIds)) return null
 
   const baseline = createInitialPlayerProgress()
-  const clearedStageIds = [...value.clearedStageIds]
+  const clearedStageIds = normalizeIncidentStoryProgress(value.clearedStageIds)
   const derivedSkillUnlocks = getDerivedForestSkillUnlocks(clearedStageIds)
 
   return {
