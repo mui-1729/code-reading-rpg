@@ -8,7 +8,7 @@ const resetOpening = async (page: import('@playwright/test').Page) => {
   await page.reload()
 }
 
-test('first START briefs a real world incident then CONNECTs into CODE WORLD', async ({ page }) => {
+test('first START briefs a real world incident then CONNECTs into incident-driven CODE WORLD investigation', async ({ page }) => {
   await resetOpening(page)
 
   await expect(page.getByRole('button', { name: 'START' })).toBeVisible()
@@ -28,23 +28,25 @@ test('first START briefs a real world incident then CONNECTs into CODE WORLD', a
   await page.getByRole('button', { name: 'NEXT ▶' }).click()
   await expect(page.locator('.opening-layer-badge')).toHaveText('CONNECT')
   await expect(page.locator('.opening-kicker')).toHaveText('CONNECT')
-  await expect(page.locator('.opening-copy')).toContainText('コードが世界のrule')
+  await expect(page.locator('.opening-copy')).toContainText('codeが世界のrule')
 
   await page.getByRole('button', { name: 'NEXT ▶' }).click()
   await expect(page.locator('.opening-layer-badge')).toHaveText('CODE WORLD')
   await expect(page.locator('.opening-kicker')).toHaveText('JAVASCRIPT GRASSLAND')
   await expect(page.locator('.opening-copy')).toContainText('現実側のtarget bug')
+  await expect(page.locator('.opening-copy')).toContainText('VillageにいるMIOへログ')
 
   await page.getByRole('button', { name: 'NEXT ▶' }).click()
   await expect(page.locator('.opening-layer-badge')).toHaveText('CODE WORLD')
   await expect(page.locator('.opening-kicker')).toHaveText('MISSION START')
-  await expect(page.locator('.opening-copy')).toContainText('HubでBYTEと合流')
+  await expect(page.locator('.opening-copy')).toContainText('目的は研修を終えることではない')
+  await expect(page.locator('.opening-copy')).toContainText('実際のtarget異常を再現')
 
   await page.getByRole('button', { name: '▶ EXPLORE CODE WORLD' }).click()
   await expect(page).toHaveURL(/\/world$/)
   await expect(page.getByLabel('Open world map')).toBeVisible()
   await expect(page.getByLabel('Next objective')).toContainText('BYTEと合流する')
-  await expect(page.getByLabel('Next objective')).toContainText('左か上へ1歩')
+  await expect(page.getByLabel('Next objective')).toContainText('incidentのログ')
 })
 
 test('after the opening is seen, CONTINUE enters the world and opening can be replayed', async ({ page }) => {
