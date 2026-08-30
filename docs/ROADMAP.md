@@ -42,31 +42,43 @@ REAL WORLDでは新人エンジニアとしてproblemを受けるが、technical
 - `JAVASCRIPT DEEP FOREST` 31 × 21
 - Overworld ↔ Village / Forest、Forest ↔ Deep Forest transition
 - VillageはRandom Encounterなし
+- first live incident 1をVillage preparation直後に固定で体験
 - Forest / Deep Forestはfixed-firstで新conceptを導入し、clear済みLessonだけをRandomで反復
+- second live incident 2をForestのimpact-range調査後、Deep Forest入口で固定体験
 - MID BOSS 13 / second MID BOSS 19
+- Battle 22後はDeep Forest西口からCode Core手前へ直接進行
 - JavaScript Final Boss = existing Battle 3
 - World Objective / BYTE guidance
 - persistent HP / Treasure / Shop / paid Inn
 - BYTE party / follower
 - `PlayerProgress v4` / `RpgState v4`
+- semantic progression key + transitive prerequisite validation
 - old save migration / derived progression normalization
 
-### JavaScript learning route — completed P0
+### JavaScript incident-driven route — completed P0
 
 ```text
-GREENFIELD VILLAGE
+OPENING INCIDENT
+↓
+GREENFIELD VILLAGE — incidentを読む準備
 7: enemy.hp + < / >
 8: enemy.name + ===
 9: enemies + find()
 ↓
-JAVASCRIPT FOREST
+LIVE INCIDENT 1
+1: 最初のtarget異常を実際のstateで再現
+↓
+JAVASCRIPT FOREST — traceを追う
 10: find() + &&
 11: find() + ||
 12: comparison / find() / && / || combined
 13: MID BOSS — new syntaxなし
-14: find() vs filter()
+14: find() vs filter() / impact range
 ↓
-JAVASCRIPT DEEP FOREST
+LIVE INCIDENT 2
+2: 複数targetへ広がった二つ目の症状を確認
+↓
+JAVASCRIPT DEEP FOREST — shared traceをroot causeへ追う
 15: filter() condition repetition
 16: map()
 17: some()
@@ -76,8 +88,7 @@ JAVASCRIPT DEEP FOREST
 21: nested data + ?. + ??
 22: reduce() / aggregate
 ↓
-OVERWORLD FINAL INCIDENT
-1 → 2
+DEEP FOREST WEST EXIT
 ↓
 CODE CORE FINAL BOSS
 3
@@ -87,17 +98,20 @@ JavaScript Area CLEAR / REAL WORLD RETURN
 
 実装原則:
 
+- `battleId`はsave / URL互換のstable identifierでありStory chapter順にしない
+- Story順はsemantic progression keyで表現する
 - 新conceptはRandomより先にfixed Lessonで導入
 - Story / CODE HELPは読み方を教えるがcorrect targetは公開しない
+- syntaxを学ぶために冒険するのではなく、incidentのtraceを追うために必要なcodeを読む
 - `map()` / `some()` / `every()`を一度にまとめず別Battleで導入
 - second MID BOSS 19は既習内容だけで理解確認
 - `sort()`以降はmultilineとintermediate valueを段階導入
 - Battle 21は`map()`でnestedな`stats.hp`へ変換し、`stats?.hp ?? Infinity`を読む
-- Battle 22前はexisting Battle 1 / 2とFinal Boss 3を先出ししない
-- Boss 3は22 + 1 + 2 clear後だけ開始可能
+- Battle 1は9後・Forest前、Battle 2は14後・Deep Forest lesson前に置く
+- Boss 3は正規incident routeとBattle 22までのtransitive prerequisiteを満たした後だけ開始可能
 - Boss 3 clear時だけJavaScript Area CLEAR
 - display codeを`eval()`せずsafe `TargetRule`へ写す
-- PlayerProgress / RpgStateはv4のまま維持
+- PlayerProgress / RpgStateはv4のまま維持し、旧saveへ必要なincident beatをbackfillする
 
 ### Battle / learning infrastructure
 
