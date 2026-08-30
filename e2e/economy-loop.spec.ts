@@ -61,6 +61,13 @@ async function seedEconomyLoop(page: Page) {
   )
 }
 
+async function dismissStory(page: Page) {
+  const story = page.locator('.battle-story-window')
+  await expect(story).toBeVisible()
+  await story.getByRole('button', { name: 'SKIP' }).click()
+  await expect(story).toBeHidden()
+}
+
 async function executeSkill(page: Page, name: string) {
   const card = page.getByRole('button', { name: new RegExp(`^${name}\\b`) })
   await expect(card).toBeEnabled()
@@ -79,11 +86,12 @@ async function storedState(page: Page) {
   )
 }
 
-test('Battle Gold → Shop purchase/equip → Inn → reload → next Battleを1本で維持する', async ({ page }) => {
+test('Battle Gold → Shop purchase/equip → Inn → reload → next canonical Battleを1本で維持する', async ({ page }) => {
   await seedEconomyLoop(page)
 
-  await page.goto('/javascript/battle/1?seed=encounter%3A5%3A10%3A11&returnTo=%2Fworld')
+  await page.goto('/javascript/battle/1?seed=encounter%3Aoverworld%3A5%3A10%3A11&returnTo=%2Fworld')
   await expect(page.getByText('CHAPTER 01', { exact: false })).toBeVisible()
+  await dismissStory(page)
 
   await executeSkill(page, 'TRACE')
   await executeSkill(page, 'PULSE')
@@ -98,7 +106,8 @@ test('Battle Gold → Shop purchase/equip → Inn → reload → next Battleを1
 
   let stored = await storedState(page)
   expect(stored.progress.progress.clearedStageIds).toContain(1)
-  expect(stored.progress.progress.unlockedStageIds).toContain(2)
+  expect(stored.progress.progress.unlockedStageIds).toContain(10)
+  expect(stored.progress.progress.unlockedStageIds).not.toContain(2)
   expect(stored.rpg.state.currentHp).toBeGreaterThan(0)
   expect(stored.rpg.state.currentHp).toBeLessThan(116)
 
@@ -148,7 +157,9 @@ test('Battle Gold → Shop purchase/equip → Inn → reload → next Battleを1
   )
   await page.keyboard.press('Escape')
 
-  await page.goto('/javascript/battle/2?seed=economy-next&returnTo=%2Fworld')
-  await expect(page.getByText('CHAPTER 02', { exact: false })).toBeVisible()
+  await page.goto('/javascript/battle/10?seed=economy-next&returnTo=%2Fworld')
+  await dismissStory(page)
+  await expect(page).toHaveURL(/\/javascript\/battle\/10/)
+  await expect(page.locator('.battle-console')).toBeVisible()
   await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('132/132')
 })
