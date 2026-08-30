@@ -4,7 +4,9 @@ const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
-const baseCleared = [7, 8, 9, 10, 11, 12, 13, 14, 15]
+const throughDeepFilter = [7, 8, 9, 1, 10, 11, 12, 13, 14, 2, 15]
+const throughBattle21 = [...throughDeepFilter, 16, 17, 18, 19, 20, 21]
+const throughDeepForest = [...throughBattle21, 22]
 
 async function seedWorld(
   page: Page,
@@ -29,8 +31,7 @@ async function seedWorld(
             clearedStageIds,
             clearedAreaIds: [],
             completedSideQuestIds: [],
-            // 古いv4 saveでもrestore時にclear済みstageから後続unlockを補完する。
-            unlockedStageIds: [1, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+            unlockedStageIds: [1, 2, 3, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22],
             unlockedSkillIds: [
               'trace',
               'pulse',
@@ -89,7 +90,7 @@ async function seedWorld(
 
 test('Battle 15後のDeep ForestでBattle 16 map()を固定導入する', async ({ page }) => {
   await seedWorld(page, {
-    clearedStageIds: baseCleared,
+    clearedStageIds: throughDeepFilter,
     mapId: 'js-deep-forest',
     position: { x: 24, y: 8 },
   })
@@ -106,7 +107,7 @@ test('Battle 15後のDeep ForestでBattle 16 map()を固定導入する', async 
 
 test('Battle 18後のDeep Forestで第二MID BOSS Battle 19を固定する', async ({ page }) => {
   await seedWorld(page, {
-    clearedStageIds: [...baseCleared, 16, 17, 18],
+    clearedStageIds: [...throughDeepFilter, 16, 17, 18],
     mapId: 'js-deep-forest',
     position: { x: 11, y: 9 },
   })
@@ -123,7 +124,7 @@ test('Battle 18後のDeep Forestで第二MID BOSS Battle 19を固定する', asy
 
 test('最深部ではBattle 22 reduce()を固定導入する', async ({ page }) => {
   await seedWorld(page, {
-    clearedStageIds: [...baseCleared, 16, 17, 18, 19, 20, 21],
+    clearedStageIds: throughBattle21,
     mapId: 'js-deep-forest',
     position: { x: 6, y: 9 },
   })
@@ -140,7 +141,7 @@ test('最深部ではBattle 22 reduce()を固定導入する', async ({ page }) 
 
 test('Battle 22前はJavaScript Final Boss 3へ挑戦できない', async ({ page }) => {
   await seedWorld(page, {
-    clearedStageIds: [...baseCleared, 16, 17, 18, 19, 20, 21, 1, 2],
+    clearedStageIds: throughBattle21,
     mapId: 'overworld',
     position: { x: 8, y: 4 },
   })
@@ -148,12 +149,14 @@ test('Battle 22前はJavaScript Final Boss 3へ挑戦できない', async ({ pag
   await page.getByRole('button', { name: 'Interact' }).click()
 
   await expect(page).toHaveURL(/\/world$/)
-  await expect(page.getByText('Code Coreへ挑む前に、Deep ForestのLesson 15〜22を最後まで読み切ろう。')).toBeVisible()
+  await expect(
+    page.getByText('Code Coreへ挑む前に、Deep Forestのtraceをroot causeまで最後まで追おう。'),
+  ).toBeVisible()
 })
 
-test('Battle 22と既存Battle 1 / 2完了後だけFinal Boss 3を開始できる', async ({ page }) => {
+test('incident routeとBattle 22完了後にFinal Boss 3を開始できる', async ({ page }) => {
   await seedWorld(page, {
-    clearedStageIds: [...baseCleared, 16, 17, 18, 19, 20, 21, 22, 1, 2],
+    clearedStageIds: throughDeepForest,
     mapId: 'overworld',
     position: { x: 8, y: 4 },
   })
