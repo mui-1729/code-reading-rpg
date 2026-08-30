@@ -40,7 +40,12 @@ const javascriptNodes = [
 const typescriptNodes = [
   { key: 'ts-api-contract', battleId: 4, area: 'typescript', prerequisites: ['js-final-code-core'] },
   { key: 'ts-optional-union', battleId: 5, area: 'typescript', prerequisites: ['ts-api-contract'] },
-  { key: 'ts-final-shared-contract', battleId: 6, area: 'typescript', prerequisites: ['ts-api-contract', 'ts-optional-union'] },
+  {
+    key: 'ts-final-shared-contract',
+    battleId: 6,
+    area: 'typescript',
+    prerequisites: ['ts-optional-union'],
+  },
 ] as const satisfies readonly ProgressionNode[]
 
 const nodes: readonly ProgressionNode[] = [...javascriptNodes, ...typescriptNodes]
@@ -72,9 +77,20 @@ export function getAreaProgressionKeys(area: ProgressionArea): readonly string[]
   return nodesByArea[area].map((node) => node.key)
 }
 
-function isProgressionKeyCleared(key: string, clearedStageIds: readonly number[]): boolean {
+function isProgressionKeySatisfied(
+  key: string,
+  clearedStageIds: readonly number[],
+  visiting: ReadonlySet<string> = new Set(),
+): boolean {
   const requiredNode = nodeByKey.get(key)
-  return requiredNode !== undefined && clearedStageIds.includes(requiredNode.battleId)
+  if (!requiredNode || !clearedStageIds.includes(requiredNode.battleId)) return false
+  if (visiting.has(key)) return false
+
+  const nextVisiting = new Set(visiting)
+  nextVisiting.add(key)
+  return requiredNode.prerequisites.every((requiredKey) =>
+    isProgressionKeySatisfied(requiredKey, clearedStageIds, nextVisiting),
+  )
 }
 
 export function areBattlePrerequisitesMet(
@@ -84,7 +100,7 @@ export function areBattlePrerequisitesMet(
   const node = getProgressionNode(battleId)
   if (!node) return false
   return node.prerequisites.every((requiredKey) =>
-    isProgressionKeyCleared(requiredKey, clearedStageIds),
+    isProgressionKeySatisfied(requiredKey, clearedStageIds),
   )
 }
 
@@ -93,6 +109,8 @@ export function isBattleAccessible(
   clearedStageIds: readonly number[],
 ): boolean {
   if (!getProgressionNode(battleId)) return false
+  // An already-cleared Battle remains replayable for compatibility, but its
+  // clear bit does not authorize later nodes unless its own ancestry is valid.
   if (clearedStageIds.includes(battleId)) return true
   return areBattlePrerequisitesMet(battleId, clearedStageIds)
 }
