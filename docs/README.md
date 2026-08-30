@@ -27,6 +27,7 @@
 ### Learning / content
 
 - [`CONTENT_GUIDE.md`](./CONTENT_GUIDE.md) — Battle / Skill / code variant追加ルール
+- [`SEMANTIC_VARIATION.md`](./SEMANTIC_VARIATION.md) — semantic Skill variant、BattleごとのallowedSyntax、型情報を判断材料にするルール
 - [`CODE_DATA.md`](./CODE_DATA.md) — runtime data inspector
 - [`CODE_CODEX.md`](./CODE_CODEX.md) — 学習参照UI
 - [`TUTORIAL.md`](./TUTORIAL.md) — MOVE → INTERACT → SELECT → EXECUTE

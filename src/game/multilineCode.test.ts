@@ -58,12 +58,17 @@ describe('Battle 3 multiline code', () => {
     expect(second.map((card) => card.codeHelpLines)).toEqual(first.map((card) => card.codeHelpLines))
   })
 
-  it('複数行化してもPOWER・TargetRule・concept・explanationを変えない', () => {
+  it('複数行化そのものはPOWER・TargetRule・concept・explanationを変えない', () => {
     const battle = generateBattle(3, 'domain-stability')
     expect(battle).toBeDefined()
     if (!battle) return
 
-    const cards = getSkillCardsForBattle(battle, 'domain-stability')
+    const multiLineSkillIds = new Set(battle.multiLineSkillIds ?? [])
+    const cards = getSkillCardsForBattle(battle, 'domain-stability').filter((card) =>
+      multiLineSkillIds.has(card.id),
+    )
+
+    expect(cards.length).toBeGreaterThan(0)
     for (const card of cards) {
       const defaultSkill = skills[card.id]
       expect(card.power).toBe(defaultSkill.power)

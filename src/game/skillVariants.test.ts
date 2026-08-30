@@ -19,53 +19,61 @@ describe('seeded skill code variants', () => {
   })
 
   it('battleId + seed + skillIdが同じなら同じvariantを再現する', () => {
-    const first = getSkillCardForBattle('trace', 1, 'repeatable-seed')
-    const second = getSkillCardForBattle('trace', 1, 'repeatable-seed')
+    const first = getSkillCardForBattle('pulse', 1, 'repeatable-seed')
+    const second = getSkillCardForBattle('pulse', 1, 'repeatable-seed')
 
-    expect(second.code).toBe(first.code)
+    expect(second).toEqual(first)
   })
 
-  it('seedが変わると複数variantが選ばれる', () => {
-    const selectedCodes = new Set(
-      Array.from({ length: 32 }, (_, index) =>
-        getSkillCardForBattle('trace', 1, `variant-seed-${index}`).code,
+  it('seedが変わると同じSkill名でも複数TargetRuleが選ばれる', () => {
+    const cards = Array.from({ length: 64 }, (_, index) =>
+      getSkillCardForBattle('pulse', 1, `variant-seed-${index}`),
+    )
+    const rules = new Set(cards.map((card) => JSON.stringify(card.rule)))
+    const targetSets = new Set(
+      cards.map((card) =>
+        getTargets(battles[0].enemies, card.rule)
+          .map((enemy) => enemy.name)
+          .join(','),
       ),
     )
 
-    expect(selectedCodes.size).toBeGreaterThan(1)
+    expect(new Set(cards.map((card) => card.name))).toEqual(new Set(['PULSE']))
+    expect(rules.size).toBeGreaterThan(1)
+    expect(targetSets.size).toBeGreaterThan(1)
   })
 
-  it('variant選択でPOWER・TargetRule・concept・explanationを変えない', () => {
+  it('semantic variantでもPOWERはSkill固有値を維持する', () => {
     for (const battle of battles) {
       for (const skillId of battle.skillIds) {
         const defaultSkill = skills[skillId]
-        const variantSkill = getSkillCardForBattle(skillId, battle.id, 'preserve-domain')
+        const variantSkill = getSkillCardForBattle(skillId, battle.id, 'preserve-power',
+          battle.multiLineSkillIds?.includes(skillId) ? 'multi' : 'single')
 
         expect(variantSkill.power).toBe(defaultSkill.power)
-        expect(variantSkill.rule).toEqual(defaultSkill.rule)
-        expect(variantSkill.concept).toBe(defaultSkill.concept)
-        expect(variantSkill.explanation).toBe(defaultSkill.explanation)
+        expect(variantSkill.concept.trim().length).toBeGreaterThan(0)
+        expect(variantSkill.explanation.trim().length).toBeGreaterThan(0)
       }
     }
   })
 
-  it('variantが変わっても生成盤面の対象判定を変えない', () => {
+  it('生成盤面でも選択されたsemantic ruleに初期targetがあるSkillを維持する', () => {
     for (const battle of battles) {
-      const generated = generateBattle(battle.id, 'target-stability')
+      const seed = `target-valid-${battle.id}`
+      const generated = generateBattle(battle.id, seed)
       expect(generated).toBeDefined()
       if (!generated) continue
 
-      for (const skillId of generated.skillIds) {
-        const defaultTargets = getTargets(generated.enemies, skills[skillId].rule).map(
-          (enemy) => enemy.id,
-        )
-        const variantTargets = getTargets(
-          generated.enemies,
-          getSkillCardForBattle(skillId, battle.id, 'target-stability').rule,
-        ).map((enemy) => enemy.id)
+      const cards = generated.skillIds.map((skillId) =>
+        getSkillCardForBattle(
+          skillId,
+          battle.id,
+          seed,
+          generated.multiLineSkillIds?.includes(skillId) ? 'multi' : 'single',
+        ),
+      )
 
-        expect(variantTargets).toEqual(defaultTargets)
-      }
+      expect(cards.some((card) => getTargets(generated.enemies, card.rule).length > 0)).toBe(true)
     }
   })
 })
