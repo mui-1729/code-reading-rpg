@@ -4,14 +4,14 @@ const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
-const clearedJavaScriptLessons = [
-  7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
+const clearedJavaScriptRoute = [
+  7, 8, 9, 1, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22,
 ]
 
 async function seedPostLessonEncounter(page: Page) {
   await page.goto('/')
   await page.evaluate(
-    ({ progressKey, rpgKey, tutorialKey, clearedLessons }) => {
+    ({ progressKey, rpgKey, tutorialKey, clearedRoute }) => {
       localStorage.clear()
       localStorage.setItem(
         progressKey,
@@ -21,10 +21,10 @@ async function seedPostLessonEncounter(page: Page) {
             exp: 0,
             gold: 0,
             inventory: { patchKit: 0 },
-            clearedStageIds: clearedLessons,
+            clearedStageIds: clearedRoute,
             clearedAreaIds: [],
             completedSideQuestIds: [],
-            unlockedStageIds: [1, 2, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22],
+            unlockedStageIds: [7],
             unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
           },
         }),
@@ -60,7 +60,7 @@ async function seedPostLessonEncounter(page: Page) {
       progressKey: PROGRESS_KEY,
       rpgKey: RPG_KEY,
       tutorialKey: TUTORIAL_KEY,
-      clearedLessons: clearedJavaScriptLessons,
+      clearedRoute: clearedJavaScriptRoute,
     },
   )
   await page.goto('/world')
@@ -92,7 +92,7 @@ test('Random Encounterで敗北後、Hub復帰して再びRandom Encounterでき
   await expect(viewport).toHaveAttribute('data-world-y', '14')
 
   // defeat後はcount=5 / steps=8。Hubから西へ抜けてTall Grass (17,11) へ入ると
-  // deterministic rollが18%未満になり、再びBattle 1が発生する。
+  // deterministic rollが18%未満になり、再びclear済みincident Battle 1が復習Encounterとして発生する。
   await page.getByRole('button', { name: 'Move left' }).click()
   await page.getByRole('button', { name: 'Move left' }).click()
   await page.getByRole('button', { name: 'Move left' }).click()
