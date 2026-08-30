@@ -31,9 +31,10 @@ describe('JavaScript battle story events', () => {
     expect(beforeText).toContain('複数')
     expect(beforeText).toContain('filter()')
     expect(beforeText).not.toMatch(/Slime|Goblin|Golem/)
-    expect(afterText).toContain('同じcall path')
+    expect(afterText).toContain('call pathが合流')
     expect(afterText).toContain('戻る必要はない')
-    expect(afterText).not.toContain('root causeと断定')
+    expect(afterText).toContain('root causeと断定するには')
+    expect(afterText).toContain('確認したい')
   })
 
   it('Final briefing follows the same trace forward and ending RETURNs to incident close', () => {
