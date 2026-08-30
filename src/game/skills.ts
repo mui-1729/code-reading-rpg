@@ -1,14 +1,17 @@
+import { getBattleLearningPolicy, isSyntaxAllowed } from './battleLearningPolicy'
 import { battles } from './battles'
 import { deepForestSkillDefinitions } from './deepForestSkillDefinitions'
 import { forestSkillDefinitions } from './forestSkillDefinitions'
 import type { Seed } from './random'
+import { semanticSkillVariantsById } from './semanticSkillVariants'
 import {
   skillDefinitions as javascriptSkillDefinitions,
   type CodeVariant,
   type SkillDefinition,
 } from './skillDefinitions'
+import { getTargets } from './targeting'
 import { typescriptSkillDefinitions } from './typescriptSkillDefinitions'
-import type { Battle, SkillCard } from './types'
+import type { Battle, SkillCard, TargetRule } from './types'
 
 export const allSkillDefinitions: readonly SkillDefinition[] = [
   ...javascriptSkillDefinitions,
@@ -21,15 +24,48 @@ export const allSkillDefinitionById: Record<string, SkillDefinition> = Object.fr
   allSkillDefinitions.map((definition) => [definition.id, definition]),
 )
 
-function createSkillCard(definition: SkillDefinition, variant: CodeVariant): SkillCard {
+type SemanticSource = {
+  id: string
+  rule: TargetRule
+  concept: string
+  explanation: string
+  codeVariants: readonly CodeVariant[]
+  requiredSyntax: readonly import('./battleLearningPolicy').LearningSyntax[]
+  pedagogyTags: readonly string[]
+  requiresInitialTarget: boolean
+}
+
+type EncounterCandidate = {
+  semantic: SemanticSource
+  variant: CodeVariant
+}
+
+function getBaseSemanticSource(definition: SkillDefinition): SemanticSource {
+  return {
+    id: 'base',
+    rule: definition.rule,
+    concept: definition.concept,
+    explanation: definition.explanation,
+    codeVariants: definition.codeVariants,
+    requiredSyntax: [],
+    pedagogyTags: [],
+    requiresInitialTarget: false,
+  }
+}
+
+function createSkillCard(
+  definition: SkillDefinition,
+  semantic: SemanticSource,
+  variant: CodeVariant,
+): SkillCard {
   return {
     id: definition.id,
     name: definition.name,
     code: variant.code,
     power: definition.power,
-    rule: definition.rule,
-    concept: definition.concept,
-    explanation: definition.explanation,
+    rule: semantic.rule,
+    concept: semantic.concept,
+    explanation: semantic.explanation,
     codeHelpLines: variant.codeHelpLines,
   }
 }
@@ -100,17 +136,9 @@ function getBattleAppearanceIndex(
   return Math.max(0, appearances.findIndex((battle) => battle.id === battleId))
 }
 
-const reversedOperators: Record<string, string> = {
-  '<': '>',
-  '>': '<',
-  '<=': '>=',
-  '>=': '<=',
-  '===': '===',
-}
-
 const comparisonOperand =
   '(?:[A-Za-z_$][\\w$]*(?:\\.(?:hp|attackDamage|name|score))?|"[^"]*"|\'[^\']*\'|-?\\d+)'
-const reversibleComparison = new RegExp(
+const simpleComparison = new RegExp(
   `(${comparisonOperand})[ \\t]*(<=|>=|===|<|>)[ \\t]*(${comparisonOperand})`,
   'g',
 )
@@ -119,26 +147,13 @@ function transformLines(code: string, transform: (line: string) => string): stri
   return code.split('\n').map(transform).join('\n')
 }
 
-function reverseComparisons(code: string): string {
+function parenthesizeComparisons(code: string): string {
   return transformLines(code, (line) =>
     line.replace(
-      reversibleComparison,
+      simpleComparison,
       (_match, left: string, operator: string, right: string) =>
-        `${right} ${reversedOperators[operator] ?? operator} ${left}`,
+        `(${left} ${operator} ${right})`,
     ),
-  )
-}
-
-const dataPropertyPattern = 'hp|attackDamage|name|score|enemy|value|limit|stats'
-
-function useBracketPropertyAccess(code: string): string {
-  const optionalPattern = new RegExp(`\\?\\.(${dataPropertyPattern})\\b`, 'g')
-  const directPattern = new RegExp(`\\.(${dataPropertyPattern})\\b`, 'g')
-
-  return transformLines(code, (line) =>
-    line
-      .replace(optionalPattern, (_match, property: string) => `?.["${property}"]`)
-      .replace(directPattern, (_match, property: string) => `["${property}"]`),
   )
 }
 
@@ -151,44 +166,110 @@ function parenthesizeSimpleArrowParameters(code: string): string {
   )
 }
 
-function getSemanticCandidates(variant: CodeVariant): CodeVariant[] {
-  const comparisonTransforms = [(code: string) => code, reverseComparisons]
-  const propertyTransforms = [(code: string) => code, useBracketPropertyAccess]
-  const arrowTransforms = [(code: string) => code, parenthesizeSimpleArrowParameters]
-  const seen = new Set<string>()
-  const candidates: CodeVariant[] = []
+function getPresentationCandidates(
+  variant: CodeVariant,
+  battleId: number,
+): CodeVariant[] {
+  const policy = getBattleLearningPolicy(battleId)
+  const transforms: Array<(code: string) => string> = [(code) => code]
 
-  for (const comparisonTransform of comparisonTransforms) {
-    for (const propertyTransform of propertyTransforms) {
-      for (const arrowTransform of arrowTransforms) {
-        const code = arrowTransform(propertyTransform(comparisonTransform(variant.code)))
-        if (seen.has(code)) continue
-        seen.add(code)
-        candidates.push({ ...variant, code })
-      }
-    }
+  if (policy.allowedTransforms.includes('comparison-parens')) {
+    transforms.push(parenthesizeComparisons)
+  }
+  if (policy.allowedTransforms.includes('arrow-parameter-parens')) {
+    transforms.push(parenthesizeSimpleArrowParameters)
+  }
+  if (
+    policy.allowedTransforms.includes('comparison-parens') &&
+    policy.allowedTransforms.includes('arrow-parameter-parens')
+  ) {
+    transforms.push((code) => parenthesizeSimpleArrowParameters(parenthesizeComparisons(code)))
+  }
+
+  return Array.from(
+    new Map(
+      transforms.map((transform) => {
+        const candidate = { ...variant, code: transform(variant.code) }
+        return [candidate.code, candidate]
+      }),
+    ).values(),
+  )
+}
+
+function getSemanticSources(
+  definition: SkillDefinition,
+  battleId: number,
+  lineMode: CodeVariant['lineMode'],
+): SemanticSource[] {
+  const battle = battles.find((candidate) => candidate.id === battleId)
+  const policy = getBattleLearningPolicy(battleId)
+  const alternates = (semanticSkillVariantsById[definition.id] ?? []).map<SemanticSource>(
+    (variant) => ({
+      id: variant.id,
+      rule: variant.rule,
+      concept: variant.concept,
+      explanation: variant.explanation,
+      codeVariants: variant.codeVariants,
+      requiredSyntax: variant.requiredSyntax,
+      pedagogyTags: variant.pedagogyTags ?? [],
+      requiresInitialTarget: variant.requiresInitialTarget ?? false,
+    }),
+  )
+
+  let candidates = [getBaseSemanticSource(definition), ...alternates].filter(
+    (semantic) =>
+      semantic.codeVariants.some((variant) => variant.lineMode === lineMode) &&
+      isSyntaxAllowed(semantic.requiredSyntax, policy) &&
+      (!semantic.requiresInitialTarget ||
+        !battle ||
+        getTargets(battle.enemies, semantic.rule).length > 0),
+  )
+
+  const requiredTags = policy.requiredSemanticTagsBySkillId?.[definition.id] ?? []
+  if (requiredTags.length > 0) {
+    candidates = candidates.filter((semantic) =>
+      requiredTags.every((tag) => semantic.pedagogyTags.includes(tag)),
+    )
+  }
+
+  if (candidates.length === 0) {
+    throw new Error(
+      `Skill ${definition.id} has no pedagogically valid ${lineMode} semantic variant for Battle ${battleId}`,
+    )
   }
 
   return candidates
 }
 
-function getEncounterVariant(
+function getEncounterCandidate(
   definition: SkillDefinition,
   battleId: number,
   seed: Seed,
   lineMode: CodeVariant['lineMode'],
-): CodeVariant {
-  const eligibleVariants = definition.codeVariants.filter(
-    (variant) => variant.lineMode === lineMode,
+): EncounterCandidate {
+  const candidates = getSemanticSources(definition, battleId, lineMode).flatMap((semantic) =>
+    semantic.codeVariants
+      .filter((variant) => variant.lineMode === lineMode)
+      .flatMap((variant) =>
+        getPresentationCandidates(variant, battleId).map((presentation) => ({
+          semantic,
+          variant: presentation,
+        })),
+      ),
   )
-  if (eligibleVariants.length === 0) {
-    throw new Error(`Skill ${definition.id} has no ${lineMode} code variant`)
+
+  const uniqueByCode = new Map<string, EncounterCandidate>()
+  for (const candidate of candidates) {
+    const existing = uniqueByCode.get(candidate.variant.code)
+    if (existing && JSON.stringify(existing.semantic.rule) !== JSON.stringify(candidate.semantic.rule)) {
+      throw new Error(
+        `Displayed code collision for ${definition.id}: one code string maps to multiple TargetRules`,
+      )
+    }
+    uniqueByCode.set(candidate.variant.code, candidate)
   }
 
-  const candidates = eligibleVariants.flatMap(getSemanticCandidates)
-  const uniqueCandidates = Array.from(
-    new Map(candidates.map((candidate) => [candidate.code, candidate])).values(),
-  )
+  const uniqueCandidates = [...uniqueByCode.values()]
   if (uniqueCandidates.length === 0) {
     throw new Error(`Skill ${definition.id} has no generated code variant`)
   }
@@ -213,10 +294,8 @@ export function getSkillCardForBattle(
   const definition = allSkillDefinitionById[skillId]
   if (!definition) throw new Error(`Unknown skill: ${skillId}`)
 
-  return createSkillCard(
-    definition,
-    getEncounterVariant(definition, battleId, seed, lineMode),
-  )
+  const selected = getEncounterCandidate(definition, battleId, seed, lineMode)
+  return createSkillCard(definition, selected.semantic, selected.variant)
 }
 
 export function getSkillCardsForBattle(battle: Battle, seed: Seed): SkillCard[] {
@@ -235,6 +314,6 @@ export function getSkillCardsForBattle(battle: Battle, seed: Seed): SkillCard[] 
 export const skills: Record<string, SkillCard> = Object.fromEntries(
   allSkillDefinitions.map((definition) => [
     definition.id,
-    createSkillCard(definition, getDefaultVariant(definition)),
+    createSkillCard(definition, getBaseSemanticSource(definition), getDefaultVariant(definition)),
   ]),
 )
