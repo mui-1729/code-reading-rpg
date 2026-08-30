@@ -12,6 +12,12 @@ const emptyEconomy = {
   gold: 0,
   inventory: { patchKit: 0 },
 }
+const completedJavaScriptStoryIds = [
+  3, 7, 8, 9, 1, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22,
+]
+const unlockedAfterJavaScriptComplete = [
+  7, 8, 9, 1, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22, 3, 4,
+]
 
 describe('player progress storage', () => {
   it('v4 serialize / restore時にstage unlock cacheをcanonical graphへ正規化する', () => {
@@ -115,7 +121,7 @@ describe('player progress storage', () => {
     expect(restored.unlockedStageIds).toContain(3)
   })
 
-  it('schema v1でBoss撃破済みならJavaScript Area CLEARとincident historyを引き継ぐ', () => {
+  it('schema v1でBoss撃破済みならJavaScript Area CLEARと現行story全体を完了済みとして引き継ぐ', () => {
     const raw = JSON.stringify({
       version: 1,
       progress: {
@@ -128,13 +134,13 @@ describe('player progress storage', () => {
 
     const restored = restorePlayerProgress(raw)
     expect(restored.clearedAreaIds).toEqual(['javascript'])
-    expect(restored.clearedStageIds).toEqual([3, 1, 2])
+    expect(restored.clearedStageIds).toEqual(completedJavaScriptStoryIds)
     expect(restored.gold).toBe(0)
     expect(restored.inventory.patchKit).toBe(0)
-    expect(restored.unlockedStageIds).toEqual([7, 1, 2, 3, 4])
+    expect(restored.unlockedStageIds).toEqual(unlockedAfterJavaScriptComplete)
   })
 
-  it('schema v2 / v3のArea・Side Quest進行を維持する', () => {
+  it('schema v2 / v3のArea・Side Quest進行を維持し、Boss clear済みなら現行storyを補完する', () => {
     const v2 = restorePlayerProgress(JSON.stringify({
       version: 2,
       progress: {
@@ -147,8 +153,8 @@ describe('player progress storage', () => {
     }))
     expect(v2.clearedAreaIds).toEqual(['javascript'])
     expect(v2.completedSideQuestIds).toEqual([])
-    expect(v2.clearedStageIds).toEqual([3, 1, 2])
-    expect(v2.unlockedStageIds).toEqual([7, 1, 2, 3, 4])
+    expect(v2.clearedStageIds).toEqual(completedJavaScriptStoryIds)
+    expect(v2.unlockedStageIds).toEqual(unlockedAfterJavaScriptComplete)
 
     const v3 = restorePlayerProgress(JSON.stringify({
       version: 3,
@@ -162,8 +168,8 @@ describe('player progress storage', () => {
       },
     }))
     expect(v3.completedSideQuestIds).toEqual(['javascript-second-pass'])
-    expect(v3.clearedStageIds).toEqual([3, 1, 2])
-    expect(v3.unlockedStageIds).toEqual([7, 1, 2, 3, 4])
+    expect(v3.clearedStageIds).toEqual(completedJavaScriptStoryIds)
+    expect(v3.unlockedStageIds).toEqual(unlockedAfterJavaScriptComplete)
   })
 
   it('保存データがない場合は初期状態へfallbackする', () => {
