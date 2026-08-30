@@ -50,11 +50,12 @@ export const semanticSkillVariantsById: Readonly<
       rule: { kind: 'allBelow', hp: 60 },
       concept: 'union type + literal return contract',
       explanation:
-        'Limit は60または100のunion typeです。getLimitを() => 60として読むcontractにより、この実行のlimitは60と確定し、HP60未満のEnemy全員が対象になります。',
+        'Limit は60または100のunion typeです。readLimitの戻り値型が() => 60と注釈されているため、この実行のlimitは60と確定し、HP60未満のEnemy全員が対象になります。',
       requiredSyntax: [
         'filter',
         'hp-property',
         'less-than',
+        'type-annotation',
         'type-assertion',
         'union-type',
         'function-return-contract',
@@ -74,22 +75,22 @@ export const semanticSkillVariantsById: Readonly<
         },
         {
           id: 'contract-60-multi-enemy',
-          code: 'type Limit = 60 | 100\nconst readLimit = getLimit as () => 60\nconst limit: Limit = readLimit()\nenemies.filter((enemy: Enemy) => enemy.hp < limit)',
+          code: 'type Limit = 60 | 100\nconst readLimit: () => 60 = getLimit\nconst limit: Limit = readLimit()\nenemies.filter((enemy: Enemy) => enemy.hp < limit)',
           lineMode: 'multi',
           codeHelpLines: [
             'Limitは60または100だけを許すunion type。',
-            '() => 60という戻り値contractを読むと、readLimitの結果は60に固定される。',
+            'readLimitへ() => 60という戻り値型を注釈する。getLimitがこの型に合わなければTypeScriptはエラーにする。',
             'limitはLimitの候補のうち、現在は60だと型情報から確定できる。',
             'filter()でHPがlimit=60未満のEnemyをすべて残す。',
           ],
         },
         {
           id: 'contract-60-multi-target',
-          code: 'type Limit = 60 | 100\nconst readLimit = getLimit as () => 60\nconst limit: Limit = readLimit()\nenemies.filter((target: Enemy) => target.hp < limit)',
+          code: 'type Limit = 60 | 100\nconst readLimit: () => 60 = getLimit\nconst limit: Limit = readLimit()\nenemies.filter((target: Enemy) => target.hp < limit)',
           lineMode: 'multi',
           codeHelpLines: [
             'Limitは2つのnumber literalからなるunion type。',
-            'getLimitの値そのものではなく、() => 60という戻り値contractが今回の値を決める。',
+            'getLimitをreadLimitへ代入できるのは、() => 60という戻り値型に適合するときだけ。',
             'limitへ入る値は型情報から60に絞れる。',
             'target.hp < 60を満たすEnemy全員が残る。',
           ],
@@ -101,11 +102,12 @@ export const semanticSkillVariantsById: Readonly<
       rule: { kind: 'allBelow', hp: 100 },
       concept: 'union type + literal return contract',
       explanation:
-        'Limit は60または100のunion typeです。getLimitを() => 100として読むcontractにより、この実行のlimitは100と確定し、HP100未満のEnemy全員が対象になります。',
+        'Limit は60または100のunion typeです。readLimitの戻り値型が() => 100と注釈されているため、この実行のlimitは100と確定し、HP100未満のEnemy全員が対象になります。',
       requiredSyntax: [
         'filter',
         'hp-property',
         'less-than',
+        'type-annotation',
         'type-assertion',
         'union-type',
         'function-return-contract',
@@ -125,22 +127,22 @@ export const semanticSkillVariantsById: Readonly<
         },
         {
           id: 'contract-100-multi-enemy',
-          code: 'type Limit = 60 | 100\nconst readLimit = getLimit as () => 100\nconst limit: Limit = readLimit()\nenemies.filter((enemy: Enemy) => enemy.hp < limit)',
+          code: 'type Limit = 60 | 100\nconst readLimit: () => 100 = getLimit\nconst limit: Limit = readLimit()\nenemies.filter((enemy: Enemy) => enemy.hp < limit)',
           lineMode: 'multi',
           codeHelpLines: [
             'Limitは60または100だけを許すunion type。',
-            '() => 100という戻り値contractを読むと、readLimitの結果は100に固定される。',
+            'readLimitへ() => 100という戻り値型を注釈する。getLimitがこの型に合わなければTypeScriptはエラーにする。',
             'limitはLimitの候補のうち、現在は100だと型情報から確定できる。',
             'filter()でHPがlimit=100未満のEnemyをすべて残す。',
           ],
         },
         {
           id: 'contract-100-multi-target',
-          code: 'type Limit = 60 | 100\nconst readLimit = getLimit as () => 100\nconst limit: Limit = readLimit()\nenemies.filter((target: Enemy) => target.hp < limit)',
+          code: 'type Limit = 60 | 100\nconst readLimit: () => 100 = getLimit\nconst limit: Limit = readLimit()\nenemies.filter((target: Enemy) => target.hp < limit)',
           lineMode: 'multi',
           codeHelpLines: [
             'Limitは2つのnumber literalからなるunion type。',
-            'getLimitの値そのものではなく、() => 100という戻り値contractが今回の値を決める。',
+            'getLimitをreadLimitへ代入できるのは、() => 100という戻り値型に適合するときだけ。',
             'limitへ入る値は型情報から100に絞れる。',
             'target.hp < 100を満たすEnemy全員が残る。',
           ],
