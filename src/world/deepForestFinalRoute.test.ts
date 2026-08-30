@@ -132,29 +132,30 @@ describe('JavaScript incident-driven final world route', () => {
     expect(result.nextState.worldPosition.y).toBeGreaterThan(JS_BOSS_POSITION.y)
   })
 
-  it('Final Bossは最初のincident・二つ目のincident・最終trace完了後だけunlockする', () => {
+  it('Final Bossは最初のincident・二つ目のincident・最終traceを含む全route完了後だけunlockする', () => {
     const progress = createInitialPlayerProgress()
     const rpgState = {
       ...createInitialRpgState(),
       worldMapId: OVERWORLD_MAP_ID,
       worldPosition: { x: JS_BOSS_POSITION.x, y: JS_BOSS_POSITION.y + 1 },
     }
+    const through22 = [...through15, 16, 17, 18, 19, 20, 21, 22]
 
     const missingSecond = resolveWorldInteraction(rpgState, {
       ...progress,
-      clearedStageIds: [1, 22],
+      clearedStageIds: through22.filter((id) => id !== 2),
     })
     expect(missingSecond.kind === 'boss' && missingSecond.unlocked).toBe(false)
 
     const missingTrace = resolveWorldInteraction(rpgState, {
       ...progress,
-      clearedStageIds: [1, 2, 21],
+      clearedStageIds: through22.filter((id) => id !== 22),
     })
     expect(missingTrace.kind === 'boss' && missingTrace.unlocked).toBe(false)
 
     const ready = resolveWorldInteraction(rpgState, {
       ...progress,
-      clearedStageIds: [1, 2, 22],
+      clearedStageIds: through22,
     })
     expect(ready.kind).toBe('boss')
     if (ready.kind !== 'boss') return
