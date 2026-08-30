@@ -4,10 +4,23 @@ export const JS_LESSON_CLEARS = [
 
 export const JS_BATTLE_1_PREREQS = [7, 8, 9] as const
 
-export const JS_MIDBOSS_PREREQS = [7, 8, 9, 1, 10, 11, 12] as const
+export const JS_FIRST_INCIDENT = [...JS_BATTLE_1_PREREQS, 1] as const
+
+export const JS_MIDBOSS_PREREQS = [...JS_FIRST_INCIDENT, 10, 11, 12] as const
+
+export const JS_SECOND_INCIDENT_PREREQS = [...JS_MIDBOSS_PREREQS, 13, 14] as const
 
 export const JS_BOSS_PREREQS = [
-  7, 8, 9, 1, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22,
+  ...JS_SECOND_INCIDENT_PREREQS,
+  2,
+  15,
+  16,
+  17,
+  18,
+  19,
+  20,
+  21,
+  22,
 ] as const
 
 export const JS_COMPLETE = [...JS_BOSS_PREREQS, 3] as const
