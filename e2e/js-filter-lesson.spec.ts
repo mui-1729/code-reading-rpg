@@ -100,11 +100,12 @@ test('Battle 13 clear済みsaveは西側WoodsでBattle 14をimpact-range trace�
   await expect(page).toHaveURL(/\/javascript\/battle\/14\?/)
   const story = page.getByRole('dialog', { name: '異常の影響を一体だけでなく全部追う' })
   await expect(story).toBeVisible()
-  await expect(story).toContainText('find()')
   await expect(story).toContainText('incident')
+  await expect(story).toContainText('影響範囲')
   await expect(story).not.toContainText('正解')
 
   await story.getByRole('button', { name: /NEXT/ }).click()
+  await expect(story).toContainText('find()')
   await expect(story).toContainText('filter()')
   await expect(story).toContainText('全部集める')
 })
