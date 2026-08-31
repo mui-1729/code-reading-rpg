@@ -1,16 +1,26 @@
 import { describe, expect, it } from 'vitest'
 import { createInitialPlayerProgress } from '../progression/progression'
 import { createInitialRpgState } from '../rpg/state'
-import { createDefeatRecoveryState } from './resultHandoff'
 import {
-  commitBattleSession, getVisibleBattleState, rollbackBattleSession, startBattleSession, updateBattleSession,
+  BATTLE_RETURN_ENCOUNTER_COOLDOWN,
+  commitBattleSession,
+  getVisibleBattleState,
+  rollbackBattleSession,
+  startBattleSession,
+  updateBattleSession,
+  type BattleRollbackMode,
   type BattleTransactionState,
 } from './sessionTransaction'
 
 const identity = { id: 'attempt-a', areaId: 'javascript', battleId: 7, seed: 'fixed-seed', returnTo: '/world' }
 const initial = (): BattleTransactionState => ({
   progress: { ...createInitialPlayerProgress(), gold: 70, inventory: { patchKit: 2 } },
-  rpgState: { ...createInitialRpgState(), currentHp: 40 },
+  rpgState: {
+    ...createInitialRpgState(),
+    currentHp: 40,
+    stepsSinceEncounter: 4,
+    worldPosition: { x: 8, y: 8 },
+  },
 })
 const useKit = (state: BattleTransactionState) => updateBattleSession(state, identity.id, (current) => ({
   progress: { ...current.progress, inventory: { patchKit: 1 } },
@@ -29,23 +39,40 @@ describe('Battle attempt transaction', () => {
     expect(before.progress.inventory.patchKit).toBe(2)
   })
 
-  it.each(['ABORT', 'RELOAD'])('%s restores HP, inventory and all world/progress state together', () => {
+  it.each<BattleRollbackMode>(['retry', 'abort', 'reload'])(
+    '%s restores the exact Battle-start HP, inventory, world and progress state',
+    (mode) => {
+      const before = initial()
+      const started = useKit(startBattleSession(before, identity))
+      const changed = updateBattleSession(started, identity.id, (current) => ({
+        progress: { ...current.progress, gold: 999, clearedStageIds: [7] },
+        rpgState: { ...current.rpgState, partyMemberIds: ['byte'], worldPosition: { x: 1, y: 1 } },
+      }))
+      expect(rollbackBattleSession(changed, identity.id, mode)).toEqual({ ...before, battleSession: undefined })
+    },
+  )
+
+  it('checkpoint restores Battle-start resources and position without free healing, then grants a safe encounter window', () => {
     const before = initial()
-    const started = useKit(startBattleSession(before, identity))
-    const changed = updateBattleSession(started, identity.id, (current) => ({
-      progress: { ...current.progress, gold: 999, clearedStageIds: [7] },
-      rpgState: { ...current.rpgState, partyMemberIds: ['byte'], worldPosition: { x: 1, y: 1 } },
-    }))
-    expect(rollbackBattleSession(changed)).toEqual({ ...before, battleSession: undefined })
+    const changed = useKit(startBattleSession(before, identity))
+    const returned = rollbackBattleSession(changed, identity.id, 'checkpoint')
+
+    expect(returned.progress.inventory.patchKit).toBe(2)
+    expect(returned.rpgState.currentHp).toBe(40)
+    expect(returned.rpgState.worldPosition).toEqual({ x: 8, y: 8 })
+    expect(returned.rpgState.stepsSinceEncounter).toBe(BATTLE_RETURN_ENCOUNTER_COOLDOWN)
+    expect(returned.battleSession).toBeUndefined()
   })
 
-  it('RUN commits damage/kit usage with no reward and cannot subsequently be aborted', () => {
-    const changed = useKit(startBattleSession(initial(), identity))
-    const committed = commitBattleSession(changed, identity.id, 'RUN')
-    expect(committed.progress).toEqual(changed.progress)
-    expect(committed.rpgState).toEqual(changed.rpgState)
-    expect(committed.battleSession).toBeUndefined()
-    expect(rollbackBattleSession(committed, identity.id)).toBe(committed)
+  it('RUN/escape uses abort rollback so tentative damage and PATCH KIT usage do not persist', () => {
+    const before = initial()
+    const changed = useKit(startBattleSession(before, identity))
+    const escaped = rollbackBattleSession(changed, identity.id, 'abort')
+
+    expect(escaped.progress.inventory.patchKit).toBe(2)
+    expect(escaped.rpgState.currentHp).toBe(40)
+    expect(escaped.rpgState.worldPosition).toEqual(before.rpgState.worldPosition)
+    expect(escaped.battleSession).toBeUndefined()
   })
 
   it('VICTORY commits reward and current HP atomically and only once', () => {
@@ -55,18 +82,9 @@ describe('Battle attempt transaction', () => {
     })
     const committed = commitBattleSession(changed, identity.id, 'VICTORY', reward)
     expect(committed.progress.gold).toBe(90)
+    expect(committed.progress.inventory.patchKit).toBe(1)
     expect(committed.rpgState.currentHp).toBe(64)
     expect(commitBattleSession(committed, identity.id, 'VICTORY', reward)).toBe(committed)
-  })
-
-  it('DEFEAT commits the existing hub recovery policy and consumed kit', () => {
-    const changed = useKit(startBattleSession(initial(), identity))
-    const committed = commitBattleSession(changed, identity.id, 'DEFEAT', (state) => ({
-      ...state, rpgState: createDefeatRecoveryState(state.rpgState, 88),
-    }))
-    expect(committed.rpgState).toMatchObject({ currentHp: 88, worldMapId: 'overworld', stepsSinceEncounter: 8 })
-    expect(committed.progress.inventory.patchKit).toBe(1)
-    expect(rollbackBattleSession(committed)).toBe(committed)
   })
 
   it('changing battle first rolls back; stale callbacks/cleanup cannot mutate the next attempt', () => {
@@ -76,7 +94,7 @@ describe('Battle attempt transaction', () => {
     expect(next.progress).toEqual(before.progress)
     expect(next.rpgState).toEqual(before.rpgState)
     expect(useKit(next)).toBe(next)
-    expect(commitBattleSession(next, identity.id, 'RUN')).toBe(next)
+    expect(commitBattleSession(next, identity.id, 'VICTORY')).toBe(next)
     expect(rollbackBattleSession(next, identity.id)).toBe(next)
   })
 
@@ -90,7 +108,6 @@ describe('Battle attempt transaction', () => {
 
   it('Tutorial replay aborts before repositioning; later unmount cannot restore the old position', () => {
     const before = initial()
-    before.rpgState.worldPosition = { x: 8, y: 8 }
     const changed = useKit(startBattleSession(before, identity))
     const aborted = rollbackBattleSession(changed)
     const replay = {
