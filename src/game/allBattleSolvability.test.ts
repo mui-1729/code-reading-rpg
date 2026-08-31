@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { generateBattle } from './generator'
+import { getSkillCardsForBattle } from './skills'
 import { hasInitialValidTarget, isBattleSolvable } from './solvability'
 
 const battleIds = Array.from({ length: 22 }, (_, index) => index + 1)
@@ -12,24 +13,26 @@ const requiredBattle = (battleId: number, seed: string) => {
 }
 
 describe('all battle solvability regression', () => {
-  it('Battle 1〜22の全検証seedで初手に有効targetがある', () => {
+  it('Battle 1〜22の全検証seedで選択semantic variantに初手の有効targetがある', () => {
     for (const battleId of battleIds) {
       for (const seed of seeds) {
         const battle = requiredBattle(battleId, seed)
+        const skillCards = getSkillCardsForBattle(battle, seed)
         expect(
-          hasInitialValidTarget(battle),
+          hasInitialValidTarget(battle, skillCards),
           `Battle ${battleId} seed ${seed} has no valid initial target`,
         ).toBe(true)
       }
     }
   })
 
-  it('Battle 1〜22の全検証seedに勝ち筋がある', () => {
+  it('Battle 1〜22の全検証seedで選択semantic variantのまま勝ち筋がある', () => {
     for (const battleId of battleIds) {
       for (const seed of seeds) {
         const battle = requiredBattle(battleId, seed)
+        const skillCards = getSkillCardsForBattle(battle, seed)
         expect(
-          isBattleSolvable(battle),
+          isBattleSolvable(battle, { skillCards }),
           `Battle ${battleId} seed ${seed} is not solvable`,
         ).toBe(true)
       }

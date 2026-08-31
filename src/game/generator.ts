@@ -1,9 +1,9 @@
 import { battles } from './battles'
 import { createSeededRandom, type Seed, type SeededRandom } from './random'
-import { skills } from './skills'
+import { getSkillCardsForBattle } from './skills'
 import { hasInitialValidTarget, isBattleSolvable } from './solvability'
 import { getTargets } from './targeting'
-import type { Battle } from './types'
+import type { Battle, SkillCard } from './types'
 
 const HP_MULTIPLIER_MIN_PERCENT = 85
 const HP_MULTIPLIER_MAX_PERCENT = 115
@@ -14,13 +14,18 @@ export function generateBattle(battleId: number, seed: Seed): Battle | undefined
   if (!template) return undefined
 
   const random = createSeededRandom(`${String(seed)}:battle:${template.id}`)
+  const skillCards = getSkillCardsForBattle(template, seed)
 
   for (let attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt += 1) {
     const candidate = createCandidate(template, random)
-    if (isValidCandidate(template, candidate)) return candidate
+    if (isValidCandidate(template, candidate, skillCards)) return candidate
   }
 
-  return cloneBattle(template)
+  const fallback = cloneBattle(template)
+  if (!isValidCandidate(template, fallback, skillCards)) {
+    throw new Error(`Battle ${battleId} seed ${String(seed)} has no solvable semantic variant`)
+  }
+  return fallback
 }
 
 function createCandidate(template: Battle, random: SeededRandom): Battle {
@@ -39,20 +44,29 @@ function createCandidate(template: Battle, random: SeededRandom): Battle {
   }
 }
 
-function isValidCandidate(template: Battle, candidate: Battle): boolean {
-  if (!hasInitialValidTarget(candidate)) return false
-  if (!preservesInitialLearningTargets(template, candidate)) return false
-  return isBattleSolvable(candidate)
+function isValidCandidate(
+  template: Battle,
+  candidate: Battle,
+  skillCards: readonly SkillCard[],
+): boolean {
+  if (!hasInitialValidTarget(candidate, skillCards)) return false
+  if (!preservesInitialLearningTargets(template, candidate, skillCards)) return false
+  return isBattleSolvable(candidate, { skillCards })
 }
 
-function preservesInitialLearningTargets(template: Battle, candidate: Battle): boolean {
+function preservesInitialLearningTargets(
+  template: Battle,
+  candidate: Battle,
+  skillCards: readonly SkillCard[],
+): boolean {
+  const skillById = new Map(skillCards.map((skill) => [skill.id, skill]))
   const requiredSkillIds = template.skillIds.filter((skillId) => {
-    const skill = skills[skillId]
+    const skill = skillById.get(skillId)
     return skill ? getTargets(template.enemies, skill.rule).length > 0 : false
   })
 
   return requiredSkillIds.every((skillId) => {
-    const skill = skills[skillId]
+    const skill = skillById.get(skillId)
     return skill ? getTargets(candidate.enemies, skill.rule).length > 0 : false
   })
 }

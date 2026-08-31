@@ -1,7 +1,7 @@
 import { skills } from './skills'
 import { resolveEnemyAttack, resolvePlayerAction } from './combatTurn'
 import { getTargets } from './targeting'
-import type { Battle, Enemy } from './types'
+import type { Battle, Enemy, SkillCard } from './types'
 import type { CombatStats } from '../rpg/combat'
 
 const DEFAULT_COMBAT_STATS: CombatStats = {
@@ -18,11 +18,21 @@ export type SolvabilityProfile = {
   partyFollowUpDamage?: number
   patchKitCount?: number
   patchKitHeal?: number
+  skillCards?: readonly SkillCard[]
 }
 
-export function hasInitialValidTarget(battle: Battle): boolean {
+function getSkillLookup(skillCards?: readonly SkillCard[]): Readonly<Record<string, SkillCard>> {
+  if (!skillCards) return skills
+  return Object.fromEntries(skillCards.map((skill) => [skill.id, skill]))
+}
+
+export function hasInitialValidTarget(
+  battle: Battle,
+  skillCards?: readonly SkillCard[],
+): boolean {
+  const skillById = getSkillLookup(skillCards)
   return battle.skillIds.some((skillId) => {
-    const skill = skills[skillId]
+    const skill = skillById[skillId]
     return skill ? getTargets(battle.enemies, skill.rule).length > 0 : false
   })
 }
@@ -30,6 +40,7 @@ export function hasInitialValidTarget(battle: Battle): boolean {
 export function isBattleSolvable(battle: Battle, profile: SolvabilityProfile = {}): boolean {
   const memo = new Map<string, boolean>()
   const playerStats = profile.playerStats ?? DEFAULT_COMBAT_STATS
+  const skillById = getSkillLookup(profile.skillCards)
   const initialPlayerHp = Math.max(
     0,
     Math.min(playerStats.maxHp, profile.initialPlayerHp ?? playerStats.maxHp),
@@ -54,7 +65,7 @@ export function isBattleSolvable(battle: Battle, profile: SolvabilityProfile = {
     }
 
     for (const skillId of battle.skillIds) {
-      const skill = skills[skillId]
+      const skill = skillById[skillId]
       if (!skill) continue
 
       const playerAction = resolvePlayerAction({
