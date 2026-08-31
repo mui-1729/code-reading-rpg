@@ -74,10 +74,9 @@ async function executeSkill(page: Page, name: string) {
   await card.click()
 }
 
-test('Random Encounterで敗北後、Hub復帰して再びRandom Encounterできる', async ({ page }) => {
+test('Random Encounter敗北後は開始地点へ戻り、直後に再encounterしないsafe windowを得る', async ({ page }) => {
   await seedPostLessonEncounter(page)
 
-  // JavaScript本編clear後は復習Encounterの具体的なlegacy battleIdを契約にしない。
   await page.getByRole('button', { name: 'Move down' }).click()
   await expect(page).toHaveURL(/\/javascript\/battle\/\d+\?/)
   await expect(page.locator('.battle-console')).toBeVisible()
@@ -85,21 +84,16 @@ test('Random Encounterで敗北後、Hub復帰して再びRandom Encounterでき
   // HP=1なので最初のenemy turnで敗北する。
   await executeSkill(page, 'TRACE')
   await expect(page.getByText('DEFEAT', { exact: true })).toBeVisible()
-  await page.getByRole('button', { name: /RETURN TO HUB/ }).click()
+  await page.getByRole('button', { name: /RETURN TO CHECKPOINT/ }).click()
 
   await expect(page).toHaveURL(/\/world$/)
   const viewport = page.getByLabel('Open world map')
-  await expect(viewport).toHaveAttribute('data-world-x', '20')
-  await expect(viewport).toHaveAttribute('data-world-y', '14')
+  await expect(viewport).toHaveAttribute('data-world-x', '10')
+  await expect(viewport).toHaveAttribute('data-world-y', '10')
 
-  // defeat後もHubから再び復習Encounterへ入れることだけを保証する。
-  await page.getByRole('button', { name: 'Move left' }).click()
-  await page.getByRole('button', { name: 'Move left' }).click()
-  await page.getByRole('button', { name: 'Move left' }).click()
-  await page.getByRole('button', { name: 'Move up' }).click()
-  await page.getByRole('button', { name: 'Move up' }).click()
-  await page.getByRole('button', { name: 'Move up' }).click()
-
-  await expect(page).toHaveURL(/\/javascript\/battle\/\d+\?/)
-  await expect(page.locator('.battle-console')).toBeVisible()
+  // checkpoint return resets the encounter counter, so one movement cannot
+  // immediately throw the player back into another Random Encounter.
+  await page.getByRole('button', { name: 'Move down' }).click()
+  await expect(page).toHaveURL(/\/world$/)
+  await expect(page.locator('.battle-console')).toBeHidden()
 })
