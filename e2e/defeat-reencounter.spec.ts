@@ -5,7 +5,7 @@ const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
 const clearedJavaScriptRoute = [
-  7, 8, 9, 1, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22,
+  7, 8, 9, 1, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22, 3,
 ]
 
 async function seedPostLessonEncounter(page: Page) {
@@ -22,7 +22,7 @@ async function seedPostLessonEncounter(page: Page) {
             gold: 0,
             inventory: { patchKit: 0 },
             clearedStageIds: clearedRoute,
-            clearedAreaIds: [],
+            clearedAreaIds: ['javascript'],
             completedSideQuestIds: [],
             unlockedStageIds: [7],
             unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
@@ -77,7 +77,8 @@ async function executeSkill(page: Page, name: string) {
 test('Random Encounterで敗北後、Hub復帰して再びRandom Encounterできる', async ({ page }) => {
   await seedPostLessonEncounter(page)
 
-  // count=4, next=(10,11), steps=5 は既存のdeterministic encounter fixture。
+  // JavaScript本編clear後の復習Encounter。count=4, next=(10,11), steps=5 は
+  // deterministic encounter fixtureとしてBattle 1を選ぶ。
   await page.getByRole('button', { name: 'Move down' }).click()
   await expect(page).toHaveURL(/\/javascript\/battle\/1\?/)
 
