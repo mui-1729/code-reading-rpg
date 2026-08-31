@@ -11,15 +11,15 @@ Title
 ↓
 REAL WORLD briefingからCODE WORLDへCONNECT
 ↓
-Overworldを入口にVillage / Forest / Deep Forest / TypeScript Frontierを行き来
+Openingで最初の異変を実際に体験
 ↓
-固定Lesson / Random Encounter / MID BOSS / Final Bossでコードを読む
+Villageで「さっき読めなかった部分」だけを小さく確認
 ↓
-SkillをSELECT → 同じSkillをもう一度押してEXECUTE
+Forest / Deep Forestへ同じincidentのtraceを追う
 ↓
-EXP / Gold / Level Up等を段階表示
+Code Coreでroot causeを止める
 ↓
-元のmap・座標へ戻り、次の地域やBossへ進む
+REAL WORLDへRETURNしてincident close
 ```
 
 Stage SelectやArea Selectへ戻って進行する構造ではありません。旧Area / Field URLは`/world`へredirectします。
@@ -33,7 +33,7 @@ Stage SelectやArea Selectへ戻って進行する構造ではありません。
 - 11×9 viewport / Player追従camera
 - 上下左右の画面外へ移動可能
 - tileは固定正方形
-- JavaScript地方 = Village preparation → 最初のlive incident → Forest trace → 二つ目のincident → Deep Forest root trace → Code Core
+- JavaScript地方 = first live incident → Village preparation → Forest trace → second symptom → Deep Forest root trace → Code Core
 - TypeScript地方 = TypeScript Frontier
 - Central Hub / Road / Water / Mountain
 - 固定Boss地点
@@ -41,17 +41,45 @@ Stage SelectやArea Selectへ戻って進行する構造ではありません。
 - World座標をLocalStorage保存
 - Desktop: Arrow / WASD、Mobile: D-Pad + INTERACT
 
+### JavaScript story progression
+
+プレイヤーへ見せるStory番号は、JavaScript編内で`JS-01`から連番にします。
+
+```text
+JS-01  LIVE INCIDENT
+↓
+JS-02  hp / comparison
+JS-03  name / ===
+JS-04  find()
+↓
+JS-05〜09  Forest trace
+↓
+JS-10  SECOND SYMPTOM
+↓
+JS-11〜18  Deep Forest root trace
+↓
+JS-19  ROOT CAUSE / Code Core
+```
+
+重要な方針:
+
+- **最初にincidentを見てから学ぶ。** syntaxを先に履修してからincidentへ戻る構造にはしない
+- Villageは独立したtutorial syllabusではなく、JS-01で読めなかった`hp` / `name` / `find()`を切り出して確認する場所
+- Forest / Deep Forestでは「次のsyntaxだから」ではなく、同じincidentのtraceを追う途中で必要になったcodeを読む
+- Battle 22後は来た道を戻らず、Deep Forest西口からCode Coreへ直接進む
+
+内部では既存save / URL互換のためnumeric `battleId`を維持しています。numeric IDはchapter番号ではなくlegacy runtime identifierです。Story順はsemantic progression keyで管理し、画面上の`JS-01...JS-19` / `TS-01...TS-03`とは分離します。
+
 ### Random Encounter
 
 - JavaScript Forest / Deep Forestではclear済みLessonを段階的に再出題
-- JavaScriptのincident Battle 1 / 2はStory上の固定beatとして発生し、未clear中はRandom復習にしない
+- JavaScriptのfirst incident / second symptomはStory上の固定beatとして発生し、未clear中はRandom復習にしない
 - TypeScript FrontierではBattle 4 / 5を進行に応じて出題
 - 最低5歩のcooldown
 - terrainごとの遭遇率
 - Road / Hubは安全地帯
 - Battle後は元のWorld位置へ復帰
-- JavaScript Storyは`7 → 8 → 9 → 1 → 10 → 11 → 12 → 13 → 14 → 2 → 15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 3`
-- numeric `battleId`はsave / URL互換用IDであり、Story chapter順そのものには使わない
+- new conceptをRandom Encounterで初登場させない
 
 ### Battle / code reading
 
@@ -63,6 +91,7 @@ Stage SelectやArea Selectへ戻って進行する構造ではありません。
 - code variants / multi-line code / 行別HELP
 - Battle + seedごとに表示コードを固有化し、別Battleで同じ文字列を再利用しない
 - 既存の1行 / 3行読解構造は維持
+- correct target / 正解Skillを実行前に表示しない
 
 ### RPG progression
 
@@ -75,6 +104,8 @@ Stage SelectやArea Selectへ戻って進行する構造ではありません。
 - Boss clearで上位装備を入手
 - 仲間BYTE
 - BYTEはコードが選んだ**同じtarget**へ追撃し、読解を自動化しない
+
+最初のlive incidentはLv1で体験できる難易度にし、Villageの3つの小Battleを経てForestへ入る頃にLv2へ到達する程度の成長速度にしています。Story順変更だけを理由にShop / InnのEconomy budgetは崩しません。
 
 既存のPlayerProgress schemaとは別にRPG stateを保存し、旧saveを壊さずWorld位置・装備・仲間を追加します。
 
@@ -143,6 +174,7 @@ TypeScript表示コードをruntimeで`eval()`することはありません。
 - Tutorialと重複する説明を常設しない
 - 読解に必要な値は確認可能、targetや正解Skillは先に表示しない
 - RPG成長でコード読解自体を不要にしない
+- numeric legacy Battle IDをプレイヤー向けchapter番号として見せない
 
 ## Routes
 
@@ -152,6 +184,8 @@ TypeScript表示コードをruntimeで`eval()`することはありません。
 /javascript/battle/$battleId?seed=...&returnTo=/world
 /typescript/battle/$battleId?seed=...&returnTo=/world
 ```
+
+`$battleId`は互換用のinternal IDです。Storyの表示番号とは一致を要求しません。
 
 Legacy redirect:
 
