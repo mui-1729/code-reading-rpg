@@ -16,6 +16,13 @@ function battleById(id: number) {
 }
 
 describe('Boss GUARD', () => {
+  it('Boss表示名を変更してもstable roleでGUARDを維持する', () => {
+    const battle = battleById(3)
+    const renamed = battle.enemies.map((enemy) => ({ ...enemy, name: '翻訳された敵' }))
+    const boss = renamed.find((enemy) => enemy.role === 'boss')!
+    expect(isBossGuardActive(battle, renamed)).toBe(true)
+    expect(resolveBossGuardDamage(battle, renamed, boss, 80)).toBe(1)
+  })
   it('Battle 3 / 6だけにGUARDを付与する', () => {
     expect(hasBossGuard(battleById(3))).toBe(true)
     expect(hasBossGuard(battleById(6))).toBe(true)
@@ -25,7 +32,7 @@ describe('Boss GUARD', () => {
 
   it('解除条件をBattle UIで読める短いcodeとして固定する', () => {
     expect(BOSS_GUARD_CONDITION_CODE).toBe(
-      'enemies.some(e => e.name !== "Boss" && e.hp > 0)',
+      'enemies.some(e => e.role !== "boss" && e.hp > 0)',
     )
   })
 
@@ -34,15 +41,15 @@ describe('Boss GUARD', () => {
     expect(isBossGuardActive(battle, battle.enemies)).toBe(true)
 
     const withoutMinions = battle.enemies.map((enemy) =>
-      enemy.name === 'Boss' ? { ...enemy } : { ...enemy, hp: 0 },
+      enemy.role === 'boss' ? { ...enemy } : { ...enemy, hp: 0 },
     )
     expect(isBossGuardActive(battle, withoutMinions)).toBe(false)
   })
 
   it.each([3, 6])('Battle %iはGUARD中のBoss damageだけ1へ抑える', (battleId) => {
     const battle = battleById(battleId)
-    const boss = battle.enemies.find((enemy) => enemy.name === 'Boss')
-    const minion = battle.enemies.find((enemy) => enemy.name !== 'Boss')
+    const boss = battle.enemies.find((enemy) => enemy.role === 'boss')
+    const minion = battle.enemies.find((enemy) => enemy.role !== 'boss')
     if (!boss || !minion) throw new Error(`Battle ${battleId} needs Boss and minion`)
 
     expect(resolveBossGuardDamage(battle, battle.enemies, boss, 80)).toBe(1)
@@ -51,11 +58,11 @@ describe('Boss GUARD', () => {
 
   it.each([3, 6])('Battle %iはminion全滅直後にBossへ通常damageを通す', (battleId) => {
     const battle = battleById(battleId)
-    const boss = battle.enemies.find((enemy) => enemy.name === 'Boss')
+    const boss = battle.enemies.find((enemy) => enemy.role === 'boss')
     if (!boss) throw new Error(`Battle ${battleId} needs Boss`)
 
     const openedEnemies = battle.enemies.map((enemy) =>
-      enemy.name === 'Boss' ? { ...enemy } : { ...enemy, hp: 0 },
+      enemy.role === 'boss' ? { ...enemy } : { ...enemy, hp: 0 },
     )
     expect(resolveBossGuardDamage(battle, openedEnemies, boss, 80)).toBe(80)
   })
@@ -75,7 +82,7 @@ describe('Boss GUARD', () => {
     const canHitMinion = cards.some((skill) =>
       getTargets(battle.enemies, skill.rule).some(
         (target) =>
-          target.name !== 'Boss' &&
+          target.role !== 'boss' &&
           resolveBossGuardDamage(battle, battle.enemies, target, 80) === 80,
       ),
     )

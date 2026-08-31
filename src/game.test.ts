@@ -12,6 +12,8 @@ import {
 const enemy = (id: string, name: string, hp: number, attackDamage = 1): Enemy => ({
   id,
   name,
+  role: 'standard',
+  visualId: 'enemy-fallback',
   hp,
   maxHp: Math.max(hp, 1),
   attackName: 'Test Attack',

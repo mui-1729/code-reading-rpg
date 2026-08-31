@@ -11,6 +11,8 @@ import type { Enemy } from './types'
 const enemy = (id: string, name: string, hp: number, attackDamage: number): Enemy => ({
   id,
   name,
+  role: 'standard',
+  visualId: 'enemy-fallback',
   hp,
   maxHp: Math.max(hp, 100),
   attackName: 'Test Attack',

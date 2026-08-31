@@ -2,10 +2,10 @@ import {
   getProgressionNode,
   isBattleAccessible,
   type PlayerProgress,
-  type ProgressionArea,
 } from '../progression'
+import { getAreaDefinition, type AreaId } from './areas'
 
-export type BattleRouteArea = ProgressionArea
+export type BattleRouteArea = AreaId
 
 type ProgressSlice = Pick<PlayerProgress, 'clearedStageIds' | 'unlockedStageIds'>
 
@@ -14,6 +14,8 @@ export function isBattleRouteUnlocked(
   battleId: number,
   progress: ProgressSlice,
 ): boolean {
+  const definition = getAreaDefinition(area)
+  if (!definition?.battleIds.some((id) => id === battleId)) return false
   const node = getProgressionNode(battleId)
   if (!node || node.area !== area) return false
 
@@ -22,6 +24,10 @@ export function isBattleRouteUnlocked(
 }
 
 export function getBattleRouteLockReason(area: BattleRouteArea, battleId: number): string {
+  const definition = getAreaDefinition(area)
+  if (!definition?.battleIds.some((id) => id === battleId)) {
+    return 'このBattleは存在しない。Worldへ戻ろう。'
+  }
   const node = getProgressionNode(battleId)
   if (!node || node.area !== area) return 'このBattleは存在しない。Worldへ戻ろう。'
 

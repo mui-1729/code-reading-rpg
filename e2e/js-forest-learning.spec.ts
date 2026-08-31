@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { readStoredGameState } from './storedGameState'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -138,11 +139,17 @@ test('Forest Battle 10 / 11はincident traceとして&& / ||を順に説明しfi
   await expect(andStory).toContainText('左もtrue、右もtrue')
   await expect(andStory).not.toContainText('filter()')
 
-  await page.evaluate((progressKey) => {
-    const stored = JSON.parse(localStorage.getItem(progressKey) ?? 'null')
-    stored.progress.clearedStageIds = [...new Set([...stored.progress.clearedStageIds, 10])]
-    localStorage.setItem(progressKey, JSON.stringify(stored))
-  }, PROGRESS_KEY)
+  // End the unfinished attempt before installing the next Story's clear fixture.
+  // Otherwise reload correctly rolls the synthetic clear back with that attempt.
+  await page.goto('/world')
+  await expect.poll(async () => (await readStoredGameState(page)).battleSession).toBeNull()
+  await page.evaluate(() => {
+    const key = 'code-reading-rpg:game-state'
+    const stored = JSON.parse(localStorage.getItem(key) ?? 'null')
+    stored.progress.progress.clearedStageIds = [...new Set([...stored.progress.progress.clearedStageIds, 10])]
+    stored.revision += 1
+    localStorage.setItem(key, JSON.stringify(stored))
+  })
 
   await page.goto('/javascript/battle/11?seed=forest-e2e-or&returnTo=%2Fworld')
   const orStory = page.getByRole('dialog', { name: '別の入口からも同じ異常へ入る' })

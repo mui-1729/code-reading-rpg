@@ -18,9 +18,6 @@ describe('RPG state storage', () => {
       ...initial,
       ownedEquipmentIds: [...initial.ownedEquipmentIds, 'debug-charm'],
       partyMemberIds: ['byte'],
-      partyEquipment: {
-        byte: { weapon: null, armor: null, accessory: 'debug-charm' },
-      },
       equipment: { ...initial.equipment, accessory: 'debug-charm' },
       worldMapId: JS_VILLAGE_MAP_ID,
       worldPosition: { x: 10, y: 12 },
@@ -31,7 +28,7 @@ describe('RPG state storage', () => {
     }
 
     const raw = serializeRpgState(state)
-    expect(JSON.parse(raw).version).toBe(4)
+    expect(JSON.parse(raw).version).toBe(5)
     expect(restoreRpgState(raw)).toEqual(state)
   })
 
@@ -41,7 +38,7 @@ describe('RPG state storage', () => {
       equipment: initial.equipment,
       ownedEquipmentIds: initial.ownedEquipmentIds,
       partyMemberIds: initial.partyMemberIds,
-      partyEquipment: initial.partyEquipment,
+      partyEquipment: {},
       worldPosition: { x: 12, y: 14 },
       stepsSinceEncounter: 5,
       encounterCount: 2,
@@ -60,7 +57,7 @@ describe('RPG state storage', () => {
       equipment: initial.equipment,
       ownedEquipmentIds: initial.ownedEquipmentIds,
       partyMemberIds: initial.partyMemberIds,
-      partyEquipment: initial.partyEquipment,
+      partyEquipment: {},
       worldPosition: { x: 16, y: 14 },
       stepsSinceEncounter: 4,
       encounterCount: 3,
@@ -80,7 +77,7 @@ describe('RPG state storage', () => {
       equipment: initial.equipment,
       ownedEquipmentIds: initial.ownedEquipmentIds,
       partyMemberIds: initial.partyMemberIds,
-      partyEquipment: initial.partyEquipment,
+      partyEquipment: {},
       worldPosition: { x: 7, y: 9 },
       stepsSinceEncounter: 3,
       encounterCount: 4,
@@ -209,7 +206,7 @@ describe('RPG state storage', () => {
       equipment: state.equipment,
       ownedEquipmentIds: ['training-blade', 'traveler-coat', 'debug-charm'],
       partyMemberIds: state.partyMemberIds,
-      partyEquipment: state.partyEquipment,
+      partyEquipment: {},
       worldPosition: state.worldPosition,
       stepsSinceEncounter: state.stepsSinceEncounter,
       encounterCount: state.encounterCount,
@@ -242,7 +239,7 @@ describe('RPG state storage', () => {
     })
   })
 
-  it('未知Partyを除外しjoined memberだけの装備へ正規化する', () => {
+  it('v4から未知Partyを除外し未使用partyEquipmentをv5 modelから取り除く', () => {
     const state = createInitialRpgState()
     const raw = JSON.stringify({
       version: 4,
@@ -258,9 +255,8 @@ describe('RPG state storage', () => {
     const restored = restoreRpgState(raw)
 
     expect(restored.partyMemberIds).toEqual(['byte'])
-    expect(restored.partyEquipment).toEqual({
-      byte: { weapon: 'training-blade', armor: null, accessory: null },
-    })
+    expect(restored).not.toHaveProperty('partyEquipment')
+    expect(JSON.parse(serializeRpgState(restored)).state).not.toHaveProperty('partyEquipment')
   })
 
   it('negative encounter countersは0へclampする', () => {

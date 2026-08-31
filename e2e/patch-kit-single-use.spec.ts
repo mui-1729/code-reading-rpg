@@ -1,3 +1,4 @@
+import { readStoredProgress } from './storedGameState'
 import { expect, test, type Page } from '@playwright/test'
 import { JS_BATTLE_1_PREREQS } from './canonical-progress-fixtures'
 
@@ -62,15 +63,15 @@ async function seedBattle(page: Page) {
   )
 }
 
+async function storedProgress(page: Page) {
+  return readStoredProgress(page)
+}
+
 async function dismissStory(page: Page) {
   const story = page.locator('.battle-story-window')
   await expect(story).toBeVisible()
   await story.getByRole('button', { name: 'SKIP' }).click()
   await expect(story).toBeHidden()
-}
-
-async function storedProgress(page: Page) {
-  return page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), PROGRESS_KEY)
 }
 
 test('PATCH KITは在庫2個でも同一Battleで見える操作1つ・使用1回に制限する', async ({ page }) => {
@@ -103,5 +104,8 @@ test('PATCH KITは在庫2個でも同一Battleで見える操作1つ・使用1�
   await expect(nextItem).toHaveAttribute('data-item-state', 'available')
   await expect(page.locator('.patch-kit-action:visible')).toHaveCount(1)
   await expect(nextPatchKit).toBeEnabled()
-  await expect(nextPatchKit).toHaveAttribute('aria-label', /PATCH KIT ×1/)
+  // Leaving an unfinished attempt rolls back both healing and its item cost.
+  await expect(nextPatchKit).toHaveAttribute('aria-label', /PATCH KIT ×2/)
+  await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('40/108')
+  await expect.poll(async () => (await storedProgress(page)).progress.inventory.patchKit).toBe(2)
 })

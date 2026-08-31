@@ -7,18 +7,21 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
     title: 'まず、異常そのものを見る',
     lines: [
       {
+        speakerId: 'byte',
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
         text: 'これがOpeningで見たtarget異常だ。訓練用じゃない、今動いているBattle stateそのものだよ。',
       },
       {
+        speakerId: 'byte',
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
         text: 'まだ全部読めなくていい。EnemyのHPや名前と、Skillに表示されたcodeを見比べながら「codeは実際に誰を選ぶのか」を一度体験しよう。',
       },
       {
+        speakerId: 'lead-ada',
         speaker: 'LEAD ADA',
         role: 'SENIOR ENGINEER',
         layer: 'remote',
@@ -35,18 +38,21 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
     title: '異常は見えた。次は読める材料を増やす',
     lines: [
       {
+        speakerId: 'byte',
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
         text: '症状は再現できた。偶然外れたんじゃなく、表示されたcodeのruleでtargetが決まっていることも確認できた。',
       },
       {
+        speakerId: 'byte',
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
         text: 'ただ、HPの比較、nameの条件、enemiesを前から見るfind()が一度に出てきた。原因を追うには、ここを自分で確定できるようにしたい。',
       },
       {
+        speakerId: 'lead-ada',
         speaker: 'LEAD ADA',
         role: 'SENIOR ENGINEER',
         layer: 'remote',
@@ -60,12 +66,14 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
     title: 'さっき見た異常を、今度は読んで追える',
     lines: [
       {
+        speakerId: 'trainer-mio',
         speaker: 'TRAINER MIO',
         role: 'VILLAGE GUIDE',
         layer: 'code-world',
         text: 'HPやnameの値、比較、find()の「前から最初の一体」まで追えたね。最初のBattleで読みにくかった部分は、もう一行ずつ分けて確かめられるはず。',
       },
       {
+        speakerId: 'byte',
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',

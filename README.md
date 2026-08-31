@@ -103,11 +103,11 @@ JS-19  ROOT CAUSE / Code Core
 - PATCH KIT
 - Boss clearで上位装備を入手
 - 仲間BYTE
-- BYTEはコードが選んだ**同じtarget**へ追撃し、読解を自動化しない
+- BYTEは1 ACTIONに1回、コードが選んだtargetのうちSkill後に生存する先頭1体へ追撃する
 
 最初のlive incidentはLv1で体験できる難易度にし、Villageの3つの小Battleを経てForestへ入る頃にLv2へ到達する程度の成長速度にしています。Story順変更だけを理由にShop / InnのEconomy budgetは崩しません。
 
-既存のPlayerProgress schemaとは別にRPG stateを保存し、旧saveを壊さずWorld位置・装備・仲間を追加します。
+PlayerProgress v4とRpgState v5は責務を分けたまま、単一revision snapshotで同時保存します。旧分割saveから移行し、backup復旧・到達不可map位置の正規化・storage eventによる別tab同期に対応します。Battle開始snapshotを含むroot schema v2で、未完了Battleのreload・離脱時はHPとItemも一緒に開始状態へ戻します。
 
 ### Pause menu
 

@@ -127,7 +127,7 @@ stable map:
 共通:
 
 - viewport 11 × 9
-- `worldMapId + local worldPosition`保存
+- `worldMapId + local worldPosition`をRpgState v5で保存
 - `/world` route上でmap transition
 - local mapからBattleへ入り、same map / positionへ戻る
 - Defeat時だけOverworld Hubへ戻す
@@ -207,9 +207,13 @@ internal compatibility IDは4 / 5 / 6。
 ## 8. Persistence / compatibility
 
 - `PlayerProgress` schema v4
-- `RpgState` schema v4
-- old schema migration
-- current `worldMapId + local worldPosition`保存
+- `RpgState` schema v5（未使用Party Equipmentを除去）
+- RpgState v1〜v4 → v5 migration
+- Progress / RPGの単一revision snapshot、backup recovery、storage event同期、stale tab上書き回避
+- root schema v2にBattle開始snapshotを保持し、reload / ABORTは全体rollback、VICTORY / DEFEAT / RUNは定義済みpolicyでcommit
+- current `worldMapId + local worldPosition`を保存
+- unknown map / bounds外locationはHubへfallback
+- portal graph上でlocked mapにある位置もHubへnormalize
 - semantic prerequisiteを推移的に検証
 - forged / partial clear bitでは後続へ進めない
 

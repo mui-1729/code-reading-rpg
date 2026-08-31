@@ -1,3 +1,4 @@
+import { readStoredProgress, readStoredRpg } from './storedGameState'
 import { expect, test } from '@playwright/test'
 
 const AUDIO_KEY = 'code-reading-rpg:audio-settings'
@@ -63,6 +64,8 @@ test('RESET PROGRESSはEconomy/RPG stateを初期化しSound設定は保持す�
 
   await page.evaluate(
     ({ progressKey, rpgKey }) => {
+      localStorage.removeItem('code-reading-rpg:game-state')
+      localStorage.removeItem('code-reading-rpg:game-state-backup')
       localStorage.setItem(
         progressKey,
         JSON.stringify({
@@ -111,7 +114,7 @@ test('RESET PROGRESSはEconomy/RPG stateを初期化しSound設定は保持す�
   await dialog.getByRole('button', { name: 'RESET PROGRESS' }).click()
   await dialog.getByRole('button', { name: 'CONFIRM RESET PROGRESS' }).click()
 
-  await expect.poll(async () => page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), PROGRESS_KEY)).toMatchObject({
+  await expect.poll(async () => readStoredProgress(page)).toMatchObject({
     version: 4,
     progress: {
       exp: 0,
@@ -120,8 +123,8 @@ test('RESET PROGRESSはEconomy/RPG stateを初期化しSound設定は保持す�
       clearedStageIds: [],
     },
   })
-  await expect.poll(async () => page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), RPG_KEY)).toMatchObject({
-    version: 4,
+  await expect.poll(async () => readStoredRpg(page)).toMatchObject({
+    version: 5,
     state: {
       equipment: {
         weapon: 'training-blade',

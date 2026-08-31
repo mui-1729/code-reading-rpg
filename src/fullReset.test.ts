@@ -7,6 +7,8 @@ describe('full reset', () => {
     clearFullResetStorage({ removeItem: (key) => removed.push(key) })
 
     expect(removed).toEqual([...FULL_RESET_STORAGE_KEYS])
+    expect(removed).toContain('code-reading-rpg:game-state')
+    expect(removed).toContain('code-reading-rpg:game-state-backup')
     expect(removed).not.toContain('code-reading-rpg:audio-settings')
   })
 })

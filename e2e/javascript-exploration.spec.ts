@@ -1,3 +1,4 @@
+import { readStoredGameState } from './storedGameState'
 import { expect, test, type Page } from '@playwright/test'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
@@ -85,13 +86,7 @@ test('Forestの南branchには寄り道Treasureがあり取得後もreloadでOPE
   await page.reload()
   await expect(page.getByLabel('js-forest-supply treasure opened')).toBeVisible()
 
-  const stored = await page.evaluate(
-    ({ progressKey, rpgKey }) => ({
-      progress: JSON.parse(localStorage.getItem(progressKey) ?? 'null'),
-      rpg: JSON.parse(localStorage.getItem(rpgKey) ?? 'null'),
-    }),
-    { progressKey: PROGRESS_KEY, rpgKey: RPG_KEY },
-  )
+  const stored = await readStoredGameState(page)
   expect(stored.progress.progress.gold).toBe(35)
   expect(stored.progress.progress.inventory.patchKit).toBe(1)
   expect(stored.rpg.state.openedTreasureIds).toContain('js-forest-supply')

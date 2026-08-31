@@ -36,6 +36,7 @@ Enemyを選択すると現在のobject dataを表示する。
 
 ```text
 name          "Goblin"
+role          "standard"
 hp            38
 maxHp         60
 attackName    "Slash"
@@ -136,7 +137,9 @@ src/inspector/
 
 `enemyInspection.ts`はpure resolver。
 
-`BattleCodeData.tsx`はBattle UIの現在表示からruntime contextを読み、panelへ渡す。
+`BattleCodeData.tsx`はAppのReact/domain stateから渡されたEnemy[]とselected codeを表示する。敵cardの選択・dialog openもpropsで制御し、表示DOM・NEXT文言・pathnameをscrapeしない。
+
+`attackDamage`はraw Enemy値、`incomingDamage`はPlayer DEF適用後のNEXT damage。`role`はstandard / elite / bossのstable値で、GUARDの表示codeと内部判定の双方から参照する。
 
 TargetRule / damage calculation / Battle generatorは変更しない。
 

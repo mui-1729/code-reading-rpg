@@ -38,8 +38,8 @@ REAL WORLDでは新人エンジニアとしてproblemを受けるが、technical
 - Overworld 40 × 28 + camera 11 × 9
 - `worldMapId + local worldPosition`のmulti-map model
 - `GREENFIELD VILLAGE` 21 × 15
-- `JAVASCRIPT FOREST` 31 × 21
-- `JAVASCRIPT DEEP FOREST` 31 × 21
+- `JAVASCRIPT FOREST` 31 × 27
+- `JAVASCRIPT DEEP FOREST` 31 × 27
 - Overworld ↔ Village / Forest、Forest ↔ Deep Forest transition
 - VillageはRandom Encounterなし
 - Opening直後にfirst live incidentを体験
@@ -53,7 +53,7 @@ REAL WORLDでは新人エンジニアとしてproblemを受けるが、technical
 - World Objective / BYTE guidance
 - persistent HP / Treasure / Shop / paid Inn
 - BYTE party / follower
-- `PlayerProgress v4` / `RpgState v4`
+- `PlayerProgress v4` / `RpgState v5` / unified revision snapshot
 - semantic progression key + transitive prerequisite validation
 - old save migration / derived progression normalization
 - player-facing Story番号はJavaScript `JS-01〜JS-19`、TypeScript `TS-01〜TS-03`
@@ -141,7 +141,7 @@ JS-19  -> 3
 - Boss 3は正規incident routeとBattle 22までのtransitive prerequisiteを満たした後だけ開始可能
 - Boss 3 clear時だけJavaScript Area CLEAR
 - display codeを`eval()`せずsafe `TargetRule`へ写す
-- PlayerProgress / RpgStateはv4のまま維持し、旧saveへ必要なincident beatをbackfillする
+- PlayerProgress v4を維持して旧saveへ必要なincident beatをbackfillし、RpgState v5で未使用Party Equipmentを整理
 - Story reorderだけを理由にEconomy budgetを変えない
 
 ### Battle / learning infrastructure

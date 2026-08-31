@@ -55,7 +55,7 @@ export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEvent
   if (!line) return null
 
   const layer = line.layer ?? 'code-world'
-  const speakerVisual = getStorySpeakerVisual(line.speaker)
+  const speakerVisual = getStorySpeakerVisual(line.speakerId)
 
   return (
     <div

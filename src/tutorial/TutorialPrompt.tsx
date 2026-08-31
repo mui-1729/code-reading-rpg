@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import { useRouterState } from '@tanstack/react-router'
+import { useBattleRuntime } from '../battle/BattleRuntimeContext'
+import { areas, parseBattleRoute } from '../game/areas'
 import { useRpg } from '../rpg'
 import { useTutorial } from './useTutorial'
 
@@ -11,13 +14,11 @@ type TutorialCopy = {
   className: string
 }
 
-const FIELD_PATHS = ['/world', '/javascript/field', '/typescript/field']
-const BATTLE_PATH_PATTERN = /^\/(javascript|typescript)\/battle\/[^/]+$/
+const FIELD_PATHS = ['/world', ...areas.map((area) => area.routes.field)]
 
-function getRouteKind(): RouteKind {
-  const path = window.location.pathname
+function getRouteKind(path = window.location.pathname): RouteKind {
   if (FIELD_PATHS.includes(path)) return 'field'
-  if (BATTLE_PATH_PATTERN.test(path)) return 'battle'
+  if (parseBattleRoute(path)?.area.capabilities.tutorial) return 'battle'
   return 'other'
 }
 
@@ -129,6 +130,8 @@ function clearHighlights() {
 }
 
 export function TutorialPrompt() {
+  const pathname = useRouterState({ select: (router) => router.location.pathname })
+  const { snapshot: battleRuntime } = useBattleRuntime()
   const { rpgState } = useRpg()
   const {
     state,
@@ -140,22 +143,21 @@ export function TutorialPrompt() {
   } = useTutorial()
   const [revision, setRevision] = useState(0)
   const initialPlayerPositionRef = useRef<string | number | null>(null)
-  const routeKind = typeof window === 'undefined' ? 'other' : getRouteKind()
-  const worldRoute = typeof window !== 'undefined' && window.location.pathname === '/world'
+  const routeKind = getRouteKind(pathname)
+  const worldRoute = pathname === '/world'
   const byteJoined = rpgState.partyMemberIds.includes('byte')
   const interactionReady =
     routeKind === 'field' &&
     (worldRoute ? byteJoined || hasByteNearby() : hasInteractionNearby())
-  const selectedSkill =
-    routeKind === 'battle'
-      ? document.querySelector<HTMLButtonElement>('.skill-card.selected')
-      : null
+  const selectedSkillId = routeKind === 'battle' ? battleRuntime?.selectedSkillId : null
   const battleReady =
     routeKind === 'battle' &&
-    !document.querySelector('.result-overlay, .modal-overlay') &&
-    Boolean(document.querySelector('.skill-card:not(:disabled)'))
+    battleRuntime?.phase === 'battle' &&
+    !battleRuntime.isModalOpen &&
+    !battleRuntime.isResolving
 
   useEffect(() => {
+    if (routeKind !== 'field') return
     let frame = 0
     const observer = new MutationObserver(() => {
       if (frame !== 0) return
@@ -176,12 +178,18 @@ export function TutorialPrompt() {
       observer.disconnect()
       if (frame !== 0) window.cancelAnimationFrame(frame)
     }
-  }, [])
+  }, [routeKind])
 
   useEffect(() => {
     if (state.status !== 'active' || routeKind !== 'battle' || state.phase === 'battle') return
     enterBattle()
   }, [enterBattle, routeKind, state.phase, state.status])
+
+  useEffect(() => {
+    if (state.status === 'active' && state.phase === 'battle' && battleRuntime?.isResolving) {
+      completeBattle()
+    }
+  }, [battleRuntime?.isResolving, completeBattle, state.phase, state.status])
 
   useEffect(() => {
     if (state.status !== 'active' || state.phase !== 'field-move' || routeKind !== 'field') {
@@ -216,14 +224,6 @@ export function TutorialPrompt() {
         return
       }
 
-      if (state.phase !== 'battle') return
-      const skillButton = target.closest<HTMLButtonElement>('.skill-card')
-      if (!skillButton || skillButton.disabled) return
-      if (skillButton.classList.contains('selected')) {
-        completeBattle()
-        return
-      }
-      window.requestAnimationFrame(() => setRevision((current) => current + 1))
     }
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -244,7 +244,7 @@ export function TutorialPrompt() {
       document.removeEventListener('click', onClick, true)
       document.removeEventListener('keydown', onKeyDown)
     }
-  }, [completeBattle, completeFieldInteraction, interactionReady, state.phase, state.status, worldRoute])
+  }, [completeFieldInteraction, interactionReady, state.phase, state.status, worldRoute])
 
   useEffect(() => {
     clearHighlights()
@@ -269,13 +269,17 @@ export function TutorialPrompt() {
     } else if (state.phase === 'party-join' && routeKind === 'field') {
       document.querySelector('.world-follower-sprite')?.classList.add('tutorial-highlight-soft')
     } else if (state.phase === 'battle' && routeKind === 'battle' && battleReady) {
+      // The DOM is only the highlight destination; selection comes from Battle runtime state.
+      const selectedSkill = selectedSkillId
+        ? document.querySelector<HTMLElement>(`[data-skill-id="${CSS.escape(selectedSkillId)}"]`)
+        : null
       if (selectedSkill) selectedSkill.classList.add('tutorial-highlight')
       else document.querySelector('.skill-grid')?.classList.add('tutorial-highlight')
       document.querySelector('.floating-help')?.classList.add('tutorial-highlight-soft')
     }
 
     return clearHighlights
-  }, [battleReady, byteJoined, interactionReady, routeKind, selectedSkill, state.phase, state.status, worldRoute])
+  }, [battleReady, byteJoined, interactionReady, routeKind, selectedSkillId, state.phase, state.status, worldRoute])
 
   if (state.status !== 'active') return null
 
@@ -327,7 +331,7 @@ export function TutorialPrompt() {
       className: 'tutorial-prompt-field',
     }
   } else if (state.phase === 'battle' && routeKind === 'battle' && battleReady) {
-    copy = selectedSkill
+    copy = selectedSkillId
       ? {
           label: 'EXECUTE',
           title: '選んだSkillをもう一度押して実行',

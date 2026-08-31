@@ -22,7 +22,7 @@ Pauseで成長 / Item / Equipment / Party / Objective確認
 
 JavaScript編では、**教材を先に終えてからincidentへ戻るのではなく、incidentを先に見て「何が読めないか」を知ってから必要なcodeを学ぶ**。
 
-## 2. 永続stateは2系統
+## 2. 永続stateの責務と2つの構造
 
 ### PlayerProgress v4
 
@@ -41,14 +41,13 @@ JavaScript編では、**教材を先に終えてからincidentへ戻るのでは
 
 `completedSideQuestIds`はlegacy save互換のため保持する。LevelはEXPから導出し、保存しない。
 
-### RpgState v4
+### RpgState v5
 
 ```ts
 {
   equipment,
   ownedEquipmentIds,
   partyMemberIds,
-  partyEquipment,
   worldMapId,
   worldPosition,
   stepsSinceEncounter,
@@ -58,7 +57,7 @@ JavaScript編では、**教材を先に終えてからincidentへ戻るのでは
 }
 ```
 
-PlayerProgressへWorld座標やEquipmentを混ぜない。
+PlayerProgressへWorld座標やEquipmentを混ぜない。両stateはGameStateProviderの同じReact stateに属し、同期的な1操作の更新を単一revision snapshotとしてLocalStorageへcommitする。
 
 ## 3. Level / combat stats
 
@@ -207,7 +206,7 @@ Battle 1のGoldは既存Economy budgetを守るため20 Gを維持し、Story re
 
 Equipment slotsは`weapon` / `armor` / `accessory`。Attack / Defense / maxHPへbonusを加えるが、code readingを代替しない。
 
-現在の仲間`BYTE`はPlayerがcodeから選んだ同じtargetだけへfollow-upする。独自にcorrect targetを決めない。
+現在の仲間`BYTE`は1 ACTIONに1回、Playerがcodeから選んだtarget群のうちSkill後に生存する先頭1体だけへfollow-upする。全滅時は追撃しない。複数targetで追撃damageを乗算せず、選択外の相手へ自動攻撃しない。仲間に独立HP / Defense / Equipmentはなく、Pauseでは実効のfollow-up情報だけを示す。
 
 `PATCH KIT`は30 G、Battle中1回、最大24 HP回復。現在HPと在庫はそれぞれRpgState / PlayerProgressへ保存する。
 
@@ -231,13 +230,17 @@ PlayerProgressはschema v4。旧v1 / v2 / v3からmigrationし、canonical progr
 - 旧saveでDeep Forest相当へ進んでいる → second symptomも論理的に通過済みとして補完
 - JavaScript Boss 3 clear済み → modern JavaScript arc全体をcompletedとしてnormalize
 
-RpgStateはschema v4。旧v1 / v2 / v3からmigrationし、restore時に次をnormalizeする。
+RpgStateはschema v5。旧v1 / v2 / v3 / v4からmigrationし、未使用のpartyEquipmentを除去する。restore時に次をnormalizeする。
 
 - map ID / map bounds / legacy TypeScript座標
 - known Equipment / Party / Treasure ID
-- Equipment slot / ownership / Party loadout
+- Equipment slot / ownership
 - non-negative Encounter counters
 - current HP upper bound
+
+`code-reading-rpg:game-state`の1回の`setItem`がcommit point。直前のvalid snapshotをbackupへ保持し、壊れたrootからは最新のvalid revisionを復旧する。旧Progress / RPG分割keyは初回migration入力のみで、root保存後は削除する。片側だけのlegacy saveはvalid側を保持し、他方を初期化する。
+
+World portal graphとProgressから到達可能mapを導出し、locked Forest / Deep Forest / TypeScript内だけに位置がある不整合はOverworld開始地点へ戻する。`storage` eventでnewer revisionを取り込み、保存前に新しいrevisionを検出したstale tabは上書きせず新snapshotを採用する。LocalStorageにcompare-and-swapはないため完全同時書き込みの排他までは保証しない。
 
 `RESET PROGRESS`はPlayerProgress / RpgState / TutorialStateを初期化し、Sound settingsは保持する。
 

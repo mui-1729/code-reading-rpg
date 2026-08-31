@@ -1,3 +1,4 @@
+import { readStoredProgress, readStoredRpg } from './storedGameState'
 import { expect, test, type Page } from '@playwright/test'
 import {
   JS_BATTLE_1_PREREQS,
@@ -49,11 +50,11 @@ async function seed(page: Page, clearedStageIds: number[] = []) {
 }
 
 async function storedProgress(page: Page) {
-  return page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), PROGRESS_KEY)
+  return readStoredProgress(page)
 }
 
 async function storedRpg(page: Page) {
-  return page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), RPG_KEY)
+  return readStoredRpg(page)
 }
 
 test('clear済みOverworld Random Encounterから逃走すると同じWorld位置/HPへ戻りrewardを得ない', async ({ page }) => {

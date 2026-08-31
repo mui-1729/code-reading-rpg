@@ -15,6 +15,7 @@ import {
   equipmentDefinitions,
   getCombatStats,
   getEquipmentPresentation,
+  getPartyFollowUpDamage,
   partyMemberById,
   useRpg,
   type EquipmentSlot,
@@ -353,7 +354,7 @@ export function PauseMenu() {
                         <article className="pixel-inner-window pause-list-row party-row" key={member.id}>
                           <div>
                             <strong>{member.name} · {member.role}</strong>
-                            <p>HP {member.maxHp} · ATK {member.attack} · DEF {member.defense}</p>
+                            <p>FOLLOW-UP {getPartyFollowUpDamage([member.id], combatStats.level)} · 1 ACTION / 1 SELECTED TARGET</p>
                           </div>
                           <span>ALLY</span>
                         </article>

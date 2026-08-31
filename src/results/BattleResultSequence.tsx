@@ -1,234 +1,49 @@
-import { useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
-import { useProgress } from '../progression'
+import { useEffect, useState } from 'react'
 import { getEquipmentPresentation } from '../rpg'
-import { BattleStoryEvent } from '../story/BattleStoryEvent'
-import { getBattleStoryEvent } from '../story/battleStoryEvents'
-import type { BattleStoryEvent as BattleStoryEventData } from '../story/types'
-import { buildResultSequence, type RawResultItem, type ResultSequenceItem } from './resultSequence'
+import type { ResultSequenceItem } from './resultSequence'
 
 const AUTO_ADVANCE_MS = 1100
-const WORLD_PROGRESS_SELECTOR =
-  '[data-result-feedback="world-progress"]:not(.result-sequence-consumed)'
 
-const isFirstClear = (summary: HTMLElement) =>
-  Array.from(summary.querySelectorAll<HTMLElement>('.reward-unlock'))
-    .some((element) => element.textContent?.includes('STAGE CLEAR RECORDED'))
-
-const readRewardItems = (summary: HTMLElement): RawResultItem[] => {
-  const items: RawResultItem[] = []
-
-  for (const element of Array.from(summary.children)) {
-    if (!(element instanceof HTMLElement)) continue
-    if (element.classList.contains('result-sequence-panel')) continue
-
-    if (element.classList.contains('reward-stat')) {
-      items.push({
-        label: element.querySelector('span')?.textContent ?? undefined,
-        value: element.querySelector('strong')?.textContent ?? undefined,
-      })
-      continue
-    }
-
-    if (element.classList.contains('reward-unlock')) {
-      items.push({ text: element.textContent ?? undefined })
-    }
-  }
-
-  const progressFeedback = document.querySelector<HTMLElement>(WORLD_PROGRESS_SELECTOR)
-  if (progressFeedback) {
-    const status = progressFeedback.querySelector('span')?.textContent?.trim()
-    const title = progressFeedback.querySelector('strong')?.textContent?.trim()
-    const progress = progressFeedback.querySelector('p')?.textContent?.trim()
-    const next = progressFeedback.querySelector('em')?.textContent?.trim()
-    const detail = [title, progress, next].filter(Boolean).join(' · ')
-    if (status && detail) items.push({ text: `${status}: ${detail}` })
-
-    const equipmentId = progressFeedback.dataset.equipmentRewardId
-    if (equipmentId) {
-      items.push({
-        equipmentId,
-        equipmentName: progressFeedback.dataset.equipmentRewardName,
-      })
-    }
-    progressFeedback.classList.add('result-sequence-consumed')
-  }
-
-  return items
+type BattleResultSequenceProps = {
+  items: readonly ResultSequenceItem[]
+  paused: boolean
+  done: boolean
+  onComplete: () => void
 }
 
-export function BattleResultSequence() {
-  const { progress } = useProgress()
-  const [target, setTarget] = useState<HTMLElement | null>(null)
-  const [host, setHost] = useState<HTMLElement | null>(null)
-  const [items, setItems] = useState<ResultSequenceItem[]>([])
+/** Reward data comes from the victory transaction, never from rendered text. */
+export function BattleResultSequence({ items, paused, done, onComplete }: BattleResultSequenceProps) {
   const [index, setIndex] = useState(0)
-  const [done, setDone] = useState(false)
-  const [storyEvent, setStoryEvent] = useState<BattleStoryEventData | null>(null)
-  const activeTarget = useRef<HTMLElement | null>(null)
-  const activePath = useRef('')
-  const preStoryShown = useRef(false)
-  const postStoryTarget = useRef<HTMLElement | null>(null)
-  const clearedStageIds = useRef(progress.clearedStageIds)
 
   useEffect(() => {
-    clearedStageIds.current = progress.clearedStageIds
-  }, [progress.clearedStageIds])
-
-  useEffect(() => {
-    let collectFrame = 0
-
-    const collect = (summary: HTMLElement) => {
-      if (collectFrame !== 0) return
-      collectFrame = window.requestAnimationFrame(() => {
-        collectFrame = 0
-        setItems(buildResultSequence(readRewardItems(summary)))
-      })
-    }
-
-    const scan = () => {
-      const path = window.location.pathname
-      if (path !== activePath.current) {
-        activePath.current = path
-        preStoryShown.current = false
-        postStoryTarget.current = null
-        setStoryEvent(null)
-      }
-
-      const nextTarget = document.querySelector<HTMLElement>('.victory-card .reward-summary')
-
-      if (!nextTarget && !preStoryShown.current) {
-        const preEvent = getBattleStoryEvent(path, 'pre', clearedStageIds.current)
-        if (preEvent) {
-          preStoryShown.current = true
-          setStoryEvent(preEvent)
-        }
-      }
-
-      if (nextTarget === activeTarget.current) {
-        const pendingProgress = document.querySelector(WORLD_PROGRESS_SELECTOR)
-        if (nextTarget && pendingProgress) collect(nextTarget)
-        return
-      }
-
-      if (activeTarget.current) {
-        activeTarget.current.classList.remove('result-sequence-active')
-        activeTarget.current.closest<HTMLElement>('.victory-card')?.classList.remove(
-          'result-sequence-host',
-          'result-sequence-complete',
-        )
-      }
-
-      activeTarget.current = nextTarget
-      setTarget(nextTarget)
-      setHost(nextTarget?.closest<HTMLElement>('.victory-card') ?? null)
-      setIndex(0)
-      setDone(false)
-
-      if (!nextTarget) {
-        setItems([])
-        return
-      }
-
-      nextTarget.classList.add('result-sequence-active')
-      nextTarget.closest<HTMLElement>('.victory-card')?.classList.add('result-sequence-host')
-      collect(nextTarget)
-
-      if (postStoryTarget.current !== nextTarget && isFirstClear(nextTarget)) {
-        const postEvent = getBattleStoryEvent(path, 'post')
-        if (postEvent) {
-          postStoryTarget.current = nextTarget
-          setStoryEvent(postEvent)
-        }
-      }
-    }
-
-    scan()
-    const observer = new MutationObserver(scan)
-    observer.observe(document.body, { childList: true, subtree: true })
-
-    return () => {
-      observer.disconnect()
-      if (collectFrame) window.cancelAnimationFrame(collectFrame)
-      activeTarget.current?.classList.remove('result-sequence-active')
-      activeTarget.current?.closest<HTMLElement>('.victory-card')?.classList.remove(
-        'result-sequence-host',
-        'result-sequence-complete',
-      )
-      activeTarget.current = null
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!host) return
-    host.classList.toggle('result-sequence-complete', done)
-    return () => host.classList.remove('result-sequence-complete')
-  }, [done, host])
-
-  useEffect(() => {
-    if (!target || done || items.length === 0 || storyEvent) return
+    if (done || paused || items.length === 0) return
     const timer = window.setTimeout(() => {
-      setIndex((current) => {
-        if (current >= items.length - 1) {
-          setDone(true)
-          return current
-        }
-        return current + 1
-      })
+      if (index >= items.length - 1) onComplete()
+      else setIndex((current) => current + 1)
     }, AUTO_ADVANCE_MS)
     return () => window.clearTimeout(timer)
-  }, [done, index, items.length, storyEvent, target])
+  }, [done, index, items.length, onComplete, paused])
 
-  if (storyEvent) {
-    return (
-      <BattleStoryEvent
-        event={storyEvent}
-        onComplete={() => setStoryEvent(null)}
-        onSkip={() => {
-          setStoryEvent(null)
-          if (target) setDone(true)
-        }}
-      />
-    )
-  }
-
-  if (!target || items.length === 0) return null
-
+  if (items.length === 0) return null
   const current = items[Math.min(index, items.length - 1)]
-  const currentEquipment = current.equipmentId
-    ? getEquipmentPresentation(current.equipmentId)
-    : null
+  const currentEquipment = current.equipmentId ? getEquipmentPresentation(current.equipmentId) : null
   const advance = () => {
     if (done) return
-    if (index >= items.length - 1) {
-      setDone(true)
-      return
-    }
-    setIndex((currentIndex) => currentIndex + 1)
+    if (index >= items.length - 1) onComplete()
+    else setIndex((currentIndex) => currentIndex + 1)
   }
 
-  const skip = () => setDone(true)
-
-  return createPortal(
+  return (
     <div className={`result-sequence-panel ${done ? 'is-summary' : `tone-${current.tone}`}`} aria-live="polite">
       {done ? (
         <>
           <div className="result-sequence-kicker">RESULT</div>
           <div className="result-sequence-summary">
             {items.map((item) => {
-              const equipment = item.equipmentId
-                ? getEquipmentPresentation(item.equipmentId)
-                : null
+              const equipment = item.equipmentId ? getEquipmentPresentation(item.equipmentId) : null
               return (
                 <div key={item.id} className={item.equipmentId ? 'is-equipment' : undefined}>
-                  {equipment?.visual && (
-                    <img
-                      className="result-equipment-icon equipment-pixel-icon"
-                      src={equipment.visual}
-                      alt=""
-                      aria-hidden="true"
-                    />
-                  )}
+                  {equipment?.visual && <img className="result-equipment-icon equipment-pixel-icon" src={equipment.visual} alt="" aria-hidden="true" />}
                   <span>{item.title}</span>
                   {item.detail && <strong>{item.detail}</strong>}
                 </div>
@@ -239,27 +54,18 @@ export function BattleResultSequence() {
       ) : (
         <div className="result-sequence-event" key={`${current.id}:${index}`} onClick={advance}>
           <div className="result-sequence-kicker">{index + 1} / {items.length}</div>
-          {currentEquipment?.visual && (
-            <img
-              className="result-equipment-hero equipment-pixel-icon"
-              src={currentEquipment.visual}
-              alt=""
-              aria-hidden="true"
-            />
-          )}
+          {currentEquipment?.visual && <img className="result-equipment-hero equipment-pixel-icon" src={currentEquipment.visual} alt="" aria-hidden="true" />}
           <strong>{current.title}</strong>
           {current.detail && <span>{current.detail}</span>}
           <small>Tap / click to continue</small>
         </div>
       )}
-
       {!done && (
         <div className="result-sequence-controls">
           <button type="button" className="primary-button" onClick={advance}>NEXT</button>
-          <button type="button" className="secondary-button" onClick={skip}>SKIP</button>
+          <button type="button" className="secondary-button" onClick={onComplete}>SKIP</button>
         </div>
       )}
-    </div>,
-    target,
+    </div>
   )
 }

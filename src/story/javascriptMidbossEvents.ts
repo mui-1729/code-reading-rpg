@@ -6,18 +6,24 @@ const preBattleEvent: BattleStoryEvent = {
   title: '異常の経路を守る相手を越える',
   lines: [
     {
+      speakerId: 'byte',
+
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',
       text: 'traceがこの守り人の向こうへ全部集まってる。こいつを倒すこと自体が試験なんじゃない。原因へ続く経路を塞がれてるんだ。',
     },
     {
+      speakerId: 'byte',
+
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',
       text: '使われているのは今まで見たHP、name、find()、&&、||だけ。長く見えたら条件を小さく分けて、enemiesを前から追おう。',
     },
     {
+      speakerId: 'byte',
+
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',
@@ -32,18 +38,23 @@ const postBattleEvent: BattleStoryEvent = {
   title: '一体ではなく複数へ広がる痕跡',
   lines: [
     {
+      speakerId: 'byte',
+
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',
       text: '道が開いた。ここからtraceが一体だけじゃなく、条件に合う複数のEnemyへ枝分かれしてる。',
     },
     {
+      speakerId: 'lead-ada',
       speaker: 'LEAD ADA',
       role: 'SENIOR ENGINEER',
       layer: 'remote',
       text: 'REAL WORLD側でも影響範囲が広がっている。最初の一件だけ直すのでは足りない。複数targetを作る処理まで追ってくれ。',
     },
     {
+      speakerId: 'byte',
+
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',

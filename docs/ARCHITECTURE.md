@@ -22,11 +22,11 @@ Browser
   ↓
 React 19 + TanStack Router
   ↓
-ProgressProvider
-  ↓
-RpgProvider
+GameStateProvider (ProgressContext + RpgContext + BattleSessionContext)
   ↓
 TutorialProvider
+  ↓
+BattleRuntimeProvider
   ↓
 RouterProvider
   ├─ Home / Opening
@@ -35,8 +35,6 @@ RouterProvider
 
 Global presentation
   ├─ TutorialPrompt
-  ├─ BattleCodeData
-  ├─ BattleResultSequence
   ├─ PauseMenu
   ├─ WorldProgressFeedback
   └─ AudioUnlock
@@ -44,7 +42,9 @@ Global presentation
 
 `AppRouter.tsx`はproviderとroute外overlayのcompositionだけを担当する。
 
-`RootLayout.tsx`はroute outletにPause / World progress feedbackを重ねる。
+`RootLayout.tsx`はroute outletにBattleRouteGate / Tutorial / Pause / World progress feedbackを重ねる。router stateを読むcomponentはRouterProviderの内側へ置く。
+
+CODE DATA / Item / Escape / Result / StoryはBattle runtimeがpropsで組み立てる。PortalやDOM textをBattle状態のsource of truthにしない。
 
 ## 3. Current routes
 
@@ -70,6 +70,8 @@ Legacy redirect:
 
 旧Field URLはbookmark / old link互換のためrouteだけ残す。旧Field React pageをcurrent runtimeへ戻さない。
 
+`game/areas.ts`がAreaのbattle base path、Battle sequence、World map membership、capability、Story resolver、clear equipment rewardを登録する。共通の `/$areaId/battle/$battleId` adapterが登録済みAreaを受け付け、Gate / CODE DATA / Escape / Tutorial / Storyは同じregistryを参照する。registry testはBattle definition・progression node・Story handlerとの対応漏れを検出する。
+
 ## 4. Directory responsibilities
 
 ```text
@@ -80,6 +82,8 @@ src/
 ├── routeComponents.tsx         # Home / Opening / Battle route adapters
 ├── router.tsx                  # current routes + legacy redirects
 ├── game/                       # code-reading Battle domain
+├── battle/                     # Battle session transaction / runtime snapshot / lifecycle
+├── persistence/                # atomic root save / provider / migration / cross-tab sync
 ├── world/                      # Open World domain + World UI
 ├── progression/                # EXP / Gold / clears / unlock / consumable
 ├── rpg/                        # HP / Equipment / Party / World persistence
@@ -167,9 +171,30 @@ variationしても次は変えない。
 - attack / damage motion
 - story scene connection
 
-Battle sessionの一時stateはLocalStorageのsource of truthにしない。
+Enemy / turn / selected Skill / `patchKitUsed`等の一時stateはLocalStorageのsource of truthにしない。`battle/sessionTransaction.ts`は開始時の`PlayerProgress + RpgState + Battle identity`を`BattleSessionSnapshot`として保持するpure transaction境界。
 
-永続HPは`RpgState.currentHp`へ接続し、Battle中のdamage / healをRPG stateへ反映する。
+永続HPは`RpgState.currentHp`へ接続し、Battle中のdamage / heal / Item消費は同じroot saveの開始snapshotとともに仮更新する。終了policyは次の通り。
+
+| Event | Persistent state / runtime |
+| --- | --- |
+| START | 開始時のProgress / RPG全体とarea・Battle ID・seed・returnTo・attempt IDをsnapshot |
+| VICTORY | 報酬・clear・registry装備報酬・現HP・消費を同時commit |
+| DEFEAT | 現行のfull HP / Hub位置 / cooldown回復policyと消費をcommit |
+| RUN | 現HP・消費をcommit、報酬なし |
+| ABORT | browser back / route leave / 別Battle移動では開始snapshotへ全体rollback |
+| RELOAD | 未完sessionを開始snapshotへ全体rollback後、新しいattemptとして敵・turn・per-battle flagsも初期化 |
+
+reloadでItem使用枠だけを回復したり、Enemyだけを初期化して消費を残したりしない。Retry / checkpoint UXの変更はこの基盤と分離する。
+
+`useBattleSession`はmount / unmountをSTART / ABORTへ接続する。StrictModeのsetup / cleanup / setupは同じ開始snapshotへ戻る。全Battle timerをunmount時にcancelし、persistent mutationもattempt IDでguardする。別tabの新revisionを採用したBattleは古いEnemy / turnと混ぜずWorldへ退出する。
+
+別tabの未完Battleを受信したWorld / Pauseは開始snapshotのProgress / RPGを参照する。そこでの操作は同じ開始値を計算baseにし、未完sessionのrollbackと新しい操作を1commitにまとめる。他tabの仮HPで計算した移動・Shop結果を、rollback後の在庫と合成しない。
+
+`BattleRuntimeProvider`はphase / resolving / enemies / HP / selected Skill / turn / resultのread-only snapshotを共有する。TutorialはそのsnapshotからSELECT / EXECUTEと実行完了を判断し、DOM参照はhighlightの配置だけに使う。
+
+Victory transactionからtyped result eventを生成する。`BattleResultSequence`はそれを順次表示し、報酬文言・勝利DOM・隠しWorld feedbackをparseしない。CODE DATAはraw attackDamageとDEF適用後incomingDamageを分離してpropsで受け取る。
+
+Enemyのsprite / Boss presentation / GUARDはstable `visualId` / `role`、Story portraitは`speakerId`で決定する。code-reading ruleが明示的に読む`name`は学習dataとして維持する。
 
 ### Current technical debt
 
@@ -232,6 +257,16 @@ WorldPage
 
 新しいWorld objectを追加する時は位置条件を`WorldPage.tsx`へ直書きせずdomain側を更新する。
 
+### Shared World scene
+
+`WorldPage.tsx`と`TypeScriptFrontierPage.tsx`は地域ごとのinteraction / feedbackを担当し、描画と入力の共通部分を次へ委譲する。
+
+- `WorldScene.tsx` — tile viewport、objective、player / follower layer、D-Pad / INTERACT
+- `worldSceneGeometry.ts` — map座標からviewport内座標への変換と可視範囲（寸法は`worldMap.ts`の定義を共有）
+- `useWorldKeyboardControls.ts` — Arrow / WASD / Enter / Space、Pauseとnative controlの入力所有権
+
+terrain labelとobject rendererは地域側から渡し、共通sceneへJavaScript / TypeScript固有の条件を追加しない。移動のdomain判断は両地域とも`resolveWorldMove`を使う。
+
 ## 8. Story
 
 StoryはBattle rulesと分離する。
@@ -262,13 +297,13 @@ Story eventがtarget rule / damage / generatorを変更してはいけない。
 
 LevelはEXPから導出する。
 
-### RpgState v4
+### RpgState v5
 
 担当:
 
 - current HP
 - Equipment / owned Equipment
-- Party / Party Equipment
+- joined Party member IDs
 - current World map ID
 - World position
 - Encounter pacing
@@ -282,7 +317,11 @@ restore時に次をnormalizeする。
 - non-negative Encounter counters
 - current HP upper bound
 
-v1 / v2 / v3からv4へmigrationする。旧Overworld上のTypeScript座標は`ts-frontier`へ移す。
+v1 / v2 / v3 / v4からv5へmigrationし、未使用partyEquipmentを除去する。旧Overworld上のTypeScript座標は`ts-frontier`へ移す。
+
+### Logical save transaction
+
+`persistence/GameStateProvider` が両stateとBattle開始snapshotのReact ownershipをまとめる。Treasure / Shop / Inn / Itemの同期更新は同じcommitへbatchされ、`gameStateStorage`がroot schema v2のrevision snapshotを1keyへatomicに保存する。root v1はsessionなしとして移行し、Progress v4 / RPG v5は維持する。旧分割keyはmigration専用。直前backupからのrecovery、portal graphに基づくlocked map位置の正規化、storage event同期、stale revisionの上書き回避をこの境界で行う。Area clear装備報酬もregistryから同じnormalizationで補完し、World mount effectへ依存しない。
 
 ### TutorialState v1
 
@@ -301,10 +340,10 @@ Sound settingsはprogress resetと分離したLocalStorage。`RESET PROGRESS`で
 progress resetはprovider同士を直接importして連鎖させない。
 
 ```text
-ProgressProvider
+GameStateProvider
   ↓ dispatch generic reset event
-RpgProvider      → own state reset
 TutorialProvider → own state reset
+FullResetCoordinator → root / backup / legacy saveを削除しTitleへhard navigation
 ```
 
 Soundはresetしない。
@@ -341,7 +380,8 @@ legacy quest helpersはcurrent routeを制御しない。
 
 - current companion: BYTE
 - joined stateをRpgStateへsave
-- Battleではcodeが選んだ**同じtarget**へfollow-up
+- Battleでは1 ACTIONに1回、codeが選んだtarget群の生存先頭1体へfollow-up
+- 独立HP / Defense / Party Equipmentは持たず、未使用statをPauseに示さない
 
 Partyが独自にcorrect targetを決めない。
 
@@ -383,6 +423,7 @@ Unit Test:
 - independent displayed-code oracle / shared combat turn resolver
 - progression / migration
 - RpgState normalization
+- Battle START / commit / rollback / stale attempt guard / root v1→v2 migration
 - World resolver
 - Economy / Equipment / Party
 - Tutorial reducer / storage
@@ -394,6 +435,7 @@ Playwright E2E:
 - movement / interaction
 - Random Encounter → Battle → World return
 - HP persistence / Recovery / Defeat
+- Battle reload全体rollback / browser back後timer停止 / RUN消費commit
 - Treasure / Shop / Equipment
 - BYTE / follow-up
 - Pause / CODEX / SYSTEM

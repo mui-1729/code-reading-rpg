@@ -87,13 +87,13 @@ test.describe('Boss GUARD', () => {
     const boss = page.locator('.enemy-card.is-boss-enemy')
     await expect(page.getByLabel('Boss Guard ACTIVE')).toBeVisible()
     await expect(page.getByLabel('Boss Guard ACTIVE')).toContainText(
-      'enemies.some(e => e.name !== "Boss" && e.hp > 0)',
+      'enemies.some(e => e.role !== "boss" && e.hp > 0)',
     )
 
     const guardedHpBefore = await enemyHp(boss)
     await executeSkill(page, 'ALERT')
     await expect.poll(() => enemyHp(boss)).toBe(guardedHpBefore - 1)
-    await expect(page.getByText('BOSS GUARD → total damage to Boss capped at 1')).toBeVisible()
+    await expect(page.getByText('BOSS GUARD → Skill damage to Boss capped at 1')).toBeVisible()
     await expect(page.getByText('TURN 02')).toBeVisible()
 
     await executeSkill(page, 'MOON EDGE')

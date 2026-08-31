@@ -1,15 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { gameAudio } from '../audio/gameAudio'
 import { useBgm } from '../audio/useBgm'
 import { WorldInn, WorldShop } from '../economy'
 import { useProgress } from '../progression'
-import {
-  characterVisuals,
-  emptyPartyEquipment,
-  equipmentById,
-  useRpg,
-} from '../rpg'
+import { characterVisuals, equipmentById, useRpg } from '../rpg'
 import { openWorldTreasure } from './treasures'
 import {
   getNextJavaScriptTrainingBattleId,
@@ -25,6 +20,9 @@ import {
   JS_FOREST_MAP_ID,
   JS_VILLAGE_MAP_ID,
 } from './worldMap'
+import { WorldCharacterLayer, WorldControls, WorldObjectiveCard, WorldViewport } from './WorldScene'
+import { useWorldKeyboardControls } from './useWorldKeyboardControls'
+import type { WorldPosition } from './worldSceneGeometry'
 
 const regionLabels = {
   javascript: 'JAVASCRIPT WEST',
@@ -54,11 +52,6 @@ const terrainLabels: Record<string, string> = {
   training: 'JavaScript Training Ground',
 }
 
-const VIEWPORT_COLUMNS = 11
-const VIEWPORT_ROWS = 9
-
-type Position = { x: number; y: number }
-
 export function WorldPage() {
   const navigate = useNavigate()
   const { progress, setProgress } = useProgress()
@@ -72,7 +65,7 @@ export function WorldPage() {
 
   const mapId = rpgState.worldMapId
   const position = rpgState.worldPosition
-  const [followerPosition, setFollowerPosition] = useState<Position>(() => ({
+  const [followerPosition, setFollowerPosition] = useState<WorldPosition>(() => ({
     x: position.x,
     y: position.y + 1,
   }))
@@ -437,34 +430,6 @@ export function WorldPage() {
         ? forestObjective
         : javascriptNextObjective
 
-  const spriteStyle = useCallback(
-    (spritePosition: Position) => ({
-      left: `${((spritePosition.x - viewportStart.x + 0.5) / VIEWPORT_COLUMNS) * 100}%`,
-      top: `${((spritePosition.y - viewportStart.y + 0.5) / VIEWPORT_ROWS) * 100}%`,
-    }),
-    [viewportStart.x, viewportStart.y],
-  )
-
-  const followerVisible =
-    byteJoined &&
-    followerPosition.x >= viewportStart.x &&
-    followerPosition.x < viewportStart.x + VIEWPORT_COLUMNS &&
-    followerPosition.y >= viewportStart.y &&
-    followerPosition.y < viewportStart.y + VIEWPORT_ROWS
-
-  useEffect(() => {
-    const rewards: string[] = []
-    if (progress.clearedAreaIds.includes('javascript')) rewards.push('branch-saber')
-    if (progress.clearedAreaIds.includes('typescript')) rewards.push('typed-mail')
-    if (rewards.length === 0) return
-
-    setRpgState((current) => {
-      const missing = rewards.filter((id) => !current.ownedEquipmentIds.includes(id))
-      if (missing.length === 0) return current
-      return { ...current, ownedEquipmentIds: [...current.ownedEquipmentIds, ...missing] }
-    })
-  }, [progress.clearedAreaIds, setRpgState])
-
   const enterBattle = useCallback(
     (battleId: number, battleRegion: 'javascript' | 'typescript', seed: string) => {
       gameAudio.playSe('confirm')
@@ -625,10 +590,6 @@ export function WorldPage() {
       setRpgState((current) => ({
         ...current,
         partyMemberIds: [...current.partyMemberIds, intent.memberId],
-        partyEquipment: {
-          ...current.partyEquipment,
-          [intent.memberId]: emptyPartyEquipment(),
-        },
       }))
       setMessage('BYTE joined the party! まず西の草原で、Openingのtarget異常を一緒に見に行こう。')
       return
@@ -726,30 +687,7 @@ export function WorldPage() {
     shopOpen,
   ])
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (shopOpen || innOpen || document.body.dataset.rpgPaused === 'true') return
-      const key = event.key.toLowerCase()
-      if (key === 'arrowup' || key === 'w') {
-        event.preventDefault()
-        move(0, -1)
-      } else if (key === 'arrowdown' || key === 's') {
-        event.preventDefault()
-        move(0, 1)
-      } else if (key === 'arrowleft' || key === 'a') {
-        event.preventDefault()
-        move(-1, 0)
-      } else if (key === 'arrowright' || key === 'd') {
-        event.preventDefault()
-        move(1, 0)
-      } else if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault()
-        interact()
-      }
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [innOpen, interact, move, shopOpen])
+  useWorldKeyboardControls({ interact, move, disabled: shopOpen || innOpen })
 
   return (
     <main className="app-shell world-shell title-screen">
@@ -785,18 +723,14 @@ export function WorldPage() {
           </div>
         </header>
 
-        <section
-          className={`world-next-objective pixel-inner-window ${currentObjective.clear ? 'is-clear' : ''}`}
-          aria-label="Next objective"
-        >
-          <span>{currentObjective.label}</span>
-          <strong>{currentObjective.title}</strong>
-          <p>{currentObjective.detail}</p>
-        </section>
+        <WorldObjectiveCard objective={currentObjective} />
 
-        <div
-          className="world-viewport pixel-inner-window"
-          aria-label={
+        <WorldViewport
+          mapId={mapId}
+          playerPosition={position}
+          cells={visibleCells}
+          terrainLabels={terrainLabels}
+          label={
             isVillage
               ? 'Village map'
               : isDeepForest
@@ -805,42 +739,44 @@ export function WorldPage() {
                   ? 'Forest map'
                   : 'Open world map'
           }
-          data-world-map={mapId}
-          data-world-x={position.x}
-          data-world-y={position.y}
-        >
-          {visibleCells.map((cell) => {
-            const renderedTerrain =
-              cell.terrain === 'midboss' && progress.clearedStageIds.includes(13)
-                ? 'road'
-                : cell.terrain
+          getTerrain={(cell) =>
+            cell.terrain === 'midboss' && progress.clearedStageIds.includes(13)
+              ? 'road'
+              : cell.terrain
+          }
+          renderObject={(cell, renderedTerrain) => {
             const treasure =
               renderedTerrain === 'treasure' ? getTreasureAtPosition(cell, mapId) : undefined
             const treasureOpened = treasure
               ? rpgState.openedTreasureIds.includes(treasure.id)
               : false
             return (
-              <div
-                key={`${cell.mapId}:${cell.x}:${cell.y}`}
-                className={`world-tile terrain-${renderedTerrain}`}
-                title={terrainLabels[renderedTerrain]}
-                data-world-map={cell.mapId}
-                data-world-x={cell.x}
-                data-world-y={cell.y}
-              >
-                {renderedTerrain === 'boss' && <span className="world-object boss-object">BOSS</span>}
+              <>
+                {renderedTerrain === 'boss' && (
+                  <span className="world-object boss-object">BOSS</span>
+                )}
                 {renderedTerrain === 'midboss' && (
-                  <span className="world-object midboss-object" aria-label="JavaScript Forest Mid-Boss">
+                  <span
+                    className="world-object midboss-object"
+                    aria-label="JavaScript Forest Mid-Boss"
+                  >
                     MID BOSS
                   </span>
                 )}
-                {renderedTerrain === 'shop' && <span className="world-object shop-object">SHOP</span>}
+                {renderedTerrain === 'shop' && (
+                  <span className="world-object shop-object">SHOP</span>
+                )}
                 {renderedTerrain === 'village' && (
                   <span className="world-object village-object">VILLAGE</span>
                 )}
-                {renderedTerrain === 'exit' && <span className="world-object exit-object">EXIT</span>}
+                {renderedTerrain === 'exit' && (
+                  <span className="world-object exit-object">EXIT</span>
+                )}
                 {renderedTerrain === 'training' && (
-                  <span className="world-object training-object" aria-label="JavaScript Training Ground">
+                  <span
+                    className="world-object training-object"
+                    aria-label="JavaScript Training Ground"
+                  >
                     TRAIN
                   </span>
                 )}
@@ -862,73 +798,25 @@ export function WorldPage() {
                     {treasureOpened ? 'OPEN' : 'CHEST'}
                   </span>
                 )}
-              </div>
+              </>
             )
-          })}
-
-          <div
-            className="world-character-layer"
-            aria-hidden="true"
-            data-world-map={mapId}
-            data-world-x={position.x}
-            data-world-y={position.y}
-          >
-            {followerVisible && (
-              <span
-                className="world-follower-sprite world-character-overlay"
-                style={spriteStyle(followerPosition)}
-                data-world-map={mapId}
-                data-world-x={followerPosition.x}
-                data-world-y={followerPosition.y}
-              >
-                <img
-                  className="world-follower-pixel"
-                  src={characterVisuals.byte.field}
-                  alt=""
-                />
-              </span>
-            )}
-
-            <span
-              className="world-player-sprite world-character-overlay"
-              style={spriteStyle(position)}
-              data-world-map={mapId}
-              data-world-x={position.x}
-              data-world-y={position.y}
-            >
-              <img
-                className="world-player-pixel"
-                src={characterVisuals.player.field}
-                alt=""
-              />
-            </span>
-          </div>
-        </div>
+          }}
+        >
+          <WorldCharacterLayer
+            mapId={mapId}
+            playerPosition={position}
+            viewportStart={viewportStart}
+            followerPosition={followerPosition}
+            followerJoined={byteJoined}
+          />
+        </WorldViewport>
 
         <section className="world-message pixel-inner-window" aria-live="polite">
           <span>FIELD LOG</span>
           <p>{message}</p>
         </section>
 
-        <div className="world-controls" aria-label="World controls">
-          <div className="world-dpad">
-            <button type="button" aria-label="Move up" onClick={() => move(0, -1)}>
-              ▲
-            </button>
-            <button type="button" aria-label="Move left" onClick={() => move(-1, 0)}>
-              ◀
-            </button>
-            <button type="button" aria-label="Move down" onClick={() => move(0, 1)}>
-              ▼
-            </button>
-            <button type="button" aria-label="Move right" onClick={() => move(1, 0)}>
-              ▶
-            </button>
-          </div>
-          <button type="button" className="primary-button world-interact" onClick={interact}>
-            INTERACT
-          </button>
-        </div>
+        <WorldControls move={move} interact={interact} />
       </section>
 
       <WorldShop open={shopOpen} onClose={() => setShopOpen(false)} onMessage={setMessage} />

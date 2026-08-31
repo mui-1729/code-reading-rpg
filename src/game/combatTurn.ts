@@ -11,6 +11,7 @@ export type PlayerActionResolution = {
   enemies: Enemy[]
   skillDamage: number
   partyFollowUpDamage: number
+  partyFollowUpTargetId: string | null
   totalDamage: number
   damageByTargetId: Record<string, number>
   guardedBossTargeted: boolean
@@ -34,30 +35,63 @@ export function resolvePlayerAction(input: {
   const targets = getTargets(enemies, input.skill.rule)
   const skillDamage = getSkillDamage(input.skill.power, input.playerStats)
   const partyFollowUpDamage = Math.max(0, input.partyFollowUpDamage ?? 0)
-  const totalDamage = skillDamage + partyFollowUpDamage
-  const damageByTargetId = Object.fromEntries(
+  const skillDamageByTargetId = Object.fromEntries(
     targets.map((target) => [
       target.id,
-      resolveBossGuardDamage(input.battle, enemies, target, totalDamage),
+      resolveBossGuardDamage(input.battle, enemies, target, skillDamage),
     ]),
   )
   const targetIds = new Set(targets.map((target) => target.id))
+  const enemiesAfterSkill = enemies.map((enemy) =>
+    targetIds.has(enemy.id)
+      ? { ...enemy, hp: Math.max(0, enemy.hp - (skillDamageByTargetId[enemy.id] ?? 0)) }
+      : enemy,
+  )
+  // A party member performs one follow-up per player action, not one extra hit
+  // per target. Prefer a selected target that survived the Skill so the hit is
+  // observable; if every selected target fell, the follow-up is not emitted.
+  const followUpTarget = partyFollowUpDamage > 0
+    ? targets.find((target) =>
+        (enemiesAfterSkill.find((enemy) => enemy.id === target.id)?.hp ?? 0) > 0,
+      )
+    : undefined
+  const resolvedFollowUpDamage = followUpTarget
+    ? resolveBossGuardDamage(
+        input.battle,
+        enemiesAfterSkill,
+        followUpTarget,
+        partyFollowUpDamage,
+      )
+    : 0
+  const damageByTargetId = Object.fromEntries(
+    targets.map((target) => [
+      target.id,
+      (skillDamageByTargetId[target.id] ?? 0) +
+        (target.id === followUpTarget?.id ? resolvedFollowUpDamage : 0),
+    ]),
+  )
   const nextEnemies = enemies.map((enemy) =>
     targetIds.has(enemy.id)
       ? { ...enemy, hp: Math.max(0, enemy.hp - (damageByTargetId[enemy.id] ?? 0)) }
       : enemy,
+  )
+  const totalDamage = Object.values(damageByTargetId).reduce(
+    (total, damage) => total + damage,
+    0,
   )
 
   return {
     targets,
     enemies: nextEnemies,
     skillDamage,
-    partyFollowUpDamage,
+    partyFollowUpDamage: resolvedFollowUpDamage,
+    partyFollowUpTargetId: followUpTarget?.id ?? null,
     totalDamage,
     damageByTargetId,
     guardedBossTargeted: targets.some(
       (target) =>
-        target.name === 'Boss' && (damageByTargetId[target.id] ?? totalDamage) < totalDamage,
+        target.role === 'boss' &&
+        (skillDamageByTargetId[target.id] ?? skillDamage) < skillDamage,
     ),
   }
 }

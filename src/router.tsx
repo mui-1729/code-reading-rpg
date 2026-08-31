@@ -1,6 +1,7 @@
 import { createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router'
 import { RootLayout } from './RootLayout'
-import { BattleRoutePage, HomePage, TypeScriptBattleRoutePage } from './routeComponents'
+import { BattleRoutePage, HomePage } from './routeComponents'
+import { validateBattleSearch } from './battle/session'
 import { WorldRoutePage } from './world/WorldRoutePage'
 
 const rootRoute = createRootRoute({ component: RootLayout })
@@ -32,15 +33,7 @@ const javascriptFieldRoute = createRoute({
 const javascriptBattleRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'javascript/battle/$battleId',
-  validateSearch: (search: Record<string, unknown>) => ({
-    seed: typeof search.seed === 'string' && search.seed.length > 0 ? search.seed : undefined,
-    returnTo:
-      search.returnTo === '/world'
-        ? '/world' as const
-        : search.returnTo === '/javascript/field'
-          ? '/javascript/field' as const
-          : undefined,
-  }),
+  validateSearch: validateBattleSearch,
   component: BattleRoutePage,
 })
 
@@ -65,22 +58,22 @@ const typescriptFieldRoute = createRoute({
 const typescriptBattleRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'typescript/battle/$battleId',
-  validateSearch: (search: Record<string, unknown>) => ({
-    seed: typeof search.seed === 'string' && search.seed.length > 0 ? search.seed : undefined,
-    returnTo:
-      search.returnTo === '/world'
-        ? '/world' as const
-        : search.returnTo === '/typescript/field'
-          ? '/typescript/field' as const
-          : undefined,
-  }),
-  component: TypeScriptBattleRoutePage,
+  validateSearch: validateBattleSearch,
+  component: BattleRoutePage,
 })
 
 const typescriptCompleteRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'typescript/complete',
   beforeLoad: () => { throw redirect({ to: '/world' }) },
+})
+
+// New registered Areas use the same adapter without adding another route component.
+const registeredBattleRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '$areaId/battle/$battleId',
+  validateSearch: validateBattleSearch,
+  component: BattleRoutePage,
 })
 
 const routeTree = rootRoute.addChildren([
@@ -94,6 +87,7 @@ const routeTree = rootRoute.addChildren([
   typescriptFieldRoute,
   typescriptBattleRoute,
   typescriptCompleteRoute,
+  registeredBattleRoute,
 ])
 
 export const router = createRouter({

@@ -223,6 +223,40 @@ test('@cross-browser Victory/Defeat result dialog traps focus and blocks Battle 
   await expect(page).toHaveURL(/\/world$/)
 })
 
+test('@cross-browser post-Battle Story exclusively owns focus until the Victory result is revealed', async ({ page }) => {
+  await seedState(page, { clearedStageIds: JS_BATTLE_1_PREREQS })
+  await page.goto('/javascript/battle/1?seed=encounter%3A5%3A10%3A11&returnTo=%2Fworld')
+  await dismissStory(page)
+
+  // First-clear Chapter 1 has a post-Battle Story; training Battle 7 does not.
+  // Check the displayed comparison rather than relying on the card name alone.
+  for (const name of ['TRACE', 'NOVA', 'TRACE']) {
+    const card = page.getByRole('button', { name: new RegExp(`^${name}\\b`) })
+    await expect(card).toBeEnabled()
+    await expect(card.locator('pre code')).toContainText(name === 'NOVA' ? '> 60' : '< 45')
+    await card.click()
+    await card.click()
+  }
+
+  const story = page.locator('.battle-story-window')
+  const overlay = page.locator('.victory-overlay')
+  await expect(story).toBeVisible()
+  await expect(overlay).toHaveAttribute('inert', '')
+  await expect(overlay).toHaveAttribute('aria-hidden', 'true')
+  await expect(page.getByRole('dialog')).toHaveCount(1)
+  await expect(page.getByRole('dialog', { name: 'Victory result' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'SKIP', exact: true })).toHaveCount(1)
+  await expectDialogFocusTrap(page, story)
+
+  await story.getByRole('button', { name: 'SKIP', exact: true }).click()
+  const result = page.getByRole('dialog', { name: 'Victory result' })
+  await expect(result).toBeVisible()
+  await expect(overlay).not.toHaveAttribute('inert', '')
+  await expect(result.getByRole('button').first()).toBeFocused()
+  await result.getByRole('button', { name: /RETURN TO WORLD/ }).click()
+  await expect(page).toHaveURL(/\/world$/)
+})
+
 test('@responsive mobile keeps selected code and Enemy runtime data comparable', async ({
   page,
 }) => {

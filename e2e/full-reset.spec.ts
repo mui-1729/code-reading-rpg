@@ -1,3 +1,4 @@
+import { readStoredProgress, readStoredRpg } from './storedGameState'
 import { expect, test } from '@playwright/test'
 
 const AUDIO_KEY = 'code-reading-rpg:audio-settings'
@@ -99,7 +100,7 @@ test('RESET PROGRESSはOpeningを含め最初からに戻しSoundだけ保持す
   await expect.poll(() => page.evaluate((key) => localStorage.getItem(key), OPENING_KEY)).toBeNull()
 
   await expect.poll(async () =>
-    page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), PROGRESS_KEY),
+    readStoredProgress(page),
   ).toMatchObject({
     version: 4,
     progress: {
@@ -111,9 +112,9 @@ test('RESET PROGRESSはOpeningを含め最初からに戻しSoundだけ保持す
   })
 
   await expect.poll(async () =>
-    page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), RPG_KEY),
+    readStoredRpg(page),
   ).toMatchObject({
-    version: 4,
+    version: 5,
     state: {
       equipment: {
         weapon: 'training-blade',

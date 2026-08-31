@@ -57,14 +57,15 @@ RPG側の目的は、**コード読解を代替することではなく、次の
 | State | Version | 責務 |
 | --- | ---: | --- |
 | `PlayerProgress` | v4 | EXP / Gold / PATCH KIT / Stage・Area clear / unlock |
-| `RpgState` | v4 | current HP / Equipment ownership・loadout / Party / World position / Treasure |
+| `RpgState` | v5 | current HP / Equipment ownership・loadout / Party / World position / Treasure |
 
 重要:
 
 - Goldとconsumableは`PlayerProgress`
 - current HPとEquipmentは`RpgState`
 - UI都合だけで1つの巨大stateへ統合しない
-- 2つのstateをまたぐtransactionはpure resolverで結果を作り、UI adapterが両Providerへcommitする
+- 2つのstateをまたぐtransactionはpure resolverで結果を作り、UI adapterがGameStateProviderの同じcommitへ更新する
+- 保存は単一revision snapshot。旧split saveはmigration入力とし、backup復旧とlocked map正規化を行う
 
 ### 2.2 Equipment
 
@@ -606,9 +607,9 @@ ShopとInnをHubの「準備地点」として視覚的にセットで理解で�
 
 - `PlayerProgress v4.gold`
 - `PlayerProgress v4.inventory.patchKit`
-- `RpgState v4.currentHp`
-- `RpgState v4.equipment`
-- `RpgState v4.ownedEquipmentIds`
+- `RpgState v5.currentHp`
+- `RpgState v5.equipment`
+- `RpgState v5.ownedEquipmentIds`
 
 ### No schema bump for
 

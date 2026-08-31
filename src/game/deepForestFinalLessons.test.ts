@@ -13,6 +13,8 @@ const enemy = (
 ): Enemy => ({
   id,
   name,
+  role: 'standard',
+  visualId: 'enemy-fallback',
   hp,
   maxHp: hp,
   attackName: 'Test',

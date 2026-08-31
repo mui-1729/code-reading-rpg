@@ -1,77 +1,39 @@
-import { useEffect, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { useNavigate } from '@tanstack/react-router'
 import { gameAudio } from '../audio/gameAudio'
 import { useProgress } from '../progression'
+import { getAreaCapability } from './areas'
 import { isBattleEscapeAllowed } from './battleEscape'
 
-type BattleLocation = {
+type BattleEscapePanelProps = {
+  areaId: string
   battleId: number
-  seed: string | null
-  returnTo: string | null
+  seed: string
+  returnTo?: string
+  actionLocked: boolean
+  onRun: () => void
 }
 
-function readBattleLocation(): BattleLocation | null {
-  if (typeof window === 'undefined') return null
-  const match = window.location.pathname.match(/^\/(?:javascript|typescript)\/battle\/(\d+)$/)
-  if (!match) return null
-
-  const battleId = Number(match[1])
-  if (!Number.isInteger(battleId)) return null
-  const search = new URLSearchParams(window.location.search)
-  return {
-    battleId,
-    seed: search.get('seed'),
-    returnTo: search.get('returnTo'),
-  }
-}
-
-export function BattleEscapePanel() {
+export function BattleEscapePanel({ areaId, battleId, seed, returnTo, actionLocked, onRun }: BattleEscapePanelProps) {
+  const navigate = useNavigate()
   const { progress } = useProgress()
-  const [portalTarget, setPortalTarget] = useState<Element | null>(null)
-  const [location, setLocation] = useState<BattleLocation | null>(null)
-
-  useEffect(() => {
-    if (typeof document === 'undefined' || typeof window === 'undefined') return
-
-    const syncBattleUi = () => {
-      setLocation(readBattleLocation())
-      setPortalTarget(document.querySelector('.battle-console'))
-    }
-
-    syncBattleUi()
-    const observer = new MutationObserver(syncBattleUi)
-    observer.observe(document.body, { childList: true, subtree: true })
-    window.addEventListener('popstate', syncBattleUi)
-    return () => {
-      observer.disconnect()
-      window.removeEventListener('popstate', syncBattleUi)
-    }
-  }, [])
-
-  if (!portalTarget || !location) return null
-
+  if (!getAreaCapability(areaId, 'escape')) return null
   const allowed = isBattleEscapeAllowed({
-    ...location,
+    battleId,
+    seed,
+    returnTo: returnTo ?? null,
     clearedStageIds: progress.clearedStageIds,
   })
 
   const escape = () => {
-    if (!allowed || location.returnTo !== '/world') {
-      gameAudio.playSe('cancel')
-      return
-    }
+    if (!allowed || actionLocked) return
     gameAudio.playSe('confirm')
-    window.location.assign('/world')
+    onRun()
+    navigate({ to: '/world' })
   }
 
-  return createPortal(
+  return (
     <div className="battle-escape-row">
-      <button
-        type="button"
-        className="secondary-button battle-escape-action"
-        onClick={escape}
-        disabled={!allowed}
-      >
+      <button type="button" className="secondary-button battle-escape-action" onClick={escape} disabled={!allowed || actionLocked}>
         {allowed ? 'RUN · ESCAPE' : 'RUN LOCKED · FIXED BATTLE'}
       </button>
       <span className="battle-item-state">
@@ -79,7 +41,6 @@ export function BattleEscapePanel() {
           ? 'Random Encounterから離脱し、元いたWorld位置へ戻る · reward / clearなし'
           : 'Fixed Lesson / Bossは最後まで挑戦する'}
       </span>
-    </div>,
-    portalTarget,
+    </div>
   )
 }

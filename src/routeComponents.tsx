@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
-import { getRouteApi, useNavigate } from '@tanstack/react-router'
+import { useNavigate, useParams, useRouterState, useSearch } from '@tanstack/react-router'
 import App from './App'
 import { useBgm } from './audio/useBgm'
+import { useProgress } from './progression'
+import { useRpg } from './rpg'
+import { hasExistingRun } from './story/openingProgress'
 import {
   areaById,
-  getAreaForBattle,
-  JAVASCRIPT_AREA_ID,
-  TYPESCRIPT_AREA_ID,
+  getAreaDefinition,
+  parseBattleRoute,
 } from './game'
 import {
   JAVASCRIPT_OPENING_STORAGE_KEY,
@@ -14,11 +16,7 @@ import {
 } from './story/javascriptOpening'
 import type { StoryWorldLayer } from './story/types'
 
-const javascriptBattleRouteApi = getRouteApi('/javascript/battle/$battleId')
-const typescriptBattleRouteApi = getRouteApi('/typescript/battle/$battleId')
 const createRunSeed = () => crypto.randomUUID()
-
-type SupportedAreaId = typeof JAVASCRIPT_AREA_ID | typeof TYPESCRIPT_AREA_ID
 
 const openingSystemLines: Record<string, string> = {
   briefing: 'REAL WORLD // TASK ASSIGNED // investigate unexpected target selection',
@@ -36,44 +34,17 @@ const storyLayerLabels: Record<StoryWorldLayer, string> = {
   return: 'RETURN // REAL WORLD',
 }
 
-const hasExistingRun = () => {
-  const stored = window.localStorage.getItem('code-reading-rpg:rpg-state')
-  if (!stored) return false
-
-  try {
-    const parsed = JSON.parse(stored) as {
-      state?: {
-        worldPosition?: { x?: number; y?: number }
-        encounterCount?: number
-        openedTreasureIds?: unknown[]
-        partyMemberIds?: unknown[]
-      }
-    }
-    const state = parsed.state
-    if (!state) return false
-    const position = state.worldPosition
-    return Boolean(
-      (position && (position.x !== 20 || position.y !== 14)) ||
-      (state.encounterCount ?? 0) > 0 ||
-      (state.openedTreasureIds?.length ?? 0) > 0 ||
-      (state.partyMemberIds?.length ?? 0) > 0,
-    )
-  } catch {
-    return false
-  }
-}
-
 const readOpeningSeen = () => {
   if (typeof window === 'undefined') return false
-  return (
-    window.localStorage.getItem(JAVASCRIPT_OPENING_STORAGE_KEY) === 'seen' || hasExistingRun()
-  )
+  return window.localStorage.getItem(JAVASCRIPT_OPENING_STORAGE_KEY) === 'seen'
 }
 
 export function HomePage() {
   const navigate = useNavigate()
+  const { rpgState } = useRpg()
+  const { progress } = useProgress()
   const [openingIndex, setOpeningIndex] = useState<number | null>(null)
-  const [openingSeen, setOpeningSeen] = useState(readOpeningSeen)
+  const [openingSeen, setOpeningSeen] = useState(() => readOpeningSeen() || hasExistingRun(rpgState, progress))
   useBgm('menu')
 
   const enterWorld = () => {
@@ -199,88 +170,43 @@ export function HomePage() {
 }
 
 export function BattleRoutePage() {
-  const { battleId } = javascriptBattleRouteApi.useParams()
-  const { seed: searchSeed, returnTo } = javascriptBattleRouteApi.useSearch()
+  const { battleId = '', areaId } = useParams({ strict: false })
+  const { seed: searchSeed, returnTo } = useSearch({ strict: false })
+  const pathname = useRouterState({ select: (state) => state.location.pathname })
+  const route = parseBattleRoute(pathname)
+  const area = route?.area ?? getAreaDefinition(areaId ?? pathname.split('/')[1])
   const navigate = useNavigate()
   const [fallbackSeed] = useState(createRunSeed)
   const seed = searchSeed ?? fallbackSeed
-  const numericBattleId = Number(battleId)
-  const battleArea = getAreaForBattle(numericBattleId)
-  const exists = battleArea?.id === JAVASCRIPT_AREA_ID
+  const exists = Boolean(route)
 
   useEffect(() => {
-    if (searchSeed || !exists) return
-
+    if (searchSeed || !exists || !area) return
     navigate({
-      to: '/javascript/battle/$battleId',
-      params: { battleId },
+      to: '/$areaId/battle/$battleId',
+      params: { areaId: area.id, battleId },
       search: { seed, returnTo },
       replace: true,
     })
-  }, [battleId, exists, navigate, returnTo, searchSeed, seed])
+  }, [area, battleId, exists, navigate, returnTo, searchSeed, seed])
 
-  if (!exists) return <NotFoundBattle areaId={JAVASCRIPT_AREA_ID} />
-
-  return (
-    <App
-      key={`${battleId}:${seed}`}
-      battleId={numericBattleId}
-      seed={seed}
-      returnTo={returnTo}
-    />
-  )
+  if (!route) return <NotFoundBattle areaId={area?.id} />
+  return <App key={`${route.area.id}:${battleId}:${seed}:${returnTo ?? ''}`} battleId={route.battleId} seed={seed} returnTo={returnTo} />
 }
 
-export function TypeScriptBattleRoutePage() {
-  const { battleId } = typescriptBattleRouteApi.useParams()
-  const { seed: searchSeed, returnTo } = typescriptBattleRouteApi.useSearch()
-  const navigate = useNavigate()
-  const [fallbackSeed] = useState(createRunSeed)
-  const seed = searchSeed ?? fallbackSeed
-  const numericBattleId = Number(battleId)
-  const battleArea = getAreaForBattle(numericBattleId)
-  const exists = battleArea?.id === TYPESCRIPT_AREA_ID
-
-  useEffect(() => {
-    if (searchSeed || !exists) return
-
-    navigate({
-      to: '/typescript/battle/$battleId',
-      params: { battleId },
-      search: { seed, returnTo },
-      replace: true,
-    })
-  }, [battleId, exists, navigate, returnTo, searchSeed, seed])
-
-  if (!exists) return <NotFoundBattle areaId={TYPESCRIPT_AREA_ID} />
-
-  return (
-    <App
-      key={`${battleId}:${seed}`}
-      battleId={numericBattleId}
-      seed={seed}
-      returnTo={returnTo}
-    />
-  )
-}
-
-function NotFoundBattle({ areaId }: { areaId: SupportedAreaId }) {
+function NotFoundBattle({ areaId }: { areaId?: string }) {
   const navigate = useNavigate()
   useBgm('menu')
-  const area = areaById[areaId]
-  const fieldPath = area.routes.field
+  const area = areaId ? areaById[areaId] : undefined
 
   return (
     <main className="app-shell center-shell title-screen">
       <section className="result-card defeat-card pixel-window">
         <div className="eyebrow">ROUTE ERROR</div>
         <h2>そのBattleはこのAreaに存在しない</h2>
-        <button
-          className="primary-button"
-          disabled={!fieldPath}
-          onClick={() => fieldPath && navigate({ to: fieldPath })}
-        >
-          ◀ RETURN TO FIELD
+        {area && <p>{area.title}</p>}
+        <button className="primary-button" onClick={() => navigate({ to: '/world' })}>
+          ◀ RETURN TO WORLD
         </button>
       </section>
     </main>

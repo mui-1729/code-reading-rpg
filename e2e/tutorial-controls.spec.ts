@@ -1,3 +1,4 @@
+import { readStoredRpg } from './storedGameState'
 import { expect, test } from '@playwright/test'
 
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
@@ -15,7 +16,7 @@ const storedTutorial = (page: Parameters<typeof test>[0]['page']) =>
   page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), TUTORIAL_KEY)
 
 const storedRpg = (page: Parameters<typeof test>[0]['page']) =>
-  page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), RPG_KEY)
+  readStoredRpg(page)
 
 test('mobile TutorialがD-Pad移動後にBYTE INTERACTへ進む', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })

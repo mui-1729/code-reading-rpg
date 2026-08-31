@@ -6,18 +6,24 @@ const firstFilterPreBattleEvent: BattleStoryEvent = {
   title: '異常の影響を一体だけでなく全部追う',
   lines: [
     {
+      speakerId: 'byte',
+
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',
       text: '守り人の先では、同じ条件に合うEnemyが何体もtraceへ入ってる。最初の一体だけ見ても、incidentの影響範囲が分からない。',
     },
     {
+      speakerId: 'byte',
+
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',
       text: '今までのfind()は条件に合う相手を前から探して、最初の一体で止まった。ここで使われているfilter()は最後まで見て、条件に合うものを全部集める。',
     },
     {
+      speakerId: 'byte',
+
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',
@@ -32,18 +38,23 @@ const firstFilterPostBattleEvent: BattleStoryEvent = {
   title: '複数targetの経路がDeep Forestへ続く',
   lines: [
     {
+      speakerId: 'byte',
+
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',
       text: 'find()なら最初の一体、filter()なら条件に合うもの全部。これでREAL WORLDで広がっていた影響範囲とCODE WORLDのtraceが対応した。',
     },
     {
+      speakerId: 'lead-ada',
       speaker: 'LEAD ADA',
       role: 'SENIOR ENGINEER',
       layer: 'remote',
       text: '複数target側の異常ログが、Forestのさらに西へ伸びている。Deep Forest入口で同じ症状をもう一度確認してくれ。',
     },
     {
+      speakerId: 'byte',
+
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',
@@ -58,18 +69,24 @@ const deepForestFilterPreBattleEvent: BattleStoryEvent = {
   title: '同じfilter()でも条件が変わる',
   lines: [
     {
+      speakerId: 'byte',
+
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',
       text: '二つ目の症状を追ったら、同じfilter()が別の条件でも使われている場所に着いた。処理の名前を覚えるだけじゃ、ここでは足りない。',
     },
     {
+      speakerId: 'byte',
+
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',
       text: '前はHPが45未満だったけど、ECHOはHPが65より大きいを見る。< と > の向きを先に確かめよう。',
     },
     {
+      speakerId: 'byte',
+
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',
@@ -84,12 +101,16 @@ const deepForestFilterPostBattleEvent: BattleStoryEvent = {
   title: '条件が違っても処理の流れは追える',
   lines: [
     {
+      speakerId: 'byte',
+
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',
       text: '<でも>でも、filter()は条件を確認して最後まで見て、当てはまるものを全部集める。値が変わってもcodeを読み直せば追える。',
     },
     {
+      speakerId: 'byte',
+
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',

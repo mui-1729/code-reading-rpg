@@ -1,16 +1,11 @@
-const enemyVisualIdByName: Readonly<Record<string, string>> = {
-  Slime: 'slime',
-  Goblin: 'goblin',
-  Golem: 'golem',
-  Boss: 'boss',
-  Sprout: 'sprout',
-  Boar: 'boar',
-  Guardian: 'guardian',
-  'Root Guardian': 'root-guardian',
-}
+import type { Enemy } from './types'
+
+const enemyVisualIds = new Set([
+  'slime', 'goblin', 'golem', 'boss', 'sprout', 'boar', 'guardian', 'root-guardian',
+])
 
 export const ENEMY_VISUAL_FALLBACK_ID = 'enemy-fallback'
 
-export function getEnemyVisualId(name: string): string {
-  return enemyVisualIdByName[name] ?? ENEMY_VISUAL_FALLBACK_ID
+export function getEnemyVisualId(enemy: Pick<Enemy, 'visualId'>): string {
+  return enemyVisualIds.has(enemy.visualId) ? enemy.visualId : ENEMY_VISUAL_FALLBACK_ID
 }

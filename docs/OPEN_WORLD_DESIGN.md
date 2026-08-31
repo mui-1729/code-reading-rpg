@@ -278,6 +278,12 @@ map固有game ruleを`WorldPage.tsx`へ増やしすぎない。
 
 numeric `battleId`を維持する理由はこの互換性。今後chapter追加時にnumeric IDを振り直す理由には使わない。
 
+RpgState v5は未使用のpartyEquipmentを除き、旧v1〜v4の装備・仲間・HP・World状態を移行する。Progress v4とRPGはBattle開始snapshotを含むroot schema v2の単一revisionとして保存・復元する。旧root v1 / 旧分割saveから移行し、壊れたrootはvalid backupから復旧する。portal graphの解放条件を満たさないmapに位置だけが残る場合はOverworld開始地点へ正規化する。
+
+Battle開始HPは現在のHPを引き継ぐ。VICTORY / RUNでは現在HPとItem消費を確定し、DEFEATでは消費を確定したうえでOverworld Hubへfull HP・cooldown resetで戻す。browser back / route leave / 別Battle移動および未完了Battleのreloadは開始snapshotへ全体rollbackする。敵・turn・Item使用枠も初期化し、HPやItemだけが残るpartial restoreは行わない。
+
+Worldのviewport / character layer / keyboard / D-Padは共有componentとhookで描画・制御し、地域固有の地形・interaction intentは各domainから与える。別tabのWorld操作は、そのtabが所有しないBattleの未確定HP・Itemではなく開始snapshotを使う。
+
 ## 12. Future region rule
 
 TypeScript / Database等も同じ設計原則を使う。

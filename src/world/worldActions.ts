@@ -1,6 +1,5 @@
 import { createSeededRandom } from '../game/random'
 import {
-  areBattlePrerequisitesMet,
   getCanonicalUnlockedStageIds,
   isBattleAccessible,
   type PlayerProgress,
@@ -33,6 +32,7 @@ import {
   type WorldRegion,
   type WorldTreasureId,
 } from './worldMap'
+import { isWorldPortalRequirementSatisfied } from './worldPortalAccess'
 
 type BattleRegion = Exclude<WorldRegion, 'hub'>
 type JavaScriptTrainingBattleId = 7 | 8 | 9
@@ -234,17 +234,6 @@ function createJavaScriptFixedEncounter(
   }
 }
 
-function isPortalRequirementSatisfied(
-  requiredClearedStageId: number | undefined,
-  clearedStageIds: readonly number[],
-): boolean {
-  if (requiredClearedStageId === undefined) return true
-  return (
-    clearedStageIds.includes(requiredClearedStageId) &&
-    areBattlePrerequisitesMet(requiredClearedStageId, clearedStageIds)
-  )
-}
-
 export function resolveWorldMove({
   rpgState,
   progress,
@@ -271,7 +260,7 @@ export function resolveWorldMove({
   const nextSteps = rpgState.stepsSinceEncounter + 1
   const portal = getWorldPortalAtPosition(mapId, next)
   if (portal) {
-    if (!isPortalRequirementSatisfied(portal.requiredClearedStageId, progress.clearedStageIds)) {
+    if (!isWorldPortalRequirementSatisfied(portal.requiredClearedStageId, progress.clearedStageIds)) {
       return { kind: 'blocked', nextState: rpgState, terrain }
     }
 

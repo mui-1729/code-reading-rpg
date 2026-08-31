@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { readStoredRpg } from './storedGameState'
 import { JS_COMPLETE } from './canonical-progress-fixtures'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
@@ -127,6 +128,7 @@ test('TypeScript Frontierの西GATEからCentral Hubへ往復できる', async (
 
 test('旧overworld TypeScript側saveは専用mapへmigrationしreload後も保持する', async ({ page }) => {
   await seedWorld(page, {
+    clearedStageIds: JS_COMPLETE,
     worldMapId: 'overworld',
     worldPosition: { x: 30, y: 14 },
   })
@@ -138,6 +140,22 @@ test('旧overworld TypeScript側saveは専用mapへmigrationしreload後も保�
   await page.reload()
   await expect(frontier(page)).toHaveAttribute('data-world-x', '9')
   await expect(frontier(page)).toHaveAttribute('data-world-y', '14')
+})
+
+test('未解放TypeScript側の旧座標saveはOverworld開始地点へnormalizeする', async ({ page }) => {
+  await seedWorld(page, {
+    worldMapId: 'overworld',
+    worldPosition: { x: 30, y: 14 },
+  })
+
+  await expect(overworld(page)).toHaveAttribute('data-world-map', 'overworld')
+  await expect(overworld(page)).toHaveAttribute('data-world-x', '20')
+  await expect(overworld(page)).toHaveAttribute('data-world-y', '14')
+  await expect.poll(async () => (await readStoredRpg(page)).state.worldMapId).toBe('overworld')
+  await expect.poll(async () => (await readStoredRpg(page)).state.worldPosition).toEqual({
+    x: 20,
+    y: 14,
+  })
 })
 
 test('TypeScript local encounterから逃走すると同じFrontier位置へ戻る', async ({ page }) => {

@@ -1,11 +1,14 @@
 import { PLAYER_PROGRESS_STORAGE_KEY } from './progression'
 import { RPG_STORAGE_KEY } from './rpg'
+import { GAME_STATE_BACKUP_STORAGE_KEY, GAME_STATE_STORAGE_KEY } from './persistence/gameStateStorage'
 import { JAVASCRIPT_OPENING_STORAGE_KEY } from './story/javascriptOpening'
 import { TUTORIAL_STORAGE_KEY } from './tutorial/storage'
 
 export const FULL_RESET_STORAGE_KEYS = [
   PLAYER_PROGRESS_STORAGE_KEY,
   RPG_STORAGE_KEY,
+  GAME_STATE_STORAGE_KEY,
+  GAME_STATE_BACKUP_STORAGE_KEY,
   TUTORIAL_STORAGE_KEY,
   JAVASCRIPT_OPENING_STORAGE_KEY,
 ] as const

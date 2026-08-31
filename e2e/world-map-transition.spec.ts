@@ -1,3 +1,4 @@
+import { readStoredRpg } from './storedGameState'
 import { expect, test, type Page } from '@playwright/test'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
@@ -57,7 +58,7 @@ async function seedWorld(page: Page) {
 }
 
 async function storedRpgState(page: Page) {
-  return page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), RPG_KEY)
+  return readStoredRpg(page)
 }
 
 test('JS-01後のOverworld → Village → reload → Overworld round tripを保存する', async ({ page }) => {
@@ -75,7 +76,7 @@ test('JS-01後のOverworld → Village → reload → Overworld round tripを保
   await expect(viewport).toHaveAttribute('data-world-x', '10')
   await expect(viewport).toHaveAttribute('data-world-y', '12')
 
-  await expect.poll(async () => (await storedRpgState(page)).version).toBe(4)
+  await expect.poll(async () => (await storedRpgState(page)).version).toBe(5)
   await expect.poll(async () => (await storedRpgState(page)).state.worldMapId).toBe('js-village')
   await expect.poll(async () => (await storedRpgState(page)).state.worldPosition).toEqual({
     x: 10,
