@@ -96,6 +96,8 @@ PR前にも4項目を実行し、Open World / route / persistenceへ触れる変
 - unknown Equipment ID
 - unknown Party ID
 - invalid loadout
+- Progress / RPGの単一revision、legacy partial-save復旧、root/backupの中断commit
+- portal graph上でlocked map位置の正規化、stale revisionの上書き回避
 
 ### Economy / Equipment / Party
 
@@ -113,6 +115,7 @@ Party:
 
 - joined member
 - follow-up damage
+- multi-targetでも1 ACTIONに1回、選択した生存先頭targetにだけ追撃
 - codeが選んだ同じtarget以外へ攻撃しない設計境界
 
 ### World Objective
@@ -229,6 +232,7 @@ World位置 / Gold / Equipment / Party
 - URL / role / visible state / LocalStorageを待機条件にする
 - 1本の巨大scenarioにせず、core / persistence / party / equipmentを分ける
 - `npm test`は`src`のみを対象にし、Playwright specをVitestが拾わないよう分離する
+- legacy v4 fixtureはmigration入力に使えるが、assertionは`storedGameState`から単一root snapshotを読む
 
 ## 7. Cloudflare Preview
 

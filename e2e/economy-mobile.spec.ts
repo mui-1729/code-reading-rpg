@@ -75,12 +75,14 @@ test('390px幅でShop / Inn / Pauseが横overflowせずEscapeで閉じられる'
   await page.keyboard.press('Escape')
   await expect(shop).toBeHidden()
 
-  await page.evaluate((rpgKey) => {
-    const stored = JSON.parse(localStorage.getItem(rpgKey) ?? 'null')
-    stored.state.worldPosition = { x: 20, y: 16 }
-    stored.state.currentHp = 40
-    localStorage.setItem(rpgKey, JSON.stringify(stored))
-  }, RPG_KEY)
+  await page.evaluate(() => {
+    const key = 'code-reading-rpg:game-state'
+    const stored = JSON.parse(localStorage.getItem(key) ?? 'null')
+    stored.rpg.state.worldPosition = { x: 20, y: 16 }
+    stored.rpg.state.currentHp = 40
+    stored.revision += 1
+    localStorage.setItem(key, JSON.stringify(stored))
+  })
   await page.reload()
 
   await page.getByRole('button', { name: 'INTERACT' }).click()

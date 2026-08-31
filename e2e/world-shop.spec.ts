@@ -1,3 +1,4 @@
+import { readStoredGameState } from './storedGameState'
 import { expect, test, type Page } from '@playwright/test'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
@@ -57,13 +58,7 @@ async function seedShopState(page: Page, gold = 200) {
 }
 
 async function storedState(page: Page) {
-  return page.evaluate(
-    ({ progressKey, rpgKey }) => ({
-      progress: JSON.parse(localStorage.getItem(progressKey) ?? 'null'),
-      rpg: JSON.parse(localStorage.getItem(rpgKey) ?? 'null'),
-    }),
-    { progressKey: PROGRESS_KEY, rpgKey: RPG_KEY },
-  )
+  return readStoredGameState(page)
 }
 
 test.describe('World Shop', () => {

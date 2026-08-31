@@ -17,12 +17,12 @@ describe('pixel visual assets', () => {
   })
 
   it('maps story speakers to intended character portraits', () => {
-    expect(getStorySpeakerVisual('BYTE')).toContain('byte-field')
-    expect(getStorySpeakerVisual('LEAD ADA')).toContain('lead-ada-portrait')
-    expect(getStorySpeakerVisual('LEAD ADA // REMOTE')).toContain('lead-ada-portrait')
-    expect(getStorySpeakerVisual('TRAINER MIO')).toContain('trainer-mio-portrait')
-    expect(getStorySpeakerVisual('TYPE WARDEN')).toContain('type-warden-portrait')
-    expect(getStorySpeakerVisual('SYSTEM')).toBeNull()
+    expect(getStorySpeakerVisual('byte')).toContain('byte-field')
+    expect(getStorySpeakerVisual('lead-ada')).toContain('lead-ada-portrait')
+    expect(getStorySpeakerVisual('trainer-mio')).toContain('trainer-mio-portrait')
+    expect(getStorySpeakerVisual('type-warden')).toContain('type-warden-portrait')
+    expect(getStorySpeakerVisual('system')).toBeNull()
+    expect(getStorySpeakerVisual('LEAD ADA // REMOTE')).toBeNull()
   })
 
   it('maps every equipment definition to the generic equipment registry', () => {

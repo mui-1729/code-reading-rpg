@@ -43,6 +43,12 @@ const runtimeRef = (name: string, hp: number, attackDamage: number, incomingDama
 })
 
 describe('runtime code data', () => {
+  it('GUARD表示codeが参照するstable roleを確認できる', () => {
+    const boss = { ...enemies[0], role: 'boss' }
+    expect(createEnemyInspectionSnapshot(boss, null).base).toContainEqual({ name: 'role', expression: 'enemy.role', value: 'boss' })
+    const data = createCodeDataVariables([boss], null)
+    expect(data[0].value).toEqual([expect.objectContaining({ role: 'boss' })])
+  })
   it('Enemy objectのraw値とPlayer DEF適用後damageを別項目で確認できる', () => {
     const snapshot = createEnemyInspectionSnapshot(enemies[0], null)
 

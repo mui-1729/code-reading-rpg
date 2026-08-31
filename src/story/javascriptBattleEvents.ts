@@ -9,18 +9,24 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
     title: '直ったはずなのに',
     lines: [
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
         text: 'この地点のtarget異常は止まった！ ……でも待って。同じ形の症状が別の戦闘ログにも残ってる。',
       },
       {
+        speakerId: 'lead-ada',
+
         speaker: 'LEAD ADA',
         role: 'SENIOR ENGINEER',
         layer: 'remote',
         text: 'REAL WORLD側でも別機能の異常が続いている。一か所だけのbugじゃなさそうだ。どこまで波及しているか追ってくれ。',
       },
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
@@ -34,18 +40,24 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
     title: '共通コードの先',
     lines: [
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
         text: '見つけた。別々の異変に見えていた処理が、全部同じ場所を通ってる。',
       },
       {
+        speakerId: 'lead-ada',
+
         speaker: 'LEAD ADA',
         role: 'SENIOR ENGINEER',
         layer: 'remote',
         text: '現実側のcall pathも一致した。王国中の戦闘処理をまとめるCode Coreがroot cause候補だ。',
       },
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
@@ -59,24 +71,32 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
     title: 'JavaScript incident、解決',
     lines: [
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
         text: 'Code Coreが安定した！ 草原の異変も全部消えてる。CODE WORLD側のroot causeは修復完了。',
       },
       {
+        speakerId: 'system',
+
         speaker: 'SYSTEM',
         role: 'CONNECTOR',
         layer: 'return',
         text: 'CODE WORLDの状態をREAL WORLDへ同期。sessionを切り離して、エンジニアをRETURNする。',
       },
       {
+        speakerId: 'lead-ada',
+
         speaker: 'LEAD ADA',
         role: 'SENIOR ENGINEER',
         layer: 'real-world',
         text: '戻ったな。現実側の戦闘システムも正常化した。最初のincidentはcloseだ。初仕事、よく原因まで追えた。',
       },
       {
+        speakerId: 'lead-ada',
+
         speaker: 'LEAD ADA',
         role: 'SENIOR ENGINEER',
         layer: 'real-world',
@@ -90,6 +110,8 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
     title: '「両方」を一つずつ読む',
     lines: [
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
@@ -103,6 +125,8 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
     title: '「どちらか」を見分ける',
     lines: [
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
@@ -116,12 +140,16 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
     title: '記号が増えても読む順番は同じ',
     lines: [
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
         text: 'かっこの内側を先に読み、&&と||を小さな条件へ分ければ追えた。新しい記号を丸暗記するより、読む順番を守る方が大事だ。',
       },
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
@@ -138,18 +166,24 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
     title: 'Code Coreへ',
     lines: [
       {
+        speakerId: 'lead-ada',
+
         speaker: 'LEAD ADA',
         role: 'SENIOR ENGINEER',
         layer: 'remote',
         text: 'REAL WORLDのtraceもここへ集約している。この先のCode Coreがroot causeなら、incident全体を止められる。',
       },
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
         text: 'ログが一気に増えてる。Core自身が壊れたruleを繰り返して、草原の異変を作ってるみたい。',
       },
       {
+        speakerId: 'lead-ada',
+
         speaker: 'LEAD ADA',
         role: 'SENIOR ENGINEER',
         layer: 'remote',
@@ -163,18 +197,24 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
     title: 'まず、数字を一つ読む',
     lines: [
       {
+        speakerId: 'trainer-mio',
+
         speaker: 'TRAINER MIO',
         role: 'VILLAGE GUIDE',
         layer: 'code-world',
         text: '長いコードを全部いっぺんに読む必要はないよ。まず enemy.hp を見よう。点の右にある hp は、その敵が今持っているHPの数字だ。',
       },
       {
+        speakerId: 'trainer-mio',
+
         speaker: 'TRAINER MIO',
         role: 'VILLAGE GUIDE',
         layer: 'code-world',
         text: '`<` は左の数字が右より小さいか、`>` は左の数字が右より大きいかを見る記号。まずこの小さな比べ方だけ追えばいい。',
       },
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
@@ -188,18 +228,24 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
     title: '文字も値として読む',
     lines: [
       {
+        speakerId: 'trainer-mio',
+
         speaker: 'TRAINER MIO',
         role: 'VILLAGE GUIDE',
         layer: 'code-world',
         text: '次は enemy.name。hp が数字を読むのと同じで、name はその敵の名前という値を読む。',
       },
       {
+        speakerId: 'trainer-mio',
+
         speaker: 'TRAINER MIO',
         role: 'VILLAGE GUIDE',
         layer: 'code-world',
         text: '`===` は左右が同じ値かを確かめる。コードの右側に書かれた名前と、今いる敵の name を一体ずつ見比べれば読めるよ。',
       },
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
@@ -213,18 +259,24 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
     title: '前から探して、最初で止まる',
     lines: [
       {
+        speakerId: 'trainer-mio',
+
         speaker: 'TRAINER MIO',
         role: 'VILLAGE GUIDE',
         layer: 'code-world',
         text: 'enemies は、画面にいる敵たちを順番に並べた集まりだと思えばいい。左から順に一体ずつ見ていける。',
       },
       {
+        speakerId: 'trainer-mio',
+
         speaker: 'TRAINER MIO',
         role: 'VILLAGE GUIDE',
         layer: 'code-world',
         text: 'find() はその集まりを前から調べて、カッコの中の条件に最初に合った一体で止まる。条件に合う敵が二体いても、選ばれるのは先に見つかった方だ。',
       },
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
@@ -238,18 +290,24 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
     title: '二つともtrueなら通る',
     lines: [
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
         text: '森に入ると、条件が一つ増えたみたい。でも読むやり方は変えなくていい。まず `&&` の左と右を別々に見よう。',
       },
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
         text: '`&&` は「左もtrue、右もtrue」のときだけ全体がtrueになる。日本語なら「A かつ B」に近い。',
       },
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
@@ -263,18 +321,24 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
     title: 'どちらかtrueなら通る',
     lines: [
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
         text: '次の記号は `||`。見た目は似てるけど、&&とは通り方が違う。',
       },
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
         text: '`||` は左右のどちらか一方でもtrueなら、全体がtrueになる。日本語なら「A または B」に近い。',
       },
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
@@ -288,18 +352,24 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
     title: '小さく分ければ読める',
     lines: [
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
         text: 'ここでは新しい記号は増えないよ。&&と||、比較、find()が一緒に出るだけ。',
       },
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
         text: '長く見えたら、かっこの中 → その外 → find()で前から、の順に小さく分ける。コードを一行丸ごと暗記する必要はない。',
       },
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',

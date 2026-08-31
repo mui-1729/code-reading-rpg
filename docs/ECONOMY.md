@@ -226,14 +226,14 @@ REST
 
 `getInnRestQuote()`がprice / wallet / after-rest Gold / shortage / heal amountを算出する。
 
-`resolveInnRest()`が`PlayerProgress`と`RpgState`の両方をpure resultとして返し、UIは成功時だけ両Providerへcommitする。
+`resolveInnRest()`が`PlayerProgress`と`RpgState`の両方をpure resultとして返し、UIは成功時だけGameStateProviderの同じcommitへ両stateを更新する。
 
 ## Save ownership
 
 | State | Version | Economy関連責務 |
 | --- | ---: | --- |
 | `PlayerProgress` | v4 | EXP / Gold / `inventory.patchKit` / progression |
-| `RpgState` | v4 | current HP / Equipment ownership・loadout / Party / World / Treasure |
+| `RpgState` | v5 | current HP / Equipment ownership・loadout / Party / World / Treasure |
 
 Economy loop追加のためだけにschema versionは上げない。
 
@@ -241,8 +241,10 @@ Legacy migration:
 
 - PlayerProgress v1 / v2 / v3 → v4
 - Economy fieldが存在しないlegacy saveはGold 0 / PATCH KIT 0で開始
-- RpgState v1 / v2 / v3 → v4
+- RpgState v1 / v2 / v3 / v4 → v5（未使用Party Equipmentを除去）
 - legacy current HP / known Equipmentは可能な範囲で保持
+
+LocalStorageのcommitは両stateを含む単一revision snapshot。直前backup復旧とstale tab上書き回避を行い、旧分割keyはmigration入力としてだけ読む。
 
 `RESET PROGRESS`はPlayerProgressとRpgStateを初期化する。Sound設定は別storageなので保持する。
 

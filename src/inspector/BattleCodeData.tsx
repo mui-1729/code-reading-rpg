@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { useModalFocus } from '../ui/useModalFocus'
 import {
   createCodeDataVariables,
@@ -10,10 +9,12 @@ import {
 type CodeDataCollection = readonly Record<string, string | number | boolean | null>[]
 
 type BattleCodeDataProps = {
-  battleKey: string
   enemies: readonly RuntimeEnemy[]
   selectedCode: string | null
   selectedSkillName: string | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  selectedEnemyKey: string | null
 }
 
 function formatScalar(value: string | number | boolean | null) {
@@ -43,13 +44,13 @@ function DataValue({ value }: { value: CodeDataValue }) {
 }
 
 export function BattleCodeData({
-  battleKey,
   enemies,
   selectedCode,
   selectedSkillName,
+  open,
+  onOpenChange: setOpen,
+  selectedEnemyKey,
 }: BattleCodeDataProps) {
-  const [open, setOpen] = useState(false)
-  const [selectedEnemyKey, setSelectedEnemyKey] = useState<string | null>(null)
   const selectedEnemy = selectedEnemyKey
     ? enemies.find((enemy) => enemy.key === selectedEnemyKey) ?? null
     : null
@@ -62,82 +63,12 @@ export function BattleCodeData({
     onEscape: () => setOpen(false),
   })
 
-  useEffect(() => {
-    const resetTimer = window.setTimeout(() => {
-      setOpen(false)
-      setSelectedEnemyKey(null)
-    }, 0)
-    return () => window.clearTimeout(resetTimer)
-  }, [battleKey])
-
-  useEffect(() => {
-    const cards = Array.from(document.querySelectorAll<HTMLElement>('.enemy-card'))
-
-    cards.forEach((card, index) => {
-      const enemy = enemies[index]
-      if (!enemy) return
-      card.classList.add('code-data-clickable')
-      card.setAttribute('role', 'button')
-      card.setAttribute('tabindex', '0')
-      card.setAttribute('aria-label', `${enemy.name}のコード上のデータを確認`)
-    })
-
-    const openEnemy = (card: Element) => {
-      const index = cards.indexOf(card as HTMLElement)
-      const enemy = index >= 0 ? enemies[index] : undefined
-      if (!enemy) return
-      if (card instanceof HTMLElement) card.focus()
-      setSelectedEnemyKey(enemy.key)
-      setOpen(true)
-    }
-
-    const onClick = (event: MouseEvent) => {
-      if (document.querySelector('.modal-overlay')) return
-      const target = event.target
-      if (!(target instanceof Element)) return
-      const card = target.closest('.enemy-card')
-      if (card) openEnemy(card)
-    }
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Enter' && event.key !== ' ') return
-      const target = event.target
-      if (!(target instanceof Element)) return
-      const card = target.closest('.enemy-card')
-      if (!card) return
-      event.preventDefault()
-      openEnemy(card)
-    }
-
-    document.addEventListener('click', onClick)
-    document.addEventListener('keydown', onKeyDown)
-    return () => {
-      document.removeEventListener('click', onClick)
-      document.removeEventListener('keydown', onKeyDown)
-      cards.forEach((card) => {
-        card.classList.remove('code-data-clickable', 'code-data-inspected')
-        card.removeAttribute('role')
-        card.removeAttribute('tabindex')
-        card.removeAttribute('aria-label')
-      })
-    }
-  }, [enemies])
-
-  useEffect(() => {
-    const cards = Array.from(document.querySelectorAll<HTMLElement>('.enemy-card'))
-    cards.forEach((card) => card.classList.remove('code-data-inspected'))
-    if (!selectedEnemyKey) return
-
-    const selectedIndex = enemies.findIndex((enemy) => enemy.key === selectedEnemyKey)
-    if (selectedIndex >= 0) cards[selectedIndex]?.classList.add('code-data-inspected')
-  }, [enemies, selectedEnemyKey])
-
   return (
     <>
       <button
         type="button"
         className="floating-code-data"
-        onClick={() => setOpen((current) => !current)}
+        onClick={() => setOpen(!open)}
         aria-label="コードで使う実データを確認"
         aria-expanded={open}
       >

@@ -1,14 +1,10 @@
-import type { EquipmentLoadout } from './equipment'
-
 export type PartyMemberDefinition = {
   id: string
   name: string
   role: string
-  maxHp: number
+  /** Damage dealt by the member's single follow-up after a player action. */
   attack: number
-  defense: number
   glyph: string
-  equipment: EquipmentLoadout
 }
 
 export const partyMembers: readonly PartyMemberDefinition[] = [
@@ -16,11 +12,8 @@ export const partyMembers: readonly PartyMemberDefinition[] = [
     id: 'byte',
     name: 'BYTE',
     role: 'SCOUT',
-    maxHp: 72,
     attack: 7,
-    defense: 3,
     glyph: 'B',
-    equipment: { weapon: null, armor: null, accessory: null },
   },
 ]
 

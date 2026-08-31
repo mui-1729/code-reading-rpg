@@ -65,9 +65,9 @@ describe('JavaScript story progression', () => {
   })
 
   it('uses programmer characters without incident-management jargon', () => {
-    expect(npcById.archivist).toMatchObject({ name: 'LEAD ADA', role: 'SENIOR ENGINEER' })
-    expect(npcById['lambda-sage']).toMatchObject({ name: 'LAMBDA', role: 'CODE MENTOR' })
-    expect(npcById['byte-scout']).toMatchObject({ name: 'BYTE', role: 'DEBUGGER' })
+    expect(npcById.archivist).toMatchObject({ name: 'LEAD ADA', role: 'mentor', roleLabel: 'SENIOR ENGINEER', visualId: 'lead-ada' })
+    expect(npcById['lambda-sage']).toMatchObject({ name: 'LAMBDA', role: 'mentor', roleLabel: 'CODE MENTOR' })
+    expect(npcById['byte-scout']).toMatchObject({ name: 'BYTE', role: 'scout', roleLabel: 'DEBUGGER', visualId: 'byte' })
 
     expect(javascriptQuest?.title).toBe('JavaScript王国のバグを追え')
     expect(javascriptQuest?.steps.map((step) => step.label)).toEqual([

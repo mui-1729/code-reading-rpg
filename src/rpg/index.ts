@@ -32,11 +32,9 @@ export {
   getStorySpeakerVisual,
   getWeaponVisual,
 } from './visualAssets'
-export { RpgProvider } from './RpgProvider'
 export { useRpg } from './useRpg'
 export {
   createInitialRpgState,
-  emptyPartyEquipment,
   restoreRpgState,
   RPG_STATE_SCHEMA_VERSION,
   RPG_STORAGE_KEY,

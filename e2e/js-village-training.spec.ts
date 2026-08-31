@@ -1,3 +1,4 @@
+import { readStoredProgress } from './storedGameState'
 import { expect, test, type Page } from '@playwright/test'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
@@ -86,7 +87,7 @@ async function finishBattle(page: Page, skills: string[]) {
 }
 
 async function storedProgress(page: Page) {
-  return page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), PROGRESS_KEY)
+  return readStoredProgress(page)
 }
 
 test('Village TRAINで初心者Storyを読みながらBattle 7→8→9を順にclearする', async ({ page }) => {

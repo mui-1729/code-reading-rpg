@@ -3,6 +3,6 @@ import { ProgressContext } from './ProgressContext'
 
 export function useProgress() {
   const value = useContext(ProgressContext)
-  if (!value) throw new Error('useProgress must be used within ProgressProvider')
+  if (!value) throw new Error('useProgress must be used within GameStateProvider')
   return value
 }

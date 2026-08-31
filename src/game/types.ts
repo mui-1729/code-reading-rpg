@@ -1,6 +1,8 @@
 export type Enemy = {
   id: string
   name: string
+  role: 'standard' | 'elite' | 'boss'
+  visualId: string
   hp: number
   maxHp: number
   attackName: string

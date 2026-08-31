@@ -1,18 +1,19 @@
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { gameAudio } from './audio/gameAudio'
+import { useBattleRuntime } from './battle/BattleRuntimeContext'
 import { createDefeatRecoveryState, withBattleHp } from './battle/resultHandoff'
 import { createBattleSession, type BattleReturnPath } from './battle/session'
-import { consumePatchKit, PATCH_KIT_HEAL } from './economy'
+import { consumePatchKit } from './economy'
+import { BattleItemPanel } from './economy/BattleItemPanel'
+import { BattleEscapePanel } from './game/BattleEscapePanel'
 import {
   areaById,
   getEnemyVisualId,
   getSkillCardsForBattle,
-  JAVASCRIPT_AREA_ID,
   resolveEnemyAttack,
   resolvePlayerAction,
   skills,
-  TYPESCRIPT_AREA_ID,
   type Enemy,
   type Seed,
   type SkillCard,
@@ -29,8 +30,11 @@ import {
   useProgress,
   type BattleVictoryReward,
 } from './progression'
+import { BattleResultSequence } from './results/BattleResultSequence'
+import { createVictoryResultSequence, type ResultSequenceItem } from './results/resultSequence'
 import {
   characterVisuals,
+  equipmentById,
   getCombatStats,
   getIncomingDamage,
   getPartyFollowUpDamage,
@@ -39,6 +43,9 @@ import {
   partyMemberById,
   useRpg,
 } from './rpg'
+import { BattleStoryEvent } from './story/BattleStoryEvent'
+import { getBattleStoryEventForBattle } from './story/battleStoryEvents'
+import { getWorldProgressChange } from './world/worldObjective'
 import { useModalFocus } from './ui/useModalFocus'
 
 type Phase = 'battle' | 'victory' | 'defeat'
@@ -59,6 +66,7 @@ const cloneEnemies = (enemies: Enemy[]) => enemies.map((enemy) => ({ ...enemy })
 
 function App({ battleId, seed, returnTo }: AppProps) {
   const navigate = useNavigate()
+  const { setSnapshot } = useBattleRuntime()
   const { progress, stats: baseStats, setProgress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
   const playerStats = useMemo(
@@ -90,8 +98,17 @@ function App({ battleId, seed, returnTo }: AppProps) {
   const [enemyTurnActive, setEnemyTurnActive] = useState(false)
   const [isResolving, setIsResolving] = useState(false)
   const [patchKitUsed, setPatchKitUsed] = useState(false)
+  const [lastPatchKitHeal, setLastPatchKitHeal] = useState<number | null>(null)
   const [partyFollowUpActive, setPartyFollowUpActive] = useState(false)
   const [victoryReward, setVictoryReward] = useState<BattleVictoryReward | null>(null)
+  const [resultItems, setResultItems] = useState<ResultSequenceItem[]>([])
+  const [resultSequenceDone, setResultSequenceDone] = useState(false)
+  const completeResultSequence = useCallback(() => setResultSequenceDone(true), [])
+  const [storyEvent, setStoryEvent] = useState(() =>
+    getBattleStoryEventForBattle(battle.areaId, battle.id, 'pre', progress.clearedStageIds),
+  )
+  const [codeDataOpen, setCodeDataOpen] = useState(false)
+  const [inspectedEnemyKey, setInspectedEnemyKey] = useState<string | null>(null)
 
   const availableSkills = useMemo(
     () => getSkillCardsForBattle(battle, seed),
@@ -106,6 +123,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
       enemies.map((enemy) => ({
         key: enemy.id,
         name: enemy.name,
+        role: enemy.role,
         hp: enemy.hp,
         maxHp: enemy.maxHp,
         attackName: enemy.attackName,
@@ -116,6 +134,24 @@ function App({ battleId, seed, returnTo }: AppProps) {
   )
   const bossGuardEnabled = hasBossGuard(battle)
   const bossGuardActive = isBossGuardActive(battle, enemies)
+
+  useLayoutEffect(() => {
+    setSnapshot({
+      areaId: battle.areaId,
+      battleId: battle.id,
+      capabilities: battleArea.capabilities,
+      enemies,
+      isModalOpen: Boolean(storyEvent || explainedSkill || codeDataOpen),
+      isResolving,
+      phase,
+      playerHp,
+      playerMaxHp: playerStats.maxHp,
+      selectedSkillId,
+      turn,
+      result: victoryReward,
+    })
+    return () => setSnapshot(null)
+  }, [battle.areaId, battle.id, battleArea.capabilities, codeDataOpen, enemies, explainedSkill, isResolving, phase, playerHp, playerStats.maxHp, selectedSkillId, setSnapshot, storyEvent, turn, victoryReward])
 
   useEffect(() => {
     gameAudio.requestBgm('battle')
@@ -160,6 +196,15 @@ function App({ battleId, seed, returnTo }: AppProps) {
 
     setProgress(battleResult.progress)
     setVictoryReward(reward)
+    const clearedArea = reward.clearedAreaId ? areaById[reward.clearedAreaId] : undefined
+    const equipmentId = clearedArea?.clearRewardEquipmentId
+    setResultItems(createVictoryResultSequence(reward, {
+      unlockedSkillName: reward.unlockedSkillId ? skills[reward.unlockedSkillId]?.name : undefined,
+      clearedAreaTitle: clearedArea?.title.toUpperCase(),
+      worldFeedback: getWorldProgressChange(progress, battleResult.progress),
+      equipment: equipmentId ? equipmentById[equipmentId] : undefined,
+    }))
+    if (reward.firstClear) setStoryEvent(getBattleStoryEventForBattle(battle.areaId, battle.id, 'post'))
     setIsResolving(false)
     setPhase('victory')
   }
@@ -241,7 +286,13 @@ function App({ battleId, seed, returnTo }: AppProps) {
       }
 
       const targetIds = targets.map((target) => target.id)
-      const { damageByTargetId, guardedBossTargeted, enemies: nextEnemies } = action
+      const {
+        damageByTargetId,
+        guardedBossTargeted,
+        enemies: nextEnemies,
+        partyFollowUpTargetId,
+        partyFollowUpDamage: resolvedPartyFollowUpDamage,
+      } = action
       const newlyDefeatedIds = getNewlyDefeatedIds(enemies, nextEnemies)
 
       gameAudio.playSe('enemyHit')
@@ -256,17 +307,21 @@ function App({ battleId, seed, returnTo }: AppProps) {
         'player',
         `${skill.name} → ${targets.map((target) => target.name).join(' / ')} · ${skillPower} DMG`,
       )
-      if (partyFollowUpDamage > 0) {
+      if (partyFollowUpTargetId && resolvedPartyFollowUpDamage > 0) {
         const allies = rpgState.partyMemberIds
           .map((id) => partyMemberById[id]?.name)
           .filter(Boolean)
           .join(' + ')
         setPartyFollowUpActive(true)
         setTimeout(() => setPartyFollowUpActive(false), 260)
-        addLog('system', `${allies} FOLLOW-UP → +${partyFollowUpDamage} DMG`)
+        const followUpTarget = targets.find((target) => target.id === partyFollowUpTargetId)
+        addLog(
+          'system',
+          `${allies} FOLLOW-UP → ${followUpTarget?.name ?? partyFollowUpTargetId} · ${resolvedPartyFollowUpDamage} DMG`,
+        )
       }
       if (guardedBossTargeted) {
-        addLog('system', 'BOSS GUARD → total damage to Boss capped at 1')
+        addLog('system', 'BOSS GUARD → Skill damage to Boss capped at 1')
       }
 
       setTimeout(() => {
@@ -280,7 +335,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
   }
 
   const handleSkillClick = (skill: SkillCard) => {
-    if (phase !== 'battle' || isResolving) return
+    if (phase !== 'battle' || isResolving || storyEvent || explainedSkill || codeDataOpen) return
 
     if (selectedSkillId === skill.id) {
       gameAudio.playSe('execute')
@@ -302,59 +357,25 @@ function App({ battleId, seed, returnTo }: AppProps) {
     setProgress(result.progress)
     setRpgState((current) => withBattleHp(current, result.hp))
     setPatchKitUsed(true)
+    setLastPatchKitHeal(result.healed)
     addLog('system', `PATCH KIT → +${result.healed} HP`)
   }
 
   const goNextBattle = () => {
     gameAudio.playSe('confirm')
-
-    if (returnTo === '/world') {
+    if (returnTo === '/world' || !nextBattle) {
       navigate({ to: '/world' })
       return
     }
-
-    if (!nextBattle) {
-      navigate({ to: '/world' })
-      return
-    }
-
-    if (battle.areaId === TYPESCRIPT_AREA_ID) {
-      navigate({
-        to: '/typescript/battle/$battleId',
-        params: { battleId: String(nextBattle.id) },
-        search: {
-          seed: String(seed),
-          returnTo: returnTo === '/typescript/field' ? returnTo : undefined,
-        },
-      })
-      return
-    }
-
     navigate({
-      to: '/javascript/battle/$battleId',
-      params: { battleId: String(nextBattle.id) },
-      search: {
-        seed: String(seed),
-        returnTo: returnTo === '/javascript/field' ? returnTo : undefined,
-      },
+      to: '/$areaId/battle/$battleId',
+      params: { areaId: nextBattle.areaId, battleId: String(nextBattle.id) },
+      search: { seed: String(seed), returnTo },
     })
   }
 
   const goReturnDestination = () => {
     gameAudio.playSe('confirm')
-
-    if (returnTo === '/world') {
-      navigate({ to: '/world' })
-      return
-    }
-    if (returnTo === '/typescript/field') {
-      navigate({ to: '/world' })
-      return
-    }
-    if (returnTo === '/javascript/field') {
-      navigate({ to: '/world' })
-      return
-    }
     navigate({ to: '/world' })
   }
 
@@ -376,16 +397,8 @@ function App({ battleId, seed, returnTo }: AppProps) {
     onEscape: goReturnDestination,
   })
 
-  const unlockedSkill = victoryReward?.unlockedSkillId
-    ? skills[victoryReward.unlockedSkillId]
-    : null
-  const clearedArea = victoryReward?.clearedAreaId
-    ? areaById[victoryReward.clearedAreaId]
-    : null
   const playerHpPercent = Math.max(0, Math.min(100, (playerHp / playerStats.maxHp) * 100))
-  const areaLabel = battleArea?.title.toUpperCase() ?? (
-    battle.areaId === JAVASCRIPT_AREA_ID ? 'JAVASCRIPT KINGDOM' : 'TYPESCRIPT FRONTIER'
-  )
+  const areaLabel = battleArea?.title.toUpperCase() ?? battle.areaId.toUpperCase()
 
   return (
     <main className="app-shell battle-screen">
@@ -462,12 +475,28 @@ function App({ battleId, seed, returnTo }: AppProps) {
           {enemies.map((enemy) => {
             const hpPercent = (enemy.hp / enemy.maxHp) * 100
             const defeated = enemy.hp <= 0
-            const visualId = getEnemyVisualId(enemy.name)
-            const isBossEnemy = battle.isBoss && visualId === 'boss'
+            const visualId = getEnemyVisualId(enemy)
+            const isBossEnemy = enemy.role === 'boss'
             return (
               <article
-                className={`enemy-card ${defeated ? 'defeated' : ''} ${animatingIds.includes(enemy.id) ? 'hit' : ''} ${defeatingIds.includes(enemy.id) ? 'defeating' : ''} ${isBossEnemy ? 'is-boss-enemy' : ''}`}
+                className={`enemy-card ${battleArea.capabilities.codeData ? 'code-data-clickable' : ''} ${inspectedEnemyKey === enemy.id ? 'code-data-inspected' : ''} ${defeated ? 'defeated' : ''} ${animatingIds.includes(enemy.id) ? 'hit' : ''} ${defeatingIds.includes(enemy.id) ? 'defeating' : ''} ${isBossEnemy ? 'is-boss-enemy' : ''}`}
                 key={enemy.id}
+                role={battleArea.capabilities.codeData ? 'button' : undefined}
+                tabIndex={battleArea.capabilities.codeData ? 0 : undefined}
+                aria-label={battleArea.capabilities.codeData ? `${enemy.name}のコード上のデータを確認` : undefined}
+                onClick={(event) => {
+                  if (!battleArea.capabilities.codeData || phase !== 'battle' || storyEvent || explainedSkill) return
+                  event.currentTarget.focus()
+                  setInspectedEnemyKey(enemy.id)
+                  setCodeDataOpen(true)
+                }}
+                onKeyDown={(event) => {
+                  if (event.key !== 'Enter' && event.key !== ' ') return
+                  if (!battleArea.capabilities.codeData || phase !== 'battle' || storyEvent || explainedSkill) return
+                  event.preventDefault()
+                  setInspectedEnemyKey(enemy.id)
+                  setCodeDataOpen(true)
+                }}
               >
                 {damagePopups[enemy.id] !== undefined && (
                   <span className="damage-number enemy-damage-number">-{damagePopups[enemy.id]}</span>
@@ -511,19 +540,8 @@ function App({ battleId, seed, returnTo }: AppProps) {
       </section>
 
       <section className="battle-console pixel-window">
-        {progress.inventory.patchKit > 0 && (
-          <div className="battle-item-row">
-            <button
-              type="button"
-              className="secondary-button patch-kit-action"
-              onClick={handlePatchKit}
-              disabled={isResolving || patchKitUsed || playerHp >= playerStats.maxHp}
-            >
-              PATCH KIT ×{progress.inventory.patchKit} · +{PATCH_KIT_HEAL} HP
-            </button>
-            {patchKitUsed && <span>USED THIS BATTLE</span>}
-          </div>
-        )}
+        <BattleItemPanel progress={progress} hp={playerHp} maxHp={playerStats.maxHp} usedThisBattle={patchKitUsed} lastHeal={lastPatchKitHeal} actionLocked={isResolving || phase !== 'battle' || Boolean(storyEvent)} onUse={handlePatchKit} />
+        <BattleEscapePanel areaId={battle.areaId} battleId={battle.id} seed={String(seed)} returnTo={returnTo} actionLocked={isResolving || phase !== 'battle' || Boolean(storyEvent)} />
 
         <div className="skill-grid">
           {availableSkills.map((skill) => {
@@ -533,6 +551,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
               <button
                 type="button"
                 key={skill.id}
+                data-skill-id={skill.id}
                 className={`skill-card ${selected ? 'selected' : ''}`}
                 onClick={() => handleSkillClick(skill)}
                 disabled={isResolving}
@@ -560,12 +579,14 @@ function App({ battleId, seed, returnTo }: AppProps) {
         )}
       </section>
 
-      {phase === 'battle' && (
+      {phase === 'battle' && battleArea.capabilities.codeData && (
         <BattleCodeData
-          battleKey={`${battle.id}:${String(seed)}`}
           enemies={codeDataEnemies}
           selectedCode={selectedSkill?.code ?? null}
           selectedSkillName={selectedSkill?.name ?? null}
+          open={codeDataOpen}
+          onOpenChange={setCodeDataOpen}
+          selectedEnemyKey={inspectedEnemyKey}
         />
       )}
 
@@ -573,7 +594,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
         <div className="overlay result-overlay victory-overlay" role="presentation">
           <section
             ref={resultDialogRef}
-            className="result-card victory-card pixel-window result-card-enter"
+            className={`result-card victory-card pixel-window result-card-enter result-sequence-host ${resultSequenceDone ? 'result-sequence-complete' : ''}`}
             role="dialog"
             aria-modal="true"
             aria-label="Victory result"
@@ -583,29 +604,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
             <h2>{battle.title} cleared.</h2>
             {victoryReward && (
               <div className="reward-summary pixel-inner-window">
-                <div className="reward-stat"><span>EXP GAINED</span><strong>+{victoryReward.expGained}</strong></div>
-                <div className="reward-stat"><span>GOLD GAINED</span><strong>+{victoryReward.goldGained} G</strong></div>
-                <div className="reward-stat">
-                  <span>LEVEL</span>
-                  <strong>{victoryReward.previousLevel}{victoryReward.newLevel > victoryReward.previousLevel ? ` → ${victoryReward.newLevel}` : ''}</strong>
-                </div>
-                {victoryReward.newLevel > victoryReward.previousLevel && (
-                  <div className="reward-unlock level-up-reward motion-reward">LEVEL UP!</div>
-                )}
-                {victoryReward.firstClear && (
-                  <div className="reward-unlock motion-reward">STAGE CLEAR RECORDED</div>
-                )}
-                {victoryReward.unlockedStageId && (
-                  <div className="reward-unlock motion-reward">STAGE {victoryReward.unlockedStageId} UNLOCKED</div>
-                )}
-                {unlockedSkill && (
-                  <div className="reward-unlock motion-reward">SKILL UNLOCKED: {unlockedSkill.name}</div>
-                )}
-                {clearedArea && (
-                  <div className="reward-unlock area-clear-reward motion-reward">
-                    AREA CLEAR: {clearedArea.title.toUpperCase()}
-                  </div>
-                )}
+                <BattleResultSequence items={resultItems} paused={Boolean(storyEvent)} done={resultSequenceDone} onComplete={completeResultSequence} />
               </div>
             )}
             <div className="result-actions">
@@ -686,6 +685,17 @@ function App({ battleId, seed, returnTo }: AppProps) {
         >
           ?
         </button>
+      )}
+      {storyEvent && (
+        <BattleStoryEvent
+          key={storyEvent.id}
+          event={storyEvent}
+          onComplete={() => setStoryEvent(undefined)}
+          onSkip={() => {
+            setStoryEvent(undefined)
+            if (phase === 'victory') completeResultSequence()
+          }}
+        />
       )}
     </main>
   )

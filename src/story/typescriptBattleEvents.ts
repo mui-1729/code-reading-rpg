@@ -7,18 +7,24 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
     title: '入口だけの問題じゃない',
     lines: [
       {
+        speakerId: 'type-warden',
+
         speaker: 'TYPE WARDEN',
         role: 'CODE WORLD MAINTAINER',
         layer: 'code-world',
         text: '入口の型注釈とEnemyの読み方は合っていた。ここで起きていたのは、型そのものより実際の条件と値の追い違いだ。',
       },
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
         text: 'でも同じAPI更新のあとから、別moduleにlimitが消える症状も出てる。CODE WORLDでも異変が複数地点へ広がってる。',
       },
       {
+        speakerId: 'lead-ada',
+
         speaker: 'LEAD ADA',
         role: 'SENIOR ENGINEER',
         layer: 'remote',
@@ -32,18 +38,24 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
     title: 'Shared Contractにつながった',
     lines: [
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
         text: '見つけた！ optionalなlimitもunionの設定も、別々の機能から同じTargetPolicy contractを読んでる。',
       },
       {
+        speakerId: 'type-warden',
+
         speaker: 'TYPE WARDEN',
         role: 'CODE WORLD MAINTAINER',
         layer: 'code-world',
         text: 'API更新で新旧2種類のdata shapeを受けるようになった。その共通contractの絞り込みがFrontier Compilerへ集約されている。',
       },
       {
+        speakerId: 'lead-ada',
+
         speaker: 'LEAD ADA',
         role: 'SENIOR ENGINEER',
         layer: 'remote',
@@ -57,24 +69,32 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
     title: 'TypeScript incident、解決',
     lines: [
       {
+        speakerId: 'type-warden',
+
         speaker: 'TYPE WARDEN',
         role: 'CODE WORLD MAINTAINER',
         layer: 'code-world',
         text: 'Shared Contractの整合性が戻った。新旧data shapeのどちらでもFrontier Compilerが正しく絞り込めている。',
       },
       {
+        speakerId: 'system',
+
         speaker: 'SYSTEM',
         role: 'CONNECTOR',
         layer: 'return',
         text: 'TypeScript Frontierの修復結果をREAL WORLDへ同期。CODE WORLD sessionからRETURNする。',
       },
       {
+        speakerId: 'lead-ada',
+
         speaker: 'LEAD ADA',
         role: 'SENIOR ENGINEER',
         layer: 'real-world',
         text: '現実側のtarget処理と設定値も正常になった。API更新後のincidentはclose。今回もroot causeまで追えたな。',
       },
       {
+        speakerId: 'lead-ada',
+
         speaker: 'LEAD ADA',
         role: 'SENIOR ENGINEER',
         layer: 'real-world',
@@ -91,18 +111,24 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
     title: 'API更新後の型ずれ',
     lines: [
       {
+        speakerId: 'lead-ada',
+
         speaker: 'LEAD ADA',
         role: 'SENIOR ENGINEER',
         layer: 'real-world',
         text: '次の仕事だ。Enemy API更新後からtarget結果と一部の設定値がずれるincidentが出ている。TypeScript側を調査してほしい。',
       },
       {
+        speakerId: 'type-warden',
+
         speaker: 'TYPE WARDEN',
         role: 'CODE WORLD MAINTAINER',
         layer: 'remote',
         text: 'CODE WORLDのTypeScript Frontierでも、API contractの入口から異変が始まっている。こちらで現地の状態を案内する。',
       },
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
@@ -116,18 +142,24 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
     title: 'Frontier Compilerへ',
     lines: [
       {
+        speakerId: 'type-warden',
+
         speaker: 'TYPE WARDEN',
         role: 'CODE WORLD MAINTAINER',
         layer: 'code-world',
         text: 'この先がShared Contractを解釈するFrontier Compilerだ。複数moduleの型判定がここへ集約されている。',
       },
       {
+        speakerId: 'byte',
+
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
         text: 'type predicate、generic、keyofが一気に出る。でも全部、上から値を絞って最後に何を読むかって流れだ。',
       },
       {
+        speakerId: 'lead-ada',
+
         speaker: 'LEAD ADA',
         role: 'SENIOR ENGINEER',
         layer: 'remote',

@@ -1,49 +1,33 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
+import { useRouterState } from '@tanstack/react-router'
 import { useProgress } from '../progression'
-import { getBattleRouteLockReason, isBattleRouteUnlocked, type BattleRouteArea } from './battleRouteAccess'
+import { parseBattleRoute } from './areas'
+import { getBattleRouteLockReason, isBattleRouteUnlocked } from './battleRouteAccess'
 
 const FLASH_KEY = 'code-reading-rpg:battle-route-lock'
-const BATTLE_PATH = /^\/(javascript|typescript)\/battle\/(\d+)$/
-
-type RouteSnapshot = {
-  pathname: string
-  hash: string
-}
-
-function readRoute(): RouteSnapshot {
-  return { pathname: window.location.pathname, hash: window.location.hash }
-}
 
 export function BattleRouteGate() {
   const { progress } = useProgress()
-  const [route, setRoute] = useState<RouteSnapshot>(() => readRoute())
+  const location = useRouterState({
+    select: (state) => ({
+      pathname: state.location.pathname,
+      hash: state.location.hash,
+    }),
+  })
+  const battleRoute = parseBattleRoute(location.pathname)
 
   useEffect(() => {
-    const sync = () => setRoute(readRoute())
-    const observer = new MutationObserver(sync)
-    observer.observe(document.body, { childList: true, subtree: true })
-    window.addEventListener('popstate', sync)
-    return () => {
-      observer.disconnect()
-      window.removeEventListener('popstate', sync)
-    }
-  }, [])
+    if (!battleRoute) return
+    const { area, battleId } = battleRoute
+    if (isBattleRouteUnlocked(area.id, battleId, progress)) return
 
-  useEffect(() => {
-    const match = BATTLE_PATH.exec(route.pathname)
-    if (!match) return
-
-    const area = match[1] as BattleRouteArea
-    const battleId = Number(match[2])
-    if (isBattleRouteUnlocked(area, battleId, progress)) return
-
-    const reason = getBattleRouteLockReason(area, battleId)
+    const reason = getBattleRouteLockReason(area.id, battleId)
     window.sessionStorage.setItem(FLASH_KEY, reason)
-    window.location.replace('/world#battle-locked')
-  }, [progress, route.pathname])
+    window.location.replace(`${area.routes.world}#battle-locked`)
+  }, [battleRoute, progress])
 
   const notice =
-    route.pathname === '/world' && route.hash === '#battle-locked'
+    location.pathname === '/world' && location.hash.replace(/^#/, '') === 'battle-locked'
       ? window.sessionStorage.getItem(FLASH_KEY)
       : null
 

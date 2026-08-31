@@ -1,3 +1,4 @@
+import { readStoredProgress } from './storedGameState'
 import { expect, test, type Page } from '@playwright/test'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
@@ -89,7 +90,7 @@ test('未解放JavaScript Battleの直URLをWorldへ戻しprogressを変更し�
   await expect(page).toHaveURL(/\/world#battle-locked$/)
   await expect(page.getByRole('status')).toContainText('BATTLE LOCKED')
   await expect(page.getByRole('status')).toContainText('まだ解放されていない')
-  const stored = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), PROGRESS_KEY)
+  const stored = await readStoredProgress(page)
   expect(stored.progress.exp).toBe(0)
   expect(stored.progress.gold).toBe(0)
   expect(stored.progress.clearedStageIds).toEqual([])

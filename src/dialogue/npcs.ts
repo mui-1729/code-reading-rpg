@@ -5,7 +5,9 @@ export const npcDefinitions: NpcDefinition[] = [
   {
     id: 'archivist',
     name: 'LEAD ADA',
-    role: 'SENIOR ENGINEER',
+    role: 'mentor',
+    roleLabel: 'SENIOR ENGINEER',
+    visualId: 'lead-ada',
     dialogues: [
       {
         id: 'archivist-area-clear',
@@ -48,7 +50,9 @@ export const npcDefinitions: NpcDefinition[] = [
   {
     id: 'lambda-sage',
     name: 'LAMBDA',
-    role: 'CODE MENTOR',
+    role: 'mentor',
+    roleLabel: 'CODE MENTOR',
+    visualId: null,
     dialogues: [
       {
         id: 'lambda-level-3',
@@ -79,7 +83,9 @@ export const npcDefinitions: NpcDefinition[] = [
   {
     id: 'byte-scout',
     name: 'BYTE',
-    role: 'DEBUGGER',
+    role: 'scout',
+    roleLabel: 'DEBUGGER',
+    visualId: 'byte',
     dialogues: [
       {
         id: 'byte-area-clear',
@@ -111,7 +117,9 @@ export const npcDefinitions: NpcDefinition[] = [
   {
     id: 'type-warden',
     name: 'TYPE WARDEN',
-    role: 'SYSTEM MAINTAINER',
+    role: 'maintainer',
+    roleLabel: 'SYSTEM MAINTAINER',
+    visualId: 'type-warden',
     dialogues: [
       {
         id: 'type-warden-area-clear',
@@ -150,7 +158,9 @@ export const npcDefinitions: NpcDefinition[] = [
   {
     id: 'narrowing-scholar',
     name: 'NARROWING SCHOLAR',
-    role: 'TYPE READING HINT',
+    role: 'mentor',
+    roleLabel: 'TYPE READING HINT',
+    visualId: null,
     dialogues: [
       {
         id: 'narrowing-scholar-stage-5',
@@ -181,7 +191,9 @@ export const npcDefinitions: NpcDefinition[] = [
   {
     id: 'compiler-scout',
     name: 'COMPILER SCOUT',
-    role: 'REVIEW SCOUT',
+    role: 'scout',
+    roleLabel: 'REVIEW SCOUT',
+    visualId: null,
     dialogues: [
       {
         id: 'compiler-scout-area-clear',

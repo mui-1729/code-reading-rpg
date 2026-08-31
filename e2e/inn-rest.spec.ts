@@ -1,3 +1,4 @@
+import { readStoredGameState } from './storedGameState'
 import { expect, test, type Page } from '@playwright/test'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
@@ -63,13 +64,7 @@ async function seedInnState(page: Page, options: { gold: number; currentHp: numb
 }
 
 async function storedInnState(page: Page) {
-  return page.evaluate(
-    ({ progressKey, rpgKey }) => ({
-      progress: JSON.parse(localStorage.getItem(progressKey) ?? 'null'),
-      rpg: JSON.parse(localStorage.getItem(rpgKey) ?? 'null'),
-    }),
-    { progressKey: PROGRESS_KEY, rpgKey: RPG_KEY },
-  )
+  return readStoredGameState(page)
 }
 
 test.describe('Inn / Rest', () => {

@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { createBattleSession } from './session'
+import { createBattleSession, validateBattleSearch } from './session'
 
 describe('battle session identity', () => {
+  it('return pathはregistered legacy fieldかWorldだけを受け付ける', () => {
+    expect(validateBattleSearch({ seed: 'seed', returnTo: '/typescript/field' })).toEqual({ seed: 'seed', returnTo: '/typescript/field' })
+    expect(validateBattleSearch({ seed: '', returnTo: 'https://example.test' })).toEqual({ seed: undefined, returnTo: undefined })
+  })
   it('keeps battleId / seed / returnTo together with the generated battle', () => {
     const session = createBattleSession(7, 'session-seed', '/world')
 

@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { gameAudio } from '../audio/gameAudio'
 import { useBgm } from '../audio/useBgm'
 import { useProgress } from '../progression'
-import { characterVisuals, useRpg } from '../rpg'
+import { useRpg } from '../rpg'
 import { openWorldTreasure } from './treasures'
 import { resolveWorldMove } from './worldActions'
 import {
@@ -13,11 +13,9 @@ import {
   TS_BOSS_POSITION,
   TS_FRONTIER_MAP_ID,
 } from './worldMap'
-
-const VIEWPORT_COLUMNS = 11
-const VIEWPORT_ROWS = 9
-
-type Position = { x: number; y: number }
+import { WorldCharacterLayer, WorldControls, WorldObjectiveCard, WorldViewport } from './WorldScene'
+import { useWorldKeyboardControls } from './useWorldKeyboardControls'
+import type { WorldPosition } from './worldSceneGeometry'
 
 const terrainLabels: Record<string, string> = {
   mountain: 'Collapsed Boundary',
@@ -74,32 +72,14 @@ export function TypeScriptFrontierPage() {
   useBgm('field')
 
   const position = rpgState.worldPosition
-  const [followerPosition, setFollowerPosition] = useState<Position>(() => ({
+  const [followerPosition, setFollowerPosition] = useState<WorldPosition>(() => ({
     x: position.x,
     y: position.y + 1,
   }))
-  const visibleCells = useMemo(
-    () => getVisibleWorldCells(position, TS_FRONTIER_MAP_ID),
-    [position],
-  )
+  const visibleCells = useMemo(() => getVisibleWorldCells(position, TS_FRONTIER_MAP_ID), [position])
   const viewportStart = visibleCells[0] ?? position
   const byteJoined = rpgState.partyMemberIds.includes('byte')
   const objective = getObjective(progress.clearedStageIds)
-
-  const spriteStyle = useCallback(
-    (spritePosition: Position) => ({
-      left: `${((spritePosition.x - viewportStart.x + 0.5) / VIEWPORT_COLUMNS) * 100}%`,
-      top: `${((spritePosition.y - viewportStart.y + 0.5) / VIEWPORT_ROWS) * 100}%`,
-    }),
-    [viewportStart.x, viewportStart.y],
-  )
-
-  const followerVisible =
-    byteJoined &&
-    followerPosition.x >= viewportStart.x &&
-    followerPosition.x < viewportStart.x + VIEWPORT_COLUMNS &&
-    followerPosition.y >= viewportStart.y &&
-    followerPosition.y < viewportStart.y + VIEWPORT_ROWS
 
   const enterBattle = useCallback(
     (battleId: number, seed: string) => {
@@ -182,7 +162,9 @@ export function TypeScriptFrontierPage() {
     if (isAdjacent(position, TS_BOSS_POSITION)) {
       if (!progress.unlockedStageIds.includes(6) && !progress.clearedStageIds.includes(5)) {
         gameAudio.playSe('cancel')
-        setMessage('BYTE: まずFrontierのBattle 4 / 5を終わらせよう。二つの型ruleが揃えばTYPE WARDENへ挑める。')
+        setMessage(
+          'BYTE: まずFrontierのBattle 4 / 5を終わらせよう。二つの型ruleが揃えばTYPE WARDENへ挑める。',
+        )
         return
       }
       enterBattle(6, `boss:ts:${rpgState.encounterCount}`)
@@ -196,30 +178,7 @@ export function TypeScriptFrontierPage() {
     )
   }, [enterBattle, position, progress, rpgState, setProgress, setRpgState, visibleCells])
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (document.body.dataset.rpgPaused === 'true') return
-      const key = event.key.toLowerCase()
-      if (key === 'arrowup' || key === 'w') {
-        event.preventDefault()
-        move(0, -1)
-      } else if (key === 'arrowdown' || key === 's') {
-        event.preventDefault()
-        move(0, 1)
-      } else if (key === 'arrowleft' || key === 'a') {
-        event.preventDefault()
-        move(-1, 0)
-      } else if (key === 'arrowright' || key === 'd') {
-        event.preventDefault()
-        move(1, 0)
-      } else if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault()
-        interact()
-      }
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [interact, move])
+  useWorldKeyboardControls({ interact, move })
 
   return (
     <main className="app-shell world-shell title-screen">
@@ -229,28 +188,22 @@ export function TypeScriptFrontierPage() {
             <div className="eyebrow">LOCAL MAP // TYPESCRIPT FRONTIER</div>
             <h1>TYPESCRIPT FRONTIER</h1>
             <p>
-              JavaScriptの草原とは別の地方。Rune Stone Roadを軸に、Crystal FieldとAncient Ruinsで型のruleを読む。
+              JavaScriptの草原とは別の地方。Rune Stone Roadを軸に、Crystal FieldとAncient
+              Ruinsで型のruleを読む。
             </p>
           </div>
         </header>
 
-        <section
-          className={`world-next-objective pixel-inner-window ${objective.clear ? 'is-clear' : ''}`}
-          aria-label="Next objective"
-        >
-          <span>{objective.label}</span>
-          <strong>{objective.title}</strong>
-          <p>{objective.detail}</p>
-        </section>
+        <WorldObjectiveCard objective={objective} />
 
-        <div
-          className="world-viewport pixel-inner-window typescript-frontier-viewport"
-          aria-label="TypeScript Frontier map"
-          data-world-map={TS_FRONTIER_MAP_ID}
-          data-world-x={position.x}
-          data-world-y={position.y}
-        >
-          {visibleCells.map((cell) => {
+        <WorldViewport
+          mapId={TS_FRONTIER_MAP_ID}
+          playerPosition={position}
+          cells={visibleCells}
+          terrainLabels={terrainLabels}
+          className="typescript-frontier-viewport"
+          label="TypeScript Frontier map"
+          renderObject={(cell) => {
             const treasureDefinition =
               cell.terrain === 'treasure'
                 ? getTreasureAtPosition(cell, TS_FRONTIER_MAP_ID)
@@ -260,14 +213,7 @@ export function TypeScriptFrontierPage() {
               : false
 
             return (
-              <div
-                key={`${cell.mapId}:${cell.x}:${cell.y}`}
-                className={`world-tile terrain-${cell.terrain}`}
-                title={terrainLabels[cell.terrain] ?? cell.terrain}
-                data-world-map={cell.mapId}
-                data-world-x={cell.x}
-                data-world-y={cell.y}
-              >
+              <>
                 {cell.terrain === 'gate' && (
                   <span className="world-object ts-gate-object">GATE</span>
                 )}
@@ -282,65 +228,25 @@ export function TypeScriptFrontierPage() {
                     {treasureOpened ? 'OPEN' : 'TYPE CACHE'}
                   </span>
                 )}
-              </div>
+              </>
             )
-          })}
-
-          <div
-            className="world-character-layer"
-            aria-hidden="true"
-            data-world-map={TS_FRONTIER_MAP_ID}
-            data-world-x={position.x}
-            data-world-y={position.y}
-          >
-            {followerVisible && (
-              <span
-                className="world-follower-sprite world-character-overlay"
-                style={spriteStyle(followerPosition)}
-                data-world-map={TS_FRONTIER_MAP_ID}
-                data-world-x={followerPosition.x}
-                data-world-y={followerPosition.y}
-              >
-                <img className="world-follower-pixel" src={characterVisuals.byte.field} alt="" />
-              </span>
-            )}
-
-            <span
-              className="world-player-sprite world-character-overlay"
-              style={spriteStyle(position)}
-              data-world-map={TS_FRONTIER_MAP_ID}
-              data-world-x={position.x}
-              data-world-y={position.y}
-            >
-              <img className="world-player-pixel" src={characterVisuals.player.field} alt="" />
-            </span>
-          </div>
-        </div>
+          }}
+        >
+          <WorldCharacterLayer
+            mapId={TS_FRONTIER_MAP_ID}
+            playerPosition={position}
+            viewportStart={viewportStart}
+            followerPosition={followerPosition}
+            followerJoined={byteJoined}
+          />
+        </WorldViewport>
 
         <section className="world-message pixel-inner-window" aria-live="polite">
           <span>FRONTIER LOG</span>
           <p>{message}</p>
         </section>
 
-        <div className="world-controls" aria-label="World controls">
-          <div className="world-dpad">
-            <button type="button" aria-label="Move up" onClick={() => move(0, -1)}>
-              ▲
-            </button>
-            <button type="button" aria-label="Move left" onClick={() => move(-1, 0)}>
-              ◀
-            </button>
-            <button type="button" aria-label="Move down" onClick={() => move(0, 1)}>
-              ▼
-            </button>
-            <button type="button" aria-label="Move right" onClick={() => move(1, 0)}>
-              ▶
-            </button>
-          </div>
-          <button type="button" className="primary-button world-interact" onClick={interact}>
-            INTERACT
-          </button>
-        </div>
+        <WorldControls move={move} interact={interact} />
       </section>
     </main>
   )

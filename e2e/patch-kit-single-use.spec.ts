@@ -1,3 +1,4 @@
+import { readStoredProgress } from './storedGameState'
 import { expect, test } from '@playwright/test'
 import { JS_BATTLE_1_PREREQS } from './canonical-progress-fixtures'
 
@@ -63,7 +64,7 @@ async function seedBattle(page: import('@playwright/test').Page) {
 }
 
 async function storedProgress(page: import('@playwright/test').Page) {
-  return page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), PROGRESS_KEY)
+  return readStoredProgress(page)
 }
 
 test('PATCH KITは在庫2個でも同一Battleで見える操作1つ・使用1回に制限する', async ({ page }) => {

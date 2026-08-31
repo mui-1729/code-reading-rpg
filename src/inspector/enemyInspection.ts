@@ -1,6 +1,7 @@
 export type RuntimeEnemy = {
   key: string
   name: string
+  role?: string
   hp: number
   maxHp: number
   attackName: string
@@ -30,6 +31,7 @@ export type EnemyInspectionSnapshot = {
 
 const enemyRef = (enemy: RuntimeEnemy) => ({
   name: enemy.name,
+  ...(enemy.role ? { role: enemy.role } : {}),
   hp: enemy.hp,
   attackDamage: enemy.attackDamage,
   incomingDamage: enemy.incomingDamage,
@@ -43,6 +45,7 @@ export function createEnemyInspectionSnapshot(
 ): EnemyInspectionSnapshot {
   const base: CodeDataVariable[] = [
     { name: 'name', expression: 'enemy.name', value: enemy.name },
+    ...(enemy.role ? [{ name: 'role', expression: 'enemy.role', value: enemy.role }] : []),
     { name: 'hp', expression: 'enemy.hp', value: enemy.hp },
     { name: 'maxHp', expression: 'enemy.maxHp', value: enemy.maxHp },
     { name: 'attackName', expression: 'enemy.attackName', value: enemy.attackName },

@@ -1,3 +1,4 @@
+import { readStoredGameState } from './storedGameState'
 import { expect, test, type Page } from '@playwright/test'
 import { JS_BATTLE_1_PREREQS } from './canonical-progress-fixtures'
 
@@ -70,13 +71,7 @@ async function executeSkill(page: Page, name: string) {
 }
 
 async function storedState(page: Page) {
-  return page.evaluate(
-    ({ progressKey, rpgKey }) => ({
-      progress: JSON.parse(localStorage.getItem(progressKey) ?? 'null'),
-      rpg: JSON.parse(localStorage.getItem(rpgKey) ?? 'null'),
-    }),
-    { progressKey: PROGRESS_KEY, rpgKey: RPG_KEY },
-  )
+  return readStoredGameState(page)
 }
 
 test('Battle Gold → Shop purchase/equip → Inn → reload → next Battleを1本で維持する', async ({ page }) => {

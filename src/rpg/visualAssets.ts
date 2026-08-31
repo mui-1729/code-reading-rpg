@@ -20,12 +20,15 @@ export const characterVisuals = {
   },
 } as const
 
-export function getStorySpeakerVisual(speaker: string): string | null {
-  if (speaker === 'BYTE') return characterVisuals.byte.portrait
-  if (speaker.startsWith('LEAD ADA')) return characterVisuals.leadAda.portrait
-  if (speaker.startsWith('TRAINER MIO')) return characterVisuals.trainerMio.portrait
-  if (speaker.startsWith('TYPE WARDEN')) return characterVisuals.typeWarden.portrait
-  return null
+const storySpeakerPortraits: Readonly<Record<string, string>> = {
+  byte: characterVisuals.byte.portrait,
+  'lead-ada': characterVisuals.leadAda.portrait,
+  'trainer-mio': characterVisuals.trainerMio.portrait,
+  'type-warden': characterVisuals.typeWarden.portrait,
+}
+
+export function getStorySpeakerVisual(speakerId: string): string | null {
+  return storySpeakerPortraits[speakerId] ?? null
 }
 
 export const equipmentVisuals: Record<string, string> = {

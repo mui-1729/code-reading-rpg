@@ -48,7 +48,7 @@ REAL WORLDでは新人エンジニアとしてproblemを受けるが、technical
 - World Objective / BYTE guidance
 - persistent HP / Treasure / Shop / paid Inn
 - BYTE party / follower
-- `PlayerProgress v4` / `RpgState v4`
+- `PlayerProgress v4` / `RpgState v5` / unified revision snapshot
 - old save migration / derived progression normalization
 
 ### JavaScript learning route — completed P0
@@ -97,7 +97,7 @@ JavaScript Area CLEAR / REAL WORLD RETURN
 - Boss 3は22 + 1 + 2 clear後だけ開始可能
 - Boss 3 clear時だけJavaScript Area CLEAR
 - display codeを`eval()`せずsafe `TargetRule`へ写す
-- PlayerProgress / RpgStateはv4のまま維持
+- PlayerProgress v4を維持し、RpgState v5で未使用Party Equipmentを整理
 
 ### Battle / learning infrastructure
 

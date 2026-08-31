@@ -3,6 +3,6 @@ import { RpgContext } from './RpgContext'
 
 export function useRpg() {
   const value = useContext(RpgContext)
-  if (!value) throw new Error('useRpg must be used within RpgProvider')
+  if (!value) throw new Error('useRpg must be used within GameStateProvider')
   return value
 }

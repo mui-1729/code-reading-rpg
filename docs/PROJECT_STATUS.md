@@ -123,7 +123,7 @@ stable map:
 共通:
 
 - viewport 11 × 9
-- `worldMapId + local worldPosition`をRpgState v4で保存
+- `worldMapId + local worldPosition`をRpgState v5で保存
 - `/world` route上でmap transition
 - local mapからBattleへ入り、`returnTo=/world`でsame map / positionへ戻る
 - Defeat時だけOverworld Hubへ戻す
@@ -229,10 +229,12 @@ Economy / Equipmentはcorrect targetを変えず、survivabilityとRPG progressi
 ## 8. Persistence / compatibility
 
 - `PlayerProgress` schema v4
-- `RpgState` schema v4
-- RpgState v1〜v3 → v4 migration
+- `RpgState` schema v5（未使用Party Equipmentを除去）
+- RpgState v1〜v4 → v5 migration
+- Progress / RPGの単一revision snapshot、backup recovery、storage event同期、stale tab上書き回避
 - current `worldMapId + local worldPosition`を保存
 - unknown map / bounds外locationはHubへfallback
+- portal graph上でlocked mapにある位置もHubへnormalize
 - save schema bumpなしでJavaScript routeをderived補完
 
 Derived progression:

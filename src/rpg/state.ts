@@ -25,7 +25,6 @@ export type RpgState = {
   equipment: EquipmentLoadout
   ownedEquipmentIds: string[]
   partyMemberIds: string[]
-  partyEquipment: Record<string, EquipmentLoadout>
   worldMapId: WorldMapId
   worldPosition: WorldPosition
   stepsSinceEncounter: number
@@ -35,8 +34,13 @@ export type RpgState = {
 }
 
 export type StoredRpgState = {
-  version: 4
+  version: 5
   state: RpgState
+}
+
+type LegacyStoredRpgStateV4 = {
+  version: 4
+  state: RpgState & { partyEquipment?: Record<string, EquipmentLoadout> }
 }
 
 type LegacyStoredRpgStateV3 = {
@@ -55,7 +59,7 @@ type LegacyStoredRpgStateV1 = {
 }
 
 export const RPG_STORAGE_KEY = 'code-reading-rpg:rpg-state'
-export const RPG_STATE_SCHEMA_VERSION = 4
+export const RPG_STATE_SCHEMA_VERSION = 5
 
 const equipmentSlots: EquipmentSlot[] = ['weapon', 'armor', 'accessory']
 
@@ -77,7 +81,6 @@ export function createInitialRpgState(baseMaxHp = BASE_PLAYER_HP): RpgState {
     equipment,
     ownedEquipmentIds: [...starterEquipmentIds],
     partyMemberIds: [],
-    partyEquipment: {},
     worldMapId: OVERWORLD_MAP_ID,
     worldPosition: { ...WORLD_MAP_STARTS[OVERWORLD_MAP_ID] },
     stepsSinceEncounter: 8,
@@ -128,11 +131,15 @@ function uniqueKnownTreasureIds(value: unknown): WorldTreasureId[] {
   )
 }
 
+function emptyLoadout(): EquipmentLoadout {
+  return { weapon: null, armor: null, accessory: null }
+}
+
 function normalizeLoadout(
   value: unknown,
   ownedEquipmentIds: readonly string[],
 ): EquipmentLoadout {
-  if (!isLoadout(value)) return emptyPartyEquipment()
+  if (!isLoadout(value)) return emptyLoadout()
   const owned = new Set(ownedEquipmentIds)
 
   return Object.fromEntries(
@@ -228,12 +235,17 @@ export function restoreRpgState(raw: string | null, baseMaxHp = BASE_PLAYER_HP):
 
   try {
     const parsed = JSON.parse(raw) as Partial<
-      StoredRpgState | LegacyStoredRpgStateV3 | LegacyStoredRpgStateV2 | LegacyStoredRpgStateV1
+      | StoredRpgState
+      | LegacyStoredRpgStateV4
+      | LegacyStoredRpgStateV3
+      | LegacyStoredRpgStateV2
+      | LegacyStoredRpgStateV1
     >
     if (
       (parsed.version !== 1 &&
         parsed.version !== 2 &&
         parsed.version !== 3 &&
+        parsed.version !== 4 &&
         parsed.version !== RPG_STATE_SCHEMA_VERSION) ||
       !parsed.state
     ) {
@@ -243,22 +255,12 @@ export function restoreRpgState(raw: string | null, baseMaxHp = BASE_PLAYER_HP):
     const state = parsed.state as Partial<RpgState>
     const ownedEquipmentIds = uniqueKnownEquipmentIds(state.ownedEquipmentIds)
     const partyMemberIds = uniqueKnownPartyIds(state.partyMemberIds)
-    const joinedPartyMembers = new Set(partyMemberIds)
     const equipment = normalizeLoadout(state.equipment, ownedEquipmentIds)
-    const partyEquipment =
-      state.partyEquipment && typeof state.partyEquipment === 'object'
-        ? (Object.fromEntries(
-            Object.entries(state.partyEquipment)
-              .filter(([memberId]) => joinedPartyMembers.has(memberId))
-              .map(([memberId, loadout]) => [
-                memberId,
-                normalizeLoadout(loadout, ownedEquipmentIds),
-              ]),
-          ) as Record<string, EquipmentLoadout>)
-        : {}
     const maxHp = getMaxHpForRpgState(baseMaxHp, { equipment })
     const worldLocation = normalizeWorldLocation(
-      parsed.version === RPG_STATE_SCHEMA_VERSION ? state.worldMapId : OVERWORLD_MAP_ID,
+      parsed.version === 4 || parsed.version === RPG_STATE_SCHEMA_VERSION
+        ? state.worldMapId
+        : OVERWORLD_MAP_ID,
       state.worldPosition,
     )
 
@@ -266,7 +268,6 @@ export function restoreRpgState(raw: string | null, baseMaxHp = BASE_PLAYER_HP):
       equipment,
       ownedEquipmentIds,
       partyMemberIds,
-      partyEquipment,
       worldMapId: worldLocation.mapId,
       worldPosition: worldLocation.position,
       stepsSinceEncounter:
@@ -280,15 +281,11 @@ export function restoreRpgState(raw: string | null, baseMaxHp = BASE_PLAYER_HP):
       currentHp:
         parsed.version === 1 ? maxHp : normalizeCurrentHp(state.currentHp, maxHp),
       openedTreasureIds:
-        parsed.version === 3 || parsed.version === RPG_STATE_SCHEMA_VERSION
+        parsed.version === 3 || parsed.version === 4 || parsed.version === RPG_STATE_SCHEMA_VERSION
           ? uniqueKnownTreasureIds(state.openedTreasureIds)
           : [],
     }
   } catch {
     return initial
   }
-}
-
-export function emptyPartyEquipment(): EquipmentLoadout {
-  return { weapon: null, armor: null, accessory: null }
 }

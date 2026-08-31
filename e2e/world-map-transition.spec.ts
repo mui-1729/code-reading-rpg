@@ -1,3 +1,4 @@
+import { readStoredRpg } from './storedGameState'
 import { expect, test, type Page } from '@playwright/test'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
@@ -57,7 +58,7 @@ async function seedWorld(page: Page) {
 }
 
 async function storedRpgState(page: Page) {
-  return page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), RPG_KEY)
+  return readStoredRpg(page)
 }
 
 test('Overworld → Village → reload → Overworldのround tripを保存する', async ({ page }) => {

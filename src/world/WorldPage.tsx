@@ -4,12 +4,7 @@ import { gameAudio } from '../audio/gameAudio'
 import { useBgm } from '../audio/useBgm'
 import { WorldInn, WorldShop } from '../economy'
 import { useProgress } from '../progression'
-import {
-  characterVisuals,
-  emptyPartyEquipment,
-  equipmentById,
-  useRpg,
-} from '../rpg'
+import { characterVisuals, equipmentById, useRpg } from '../rpg'
 import { openWorldTreasure } from './treasures'
 import {
   getNextJavaScriptTrainingBattleId,
@@ -25,6 +20,9 @@ import {
   JS_FOREST_MAP_ID,
   JS_VILLAGE_MAP_ID,
 } from './worldMap'
+import { WorldCharacterLayer, WorldControls, WorldObjectiveCard, WorldViewport } from './WorldScene'
+import { useWorldKeyboardControls } from './useWorldKeyboardControls'
+import type { WorldPosition } from './worldSceneGeometry'
 
 const regionLabels = {
   javascript: 'JAVASCRIPT WEST',
@@ -54,11 +52,6 @@ const terrainLabels: Record<string, string> = {
   training: 'JavaScript Training Ground',
 }
 
-const VIEWPORT_COLUMNS = 11
-const VIEWPORT_ROWS = 9
-
-type Position = { x: number; y: number }
-
 export function WorldPage() {
   const navigate = useNavigate()
   const { progress, setProgress } = useProgress()
@@ -72,7 +65,7 @@ export function WorldPage() {
 
   const mapId = rpgState.worldMapId
   const position = rpgState.worldPosition
-  const [followerPosition, setFollowerPosition] = useState<Position>(() => ({
+  const [followerPosition, setFollowerPosition] = useState<WorldPosition>(() => ({
     x: position.x,
     y: position.y + 1,
   }))
@@ -148,7 +141,8 @@ export function WorldPage() {
       return {
         label: 'NEXT OBJECTIVE · 1 / 4',
         title: 'BYTEと合流する',
-        detail: '開始地点から左か上へ1歩進むとBYTEの隣。INTERACTで話しかけ、仲間になったら西へ向かおう。',
+        detail:
+          '開始地点から左か上へ1歩進むとBYTEの隣。INTERACTで話しかけ、仲間になったら西へ向かおう。',
         clear: false,
       }
     }
@@ -156,7 +150,8 @@ export function WorldPage() {
       return {
         label: 'NEXT OBJECTIVE · TRAINING',
         title: '西の村でJavaScriptの読み方を練習する',
-        detail: 'Hubから西の道を進み、途中で北へ伸びる道の先にあるVILLAGEへ入ろう。村のTRAINで基礎を順番に練習できる。',
+        detail:
+          'Hubから西の道を進み、途中で北へ伸びる道の先にあるVILLAGEへ入ろう。村のTRAINで基礎を順番に練習できる。',
         clear: false,
       }
     }
@@ -169,7 +164,8 @@ export function WorldPage() {
       return {
         label: 'NEXT OBJECTIVE · FOREST',
         title: `西の森で${forestStep}`,
-        detail: '村を出て西の道を進み、FORESTへ入ろう。森の道を外れて歩くと、学んだ範囲だけのBattleが起こる。',
+        detail:
+          '村を出て西の道を進み、FORESTへ入ろう。森の道を外れて歩くと、学んだ範囲だけのBattleが起こる。',
         clear: false,
       }
     }
@@ -177,7 +173,8 @@ export function WorldPage() {
       return {
         label: 'NEXT OBJECTIVE · MID-BOSS',
         title: '森の守り人を突破する',
-        detail: 'FORESTのmain trailを西へ進もう。MID BOSSの隣でINTERACTし、今まで学んだ条件だけでBattle 13を読み切る。',
+        detail:
+          'FORESTのmain trailを西へ進もう。MID BOSSの隣でINTERACTし、今まで学んだ条件だけでBattle 13を読み切る。',
         clear: false,
       }
     }
@@ -185,7 +182,8 @@ export function WorldPage() {
       return {
         label: 'NEXT OBJECTIVE · FILTER',
         title: '最初の一体ではなく、全部集める読み方を知る',
-        detail: '守り人を越えてForest西側へ進み、main trailからWoodsへ入ろう。Battle 14でfind()とfilter()の違いを読む。',
+        detail:
+          '守り人を越えてForest西側へ進み、main trailからWoodsへ入ろう。Battle 14でfind()とfilter()の違いを読む。',
         clear: false,
       }
     }
@@ -193,7 +191,8 @@ export function WorldPage() {
       return {
         label: 'NEXT OBJECTIVE · DEEP FOREST',
         title: 'Deep Forestでfilter()をもう一度読む',
-        detail: 'Forestの西端にあるEXITからDEEP FORESTへ入ろう。最初のWoodsで、今度はhp > 65のfilter()を読む。',
+        detail:
+          'Forestの西端にあるEXITからDEEP FORESTへ入ろう。最初のWoodsで、今度はhp > 65のfilter()を読む。',
         clear: false,
       }
     }
@@ -214,7 +213,8 @@ export function WorldPage() {
       return {
         label: 'NEXT OBJECTIVE · DEEP FOREST',
         title: `Deep Forestを西へ進み${nextLesson}を読む`,
-        detail: 'Forest西端のEXITからDeep Forestへ戻り、西へ進もう。新conceptは固定Lessonで先に学び、Woodsではclear済み内容だけを復習できる。',
+        detail:
+          'Forest西端のEXITからDeep Forestへ戻り、西へ進もう。新conceptは固定Lessonで先に学び、Woodsではclear済み内容だけを復習できる。',
         clear: false,
       }
     }
@@ -222,7 +222,8 @@ export function WorldPage() {
       return {
         label: 'FINAL INCIDENT · 1 / 2',
         title: '草原へ戻って最初の異変を追う',
-        detail: 'Deep Forestの学習は完了。Forest東端からOverworldへ戻り、JavaScript側の草むらで実際のtarget異変を調べよう。',
+        detail:
+          'Deep Forestの学習は完了。Forest東端からOverworldへ戻り、JavaScript側の草むらで実際のtarget異変を調べよう。',
         clear: false,
       }
     }
@@ -230,14 +231,16 @@ export function WorldPage() {
       return {
         label: 'FINAL INCIDENT · 2 / 2',
         title: 'もう一つの異変を追う',
-        detail: '一つ目の異変は確認できた。JavaScript側の草むらでもう一戦し、共通するCode Coreへのつながりを確かめよう。',
+        detail:
+          '一つ目の異変は確認できた。JavaScript側の草むらでもう一戦し、共通するCode Coreへのつながりを確かめよう。',
         clear: false,
       }
     }
     return {
       label: 'FINAL BOSS',
       title: '北西のCode Coreへ向かう',
-      detail: '二つの異変が同じroot causeへつながった。北西のBOSSの隣でINTERACTし、JavaScript Final Boss Battle 3へ挑もう。',
+      detail:
+        '二つの異変が同じroot causeへつながった。北西のBOSSの隣でINTERACTし、JavaScript Final Boss Battle 3へ挑もう。',
       clear: false,
     }
   }, [byteJoined, nextTrainingBattleId, progress.clearedAreaIds, progress.clearedStageIds])
@@ -270,7 +273,8 @@ export function WorldPage() {
     return {
       label: 'TRAINING COMPLETE',
       title: '村の基礎訓練を完了した',
-      detail: '南のEXITから草原へ戻り、西の道を進もう。FORESTでは&&と||を、今までのfind()に足して読む。',
+      detail:
+        '南のEXITから草原へ戻り、西の道を進もう。FORESTでは&&と||を、今までのfind()に足して読む。',
       clear: true,
     }
   }, [nextTrainingBattleId])
@@ -296,7 +300,8 @@ export function WorldPage() {
       return {
         label: 'FOREST · 3 / 4',
         title: '&&と||を小さく分けて読む',
-        detail: '新しいsyntaxは増えない。かっこの内側から順に読み、find()が最初に止まる相手を追おう。',
+        detail:
+          '新しいsyntaxは増えない。かっこの内側から順に読み、find()が最初に止まる相手を追おう。',
         clear: false,
       }
     }
@@ -304,7 +309,8 @@ export function WorldPage() {
       return {
         label: 'FOREST MID-BOSS',
         title: '今までの読み方だけで守り人へ挑む',
-        detail: 'main trailを西へ進み、MID BOSSの隣でINTERACT。新しいsyntaxは使わず、Battle 13で理解を確認する。',
+        detail:
+          'main trailを西へ進み、MID BOSSの隣でINTERACT。新しいsyntaxは使わず、Battle 13で理解を確認する。',
         clear: false,
       }
     }
@@ -312,7 +318,8 @@ export function WorldPage() {
       return {
         label: 'FOREST · 4 / 4',
         title: 'find()とfilter()の違いを読む',
-        detail: '守り人の先へ進み、西側のWoodsへ入ろう。同じhp < 45でも、一体で止まるか全部集めるかを比べる。',
+        detail:
+          '守り人の先へ進み、西側のWoodsへ入ろう。同じhp < 45でも、一体で止まるか全部集めるかを比べる。',
         clear: false,
       }
     }
@@ -320,7 +327,8 @@ export function WorldPage() {
       return {
         label: 'DEEP FOREST ROUTE',
         title: '西端のEXITからDeep Forestへ進む',
-        detail: 'Forest側の学習は完了。西端のEXITからDeep Forestへ入り、map()以降の学習routeを最後まで進めよう。',
+        detail:
+          'Forest側の学習は完了。西端のEXITからDeep Forestへ入り、map()以降の学習routeを最後まで進めよう。',
         clear: false,
       }
     }
@@ -337,7 +345,8 @@ export function WorldPage() {
       return {
         label: 'DEEP FOREST · 1 / 8',
         title: 'filter()を反対向きの条件でも読む',
-        detail: 'main trailを外れてWoods / Deep Woodsへ入ろう。最初のLessonでhp > 65を最後まで見て、当てはまるもの全部を集める。',
+        detail:
+          'main trailを外れてWoods / Deep Woodsへ入ろう。最初のLessonでhp > 65を最後まで見て、当てはまるもの全部を集める。',
         clear: false,
       }
     }
@@ -345,7 +354,8 @@ export function WorldPage() {
       return {
         label: 'DEEP FOREST · 2 / 8',
         title: 'map()で一つずつ別の形へ変える',
-        detail: '西へ進みWoods / Deep Woodsへ入ろう。各Enemyを新しいobjectへ変換してから、既習のfind()へ戻る流れを読む。',
+        detail:
+          '西へ進みWoods / Deep Woodsへ入ろう。各Enemyを新しいobjectへ変換してから、既習のfind()へ戻る流れを読む。',
         clear: false,
       }
     }
@@ -369,7 +379,8 @@ export function WorldPage() {
       return {
         label: 'DEEP FOREST · 5 / 8 · MID-BOSS',
         title: '第二の守り人を既習内容だけで突破する',
-        detail: '西へ進むとRoot Guardianとの固定Battle 19。filter() / map() / some() / every()だけで理解を確認する。',
+        detail:
+          '西へ進むとRoot Guardianとの固定Battle 19。filter() / map() / some() / every()だけで理解を確認する。',
         clear: false,
       }
     }
@@ -377,7 +388,8 @@ export function WorldPage() {
       return {
         label: 'DEEP FOREST · 6 / 8',
         title: 'sort()で並べ替え、[0]で先頭を取る',
-        detail: '最深部へ進もう。living → byHp → byHp[0]と途中結果へ分け、複数行codeを一行ずつ追う。',
+        detail:
+          '最深部へ進もう。living → byHp → byHp[0]と途中結果へ分け、複数行codeを一行ずつ追う。',
         clear: false,
       }
     }
@@ -385,7 +397,8 @@ export function WorldPage() {
       return {
         label: 'DEEP FOREST · 7 / 8',
         title: '?. と ??で安全に値を読む',
-        detail: 'livingをmap()でnestedなwrappedへ変換し、stats?.hpで安全に読み、??で欠けた値だけInfinityへ置き換える。',
+        detail:
+          'livingをmap()でnestedなwrappedへ変換し、stats?.hpで安全に読み、??で欠けた値だけInfinityへ置き換える。',
         clear: false,
       }
     }
@@ -400,7 +413,8 @@ export function WorldPage() {
     return {
       label: 'DEEP FOREST COMPLETE',
       title: 'JavaScriptの学習routeを最後まで読み切った',
-      detail: '東へ戻ってForestを抜け、Overworldの草原へ戻ろう。残る二つの実際の異変を追った先にFinal Bossがいる。',
+      detail:
+        '東へ戻ってForestを抜け、Overworldの草原へ戻ろう。残る二つの実際の異変を追った先にFinal Bossがいる。',
       clear: true,
     }
   }, [progress.clearedStageIds])
@@ -412,21 +426,6 @@ export function WorldPage() {
       : isForest
         ? forestObjective
         : javascriptNextObjective
-
-  const spriteStyle = useCallback(
-    (spritePosition: Position) => ({
-      left: `${((spritePosition.x - viewportStart.x + 0.5) / VIEWPORT_COLUMNS) * 100}%`,
-      top: `${((spritePosition.y - viewportStart.y + 0.5) / VIEWPORT_ROWS) * 100}%`,
-    }),
-    [viewportStart.x, viewportStart.y],
-  )
-
-  const followerVisible =
-    byteJoined &&
-    followerPosition.x >= viewportStart.x &&
-    followerPosition.x < viewportStart.x + VIEWPORT_COLUMNS &&
-    followerPosition.y >= viewportStart.y &&
-    followerPosition.y < viewportStart.y + VIEWPORT_ROWS
 
   useEffect(() => {
     const rewards: string[] = []
@@ -540,7 +539,9 @@ export function WorldPage() {
     if (intent.kind === 'midboss') {
       if (!intent.unlocked) {
         gameAudio.playSe('cancel')
-        setMessage('BYTE: まず森のLesson 10〜12を終わらせよう。今までの読み方が揃えば、この守り人にも挑める。')
+        setMessage(
+          'BYTE: まず森のLesson 10〜12を終わらせよう。今までの読み方が揃えば、この守り人にも挑める。',
+        )
         return
       }
       enterBattle(intent.battleId, intent.region, intent.seed)
@@ -550,35 +551,59 @@ export function WorldPage() {
     if (intent.kind === 'party') {
       if (intent.alreadyJoined) {
         if (nextTrainingBattleId !== null) {
-          setMessage('BYTE: まずGREENFIELD VILLAGEのTRAINで、コードを小さいところから読んでみよう。')
+          setMessage(
+            'BYTE: まずGREENFIELD VILLAGEのTRAINで、コードを小さいところから読んでみよう。',
+          )
         } else if (!progress.clearedStageIds.includes(12)) {
           setMessage('BYTE: 次は西のFOREST。&&と||も、小さな条件へ分ければ読めるよ。')
         } else if (!progress.clearedStageIds.includes(13)) {
-          setMessage('BYTE: 森の西側に守り人がいる。新しい記号はないから、今までの読み方だけで挑もう。')
+          setMessage(
+            'BYTE: 森の西側に守り人がいる。新しい記号はないから、今までの読み方だけで挑もう。',
+          )
         } else if (!progress.clearedStageIds.includes(14)) {
-          setMessage('BYTE: 守り人の先のWoodsへ行こう。次はfind()の「最初の一体」と、filter()の「全部集める」を比べる。')
+          setMessage(
+            'BYTE: 守り人の先のWoodsへ行こう。次はfind()の「最初の一体」と、filter()の「全部集める」を比べる。',
+          )
         } else if (!progress.clearedStageIds.includes(15)) {
-          setMessage('BYTE: Forest西端のEXITからDeep Forestへ進もう。filter()を別の条件でもう一度読んでみる。')
+          setMessage(
+            'BYTE: Forest西端のEXITからDeep Forestへ進もう。filter()を別の条件でもう一度読んでみる。',
+          )
         } else if (!progress.clearedStageIds.includes(16)) {
-          setMessage('BYTE: Deep Forestを西へ。次はmap()で各Enemyを一つずつ別の形へ変える流れを読む。')
+          setMessage(
+            'BYTE: Deep Forestを西へ。次はmap()で各Enemyを一つずつ別の形へ変える流れを読む。',
+          )
         } else if (!progress.clearedStageIds.includes(17)) {
-          setMessage('BYTE: map()は読めた。さらに西でsome()の「一つでも」をtrue / falseとして確かめよう。')
+          setMessage(
+            'BYTE: map()は読めた。さらに西でsome()の「一つでも」をtrue / falseとして確かめよう。',
+          )
         } else if (!progress.clearedStageIds.includes(18)) {
           setMessage('BYTE: 次はevery()。「一つでも」ではなく「全員」が条件に合うかを読む。')
         } else if (!progress.clearedStageIds.includes(19)) {
-          setMessage('BYTE: Deep Forestの第二の守り人へ。新しいsyntaxはないから、既習内容だけで挑もう。')
+          setMessage(
+            'BYTE: Deep Forestの第二の守り人へ。新しいsyntaxはないから、既習内容だけで挑もう。',
+          )
         } else if (!progress.clearedStageIds.includes(20)) {
-          setMessage('BYTE: 最深部でsort()を読む。living → byHp → byHp[0]と途中結果へ分ければ大丈夫。')
+          setMessage(
+            'BYTE: 最深部でsort()を読む。living → byHp → byHp[0]と途中結果へ分ければ大丈夫。',
+          )
         } else if (!progress.clearedStageIds.includes(21)) {
-          setMessage('BYTE: sort()の次は?.と??。map()で作ったnestedなstats.hpを安全に読む部分だけを足そう。')
+          setMessage(
+            'BYTE: sort()の次は?.と??。map()で作ったnestedなstats.hpを安全に読む部分だけを足そう。',
+          )
         } else if (!progress.clearedStageIds.includes(22)) {
-          setMessage('BYTE: Deep Forest最後のLessonはreduce()。bestへ途中結果を一つずつ残して読む。')
+          setMessage(
+            'BYTE: Deep Forest最後のLessonはreduce()。bestへ途中結果を一つずつ残して読む。',
+          )
         } else if (!progress.clearedStageIds.includes(1)) {
-          setMessage('BYTE: 学習routeは完了。草原へ戻って、最初に起きていた実際のtarget異変を追おう。')
+          setMessage(
+            'BYTE: 学習routeは完了。草原へ戻って、最初に起きていた実際のtarget異変を追おう。',
+          )
         } else if (!progress.clearedStageIds.includes(2)) {
           setMessage('BYTE: 一つ目の異変は確認した。同じ症状が残る草原でもう一戦追おう。')
         } else if (!progress.clearedAreaIds.includes('javascript')) {
-          setMessage('BYTE: 二つの異変がCode Coreへつながった。北西のBOSSがJavaScript地方のFinal Bossだ。')
+          setMessage(
+            'BYTE: 二つの異変がCode Coreへつながった。北西のBOSSがJavaScript地方のFinal Bossだ。',
+          )
         } else {
           setMessage('BYTE: 西は落ち着いたね。東にはTypeScript地方が広がっている。')
         }
@@ -589,10 +614,6 @@ export function WorldPage() {
       setRpgState((current) => ({
         ...current,
         partyMemberIds: [...current.partyMemberIds, intent.memberId],
-        partyEquipment: {
-          ...current.partyEquipment,
-          [intent.memberId]: emptyPartyEquipment(),
-        },
       }))
       setMessage('BYTE joined the party! Battleでは、同じ相手へ追撃してくれる。')
       return
@@ -684,30 +705,7 @@ export function WorldPage() {
     shopOpen,
   ])
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (shopOpen || innOpen || document.body.dataset.rpgPaused === 'true') return
-      const key = event.key.toLowerCase()
-      if (key === 'arrowup' || key === 'w') {
-        event.preventDefault()
-        move(0, -1)
-      } else if (key === 'arrowdown' || key === 's') {
-        event.preventDefault()
-        move(0, 1)
-      } else if (key === 'arrowleft' || key === 'a') {
-        event.preventDefault()
-        move(-1, 0)
-      } else if (key === 'arrowright' || key === 'd') {
-        event.preventDefault()
-        move(1, 0)
-      } else if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault()
-        interact()
-      }
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [innOpen, interact, move, shopOpen])
+  useWorldKeyboardControls({ interact, move, disabled: shopOpen || innOpen })
 
   return (
     <main className="app-shell world-shell title-screen">
@@ -743,18 +741,14 @@ export function WorldPage() {
           </div>
         </header>
 
-        <section
-          className={`world-next-objective pixel-inner-window ${currentObjective.clear ? 'is-clear' : ''}`}
-          aria-label="Next objective"
-        >
-          <span>{currentObjective.label}</span>
-          <strong>{currentObjective.title}</strong>
-          <p>{currentObjective.detail}</p>
-        </section>
+        <WorldObjectiveCard objective={currentObjective} />
 
-        <div
-          className="world-viewport pixel-inner-window"
-          aria-label={
+        <WorldViewport
+          mapId={mapId}
+          playerPosition={position}
+          cells={visibleCells}
+          terrainLabels={terrainLabels}
+          label={
             isVillage
               ? 'Village map'
               : isDeepForest
@@ -763,42 +757,44 @@ export function WorldPage() {
                   ? 'Forest map'
                   : 'Open world map'
           }
-          data-world-map={mapId}
-          data-world-x={position.x}
-          data-world-y={position.y}
-        >
-          {visibleCells.map((cell) => {
-            const renderedTerrain =
-              cell.terrain === 'midboss' && progress.clearedStageIds.includes(13)
-                ? 'road'
-                : cell.terrain
+          getTerrain={(cell) =>
+            cell.terrain === 'midboss' && progress.clearedStageIds.includes(13)
+              ? 'road'
+              : cell.terrain
+          }
+          renderObject={(cell, renderedTerrain) => {
             const treasure =
               renderedTerrain === 'treasure' ? getTreasureAtPosition(cell, mapId) : undefined
             const treasureOpened = treasure
               ? rpgState.openedTreasureIds.includes(treasure.id)
               : false
             return (
-              <div
-                key={`${cell.mapId}:${cell.x}:${cell.y}`}
-                className={`world-tile terrain-${renderedTerrain}`}
-                title={terrainLabels[renderedTerrain]}
-                data-world-map={cell.mapId}
-                data-world-x={cell.x}
-                data-world-y={cell.y}
-              >
-                {renderedTerrain === 'boss' && <span className="world-object boss-object">BOSS</span>}
+              <>
+                {renderedTerrain === 'boss' && (
+                  <span className="world-object boss-object">BOSS</span>
+                )}
                 {renderedTerrain === 'midboss' && (
-                  <span className="world-object midboss-object" aria-label="JavaScript Forest Mid-Boss">
+                  <span
+                    className="world-object midboss-object"
+                    aria-label="JavaScript Forest Mid-Boss"
+                  >
                     MID BOSS
                   </span>
                 )}
-                {renderedTerrain === 'shop' && <span className="world-object shop-object">SHOP</span>}
+                {renderedTerrain === 'shop' && (
+                  <span className="world-object shop-object">SHOP</span>
+                )}
                 {renderedTerrain === 'village' && (
                   <span className="world-object village-object">VILLAGE</span>
                 )}
-                {renderedTerrain === 'exit' && <span className="world-object exit-object">EXIT</span>}
+                {renderedTerrain === 'exit' && (
+                  <span className="world-object exit-object">EXIT</span>
+                )}
                 {renderedTerrain === 'training' && (
-                  <span className="world-object training-object" aria-label="JavaScript Training Ground">
+                  <span
+                    className="world-object training-object"
+                    aria-label="JavaScript Training Ground"
+                  >
                     TRAIN
                   </span>
                 )}
@@ -820,73 +816,25 @@ export function WorldPage() {
                     {treasureOpened ? 'OPEN' : 'CHEST'}
                   </span>
                 )}
-              </div>
+              </>
             )
-          })}
-
-          <div
-            className="world-character-layer"
-            aria-hidden="true"
-            data-world-map={mapId}
-            data-world-x={position.x}
-            data-world-y={position.y}
-          >
-            {followerVisible && (
-              <span
-                className="world-follower-sprite world-character-overlay"
-                style={spriteStyle(followerPosition)}
-                data-world-map={mapId}
-                data-world-x={followerPosition.x}
-                data-world-y={followerPosition.y}
-              >
-                <img
-                  className="world-follower-pixel"
-                  src={characterVisuals.byte.field}
-                  alt=""
-                />
-              </span>
-            )}
-
-            <span
-              className="world-player-sprite world-character-overlay"
-              style={spriteStyle(position)}
-              data-world-map={mapId}
-              data-world-x={position.x}
-              data-world-y={position.y}
-            >
-              <img
-                className="world-player-pixel"
-                src={characterVisuals.player.field}
-                alt=""
-              />
-            </span>
-          </div>
-        </div>
+          }}
+        >
+          <WorldCharacterLayer
+            mapId={mapId}
+            playerPosition={position}
+            viewportStart={viewportStart}
+            followerPosition={followerPosition}
+            followerJoined={byteJoined}
+          />
+        </WorldViewport>
 
         <section className="world-message pixel-inner-window" aria-live="polite">
           <span>FIELD LOG</span>
           <p>{message}</p>
         </section>
 
-        <div className="world-controls" aria-label="World controls">
-          <div className="world-dpad">
-            <button type="button" aria-label="Move up" onClick={() => move(0, -1)}>
-              ▲
-            </button>
-            <button type="button" aria-label="Move left" onClick={() => move(-1, 0)}>
-              ◀
-            </button>
-            <button type="button" aria-label="Move down" onClick={() => move(0, 1)}>
-              ▼
-            </button>
-            <button type="button" aria-label="Move right" onClick={() => move(1, 0)}>
-              ▶
-            </button>
-          </div>
-          <button type="button" className="primary-button world-interact" onClick={interact}>
-            INTERACT
-          </button>
-        </div>
+        <WorldControls move={move} interact={interact} />
       </section>
 
       <WorldShop open={shopOpen} onClose={() => setShopOpen(false)} onMessage={setMessage} />

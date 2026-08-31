@@ -6,18 +6,24 @@ const preBattleEvent: BattleStoryEvent = {
   title: '今までの読み方だけで進む',
   lines: [
     {
+      speakerId: 'byte',
+
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',
       text: 'この先を守っている相手は強そう。でも、新しい記号は増えていない。今まで読んだHP、name、find()、&&、||だけだ。',
     },
     {
+      speakerId: 'byte',
+
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',
       text: '長く見えたら、比較を一つ読む。&&や||を左右へ分ける。それからenemiesを前から見る。いつもの順番で追えばいい。',
     },
     {
+      speakerId: 'byte',
+
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',
@@ -32,12 +38,16 @@ const postBattleEvent: BattleStoryEvent = {
   title: '一体を探す読み方は身についた',
   lines: [
     {
+      speakerId: 'byte',
+
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',
       text: '突破できた！ 条件を小さく分けて、find()が最初に止まる相手を自分で追えていた。',
     },
     {
+      speakerId: 'byte',
+
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',

@@ -1,3 +1,4 @@
+import { readStoredRpg } from './storedGameState'
 import { expect, test, type Page } from '@playwright/test'
 
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
@@ -12,6 +13,19 @@ async function seedReplayState(
   await page.evaluate(
     ({ tutorialKey, rpgKey, mapId, position }) => {
       localStorage.clear()
+      localStorage.setItem('code-reading-rpg:player-progress', JSON.stringify({
+        version: 4,
+        progress: {
+          exp: 0,
+          gold: 0,
+          inventory: { patchKit: 0 },
+          clearedStageIds: mapId === 'js-deep-forest' ? [9, 14] : [],
+          clearedAreaIds: [],
+          completedSideQuestIds: [],
+          unlockedStageIds: [7],
+          unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
+        },
+      }))
       localStorage.setItem(tutorialKey, JSON.stringify({ version: 1, status: 'completed', phase: 'battle' }))
       localStorage.setItem(rpgKey, JSON.stringify({
         version: 4,
@@ -41,7 +55,7 @@ async function replayTutorial(page: Page) {
 }
 
 async function storedRpg(page: Page) {
-  return page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), RPG_KEY)
+  return readStoredRpg(page)
 }
 
 test('Battle中のREPLAY TUTORIALはWorld開始地点へ戻りMOVEから始める', async ({ page }) => {

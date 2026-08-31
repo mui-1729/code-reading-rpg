@@ -1,7 +1,18 @@
 import { battles, generateBattle, type Battle, type Seed } from '../game'
-import { getNextBattleId, type ProgressionArea } from '../progression'
+import { areas, getAreaDefinition, type AreaRoutePath } from '../game/areas'
 
-export type BattleReturnPath = '/world' | '/javascript/field' | '/typescript/field'
+export type BattleReturnPath = '/world' | AreaRoutePath
+
+export function validateBattleSearch(search: Record<string, unknown>) {
+  return {
+    seed: typeof search.seed === 'string' && search.seed.length > 0 ? search.seed : undefined,
+    returnTo: search.returnTo === '/world'
+      ? '/world' as const
+      : areas.some((area) => area.routes.field === search.returnTo)
+        ? search.returnTo as AreaRoutePath
+        : undefined,
+  }
+}
 
 export type BattleSession = {
   battleId: number
@@ -9,10 +20,6 @@ export type BattleSession = {
   returnTo?: BattleReturnPath
   battle: Battle
   nextBattle?: Battle
-}
-
-function isProgressionArea(areaId: string): areaId is ProgressionArea {
-  return areaId === 'javascript' || areaId === 'typescript'
 }
 
 export function createBattleSession(
@@ -23,9 +30,9 @@ export function createBattleSession(
   const battle = generateBattle(battleId, seed)
   if (!battle) throw new Error(`Unknown battle: ${battleId}`)
 
-  const nextBattleId = isProgressionArea(battle.areaId)
-    ? getNextBattleId(battle.areaId, battleId)
-    : undefined
+  const sequence = getAreaDefinition(battle.areaId)?.battleIds ?? []
+  const currentIndex = sequence.indexOf(battleId)
+  const nextBattleId = currentIndex >= 0 ? sequence[currentIndex + 1] : undefined
   const nextBattle = nextBattleId === undefined
     ? undefined
     : battles.find((candidate) => candidate.id === nextBattleId)

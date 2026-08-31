@@ -143,7 +143,7 @@ Code Core Final Boss
 - 東のEXITからOverworldへ戻る
 - 西端のEXITからDeep Forestへ進む
 - Deep Forest入口はBattle 14 clearで解放
-- current map / positionはRpgState v4のまま保存・reload可能
+- current map / positionはRpgState v5で保存・reload可能
 
 Forestは空白を広げるmapではなく、**西へ進むほど新conceptを固定Lessonで導入し、その途中で既習conceptだけをRandom Encounter反復するmap**。
 
@@ -158,7 +158,7 @@ Forestは空白を広げるmapではなく、**西へ進むほど新conceptを�
 - Battle 14 clear前はForest側portalを通れない
 - Battle 15〜22を東→西の進行に合わせてfixed-firstで導入
 - second MID BOSS 19はRandom poolへ入れない
-- current map / positionはRpgState v4のまま保存・reload可能
+- current map / positionはRpgState v5で保存・reload可能
 
 Deep Forestは、`filter()`反復から始まり、`map()` / `some()` / `every()` / `sort()` / `?.` / `??` / `reduce()`までを一つずつ増やすJavaScript地方後半のlearning map。
 
@@ -401,7 +401,7 @@ Defeat時だけ、
 
 ## 10. Save migration / normalization
 
-RpgState schemaはv4。
+RpgState schemaはv5。v4からはmigrationで未使用partyEquipmentだけを除去し、既存の装備・仲間・HP・World進行を保持する。
 
 旧RpgState v1〜v3は、
 
@@ -432,6 +432,8 @@ PlayerProgressもv4を維持し、schema bumpせず進行からderived unlockを
 ```
 
 #203 / #205 / #207 / #209 / #212 / #214時点のv4 saveから後続routeへ進める。未知map ID / bounds外positionはOverworld開始地点へfallbackする。
+
+ProgressとRPG stateは単一revision snapshotとして保存・復元する。portal graphの解放条件を満たさないForest / Deep Forest / TypeScript内に位置だけが残る場合もOverworld開始地点へ戻する。
 
 ## 11. World Objective
 

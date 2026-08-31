@@ -72,9 +72,9 @@ Stage SelectやArea Selectへ戻って進行する構造ではありません。
 - PATCH KIT
 - Boss clearで上位装備を入手
 - 仲間BYTE
-- BYTEはコードが選んだ**同じtarget**へ追撃し、読解を自動化しない
+- BYTEは1 ACTIONに1回、コードが選んだtargetのうちSkill後に生存する先頭1体へ追撃する
 
-既存のPlayerProgress schemaとは別にRPG stateを保存し、旧saveを壊さずWorld位置・装備・仲間を追加します。
+PlayerProgress v4とRpgState v5は責務を分けたまま、単一revision snapshotで同時保存します。旧分割saveから移行し、backup復旧・到達不可map位置の正規化・storage eventによる別tab同期に対応します。
 
 ### Pause menu
 

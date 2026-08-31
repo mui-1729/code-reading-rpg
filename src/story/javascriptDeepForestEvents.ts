@@ -10,18 +10,24 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
       title: '一つずつ、別の形へ変える',
       lines: [
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
           text: '次は「集める」ではなく、配列の中身を一つずつ別の形へ変える。map()は元の順番を保ったまま、新しい配列を作る処理だよ。',
         },
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
           text: 'PROJECTでは各Enemyを { enemy, hp } という小さなobjectへ包む。そのあとに出てくるfind()はもう知っている処理だから、まずmap()の右側だけを追ってみよう。',
         },
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
@@ -35,12 +41,16 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
       title: '同じ数だけ、新しい形を作る',
       lines: [
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
           text: 'map()は「条件に合うものだけ残す」filter()とは違って、各要素を一つずつ変換する。元が3要素なら、基本的に変換後も3要素だ。',
         },
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
@@ -56,18 +66,24 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
       title: '一つでもあるかだけを確かめる',
       lines: [
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
           text: 'some()は条件に合ったEnemyを返す処理じゃない。「一つでもある？」に対してtrueかfalseだけを返す。',
         },
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
           text: 'SIGNALでは内側のsome()を先に読む。生存Enemyの中にHP50未満が一体でもいればtrue、いなければfalseだ。',
         },
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
@@ -81,12 +97,16 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
       title: '結果はtrueかfalse',
       lines: [
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
           text: 'some()は一体でも条件を満たした時点でtrueになる。必要なのは「誰か」ではなく、「いるかどうか」なんだ。',
         },
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
@@ -102,18 +122,24 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
       title: '全員が当てはまるかを確かめる',
       lines: [
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
           text: 'every()も返すのはtrue / false。ただしtrueになるのは、調べた要素が全部条件を満たしたときだけ。',
         },
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
           text: 'SYNCではまず生存Enemyだけをfilter()し、その全員がHP100未満かをevery()で確認する。some()との違いは「一体でも」か「全員」かだ。',
         },
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
@@ -127,12 +153,16 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
       title: 'some()とevery()を分けて読める',
       lines: [
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
           text: 'some()は一つでもtrueならtrue。every()は全部trueのときだけtrue。この二つは返す値がbooleanだと分かれば整理しやすい。',
         },
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
@@ -148,12 +178,16 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
       title: '新しい記号なしで読み切る',
       lines: [
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
           text: 'Root Guardianだ。でも新しいsyntaxはない。filter()は集める、map()は変える、some() / every()はtrue / falseを返す。',
         },
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
@@ -167,12 +201,16 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
       title: '森の最深部へ',
       lines: [
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
           text: '第二の守り人を越えた。ここから先は、新しい処理を一つずつ足しながら、複数行のcodeを途中結果へ分けて読む。',
         },
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
@@ -188,18 +226,24 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
       title: '並べ替えてから先頭を見る',
       lines: [
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
           text: 'sort()は配列の順番を並べ替える。ORDERではa.hp - b.hpを使うので、HPが小さいものほど前へ来る。',
         },
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
           text: '複数行を一気に見なくていい。1行目でliving、2行目でbyHpを作り、最後の[0]でbyHpの先頭を取る。',
         },
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
@@ -213,12 +257,16 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
       title: '途中結果へ分ければ長いcodeも読める',
       lines: [
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
           text: 'living → byHp → byHp[0]。変数ごとに現在値を置けば、複数行でも一行ずつ追える。',
         },
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
@@ -234,18 +282,24 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
       title: '値がなくても途中で壊さない',
       lines: [
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
           text: '?.は左側がnullやundefinedなら、その先を無理に読まずundefinedで止まる。これをoptional chainingと呼ぶ。',
         },
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
           text: 'SAFE PATHではmap()でEnemyをnestedなstats.hpへ包む。stats?.hpで安全に読み、値がなければ?? Infinityで代わりの値を使う。',
         },
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
@@ -259,12 +313,16 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
       title: '?.と??を一組で読める',
       lines: [
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
           text: 'stats?.hpで安全に止まり、??で必要なら代わりの値を使う。この二段階を見つければ、nestedなdataを読むcodeも追いやすい。',
         },
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
@@ -280,18 +338,24 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
       title: '途中結果を一つへまとめる',
       lines: [
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
           text: 'reduce()は配列を左から順に見ながら、途中結果を一つだけ持って進む。REDUCE FOCUSではその途中結果がbestだ。',
         },
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
           text: 'bestと次のenemyのattackDamageを比べ、? : で大きい方を次のbestとして残す。? : は条件がtrueなら左、falseなら右を返す小さな分岐だよ。',
         },
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
@@ -305,18 +369,24 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
       title: 'JavaScriptの基礎を一通り読み切った',
       lines: [
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
           text: 'comparison、find()、&& / ||、filter()、map()、some() / every()、sort()、?. / ??、reduce()。森で必要な読み方は揃った。',
         },
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
           text: 'でも最初に起きていた「技が違う相手へ飛ぶ異変」はまだ残っている。Forest東端から草原へ戻り、OverworldのEncounterで実際の異変を二戦追おう。',
         },
         {
+          speakerId: 'byte',
+
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',

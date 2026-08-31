@@ -7,6 +7,8 @@ const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 async function skipTutorial(page: Page) {
   await page.goto('/')
   await page.evaluate((key) => {
+    localStorage.removeItem('code-reading-rpg:game-state')
+    localStorage.removeItem('code-reading-rpg:game-state-backup')
     localStorage.setItem(key, JSON.stringify({ version: 1, status: 'skipped', phase: 'battle' }))
   }, TUTORIAL_KEY)
 }

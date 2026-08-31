@@ -1,3 +1,4 @@
+import { readStoredProgress, readStoredRpg } from './storedGameState'
 import { expect, test, type Page } from '@playwright/test'
 import { JS_BATTLE_1_PREREQS } from './canonical-progress-fixtures'
 
@@ -90,11 +91,11 @@ async function playerPosition(page: Page) {
 }
 
 async function storedRpgState(page: Page) {
-  return page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), RPG_KEY)
+  return readStoredRpg(page)
 }
 
 async function storedProgress(page: Page) {
-  return page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), PROGRESS_KEY)
+  return readStoredProgress(page)
 }
 
 test.describe('Open World RPG loop', () => {

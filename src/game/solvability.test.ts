@@ -67,6 +67,8 @@ describe('variable battle validation', () => {
         {
           id: 'durable-goblin',
           name: 'Goblin',
+          role: 'standard',
+          visualId: 'goblin',
           hp: 90,
           maxHp: 90,
           attackName: 'TEST',

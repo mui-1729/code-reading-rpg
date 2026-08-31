@@ -1,3 +1,4 @@
+import { readStoredRpg } from './storedGameState'
 import { expect, test } from '@playwright/test'
 import { JS_BATTLE_1_PREREQS } from './canonical-progress-fixtures'
 
@@ -74,9 +75,9 @@ test('Village保存状態からBattleで敗北するとOverworld Hubへ戻る', 
   await expect(page.getByText('DEFEAT', { exact: true })).toBeVisible()
 
   await expect.poll(async () =>
-    page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), RPG_KEY),
+    readStoredRpg(page),
   ).toMatchObject({
-    version: 4,
+    version: 5,
     state: {
       worldMapId: 'overworld',
       worldPosition: { x: 20, y: 14 },

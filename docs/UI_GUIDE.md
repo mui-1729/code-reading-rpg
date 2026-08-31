@@ -222,7 +222,7 @@ EXECUTE
 
 - World実座標の移動でMOVE完了
 - World object隣接時のINTERACTを案内
-- Battleではselected Skill DOMを観測
+- Battleでは共有runtime snapshotからselected Skill / EXECUTEを判断し、DOMはhighlight配置だけに使う
 - 正解Skill / Enemyはhighlightしない
 - SKIP可能
 - RESET PROGRESSで初期化

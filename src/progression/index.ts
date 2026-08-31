@@ -40,7 +40,6 @@ export {
   restorePlayerProgress,
   serializePlayerProgress,
 } from './storage'
-export { ProgressProvider } from './ProgressProvider'
 export { useProgress } from './useProgress'
 export type { ProgressionArea, ProgressionNode } from './progressionGraph'
 export type {
