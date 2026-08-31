@@ -6,11 +6,15 @@ const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
 const initialSkills = ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label']
 
-type ForestGateState = 'training-incomplete' | 'incident-pending' | 'incident-cleared'
+type ForestGateState = 'training-incomplete' | 'incident-only' | 'training-complete'
 
 async function seedForestGate(page: Page, state: ForestGateState) {
   const clearedStageIds =
-    state === 'training-incomplete' ? [7, 8] : state === 'incident-pending' ? [7, 8, 9] : [7, 8, 9, 1]
+    state === 'training-incomplete'
+      ? [1, 7, 8]
+      : state === 'incident-only'
+        ? [1]
+        : [1, 7, 8, 9]
 
   await page.goto('/')
   await page.evaluate(
@@ -21,13 +25,13 @@ async function seedForestGate(page: Page, state: ForestGateState) {
         JSON.stringify({
           version: 4,
           progress: {
-            exp: cleared.includes(1) ? 64 : cleared.length * 8,
-            gold: cleared.includes(1) ? 20 : 0,
+            exp: 12 + Math.max(0, cleared.length - 1) * 8,
+            gold: 20,
             inventory: { patchKit: 0 },
             clearedStageIds: cleared,
             clearedAreaIds: [],
             completedSideQuestIds: [],
-            unlockedStageIds: [7],
+            unlockedStageIds: [1, 7],
             unlockedSkillIds: skills,
           },
         }),
@@ -79,20 +83,20 @@ test('Training 9未clearではForest入口が閉じている', async ({ page }) 
   await page.getByRole('button', { name: 'Move left' }).click()
 
   await expect(page.getByLabel('Open world map')).toHaveAttribute('data-world-map', 'overworld')
-  await expect(page.getByText(/Villageでincident codeに必要な3つの読み方/)).toBeVisible()
+  await expect(page.getByLabel('Next objective')).toContainText('INCIDENT PREP')
 })
 
-test('Training完了だけではForestへ入れずfirst incidentの再現を要求する', async ({ page }) => {
-  await seedForestGate(page, 'incident-pending')
+test('JS-01 clearだけではForestへ入れずVillage trainingを要求する', async ({ page }) => {
+  await seedForestGate(page, 'incident-only')
 
   await page.getByRole('button', { name: 'Move left' }).click()
 
   await expect(page.getByLabel('Open world map')).toHaveAttribute('data-world-map', 'overworld')
-  await expect(page.getByText(/草原で最初のtarget異常を実際に再現/)).toBeVisible()
+  await expect(page.getByLabel('Next objective')).toContainText('INCIDENT PREP')
 })
 
-test('first incident完了後はForestへ入りreload後もlocal mapを保持する', async ({ page }) => {
-  await seedForestGate(page, 'incident-cleared')
+test('Village training完了後はForestへ入りreload後もlocal mapを保持する', async ({ page }) => {
+  await seedForestGate(page, 'training-complete')
 
   await page.getByRole('button', { name: 'Move left' }).click()
   const forest = page.getByLabel('Forest map')
@@ -107,7 +111,7 @@ test('first incident完了後はForestへ入りreload後もlocal mapを保持す
 })
 
 test('Forest最初のWoodsはRandom抽選ではなくBattle 10の固定traceになる', async ({ page }) => {
-  await seedForestGate(page, 'incident-cleared')
+  await seedForestGate(page, 'training-complete')
 
   await page.getByRole('button', { name: 'Move left' }).click()
   await expect(page.getByLabel('Forest map')).toHaveAttribute('data-world-map', 'js-forest')
@@ -122,7 +126,7 @@ test('Forest最初のWoodsはRandom抽選ではなくBattle 10の固定traceに�
 })
 
 test('Forest Battle 10 / 11はincident traceとして&& / ||を順に説明しfilterを先取りしない', async ({ page }) => {
-  await seedForestGate(page, 'incident-cleared')
+  await seedForestGate(page, 'training-complete')
 
   await page.goto('/javascript/battle/10?seed=forest-e2e-and&returnTo=%2Fworld')
   const andStory = page.getByRole('dialog', { name: '二つの条件を通る経路を追う' })
