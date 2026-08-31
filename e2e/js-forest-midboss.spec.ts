@@ -13,10 +13,10 @@ async function seedMidboss(page: Page, state: MidbossProgress) {
       localStorage.clear()
       const clearedStageIds =
         midbossState === 'locked'
-          ? [7, 8, 9, 1, 10, 11]
+          ? [1, 7, 8, 9, 10, 11]
           : midbossState === 'ready'
-            ? [7, 8, 9, 1, 10, 11, 12]
-            : [7, 8, 9, 1, 10, 11, 12, 13]
+            ? [1, 7, 8, 9, 10, 11, 12]
+            : [1, 7, 8, 9, 10, 11, 12, 13]
 
       localStorage.setItem(
         progressKey,
@@ -105,10 +105,13 @@ test('Battle 12 clear済みsaveはtrace-blocked objectiveからBattle 13へ進�
   await expect(page).toHaveURL(/\/javascript\/battle\/13\?/)
   const story = page.getByRole('dialog', { name: '異常の経路を守る相手を越える' })
   await expect(story).toBeVisible()
+  await expect(story).toContainText('trace')
+  await expect(story).not.toContainText('filter()')
+
+  await story.getByRole('button', { name: /NEXT/ }).click()
   await expect(story).toContainText('find()')
   await expect(story).toContainText('&&')
   await expect(story).toContainText('||')
-  await expect(story).toContainText('trace')
   await expect(story).not.toContainText('filter()')
 })
 
