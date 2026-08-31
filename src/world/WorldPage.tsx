@@ -126,13 +126,13 @@ export function WorldPage() {
     if (progress.clearedStageIds.includes(12)) {
       return 'BYTE // Forestの条件junctionを追えた。traceを塞ぐ守り人を越えよう。'
     }
-    if (progress.clearedStageIds.includes(1)) {
-      return 'BYTE // 最初のtarget異常を再現した。条件の流れは西のForestへ続いている。'
-    }
     if (progress.clearedStageIds.includes(9)) {
-      return 'BYTE // incidentの一行を読める準備ができた。村を出て西へ進み、実際のtarget異常を再現しよう。'
+      return 'BYTE // 最初のincidentで読みにくかったselectorを自分で追えるようになった。再戦せず、そのtraceを西のForestへ追おう。'
     }
-    return 'LEAD ADA // 最初の仕事はtarget異常の調査。BYTEと合流し、Villageでincident codeに必要な読み方だけ確認しよう。'
+    if (progress.clearedStageIds.includes(1)) {
+      return 'BYTE // 最初のtarget異常は再現できた。原因を追う前に、HP・name・find()だけVillageで確認しよう。'
+    }
+    return 'LEAD ADA // 最初の仕事はtarget異常の調査。BYTEと合流したら、まず草原で実際の症状をその目で確かめよう。'
   }, [progress.clearedAreaIds, progress.clearedStageIds])
 
   const javascriptNextObjective = useMemo(() => {
@@ -148,23 +148,23 @@ export function WorldPage() {
       return {
         label: 'NEXT OBJECTIVE',
         title: 'BYTEと合流する',
-        detail: '開始地点の近くにいるBYTEへINTERACT。incidentのログを持って西のVillageへ向かおう。',
-        clear: false,
-      }
-    }
-    if (nextTrainingBattleId !== null) {
-      return {
-        label: 'INCIDENT PREP',
-        title: 'Villageでincident codeに必要な部分を読む',
-        detail: '西の道からVILLAGEへ入り、TRAINでHP・name・find()を順番に確認する。目的は実際の症状を読めるようにすること。',
+        detail: '開始地点の近くにいるBYTEへINTERACT。合流したら西の草原へ進み、Openingで見たtarget異常をまず再現する。',
         clear: false,
       }
     }
     if (!progress.clearedStageIds.includes(1)) {
       return {
         label: 'LIVE INCIDENT',
-        title: '村を出て最初のtarget異常を再現する',
-        detail: 'Village南のEXITから草原へ戻り、西へ進もう。JavaScript側で最初に一歩進むと、Openingで見た実際の症状が始まる。',
+        title: '草原で最初のtarget異常を実際に見る',
+        detail: 'BYTEと西へ進もう。JavaScript側の草原へ入ると固定incidentが始まる。全部読めなくても、何が起きるかをまず観察する。',
+        clear: false,
+      }
+    }
+    if (nextTrainingBattleId !== null) {
+      return {
+        label: 'INCIDENT PREP',
+        title: 'Villageで読めなかった部分だけ確認する',
+        detail: 'VILLAGEへ入り、TRAINでHP・name・find()を順番に確認する。最初のincidentで分からなかったselectorを読めるようにするためだ。',
         clear: false,
       }
     }
@@ -177,7 +177,7 @@ export function WorldPage() {
       return {
         label: 'FOLLOW THE TRACE',
         title: `Forestで${traceStep}を追う`,
-        detail: '最初の症状から伸びたtraceは西のFORESTへ続いている。Woodsへ入り、現在のstateとcodeから経路を追おう。',
+        detail: '最初の症状で見たselectorを読めるようになった。再戦ではなく、西のFORESTへ続くtraceを現在のstateとcodeから追おう。',
         clear: false,
       }
     }
@@ -246,15 +246,15 @@ export function WorldPage() {
     if (nextTrainingBattleId === 7) {
       return {
         label: 'INCIDENT PREP · 1 / 3',
-        title: 'incidentログのHPを読む',
-        detail: 'TRAINの隣でINTERACT。target条件に使われているenemy.hpと< / >を小さく読む。',
+        title: '最初のBattleで見たHP条件を読む',
+        detail: 'TRAINの隣でINTERACT。target条件に使われていたenemy.hpと< / >だけを小さく読む。',
         clear: false,
       }
     }
     if (nextTrainingBattleId === 8) {
       return {
         label: 'INCIDENT PREP · 2 / 3',
-        title: 'ログにあるnameの条件を読む',
+        title: '同じログにあったname条件を読む',
         detail: 'TRAINでもう一度INTERACT。enemy.nameと===を使って、文字の値を比較する。',
         clear: false,
       }
@@ -262,15 +262,15 @@ export function WorldPage() {
     if (nextTrainingBattleId === 9) {
       return {
         label: 'INCIDENT PREP · 3 / 3',
-        title: '実際のselectorがどこで止まるか読む',
+        title: '最初のselectorがどこで止まったか読む',
         detail: 'enemiesを前から見て、find()が条件に合う最初の一体で止まる流れを確認する。',
         clear: false,
       }
     }
     return {
-      label: 'FIELD CHECK READY',
-      title: '実際のincidentを調べる準備ができた',
-      detail: '南のEXITから草原へ戻り、西へ進もう。次は練習ではなく、Openingで見たtarget異常をその場で再現する。',
+      label: 'TRACE READY',
+      title: '最初のincidentの続きをForestへ追う',
+      detail: '必要な読み方は揃った。同じBattleをやり直すのではなく、南のEXITから草原へ出て西のFORESTへ進み、selectorのtraceを追おう。',
       clear: true,
     }
   }, [nextTrainingBattleId])
@@ -279,8 +279,16 @@ export function WorldPage() {
     if (!progress.clearedStageIds.includes(1)) {
       return {
         label: 'FOREST LOCKED',
-        title: '先に草原の症状を再現する',
-        detail: 'Forestへ進む前に、Villageを出た先で最初のtarget異常を確認しよう。traceがForestへ続くことを確かめる。',
+        title: '先に草原の症状を実際に見る',
+        detail: 'Forestへ進む前に、BYTEと最初のtarget異常を再現しよう。何が読めないかを知ることも調査の一部だ。',
+        clear: false,
+      }
+    }
+    if (!progress.clearedStageIds.includes(9)) {
+      return {
+        label: 'FOREST LOCKED',
+        title: 'Villageでselectorを読む材料を揃える',
+        detail: '最初のincidentは再現済み。MIOとHP・name・find()だけ確認してから、同じtraceをForestへ追おう。',
         clear: false,
       }
     }
@@ -497,13 +505,17 @@ export function WorldPage() {
                     ? '家がある。今は中へは入れない。'
                     : result.terrain === 'training'
                       ? 'TRAIN。隣からINTERACTするとincident codeに必要な基礎を確認できる。'
-                      : result.terrain === 'woods'
-                        ? !progress.clearedStageIds.includes(9)
-                          ? 'Forestへ進む前に、Villageでincident codeに必要な3つの読み方を確認しよう。'
-                          : !progress.clearedStageIds.includes(1)
-                            ? 'Forestへ入る前に、草原で最初のtarget異常を実際に再現しよう。'
-                            : 'その先へ進むためのtraceがまだ開いていない。'
-                        : 'そこへは進めない。',
+                      : result.terrain === 'village'
+                        ? !progress.clearedStageIds.includes(1)
+                          ? 'Villageへ行く前に、BYTEと草原の最初のtarget異常を実際に見よう。'
+                          : 'Villageへの道がまだ開いていない。'
+                        : result.terrain === 'woods'
+                          ? !progress.clearedStageIds.includes(1)
+                            ? 'Forestへ進む前に、BYTEと草原で最初のtarget異常を実際に見よう。'
+                            : !progress.clearedStageIds.includes(9)
+                              ? 'Forestへ進む前に、Villageで最初のincidentに必要なHP・name・find()を確認しよう。'
+                              : 'その先へ進むためのtraceがまだ開いていない。'
+                          : 'そこへは進めない。',
         )
         return
       }
@@ -521,13 +533,13 @@ export function WorldPage() {
           result.label === 'CODE CORE APPROACH'
             ? 'Deep Forestのtraceを抜けてCode Core手前へ出た。北へ進めばFinal Bossだ。'
             : result.toMapId === JS_VILLAGE_MAP_ID
-              ? `${result.label}へ入った。MIOとincident codeに必要な部分を確認しよう。`
+              ? `${result.label}へ入った。さっきのincidentで読めなかった部分だけMIOと確認しよう。`
               : result.toMapId === JS_DEEP_FOREST_MAP_ID
                 ? progress.clearedStageIds.includes(2)
                   ? `${result.label}へ入った。共有traceはさらに西へ続いている。`
                   : `${result.label}へ入った。最初の移動で二つ目の実際の症状を確認する。`
                 : result.toMapId === JS_FOREST_MAP_ID
-                  ? `${result.label}へ入った。最初のincidentから続くtraceを西へ追おう。`
+                  ? `${result.label}へ入った。最初のincidentで見たselectorのtraceを西へ追おう。`
                   : `${result.label}へ移動した。`,
         )
         return
@@ -554,7 +566,7 @@ export function WorldPage() {
     if (intent.kind === 'training') {
       if (intent.battleId === null) {
         gameAudio.playSe('confirm')
-        setMessage('TRAINER MIO: 必要な読み方は揃った。村を出て西へ進み、実際のtarget異常を再現してみよう。')
+        setMessage('TRAINER MIO: 必要な読み方は揃ったよ。同じBattleへ戻る必要はない。西のForestへ続くtraceを追ってみて。')
         return
       }
       enterBattle(intent.battleId, 'javascript', `village-training:${intent.battleId}`)
@@ -573,12 +585,12 @@ export function WorldPage() {
 
     if (intent.kind === 'party') {
       if (intent.alreadyJoined) {
-        if (nextTrainingBattleId !== null) {
-          setMessage('BYTE: MIOにincidentのログを見せよう。まず必要な部分だけ小さく読めるようにする。')
-        } else if (!progress.clearedStageIds.includes(1)) {
-          setMessage('BYTE: 準備はできた。村を出て西へ進めば、最初のtarget異常を実際のstateで確認できる。')
+        if (!progress.clearedStageIds.includes(1)) {
+          setMessage('BYTE: まず現場を見よう。西の草原へ進めば、Openingで見たtarget異常を実際のstateで確認できる。')
+        } else if (nextTrainingBattleId !== null) {
+          setMessage('BYTE: 症状は再現できた。MIOにログを見せて、読めなかったHP・name・find()だけ確認しよう。')
         } else if (!progress.clearedStageIds.includes(12)) {
-          setMessage('BYTE: 最初の症状のtraceはForestへ続いてる。条件を一つずつ追って、どこへ流れるか見よう。')
+          setMessage('BYTE: 最初の症状で見たselectorを今なら読める。traceはForestへ続いてるから、条件を一つずつ追おう。')
         } else if (!progress.clearedStageIds.includes(13)) {
           setMessage('BYTE: traceが森の守り人の向こうへ集まってる。今まで読んだ条件だけで道を開こう。')
         } else if (!progress.clearedStageIds.includes(14)) {
@@ -618,7 +630,7 @@ export function WorldPage() {
           [intent.memberId]: emptyPartyEquipment(),
         },
       }))
-      setMessage('BYTE joined the party! Battleでは、同じ相手へ追撃してくれる。')
+      setMessage('BYTE joined the party! まず西の草原で、Openingのtarget異常を一緒に見に行こう。')
       return
     }
 
@@ -666,10 +678,12 @@ export function WorldPage() {
         setMessage(
           intent.region === 'javascript'
             ? !progress.clearedStageIds.includes(1)
-              ? '最初のtarget異常を再現し、Forestへ続くtraceを見つけよう。'
-              : !progress.clearedStageIds.includes(2)
-                ? 'Forestの影響範囲を追い、Deep Forest入口で二つ目の症状を確認しよう。'
-                : 'Code Coreへ挑む前に、Deep Forestのtraceをroot causeまで最後まで追おう。'
+              ? 'BYTEと最初のtarget異常を実際に見て、何を読む必要があるか掴もう。'
+              : !progress.clearedStageIds.includes(9)
+                ? 'Villageで最初のincidentに必要なHP・name・find()を確認しよう。'
+                : !progress.clearedStageIds.includes(2)
+                  ? 'Forestの影響範囲を追い、Deep Forest入口で二つ目の症状を確認しよう。'
+                  : 'Code Coreへ挑む前に、Deep Forestのtraceをroot causeまで最後まで追おう。'
             : '東の奥へ進む前に、TypeScript地方のBattleをもう少し確かめよう。',
         )
         return
@@ -680,7 +694,9 @@ export function WorldPage() {
 
     setMessage(
       isVillage
-        ? '静かな村だ。中央のTRAINでincident codeを確認するか、南のEXITから実地調査へ出よう。'
+        ? nextTrainingBattleId === null
+          ? '必要な確認は終わった。南のEXITから草原へ出て、西のForestへ同じtraceを追おう。'
+          : '最初のincidentで読めなかった部分を、中央のTRAINでMIOと一つずつ確認しよう。'
         : isDeepForest
           ? progress.clearedStageIds.includes(22)
             ? 'root causeはCode Core。Deep Forest西端のEXITからCore手前へ直進できる。'
@@ -755,7 +771,7 @@ export function WorldPage() {
             </h1>
             <p>
               {isVillage
-                ? 'JavaScript地方の小さな村。MIOとincident codeに必要な読み方を確認し、南の出口から実地調査へ戻れる。'
+                ? '最初のtarget異常で読めなかった部分だけをMIOと確認する村。HP・name・find()が読めたら、同じtraceをForestへ追う。'
                 : isDeepForest
                   ? '二つのtarget異常が合流した深い森。dataの変換・判定・優先順・集約を追い、最深部の西口からCode Coreへつながる。'
                   : isForest
