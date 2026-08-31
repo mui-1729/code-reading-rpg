@@ -104,7 +104,7 @@ describe('World action resolver', () => {
     expect(result.nextState.encounterCount).toBe(state.encounterCount)
   })
 
-  it('OverworldのVillage入口へ入るとVillage mapへtransitionする', () => {
+  it('最初のincident前はVillage入口を通れない', () => {
     const state = {
       ...createInitialRpgState(),
       worldPosition: { x: 14, y: 13 },
@@ -117,6 +117,25 @@ describe('World action resolver', () => {
       dx: 0,
       dy: -1,
     })
+
+    expect(result.kind).toBe('blocked')
+    expect(result.terrain).toBe('village')
+    expect(result.nextState).toBe(state)
+  })
+
+  it('最初のincident clear後はVillage mapへtransitionする', () => {
+    const state = {
+      ...createInitialRpgState(),
+      worldPosition: { x: 14, y: 13 },
+      stepsSinceEncounter: 8,
+    }
+    const progress = {
+      ...createInitialPlayerProgress(),
+      clearedStageIds: [1],
+      unlockedStageIds: [1, 7],
+    }
+
+    const result = resolveWorldMove({ rpgState: state, progress, dx: 0, dy: -1 })
 
     expect(result.kind).toBe('transition')
     if (result.kind !== 'transition') return
@@ -152,31 +171,31 @@ describe('World action resolver', () => {
     expect(result.nextState.worldPosition).toEqual({ x: 14, y: 13 })
   })
 
-  it('Training 9未clearではForest入口を通れない', () => {
+  it('最初のincidentだけclearしてもTraining 9未clearならForest入口を通れない', () => {
     const state = {
       ...createInitialRpgState(),
       worldPosition: { x: 8, y: 14 },
       stepsSinceEncounter: 8,
     }
+    const progress = {
+      ...createInitialPlayerProgress(),
+      clearedStageIds: [1],
+      unlockedStageIds: [1, 7],
+    }
 
-    const result = resolveWorldMove({
-      rpgState: state,
-      progress: createInitialPlayerProgress(),
-      dx: -1,
-      dy: 0,
-    })
+    const result = resolveWorldMove({ rpgState: state, progress, dx: -1, dy: 0 })
 
     expect(result.kind).toBe('blocked')
     expect(result.terrain).toBe('woods')
     expect(result.nextState).toBe(state)
   })
 
-  it('最初のincident clear後はOverworldからForestへ入り、東口から戻れる', () => {
+  it('incident観察とTraining完了後はOverworldからForestへ入り、東口から戻れる', () => {
     const initialProgress = createInitialPlayerProgress()
     const progress = {
       ...initialProgress,
-      clearedStageIds: [7, 8, 9, 1],
-      unlockedStageIds: [...initialProgress.unlockedStageIds, 8, 9, 1, 10],
+      clearedStageIds: [1, 7, 8, 9],
+      unlockedStageIds: [1, 7, 8, 9, 10],
     }
     const state = {
       ...createInitialRpgState(),
@@ -228,12 +247,12 @@ describe('World action resolver', () => {
     expect(result.nextState.encounterCount).toBe(7)
   })
 
-  it('Forestでは最初のincident後の最初のEncounterとしてBattle 10を返す', () => {
+  it('ForestではTraining完了後の最初のEncounterとしてBattle 10を返す', () => {
     const initialProgress = createInitialPlayerProgress()
     const progress = {
       ...initialProgress,
-      clearedStageIds: [7, 8, 9, 1],
-      unlockedStageIds: [...initialProgress.unlockedStageIds, 8, 9, 1, 10],
+      clearedStageIds: [1, 7, 8, 9],
+      unlockedStageIds: [1, 7, 8, 9, 10],
     }
     const state = {
       ...createInitialRpgState(),
@@ -281,15 +300,15 @@ describe('World action resolver', () => {
     expect(result.nextState.worldPosition).toEqual({ x: 11, y: 7 })
   })
 
-  it('Training進捗は7→8→9の順で次の未clear Battleを返す', () => {
-    expect(getNextJavaScriptTrainingBattleId([])).toBe(7)
-    expect(getNextJavaScriptTrainingBattleId([7])).toBe(8)
-    expect(getNextJavaScriptTrainingBattleId([7, 8])).toBe(9)
-    expect(getNextJavaScriptTrainingBattleId([7, 8, 9])).toBeNull()
-    expect(getNextJavaScriptTrainingBattleId([1, 2, 7, 8, 9])).toBeNull()
+  it('Trainingはfirst incident後だけ7→8→9の順で次の未clear Battleを返す', () => {
+    expect(getNextJavaScriptTrainingBattleId([])).toBeNull()
+    expect(getNextJavaScriptTrainingBattleId([1])).toBe(7)
+    expect(getNextJavaScriptTrainingBattleId([1, 7])).toBe(8)
+    expect(getNextJavaScriptTrainingBattleId([1, 7, 8])).toBe(9)
+    expect(getNextJavaScriptTrainingBattleId([1, 7, 8, 9])).toBeNull()
   })
 
-  it('Village TRAIN interactionはclear状況に応じてBattle 7→8→9を返す', () => {
+  it('Village TRAIN interactionはincident clear後の状況に応じてBattle 7→8→9を返す', () => {
     const initialState = {
       ...createInitialRpgState(),
       worldMapId: JS_VILLAGE_MAP_ID,
@@ -299,24 +318,30 @@ describe('World action resolver', () => {
 
     expect(resolveWorldInteraction(initialState, initialProgress)).toEqual({
       kind: 'training',
-      battleId: 7,
+      battleId: null,
     })
     expect(
       resolveWorldInteraction(initialState, {
         ...initialProgress,
-        clearedStageIds: [7],
+        clearedStageIds: [1],
+      }),
+    ).toEqual({ kind: 'training', battleId: 7 })
+    expect(
+      resolveWorldInteraction(initialState, {
+        ...initialProgress,
+        clearedStageIds: [1, 7],
       }),
     ).toEqual({ kind: 'training', battleId: 8 })
     expect(
       resolveWorldInteraction(initialState, {
         ...initialProgress,
-        clearedStageIds: [7, 8],
+        clearedStageIds: [1, 7, 8],
       }),
     ).toEqual({ kind: 'training', battleId: 9 })
     expect(
       resolveWorldInteraction(initialState, {
         ...initialProgress,
-        clearedStageIds: [7, 8, 9],
+        clearedStageIds: [1, 7, 8, 9],
       }),
     ).toEqual({ kind: 'training', battleId: null })
   })
@@ -353,7 +378,7 @@ describe('World action resolver', () => {
     const initialProgress = createInitialPlayerProgress()
     const progress = {
       ...initialProgress,
-      clearedStageIds: [7, 8, 9, 1, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22],
+      clearedStageIds: [1, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22],
     }
 
     const result = resolveWorldMove({
@@ -450,7 +475,7 @@ describe('World action resolver', () => {
         { ...initialState, worldPosition: { x: 8, y: 4 }, encounterCount: 3 },
         {
           ...initialProgress,
-          clearedStageIds: [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 1, 2],
+          clearedStageIds: [1, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22],
         },
       ),
     ).toEqual({
