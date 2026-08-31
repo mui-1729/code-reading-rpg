@@ -100,10 +100,14 @@ test('Battle 15後のDeep ForestでBattle 16 map()をtrace変換として固定�
   await expect(page).toHaveURL(/\/javascript\/battle\/16\?/)
   const story = page.getByRole('dialog', { name: '同じEnemyが別の形で渡されている' })
   await expect(story).toBeVisible()
-  await expect(story).toContainText('map()')
   await expect(story).toContainText('trace')
+  await expect(story).toContainText('{ enemy, hp }')
   await expect(story).not.toContainText('Slime')
   await expect(story).not.toContainText('Goblin')
+
+  await story.getByRole('button', { name: /NEXT/ }).click()
+  await expect(story).toContainText('map()')
+  await expect(story).toContainText('新しい配列')
 })
 
 test('Battle 18後のDeep ForestでRoot Guardian Battle 19を固定する', async ({ page }) => {
@@ -118,10 +122,13 @@ test('Battle 18後のDeep ForestでRoot Guardian Battle 19を固定する', asyn
   await expect(page).toHaveURL(/\/javascript\/battle\/19\?/)
   const story = page.getByRole('dialog', { name: 'Root Guardianのjunctionを突破する' })
   await expect(story).toBeVisible()
+  await expect(story).toContainText('incident')
+  await expect(story).toContainText('junction')
+
+  await story.getByRole('button', { name: /NEXT/ }).click()
   await expect(story).toContainText('新しいsyntaxはない')
   await expect(story).toContainText('some()')
   await expect(story).toContainText('every()')
-  await expect(story).toContainText('incident')
 })
 
 test('最深部ではBattle 22 reduce()をfinal traceとして固定導入する', async ({ page }) => {
@@ -136,10 +143,13 @@ test('最深部ではBattle 22 reduce()をfinal traceとして固定導入する
   await expect(page).toHaveURL(/\/javascript\/battle\/22\?/)
   const story = page.getByRole('dialog', { name: '複数の候補が最後に一つへ集約される' })
   await expect(story).toBeVisible()
-  await expect(story).toContainText('reduce()')
   await expect(story).toContainText('best')
   await expect(story).toContainText('Deep Forest最後のtrace')
   await expect(story).not.toContainText('Guardian')
+
+  await story.getByRole('button', { name: /NEXT/ }).click()
+  await expect(story).toContainText('reduce()')
+  await expect(story).toContainText('attackDamage')
 })
 
 test('Battle 22前はJavaScript Final Boss 3へ挑戦できない', async ({ page }) => {
@@ -169,5 +179,6 @@ test('incident routeとBattle 22完了後にFinal Boss 3を開始できる', asy
   await expect(page).toHaveURL(/\/javascript\/battle\/3\?/)
   const story = page.getByRole('dialog', { name: 'Code Coreへ' })
   await expect(story).toBeVisible()
-  await expect(story).toContainText('root cause')
+  await expect(story).toContainText('ROOT CAUSE')
+  await expect(story).toContainText('二つの症状')
 })
