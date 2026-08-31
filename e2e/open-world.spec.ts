@@ -279,7 +279,7 @@ test.describe('Open World RPG loop', () => {
     await expect.poll(async () => (await storedProgress(page)).progress.inventory.patchKit).toBe(3)
   })
 
-  test('DefeatするとHubへ戻りfull HPで復帰する', async ({ page }) => {
+  test('DefeatするとBattle開始checkpointへ残HPのまま戻る', async ({ page }) => {
     await seedStorage(page, {
       rpg: createRpgState({
         worldPosition: { x: 10, y: 11 },
@@ -291,11 +291,12 @@ test.describe('Open World RPG loop', () => {
     await dismissStory(page)
     await executeSkill(page, 'TRACE')
     await expect(page.getByText('DEFEAT', { exact: true })).toBeVisible()
-    await page.getByRole('button', { name: /RETURN TO HUB/ }).click()
+    await page.getByRole('button', { name: /RETURN TO CHECKPOINT/ }).click()
 
     await expect(page).toHaveURL(/\/world$/)
-    await expect.poll(() => playerPosition(page)).toEqual({ x: 20, y: 14 })
-    await expect.poll(async () => (await storedRpgState(page)).state.currentHp).toBe(108)
+    await expect.poll(() => playerPosition(page)).toEqual({ x: 10, y: 11 })
+    await expect.poll(async () => (await storedRpgState(page)).state.currentHp).toBe(1)
+    await expect.poll(async () => (await storedRpgState(page)).state.stepsSinceEncounter).toBe(0)
   })
 
   test('World / Gold / Equipment / Party stateはreload後も保持される', async ({ page }) => {
