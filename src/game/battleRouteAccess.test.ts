@@ -1,28 +1,28 @@
 import { describe, expect, it } from 'vitest'
 import { isBattleRouteUnlocked } from './battleRouteAccess'
 
-const progress = (clearedStageIds: number[], unlockedStageIds: number[] = [7]) => ({
+const progress = (clearedStageIds: number[], unlockedStageIds: number[] = [1]) => ({
   clearedStageIds,
   unlockedStageIds,
 })
 
-const throughFirstIncident = [7, 8, 9, 1]
-const throughFilter = [...throughFirstIncident, 10, 11, 12, 13, 14]
+const trainingComplete = [1, 7, 8, 9]
+const throughFilter = [...trainingComplete, 10, 11, 12, 13, 14]
 const throughSecondIncident = [...throughFilter, 2]
 const throughDeepForest = [...throughSecondIncident, 15, 16, 17, 18, 19, 20, 21, 22]
 
 describe('battle route progression guard', () => {
-  it('fresh saveは最初のVillage preparationだけを許可しstored unlock bitではbypassできない', () => {
-    expect(isBattleRouteUnlocked('javascript', 7, progress([]))).toBe(true)
-    expect(isBattleRouteUnlocked('javascript', 1, progress([], [1, 7]))).toBe(false)
-    expect(isBattleRouteUnlocked('javascript', 8, progress([], [7, 8]))).toBe(false)
+  it('fresh saveはlive incidentを許可しstored unlock bitでは後続をbypassできない', () => {
+    expect(isBattleRouteUnlocked('javascript', 1, progress([]))).toBe(true)
+    expect(isBattleRouteUnlocked('javascript', 7, progress([], [1, 7]))).toBe(false)
+    expect(isBattleRouteUnlocked('javascript', 8, progress([], [1, 7, 8]))).toBe(false)
   })
 
-  it('first incidentを通過してからForest traceを順番に開く', () => {
-    expect(isBattleRouteUnlocked('javascript', 1, progress([7, 8, 9]))).toBe(true)
-    expect(isBattleRouteUnlocked('javascript', 10, progress([7, 8, 9]))).toBe(false)
-    expect(isBattleRouteUnlocked('javascript', 10, progress(throughFirstIncident))).toBe(true)
-    expect(isBattleRouteUnlocked('javascript', 11, progress([...throughFirstIncident, 10]))).toBe(true)
+  it('first incident後にVillage prep、その完了後にForest traceを順番に開く', () => {
+    expect(isBattleRouteUnlocked('javascript', 7, progress([1]))).toBe(true)
+    expect(isBattleRouteUnlocked('javascript', 10, progress([1, 7, 8]))).toBe(false)
+    expect(isBattleRouteUnlocked('javascript', 10, progress(trainingComplete))).toBe(true)
+    expect(isBattleRouteUnlocked('javascript', 11, progress([...trainingComplete, 10]))).toBe(true)
   })
 
   it('second incidentはfilter trace後、Deep Forest lessonはsecond incident後に開く', () => {
