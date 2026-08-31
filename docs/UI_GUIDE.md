@@ -15,6 +15,7 @@ UIは、**Open World探索とコード読解に必要な情報を優先し、常
 - 正解target / 正解Skill / damage previewを表示しない
 - Mobileでは固定UIを最小化する
 - 状態変化は短い一時feedbackを優先する
+- **Battleではcode panelより先に「誰と・どこで戦っているか」が視覚的に読めること**
 
 ## Open World
 
@@ -151,6 +152,65 @@ Equipment / Partyの効果:
 - Party follow-upは小さい補助行で表示する
 
 ただしTargetRuleの答えを先に見せない。
+
+### RPG-first Battle visual grammar
+
+Battleを「暗いpanel上にcode cardを並べた画面」にしない。Playerがcodeを読む前に、最低限次を判別できることを基準にする。
+
+```text
+WHERE   どのRegion / 場所で戦っているか
+WHO     Enemyのsilhouette / role / Boss identity
+DANGER  normal / incident / training / Bossのどれか
+STATE   HP / NEXT / Guardなど、現在の盤面
+RULE    その後でSkill codeを読む
+```
+
+scene identityはBattleごとにpresentation layerで解決し、学習logicや`TargetRule`へvisual条件を混ぜない。
+
+現在のBattle scene系統:
+
+| Scene | Visual cue | Audio cue |
+| --- | --- | --- |
+| Overworld incident | open grassland / distant ridge | base Battle |
+| Village training | training yard / fence / house silhouette | base Battle |
+| JavaScript Forest | dense green canopy / trunks | Forest Battle |
+| JavaScript Deep Forest | dark roots / corrupted natural tones | Deep Forest Battle |
+| TypeScript Frontier | stone/crystal / geometric grid | TypeScript Battle |
+| JavaScript Final | organic corrupted Code Core | JS Final Boss |
+| TypeScript Final | geometric crystal contract vault | TS Final Boss |
+
+最低でも、**ForestとTypeScript、通常戦とBossはscreenshotだけで区別できる**こと。
+
+### Enemy identity
+
+- Enemy visualは表示名の1文字glyphだけへ依存しない
+- Sprout / Boar / Guardian等はsilhouetteとpaletteでroleを判別できるようにする
+- Final Bossはgeneric `Boss` spriteを使い回さない
+- JS FinalとTS Finalを単なるpalette swapにしない
+- Player / joined PartyはBattle stage内に存在して見えること
+
+code上のdata nameとfantasy表示名が異なる場合は、fantasy identityを主表示しつつ`CODE NAME`を併記する。これによりRPGとしての固有名を持たせても、CODE DATA / 表示codeとの対応を失わない。
+
+### Boss readability
+
+BossはHP量だけで区別しない。
+
+- arena border / scenery / BGMを通常戦から変える
+- Boss silhouetteを通常Enemyより強くする
+- Boss Guardは`ACTIVE / OPEN`が敵card上で視覚的に分かる
+- Guardの解除条件を答えとして強調しすぎず、現在状態とruleを比較できる形にする
+
+### Mobile
+
+scene decorationはcode readabilityより下位。狭いviewportでは背景decorを弱めてもよいが、以下は残す。
+
+- scene identity
+- Boss / normal差
+- Enemy HP / NEXT
+- Skill code
+- SELECT / EXECUTE
+
+背景のためにEnemy cardやcodeを横方向へ押し出さない。
 
 ## PATCH KIT
 
