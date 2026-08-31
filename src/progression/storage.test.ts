@@ -13,10 +13,10 @@ const emptyEconomy = {
   inventory: { patchKit: 0 },
 }
 const completedJavaScriptStoryIds = [
-  3, 7, 8, 9, 1, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22,
+  3, 1, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22,
 ]
 const unlockedAfterJavaScriptComplete = [
-  7, 8, 9, 1, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22, 3, 4,
+  1, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22, 3, 4,
 ]
 
 describe('player progress storage', () => {
@@ -26,6 +26,7 @@ describe('player progress storage', () => {
       exp: 520,
       gold: 75,
       inventory: { patchKit: 2 },
+      // pre-#261 shapeを意図的に渡し、restore時のmigrationまで確認する。
       clearedStageIds: [7, 8, 9],
       clearedAreaIds: [],
       completedSideQuestIds: ['javascript-second-pass'],
@@ -37,10 +38,13 @@ describe('player progress storage', () => {
     const parsed = JSON.parse(raw)
 
     expect(parsed.version).toBe(PLAYER_PROGRESS_SCHEMA_VERSION)
-    expect(parsed.progress.unlockedStageIds).toEqual([7, 8, 9, 1])
-    expect(restorePlayerProgress(raw).unlockedStageIds).toEqual([7, 8, 9, 1])
-    expect(restorePlayerProgress(raw).gold).toBe(75)
-    expect(restorePlayerProgress(raw).inventory.patchKit).toBe(2)
+    expect(parsed.progress.unlockedStageIds).toEqual([1, 7, 8, 9])
+
+    const restored = restorePlayerProgress(raw)
+    expect(restored.clearedStageIds).toEqual([7, 8, 9, 1])
+    expect(restored.unlockedStageIds).toEqual([1, 7, 8, 9, 10])
+    expect(restored.gold).toBe(75)
+    expect(restored.inventory.patchKit).toBe(2)
   })
 
   it('schema v1をv4へmigrationし、不正なlegacy unlock bitをcanonical graphで除去する', () => {
@@ -60,7 +64,7 @@ describe('player progress storage', () => {
       clearedStageIds: [1],
       clearedAreaIds: [],
       completedSideQuestIds: [],
-      unlockedStageIds: [7, 1],
+      unlockedStageIds: [1, 7],
       unlockedSkillIds: [...initialSkills, 'viper'],
     })
   })
@@ -220,7 +224,7 @@ describe('player progress storage', () => {
 
     expect(migrateStoredPlayerProgress(stored)).toEqual({
       ...stored.progress,
-      unlockedStageIds: [7, 1],
+      unlockedStageIds: [1, 7],
       unlockedSkillIds: [...initialSkills, 'viper'],
     })
   })
