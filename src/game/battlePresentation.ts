@@ -17,6 +17,8 @@ export type BattlePresentation = {
   arenaKind: BattleArenaKind
   locationLabel: string
   bgmTrack: BgmTrack
+  bossDisplayName?: string
+  bossVisualId?: 'core-wyrm' | 'contract-titan'
 }
 
 const PRESENTATION_BY_BATTLE_ID: Readonly<Record<number, BattlePresentation>> = {
@@ -133,6 +135,8 @@ const PRESENTATION_BY_BATTLE_ID: Readonly<Record<number, BattlePresentation>> = 
     arenaKind: 'boss',
     locationLabel: 'CODE CORE · ROOT CHAMBER',
     bgmTrack: 'battleJsBoss',
+    bossDisplayName: 'CORE WYRM',
+    bossVisualId: 'core-wyrm',
   },
   4: {
     sceneId: 'typescript-frontier',
@@ -151,6 +155,8 @@ const PRESENTATION_BY_BATTLE_ID: Readonly<Record<number, BattlePresentation>> = 
     arenaKind: 'boss',
     locationLabel: 'FRONTIER CORE · CONTRACT VAULT',
     bgmTrack: 'battleTsBoss',
+    bossDisplayName: 'CONTRACT TITAN',
+    bossVisualId: 'contract-titan',
   },
 }
 
@@ -166,6 +172,9 @@ export function getBattlePresentation(
       arenaKind: battle.isBoss ? 'boss' : 'field',
       locationLabel: battle.isBoss ? 'FRONTIER CORE · CONTRACT VAULT' : 'TYPESCRIPT FRONTIER',
       bgmTrack: battle.isBoss ? 'battleTsBoss' : 'battleTypeScript',
+      ...(battle.isBoss
+        ? { bossDisplayName: 'CONTRACT TITAN', bossVisualId: 'contract-titan' as const }
+        : {}),
     }
   }
 
@@ -174,5 +183,8 @@ export function getBattlePresentation(
     arenaKind: battle.isBoss ? 'boss' : 'field',
     locationLabel: battle.isBoss ? 'CODE CORE · ROOT CHAMBER' : 'CENTRAL WILDS',
     bgmTrack: battle.isBoss ? 'battleJsBoss' : 'battle',
+    ...(battle.isBoss
+      ? { bossDisplayName: 'CORE WYRM', bossVisualId: 'core-wyrm' as const }
+      : {}),
   }
 }
