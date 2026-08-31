@@ -8,10 +8,10 @@ export const PLAYER_PROGRESS_SCHEMA_VERSION = 4
 const V1_JAVASCRIPT_BOSS_STAGE_ID = 3
 const V1_JAVASCRIPT_AREA_ID = 'javascript'
 
-const FOREST_OR_LATER_STAGE_IDS = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 3]
+const TRAINING_OR_LATER_STAGE_IDS = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 3]
 const DEEP_FOREST_OR_LATER_STAGE_IDS = [15, 16, 17, 18, 19, 20, 21, 22, 3]
 const COMPLETE_JAVASCRIPT_STORY_IDS = [
-  7, 8, 9, 1, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22, 3,
+  1, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22, 3,
 ]
 
 type LegacyProgressV1 = {
@@ -66,15 +66,14 @@ const mergeUnique = <T,>(baseline: readonly T[], stored: readonly T[]): T[] => [
 ]
 
 /**
- * Issue #261 moved the two legacy incident Battles into the middle of the
- * JavaScript route. Saves created before that change may already be past the
- * new location without having those IDs in clearedStageIds. Backfill only the
- * story beats the player has logically passed so an old save never has to
- * walk backwards through completed regions.
+ * Issue #261 places the first live incident before Village training and the
+ * second incident before Deep Forest investigation. Saves created by older
+ * routes may already be beyond those narrative beats without their legacy
+ * numeric IDs in clearedStageIds. Backfill only beats the player has logically
+ * passed so an existing save is never forced backwards through cleared regions.
  *
- * Boss 3 was historically sufficient to mark JavaScript complete. If it is
- * present, the save is normalized to the complete modern arc so TypeScript
- * remains reachable without replaying a newly inserted prerequisite chain.
+ * Boss 3 was historically sufficient to mark JavaScript complete. If present,
+ * normalize to the complete current arc so TypeScript remains reachable.
  */
 function normalizeIncidentStoryProgress(clearedStageIds: readonly number[]): number[] {
   if (clearedStageIds.includes(V1_JAVASCRIPT_BOSS_STAGE_ID)) {
@@ -84,7 +83,9 @@ function normalizeIncidentStoryProgress(clearedStageIds: readonly number[]): num
   const normalized = [...clearedStageIds]
   const hasAny = (ids: readonly number[]) => ids.some((id) => normalized.includes(id))
 
-  if (hasAny(FOREST_OR_LATER_STAGE_IDS) && !normalized.includes(1)) normalized.push(1)
+  // Older saves could begin at Training 7. Once any training-or-later content
+  // is cleared, treat the newly inserted opening observation as already passed.
+  if (hasAny(TRAINING_OR_LATER_STAGE_IDS) && !normalized.includes(1)) normalized.push(1)
   if (hasAny(DEEP_FOREST_OR_LATER_STAGE_IDS) && !normalized.includes(2)) normalized.push(2)
 
   return normalized
