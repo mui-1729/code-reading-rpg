@@ -7,13 +7,14 @@ import {
   resolveWorldMove,
 } from './worldActions'
 import {
-  getTerrain,
   JS_BOSS_POSITION,
+  JS_DEEP_FOREST_CORE_EXIT_POSITION,
   JS_DEEP_FOREST_MAP_ID,
   OVERWORLD_MAP_ID,
 } from './worldMap'
 
-const clearedThrough15 = [7, 8, 9, 10, 11, 12, 13, 14, 15]
+const throughFilter = [1, 7, 8, 9, 10, 11, 12, 13, 14]
+const through15 = [...throughFilter, 2, 15]
 
 function deepForestMove(
   clearedStageIds: number[],
@@ -31,11 +32,7 @@ function deepForestMove(
 
   return resolveWorldMove({
     rpgState,
-    progress: {
-      ...progress,
-      clearedStageIds,
-      unlockedStageIds: [...progress.unlockedStageIds, 14, 15, 16, 17, 18, 19, 20, 21, 22],
-    },
+    progress: { ...progress, clearedStageIds },
     dx,
     dy,
     encounterRolls: { trigger: 0.99, battle: 0.99 },
@@ -47,32 +44,76 @@ function expectFixedBattle(
   from: { x: number; y: number },
   expectedBattleId: number,
 ) {
-  const next = { x: from.x - 1, y: from.y }
-  expect(['woods', 'deep-woods']).toContain(getTerrain(next.x, next.y, JS_DEEP_FOREST_MAP_ID))
-
   const result = deepForestMove(clearedStageIds, from, -1, 0)
   expect(result.kind).toBe('encounter')
   if (result.kind !== 'encounter') return
   expect(result.battle.battleId).toBe(expectedBattleId)
 }
 
-describe('JavaScript Deep Forest final world route', () => {
-  it('Battle 15後は東から西へ16 → 17 → 18を固定導入する', () => {
-    expectFixedBattle(clearedThrough15, { x: 24, y: 8 }, 16)
-    expectFixedBattle([...clearedThrough15, 16], { x: 20, y: 9 }, 17)
-    expectFixedBattle([...clearedThrough15, 16, 17], { x: 15, y: 9 }, 18)
+describe('JavaScript incident-driven final world route', () => {
+  it('BYTE合流後はTraining前のOverworldで最初の実incidentを固定再現する', () => {
+    const progress = createInitialPlayerProgress()
+    const rpgState = {
+      ...createInitialRpgState(),
+      partyMemberIds: ['byte'],
+      worldMapId: OVERWORLD_MAP_ID,
+      worldPosition: { x: 14, y: 13 },
+    }
+
+    const result = resolveWorldMove({
+      rpgState,
+      progress,
+      dx: -1,
+      dy: 0,
+      encounterRolls: { trigger: 0.99, battle: 0.99 },
+    })
+
+    expect(result.kind).toBe('encounter')
+    if (result.kind !== 'encounter') return
+    expect(result.battle.battleId).toBe(1)
   })
 
-  it('Battle 18後は第二MID BOSS 19を固定し、その後20 → 21 → 22を最深部で順番に導入する', () => {
-    const through18 = [...clearedThrough15, 16, 17, 18]
+  it('BYTE未加入なら同じ草原へ入ってもfirst incidentを開始しない', () => {
+    const result = resolveWorldMove({
+      rpgState: {
+        ...createInitialRpgState(),
+        worldMapId: OVERWORLD_MAP_ID,
+        worldPosition: { x: 14, y: 13 },
+      },
+      progress: createInitialPlayerProgress(),
+      dx: -1,
+      dy: 0,
+      encounterRolls: { trigger: 0.99, battle: 0.99 },
+    })
+
+    expect(result.kind).toBe('moved')
+  })
+
+  it('Forest filter trace後はDeep Forest最初の移動で二つ目の実incidentを固定再現する', () => {
+    const result = deepForestMove(throughFilter, { x: 28, y: 10 }, -1, 0)
+
+    expect(result.kind).toBe('encounter')
+    if (result.kind !== 'encounter') return
+    expect(result.battle.battleId).toBe(2)
+  })
+
+  it('二つ目のincident後は東から西へ15 → 16 → 17 → 18を固定導入する', () => {
+    expectFixedBattle([...throughFilter, 2], { x: 27, y: 9 }, 15)
+    expectFixedBattle(through15, { x: 24, y: 8 }, 16)
+    expectFixedBattle([...through15, 16], { x: 20, y: 9 }, 17)
+    expectFixedBattle([...through15, 16, 17], { x: 15, y: 9 }, 18)
+  })
+
+  it('18後はRoot Guardian 19、その後20 → 21 → 22を最深部で順番に追う', () => {
+    const through18 = [...through15, 16, 17, 18]
     expectFixedBattle(through18, { x: 11, y: 9 }, 19)
     expectFixedBattle([...through18, 19], { x: 10, y: 9 }, 20)
     expectFixedBattle([...through18, 19, 20], { x: 8, y: 9 }, 21)
     expectFixedBattle([...through18, 19, 20, 21], { x: 6, y: 9 }, 22)
   })
 
-  it('Deep Forest Randomはclear済みLessonだけを返し、MID BOSS 19は混ぜない', () => {
-    const through18 = [...clearedThrough15, 16, 17, 18]
+  it('Deep Forest Randomはclear済みLessonだけを返しstory Battle 2 / Guardian 19を混ぜない', () => {
+    const through18 = [...through15, 16, 17, 18]
     const seen = new Set<number>()
 
     for (const roll of [0, 0.1, 0.25, 0.4, 0.55, 0.7, 0.85, 0.99]) {
@@ -81,83 +122,57 @@ describe('JavaScript Deep Forest final world route', () => {
     }
 
     expect([...seen].every((id) => through18.includes(id))).toBe(true)
+    expect(seen.has(2)).toBe(false)
     expect(seen.has(19)).toBe(false)
     expect(seen.has(20)).toBe(false)
   })
 
-  it('Battle 22前はOverworld JavaScript Randomで旧Battle 1 / 2を先出ししない', () => {
-    const progress = createInitialPlayerProgress()
+  it('Battle 22後はDeep Forest西口からCode Core手前へ直接抜ける', () => {
+    const through22 = [...through15, 16, 17, 18, 19, 20, 21, 22]
     const rpgState = {
       ...createInitialRpgState(),
-      worldMapId: OVERWORLD_MAP_ID,
-      worldPosition: { x: 9, y: 18 },
-      stepsSinceEncounter: 8,
+      worldMapId: JS_DEEP_FOREST_MAP_ID,
+      worldPosition: { x: JS_DEEP_FOREST_CORE_EXIT_POSITION.x + 1, y: JS_DEEP_FOREST_CORE_EXIT_POSITION.y },
+    }
+    const progress = {
+      ...createInitialPlayerProgress(),
+      clearedStageIds: through22,
     }
 
-    expect(getTerrain(10, 18, OVERWORLD_MAP_ID)).toBe('tall-grass')
+    const result = resolveWorldMove({ rpgState, progress, dx: -1, dy: 0 })
 
-    const result = resolveWorldMove({
-      rpgState,
-      progress: { ...progress, clearedStageIds: [...clearedThrough15, 16, 17, 18, 19, 20, 21] },
-      dx: 1,
-      dy: 0,
-      encounterRolls: { trigger: 0, battle: 0 },
-    })
-
-    expect(result.kind).toBe('moved')
+    expect(result.kind).toBe('transition')
+    if (result.kind !== 'transition') return
+    expect(result.toMapId).toBe(OVERWORLD_MAP_ID)
+    expect(result.label).toBe('CODE CORE APPROACH')
+    expect(result.nextState.worldPosition.x).toBe(JS_BOSS_POSITION.x)
+    expect(result.nextState.worldPosition.y).toBeGreaterThan(JS_BOSS_POSITION.y)
   })
 
-  it('Battle 22後はOverworld JavaScript Randomで既存Battle 1から最終異変を再開する', () => {
-    const progress = createInitialPlayerProgress()
-    const rpgState = {
-      ...createInitialRpgState(),
-      worldMapId: OVERWORLD_MAP_ID,
-      worldPosition: { x: 9, y: 18 },
-      stepsSinceEncounter: 8,
-    }
-
-    const result = resolveWorldMove({
-      rpgState,
-      progress: {
-        ...progress,
-        clearedStageIds: [...clearedThrough15, 16, 17, 18, 19, 20, 21, 22],
-      },
-      dx: 1,
-      dy: 0,
-      encounterRolls: { trigger: 0, battle: 0 },
-    })
-
-    expect(result.kind).toBe('encounter')
-    if (result.kind !== 'encounter') return
-    expect(result.battle.battleId).toBe(1)
-  })
-
-  it('JavaScript Final Boss 3はBattle 22 + Battle 1 + Battle 2完了後だけunlockする', () => {
+  it('Final Bossは最初のincident・二つ目のincident・最終traceを含む全route完了後だけunlockする', () => {
     const progress = createInitialPlayerProgress()
     const rpgState = {
       ...createInitialRpgState(),
       worldMapId: OVERWORLD_MAP_ID,
       worldPosition: { x: JS_BOSS_POSITION.x, y: JS_BOSS_POSITION.y + 1 },
     }
-    const through22 = [...clearedThrough15, 16, 17, 18, 19, 20, 21, 22]
+    const through22 = [...through15, 16, 17, 18, 19, 20, 21, 22]
 
-    const beforeIncident = resolveWorldInteraction(rpgState, {
+    const missingSecond = resolveWorldInteraction(rpgState, {
       ...progress,
-      clearedStageIds: through22,
+      clearedStageIds: through22.filter((id) => id !== 2),
     })
-    expect(beforeIncident.kind).toBe('boss')
-    if (beforeIncident.kind !== 'boss') return
-    expect(beforeIncident.unlocked).toBe(false)
+    expect(missingSecond.kind === 'boss' && missingSecond.unlocked).toBe(false)
 
-    const afterFirst = resolveWorldInteraction(rpgState, {
+    const missingTrace = resolveWorldInteraction(rpgState, {
       ...progress,
-      clearedStageIds: [...through22, 1],
+      clearedStageIds: through22.filter((id) => id !== 22),
     })
-    expect(afterFirst.kind === 'boss' && afterFirst.unlocked).toBe(false)
+    expect(missingTrace.kind === 'boss' && missingTrace.unlocked).toBe(false)
 
     const ready = resolveWorldInteraction(rpgState, {
       ...progress,
-      clearedStageIds: [...through22, 1, 2],
+      clearedStageIds: through22,
     })
     expect(ready.kind).toBe('boss')
     if (ready.kind !== 'boss') return

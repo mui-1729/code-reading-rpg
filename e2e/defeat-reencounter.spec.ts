@@ -4,14 +4,14 @@ const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
-const clearedJavaScriptLessons = [
-  7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
+const clearedJavaScriptRoute = [
+  1, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22, 3,
 ]
 
 async function seedPostLessonEncounter(page: Page) {
   await page.goto('/')
   await page.evaluate(
-    ({ progressKey, rpgKey, tutorialKey, clearedLessons }) => {
+    ({ progressKey, rpgKey, tutorialKey, clearedRoute }) => {
       localStorage.clear()
       localStorage.setItem(
         progressKey,
@@ -21,10 +21,10 @@ async function seedPostLessonEncounter(page: Page) {
             exp: 0,
             gold: 0,
             inventory: { patchKit: 0 },
-            clearedStageIds: clearedLessons,
-            clearedAreaIds: [],
+            clearedStageIds: clearedRoute,
+            clearedAreaIds: ['javascript'],
             completedSideQuestIds: [],
-            unlockedStageIds: [1, 2, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22],
+            unlockedStageIds: [7],
             unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
           },
         }),
@@ -60,7 +60,7 @@ async function seedPostLessonEncounter(page: Page) {
       progressKey: PROGRESS_KEY,
       rpgKey: RPG_KEY,
       tutorialKey: TUTORIAL_KEY,
-      clearedLessons: clearedJavaScriptLessons,
+      clearedRoute: clearedJavaScriptRoute,
     },
   )
   await page.goto('/world')
@@ -77,9 +77,10 @@ async function executeSkill(page: Page, name: string) {
 test('Random Encounterで敗北後、Hub復帰して再びRandom Encounterできる', async ({ page }) => {
   await seedPostLessonEncounter(page)
 
-  // count=4, next=(10,11), steps=5 は既存のdeterministic encounter fixture。
+  // JavaScript本編clear後は復習Encounterの具体的なlegacy battleIdを契約にしない。
   await page.getByRole('button', { name: 'Move down' }).click()
-  await expect(page).toHaveURL(/\/javascript\/battle\/1\?/)
+  await expect(page).toHaveURL(/\/javascript\/battle\/\d+\?/)
+  await expect(page.locator('.battle-console')).toBeVisible()
 
   // HP=1なので最初のenemy turnで敗北する。
   await executeSkill(page, 'TRACE')
@@ -91,8 +92,7 @@ test('Random Encounterで敗北後、Hub復帰して再びRandom Encounterでき
   await expect(viewport).toHaveAttribute('data-world-x', '20')
   await expect(viewport).toHaveAttribute('data-world-y', '14')
 
-  // defeat後はcount=5 / steps=8。Hubから西へ抜けてTall Grass (17,11) へ入ると
-  // deterministic rollが18%未満になり、再びBattle 1が発生する。
+  // defeat後もHubから再び復習Encounterへ入れることだけを保証する。
   await page.getByRole('button', { name: 'Move left' }).click()
   await page.getByRole('button', { name: 'Move left' }).click()
   await page.getByRole('button', { name: 'Move left' }).click()
@@ -100,6 +100,6 @@ test('Random Encounterで敗北後、Hub復帰して再びRandom Encounterでき
   await page.getByRole('button', { name: 'Move up' }).click()
   await page.getByRole('button', { name: 'Move up' }).click()
 
-  await expect(page).toHaveURL(/\/javascript\/battle\/1\?/)
-  await expect(page.getByText('CHAPTER 01', { exact: false })).toBeVisible()
+  await expect(page).toHaveURL(/\/javascript\/battle\/\d+\?/)
+  await expect(page.locator('.battle-console')).toBeVisible()
 })

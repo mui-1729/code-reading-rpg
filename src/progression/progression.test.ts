@@ -13,8 +13,13 @@ import {
   REPLAY_GOLD_MULTIPLIER,
 } from './progression'
 
+const javascriptRouteBeforeBoss = [
+  1, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22,
+]
+const javascriptComplete = [...javascriptRouteBeforeBoss, 3]
+
 describe('player progression', () => {
-  it('初期進行はLv1相当でcanonical route先頭のVillage Trainingだけを解放する', () => {
+  it('初期進行はLv1相当で最初のlive incidentだけを解放する', () => {
     const progress = createInitialPlayerProgress()
 
     expect(progress).toEqual({
@@ -24,7 +29,7 @@ describe('player progression', () => {
       clearedStageIds: [],
       clearedAreaIds: [],
       completedSideQuestIds: [],
-      unlockedStageIds: [7],
+      unlockedStageIds: [1],
       unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
     })
     expect(getPlayerStats(progress.exp)).toEqual({
@@ -95,82 +100,86 @@ describe('player progression', () => {
     expect(getPowerMultiplierForLevel(0)).toBe(1)
   })
 
-  it('Stage初回クリアでEXP・Gold・CLEAR・canonical次Stageをまとめて更新する', () => {
+  it('最初のlive incident初回クリアでEXP・Gold・Village preparationをまとめて更新する', () => {
     const initial = createInitialPlayerProgress()
     const result = applyBattleVictory(initial, {
-      stageId: 7,
-      expReward: 40,
+      stageId: 1,
+      expReward: 12,
       goldReward: 20,
-      nextStageId: 8,
+      nextStageId: 7,
     })
 
-    expect(result.progress.exp).toBe(40)
+    expect(result.progress.exp).toBe(12)
     expect(result.progress.gold).toBe(20)
-    expect(result.progress.clearedStageIds).toEqual([7])
-    expect(result.progress.unlockedStageIds).toEqual([7, 8])
-    expect(result.reward.unlockedStageId).toBe(8)
+    expect(result.progress.clearedStageIds).toEqual([1])
+    expect(result.progress.unlockedStageIds).toEqual([1, 7])
+    expect(result.reward.unlockedStageId).toBe(7)
+    expect(result.reward.newLevel).toBe(1)
     expect(initial).toEqual(createInitialPlayerProgress())
   })
 
   it('forged nextStageIdはcanonical prerequisiteを迂回してunlockしない', () => {
     const result = applyBattleVictory(createInitialPlayerProgress(), {
-      stageId: 7,
-      expReward: 8,
+      stageId: 1,
+      expReward: 12,
       nextStageId: 3,
     })
 
-    expect(result.progress.unlockedStageIds).toEqual([7, 8])
+    expect(result.progress.unlockedStageIds).toEqual([1, 7])
     expect(result.progress.unlockedStageIds).not.toContain(3)
-    expect(result.reward.unlockedStageId).toBe(8)
+    expect(result.reward.unlockedStageId).toBe(7)
   })
 
-  it('Village Training 7→8→9は低EXP・Gold 0のままForest 10へつなぐ', () => {
-    const initial = createInitialPlayerProgress()
-    const first = applyBattleVictory(initial, {
+  it('live incident後のVillage Training 7→8→9は低EXP・Gold 0でForest traceへつなぐ', () => {
+    const incident = applyBattleVictory(createInitialPlayerProgress(), {
+      stageId: 1,
+      expReward: 12,
+      goldReward: 20,
+      nextStageId: 7,
+    })
+
+    const hp = applyBattleVictory(incident.progress, {
       stageId: 7,
       expReward: 8,
       goldReward: 0,
       nextStageId: 8,
     })
+    expect(hp.progress.exp).toBe(20)
+    expect(hp.progress.gold).toBe(20)
+    expect(hp.progress.clearedStageIds).toEqual([1, 7])
+    expect(hp.progress.unlockedStageIds).toEqual([1, 7, 8])
+    expect(hp.reward.unlockedStageId).toBe(8)
 
-    expect(first.progress.exp).toBe(8)
-    expect(first.progress.gold).toBe(0)
-    expect(first.progress.clearedStageIds).toEqual([7])
-    expect(first.progress.unlockedStageIds).toEqual([7, 8])
-    expect(first.reward.unlockedStageId).toBe(8)
-    expect(first.reward.newLevel).toBe(1)
-
-    const second = applyBattleVictory(first.progress, {
+    const name = applyBattleVictory(hp.progress, {
       stageId: 8,
       expReward: 8,
       goldReward: 0,
       nextStageId: 9,
     })
-    expect(second.progress.exp).toBe(16)
-    expect(second.progress.gold).toBe(0)
-    expect(second.progress.clearedStageIds).toEqual([7, 8])
-    expect(second.progress.unlockedStageIds).toEqual([7, 8, 9])
-    expect(second.reward.unlockedStageId).toBe(9)
+    expect(name.progress.exp).toBe(28)
+    expect(name.progress.unlockedStageIds).toEqual([1, 7, 8, 9])
+    expect(name.reward.unlockedStageId).toBe(9)
 
-    const third = applyBattleVictory(second.progress, {
+    const find = applyBattleVictory(name.progress, {
       stageId: 9,
       expReward: 8,
       goldReward: 0,
       nextStageId: 10,
     })
-    expect(third.progress.exp).toBe(24)
-    expect(third.progress.gold).toBe(0)
-    expect(third.progress.clearedStageIds).toEqual([7, 8, 9])
-    expect(third.progress.unlockedStageIds).toEqual([7, 8, 9, 10])
-    expect(third.reward.unlockedStageId).toBe(10)
+    expect(find.progress.exp).toBe(36)
+    expect(find.progress.gold).toBe(20)
+    expect(find.progress.clearedStageIds).toEqual([1, 7, 8, 9])
+    expect(find.progress.unlockedStageIds).toEqual([1, 7, 8, 9, 10])
+    expect(find.reward.unlockedStageId).toBe(10)
   })
 
-  it('Forest 10→11→12はLINK / FORKを順に解放して学習routeを完了する', () => {
+  it('Forest 10→11→12はLINK / FORKを順に解放してincident traceを進める', () => {
     const initial = {
       ...createInitialPlayerProgress(),
-      exp: 24,
-      clearedStageIds: [7, 8, 9],
-      unlockedStageIds: [7, 8, 9, 10],
+      exp: 36,
+      gold: 20,
+      clearedStageIds: [1, 7, 8, 9],
+      unlockedStageIds: [1, 7, 8, 9, 10],
     }
 
     const andResult = applyBattleVictory(initial, {
@@ -180,9 +189,9 @@ describe('player progression', () => {
       nextStageId: 11,
       unlockSkillId: 'link',
     })
-    expect(andResult.progress.exp).toBe(40)
-    expect(andResult.progress.gold).toBe(6)
-    expect(andResult.progress.unlockedStageIds).toEqual([7, 8, 9, 10, 11])
+    expect(andResult.progress.exp).toBe(52)
+    expect(andResult.progress.gold).toBe(26)
+    expect(andResult.progress.unlockedStageIds).toEqual([1, 7, 8, 9, 10, 11])
     expect(andResult.progress.unlockedSkillIds).toContain('link')
     expect(andResult.reward.unlockedSkillId).toBe('link')
 
@@ -193,9 +202,9 @@ describe('player progression', () => {
       nextStageId: 12,
       unlockSkillId: 'fork',
     })
-    expect(orResult.progress.exp).toBe(60)
-    expect(orResult.progress.gold).toBe(14)
-    expect(orResult.progress.unlockedStageIds).toEqual([7, 8, 9, 10, 11, 12])
+    expect(orResult.progress.exp).toBe(72)
+    expect(orResult.progress.gold).toBe(34)
+    expect(orResult.progress.unlockedStageIds).toEqual([1, 7, 8, 9, 10, 11, 12])
     expect(orResult.progress.unlockedSkillIds).toEqual(expect.arrayContaining(['link', 'fork']))
 
     const combinedResult = applyBattleVictory(orResult.progress, {
@@ -203,31 +212,31 @@ describe('player progression', () => {
       expReward: 24,
       goldReward: 10,
     })
-    expect(combinedResult.progress.exp).toBe(84)
-    expect(combinedResult.progress.gold).toBe(24)
-    expect(combinedResult.progress.clearedStageIds).toEqual([7, 8, 9, 10, 11, 12])
+    expect(combinedResult.progress.exp).toBe(96)
+    expect(combinedResult.progress.gold).toBe(44)
+    expect(combinedResult.progress.clearedStageIds).toEqual([1, 7, 8, 9, 10, 11, 12])
     expect(combinedResult.progress.unlockedStageIds).toContain(13)
   })
 
   it('再クリアはEXPを再獲得しGoldだけ50%へ減衰、CLEARやunlockは重複させない', () => {
     const first = applyBattleVictory(createInitialPlayerProgress(), {
-      stageId: 7,
-      expReward: 40,
+      stageId: 1,
+      expReward: 12,
       goldReward: 20,
-      nextStageId: 8,
+      nextStageId: 7,
     })
     const replay = applyBattleVictory(first.progress, {
-      stageId: 7,
-      expReward: 40,
+      stageId: 1,
+      expReward: 12,
       goldReward: 20,
-      nextStageId: 8,
+      nextStageId: 7,
     })
 
     expect(REPLAY_GOLD_MULTIPLIER).toBe(0.5)
-    expect(replay.progress.exp).toBe(80)
+    expect(replay.progress.exp).toBe(24)
     expect(replay.progress.gold).toBe(30)
-    expect(replay.progress.clearedStageIds).toEqual([7])
-    expect(replay.progress.unlockedStageIds).toEqual([7, 8])
+    expect(replay.progress.clearedStageIds).toEqual([1])
+    expect(replay.progress.unlockedStageIds).toEqual([1, 7])
     expect(replay.reward.firstClear).toBe(false)
     expect(replay.reward.unlockedStageId).toBeUndefined()
   })
@@ -239,12 +248,11 @@ describe('player progression', () => {
   })
 
   it('JavaScript Boss初回クリアでArea CLEARとTypeScript入口unlockを記録する', () => {
-    const jsRoute = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 1, 2]
     const progress = {
       ...createInitialPlayerProgress(),
-      exp: 120,
-      clearedStageIds: jsRoute,
-      unlockedStageIds: [...jsRoute, 3],
+      exp: 300,
+      clearedStageIds: javascriptRouteBeforeBoss,
+      unlockedStageIds: [...javascriptRouteBeforeBoss, 3],
       unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper', 'moon-edge'],
     }
     const result = applyBattleVictory(progress, {
@@ -253,8 +261,8 @@ describe('player progression', () => {
       clearAreaId: 'javascript',
     })
 
-    expect(result.progress.exp).toBe(220)
-    expect(result.progress.clearedStageIds).toEqual([...jsRoute, 3])
+    expect(result.progress.exp).toBe(400)
+    expect(result.progress.clearedStageIds).toEqual(javascriptComplete)
     expect(result.progress.clearedAreaIds).toEqual(['javascript'])
     expect(result.progress.unlockedStageIds).toContain(4)
     expect(result.reward.clearedAreaId).toBe('javascript')
@@ -264,10 +272,10 @@ describe('player progression', () => {
   it('Boss再クリアではArea CLEARを重複させない', () => {
     const progress = {
       ...createInitialPlayerProgress(),
-      exp: 220,
-      clearedStageIds: [3],
+      exp: 400,
+      clearedStageIds: javascriptComplete,
       clearedAreaIds: ['javascript'],
-      unlockedStageIds: [3, 4, 7],
+      unlockedStageIds: [...javascriptComplete, 4],
       unlockedSkillIds: ['trace', 'pulse', 'nova', 'viper', 'moon-edge'],
     }
     const result = applyBattleVictory(progress, {
@@ -276,7 +284,7 @@ describe('player progression', () => {
       clearAreaId: 'javascript',
     })
 
-    expect(result.progress.exp).toBe(320)
+    expect(result.progress.exp).toBe(500)
     expect(result.progress.clearedAreaIds).toEqual(['javascript'])
     expect(result.reward.firstClear).toBe(false)
     expect(result.reward.clearedAreaId).toBeUndefined()
@@ -285,9 +293,9 @@ describe('player progression', () => {
   it('TypeScript Boss初回クリアでTypeScript Area CLEARを記録する', () => {
     const progress = {
       ...createInitialPlayerProgress(),
-      exp: 360,
-      clearedStageIds: [3, 4, 5],
-      unlockedStageIds: [3, 4, 5, 6, 7],
+      exp: 520,
+      clearedStageIds: [...javascriptComplete, 4, 5],
+      unlockedStageIds: [...javascriptComplete, 4, 5, 6],
       unlockedSkillIds: ['ts-scan', 'ts-guard', 'ts-label', 'ts-union', 'ts-optional', 'ts-narrow'],
     }
     const result = applyBattleVictory(progress, {
@@ -296,7 +304,7 @@ describe('player progression', () => {
       clearAreaId: 'typescript',
     })
 
-    expect(result.progress.clearedStageIds).toEqual([3, 4, 5, 6])
+    expect(result.progress.clearedStageIds).toEqual([...javascriptComplete, 4, 5, 6])
     expect(result.progress.clearedAreaIds).toEqual(['typescript'])
     expect(result.reward.clearedAreaId).toBe('typescript')
   })

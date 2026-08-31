@@ -11,16 +11,22 @@
 ```text
 REAL WORLDで仕事 / incidentを受ける
 ↓
-CODE WORLDで同じproblemが異変として見える
+CODE WORLDでまず同じproblemの現象を体験する
 ↓
-code / dataを読む
+「何が読めないか」「何を調べる必要があるか」が生まれる
 ↓
-Chapterを進めながらroot causeへ近づく
+必要なcode / dataを少しずつ読む
+↓
+同じtraceを追いながら新しい読み方を追加する
+↓
+root causeへ到達
 ↓
 Boss / Finalで総合して解決
 ```
 
 という共通framingを持つ。
+
+**先に教材を一式履修してからincidentへ戻る構造にしない。**
 
 細かなStory台本、NPC名、台詞、Region固有名はこの文書で固定しない。
 
@@ -32,7 +38,7 @@ Boss / Finalで総合して解決
 
 - 同じ実務上の問題を解くために一緒に使う
 - 前の概念がそのまま次の概念の土台になる
-- 1つの3 Chapter arcとして自然につながる
+- 1つのincident / taskとして自然につながる
 - Battle上でも同じ種類の「コードを読んで結果を判断する」体験になる
 
 分ける:
@@ -44,14 +50,18 @@ Boss / Finalで総合して解決
 
 共通ルール:
 
-- 各編は原則 Chapter 1 → Chapter 2 → Final
-- 新しく学んだ読み方は後Chapterでも再登場する
+- **各編を固定3 Chapterへ押し込まない**
+- Story beat数はincidentの因果と認知負荷から決める
+- player-facing番号はarea内Story順で連番にする
+- numeric runtime IDはsave / URL互換用であり、chapter番号として使わない
+- 新しく学んだ読み方は後beatでも再登場する
 - 前の編で学んだ読み方も後の編で再利用する
 - Battleはクイズではなくcurrent stateとcodeを読んで意思決定する
 - REAL WORLDのproblemとCODE WORLDの異変を同じ原因へつなぐ
 - Bossはその編で追っていたroot causeを象徴する
 - 未習syntaxを大量に出して難しくしない
 - Region表現はlearningを助けるために使い、技術名の装飾だけにしない
+- new conceptはRandom Encounterより先にfixed / contextualな導入を置く
 
 ---
 
@@ -77,29 +87,46 @@ Boss / Finalで総合して解決
 - `filter`
 - `&&` / `||`
 - `map`
-- `some`
+- `some` / `every`
 - `sort`
+- optional chaining / nullish coalescing
 - `reduce`
 
 ### CODE WORLD方向
 
-現在のJavaScript Grasslandを残す。
+JavaScriptは自然系Regionとして、Grassland / Village / Forest / Deep Forestを使う。
 
-最初に「codeがworld ruleとしてtarget / effectを決める」ことを体験するRegionにする。
+generic fantasyを消さず、codeはworldのtarget / effectを決めるruleとして存在する。
 
-generic fantasyを消さず、今後必要に応じてJavaScriptのruntime / object / arrayを感じるobject / landmarkを薄く足す。
+### 現在採用しているStory構造
 
-### 現状
+JavaScriptは固定3 Chapterではなく19 Story beat。
 
-Battle 1〜3、3 Chapter Storyは実装済み。
+```text
+JS-01  first live incident
+↓
+JS-02〜04  Villageで読めなかった基礎を確認
+↓
+JS-05〜09  Forestで同じtraceを追う
+↓
+JS-10  second symptom
+↓
+JS-11〜18  Deep Forestでshared traceをroot causeへ追う
+↓
+JS-19  Code Core Final
+```
 
-今後は詳細Storyの全面rewriteではなく、REAL WORLD → CONNECT → Grasslandというframingを強化する。
+重要なのはJS-01を最初に置くこと。
+
+Playerは最初から全部のcodeを理解する必要はない。まず症状を体験し、何を読めるようになる必要があるかを知ってからVillageへ進む。
+
+internal Battle IDはlegacy互換のため1 / 7〜22 / 2 / 3等を維持するが、Story順のauthorityにはしない。
 
 ---
 
 ## 02. TypeScript編 — 型を含むコード読解
 
-JavaScript編と同じ粒度・同じ3 Chapter構造の1編として扱う。
+JavaScriptの次の1編として扱うが、JavaScriptの番号続きを使わない。player-facing番号は`TS-01...`として独立させる。
 
 ### REAL WORLDでの役割
 
@@ -127,13 +154,11 @@ JavaScript編と同じ粒度・同じ3 Chapter構造の1編として扱う。
 
 ### CODE WORLD方向
 
-現在のTypeScript Forestを残す。
-
-今後visualを整える場合、
+JavaScript自然Regionの色違いにはしない。
 
 - crystal
 - rune
-- structure
+- stone structure
 - boundary
 
 など、type / contractを薄く感じるmotifをcandidateとする。
@@ -142,17 +167,19 @@ JavaScript編と同じ粒度・同じ3 Chapter構造の1編として扱う。
 
 ### 現状
 
-Battle 4〜6とEngineer Storyは実装済み。
+現在は3 Story beat:
 
-現在のarcは、
+```text
+TS-01 CONTRACT TRACE
+→ TS-02 DATA SHAPE
+→ TS-03 ROOT CAUSE
+```
 
-- API契約の食い違い
-- optional / unionへの波及
-- Shared Contract / Frontier Compilerのroot cause
+internal compatibility IDは4 / 5 / 6。
 
-へ接続済み。
+今後beginner Storyを改善する場合も、最初にtechnical termを説明するのではなく、**data shapeの異常を先に体験 → 普通の言葉 → 型情報**の順にする。
 
-今後はこれをCODE WORLD側のForestの異変 / root cause entityとして自然につなぐ。
+必要ならbeat数を増やしてよい。3つを維持すること自体を目標にしない。
 
 ---
 
@@ -176,9 +203,9 @@ Battle 4〜6とEngineer Storyは実装済み。
 - queryが遅い
 - transaction途中で状態が不整合になる
 
-### 読解theme
+### 読解theme candidate
 
-Chapter 1:
+前半:
 
 - table / row / column
 - `SELECT`
@@ -187,19 +214,21 @@ Chapter 1:
 - `ORDER BY`
 - `LIMIT`
 
-Chapter 2:
+中盤:
 
 - `JOIN`
 - `NULL`
 - `GROUP BY`
 - aggregate
 
-Final:
+root cause側:
 
 - indexの入口
 - transaction
 - 複数queryの依存関係
 - correct resultとslow queryの切り分け
+
+これを固定3分割とは扱わない。1beatに詰め込みすぎるなら分割する。
 
 ### CODE WORLD方向
 
@@ -223,7 +252,15 @@ Battle representationは固定しない。
 
 ### prototype
 
-最初は1 Battleだけ作る。
+最初は1つの**現象 + 1 Battle**だけ作る。
+
+```text
+期待と違う検索結果を見る
+↓
+queryを読む必要が生まれる
+↓
+1 Battleで既存queryの結果を判断する
+```
 
 確認する:
 
@@ -233,7 +270,7 @@ Battle representationは固定しない。
 - field表現がlearningを助けるか
 - REAL WORLDのdata issueとCODE WORLDの異変が同じproblemに見えるか
 
-成功後に3 Chapter + full Regionへ広げる。
+成功後に、必要なbeat数とfull Regionへ広げる。
 
 ---
 
@@ -316,6 +353,8 @@ candidate:
 state changeがworld presentationへ反映される表現と相性がよい。
 
 Boss candidate: Render Core / Stale State系。
+
+Storyは「Reactの説明」から始めず、**表示が期待と違う現象を先に体験**してからprops / state / render flowを追う。
 
 ---
 
@@ -478,15 +517,18 @@ DatabaseをReactより先に置く理由:
 ## 各編を作るときのチェック
 
 1. REAL WORLDで何の仕事を任されたか
-2. 現場で何が壊れた /困っているか
-3. CODE WORLDでは同じproblemがどう異変として見えるか
-4. その問題を理解するために何のcode / dataを読むか
-5. Region表現はmental modelを助けるか
-6. Chapterごとに何が新しく増えるか
-7. 前Chapter・前編の知識をどこで再利用するか
-8. Bossは何のroot causeを象徴し、何を総合して読ませるか
-9. Battle以外にNPC / World / clueで何を体験させるか
-10. 同じ仕事としてまとめられる概念を無駄に別編へ分けていないか
-11. framework固有mental modelを無理に混ぜていないか
-12. クイズに答えるだけになっていないか
-13. engineering framingのためにfantasy RPGの面白さを消していないか
+2. **Playerが最初に体験する現象は何か**
+3. その時点で全部理解できなくても、何がおかしいかは感じられるか
+4. CODE WORLDでは同じproblemがどう異変として見えるか
+5. その問題を理解するために何のcode / dataを読む必要が生まれるか
+6. Region表現はmental modelを助けるか
+7. 次のStory beatで何が新しく増えるか
+8. 前beat・前編の知識をどこで再利用するか
+9. Bossは何のroot causeを象徴し、何を総合して読ませるか
+10. Battle以外にNPC / World / clueで何を体験させるか
+11. 同じ仕事としてまとめられる概念を無駄に別編へ分けていないか
+12. framework固有mental modelを無理に混ぜていないか
+13. クイズに答えるだけになっていないか
+14. engineering framingのためにfantasy RPGの面白さを消していないか
+15. 固定Chapter数のために不自然なStory beatを作っていないか
+16. player-facing番号とlegacy runtime IDを混同していないか

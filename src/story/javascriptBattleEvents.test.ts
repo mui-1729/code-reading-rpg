@@ -5,26 +5,46 @@ import {
 } from './javascriptBattleEvents'
 
 describe('JavaScript battle story events', () => {
-  it('Chapter 1 links CODE WORLD symptoms to the same REAL WORLD incident', () => {
-    const event = getJavaScriptPostBattleEvent(1)
-    expect(event?.title).toBe('直ったはずなのに')
-    expect(event?.lines.some((line) => line.layer === 'code-world')).toBe(true)
-    expect(event?.lines.some((line) => line.layer === 'remote')).toBe(true)
-    expect(event?.lines.some((line) => line.text.includes('REAL WORLD側'))).toBe(true)
+  it('first incident is an actual early gameplay beat connected to REAL WORLD', () => {
+    const before = getJavaScriptPreBattleEvent(1)
+    const after = getJavaScriptPostBattleEvent(1)
+    const beforeText = before?.lines.map((line) => line.text).join('\n') ?? ''
+    const afterText = after?.lines.map((line) => line.text).join('\n') ?? ''
+
+    expect(before?.label).toBe('LIVE INCIDENT')
+    expect(beforeText).toContain('訓練用じゃない')
+    expect(beforeText).toContain('実際')
+    expect(beforeText).not.toMatch(/Slime|Goblin|Golem/)
+    expect(after?.title).toBe('最初の症状をつかんだ')
+    expect(after?.lines.some((line) => line.layer === 'remote')).toBe(true)
+    expect(afterText).toContain('REAL WORLD側')
+    expect(afterText).toContain('Forest')
   })
 
-  it('Chapter 2 reveals Code Core as the shared root cause candidate', () => {
-    const event = getJavaScriptPostBattleEvent(2)
-    expect(event?.lines.some((line) => line.text.includes('Code Core'))).toBe(true)
-    expect(event?.lines.some((line) => line.text.includes('root cause'))).toBe(true)
-    expect(event?.lines.some((line) => line.text.includes('北西'))).toBe(true)
+  it('second incident appears after impact-range investigation and keeps the route moving forward', () => {
+    const before = getJavaScriptPreBattleEvent(2)
+    const after = getJavaScriptPostBattleEvent(2)
+    const beforeText = before?.lines.map((line) => line.text).join('\n') ?? ''
+    const afterText = after?.lines.map((line) => line.text).join('\n') ?? ''
+
+    expect(before?.label).toBe('SECOND SYMPTOM')
+    expect(beforeText).toContain('複数')
+    expect(beforeText).toContain('filter()')
+    expect(beforeText).not.toMatch(/Slime|Goblin|Golem/)
+    expect(afterText).toContain('call pathが合流')
+    expect(afterText).toContain('戻る必要はない')
+    expect(afterText).toContain('root causeと断定するには')
+    expect(afterText).toContain('確認したい')
   })
 
-  it('Final briefing stays connected to REAL WORLD and ending RETURNs to incident close', () => {
+  it('Final briefing follows the same trace forward and ending RETURNs to incident close', () => {
     const before = getJavaScriptPreBattleEvent(3)
     const after = getJavaScriptPostBattleEvent(3)
+    const beforeText = before?.lines.map((line) => line.text).join('\n') ?? ''
 
     expect(before?.title).toBe('Code Coreへ')
+    expect(beforeText).toContain('Deep Forest')
+    expect(beforeText).toContain('戻って別の場所を探す必要はない')
     expect(before?.lines.some((line) => line.layer === 'remote')).toBe(true)
     expect(after?.title).toBe('JavaScript incident、解決')
     expect(after?.lines.some((line) => line.layer === 'return')).toBe(true)
@@ -33,44 +53,51 @@ describe('JavaScript battle story events', () => {
     expect(after?.lines.some((line) => line.text.includes('初仕事'))).toBe(true)
   })
 
-  it('Village Training 7はenemy.hpと比較記号を普通の言葉から説明する', () => {
+  it('Village 7はincident logを読む必要からenemy.hpと比較記号を導入する', () => {
     const event = getJavaScriptPreBattleEvent(7)
     const text = event?.lines.map((line) => line.text).join('\n') ?? ''
 
-    expect(event?.title).toBe('まず、数字を一つ読む')
+    expect(event?.label).toBe('INCIDENT PREP')
+    expect(text).toContain('incident')
     expect(text).toContain('enemy.hp')
     expect(text).toContain('`<`')
     expect(text).toContain('`>`')
     expect(text).toContain('find()')
-    expect(text).toContain('今は中の「HPをどう比べているか」に注目')
     expect(text).not.toMatch(/Sprout|Boar/)
   })
 
-  it('Village Training 8はenemy.nameと===を説明し正解Enemyを直接教えない', () => {
+  it('Village 8はincidentの別条件としてenemy.nameと===を説明し正解Enemyを教えない', () => {
     const event = getJavaScriptPreBattleEvent(8)
     const text = event?.lines.map((line) => line.text).join('\n') ?? ''
 
+    expect(text).toContain('incident')
     expect(text).toContain('enemy.name')
     expect(text).toContain('`===`')
     expect(text).not.toMatch(/Goblin|Golem/)
   })
 
-  it('Village Training 9はenemiesとfind()を前から最初の一体として説明する', () => {
-    const event = getJavaScriptPreBattleEvent(9)
-    const text = event?.lines.map((line) => line.text).join('\n') ?? ''
+  it('Village 9はactual selectorとしてenemiesとfind()を説明しfield checkへ接続する', () => {
+    const before = getJavaScriptPreBattleEvent(9)
+    const after = getJavaScriptPostBattleEvent(9)
+    const text = before?.lines.map((line) => line.text).join('\n') ?? ''
+    const afterText = after?.lines.map((line) => line.text).join('\n') ?? ''
 
+    expect(text).toContain('incident')
     expect(text).toContain('enemies')
     expect(text).toContain('find()')
     expect(text).toContain('前から')
     expect(text).toContain('最初')
     expect(text).not.toMatch(/Slime|Goblin|Golem/)
+    expect(after?.label).toBe('FIELD CHECK READY')
+    expect(afterText).toContain('実際')
   })
 
-  it('Forest 10は&&を「左右ともtrue」と説明しfilterを先取りしない', () => {
+  it('Forest 10はincident trace上の&&を左右ともtrueとして説明しfilterを先取りしない', () => {
     const event = getJavaScriptPreBattleEvent(10)
     const text = event?.lines.map((line) => line.text).join('\n') ?? ''
 
-    expect(event?.title).toBe('二つともtrueなら通る')
+    expect(event?.label).toBe('FOLLOW THE TRACE')
+    expect(text).toContain('trace')
     expect(text).toContain('`&&`')
     expect(text).toContain('左もtrue、右もtrue')
     expect(text).toContain('find()')
@@ -78,7 +105,7 @@ describe('JavaScript battle story events', () => {
     expect(text).not.toMatch(/Sprout|Goblin|Boar/)
   })
 
-  it('Forest 11は||を「どちらか一方でもtrue」と説明し正解Enemyを直接教えない', () => {
+  it('Forest 11は別trace入口として||を説明し正解Enemyを直接教えない', () => {
     const event = getJavaScriptPreBattleEvent(11)
     const text = event?.lines.map((line) => line.text).join('\n') ?? ''
 
@@ -89,7 +116,7 @@ describe('JavaScript battle story events', () => {
     expect(text).not.toMatch(/Slime|Goblin|Boar/)
   })
 
-  it('Forest 12は新syntaxを増やさず&& / ||を小さく分けて読む', () => {
+  it('Forest 12はnew syntaxを増やさずtrace junctionを既習条件で読む', () => {
     const before = getJavaScriptPreBattleEvent(12)
     const after = getJavaScriptPostBattleEvent(12)
     const beforeText = before?.lines.map((line) => line.text).join('\n') ?? ''
@@ -99,16 +126,16 @@ describe('JavaScript battle story events', () => {
     expect(beforeText).toContain('&&と||')
     expect(beforeText).toContain('find()')
     expect(beforeText).not.toContain('filter()')
-    expect(afterText).toContain('読む順番')
+    expect(after?.label).toBe('TRACE CONVERGED')
+    expect(afterText).toContain('守り人')
   })
 
-  it('Forest 10 / 11は戦闘後も&& / ||の違いを短く復習する', () => {
-    expect(getJavaScriptPostBattleEvent(10)?.lines[0]?.text).toContain('&&')
-    expect(getJavaScriptPostBattleEvent(11)?.lines[0]?.text).toContain('||')
+  it('Forest 10 / 11のpost Storyもsyntax名だけでなくincident traceへ意味を戻す', () => {
+    expect(getJavaScriptPostBattleEvent(10)?.lines[0]?.text).toContain('trace')
+    expect(getJavaScriptPostBattleEvent(11)?.lines[0]?.text).toContain('経路')
   })
 
-  it('non-story battles do not get unrelated JavaScript story events', () => {
-    expect(getJavaScriptPreBattleEvent(1)).toBeUndefined()
+  it('unrelated TypeScript battle does not get JavaScript story events', () => {
     expect(getJavaScriptPostBattleEvent(4)).toBeUndefined()
   })
 })

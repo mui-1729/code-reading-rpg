@@ -46,7 +46,7 @@ async function storedRpg(page: Page) {
 
 test('Battle中のREPLAY TUTORIALはWorld開始地点へ戻りMOVEから始める', async ({ page }) => {
   await seedReplayState(page, 'overworld', { x: 8, y: 8 })
-  await page.goto('/javascript/battle/7?seed=replay-from-battle&returnTo=%2Fworld')
+  await page.goto('/javascript/battle/1?seed=replay-from-battle&returnTo=%2Fworld')
 
   const story = page.locator('.battle-story-overlay')
   if (await story.isVisible()) {
@@ -86,14 +86,15 @@ test('Deep ForestからREPLAYしても同じWorld開始地点へ戻す', async (
   expect(stored.state.currentHp).toBe(73)
 })
 
-test('通常の初回direct Battle entryは従来どおりBattle phaseへfallbackする', async ({ page }) => {
+test('通常の初回direct Battle entryはBattle phaseへfallbackする', async ({ page }) => {
   await page.goto('/')
   await page.evaluate((key) => {
     localStorage.clear()
     localStorage.setItem(key, JSON.stringify({ version: 1, status: 'active', phase: 'field-move' }))
   }, TUTORIAL_KEY)
-  await page.goto('/javascript/battle/7?seed=direct-first-time')
+  await page.goto('/javascript/battle/1?seed=direct-first-time')
 
+  await expect(page).toHaveURL(/\/javascript\/battle\/1/)
   await expect.poll(async () =>
     page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null')?.phase, TUTORIAL_KEY),
   ).toBe('battle')

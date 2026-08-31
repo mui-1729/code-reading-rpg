@@ -1,6 +1,7 @@
 import { getJavaScriptPostBattleEvent, getJavaScriptPreBattleEvent } from './javascriptBattleEvents'
 import { getJavaScriptDeepForestStoryEvent } from './javascriptDeepForestEvents'
 import { getJavaScriptFilterStoryEvent } from './javascriptFilterEvents'
+import { getJavaScriptIncidentOpeningEvent } from './javascriptIncidentOpeningEvents'
 import { getJavaScriptMidbossStoryEvent } from './javascriptMidbossEvents'
 import { getTypeScriptPostBattleEvent, getTypeScriptPreBattleEvent } from './typescriptBattleEvents'
 import type { BattleStoryEvent } from './types'
@@ -24,6 +25,7 @@ export function getBattleStoryEvent(
 
   if (area === 'javascript') {
     return (
+      getJavaScriptIncidentOpeningEvent(battleId, phase) ??
       getJavaScriptDeepForestStoryEvent(battleId, phase) ??
       getJavaScriptFilterStoryEvent(battleId, phase) ??
       getJavaScriptMidbossStoryEvent(battleId, phase) ??

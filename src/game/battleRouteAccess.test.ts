@@ -1,38 +1,49 @@
 import { describe, expect, it } from 'vitest'
 import { isBattleRouteUnlocked } from './battleRouteAccess'
 
-const progress = (clearedStageIds: number[], unlockedStageIds: number[] = [7]) => ({
+const progress = (clearedStageIds: number[], unlockedStageIds: number[] = [1]) => ({
   clearedStageIds,
   unlockedStageIds,
 })
 
+const trainingComplete = [1, 7, 8, 9]
+const throughFilter = [...trainingComplete, 10, 11, 12, 13, 14]
+const throughSecondIncident = [...throughFilter, 2]
+const throughDeepForest = [...throughSecondIncident, 15, 16, 17, 18, 19, 20, 21, 22]
+
 describe('battle route progression guard', () => {
-  it('fresh saveはBattle 7だけを許可しstored unlock bitではbypassできない', () => {
-    expect(isBattleRouteUnlocked('javascript', 7, progress([]))).toBe(true)
-    expect(isBattleRouteUnlocked('javascript', 1, progress([], [1, 7]))).toBe(false)
-    expect(isBattleRouteUnlocked('javascript', 8, progress([], [7, 8]))).toBe(false)
+  it('fresh saveはlive incidentを許可しstored unlock bitでは後続をbypassできない', () => {
+    expect(isBattleRouteUnlocked('javascript', 1, progress([]))).toBe(true)
+    expect(isBattleRouteUnlocked('javascript', 7, progress([], [1, 7]))).toBe(false)
+    expect(isBattleRouteUnlocked('javascript', 8, progress([], [1, 7, 8]))).toBe(false)
   })
 
-  it('derives sequential JavaScript unlocks from canonical prerequisites', () => {
-    expect(isBattleRouteUnlocked('javascript', 11, progress([10]))).toBe(true)
-    expect(isBattleRouteUnlocked('javascript', 22, progress([21]))).toBe(true)
-    expect(isBattleRouteUnlocked('javascript', 1, progress([22]))).toBe(true)
-    expect(isBattleRouteUnlocked('javascript', 2, progress([1], [2]))).toBe(false)
-    expect(isBattleRouteUnlocked('javascript', 2, progress([22, 1]))).toBe(true)
+  it('first incident後にVillage prep、その完了後にForest traceを順番に開く', () => {
+    expect(isBattleRouteUnlocked('javascript', 7, progress([1]))).toBe(true)
+    expect(isBattleRouteUnlocked('javascript', 10, progress([1, 7, 8]))).toBe(false)
+    expect(isBattleRouteUnlocked('javascript', 10, progress(trainingComplete))).toBe(true)
+    expect(isBattleRouteUnlocked('javascript', 11, progress([...trainingComplete, 10]))).toBe(true)
   })
 
-  it('allows the JavaScript Boss only after the final lesson and Battle 1 / 2 are complete', () => {
+  it('second incidentはfilter trace後、Deep Forest lessonはsecond incident後に開く', () => {
+    expect(isBattleRouteUnlocked('javascript', 2, progress(throughFilter))).toBe(true)
+    expect(isBattleRouteUnlocked('javascript', 15, progress(throughFilter))).toBe(false)
+    expect(isBattleRouteUnlocked('javascript', 15, progress(throughSecondIncident))).toBe(true)
+  })
+
+  it('Final Bossは正規incident routeとDeep Forest最終traceをすべて要求する', () => {
     expect(isBattleRouteUnlocked('javascript', 3, progress([]))).toBe(false)
-    expect(isBattleRouteUnlocked('javascript', 3, progress([22, 1]))).toBe(false)
-    expect(isBattleRouteUnlocked('javascript', 3, progress([22, 1, 2]))).toBe(true)
+    expect(isBattleRouteUnlocked('javascript', 3, progress(throughDeepForest.slice(0, -1)))).toBe(false)
+    expect(isBattleRouteUnlocked('javascript', 3, progress(throughDeepForest))).toBe(true)
   })
 
-  it('blocks TypeScript until JavaScript Boss clear and requires the prior TS chapter', () => {
-    expect(isBattleRouteUnlocked('typescript', 4, progress([]))).toBe(false)
-    expect(isBattleRouteUnlocked('typescript', 4, progress([3]))).toBe(true)
+  it('TypeScriptはJavaScript Final clearとprior TypeScript chapterを要求する', () => {
+    const jsComplete = [...throughDeepForest, 3]
+    expect(isBattleRouteUnlocked('typescript', 4, progress(throughDeepForest))).toBe(false)
+    expect(isBattleRouteUnlocked('typescript', 4, progress(jsComplete))).toBe(true)
     expect(isBattleRouteUnlocked('typescript', 5, progress([4], [5]))).toBe(false)
-    expect(isBattleRouteUnlocked('typescript', 5, progress([3, 4]))).toBe(true)
-    expect(isBattleRouteUnlocked('typescript', 6, progress([3, 4, 5]))).toBe(true)
+    expect(isBattleRouteUnlocked('typescript', 5, progress([...jsComplete, 4]))).toBe(true)
+    expect(isBattleRouteUnlocked('typescript', 6, progress([...jsComplete, 4, 5]))).toBe(true)
   })
 
   it('allows replay of an already-cleared battle and rejects unknown IDs', () => {

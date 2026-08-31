@@ -2,46 +2,52 @@ import type { BattleStoryEvent } from './types'
 
 const preBattleEvent: BattleStoryEvent = {
   id: 'js-forest-midboss-before',
-  label: 'FOREST MID-BOSS',
-  title: '今までの読み方だけで進む',
+  label: 'TRACE BLOCKED',
+  title: '異常の経路を守る相手を越える',
   lines: [
     {
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',
-      text: 'この先を守っている相手は強そう。でも、新しい記号は増えていない。今まで読んだHP、name、find()、&&、||だけだ。',
+      text: 'traceがこの守り人の向こうへ全部集まってる。こいつを倒すこと自体が試験なんじゃない。原因へ続く経路を塞がれてるんだ。',
     },
     {
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',
-      text: '長く見えたら、比較を一つ読む。&&や||を左右へ分ける。それからenemiesを前から見る。いつもの順番で追えばいい。',
+      text: '使われているのは今まで見たHP、name、find()、&&、||だけ。長く見えたら条件を小さく分けて、enemiesを前から追おう。',
     },
     {
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',
-      text: '敵のHPと名前と並びは自分で確認してね。どの技が誰へ飛ぶかは、コードから決めよう。',
+      text: 'どの技が誰へ飛ぶかは今のstateとcodeから決める。守り人を越えた先で、traceが何に変わるか確認しよう。',
     },
   ],
 }
 
 const postBattleEvent: BattleStoryEvent = {
   id: 'js-forest-midboss-after',
-  label: 'FOREST PATH OPEN',
-  title: '一体を探す読み方は身についた',
+  label: 'TRACE PATH OPEN',
+  title: '一体ではなく複数へ広がる痕跡',
   lines: [
     {
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',
-      text: '突破できた！ 条件を小さく分けて、find()が最初に止まる相手を自分で追えていた。',
+      text: '道が開いた。ここからtraceが一体だけじゃなく、条件に合う複数のEnemyへ枝分かれしてる。',
+    },
+    {
+      speaker: 'LEAD ADA',
+      role: 'SENIOR ENGINEER',
+      layer: 'remote',
+      text: 'REAL WORLD側でも影響範囲が広がっている。最初の一件だけ直すのでは足りない。複数targetを作る処理まで追ってくれ。',
     },
     {
       speaker: 'BYTE',
       role: 'DEBUGGER',
       layer: 'code-world',
-      text: '森の奥から、今度は「条件に合うものを一体じゃなく、まとめて集める」ような反応が来てる。次はその読み方を確かめよう。',
+      text: '今までのfind()は最初の一体で止まった。次の処理は最後まで見て、条件に合うものを全部集めているみたいだ。',
     },
   ],
 }

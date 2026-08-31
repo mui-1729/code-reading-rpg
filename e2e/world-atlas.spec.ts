@@ -1,10 +1,11 @@
 import { expect, test, type Page } from '@playwright/test'
+import { JS_COMPLETE } from './canonical-progress-fixtures'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
-async function seedWorldAtlas(page: Page, clearedStageIds: number[] = []) {
+async function seedWorldAtlas(page: Page, clearedStageIds: readonly number[] = []) {
   await page.goto('/')
   await page.evaluate(
     ({ progressKey, rpgKey, tutorialKey, clearedStageIds }) => {
@@ -19,9 +20,9 @@ async function seedWorldAtlas(page: Page, clearedStageIds: number[] = []) {
             gold: 0,
             inventory: { patchKit: 0 },
             clearedStageIds,
-            clearedAreaIds: [],
+            clearedAreaIds: clearedStageIds.includes(3) ? ['javascript'] : [],
             completedSideQuestIds: [],
-            unlockedStageIds: [1, 4, 7],
+            unlockedStageIds: [7],
             unlockedSkillIds: ['trace', 'pulse', 'nova'],
           },
         }),
@@ -94,18 +95,21 @@ test('各regionはworldMap定義と同じterrain gridで道と分岐を表示す
   await expect(overworld.locator('.atlas-terrain-cell.terrain-boss').first()).toBeVisible()
 })
 
-test('進行条件付きregionはLOCKED表示になりclear後はOPENになる', async ({ page }) => {
+test('進行条件付きregionはsemantic Story gateをLOCKED表示しclear後はOPENになる', async ({ page }) => {
   await seedWorldAtlas(page)
   let atlas = await openAtlas(page)
-  await expect(atlas.locator('[data-atlas-map="ts-frontier"]')).toContainText('LOCKED · CLEAR BATTLE 3')
-  await expect(atlas.locator('[data-atlas-map="js-deep-forest"]')).toContainText('LOCKED · CLEAR BATTLE 14')
+  await expect(atlas.locator('[data-atlas-map="js-village"]')).toContainText('LOCKED · CLEAR JS-01')
+  await expect(atlas.locator('[data-atlas-map="js-forest"]')).toContainText('LOCKED · CLEAR JS-04')
+  await expect(atlas.locator('[data-atlas-map="js-deep-forest"]')).toContainText('LOCKED · CLEAR JS-09')
+  await expect(atlas.locator('[data-atlas-map="ts-frontier"]')).toContainText('LOCKED · CLEAR JS-19')
 
   await page.getByRole('button', { name: '×' }).click()
-  await seedWorldAtlas(page, [3, 9, 14])
+  await seedWorldAtlas(page, JS_COMPLETE)
   atlas = await openAtlas(page)
-  await expect(atlas.locator('[data-atlas-map="ts-frontier"]')).toContainText('OPEN')
+  await expect(atlas.locator('[data-atlas-map="js-village"]')).toContainText('OPEN')
   await expect(atlas.locator('[data-atlas-map="js-forest"]')).toContainText('OPEN')
   await expect(atlas.locator('[data-atlas-map="js-deep-forest"]')).toContainText('OPEN')
+  await expect(atlas.locator('[data-atlas-map="ts-frontier"]')).toContainText('OPEN')
 })
 
 test('zoom controlsでAtlas倍率を変更できる', async ({ page }) => {

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { PlayerProgress } from '../progression'
+import { areBattlePrerequisitesMet, getBattleDisplayCode } from '../progression/progressionGraph'
 import type { RpgState } from '../rpg'
 import {
   getTerrain,
@@ -92,14 +93,28 @@ const TERRAIN_LABEL: Partial<Record<Terrain, string>> = {
   recovery: 'INN',
 }
 
+function isRequiredStageSatisfied(
+  requiredStageId: number,
+  clearedStageIds: readonly number[],
+): boolean {
+  return (
+    clearedStageIds.includes(requiredStageId) &&
+    areBattlePrerequisitesMet(requiredStageId, clearedStageIds)
+  )
+}
+
 function getMapGateStatus(mapId: WorldMapId, clearedStageIds: readonly number[]) {
   const entrance = WORLD_PORTALS.find(
     (portal) => portal.toMapId === mapId && portal.requiredClearedStageId !== undefined,
   )
   if (!entrance?.requiredClearedStageId) return null
-  return clearedStageIds.includes(entrance.requiredClearedStageId)
-    ? 'OPEN'
-    : `LOCKED · CLEAR BATTLE ${entrance.requiredClearedStageId}`
+
+  if (isRequiredStageSatisfied(entrance.requiredClearedStageId, clearedStageIds)) {
+    return 'OPEN'
+  }
+
+  const displayCode = getBattleDisplayCode(entrance.requiredClearedStageId)
+  return `LOCKED · CLEAR ${displayCode ?? 'STORY PROGRESS'}`
 }
 
 function buildMapCells(mapId: WorldMapId, clearedStageIds: readonly number[]): AtlasCell[] {
@@ -121,7 +136,7 @@ function buildMapCells(mapId: WorldMapId, clearedStageIds: readonly number[]): A
         terrain,
         locked:
           portal?.requiredClearedStageId !== undefined &&
-          !clearedStageIds.includes(portal.requiredClearedStageId),
+          !isRequiredStageSatisfied(portal.requiredClearedStageId, clearedStageIds),
       })
     }
   }

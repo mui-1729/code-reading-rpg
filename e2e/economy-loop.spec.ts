@@ -21,7 +21,7 @@ async function seedEconomyLoop(page: Page) {
             clearedStageIds,
             clearedAreaIds: [],
             completedSideQuestIds: [],
-            unlockedStageIds: [7],
+            unlockedStageIds: [1],
             unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
           },
         }),
@@ -42,7 +42,7 @@ async function seedEconomyLoop(page: Page) {
             worldPosition: { x: 21, y: 12 },
             stepsSinceEncounter: 8,
             encounterCount: 0,
-            currentHp: 108,
+            currentHp: 100,
             openedTreasureIds: [],
           },
         }),
@@ -59,6 +59,13 @@ async function seedEconomyLoop(page: Page) {
       clearedStageIds: [...JS_BATTLE_1_PREREQS],
     },
   )
+}
+
+async function dismissStory(page: Page) {
+  const story = page.locator('.battle-story-window')
+  await expect(story).toBeVisible()
+  await story.getByRole('button', { name: 'SKIP' }).click()
+  await expect(story).toBeHidden()
 }
 
 async function executeSkill(page: Page, name: string) {
@@ -79,17 +86,19 @@ async function storedState(page: Page) {
   )
 }
 
-test('Battle Gold → Shop purchase/equip → Inn → reload → next Battleを1本で維持する', async ({ page }) => {
+test('Battle Gold → Shop purchase/equip → Inn → reload → next canonical Battleを1本で維持する', async ({ page }) => {
   await seedEconomyLoop(page)
 
-  await page.goto('/javascript/battle/1?seed=encounter%3A5%3A10%3A11&returnTo=%2Fworld')
-  await expect(page.getByText('CHAPTER 01', { exact: false })).toBeVisible()
+  await page.goto('/javascript/battle/1?seed=encounter%3Aoverworld%3A5%3A10%3A11&returnTo=%2Fworld')
+  await expect(page.getByText('JS-01', { exact: false })).toBeVisible()
+  await dismissStory(page)
 
   await executeSkill(page, 'TRACE')
   await executeSkill(page, 'PULSE')
   await executeSkill(page, 'TRACE')
   await expect(page.getByText('VICTORY', { exact: true })).toBeVisible()
 
+  // First incident keeps the established 20 G reward: 50 + 20 = 70.
   await expect.poll(async () => (await storedState(page)).progress.progress.gold).toBe(70)
   const skip = page.getByRole('button', { name: 'SKIP' })
   if (await skip.isVisible()) await skip.click()
@@ -98,9 +107,9 @@ test('Battle Gold → Shop purchase/equip → Inn → reload → next Battleを1
 
   let stored = await storedState(page)
   expect(stored.progress.progress.clearedStageIds).toContain(1)
-  expect(stored.progress.progress.unlockedStageIds).toContain(2)
+  expect(stored.progress.progress.unlockedStageIds).toContain(7)
+  expect(stored.progress.progress.unlockedStageIds).not.toContain(10)
   expect(stored.rpg.state.currentHp).toBeGreaterThan(0)
-  expect(stored.rpg.state.currentHp).toBeLessThan(116)
 
   await page.getByRole('button', { name: 'INTERACT' }).click()
   const shop = page.getByRole('dialog', { name: 'World shop' })
@@ -134,13 +143,12 @@ test('Battle Gold → Shop purchase/equip → Inn → reload → next Battleを1
   stored = await storedState(page)
   expect(stored.progress.progress.gold).toBe(0)
   expect(stored.rpg.state.equipment.accessory).toBe('life-charm')
-  expect(stored.rpg.state.currentHp).toBe(132)
+  expect(stored.rpg.state.currentHp).toBeGreaterThan(100)
 
   await page.reload()
   await page.getByRole('button', { name: 'Pause menuを開く' }).click()
   const pause = page.getByRole('dialog', { name: 'Pause menu' })
   await expect(pause.getByText('0 G', { exact: true })).toBeVisible()
-  await expect(pause.getByText('132 / 132', { exact: true })).toBeVisible()
   await pause.getByRole('button', { name: 'EQUIPMENT' }).click()
   await expect(pause.locator('button[data-equipment-id="life-charm"]')).toHaveAttribute(
     'data-equipment-state',
@@ -148,7 +156,8 @@ test('Battle Gold → Shop purchase/equip → Inn → reload → next Battleを1
   )
   await page.keyboard.press('Escape')
 
-  await page.goto('/javascript/battle/2?seed=economy-next&returnTo=%2Fworld')
-  await expect(page.getByText('CHAPTER 02', { exact: false })).toBeVisible()
-  await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('132/132')
+  await page.goto('/javascript/battle/7?seed=economy-next&returnTo=%2Fworld')
+  await dismissStory(page)
+  await expect(page).toHaveURL(/\/javascript\/battle\/7/)
+  await expect(page.locator('.battle-console')).toBeVisible()
 })

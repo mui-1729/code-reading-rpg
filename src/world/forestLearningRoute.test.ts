@@ -9,7 +9,7 @@ function forestProgress(clearedStageIds: number[]) {
   return {
     ...initial,
     clearedStageIds,
-    unlockedStageIds: [...initial.unlockedStageIds, 8, 9, 10, 11, 12],
+    unlockedStageIds: [...initial.unlockedStageIds, 1, 8, 9, 10, 11, 12],
   }
 }
 
@@ -24,10 +24,10 @@ function forestState(x: number) {
 }
 
 describe('JavaScript Forest learning route', () => {
-  it('Battle 10は最初にWoodsへ入った時点でRandom抽選なしに固定導入する', () => {
+  it('最初のincident後、Forestで最初にWoodsへ入るとBattle 10を固定導入する', () => {
     const result = resolveWorldMove({
       rpgState: forestState(23),
-      progress: forestProgress([7, 8, 9]),
+      progress: forestProgress([7, 8, 9, 1]),
       dx: 0,
       dy: -1,
       encounterRolls: { trigger: 0.99, battle: 0.99 },
@@ -42,7 +42,7 @@ describe('JavaScript Forest learning route', () => {
   it('Battle 10 clear後、Forest東側のRandom Encounterは10だけを反復する', () => {
     const result = resolveWorldMove({
       rpgState: forestState(23),
-      progress: forestProgress([7, 8, 9, 10]),
+      progress: forestProgress([7, 8, 9, 1, 10]),
       dx: 0,
       dy: -1,
       encounterRolls: { trigger: 0, battle: 0.99 },
@@ -56,7 +56,7 @@ describe('JavaScript Forest learning route', () => {
   it('Forest中盤へ進むとBattle 11を固定導入し、その後のRandomは10 / 11だけになる', () => {
     const lesson = resolveWorldMove({
       rpgState: forestState(17),
-      progress: forestProgress([7, 8, 9, 10]),
+      progress: forestProgress([7, 8, 9, 1, 10]),
       dx: 0,
       dy: -1,
       encounterRolls: { trigger: 0.99, battle: 0.99 },
@@ -68,7 +68,7 @@ describe('JavaScript Forest learning route', () => {
 
     const replay = resolveWorldMove({
       rpgState: forestState(12),
-      progress: forestProgress([7, 8, 9, 10, 11]),
+      progress: forestProgress([7, 8, 9, 1, 10, 11]),
       dx: 0,
       dy: -1,
       encounterRolls: { trigger: 0, battle: 0.99 },
@@ -82,7 +82,7 @@ describe('JavaScript Forest learning route', () => {
   it('Forest最深側へ進むとBattle 12を固定導入し、clear後に10 / 11 / 12を反復する', () => {
     const lesson = resolveWorldMove({
       rpgState: forestState(8),
-      progress: forestProgress([7, 8, 9, 10, 11]),
+      progress: forestProgress([7, 8, 9, 1, 10, 11]),
       dx: 0,
       dy: -1,
       encounterRolls: { trigger: 0.99, battle: 0.99 },
@@ -94,7 +94,7 @@ describe('JavaScript Forest learning route', () => {
 
     const replay = resolveWorldMove({
       rpgState: forestState(12),
-      progress: forestProgress([7, 8, 9, 10, 11, 12]),
+      progress: forestProgress([7, 8, 9, 1, 10, 11, 12]),
       dx: 0,
       dy: -1,
       encounterRolls: { trigger: 0, battle: 0.99 },
