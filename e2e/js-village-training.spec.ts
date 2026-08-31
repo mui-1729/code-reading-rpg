@@ -16,13 +16,13 @@ async function seedVillageTraining(page: Page) {
         JSON.stringify({
           version: 4,
           progress: {
-            exp: 0,
-            gold: 0,
+            exp: 12,
+            gold: 20,
             inventory: { patchKit: 0 },
-            clearedStageIds: [],
+            clearedStageIds: [1],
             clearedAreaIds: [],
             completedSideQuestIds: [],
-            unlockedStageIds: [7],
+            unlockedStageIds: [1, 7],
             unlockedSkillIds: skills,
           },
         }),
@@ -38,8 +38,8 @@ async function seedVillageTraining(page: Page) {
               accessory: null,
             },
             ownedEquipmentIds: ['training-blade', 'traveler-coat'],
-            partyMemberIds: [],
-            partyEquipment: {},
+            partyMemberIds: ['byte'],
+            partyEquipment: { byte: { weapon: null, armor: null, accessory: null } },
             worldMapId: 'js-village',
             worldPosition: { x: 11, y: 7 },
             stepsSinceEncounter: 8,
@@ -89,14 +89,14 @@ async function storedProgress(page: Page) {
   return page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), PROGRESS_KEY)
 }
 
-test('Villageでincidentに必要な読み方をBattle 7→8→9で確認しfirst incidentへ接続する', async ({ page }) => {
+test('first incident後にVillageで必要な読み方をBattle 7→8→9で確認しForest traceへ接続する', async ({ page }) => {
   await seedVillageTraining(page)
 
   const viewport = page.getByLabel('Village map')
   const objective = page.getByLabel('Next objective')
   await expect(viewport).toHaveAttribute('data-world-map', 'js-village')
   await expect(objective).toContainText('INCIDENT PREP · 1 / 3')
-  await expect(objective).toContainText('incidentログのHPを読む')
+  await expect(objective).toContainText('HP条件')
   await expect(page.getByText('TRAIN', { exact: true })).toBeVisible()
 
   await page.getByRole('button', { name: 'INTERACT' }).click()
@@ -108,9 +108,9 @@ test('Villageでincidentに必要な読み方をBattle 7→8→9で確認しfirs
 
   await finishBattle(page, ['TRACE', 'NOVA', 'TRACE'])
   await expect(objective).toContainText('INCIDENT PREP · 2 / 3')
-  await expect(objective).toContainText('nameの条件')
-  expect((await storedProgress(page)).progress.clearedStageIds).toEqual([7])
-  expect((await storedProgress(page)).progress.unlockedStageIds).toEqual([7, 8])
+  await expect(objective).toContainText('name条件')
+  expect((await storedProgress(page)).progress.clearedStageIds).toEqual([1, 7])
+  expect((await storedProgress(page)).progress.unlockedStageIds).toContain(8)
 
   await page.getByRole('button', { name: 'INTERACT' }).click()
   await expect(page).toHaveURL(/\/javascript\/battle\/8\?/)
@@ -122,8 +122,8 @@ test('Villageでincidentに必要な読み方をBattle 7→8→9で確認しfirs
   await finishBattle(page, ['PULSE', 'NOVA', 'TRACE'])
   await expect(objective).toContainText('INCIDENT PREP · 3 / 3')
   await expect(objective).toContainText('selector')
-  expect((await storedProgress(page)).progress.clearedStageIds).toEqual([7, 8])
-  expect((await storedProgress(page)).progress.unlockedStageIds).toEqual([7, 8, 9])
+  expect((await storedProgress(page)).progress.clearedStageIds).toEqual([1, 7, 8])
+  expect((await storedProgress(page)).progress.unlockedStageIds).toContain(9)
 
   await page.getByRole('button', { name: 'INTERACT' }).click()
   await expect(page).toHaveURL(/\/javascript\/battle\/9\?/)
@@ -135,19 +135,17 @@ test('Villageでincidentに必要な読み方をBattle 7→8→9で確認しfirs
   await findStory.getByRole('button', { name: 'SKIP' }).click()
 
   await finishBattle(page, ['PULSE', 'TRACE', 'NOVA', 'TRACE'])
-  await expect(objective).toContainText('FIELD CHECK READY')
-  await expect(objective).toContainText('実際のincidentを調べる準備ができた')
-  await expect(objective).toContainText('Openingで見たtarget異常')
-  await expect(objective).not.toContainText('FORESTでは&&と||')
+  await expect(objective).toContainText('TRACE READY')
+  await expect(objective).toContainText('最初のincidentの続きをForestへ追う')
+  await expect(objective).toContainText('同じBattleをやり直すのではなく')
 
   const progress = await storedProgress(page)
-  expect(progress.progress.exp).toBe(24)
-  expect(progress.progress.gold).toBe(0)
-  expect(progress.progress.clearedStageIds).toEqual([7, 8, 9])
-  expect(progress.progress.unlockedStageIds).toEqual([7, 8, 9, 1])
+  expect(progress.progress.clearedStageIds).toEqual([1, 7, 8, 9])
+  expect(progress.progress.unlockedStageIds).toContain(10)
+  expect(progress.progress.unlockedStageIds).not.toContain(2)
 
   await page.reload()
   await expect(page.getByLabel('Village map')).toHaveAttribute('data-world-map', 'js-village')
-  await expect(page.getByLabel('Next objective')).toContainText('FIELD CHECK READY')
-  await expect(page.getByLabel('Next objective')).toContainText('Openingで見たtarget異常')
+  await expect(page.getByLabel('Next objective')).toContainText('TRACE READY')
+  await expect(page.getByLabel('Next objective')).toContainText('FOREST')
 })
