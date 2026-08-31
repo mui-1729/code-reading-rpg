@@ -47,8 +47,8 @@ export const javascriptOpeningScenes: readonly JavaScriptOpeningScene[] = [
     kicker: 'JAVASCRIPT GRASSLAND',
     speaker: 'BYTE',
     lines: [
-      'CONNECT complete。現実側のtarget bugが、この世界では西の草原から続く戦闘の異変として見えている。',
-      'incidentのcodeには敵のHPや名前、複数の敵を順番に見る処理が出ている。僕と合流したら、近くのVillageにいるMIOへログを持っていこう。',
+      'CONNECT complete。現実側のtarget bugが、この世界では西の草原の戦闘異常として見えている。',
+      'まず僕と合流して、実際の症状をその場で再現しよう。codeを全部理解できなくてもいい。何が分からないかも調査結果になる。',
     ],
   },
   {
@@ -57,8 +57,8 @@ export const javascriptOpeningScenes: readonly JavaScriptOpeningScene[] = [
     kicker: 'MISSION START',
     speaker: 'LEAD ADA // REMOTE',
     lines: [
-      '目的は研修を終えることではない。実際のtarget異常を再現し、codeの流れをroot causeまで追うことだ。',
-      'BYTEと合流し、MIOと必要な読み方だけ確認したら西へ出ろ。そこからはincidentのtraceを途切れさせず追ってくれ。',
+      '最初にやるのは研修じゃない。現場でtarget異常を見て、現在のstateとcodeがどう食い違って見えるか確かめることだ。',
+      '再現して読み切れない部分が見えたら、VillageのMIOに必要な読み方だけ教わって戻れ。その後はtraceをroot causeまで追う。',
     ],
   },
 ]
