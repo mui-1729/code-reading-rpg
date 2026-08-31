@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { npcById } from '../dialogue/npcs'
-import { getBattleDisplayCode, getLevelForExp } from '../progression'
+import { getBattleDisplayCode, getLevelForExp, getTotalExpForLevel } from '../progression'
 import { mainQuests } from '../quests/quests'
 import { JAVASCRIPT_AREA_ID } from './areas'
 import { getBattlesForArea } from './areaProgression'
@@ -105,7 +105,7 @@ describe('JavaScript story progression', () => {
     }
   })
 
-  it('Story順の累積EXPはfirst incidentで過剰Level upせず、second symptom / Finalの推奨Levelへ自然に届く', () => {
+  it('Story順の累積EXPはFinal推奨Lvを寄り道用stretch targetとして残し、clear後にLv5へ届く', () => {
     const firstIncidentExp = javascriptBattles[0]?.expReward ?? 0
     const throughForestExp = javascriptBattles
       .slice(0, 9)
@@ -113,10 +113,14 @@ describe('JavaScript story progression', () => {
     const beforeFinalExp = javascriptBattles
       .slice(0, -1)
       .reduce((total, battle) => total + battle.expReward, 0)
+    const finalReward = javascriptBattles.at(-1)?.expReward ?? 0
+    const finalRecommendedLevel = battleByLegacyId.get(3)?.recommendedLevel ?? 1
 
     expect(getLevelForExp(0)).toBe(1)
     expect(getLevelForExp(firstIncidentExp)).toBe(1)
     expect(getLevelForExp(throughForestExp)).toBe(battleByLegacyId.get(2)?.recommendedLevel)
-    expect(getLevelForExp(beforeFinalExp)).toBe(battleByLegacyId.get(3)?.recommendedLevel)
+    expect(getLevelForExp(beforeFinalExp)).toBe(finalRecommendedLevel - 1)
+    expect(getTotalExpForLevel(finalRecommendedLevel) - beforeFinalExp).toBe(100)
+    expect(getLevelForExp(beforeFinalExp + finalReward)).toBe(finalRecommendedLevel)
   })
 })
