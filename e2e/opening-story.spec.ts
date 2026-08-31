@@ -39,8 +39,9 @@ test('first START briefs a real world incident then CONNECTs into incident-drive
   await page.getByRole('button', { name: 'NEXT ▶' }).click()
   await expect(page.locator('.opening-layer-badge')).toHaveText('CODE WORLD')
   await expect(page.locator('.opening-kicker')).toHaveText('MISSION START')
-  await expect(page.locator('.opening-copy')).toContainText('目的は研修を終えることではない')
-  await expect(page.locator('.opening-copy')).toContainText('実際のtarget異常を再現')
+  await expect(page.locator('.opening-copy')).toContainText('最初にやるのは研修じゃない')
+  await expect(page.locator('.opening-copy')).toContainText('現場でtarget異常')
+  await expect(page.locator('.opening-copy')).toContainText('traceをroot causeまで追う')
 
   await page.getByRole('button', { name: '▶ EXPLORE CODE WORLD' }).click()
   await expect(page).toHaveURL(/\/world$/)
