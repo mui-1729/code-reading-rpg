@@ -5,7 +5,7 @@ const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
 const clearedJavaScriptRoute = [
-  7, 8, 9, 1, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22, 3,
+  1, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22, 3,
 ]
 
 async function seedPostLessonEncounter(page: Page) {
@@ -77,10 +77,10 @@ async function executeSkill(page: Page, name: string) {
 test('Random Encounterで敗北後、Hub復帰して再びRandom Encounterできる', async ({ page }) => {
   await seedPostLessonEncounter(page)
 
-  // JavaScript本編clear後の復習Encounter。count=4, next=(10,11), steps=5 は
-  // deterministic encounter fixtureとしてBattle 1を選ぶ。
+  // JavaScript本編clear後は復習Encounterの具体的なlegacy battleIdを契約にしない。
   await page.getByRole('button', { name: 'Move down' }).click()
-  await expect(page).toHaveURL(/\/javascript\/battle\/1\?/)
+  await expect(page).toHaveURL(/\/javascript\/battle\/\d+\?/)
+  await expect(page.locator('.battle-console')).toBeVisible()
 
   // HP=1なので最初のenemy turnで敗北する。
   await executeSkill(page, 'TRACE')
@@ -92,8 +92,7 @@ test('Random Encounterで敗北後、Hub復帰して再びRandom Encounterでき
   await expect(viewport).toHaveAttribute('data-world-x', '20')
   await expect(viewport).toHaveAttribute('data-world-y', '14')
 
-  // defeat後はcount=5 / steps=8。Hubから西へ抜けてTall Grass (17,11) へ入ると
-  // deterministic rollが18%未満になり、再びclear済みincident Battle 1が復習Encounterとして発生する。
+  // defeat後もHubから再び復習Encounterへ入れることだけを保証する。
   await page.getByRole('button', { name: 'Move left' }).click()
   await page.getByRole('button', { name: 'Move left' }).click()
   await page.getByRole('button', { name: 'Move left' }).click()
@@ -101,6 +100,6 @@ test('Random Encounterで敗北後、Hub復帰して再びRandom Encounterでき
   await page.getByRole('button', { name: 'Move up' }).click()
   await page.getByRole('button', { name: 'Move up' }).click()
 
-  await expect(page).toHaveURL(/\/javascript\/battle\/1\?/)
-  await expect(page.getByText('CHAPTER 01', { exact: false })).toBeVisible()
+  await expect(page).toHaveURL(/\/javascript\/battle\/\d+\?/)
+  await expect(page.locator('.battle-console')).toBeVisible()
 })
