@@ -2,11 +2,14 @@ import {
   BASE_PLAYER_HP,
   DEFAULT_INITIAL_SKILL_IDS,
   DEFAULT_INITIAL_STAGE_IDS,
-  EXP_CURVE_FACTOR,
+  EXP_CURVE_CUBIC_FACTOR,
+  EXP_CURVE_LINEAR_FACTOR,
+  EXP_CURVE_QUADRATIC_FACTOR,
   HP_PER_LEVEL,
   POWER_MULTIPLIER_PER_LEVEL,
 } from './constants'
 import { getCanonicalUnlockedStageIds } from './progressionGraph'
+import { getMasteredSkillIds } from './skillMastery'
 import type {
   BattleVictoryInput,
   BattleVictoryResult,
@@ -31,13 +34,33 @@ export function createInitialPlayerProgress(): PlayerProgress {
 
 export function getTotalExpForLevel(level: number): number {
   const normalizedLevel = Math.max(1, Math.floor(level))
-  return EXP_CURVE_FACTOR * normalizedLevel * (normalizedLevel - 1)
+  const completedLevels = normalizedLevel - 1
+
+  return (
+    EXP_CURVE_CUBIC_FACTOR * completedLevels ** 3 +
+    EXP_CURVE_QUADRATIC_FACTOR * completedLevels ** 2 +
+    EXP_CURVE_LINEAR_FACTOR * completedLevels
+  )
 }
 
 export function getLevelForExp(exp: number): number {
   const normalizedExp = Math.max(0, exp)
-  const discriminant = 1 + (4 * normalizedExp) / EXP_CURVE_FACTOR
-  return Math.max(1, Math.floor((1 + Math.sqrt(discriminant)) / 2))
+  const cubicEstimate = Math.floor(
+    Math.cbrt(normalizedExp / EXP_CURVE_CUBIC_FACTOR),
+  )
+  let low = 1
+  let high = Math.max(2, cubicEstimate + 2)
+
+  while (low < high) {
+    const middle = Math.ceil((low + high) / 2)
+    if (getTotalExpForLevel(middle) <= normalizedExp) {
+      low = middle
+    } else {
+      high = middle - 1
+    }
+  }
+
+  return low
 }
 
 export function getMaxHpForLevel(level: number): number {
@@ -84,6 +107,8 @@ export function applyBattleVictory(
   input: BattleVictoryInput,
 ): BattleVictoryResult {
   const previousLevel = getLevelForExp(progress.exp)
+  // EXP is deliberately not reduced on replay. The steeper level curve makes
+  // early grinding progressively inefficient without forbidding it as an RPG playstyle.
   const expGained = Math.max(0, input.expReward)
   const firstClear = !progress.clearedStageIds.includes(input.stageId)
   const goldGained = getBattleGoldReward(input.goldReward ?? 0, firstClear)
@@ -117,9 +142,10 @@ export function applyBattleVictory(
         : newlyUnlocked[0]
   }
 
-  if (firstClear && input.unlockSkillId && !next.unlockedSkillIds.includes(input.unlockSkillId)) {
-    next.unlockedSkillIds = [...next.unlockedSkillIds, input.unlockSkillId]
-    unlockedSkillId = input.unlockSkillId
+  const beforeMasteredSkills = new Set(getMasteredSkillIds(progress.clearedStageIds))
+  next.unlockedSkillIds = getMasteredSkillIds(next.clearedStageIds)
+  if (firstClear) {
+    unlockedSkillId = next.unlockedSkillIds.find((skillId) => !beforeMasteredSkills.has(skillId))
   }
 
   if (firstClear && input.clearAreaId && !next.clearedAreaIds.includes(input.clearAreaId)) {

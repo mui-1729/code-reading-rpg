@@ -1,5 +1,6 @@
 import { createInitialPlayerProgress } from './progression'
 import { getCanonicalUnlockedStageIds } from './progressionGraph'
+import { getMasteredSkillIds } from './skillMastery'
 import type { PlayerProgress } from './types'
 
 export const PLAYER_PROGRESS_STORAGE_KEY = 'code-reading-rpg:player-progress'
@@ -91,21 +92,6 @@ function normalizeIncidentStoryProgress(clearedStageIds: readonly number[]): num
   return normalized
 }
 
-function getDerivedForestSkillUnlocks(clearedStageIds: readonly number[]): string[] {
-  const skillIds: string[] = []
-  if (clearedStageIds.includes(10)) skillIds.push('link')
-  if (clearedStageIds.includes(11)) skillIds.push('fork')
-  if (clearedStageIds.includes(14)) skillIds.push('gather')
-  if (clearedStageIds.includes(15)) skillIds.push('echo')
-  if (clearedStageIds.includes(16)) skillIds.push('project')
-  if (clearedStageIds.includes(17)) skillIds.push('signal')
-  if (clearedStageIds.includes(18)) skillIds.push('sync')
-  if (clearedStageIds.includes(20)) skillIds.push('order')
-  if (clearedStageIds.includes(21)) skillIds.push('safe-path')
-  if (clearedStageIds.includes(22)) skillIds.push('reduce-focus')
-  return skillIds
-}
-
 function parseCommonProgressFields(value: unknown) {
   if (!isRecord(value)) return null
   if (!isNonNegativeInteger(value.exp)) return null
@@ -113,19 +99,14 @@ function parseCommonProgressFields(value: unknown) {
   if (!isStageIdArray(value.unlockedStageIds)) return null
   if (!isStringIdArray(value.unlockedSkillIds)) return null
 
-  const baseline = createInitialPlayerProgress()
   const clearedStageIds = normalizeIncidentStoryProgress(value.clearedStageIds)
-  const derivedSkillUnlocks = getDerivedForestSkillUnlocks(clearedStageIds)
 
   return {
     exp: value.exp,
     clearedStageIds,
-    // Stored unlock bits are not authoritative. Rebuild them from the canonical prerequisite graph.
+    // Unlock caches are derived state. Stored bits cannot bypass the canonical route or mastery order.
     unlockedStageIds: getCanonicalUnlockedStageIds(clearedStageIds),
-    unlockedSkillIds: mergeUnique(
-      baseline.unlockedSkillIds,
-      [...value.unlockedSkillIds, ...derivedSkillUnlocks],
-    ),
+    unlockedSkillIds: getMasteredSkillIds(clearedStageIds),
   }
 }
 
@@ -221,7 +202,7 @@ export function serializePlayerProgress(progress: PlayerProgress): string {
       clearedAreaIds: [...progress.clearedAreaIds],
       completedSideQuestIds: [...progress.completedSideQuestIds],
       unlockedStageIds: getCanonicalUnlockedStageIds(progress.clearedStageIds),
-      unlockedSkillIds: [...progress.unlockedSkillIds],
+      unlockedSkillIds: getMasteredSkillIds(progress.clearedStageIds),
     },
   }
 
