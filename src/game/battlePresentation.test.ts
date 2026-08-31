@@ -22,13 +22,23 @@ describe('battle presentation identity', () => {
     expect(byId(4).sceneId).toBe('typescript-frontier')
   })
 
-  it('JS / TS Final BossはsceneとBGMの両方を共有しない', () => {
+  it('JS / TS Final Bossはscene / BGM / name / silhouetteを共有しない', () => {
     const javascript = getBattlePresentation(battles.find((battle) => battle.id === 3)!)
     const typescript = getBattlePresentation(battles.find((battle) => battle.id === 6)!)
 
-    expect(javascript.arenaKind).toBe('boss')
-    expect(typescript.arenaKind).toBe('boss')
+    expect(javascript).toMatchObject({
+      arenaKind: 'boss',
+      bossDisplayName: 'CORE WYRM',
+      bossVisualId: 'core-wyrm',
+    })
+    expect(typescript).toMatchObject({
+      arenaKind: 'boss',
+      bossDisplayName: 'CONTRACT TITAN',
+      bossVisualId: 'contract-titan',
+    })
     expect(javascript.sceneId).not.toBe(typescript.sceneId)
     expect(javascript.bgmTrack).not.toBe(typescript.bgmTrack)
+    expect(javascript.bossDisplayName).not.toBe(typescript.bossDisplayName)
+    expect(javascript.bossVisualId).not.toBe(typescript.bossVisualId)
   })
 })
