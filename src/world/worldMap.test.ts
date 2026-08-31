@@ -57,6 +57,7 @@ describe('open world map', () => {
       fromMapId: OVERWORLD_MAP_ID,
       toMapId: JS_VILLAGE_MAP_ID,
       targetPosition: { x: 10, y: 12 },
+      requiredClearedStageId: 1,
     })
 
     const villageExit = getWorldPortalAtPosition(JS_VILLAGE_MAP_ID, { x: 10, y: 14 })
@@ -71,7 +72,7 @@ describe('open world map', () => {
       fromMapId: OVERWORLD_MAP_ID,
       toMapId: JS_FOREST_MAP_ID,
       targetPosition: { x: 28, y: 10 },
-      requiredClearedStageId: 1,
+      requiredClearedStageId: 9,
     })
 
     const forestExit = getWorldPortalAtPosition(JS_FOREST_MAP_ID, { x: 30, y: 10 })
