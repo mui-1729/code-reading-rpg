@@ -211,6 +211,23 @@ export function resolveWorldMove({
   const nextSteps = rpgState.stepsSinceEncounter + 1
   const portal = getWorldPortalAtPosition(mapId, next)
   if (portal) {
+    // Story gates are intentionally stricter than the legacy portal metadata.
+    // The player first witnesses the live incident, then enters Village to
+    // learn only the missing basics; Forest opens after that preparation.
+    if (
+      mapId === OVERWORLD_MAP_ID &&
+      portal.toMapId === JS_VILLAGE_MAP_ID &&
+      !progress.clearedStageIds.includes(1)
+    ) {
+      return { kind: 'blocked', nextState: rpgState, terrain }
+    }
+    if (
+      mapId === OVERWORLD_MAP_ID &&
+      portal.toMapId === JS_FOREST_MAP_ID &&
+      !progress.clearedStageIds.includes(9)
+    ) {
+      return { kind: 'blocked', nextState: rpgState, terrain }
+    }
     if (
       portal.requiredClearedStageId !== undefined &&
       !progress.clearedStageIds.includes(portal.requiredClearedStageId)
@@ -243,12 +260,12 @@ export function resolveWorldMove({
   }
 
   // Story Battles are deterministic route beats, not lucky random encounters.
-  // After the minimum Village training, the first real symptom happens on the
-  // way west. After Forest investigation, the second symptom happens as soon
-  // as the player enters Deep Forest. Neither requires walking back later.
+  // The first symptom is witnessed before training, after BYTE joins the party.
+  // The second symptom happens after Forest investigation at Deep Forest entry.
   if (
     mapId === OVERWORLD_MAP_ID &&
     region === 'javascript' &&
+    rpgState.partyMemberIds.includes('byte') &&
     !progress.clearedStageIds.includes(1) &&
     isBattleAccessible(1, progress.clearedStageIds)
   ) {
