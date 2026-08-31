@@ -34,7 +34,7 @@ test('first START briefs a real world incident then CONNECTs into incident-drive
   await expect(page.locator('.opening-layer-badge')).toHaveText('CODE WORLD')
   await expect(page.locator('.opening-kicker')).toHaveText('JAVASCRIPT GRASSLAND')
   await expect(page.locator('.opening-copy')).toContainText('現実側のtarget bug')
-  await expect(page.locator('.opening-copy')).toContainText('VillageにいるMIOへログ')
+  await expect(page.locator('.opening-copy')).toContainText('実際の症状をその場で再現')
 
   await page.getByRole('button', { name: 'NEXT ▶' }).click()
   await expect(page.locator('.opening-layer-badge')).toHaveText('CODE WORLD')
@@ -46,7 +46,7 @@ test('first START briefs a real world incident then CONNECTs into incident-drive
   await expect(page).toHaveURL(/\/world$/)
   await expect(page.getByLabel('Open world map')).toBeVisible()
   await expect(page.getByLabel('Next objective')).toContainText('BYTEと合流する')
-  await expect(page.getByLabel('Next objective')).toContainText('incidentのログ')
+  await expect(page.getByLabel('Next objective')).toContainText('incident')
 })
 
 test('after the opening is seen, CONTINUE enters the world and opening can be replayed', async ({ page }) => {
