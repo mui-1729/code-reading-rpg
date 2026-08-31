@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createInitialPlayerProgress } from '../progression'
 import { getWorldObjective, getWorldProgressChange } from './worldObjective'
 
-const JS_BEFORE_BOSS = [7, 8, 9, 1, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22]
+const JS_BEFORE_BOSS = [1, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22]
 const JS_COMPLETE = [...JS_BEFORE_BOSS, 3]
 
 const withClears = (clearedStageIds: number[], clearedAreaIds: string[] = []) => ({
@@ -12,7 +12,7 @@ const withClears = (clearedStageIds: number[], clearedAreaIds: string[] = []) =>
 })
 
 describe('World Objective', () => {
-  it('初期状態はincident preparationを示しTypeScriptはまだ進めない', () => {
+  it('初期状態は最初のlive incidentを示しTypeScriptはまだ進めない', () => {
     const progress = createInitialPlayerProgress()
 
     expect(getWorldObjective('javascript', progress)).toMatchObject({
@@ -20,7 +20,7 @@ describe('World Objective', () => {
       clearedBattles: 0,
       totalBattles: 19,
       status: 'encounter',
-      next: 'INCIDENT PREP // Villageで必要な読み方を確認する',
+      next: 'LIVE INCIDENT // 草原で最初のtarget異常を再現する',
       bossUnlocked: false,
     })
     expect(getWorldObjective('typescript', progress)).toMatchObject({
@@ -33,8 +33,8 @@ describe('World Objective', () => {
     })
   })
 
-  it('Village preparation中は同じincident preparationを案内する', () => {
-    const progress = withClears([7])
+  it('最初のincident再現後はVillageで必要な読み方だけ確認する', () => {
+    const progress = withClears([1])
 
     expect(getWorldObjective('javascript', progress)).toMatchObject({
       clearedBattles: 1,
@@ -45,22 +45,23 @@ describe('World Objective', () => {
     })
   })
 
-  it('Village preparation完了後は最初のlive incidentを案内する', () => {
-    const progress = withClears([7, 8, 9])
-
-    expect(getWorldObjective('javascript', progress)).toMatchObject({
-      clearedBattles: 3,
-      next: 'LIVE INCIDENT // 草原で最初のtarget異常を再現する',
-      bossUnlocked: false,
-    })
-  })
-
-  it('first incident後はForestのtrace investigationを案内する', () => {
-    const progress = withClears([7, 8, 9, 1])
+  it('Village preparation完了後は同じ症状を再戦せずForest traceへ進む', () => {
+    const progress = withClears([1, 7, 8, 9])
 
     expect(getWorldObjective('javascript', progress)).toMatchObject({
       clearedBattles: 4,
       next: 'FOLLOW TRACE // Forestでtarget条件の流れを追う',
+      bossUnlocked: false,
+    })
+  })
+
+  it('Forest filterまで追うと二つ目のlive symptomを案内する', () => {
+    const progress = withClears([1, 7, 8, 9, 10, 11, 12, 13, 14])
+
+    expect(getWorldObjective('javascript', progress)).toMatchObject({
+      clearedBattles: 9,
+      next: 'SECOND SYMPTOM // Deep Forest入口で影響拡大を確認する',
+      bossUnlocked: false,
     })
   })
 
@@ -132,17 +133,23 @@ describe('World Objective', () => {
     })
   })
 
-  it('JavaScript progress差分はsemantic story routeに沿って返す', () => {
+  it('JavaScript progress差分は現場観察→準備→追跡のsemantic routeに沿って返す', () => {
     const initial = createInitialPlayerProgress()
-    const afterTraining = withClears([7])
+    const afterIncident = withClears([1])
+    const afterTraining = withClears([1, 7, 8, 9])
     const beforeBoss = withClears(JS_BEFORE_BOSS)
     const afterBoss = withClears(JS_COMPLETE, ['javascript'])
 
-    expect(getWorldProgressChange(initial, afterTraining)).toMatchObject({
+    expect(getWorldProgressChange(initial, afterIncident)).toMatchObject({
       heading: 'WORLD PROGRESS',
       label: 'JAVASCRIPT KINGDOM',
       progressLabel: '1 / 19',
       next: 'INCIDENT PREP // Villageで必要な読み方を確認する',
+    })
+    expect(getWorldProgressChange(withClears([1, 7, 8]), afterTraining)).toMatchObject({
+      heading: 'WORLD PROGRESS',
+      progressLabel: '4 / 19',
+      next: 'FOLLOW TRACE // Forestでtarget条件の流れを追う',
     })
     expect(getWorldProgressChange(withClears(JS_BEFORE_BOSS.slice(0, -1)), beforeBoss)).toMatchObject({
       heading: 'BOSS UNLOCKED',
@@ -177,7 +184,7 @@ describe('World Objective', () => {
   })
 
   it('replayではWorld progress feedbackを出さない', () => {
-    const progress = withClears([7])
+    const progress = withClears([1])
     expect(getWorldProgressChange(progress, progress)).toBeNull()
   })
 })
