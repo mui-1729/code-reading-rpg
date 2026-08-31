@@ -97,7 +97,7 @@ test('Battle 12 clear済みsaveはtrace-blocked objectiveからBattle 13へ進�
   await seedMidboss(page, 'ready')
 
   await expect(page.getByLabel('Next objective')).toContainText('TRACE BLOCKED')
-  await expect(page.getByLabel('Next objective')).toContainText('Forestの守り人を突破する')
+  await expect(page.getByLabel('Next objective')).toContainText('traceを塞ぐ守り人を突破する')
   await expect(page.getByLabel('JavaScript Forest Mid-Boss')).toBeVisible()
 
   await page.getByRole('button', { name: 'INTERACT' }).click()
