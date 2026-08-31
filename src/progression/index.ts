@@ -24,6 +24,8 @@ export {
   getAreaBattleSequence,
   getAreaClearedBattleCount,
   getAreaProgressionKeys,
+  getBattleDisplayCode,
+  getBattleStoryNumber,
   getCanonicalUnlockedStageIds,
   getNextAccessibleBattleId,
   getNextBattleId,
