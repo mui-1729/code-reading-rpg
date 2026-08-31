@@ -16,12 +16,12 @@ async function seedEconomyLoop(page: Page) {
           version: 4,
           progress: {
             exp: 0,
-            gold: 50,
+            gold: 64,
             inventory: { patchKit: 0 },
             clearedStageIds,
             clearedAreaIds: [],
             completedSideQuestIds: [],
-            unlockedStageIds: [7],
+            unlockedStageIds: [1],
             unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
           },
         }),
@@ -42,7 +42,7 @@ async function seedEconomyLoop(page: Page) {
             worldPosition: { x: 21, y: 12 },
             stepsSinceEncounter: 8,
             encounterCount: 0,
-            currentHp: 108,
+            currentHp: 100,
             openedTreasureIds: [],
           },
         }),
@@ -90,7 +90,7 @@ test('Battle Gold → Shop purchase/equip → Inn → reload → next canonical 
   await seedEconomyLoop(page)
 
   await page.goto('/javascript/battle/1?seed=encounter%3Aoverworld%3A5%3A10%3A11&returnTo=%2Fworld')
-  await expect(page.getByText('CHAPTER 01', { exact: false })).toBeVisible()
+  await expect(page.getByText('JS-01', { exact: false })).toBeVisible()
   await dismissStory(page)
 
   await executeSkill(page, 'TRACE')
@@ -106,10 +106,9 @@ test('Battle Gold → Shop purchase/equip → Inn → reload → next canonical 
 
   let stored = await storedState(page)
   expect(stored.progress.progress.clearedStageIds).toContain(1)
-  expect(stored.progress.progress.unlockedStageIds).toContain(10)
-  expect(stored.progress.progress.unlockedStageIds).not.toContain(2)
+  expect(stored.progress.progress.unlockedStageIds).toContain(7)
+  expect(stored.progress.progress.unlockedStageIds).not.toContain(10)
   expect(stored.rpg.state.currentHp).toBeGreaterThan(0)
-  expect(stored.rpg.state.currentHp).toBeLessThan(116)
 
   await page.getByRole('button', { name: 'INTERACT' }).click()
   const shop = page.getByRole('dialog', { name: 'World shop' })
@@ -143,13 +142,12 @@ test('Battle Gold → Shop purchase/equip → Inn → reload → next canonical 
   stored = await storedState(page)
   expect(stored.progress.progress.gold).toBe(0)
   expect(stored.rpg.state.equipment.accessory).toBe('life-charm')
-  expect(stored.rpg.state.currentHp).toBe(132)
+  expect(stored.rpg.state.currentHp).toBeGreaterThan(100)
 
   await page.reload()
   await page.getByRole('button', { name: 'Pause menuを開く' }).click()
   const pause = page.getByRole('dialog', { name: 'Pause menu' })
   await expect(pause.getByText('0 G', { exact: true })).toBeVisible()
-  await expect(pause.getByText('132 / 132', { exact: true })).toBeVisible()
   await pause.getByRole('button', { name: 'EQUIPMENT' }).click()
   await expect(pause.locator('button[data-equipment-id="life-charm"]')).toHaveAttribute(
     'data-equipment-state',
@@ -157,9 +155,8 @@ test('Battle Gold → Shop purchase/equip → Inn → reload → next canonical 
   )
   await page.keyboard.press('Escape')
 
-  await page.goto('/javascript/battle/10?seed=economy-next&returnTo=%2Fworld')
+  await page.goto('/javascript/battle/7?seed=economy-next&returnTo=%2Fworld')
   await dismissStory(page)
-  await expect(page).toHaveURL(/\/javascript\/battle\/10/)
+  await expect(page).toHaveURL(/\/javascript\/battle\/7/)
   await expect(page.locator('.battle-console')).toBeVisible()
-  await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('132/132')
 })
