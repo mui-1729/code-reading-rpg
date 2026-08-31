@@ -1,70 +1,71 @@
 import { describe, expect, it } from 'vitest'
 import { npcById } from '../dialogue/npcs'
-import { javascriptField } from '../field/javascriptField'
-import { getLevelForExp } from '../progression'
+import { getBattleDisplayCode, getLevelForExp } from '../progression'
 import { mainQuests } from '../quests/quests'
 import { JAVASCRIPT_AREA_ID } from './areas'
-import { battles } from './battles'
+import { getBattlesForArea } from './areaProgression'
 
-const javascriptBattles = battles.filter(
-  (battle) => battle.areaId === JAVASCRIPT_AREA_ID && [1, 2, 3].includes(battle.id),
-)
-const villageTrainingBattles = battles.filter(
-  (battle) => battle.areaId === JAVASCRIPT_AREA_ID && [7, 8, 9].includes(battle.id),
-)
-const forestLearningBattles = battles.filter(
-  (battle) => battle.areaId === JAVASCRIPT_AREA_ID && [10, 11, 12].includes(battle.id),
-)
+const javascriptBattles = getBattlesForArea(JAVASCRIPT_AREA_ID)
+const battleByLegacyId = new Map(javascriptBattles.map((battle) => [battle.id, battle]))
 const javascriptQuest = mainQuests.find((quest) => quest.areaId === JAVASCRIPT_AREA_ID)
 
 describe('JavaScript story progression', () => {
-  it('3 main chapters follow a programmer RPG story from bug to Code Core', () => {
-    expect(javascriptBattles.map((battle) => battle.label)).toEqual([
-      'CHAPTER 01',
-      'CHAPTER 02',
-      'FINAL CHAPTER',
+  it('legacy numeric IDではなくsemantic Story順でJS-01〜JS-19を一続きに表示する', () => {
+    expect(javascriptBattles.map((battle) => battle.id)).toEqual([
+      1, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22, 3,
     ])
-    expect(javascriptBattles[0]?.title).toBe('最初のバグ')
-    expect(javascriptBattles[1]?.title).toBe('広がるバグ')
-    expect(javascriptBattles[2]).toMatchObject({
-      title: '暴走するCode Core',
-      isBoss: true,
-    })
-    expect(javascriptBattles[0]?.subtitle).toContain('新人Code Knight')
-    expect(javascriptBattles[1]?.subtitle).toContain('ログ')
-    expect(javascriptBattles[2]?.subtitle).toContain('共通処理')
-    expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.name === 'Boss')).toBe(true)
-    expect(javascriptBattles[2]?.enemies.some((enemy) => enemy.attackName === 'Runtime Cascade')).toBe(true)
+    expect(javascriptBattles.map((battle) => getBattleDisplayCode(battle.id))).toEqual(
+      Array.from({ length: 19 }, (_, index) => `JS-${String(index + 1).padStart(2, '0')}`),
+    )
+    expect(javascriptBattles.map((battle) => battle.label.split(' · ')[0])).toEqual(
+      Array.from({ length: 19 }, (_, index) => `JS-${String(index + 1).padStart(2, '0')}`),
+    )
   })
 
-  it('Village Trainingはmain 3 chaptersと分離した初心者向け導入として定義する', () => {
-    expect(villageTrainingBattles.map((battle) => battle.label)).toEqual([
-      'VILLAGE TRAINING 01',
-      'VILLAGE TRAINING 02',
-      'VILLAGE TRAINING 03',
+  it('Opening後はTrainingより先にlive incidentを体験し、その不足を埋めるVillage preparationへ続く', () => {
+    expect(javascriptBattles.slice(0, 4).map((battle) => battle.label)).toEqual([
+      'JS-01 · LIVE INCIDENT',
+      'JS-02 · INCIDENT PREP',
+      'JS-03 · INCIDENT PREP',
+      'JS-04 · INCIDENT PREP',
     ])
-    expect(villageTrainingBattles.map((battle) => battle.title)).toEqual([
+    expect(javascriptBattles[0]?.title).toBe('最初のtarget異常')
+    expect(javascriptBattles[0]?.subtitle).toContain('まず現場で症状を再現')
+    expect(javascriptBattles.slice(1, 4).map((battle) => battle.title)).toEqual([
       '数字を見比べる',
       '名前を見比べる',
       '前から最初の一体を探す',
     ])
+    expect(javascriptBattles.slice(1, 4).every((battle) => battle.subtitle.includes('incident'))).toBe(true)
   })
 
-  it('Forest Learningはfind()を維持して&& → || → 組み合わせへ進む', () => {
-    expect(forestLearningBattles.map((battle) => battle.label)).toEqual([
-      'FOREST LESSON 01',
-      'FOREST LESSON 02',
-      'FOREST LESSON 03',
+  it('Training後は同じBattleへ戻らずForest trace→second symptom→Deep Forest root traceへ進む', () => {
+    expect(javascriptBattles.slice(4, 9).map((battle) => battle.label)).toEqual([
+      'JS-05 · FOREST TRACE',
+      'JS-06 · FOREST TRACE',
+      'JS-07 · TRACE JUNCTION',
+      'JS-08 · TRACE BLOCKED',
+      'JS-09 · IMPACT RANGE',
     ])
-    expect(forestLearningBattles.map((battle) => battle.title)).toEqual([
-      '二つとも当てはまる相手',
-      'どちらか一つでも当てはまる相手',
-      '森の分かれ道を読み切る',
-    ])
-    expect(forestLearningBattles.every((battle) => !battle.skillIds.includes('viper'))).toBe(true)
+    expect(javascriptBattles[9]?.label).toBe('JS-10 · SECOND SYMPTOM')
+    expect(javascriptBattles[9]?.title).toBe('広がるバグ')
+    expect(javascriptBattles.slice(10, 18).every((battle) => battle.label.startsWith('JS-'))).toBe(true)
+    expect(javascriptBattles[18]).toMatchObject({
+      label: 'JS-19 · ROOT CAUSE',
+      title: '暴走するCode Core',
+      isBoss: true,
+    })
   })
 
-  it('uses programmer characters without incident-management jargon', () => {
+  it('syntax名をLEARNED表示する教材chapterではなくWorld event / traceとしてlabelする', () => {
+    expect(javascriptBattles.every((battle) => !battle.label.includes('LEARNED'))).toBe(true)
+    expect(battleByLegacyId.get(17)?.label).toContain('REAL-WORLD SIGNAL')
+    expect(battleByLegacyId.get(18)?.label).toContain('BARRIER RULE')
+    expect(battleByLegacyId.get(19)?.label).toContain('ROOT TRACE BLOCKED')
+    expect(battleByLegacyId.get(22)?.label).toContain('FINAL TRACE')
+  })
+
+  it('uses programmer characters while the quest remains a bug investigation rather than a syllabus', () => {
     expect(npcById.archivist).toMatchObject({ name: 'LEAD ADA', role: 'SENIOR ENGINEER' })
     expect(npcById['lambda-sage']).toMatchObject({ name: 'LAMBDA', role: 'CODE MENTOR' })
     expect(npcById['byte-scout']).toMatchObject({ name: 'BYTE', role: 'DEBUGGER' })
@@ -90,51 +91,32 @@ describe('JavaScript story progression', () => {
     expect(byteEnding?.lines.join(' ')).toContain('全部green')
   })
 
-  it('shows the three chapters as simple story gates on the legacy field fixture', () => {
-    const battleLabels = javascriptField.interactions
-      .filter((interaction) => interaction.kind === 'battle')
-      .map((interaction) => interaction.label)
+  it('incident系Skillは後半の実incident / Finalでも既習syntaxを捨てずに積み上げる', () => {
+    const firstIncident = new Set(battleByLegacyId.get(1)?.skillIds ?? [])
+    const secondIncident = new Set(battleByLegacyId.get(2)?.skillIds ?? [])
+    const final = new Set(battleByLegacyId.get(3)?.skillIds ?? [])
 
-    expect(battleLabels).toEqual([
-      '最初のバグ',
-      '広がるバグ',
-      'CODE CORE',
-    ])
-  })
-
-  it('each main chapter keeps every syntax learned in earlier chapters', () => {
-    const chapter1 = new Set(javascriptBattles[0]?.skillIds ?? [])
-    const chapter2 = new Set(javascriptBattles[1]?.skillIds ?? [])
-    const finalChapter = new Set(javascriptBattles[2]?.skillIds ?? [])
-
-    for (const skillId of chapter1) {
-      expect(chapter2.has(skillId), `${skillId} should remain in chapter 2`).toBe(true)
-      expect(finalChapter.has(skillId), `${skillId} should remain in the final chapter`).toBe(true)
+    for (const skillId of firstIncident) {
+      expect(secondIncident.has(skillId), `${skillId} should remain in second incident`).toBe(true)
+      expect(final.has(skillId), `${skillId} should remain in final`).toBe(true)
     }
-
-    for (const skillId of chapter2) {
-      expect(finalChapter.has(skillId), `${skillId} should remain in the final chapter`).toBe(true)
+    for (const skillId of secondIncident) {
+      expect(final.has(skillId), `${skillId} should remain in final`).toBe(true)
     }
   })
 
-  it('later main chapters add new syntax instead of replacing old syntax', () => {
-    expect(javascriptBattles[0]?.skillIds).toEqual(['trace', 'pulse', 'nova'])
-    expect(javascriptBattles[1]?.skillIds).toEqual([
-      'trace', 'pulse', 'nova', 'viper', 'lock', 'alert',
-    ])
-    expect(javascriptBattles[2]?.skillIds).toEqual([
-      'trace', 'pulse', 'nova',
-      'viper', 'lock', 'alert',
-      'moon-edge', 'sweep', 'judge',
-    ])
-  })
-
-  it('main chapter first clears naturally reach the next chapter level', () => {
-    const chapter1Exp = javascriptBattles[0]?.expReward ?? 0
-    const chapter2Exp = javascriptBattles[1]?.expReward ?? 0
+  it('Story順の累積EXPはfirst incidentで過剰Level upせず、second symptom / Finalの推奨Levelへ自然に届く', () => {
+    const firstIncidentExp = javascriptBattles[0]?.expReward ?? 0
+    const throughForestExp = javascriptBattles
+      .slice(0, 9)
+      .reduce((total, battle) => total + battle.expReward, 0)
+    const beforeFinalExp = javascriptBattles
+      .slice(0, -1)
+      .reduce((total, battle) => total + battle.expReward, 0)
 
     expect(getLevelForExp(0)).toBe(1)
-    expect(getLevelForExp(chapter1Exp)).toBe(2)
-    expect(getLevelForExp(chapter1Exp + chapter2Exp)).toBe(3)
+    expect(getLevelForExp(firstIncidentExp)).toBe(1)
+    expect(getLevelForExp(throughForestExp)).toBe(battleByLegacyId.get(2)?.recommendedLevel)
+    expect(getLevelForExp(beforeFinalExp)).toBe(battleByLegacyId.get(3)?.recommendedLevel)
   })
 })
