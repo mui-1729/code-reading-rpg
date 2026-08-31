@@ -1,0 +1,429 @@
+.battle-location-stack {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+
+.battle-location-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 8px;
+  border: 2px solid #666481;
+  background: rgba(5, 5, 12, .88);
+  color: #d8d5e8;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-align: right;
+}
+
+.battle-stage .stage-sky {
+  background: linear-gradient(180deg, rgba(4, 7, 18, .05), rgba(4, 7, 18, .52));
+}
+
+.stage-landmark,
+.stage-atmosphere {
+  position: absolute;
+  pointer-events: none;
+}
+
+.stage-landmark {
+  display: none;
+  z-index: 0;
+}
+
+.stage-atmosphere {
+  inset: 0;
+  z-index: 0;
+  opacity: .42;
+}
+
+/* Opening incident: open grassland and a distant ridge. */
+.battle-scene-overworld-incident {
+  background: linear-gradient(#101c38 0 52%, #203d30 52% 70%, #13291f 70%);
+}
+
+.battle-scene-overworld-incident .stage-ground {
+  background: repeating-linear-gradient(90deg, #294d2f 0 18px, #315837 18px 36px);
+  border-top: 4px solid #466c3e;
+}
+
+.battle-scene-overworld-incident .stage-mountain {
+  background: #263d67;
+}
+
+/* Village lessons read as a safe training yard rather than another wilderness fight. */
+.battle-scene-village-training {
+  background: linear-gradient(#17283c 0 50%, #4b5835 50% 68%, #2e3420 68%);
+}
+
+.battle-scene-village-training .stage-star {
+  opacity: .45;
+}
+
+.battle-scene-village-training .stage-mountain {
+  opacity: .42;
+  background: #344d52;
+}
+
+.battle-scene-village-training .stage-landmark {
+  display: block;
+  bottom: 56px;
+  width: 112px;
+  height: 82px;
+  background: #6f4a32;
+  border: 7px solid #332820;
+  box-shadow: inset 0 0 0 5px #9b754d;
+}
+
+.battle-scene-village-training .landmark-a {
+  right: 10%;
+  clip-path: polygon(0 36%, 50% 0, 100% 36%, 92% 100%, 8% 100%);
+}
+
+.battle-scene-village-training .landmark-b {
+  left: 39%;
+  width: 150px;
+  height: 42px;
+  background: repeating-linear-gradient(90deg, #805b36 0 10px, #4d3427 10px 18px);
+  border-color: #36251b;
+  box-shadow: none;
+}
+
+.battle-scene-village-training .stage-ground {
+  background: repeating-linear-gradient(90deg, #5b4a2c 0 20px, #665532 20px 40px);
+  border-top: 4px solid #8a7545;
+}
+
+/* JavaScript Forest: dense green silhouettes close in around the encounter. */
+.battle-scene-javascript-forest {
+  background: linear-gradient(#091d20 0 42%, #163726 42% 68%, #0e2118 68%);
+}
+
+.battle-scene-javascript-forest .stage-moon {
+  filter: hue-rotate(42deg) brightness(.8);
+}
+
+.battle-scene-javascript-forest .stage-star {
+  color: #87b876;
+  opacity: .55;
+}
+
+.battle-scene-javascript-forest .stage-mountain {
+  bottom: 45px;
+  height: 175px;
+  background: #153a2a;
+  opacity: .85;
+  clip-path: polygon(0 100%, 10% 42%, 20% 60%, 28% 15%, 38% 58%, 48% 28%, 57% 63%, 68% 12%, 78% 57%, 88% 27%, 100% 100%);
+}
+
+.battle-scene-javascript-forest .stage-landmark {
+  display: block;
+  bottom: 44px;
+  width: 34px;
+  height: 190px;
+  background: #183323;
+  border: 6px solid #0b1e15;
+  box-shadow: -38px 34px 0 -8px #173b26, 40px 18px 0 -10px #20492e;
+}
+
+.battle-scene-javascript-forest .landmark-a { left: 4%; }
+.battle-scene-javascript-forest .landmark-b { right: 5%; transform: scaleX(-1); }
+
+.battle-scene-javascript-forest .stage-ground {
+  background: repeating-linear-gradient(90deg, #18341f 0 17px, #214128 17px 34px);
+  border-top: 4px solid #355a30;
+}
+
+/* Deep Forest is darker, root-heavy and visually closer to the corrupted Code Core. */
+.battle-scene-javascript-deep-forest {
+  background: linear-gradient(#071516 0 42%, #12271e 42% 63%, #160f1e 63%);
+}
+
+.battle-scene-javascript-deep-forest .stage-star {
+  color: #7f9670;
+  opacity: .35;
+}
+
+.battle-scene-javascript-deep-forest .stage-moon {
+  background: #b6d78c;
+  box-shadow: 0 0 0 5px #40513c, 0 0 24px #6d9958;
+}
+
+.battle-scene-javascript-deep-forest .stage-mountain {
+  background: #13271d;
+  opacity: .7;
+}
+
+.battle-scene-javascript-deep-forest .stage-landmark {
+  display: block;
+  bottom: 24px;
+  width: 210px;
+  height: 130px;
+  border: 12px solid #25321e;
+  border-color: #25321e transparent transparent #25321e;
+  border-radius: 50% 0 0 0;
+  transform: rotate(16deg);
+}
+
+.battle-scene-javascript-deep-forest .landmark-a { left: 22%; }
+.battle-scene-javascript-deep-forest .landmark-b { right: 3%; transform: scaleX(-1) rotate(16deg); }
+
+.battle-scene-javascript-deep-forest .stage-ground {
+  background: repeating-linear-gradient(135deg, #211927 0 13px, #18241a 13px 26px);
+  border-top: 4px solid #425238;
+}
+
+/* TypeScript Frontier: cold crystalline geometry, intentionally unlike the organic JS regions. */
+.battle-scene-typescript-frontier {
+  background: linear-gradient(#10142f 0 46%, #1b2450 46% 66%, #10162f 66%);
+}
+
+.battle-scene-typescript-frontier .stage-star {
+  color: #9bdcff;
+  opacity: .9;
+}
+
+.battle-scene-typescript-frontier .stage-moon {
+  background: #a9e5ff;
+  box-shadow: 0 0 0 5px #365b83, 0 0 24px #66c5ff;
+}
+
+.battle-scene-typescript-frontier .stage-mountain {
+  background: #26356c;
+  clip-path: polygon(0 100%, 18% 58%, 30% 72%, 43% 16%, 54% 68%, 70% 34%, 100% 100%);
+}
+
+.battle-scene-typescript-frontier .stage-landmark {
+  display: block;
+  bottom: 48px;
+  width: 76px;
+  height: 150px;
+  background: linear-gradient(135deg, #426b9d, #8cccf1 48%, #33497c 49%);
+  border: 6px solid #17254e;
+  clip-path: polygon(50% 0, 100% 78%, 72% 100%, 28% 100%, 0 78%);
+  box-shadow: 0 0 20px rgba(104, 198, 255, .35);
+}
+
+.battle-scene-typescript-frontier .landmark-a { left: 22%; transform: scale(.7); transform-origin: bottom; }
+.battle-scene-typescript-frontier .landmark-b { right: 7%; }
+
+.battle-scene-typescript-frontier .stage-atmosphere {
+  background-image:
+    linear-gradient(rgba(100, 190, 255, .09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(100, 190, 255, .09) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.battle-scene-typescript-frontier .stage-ground {
+  background: repeating-linear-gradient(90deg, #18254d 0 22px, #1f315e 22px 44px);
+  border-top: 4px solid #4c72a0;
+}
+
+/* Final Boss scenes are not palette swaps: JS is organic corruption, TS is a geometric vault. */
+.battle-scene-javascript-core-boss {
+  background: radial-gradient(circle at 70% 36%, #622447 0 8%, #32162e 9% 22%, #120c1d 44%, #070810 72%);
+}
+
+.battle-scene-javascript-core-boss .stage-moon,
+.battle-scene-javascript-core-boss .stage-star,
+.battle-scene-javascript-core-boss .stage-mountain {
+  display: none;
+}
+
+.battle-scene-javascript-core-boss .stage-landmark {
+  display: block;
+  bottom: 24px;
+  width: 54px;
+  height: 290px;
+  background: #281326;
+  border: 8px solid #100a15;
+  box-shadow: -42px 74px 0 -12px #38162e, 42px 118px 0 -14px #4b1836;
+  transform: rotate(22deg);
+}
+
+.battle-scene-javascript-core-boss .landmark-a { left: 10%; }
+.battle-scene-javascript-core-boss .landmark-b { right: 12%; transform: rotate(-24deg); }
+
+.battle-scene-javascript-core-boss .stage-atmosphere {
+  background: radial-gradient(circle at 70% 36%, rgba(255, 92, 155, .28), transparent 32%);
+  animation: core-breath 1.8s steps(3, end) infinite;
+}
+
+.battle-scene-javascript-core-boss .stage-ground {
+  background: repeating-linear-gradient(135deg, #24101e 0 14px, #351328 14px 28px);
+  border-top: 4px solid #70304f;
+}
+
+.battle-scene-typescript-core-boss {
+  background: linear-gradient(#090c23 0 45%, #171238 45% 68%, #080b20 68%);
+}
+
+.battle-scene-typescript-core-boss .stage-moon,
+.battle-scene-typescript-core-boss .stage-mountain {
+  display: none;
+}
+
+.battle-scene-typescript-core-boss .stage-star {
+  color: #83ddff;
+}
+
+.battle-scene-typescript-core-boss .stage-landmark {
+  display: block;
+  bottom: 36px;
+  width: 118px;
+  height: 220px;
+  background: linear-gradient(135deg, #213264 0 42%, #6bc7ef 43% 48%, #33246a 49% 100%);
+  border: 7px solid #141838;
+  clip-path: polygon(50% 0, 84% 24%, 100% 82%, 72% 100%, 28% 100%, 0 82%, 16% 24%);
+  box-shadow: 0 0 24px rgba(99, 211, 255, .34);
+}
+
+.battle-scene-typescript-core-boss .landmark-a { left: 18%; transform: scale(.65); transform-origin: bottom; }
+.battle-scene-typescript-core-boss .landmark-b { right: 4%; }
+
+.battle-scene-typescript-core-boss .stage-atmosphere {
+  background-image:
+    linear-gradient(rgba(123, 204, 255, .13) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(155, 120, 255, .12) 2px, transparent 2px);
+  background-size: 28px 28px;
+  transform: perspective(240px) rotateX(58deg) scale(1.25);
+  transform-origin: center bottom;
+}
+
+.battle-scene-typescript-core-boss .stage-ground {
+  background: repeating-linear-gradient(90deg, #151940 0 24px, #201d51 24px 48px);
+  border-top: 4px solid #587ea9;
+}
+
+@keyframes core-breath {
+  50% { opacity: .72; filter: brightness(1.18); }
+}
+
+/* Arena hierarchy: a Boss encounter is readable before the player reads any code. */
+.battle-arena-boss {
+  border-color: #e4c06c;
+}
+
+.battle-arena-boss .enemy-card.is-boss-enemy {
+  border-color: #e4c06c;
+  box-shadow: inset 0 0 0 3px #5d4322, 0 0 0 2px rgba(228, 192, 108, .18);
+}
+
+.battle-arena-boss .enemy-card.is-boss-enemy .hp-track {
+  height: 14px;
+  border-color: #c49b47;
+}
+
+.enemy-code-name {
+  display: block;
+  margin-top: 3px;
+  color: #9f9ab7;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+/* CORE WYRM: wide organic silhouette with horn/root protrusions. */
+.enemy-sprite.core-wyrm {
+  width: 104px;
+  height: 92px;
+  margin-top: 0;
+  background: #6b294d;
+  border: 8px solid #2b1024;
+  clip-path: polygon(8% 24%, 24% 12%, 35% 0, 48% 17%, 63% 6%, 76% 20%, 94% 16%, 86% 38%, 100% 58%, 83% 100%, 18% 100%, 0 62%, 15% 42%);
+  box-shadow: -24px 34px 0 -12px #4f1b3c, 25px 42px 0 -12px #7b3154;
+}
+
+.enemy-sprite.core-wyrm::before {
+  content: "";
+  position: absolute;
+  left: 24px;
+  top: 27px;
+  width: 48px;
+  height: 26px;
+  background: #170916;
+  box-shadow: inset 9px 7px 0 -4px #ffcf61, inset -9px 7px 0 -4px #ffcf61;
+}
+
+.enemy-sprite.core-wyrm::after {
+  content: "";
+  position: absolute;
+  left: 44px;
+  bottom: -22px;
+  width: 18px;
+  height: 44px;
+  background: #42162f;
+  transform: rotate(18deg);
+}
+
+/* CONTRACT TITAN: vertical crystal/armor silhouette with a luminous contract core. */
+.enemy-sprite.contract-titan {
+  width: 90px;
+  height: 108px;
+  margin-top: -8px;
+  background: linear-gradient(135deg, #365587 0 42%, #77d6f5 43% 55%, #483876 56% 100%);
+  border: 8px solid #172344;
+  clip-path: polygon(50% 0, 78% 14%, 100% 42%, 87% 90%, 68% 100%, 32% 100%, 13% 90%, 0 42%, 22% 14%);
+  box-shadow: -22px 35px 0 -12px #284774, 22px 35px 0 -12px #4e4280;
+}
+
+.enemy-sprite.contract-titan::before {
+  content: "";
+  position: absolute;
+  left: 26px;
+  top: 34px;
+  width: 30px;
+  height: 30px;
+  background: #b7f2ff;
+  border: 5px solid #334d7a;
+  transform: rotate(45deg);
+  box-shadow: 0 0 12px #7bdcff;
+}
+
+.enemy-sprite.contract-titan::after {
+  content: "";
+  position: absolute;
+  left: 37px;
+  top: 6px;
+  width: 12px;
+  height: 24px;
+  background: #89e0ff;
+  border: 4px solid #233c6c;
+}
+
+.enemy-sprite.core-wyrm .sprite-face,
+.enemy-sprite.contract-titan .sprite-face {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .battle-location-stack {
+    justify-items: end;
+    max-width: 48%;
+  }
+
+  .battle-location-chip {
+    font-size: 7px;
+    line-height: 1.35;
+  }
+
+  .battle-scene-javascript-forest .stage-landmark,
+  .battle-scene-javascript-deep-forest .stage-landmark,
+  .battle-scene-typescript-frontier .stage-landmark,
+  .battle-scene-javascript-core-boss .stage-landmark,
+  .battle-scene-typescript-core-boss .stage-landmark {
+    opacity: .66;
+  }
+
+  .enemy-sprite.core-wyrm {
+    transform: scale(.88);
+    transform-origin: bottom center;
+  }
+
+  .enemy-sprite.contract-titan {
+    transform: scale(.82);
+    transform-origin: bottom center;
+  }
+}
