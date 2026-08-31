@@ -39,8 +39,18 @@ describe('game audio settings', () => {
 })
 
 describe('game BGM', () => {
-  it('menu / field / battleの3trackに再生patternがある', () => {
-    expect(BGM_TRACKS).toEqual(['menu', 'field', 'battle'])
+  it('field / region battle / Bossごとに再生patternを持つ', () => {
+    expect(BGM_TRACKS).toEqual([
+      'menu',
+      'field',
+      'battle',
+      'battleForest',
+      'battleDeepForest',
+      'battleTypeScript',
+      'battleBoss',
+      'battleJsBoss',
+      'battleTsBoss',
+    ])
 
     for (const track of BGM_TRACKS) {
       const pattern = BGM_PATTERNS[track]
@@ -51,8 +61,14 @@ describe('game BGM', () => {
     }
   })
 
+  it('JS / TS Final Bossは同じBGM patternへfallbackしない', () => {
+    expect(BGM_PATTERNS.battleJsBoss.notes).not.toEqual(BGM_PATTERNS.battleTsBoss.notes)
+    expect(BGM_PATTERNS.battleJsBoss.type).not.toBe(BGM_PATTERNS.battleTsBoss.type)
+  })
+
   it('現在request中のtrackだけがcleanupで停止できる', () => {
     expect(shouldReleaseBgm('battle', 'battle')).toBe(true)
+    expect(shouldReleaseBgm('battleForest', 'battle')).toBe(false)
     expect(shouldReleaseBgm('field', 'battle')).toBe(false)
     expect(shouldReleaseBgm('menu', 'field')).toBe(false)
     expect(shouldReleaseBgm(null, 'menu')).toBe(false)
