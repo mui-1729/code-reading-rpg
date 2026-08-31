@@ -5,6 +5,8 @@ const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
+const clearedThroughDeepFilter = [7, 8, 9, 1, 10, 11, 12, 13, 14, 2, 15]
+
 async function seedExploration(
   page: Page,
   mapId: 'js-forest' | 'js-deep-forest',
@@ -12,7 +14,7 @@ async function seedExploration(
 ) {
   await page.goto('/')
   await page.evaluate(
-    ({ progressKey, rpgKey, tutorialKey, mapId, position }) => {
+    ({ progressKey, rpgKey, tutorialKey, mapId, position, clearedStageIds }) => {
       localStorage.clear()
       sessionStorage.clear()
       localStorage.setItem(
@@ -23,10 +25,10 @@ async function seedExploration(
             exp: 0,
             gold: 10,
             inventory: { patchKit: 0 },
-            clearedStageIds: [7, 8, 9, 10, 11, 12, 13, 14, 15],
+            clearedStageIds,
             clearedAreaIds: [],
             completedSideQuestIds: [],
-            unlockedStageIds: [1, 2, 3, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+            unlockedStageIds: [7],
             unlockedSkillIds: ['trace', 'pulse', 'nova'],
           },
         }),
@@ -64,6 +66,7 @@ async function seedExploration(
       tutorialKey: TUTORIAL_KEY,
       mapId,
       position,
+      clearedStageIds: clearedThroughDeepFilter,
     },
   )
   await page.goto('/world')

@@ -1,3 +1,5 @@
+import { JAVASCRIPT_BATTLE_SEQUENCE, TYPESCRIPT_BATTLE_SEQUENCE } from '../progression/progressionGraph'
+
 export const JAVASCRIPT_AREA_ID = 'javascript' as const
 export const TYPESCRIPT_AREA_ID = 'typescript' as const
 
@@ -53,12 +55,13 @@ export const areas: readonly AreaDefinition[] = [
       world: '/world',
       battleBase: '/javascript/battle',
     },
-    battleIds: [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 1, 2, 3],
+    battleIds: JAVASCRIPT_BATTLE_SEQUENCE,
     worldMapIds: ['overworld', 'js-village', 'js-forest', 'js-deep-forest'],
     capabilities: sharedBattleCapabilities,
     bossBattleId: 3,
     clearRewardEquipmentId: 'branch-saber',
     storyEvent: (battleId: number, phase: 'pre' | 'post') =>
+      getJavaScriptIncidentOpeningEvent(battleId, phase) ??
       getJavaScriptDeepForestStoryEvent(battleId, phase) ??
       getJavaScriptFilterStoryEvent(battleId, phase) ??
       getJavaScriptMidbossStoryEvent(battleId, phase) ??
@@ -75,7 +78,7 @@ export const areas: readonly AreaDefinition[] = [
       world: '/world',
       battleBase: '/typescript/battle',
     },
-    battleIds: [4, 5, 6],
+    battleIds: TYPESCRIPT_BATTLE_SEQUENCE,
     worldMapIds: ['overworld', 'ts-frontier'],
     capabilities: sharedBattleCapabilities,
     bossBattleId: 6,
@@ -143,6 +146,7 @@ export function parseBattleRoute(pathname: string, definitions: readonly AreaDef
 import { getJavaScriptPostBattleEvent, getJavaScriptPreBattleEvent } from '../story/javascriptBattleEvents'
 import { getJavaScriptDeepForestStoryEvent } from '../story/javascriptDeepForestEvents'
 import { getJavaScriptFilterStoryEvent } from '../story/javascriptFilterEvents'
+import { getJavaScriptIncidentOpeningEvent } from '../story/javascriptIncidentOpeningEvents'
 import { getJavaScriptMidbossStoryEvent } from '../story/javascriptMidbossEvents'
 import { getTypeScriptPostBattleEvent, getTypeScriptPreBattleEvent } from '../story/typescriptBattleEvents'
 import type { BattleStoryEvent } from '../story/types'

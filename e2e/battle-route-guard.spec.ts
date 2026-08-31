@@ -1,9 +1,12 @@
 import { readStoredProgress } from './storedGameState'
 import { expect, test, type Page } from '@playwright/test'
+import { JS_BOSS_PREREQS, JS_COMPLETE } from './canonical-progress-fixtures'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
+
+const JS_THROUGH_21 = JS_BOSS_PREREQS.slice(0, -1)
 
 async function seed(page: Page, clearedStageIds: number[], unlockedStageIds = [7]) {
   await page.goto('/')
@@ -56,27 +59,30 @@ test('fresh saveからJavaScript Final Bossへ直URL侵入できない', async (
   await page.goto('/javascript/battle/3?seed=fresh-boss-bypass')
 
   await expect(page).toHaveURL(/\/world#battle-locked$/)
-  await expect(page.getByRole('status')).toContainText('Battle 22 / Battle 1 / Battle 2')
+  await expect(page.getByRole('status')).toContainText('Deep Forest')
+  await expect(page.getByRole('status')).toContainText('root cause')
 })
 
-test('forged unlockedStageIdsがあってもBattle 1 clearだけではBattle 2へ進めない', async ({ page }) => {
+test('forged unlockedStageIdsとJS-01 clearだけではsecond symptomへ進めない', async ({ page }) => {
   await seed(page, [1], [1, 2, 3, 7])
   await page.goto('/javascript/battle/2?seed=forged-battle-2')
 
   await expect(page).toHaveURL(/\/world#battle-locked$/)
-  await expect(page.getByRole('status')).toContainText('Deep Forest')
+  await expect(page.getByRole('status')).toContainText('Forest')
+  await expect(page.getByRole('status')).toContainText('影響範囲')
 })
 
-test('Battle 1 / 2だけclearしてもBattle 3へ進めない', async ({ page }) => {
+test('incident clear bitだけを偽装してもJavaScript Finalへ進めない', async ({ page }) => {
   await seed(page, [1, 2], [1, 2, 3, 7])
-  await page.goto('/javascript/battle/3?seed=missing-battle-22')
+  await page.goto('/javascript/battle/3?seed=missing-deep-route')
 
   await expect(page).toHaveURL(/\/world#battle-locked$/)
-  await expect(page.getByRole('status')).toContainText('Battle 22')
+  await expect(page.getByRole('status')).toContainText('Deep Forest')
+  await expect(page.getByRole('status')).toContainText('root cause')
 })
 
 test('正規prerequisiteを満たしたJavaScript Final Bossは開始できる', async ({ page }) => {
-  await seed(page, [22, 1, 2], [3])
+  await seed(page, [...JS_BOSS_PREREQS], [3])
   await page.goto('/javascript/battle/3?seed=canonical-boss&returnTo=%2Fworld')
 
   await expect(page).toHaveURL(/\/javascript\/battle\/3/)
@@ -96,8 +102,16 @@ test('未解放JavaScript Battleの直URLをWorldへ戻しprogressを変更し�
   expect(stored.progress.clearedStageIds).toEqual([])
 })
 
-test('progressionで解放済みJavaScript Battleのdeep linkは開始できる', async ({ page }) => {
+test('直前Battleのclear bitだけを偽装してもtransitive prerequisiteをbypassできない', async ({ page }) => {
   await seed(page, [21], [22])
+  await page.goto('/javascript/battle/22?seed=forged-direct')
+
+  await expect(page).toHaveURL(/\/world#battle-locked$/)
+  await expect(page.getByRole('status')).toContainText('BATTLE LOCKED')
+})
+
+test('canonical progressionでBattle 21まで完了するとBattle 22のdeep linkを開始できる', async ({ page }) => {
+  await seed(page, [...JS_THROUGH_21], [22])
   await page.goto('/javascript/battle/22?seed=unlocked-direct&returnTo=%2Fworld')
 
   await expect(page).toHaveURL(/\/javascript\/battle\/22/)
@@ -112,8 +126,8 @@ test('JavaScript未clearではTypeScript Battleへ直URL侵入できない', asy
   await expect(page.getByRole('status')).toContainText('Final Boss')
 })
 
-test('JavaScript Boss clear後はTypeScript Battle 4のdeep linkを許可する', async ({ page }) => {
-  await seed(page, [3])
+test('canonical JavaScript route完了後はTypeScript Battle 4のdeep linkを許可する', async ({ page }) => {
+  await seed(page, [...JS_COMPLETE])
   await page.goto('/typescript/battle/4?seed=unlocked-ts&returnTo=%2Fworld')
 
   await expect(page).toHaveURL(/\/typescript\/battle\/4/)

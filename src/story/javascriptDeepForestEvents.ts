@@ -6,8 +6,8 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
   16: {
     pre: {
       id: 'js-map-before',
-      label: 'DEEP FOREST LESSON 02',
-      title: '一つずつ、別の形へ変える',
+      label: 'TRACE TRANSFORMED',
+      title: '同じEnemyが別の形で渡されている',
       lines: [
         {
           speakerId: 'byte',
@@ -15,7 +15,7 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: '次は「集める」ではなく、配列の中身を一つずつ別の形へ変える。map()は元の順番を保ったまま、新しい配列を作る処理だよ。',
+          text: 'traceを追うと、Enemyそのものではなく{ enemy, hp }という小さなdataへ包み直して次へ渡している場所に出た。',
         },
         {
           speakerId: 'byte',
@@ -23,7 +23,7 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: 'PROJECTでは各Enemyを { enemy, hp } という小さなobjectへ包む。そのあとに出てくるfind()はもう知っている処理だから、まずmap()の右側だけを追ってみよう。',
+          text: 'map()は配列の各要素を一つずつ別の形へ変えて、新しい配列を作る。元の順番は保たれる。',
         },
         {
           speakerId: 'byte',
@@ -31,14 +31,14 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: '変換後のentry.hpを前から確認し、最後の.enemyで元のEnemyへ戻る。どの相手になるかは今の並びから自分で確かめてね。',
+          text: 'PROJECTでは変換後のentry.hpをfind()で前から確認し、最後の.enemyで元のEnemyへ戻る。変換前後を対応させて読もう。',
         },
       ],
     },
     post: {
       id: 'js-map-after',
-      label: 'MAP LEARNED',
-      title: '同じ数だけ、新しい形を作る',
+      label: 'TRACE SHAPE RESTORED',
+      title: '形が変わっても同じdataを追える',
       lines: [
         {
           speakerId: 'byte',
@@ -46,7 +46,7 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: 'map()は「条件に合うものだけ残す」filter()とは違って、各要素を一つずつ変換する。元が3要素なら、基本的に変換後も3要素だ。',
+          text: 'filter()が要素を絞るのに対して、map()は各要素を別の形へ変える。traceの見た目が変わっても、元のEnemyとの対応は追える。',
         },
         {
           speakerId: 'byte',
@@ -54,7 +54,7 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: '次は、配列から要素そのものを返さず、「一つでも条件に合うか」をtrue / falseで答える処理を読む。',
+          text: 'この先のsignalは「誰か」を返さず、危険なstateが一つでもあるかだけをtrue / falseで次へ渡している。',
         },
       ],
     },
@@ -62,8 +62,8 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
   17: {
     pre: {
       id: 'js-some-before',
-      label: 'DEEP FOREST LESSON 03',
-      title: '一つでもあるかだけを確かめる',
+      label: 'ALARM SIGNAL',
+      title: '一体でも危険なstateがあるか調べる',
       lines: [
         {
           speakerId: 'byte',
@@ -71,7 +71,7 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: 'some()は条件に合ったEnemyを返す処理じゃない。「一つでもある？」に対してtrueかfalseだけを返す。',
+          text: 'このalarmは特定のEnemy名を必要としていない。「条件に合うものが一つでもあるか」だけで次の処理を切り替えてる。',
         },
         {
           speakerId: 'byte',
@@ -79,7 +79,7 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: 'SIGNALでは内側のsome()を先に読む。生存Enemyの中にHP50未満が一体でもいればtrue、いなければfalseだ。',
+          text: 'some()は条件に合ったEnemyそのものではなくtrue / falseを返す。SIGNALでは生存Enemyの中にHP50未満が一体でもいればtrueになる。',
         },
         {
           speakerId: 'byte',
@@ -87,14 +87,14 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: 'そのbooleanを外側のfilter()が使っている。まずsome()の答えだけ決めてから、filter()へ戻ると読みやすい。',
+          text: 'まず内側のsome()の結果を決め、そのbooleanを外側のfilter()へ渡す順で追おう。',
         },
       ],
     },
     post: {
       id: 'js-some-after',
-      label: 'SOME LEARNED',
-      title: '結果はtrueかfalse',
+      label: 'ALARM TRACE MATCHED',
+      title: 'REAL WORLDの警告条件と一致した',
       lines: [
         {
           speakerId: 'byte',
@@ -102,7 +102,14 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: 'some()は一体でも条件を満たした時点でtrueになる。必要なのは「誰か」ではなく、「いるかどうか」なんだ。',
+          text: 'some()が見ていたのは「誰か」じゃなく「いるかどうか」。このtrue / falseが異常側の処理を動かしていた。',
+        },
+        {
+          speakerId: 'lead-ada',
+          speaker: 'LEAD ADA',
+          role: 'SENIOR ENGINEER',
+          layer: 'remote',
+          text: 'REAL WORLDのmonitorも同じbooleanで切り替わっている。CODE WORLDで追っている経路と本番ログがまた一致した。',
         },
         {
           speakerId: 'byte',
@@ -110,7 +117,7 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: '似た処理にevery()がある。今度は「一体でも」ではなく「全員が」条件を満たすかを確かめる。',
+          text: '次のbarrierは一体でも、ではなく群れ全体のstateを見ているみたいだ。',
         },
       ],
     },
@@ -118,8 +125,8 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
   18: {
     pre: {
       id: 'js-every-before',
-      label: 'DEEP FOREST LESSON 04',
-      title: '全員が当てはまるかを確かめる',
+      label: 'GROUP BARRIER',
+      title: '全員のstateで開閉するruleを読む',
       lines: [
         {
           speakerId: 'byte',
@@ -127,7 +134,7 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: 'every()も返すのはtrue / false。ただしtrueになるのは、調べた要素が全部条件を満たしたときだけ。',
+          text: 'このbarrierは一体の状態では動かない。生存Enemyの全員が条件を満たしているかを見ている。',
         },
         {
           speakerId: 'byte',
@@ -135,7 +142,7 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: 'SYNCではまず生存Enemyだけをfilter()し、その全員がHP100未満かをevery()で確認する。some()との違いは「一体でも」か「全員」かだ。',
+          text: 'every()も返すのはtrue / false。ただし全部の要素が条件を満たしたときだけtrueになる。some()の「一つでも」と分けて読もう。',
         },
         {
           speakerId: 'byte',
@@ -143,14 +150,14 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: '今回も内側のevery()からtrue / falseを決め、そのあと外側のfilter()へ戻ろう。今の盤面の答え自体は自分で読んでみて。',
+          text: 'SYNCでは生存Enemyをfilter()してから、その全員がHP100未満かをevery()で確認する。今の盤面のbooleanは自分で決めよう。',
         },
       ],
     },
     post: {
       id: 'js-every-after',
-      label: 'EVERY LEARNED',
-      title: 'some()とevery()を分けて読める',
+      label: 'BARRIER OPEN',
+      title: '一つでも、と全員を区別できた',
       lines: [
         {
           speakerId: 'byte',
@@ -158,7 +165,7 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: 'some()は一つでもtrueならtrue。every()は全部trueのときだけtrue。この二つは返す値がbooleanだと分かれば整理しやすい。',
+          text: 'some()は一つでもtrueならtrue、every()は全部trueならtrue。群れ全体で動くbarrierのruleを読めた。',
         },
         {
           speakerId: 'byte',
@@ -166,7 +173,7 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: '森の奥にもう一体、大きな守り人がいる。そこでは新しいsyntaxを増やさず、filter() / map() / some() / every()だけで突破しよう。',
+          text: 'barrierの先でRoot Guardianがtraceのjunctionを押さえてる。新しいsyntaxは見えない。今までのdata flowだけで越えられる。',
         },
       ],
     },
@@ -174,8 +181,8 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
   19: {
     pre: {
       id: 'js-deep-midboss-before',
-      label: 'DEEP FOREST MID-BOSS',
-      title: '新しい記号なしで読み切る',
+      label: 'ROOT TRACE BLOCKED',
+      title: 'Root Guardianのjunctionを突破する',
       lines: [
         {
           speakerId: 'byte',
@@ -183,7 +190,7 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: 'Root Guardianだ。でも新しいsyntaxはない。filter()は集める、map()は変える、some() / every()はtrue / falseを返す。',
+          text: 'Root Guardianが複数のtraceを一か所で止めてる。ここを越えれば、二つのincidentがどこへ集約されるか見えるはずだ。',
         },
         {
           speakerId: 'byte',
@@ -191,14 +198,14 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: '長く見えたら、内側の処理から一つずつ結果を作ろう。今までの読み方だけで十分戦える。',
+          text: '新しいsyntaxはない。filter()は集める、map()は変える、some() / every()はbooleanを返す。内側から結果を作ろう。',
         },
       ],
     },
     post: {
       id: 'js-deep-midboss-after',
-      label: 'DEEPEST PATH OPEN',
-      title: '森の最深部へ',
+      label: 'ROOT TRACE OPEN',
+      title: '二つのincidentが同じ最深部へ流れた',
       lines: [
         {
           speakerId: 'byte',
@@ -206,15 +213,14 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: '第二の守り人を越えた。ここから先は、新しい処理を一つずつ足しながら、複数行のcodeを途中結果へ分けて読む。',
+          text: 'junctionが開いた。草原の一体targetとDeep Forest入口の複数target、両方のtraceがこの先へ続いてる。',
         },
         {
-          speakerId: 'byte',
-
-          speaker: 'BYTE',
-          role: 'DEBUGGER',
-          layer: 'code-world',
-          text: 'まずは配列を並べ替えるsort()。並べ替えたあと、先頭の一つをどう取るかを見よう。',
+          speakerId: 'lead-ada',
+          speaker: 'LEAD ADA',
+          role: 'SENIOR ENGINEER',
+          layer: 'remote',
+          text: 'こちらでも同じmodule群へ収束した。まだCore断定はしない。最深部の選択処理まで読んで最後の接続を確認しよう。',
         },
       ],
     },
@@ -222,8 +228,8 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
   20: {
     pre: {
       id: 'js-sort-before',
-      label: 'DEEPEST LESSON 01',
-      title: '並べ替えてから先頭を見る',
+      label: 'TARGET PRIORITY',
+      title: '候補を並べ替えて先頭を選ぶ',
       lines: [
         {
           speakerId: 'byte',
@@ -231,7 +237,7 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: 'sort()は配列の順番を並べ替える。ORDERではa.hp - b.hpを使うので、HPが小さいものほど前へ来る。',
+          text: '最深部では候補を見つけた順に使わず、HPで並べ替えてからtargetを選んでいる。ここで順番が変わる。',
         },
         {
           speakerId: 'byte',
@@ -239,7 +245,7 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: '複数行を一気に見なくていい。1行目でliving、2行目でbyHpを作り、最後の[0]でbyHpの先頭を取る。',
+          text: 'sort((a, b) => a.hp - b.hp)ならHPが小さいものほど前へ来る。1行目でliving、2行目でbyHpを作り、最後の[0]を見る。',
         },
         {
           speakerId: 'byte',
@@ -247,14 +253,14 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: '途中の配列はCODE DATAでも確認できる。どのEnemyが先頭になるかは、現在HPから自分で追おう。',
+          text: '途中の配列はCODE DATAでも確認できる。現在HPから並び替え後の先頭を追おう。',
         },
       ],
     },
     post: {
       id: 'js-sort-after',
-      label: 'SORT LEARNED',
-      title: '途中結果へ分ければ長いcodeも読める',
+      label: 'PRIORITY TRACE FOUND',
+      title: '途中結果を追えば選択順も読める',
       lines: [
         {
           speakerId: 'byte',
@@ -262,7 +268,7 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: 'living → byHp → byHp[0]。変数ごとに現在値を置けば、複数行でも一行ずつ追える。',
+          text: 'living → byHp → byHp[0]。変数ごとの現在値を置けば、複数行でもtarget決定まで追えた。',
         },
         {
           speakerId: 'byte',
@@ -270,7 +276,7 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: '次は「値がないかもしれない」ときに安全に読むための?.と??を足す。sort()自体の読み方は同じだ。',
+          text: '次のtraceにはstatsが欠けたrecordが混じってる。値がないときに処理がどう進むか確認しよう。',
         },
       ],
     },
@@ -278,8 +284,8 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
   21: {
     pre: {
       id: 'js-safe-before',
-      label: 'DEEPEST LESSON 02',
-      title: '値がなくても途中で壊さない',
+      label: 'MISSING DATA TRACE',
+      title: '値がないrecordを含む経路を追う',
       lines: [
         {
           speakerId: 'byte',
@@ -287,7 +293,7 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: '?.は左側がnullやundefinedなら、その先を無理に読まずundefinedで止まる。これをoptional chainingと呼ぶ。',
+          text: 'REAL WORLDのログにstatsがないrecordが混ざってた。ここで無理にstats.hpまで読むと、経路の意味を取り違える。',
         },
         {
           speakerId: 'byte',
@@ -295,7 +301,7 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: 'SAFE PATHではmap()でEnemyをnestedなstats.hpへ包む。stats?.hpで安全に読み、値がなければ?? Infinityで代わりの値を使う。',
+          text: '?.は左がnullやundefinedならundefinedで止まり、??は左がnullかundefinedなら代わりの値を使う。SAFE PATHでは?? Infinityになる。',
         },
         {
           speakerId: 'byte',
@@ -303,14 +309,14 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: '新しいのはnestedな値を安全に読む部分だけ。livingを作る → wrappedへ包む → sort()して先頭の.enemyへ戻る、の順に追おう。',
+          text: 'living → wrapped → sort() → 先頭の.enemyという流れは同じ。nestedな値の読み方だけ追加して追おう。',
         },
       ],
     },
     post: {
       id: 'js-safe-after',
-      label: 'SAFE READ LEARNED',
-      title: '?.と??を一組で読める',
+      label: 'MISSING DATA EXPLAINED',
+      title: '本番ログの欠け方まで一致した',
       lines: [
         {
           speakerId: 'byte',
@@ -318,15 +324,14 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: 'stats?.hpで安全に止まり、??で必要なら代わりの値を使う。この二段階を見つければ、nestedなdataを読むcodeも追いやすい。',
+          text: 'stats?.hpで安全に止まり、??で代わりの値を入れる。欠けたrecordがあっても最終targetまで追えた。',
         },
         {
-          speakerId: 'byte',
-
-          speaker: 'BYTE',
-          role: 'DEBUGGER',
-          layer: 'code-world',
-          text: '最深部の最後はreduce()。配列の要素を一体ずつ比べ、途中結果を一つへまとめていく。',
+          speakerId: 'lead-ada',
+          speaker: 'LEAD ADA',
+          role: 'SENIOR ENGINEER',
+          layer: 'remote',
+          text: 'production logのnull / undefined branchと一致した。残るtraceは一つ。複数候補を最後に一つへ集約する処理だ。',
         },
       ],
     },
@@ -334,8 +339,8 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
   22: {
     pre: {
       id: 'js-reduce-before',
-      label: 'DEEPEST LESSON 03',
-      title: '途中結果を一つへまとめる',
+      label: 'FINAL TRACE',
+      title: '複数の候補が最後に一つへ集約される',
       lines: [
         {
           speakerId: 'byte',
@@ -343,7 +348,7 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: 'reduce()は配列を左から順に見ながら、途中結果を一つだけ持って進む。REDUCE FOCUSではその途中結果がbestだ。',
+          text: 'ここがDeep Forest最後のtraceだ。複数のEnemyを左から見ながら、途中結果bestを一つだけ持って進んでいる。',
         },
         {
           speakerId: 'byte',
@@ -351,7 +356,7 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: 'bestと次のenemyのattackDamageを比べ、? : で大きい方を次のbestとして残す。? : は条件がtrueなら左、falseなら右を返す小さな分岐だよ。',
+          text: 'reduce()でbestと次のenemyのattackDamageを比べ、? : で大きい方を次のbestに残す。最後に何が残るかを一体ずつ追おう。',
         },
         {
           speakerId: 'byte',
@@ -359,14 +364,14 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: '一体ずつ比較して最後まで進んだとき、bestに何が残るかを追おう。現在盤面の答えは自分で決めてね。',
+          text: 'ここを抜ければ、この集約結果を受け取っている先が見える。現在盤面の答えはcodeから自分で決めよう。',
         },
       ],
     },
     post: {
       id: 'js-reduce-after',
-      label: 'DEEP FOREST COMPLETE',
-      title: 'JavaScriptの基礎を一通り読み切った',
+      label: 'ROOT CAUSE LOCATED',
+      title: 'traceはCode Coreへ直結していた',
       lines: [
         {
           speakerId: 'byte',
@@ -374,7 +379,14 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: 'comparison、find()、&& / ||、filter()、map()、some() / every()、sort()、?. / ??、reduce()。森で必要な読み方は揃った。',
+          text: 'つながった。草原の最初の症状、Deep Forest入口の二つ目の症状、その後の変換や判定が全部この集約を通ってCode Coreへ入ってる。',
+        },
+        {
+          speakerId: 'lead-ada',
+          speaker: 'LEAD ADA',
+          role: 'SENIOR ENGINEER',
+          layer: 'remote',
+          text: 'REAL WORLDのtraceも同じ場所で終端した。Code Coreをroot causeとして確定する。ここまでの調査結果でFinalへ進める。',
         },
         {
           speakerId: 'byte',
@@ -382,15 +394,7 @@ const events: Record<number, { pre: BattleStoryEvent; post: BattleStoryEvent }> 
           speaker: 'BYTE',
           role: 'DEBUGGER',
           layer: 'code-world',
-          text: 'でも最初に起きていた「技が違う相手へ飛ぶ異変」はまだ残っている。Forest東端から草原へ戻り、OverworldのEncounterで実際の異変を二戦追おう。',
-        },
-        {
-          speakerId: 'byte',
-
-          speaker: 'BYTE',
-          role: 'DEBUGGER',
-          layer: 'code-world',
-          text: '二つの異変を確認できたら、北西のCode Coreへ向かう。そこがJavaScript地方のFinal Bossだ。',
+          text: 'Deep Forestの西口がCore手前へ直結してる。このまま西へ抜けよう。今まで来た道を戻る必要はない。',
         },
       ],
     },

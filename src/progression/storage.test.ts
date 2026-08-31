@@ -12,6 +12,12 @@ const emptyEconomy = {
   gold: 0,
   inventory: { patchKit: 0 },
 }
+const completedJavaScriptStoryIds = [
+  3, 1, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22,
+]
+const unlockedAfterJavaScriptComplete = [
+  1, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22, 3, 4,
+]
 
 describe('player progress storage', () => {
   it('v4 serialize / restore時にstage unlock cacheをcanonical graphへ正規化する', () => {
@@ -20,6 +26,7 @@ describe('player progress storage', () => {
       exp: 520,
       gold: 75,
       inventory: { patchKit: 2 },
+      // pre-#261 shapeを意図的に渡し、restore時のmigrationまで確認する。
       clearedStageIds: [7, 8, 9],
       clearedAreaIds: [],
       completedSideQuestIds: ['javascript-second-pass'],
@@ -31,10 +38,13 @@ describe('player progress storage', () => {
     const parsed = JSON.parse(raw)
 
     expect(parsed.version).toBe(PLAYER_PROGRESS_SCHEMA_VERSION)
-    expect(parsed.progress.unlockedStageIds).toEqual([7, 8, 9, 10])
-    expect(restorePlayerProgress(raw).unlockedStageIds).toEqual([7, 8, 9, 10])
-    expect(restorePlayerProgress(raw).gold).toBe(75)
-    expect(restorePlayerProgress(raw).inventory.patchKit).toBe(2)
+    expect(parsed.progress.unlockedStageIds).toEqual([1, 7, 8, 9])
+
+    const restored = restorePlayerProgress(raw)
+    expect(restored.clearedStageIds).toEqual([7, 8, 9, 1])
+    expect(restored.unlockedStageIds).toEqual([1, 7, 8, 9, 10])
+    expect(restored.gold).toBe(75)
+    expect(restored.inventory.patchKit).toBe(2)
   })
 
   it('schema v1をv4へmigrationし、不正なlegacy unlock bitをcanonical graphで除去する', () => {
@@ -54,30 +64,68 @@ describe('player progress storage', () => {
       clearedStageIds: [1],
       clearedAreaIds: [],
       completedSideQuestIds: [],
-      unlockedStageIds: [7, 1],
+      unlockedStageIds: [1, 7],
       unlockedSkillIds: [...initialSkills, 'viper'],
     })
   })
 
-  it('legacy saveでBattle 22 / 1 clear済みならBattle 2をcanonicalにderiveする', () => {
+  it('旧routeでForestまで進んだsaveは最初のincidentを通過済みとして補完する', () => {
+    const raw = JSON.stringify({
+      version: 3,
+      progress: {
+        exp: 220,
+        clearedStageIds: [7, 8, 9, 10, 11],
+        clearedAreaIds: [],
+        completedSideQuestIds: [],
+        unlockedStageIds: [12],
+        unlockedSkillIds: ['trace', 'pulse', 'nova', 'link', 'fork'],
+      },
+    })
+
+    const restored = restorePlayerProgress(raw)
+    expect(restored.clearedStageIds).toEqual([7, 8, 9, 10, 11, 1])
+    expect(restored.unlockedStageIds).toContain(12)
+  })
+
+  it('旧routeでDeep Forestまで進んだsaveは両incidentを通過済みとして補完する', () => {
     const raw = JSON.stringify({
       version: 3,
       progress: {
         exp: 320,
-        clearedStageIds: [22, 1],
+        clearedStageIds: [7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
         clearedAreaIds: [],
         completedSideQuestIds: ['javascript-second-pass'],
-        unlockedStageIds: [3],
+        unlockedStageIds: [17],
         unlockedSkillIds: ['trace', 'pulse', 'nova'],
       },
     })
 
     const restored = restorePlayerProgress(raw)
-    expect(restored.unlockedStageIds).toEqual([7, 22, 1, 2])
+    expect(restored.clearedStageIds).toEqual([7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 1, 2])
+    expect(restored.unlockedStageIds).toContain(17)
     expect(restored.completedSideQuestIds).toEqual(['javascript-second-pass'])
   })
 
-  it('schema v1でBoss撃破済みならJavaScript Area CLEARを引き継ぐ', () => {
+  it('旧routeでBattle 22まで進んだsaveはFinalへ戻り道なしで進めるよう両incidentを補完する', () => {
+    const raw = JSON.stringify({
+      version: 3,
+      progress: {
+        exp: 620,
+        clearedStageIds: [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22],
+        clearedAreaIds: [],
+        completedSideQuestIds: [],
+        unlockedStageIds: [1],
+        unlockedSkillIds: ['trace', 'pulse', 'nova'],
+      },
+    })
+
+    const restored = restorePlayerProgress(raw)
+    expect(restored.clearedStageIds).toContain(1)
+    expect(restored.clearedStageIds).toContain(2)
+    expect(restored.unlockedStageIds).toContain(3)
+  })
+
+  it('schema v1でBoss撃破済みならJavaScript Area CLEARと現行story全体を完了済みとして引き継ぐ', () => {
     const raw = JSON.stringify({
       version: 1,
       progress: {
@@ -90,12 +138,13 @@ describe('player progress storage', () => {
 
     const restored = restorePlayerProgress(raw)
     expect(restored.clearedAreaIds).toEqual(['javascript'])
+    expect(restored.clearedStageIds).toEqual(completedJavaScriptStoryIds)
     expect(restored.gold).toBe(0)
     expect(restored.inventory.patchKit).toBe(0)
-    expect(restored.unlockedStageIds).toEqual([7, 3, 4])
+    expect(restored.unlockedStageIds).toEqual(unlockedAfterJavaScriptComplete)
   })
 
-  it('schema v2 / v3のArea・Side Quest進行を維持する', () => {
+  it('schema v2 / v3のArea・Side Quest進行を維持し、Boss clear済みなら現行storyを補完する', () => {
     const v2 = restorePlayerProgress(JSON.stringify({
       version: 2,
       progress: {
@@ -108,7 +157,8 @@ describe('player progress storage', () => {
     }))
     expect(v2.clearedAreaIds).toEqual(['javascript'])
     expect(v2.completedSideQuestIds).toEqual([])
-    expect(v2.unlockedStageIds).toEqual([7, 3, 4])
+    expect(v2.clearedStageIds).toEqual(completedJavaScriptStoryIds)
+    expect(v2.unlockedStageIds).toEqual(unlockedAfterJavaScriptComplete)
 
     const v3 = restorePlayerProgress(JSON.stringify({
       version: 3,
@@ -122,7 +172,8 @@ describe('player progress storage', () => {
       },
     }))
     expect(v3.completedSideQuestIds).toEqual(['javascript-second-pass'])
-    expect(v3.unlockedStageIds).toEqual([7, 3, 4])
+    expect(v3.clearedStageIds).toEqual(completedJavaScriptStoryIds)
+    expect(v3.unlockedStageIds).toEqual(unlockedAfterJavaScriptComplete)
   })
 
   it('保存データがない場合は初期状態へfallbackする', () => {
@@ -173,7 +224,7 @@ describe('player progress storage', () => {
 
     expect(migrateStoredPlayerProgress(stored)).toEqual({
       ...stored.progress,
-      unlockedStageIds: [7, 1],
+      unlockedStageIds: [1, 7],
       unlockedSkillIds: [...initialSkills, 'viper'],
     })
   })

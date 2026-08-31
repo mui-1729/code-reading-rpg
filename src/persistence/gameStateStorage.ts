@@ -17,6 +17,7 @@ import {
   type RpgState,
 } from '../rpg/state'
 import { OVERWORLD_MAP_ID, WORLD_MAP_STARTS, WORLD_PORTALS } from '../world/worldMap'
+import { isWorldPortalRequirementSatisfied } from '../world/worldPortalAccess'
 
 export const GAME_STATE_STORAGE_KEY = 'code-reading-rpg:game-state'
 export const GAME_STATE_BACKUP_STORAGE_KEY = 'code-reading-rpg:game-state-backup'
@@ -90,8 +91,7 @@ export function normalizeRpgStateForProgress(
       if (
         !reachable.has(portal.fromMapId) ||
         reachable.has(portal.toMapId) ||
-        (portal.requiredClearedStageId !== undefined &&
-          !progress.clearedStageIds.includes(portal.requiredClearedStageId))
+        !isWorldPortalRequirementSatisfied(portal.requiredClearedStageId, progress.clearedStageIds)
       )
         continue
       reachable.add(portal.toMapId)
@@ -120,11 +120,13 @@ export function serializeGameStateSnapshot(snapshot: GameStateSnapshot): string 
     revision: snapshot.revision,
     progress: storedEnvelope(serializePlayerProgress(snapshot.progress)),
     rpg: storedEnvelope(serializeRpgState(snapshot.rpgState)),
-    battleSession: snapshot.battleSession ? {
-      identity: snapshot.battleSession.identity,
-      progress: storedEnvelope(serializePlayerProgress(snapshot.battleSession.progress)),
-      rpg: storedEnvelope(serializeRpgState(snapshot.battleSession.rpgState)),
-    } : null,
+    battleSession: snapshot.battleSession
+      ? {
+          identity: snapshot.battleSession.identity,
+          progress: storedEnvelope(serializePlayerProgress(snapshot.battleSession.progress)),
+          rpg: storedEnvelope(serializeRpgState(snapshot.battleSession.rpgState)),
+        }
+      : null,
   }
   return JSON.stringify(stored)
 }
@@ -158,12 +160,17 @@ export function parseGameStateSnapshot(raw: string | null): GameStateSnapshot | 
     if (!isRecord(session) || !isRecord(session.identity)) return null
     const identity = session.identity
     if (
-      typeof identity.id !== 'string' || identity.id.length === 0 ||
-      typeof identity.areaId !== 'string' || identity.areaId.length === 0 ||
-      !Number.isSafeInteger(identity.battleId) || (identity.battleId as number) <= 0 ||
-      typeof identity.seed !== 'string' || identity.seed.length === 0 ||
+      typeof identity.id !== 'string' ||
+      identity.id.length === 0 ||
+      typeof identity.areaId !== 'string' ||
+      identity.areaId.length === 0 ||
+      !Number.isSafeInteger(identity.battleId) ||
+      (identity.battleId as number) <= 0 ||
+      typeof identity.seed !== 'string' ||
+      identity.seed.length === 0 ||
       (identity.returnTo !== undefined && typeof identity.returnTo !== 'string')
-    ) return null
+    )
+      return null
     const startProgress = migrateStoredPlayerProgress(session.progress)
     if (!startProgress || !isCompleteStoredRpg(session.rpg)) return null
     const startRpg = normalizeRpgStateForProgress(

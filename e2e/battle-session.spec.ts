@@ -1,5 +1,4 @@
 import { expect, test, type Page } from '@playwright/test'
-import { JS_BATTLE_1_PREREQS } from './canonical-progress-fixtures'
 import { readStoredGameState } from './storedGameState'
 
 async function enterEncounter(page: Page, beforeEncounter?: () => Promise<void>) {
@@ -19,11 +18,14 @@ async function enterEncounter(page: Page, beforeEncounter?: () => Promise<void>)
         equipment: { weapon: 'training-blade', armor: 'traveler-coat', accessory: null },
         ownedEquipmentIds: ['training-blade', 'traveler-coat'], partyMemberIds: [],
         worldMapId: 'overworld', worldPosition: { x: 10, y: 10 },
-        stepsSinceEncounter: 4, encounterCount: 4, currentHp: 40, openedTreasureIds: [],
+        stepsSinceEncounter: 4, encounterCount: 12, currentHp: 40, openedTreasureIds: [],
       },
     }))
     localStorage.setItem('code-reading-rpg:tutorial', JSON.stringify({ version: 1, status: 'skipped', phase: 'battle' }))
-  }, [...JS_BATTLE_1_PREREQS])
+  // Overworld replay encounters require both incident clear bits. The complete
+  // route bit enables post-arc Overworld replay, while Battle 7 authorizes the
+  // later canonical Battle 8 route switch.
+  }, [1, 2, 3, 7])
   await page.goto('/world')
   await expect(page.getByLabel('Open world map')).toBeVisible()
   await beforeEncounter?.()

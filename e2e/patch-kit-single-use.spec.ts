@@ -1,12 +1,12 @@
 import { readStoredProgress } from './storedGameState'
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { JS_BATTLE_1_PREREQS } from './canonical-progress-fixtures'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
-async function seedBattle(page: import('@playwright/test').Page) {
+async function seedBattle(page: Page) {
   await page.goto('/')
   await page.evaluate(
     ({ progressKey, rpgKey, tutorialKey, clearedStageIds }) => {
@@ -63,13 +63,21 @@ async function seedBattle(page: import('@playwright/test').Page) {
   )
 }
 
-async function storedProgress(page: import('@playwright/test').Page) {
+async function storedProgress(page: Page) {
   return readStoredProgress(page)
+}
+
+async function dismissStory(page: Page) {
+  const story = page.locator('.battle-story-window')
+  await expect(story).toBeVisible()
+  await story.getByRole('button', { name: 'SKIP' }).click()
+  await expect(story).toBeHidden()
 }
 
 test('PATCH KITは在庫2個でも同一Battleで見える操作1つ・使用1回に制限する', async ({ page }) => {
   await seedBattle(page)
   await page.goto('/javascript/battle/1?seed=patch-kit-single-use&returnTo=%2Fworld')
+  await dismissStory(page)
 
   const item = page.locator('.battle-item-row[data-item-id="patch-kit"]')
   const patchKit = item.locator('.patch-kit-action')
@@ -90,6 +98,7 @@ test('PATCH KITは在庫2個でも同一Battleで見える操作1つ・使用1�
   await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
 
   await page.goto('/javascript/battle/1?seed=patch-kit-next-battle&returnTo=%2Fworld')
+  await dismissStory(page)
   const nextItem = page.locator('.battle-item-row[data-item-id="patch-kit"]')
   const nextPatchKit = nextItem.locator('.patch-kit-action')
   await expect(nextItem).toHaveAttribute('data-item-state', 'available')

@@ -8,6 +8,12 @@ export const PLAYER_PROGRESS_SCHEMA_VERSION = 4
 const V1_JAVASCRIPT_BOSS_STAGE_ID = 3
 const V1_JAVASCRIPT_AREA_ID = 'javascript'
 
+const TRAINING_OR_LATER_STAGE_IDS = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 3]
+const DEEP_FOREST_OR_LATER_STAGE_IDS = [15, 16, 17, 18, 19, 20, 21, 22, 3]
+const COMPLETE_JAVASCRIPT_STORY_IDS = [
+  1, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22, 3,
+]
+
 type LegacyProgressV1 = {
   exp: number
   clearedStageIds: number[]
@@ -59,6 +65,32 @@ const mergeUnique = <T,>(baseline: readonly T[], stored: readonly T[]): T[] => [
   ...new Set([...baseline, ...stored]),
 ]
 
+/**
+ * Issue #261 places the first live incident before Village training and the
+ * second incident before Deep Forest investigation. Saves created by older
+ * routes may already be beyond those narrative beats without their legacy
+ * numeric IDs in clearedStageIds. Backfill only beats the player has logically
+ * passed so an existing save is never forced backwards through cleared regions.
+ *
+ * Boss 3 was historically sufficient to mark JavaScript complete. If present,
+ * normalize to the complete current arc so TypeScript remains reachable.
+ */
+function normalizeIncidentStoryProgress(clearedStageIds: readonly number[]): number[] {
+  if (clearedStageIds.includes(V1_JAVASCRIPT_BOSS_STAGE_ID)) {
+    return mergeUnique(clearedStageIds, COMPLETE_JAVASCRIPT_STORY_IDS)
+  }
+
+  const normalized = [...clearedStageIds]
+  const hasAny = (ids: readonly number[]) => ids.some((id) => normalized.includes(id))
+
+  // Older saves could begin at Training 7. Once any training-or-later content
+  // is cleared, treat the newly inserted opening observation as already passed.
+  if (hasAny(TRAINING_OR_LATER_STAGE_IDS) && !normalized.includes(1)) normalized.push(1)
+  if (hasAny(DEEP_FOREST_OR_LATER_STAGE_IDS) && !normalized.includes(2)) normalized.push(2)
+
+  return normalized
+}
+
 function getDerivedForestSkillUnlocks(clearedStageIds: readonly number[]): string[] {
   const skillIds: string[] = []
   if (clearedStageIds.includes(10)) skillIds.push('link')
@@ -82,7 +114,7 @@ function parseCommonProgressFields(value: unknown) {
   if (!isStringIdArray(value.unlockedSkillIds)) return null
 
   const baseline = createInitialPlayerProgress()
-  const clearedStageIds = [...value.clearedStageIds]
+  const clearedStageIds = normalizeIncidentStoryProgress(value.clearedStageIds)
   const derivedSkillUnlocks = getDerivedForestSkillUnlocks(clearedStageIds)
 
   return {

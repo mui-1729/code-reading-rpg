@@ -38,66 +38,111 @@ REAL WORLDでは新人エンジニアとしてproblemを受けるが、technical
 - Overworld 40 × 28 + camera 11 × 9
 - `worldMapId + local worldPosition`のmulti-map model
 - `GREENFIELD VILLAGE` 21 × 15
-- `JAVASCRIPT FOREST` 31 × 21
-- `JAVASCRIPT DEEP FOREST` 31 × 21
+- `JAVASCRIPT FOREST` 31 × 27
+- `JAVASCRIPT DEEP FOREST` 31 × 27
 - Overworld ↔ Village / Forest、Forest ↔ Deep Forest transition
 - VillageはRandom Encounterなし
+- Opening直後にfirst live incidentを体験
+- first incident clear後にVillageへ入り、読めなかった`hp` / `name` / `find()`を確認
+- Village preparation完了後にForestを解放
 - Forest / Deep Forestはfixed-firstで新conceptを導入し、clear済みLessonだけをRandomで反復
+- second live incidentをForestのimpact-range調査後、Deep Forest入口で固定体験
 - MID BOSS 13 / second MID BOSS 19
+- Battle 22後はDeep Forest西口からCode Core手前へ直接進行
 - JavaScript Final Boss = existing Battle 3
 - World Objective / BYTE guidance
 - persistent HP / Treasure / Shop / paid Inn
 - BYTE party / follower
 - `PlayerProgress v4` / `RpgState v5` / unified revision snapshot
+- semantic progression key + transitive prerequisite validation
 - old save migration / derived progression normalization
+- player-facing Story番号はJavaScript `JS-01〜JS-19`、TypeScript `TS-01〜TS-03`
 
-### JavaScript learning route — completed P0
+### JavaScript incident-driven route — completed P0
 
 ```text
-GREENFIELD VILLAGE
-7: enemy.hp + < / >
-8: enemy.name + ===
-9: enemies + find()
+OPENING INCIDENT
 ↓
-JAVASCRIPT FOREST
-10: find() + &&
-11: find() + ||
-12: comparison / find() / && / || combined
-13: MID BOSS — new syntaxなし
-14: find() vs filter()
+JS-01 LIVE INCIDENT
+最初のtarget異常を実際のstateで体験
 ↓
-JAVASCRIPT DEEP FOREST
-15: filter() condition repetition
-16: map()
-17: some()
-18: every()
-19: second MID BOSS — new syntaxなし
-20: sort() + [0] + intermediate value
-21: nested data + ?. + ??
-22: reduce() / aggregate
+GREENFIELD VILLAGE — 「さっき読めなかった部分」を確認
+JS-02: enemy.hp + < / >
+JS-03: enemy.name + ===
+JS-04: enemies + find()
 ↓
-OVERWORLD FINAL INCIDENT
-1 → 2
+JAVASCRIPT FOREST — 同じtraceを追う
+JS-05: find() + &&
+JS-06: find() + ||
+JS-07: comparison / find() / && / || combined
+JS-08: MID BOSS — new syntaxなし
+JS-09: find() vs filter() / impact range
 ↓
-CODE CORE FINAL BOSS
-3
+JS-10 SECOND SYMPTOM
+複数targetへ広がった二つ目の症状を確認
+↓
+JAVASCRIPT DEEP FOREST — shared traceをroot causeへ追う
+JS-11: filter() condition repetition
+JS-12: map()
+JS-13: some()
+JS-14: every()
+JS-15: second MID BOSS — new syntaxなし
+JS-16: sort() + [0] + intermediate value
+JS-17: nested data + ?. + ??
+JS-18: reduce() / aggregate
+↓
+DEEP FOREST WEST EXIT
+↓
+JS-19 CODE CORE FINAL BOSS
 ↓
 JavaScript Area CLEAR / REAL WORLD RETURN
 ```
 
+内部互換用numeric IDのStory対応は次のとおり。
+
+```text
+JS-01  -> 1
+JS-02  -> 7
+JS-03  -> 8
+JS-04  -> 9
+JS-05  -> 10
+JS-06  -> 11
+JS-07  -> 12
+JS-08  -> 13
+JS-09  -> 14
+JS-10  -> 2
+JS-11  -> 15
+JS-12  -> 16
+JS-13  -> 17
+JS-14  -> 18
+JS-15  -> 19
+JS-16  -> 20
+JS-17  -> 21
+JS-18  -> 22
+JS-19  -> 3
+```
+
 実装原則:
 
+- numeric `battleId`はsave / URL互換のstable identifierでありStory chapter番号にしない
+- Story順はsemantic progression keyで表現する
+- player-facing番号はarea内Story順から導出し、legacy IDをそのまま見せない
+- **incidentを先に体験し、必要性を知ってから学ぶ**
+- syntaxを学ぶために冒険するのではなく、incidentのtraceを追うために必要なcodeを読む
 - 新conceptはRandomより先にfixed Lessonで導入
 - Story / CODE HELPは読み方を教えるがcorrect targetは公開しない
 - `map()` / `some()` / `every()`を一度にまとめず別Battleで導入
 - second MID BOSS 19は既習内容だけで理解確認
 - `sort()`以降はmultilineとintermediate valueを段階導入
 - Battle 21は`map()`でnestedな`stats.hp`へ変換し、`stats?.hp ?? Infinity`を読む
-- Battle 22前はexisting Battle 1 / 2とFinal Boss 3を先出ししない
-- Boss 3は22 + 1 + 2 clear後だけ開始可能
+- first incidentはTraining後に再発させない。最初に一度体験し、その結果をVillageへ持ち込む
+- ForestはTraining 9 clear後に解放する
+- Battle 2は14後・Deep Forest lesson前に置く
+- Boss 3は正規incident routeとBattle 22までのtransitive prerequisiteを満たした後だけ開始可能
 - Boss 3 clear時だけJavaScript Area CLEAR
 - display codeを`eval()`せずsafe `TargetRule`へ写す
-- PlayerProgress v4を維持し、RpgState v5で未使用Party Equipmentを整理
+- PlayerProgress v4を維持して旧saveへ必要なincident beatをbackfillし、RpgState v5で未使用Party Equipmentを整理
+- Story reorderだけを理由にEconomy budgetを変えない
 
 ### Battle / learning infrastructure
 
@@ -159,6 +204,8 @@ JavaScript自然地域の色違いにしない。
 
 ### Beginner-first Story
 
+JavaScriptと同じく、**現象や困りごとを先に体験してから必要な型情報へ入る**。
+
 最初から、
 
 > API契約が壊れた
@@ -172,7 +219,8 @@ JavaScript自然地域の色違いにしない。
 候補学習順:
 
 ```text
-value / shape
+現象を体験
+→ value / shape
 → type annotation
 → union
 → optional property
@@ -208,7 +256,8 @@ visual identity:
 learning candidate:
 
 ```text
-table / row / column
+異常な検索結果を先に見る
+→ table / row / column
 → SELECT
 → WHERE
 → AND / OR
@@ -221,7 +270,8 @@ table / row / column
 JavaScript / TypeScriptと同じく、
 
 ```text
-普通の言葉
+現象
+→ 普通の言葉
 → 意味
 → 小さいquery
 → 正式名称
@@ -231,6 +281,8 @@ JavaScript / TypeScriptと同じく、
 の順で導入する。
 
 Database Battleでも「queryを書く」より先に「既存queryを読んで何が返るか」をgame decisionにする。
+
+Database編の追加時も、JS / TSのlegacy numeric IDを振り直さず、独立したsemantic progressionとplayer-facing番号系列を追加する。
 
 ---
 
@@ -291,3 +343,4 @@ Cloudflare Production
 - JavaScript地方への追加concept詰め込み
 - gameplay変更と#196 refactorの同時実施
 - JavaScriptだけで遺跡 / 地下 / 城塞を使い切ること
+- numeric legacy Battle IDをchapter番号として再利用すること

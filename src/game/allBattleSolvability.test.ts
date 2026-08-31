@@ -13,8 +13,11 @@ const requiredBattle = (battleId: number, seed: string) => {
 }
 
 describe('all battle solvability regression', () => {
-  it('Battle 1〜22の全検証seedで選択semantic variantに初手の有効targetがある', () => {
-    for (const battleId of battleIds) {
+  // Keep every seed, but give each Battle its own assertion report and time budget.
+  // A single 4,400-case test can exceed the default timeout during parallel CI.
+  it.each(battleIds)(
+    'Battle %iの全検証seedで選択semantic variantに初手の有効targetがある',
+    (battleId) => {
       for (const seed of seeds) {
         const battle = requiredBattle(battleId, seed)
         const skillCards = getSkillCardsForBattle(battle, seed)
@@ -23,11 +26,12 @@ describe('all battle solvability regression', () => {
           `Battle ${battleId} seed ${seed} has no valid initial target`,
         ).toBe(true)
       }
-    }
-  })
+    },
+  )
 
-  it('Battle 1〜22の全検証seedで選択semantic variantのまま勝ち筋がある', () => {
-    for (const battleId of battleIds) {
+  it.each(battleIds)(
+    'Battle %iの全検証seedで選択semantic variantのまま勝ち筋がある',
+    (battleId) => {
       for (const seed of seeds) {
         const battle = requiredBattle(battleId, seed)
         const skillCards = getSkillCardsForBattle(battle, seed)
@@ -36,6 +40,6 @@ describe('all battle solvability regression', () => {
           `Battle ${battleId} seed ${seed} is not solvable`,
         ).toBe(true)
       }
-    }
-  })
+    },
+  )
 })

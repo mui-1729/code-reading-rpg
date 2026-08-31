@@ -12,9 +12,16 @@ import {
   type AreaDefinition,
 } from './areas'
 import { battles } from './battles'
-import { getProgressionNode } from '../progression'
+import { getAreaBattleSequence, getProgressionNode } from '../progression'
 
 describe('area definitions', () => {
+  it('registry order and incident-first story resolver follow the canonical graph', () => {
+    expect(areaById.javascript.battleIds).toEqual(getAreaBattleSequence('javascript'))
+    expect(areaById.typescript.battleIds).toEqual(getAreaBattleSequence('typescript'))
+    expect(areaById.javascript.storyEvent?.(1, 'pre')?.id).toBe('js-before-first-incident-field-observation')
+    expect(areaById.javascript.storyEvent?.(9, 'post')?.id).toBe('js-training-complete-return-to-trace')
+  })
+
   it('Area idが一意でlookupと一致する', () => {
     expect(new Set(areas.map((area) => area.id)).size).toBe(areas.length)
 

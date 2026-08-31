@@ -4,9 +4,9 @@ export type { BattleStoryEvent, BattleStoryLine } from './types'
 
 const postBattleEvents: Record<number, BattleStoryEvent> = {
   1: {
-    id: 'js-after-chapter-1',
-    label: 'AFTER BATTLE',
-    title: '直ったはずなのに',
+    id: 'js-after-first-incident',
+    label: 'INCIDENT REPRODUCED',
+    title: '最初の症状をつかんだ',
     lines: [
       {
         speakerId: 'byte',
@@ -14,7 +14,7 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
-        text: 'この地点のtarget異常は止まった！ ……でも待って。同じ形の症状が別の戦闘ログにも残ってる。',
+        text: '再現できた。技は勝手に外れたんじゃない。表示されたcodeのruleどおりにtargetを選んで、その結果が現実の期待とずれている。',
       },
       {
         speakerId: 'lead-ada',
@@ -22,7 +22,7 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'LEAD ADA',
         role: 'SENIOR ENGINEER',
         layer: 'remote',
-        text: 'REAL WORLD側でも別機能の異常が続いている。一か所だけのbugじゃなさそうだ。どこまで波及しているか追ってくれ。',
+        text: 'REAL WORLD側のtraceも一致した。偶発的な戦闘バグではない。targetを決める条件が西のForest側から流れ込んでいる。',
       },
       {
         speakerId: 'byte',
@@ -30,14 +30,14 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
-        text: '次の症状は草原の奥に出てる。同じincidentをCODE WORLD側から追おう。',
+        text: '原因はこの草原で止まってない。ここから西へ進んで、条件がどこで組み合わされているか追おう。',
       },
     ],
   },
   2: {
-    id: 'js-after-chapter-2',
-    label: 'NEW CLUE',
-    title: '共通コードの先',
+    id: 'js-after-second-incident',
+    label: 'SHARED TRACE FOUND',
+    title: '二つの症状が同じ流れへつながった',
     lines: [
       {
         speakerId: 'byte',
@@ -45,7 +45,7 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
-        text: '見つけた。別々の異変に見えていた処理が、全部同じ場所を通ってる。',
+        text: '二つ目も再現した。今度は複数targetの処理だけど、さっきまでForestで追ってきた経路と同じ先へ流れてる。',
       },
       {
         speakerId: 'lead-ada',
@@ -53,7 +53,7 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'LEAD ADA',
         role: 'SENIOR ENGINEER',
         layer: 'remote',
-        text: '現実側のcall pathも一致した。王国中の戦闘処理をまとめるCode Coreがroot cause候補だ。',
+        text: 'REAL WORLD側でもcall pathが合流した。ただしCode Coreをroot causeと断定するには、Deep Forestの残りの処理を追って入力がどこへ集約されるか確認したい。',
       },
       {
         speakerId: 'byte',
@@ -61,7 +61,7 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
-        text: 'Coreの反応が強くなってる。北西の入口から直接入って、世界のruleになっている共通コードを読もう。',
+        text: '進む方向はこのまま西だ。戻る必要はない。Deep Forestの奥で、二つの症状が一つの原因へ集まるところまで追おう。',
       },
     ],
   },
@@ -76,7 +76,7 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
-        text: 'Code Coreが安定した！ 草原の異変も全部消えてる。CODE WORLD側のroot causeは修復完了。',
+        text: 'Code Coreが安定した！ 草原からDeep Forestまで続いていたtarget異常も消えてる。CODE WORLD側のroot causeは修復完了。',
       },
       {
         speakerId: 'system',
@@ -92,7 +92,7 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'LEAD ADA',
         role: 'SENIOR ENGINEER',
         layer: 'real-world',
-        text: '戻ったな。現実側の戦闘システムも正常化した。最初のincidentはcloseだ。初仕事、よく原因まで追えた。',
+        text: '戻ったな。現実側の戦闘システムも正常化した。最初のincidentはcloseだ。初仕事、よく症状から原因まで追えた。',
       },
       {
         speakerId: 'lead-ada',
@@ -100,14 +100,35 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'LEAD ADA',
         role: 'SENIOR ENGINEER',
         layer: 'real-world',
-        text: '小さな症状だけ直すのではなく、コードのつながりからroot causeを読む。その感覚を次の仕事にも持っていこう。',
+        text: '小さな症状だけ直すのではなく、stateとcodeのつながりからroot causeを読む。その感覚を次の仕事にも持っていこう。',
+      },
+    ],
+  },
+  9: {
+    id: 'js-training-complete',
+    label: 'FIELD CHECK READY',
+    title: '実際のincidentを読める準備ができた',
+    lines: [
+      {
+        speakerId: 'trainer-mio',
+        speaker: 'TRAINER MIO',
+        role: 'VILLAGE GUIDE',
+        layer: 'code-world',
+        text: 'HPやnameの値、比較、find()の「前から最初の一体」まで追えたね。これで最初のincidentに出ていた一行を、自分で読める。',
+      },
+      {
+        speakerId: 'byte',
+        speaker: 'BYTE',
+        role: 'DEBUGGER',
+        layer: 'code-world',
+        text: '村を出て西へ進もう。次は練習用じゃない実際のstateで、target異常をその場で再現する。',
       },
     ],
   },
   10: {
     id: 'js-forest-after-and',
-    label: 'FOREST NOTE',
-    title: '「両方」を一つずつ読む',
+    label: 'TRACE ADVANCED',
+    title: '二つの条件を通る枝を追えた',
     lines: [
       {
         speakerId: 'byte',
@@ -115,14 +136,14 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
-        text: '&&が出ても、いっぺんに考えなくて大丈夫。左をtrueかfalseか決めて、次に右を見る。それから「両方trueか」を確かめれば読める。',
+        text: 'この枝は&&で二つの条件を両方通った相手だけを先へ送っていた。左と右を分けて読めば、incidentのtraceを一段奥まで追える。',
       },
     ],
   },
   11: {
     id: 'js-forest-after-or',
-    label: 'FOREST NOTE',
-    title: '「どちらか」を見分ける',
+    label: 'TRACE BRANCH FOUND',
+    title: '別の条件でも同じ経路へ入る',
     lines: [
       {
         speakerId: 'byte',
@@ -130,14 +151,14 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
-        text: '||は「どちらか一つでもtrueなら通る」。&&の「両方必要」と並べると違いが分かりやすいね。',
+        text: 'こっちは||で、どちらか一つでもtrueなら同じ経路へ入る。&&との違いが分かると、どのstateが異常側へ流れるか見分けやすい。',
       },
     ],
   },
   12: {
     id: 'js-forest-after-combined',
-    label: 'FOREST ROUTE OPEN',
-    title: '記号が増えても読む順番は同じ',
+    label: 'TRACE CONVERGED',
+    title: '複数の条件が一つの経路へ集まった',
     lines: [
       {
         speakerId: 'byte',
@@ -145,7 +166,7 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
-        text: 'かっこの内側を先に読み、&&と||を小さな条件へ分ければ追えた。新しい記号を丸暗記するより、読む順番を守る方が大事だ。',
+        text: 'かっこの内側、&&、||を小さく分ければ、長い条件でもどのtargetが先へ進むか追えた。',
       },
       {
         speakerId: 'byte',
@@ -153,16 +174,72 @@ const postBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
-        text: 'この森では同じruleでも敵のHPや並びが変わる。何度か戦うと、条件を自分で追う感覚を確かめられるよ。',
+        text: 'traceが森の守り人の向こうへ集まってる。あれは試験じゃなくて、incidentの経路そのものを塞いでいるみたいだ。',
       },
     ],
   },
 }
 
 const preBattleEvents: Record<number, BattleStoryEvent> = {
+  1: {
+    id: 'js-before-first-incident',
+    label: 'LIVE INCIDENT',
+    title: '最初のtarget異常を再現する',
+    lines: [
+      {
+        speakerId: 'byte',
+        speaker: 'BYTE',
+        role: 'DEBUGGER',
+        layer: 'code-world',
+        text: 'ここからは訓練用じゃない。Openingで見た「技が違う相手へ飛ぶ」症状が、今のBattle stateに出ている。',
+      },
+      {
+        speakerId: 'byte',
+        speaker: 'BYTE',
+        role: 'DEBUGGER',
+        layer: 'code-world',
+        text: 'でも読む材料は村で触ったものだけだ。enemyの値、比較、enemiesの並び、find()を順番に追えば、codeが実際に誰を選ぶか判断できる。',
+      },
+      {
+        speakerId: 'lead-ada',
+        speaker: 'LEAD ADA',
+        role: 'SENIOR ENGINEER',
+        layer: 'remote',
+        text: 'まず症状を正確に再現してくれ。期待していたtargetではなく、codeが現在のstateから何を選ぶかを見るんだ。',
+      },
+    ],
+  },
+  2: {
+    id: 'js-before-second-incident',
+    label: 'SECOND SYMPTOM',
+    title: '異常が複数targetへ広がっている',
+    lines: [
+      {
+        speakerId: 'byte',
+        speaker: 'BYTE',
+        role: 'DEBUGGER',
+        layer: 'code-world',
+        text: 'Deep Forestへ入った途端、同じincidentの別症状が出た。今度は一体だけじゃなく、複数のtargetをまとめて選ぶ処理までずれている。',
+      },
+      {
+        speakerId: 'byte',
+        speaker: 'BYTE',
+        role: 'DEBUGGER',
+        layer: 'code-world',
+        text: 'Forestで見たfilter()、&&、||までがここに出ている。まず条件を小さく読み、どのEnemyが結果へ残るかを追おう。',
+      },
+      {
+        speakerId: 'lead-ada',
+        speaker: 'LEAD ADA',
+        role: 'SENIOR ENGINEER',
+        layer: 'remote',
+        text: '一つ目と同じcall pathへ入るか確認したい。答えを当てるのではなく、現在のdataから処理結果を確定してくれ。',
+      },
+    ],
+  },
   3: {
     id: 'js-before-final',
-    label: 'BEFORE BATTLE',
+    label: 'ROOT CAUSE',
     title: 'Code Coreへ',
     lines: [
       {
@@ -171,7 +248,7 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'LEAD ADA',
         role: 'SENIOR ENGINEER',
         layer: 'remote',
-        text: 'REAL WORLDのtraceもここへ集約している。この先のCode Coreがroot causeなら、incident全体を止められる。',
+        text: 'Deep ForestのtraceがREAL WORLD側のcall pathと完全に重なった。この先のCode Coreが、二つの症状へ同じ壊れたruleを流している。',
       },
       {
         speakerId: 'byte',
@@ -179,7 +256,7 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
-        text: 'ログが一気に増えてる。Core自身が壊れたruleを繰り返して、草原の異変を作ってるみたい。',
+        text: '最深部の西口がCoreの手前へ直接つながっていた。ここまで追ってきた経路の続きだ。戻って別の場所を探す必要はない。',
       },
       {
         speakerId: 'lead-ada',
@@ -187,14 +264,14 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'LEAD ADA',
         role: 'SENIOR ENGINEER',
         layer: 'remote',
-        text: '今まで読んだコードを全部使ってroot causeを確認する。準備ができたら行け、Code Knight。',
+        text: '今まで読んだcodeとstateを全部使ってroot causeを止める。準備ができたら行け、Code Knight。',
       },
     ],
   },
   7: {
     id: 'js-village-training-comparison',
-    label: 'VILLAGE TRAINING',
-    title: 'まず、数字を一つ読む',
+    label: 'INCIDENT PREP',
+    title: 'まず、ログの数字を一つ読む',
     lines: [
       {
         speakerId: 'trainer-mio',
@@ -202,7 +279,7 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'TRAINER MIO',
         role: 'VILLAGE GUIDE',
         layer: 'code-world',
-        text: '長いコードを全部いっぺんに読む必要はないよ。まず enemy.hp を見よう。点の右にある hp は、その敵が今持っているHPの数字だ。',
+        text: 'BYTEからincidentのログを見せてもらったよ。最初にtargetを絞るところで enemy.hp という数字を使ってる。まずそこだけ読めるようにしよう。',
       },
       {
         speakerId: 'trainer-mio',
@@ -210,7 +287,7 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'TRAINER MIO',
         role: 'VILLAGE GUIDE',
         layer: 'code-world',
-        text: '`<` は左の数字が右より小さいか、`>` は左の数字が右より大きいかを見る記号。まずこの小さな比べ方だけ追えばいい。',
+        text: '`<` は左の数字が右より小さいか、`>` は左の数字が右より大きいかを見る記号。長いcodeを見る前に、この小さな比較を確定できればいい。',
       },
       {
         speakerId: 'byte',
@@ -218,14 +295,14 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
-        text: '技の行には find() も見えるけど、今は中の「HPをどう比べているか」に注目しよう。どの敵が条件に合うかは、画面のHPを見て自分で確かめてみて。',
+        text: '技の行にはfind()も見えるけど、今は中の「HPをどう比べているか」に注目しよう。どの敵が条件に合うかは、画面のHPで自分で確かめてみて。',
       },
     ],
   },
   8: {
     id: 'js-village-training-equality',
-    label: 'VILLAGE TRAINING',
-    title: '文字も値として読む',
+    label: 'INCIDENT PREP',
+    title: 'ログにある名前の条件も読む',
     lines: [
       {
         speakerId: 'trainer-mio',
@@ -233,7 +310,7 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'TRAINER MIO',
         role: 'VILLAGE GUIDE',
         layer: 'code-world',
-        text: '次は enemy.name。hp が数字を読むのと同じで、name はその敵の名前という値を読む。',
+        text: '同じincidentの別の行には enemy.name もある。hpが数字を読むのと同じで、nameはその敵の名前という値を読む。',
       },
       {
         speakerId: 'trainer-mio',
@@ -241,7 +318,7 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'TRAINER MIO',
         role: 'VILLAGE GUIDE',
         layer: 'code-world',
-        text: '`===` は左右が同じ値かを確かめる。コードの右側に書かれた名前と、今いる敵の name を一体ずつ見比べれば読めるよ。',
+        text: '`===` は左右が同じ値かを確かめる。codeの右側に書かれた名前と、今いる敵のnameを一体ずつ見比べれば読めるよ。',
       },
       {
         speakerId: 'byte',
@@ -249,14 +326,14 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
-        text: '前に見たHPの比較も一緒に出る。新しいことだけに飛びつかず、知っている部分から順番に読んでみよう。',
+        text: 'さっきのHP比較も消えない。知っている条件から一つずつ読めば、実際のincidentでも迷いにくい。',
       },
     ],
   },
   9: {
     id: 'js-village-training-find',
-    label: 'VILLAGE TRAINING',
-    title: '前から探して、最初で止まる',
+    label: 'INCIDENT PREP',
+    title: '実際のselectorがどこで止まるか追う',
     lines: [
       {
         speakerId: 'trainer-mio',
@@ -264,7 +341,7 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'TRAINER MIO',
         role: 'VILLAGE GUIDE',
         layer: 'code-world',
-        text: 'enemies は、画面にいる敵たちを順番に並べた集まりだと思えばいい。左から順に一体ずつ見ていける。',
+        text: 'incidentのtarget selectorはenemiesという集まりを前から見ている。画面の敵を順番に並べたものだと思えばいい。',
       },
       {
         speakerId: 'trainer-mio',
@@ -272,7 +349,7 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'TRAINER MIO',
         role: 'VILLAGE GUIDE',
         layer: 'code-world',
-        text: 'find() はその集まりを前から調べて、カッコの中の条件に最初に合った一体で止まる。条件に合う敵が二体いても、選ばれるのは先に見つかった方だ。',
+        text: 'find()はその集まりを前から調べて、カッコの中の条件に最初に合った一体で止まる。条件に合う敵が二体いても、選ばれるのは先に見つかった方だ。',
       },
       {
         speakerId: 'byte',
@@ -280,14 +357,14 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
-        text: '読む順番は「条件を読む → enemies を前から見る → 最初の true で止まる」。答えは言わないから、今の並びとHPで追ってみよう。',
+        text: '読む順番は「条件を読む → enemiesを前から見る → 最初のtrueで止まる」。ここまで読めれば、次は実際の症状を再現できる。',
       },
     ],
   },
   10: {
     id: 'js-forest-and',
-    label: 'FOREST LESSON',
-    title: '二つともtrueなら通る',
+    label: 'FOLLOW THE TRACE',
+    title: '二つの条件を通る経路を追う',
     lines: [
       {
         speakerId: 'byte',
@@ -295,7 +372,7 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
-        text: '森に入ると、条件が一つ増えたみたい。でも読むやり方は変えなくていい。まず `&&` の左と右を別々に見よう。',
+        text: '最初の症状から伸びたtraceが、Forestで二つの条件に分かれてる。まず`&&`の左と右を別々に見よう。',
       },
       {
         speakerId: 'byte',
@@ -303,7 +380,7 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
-        text: '`&&` は「左もtrue、右もtrue」のときだけ全体がtrueになる。日本語なら「A かつ B」に近い。',
+        text: '`&&`は「左もtrue、右もtrue」のときだけ全体がtrueになる。日本語なら「A かつ B」に近い。両方通るstateだけが先へ進む。',
       },
       {
         speakerId: 'byte',
@@ -311,14 +388,14 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
-        text: '今回はもう知っている hp、name、===、find()しか使っていない。敵を前から見て、二つの条件を一体ずつ確かめよう。',
+        text: '使っているのはもう知っているhp、name、===、find()だ。traceがどのEnemyから続くかを、今のdataで確かめよう。',
       },
     ],
   },
   11: {
     id: 'js-forest-or',
-    label: 'FOREST LESSON',
-    title: 'どちらかtrueなら通る',
+    label: 'FOLLOW THE TRACE',
+    title: '別の入口からも同じ異常へ入る',
     lines: [
       {
         speakerId: 'byte',
@@ -326,7 +403,7 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
-        text: '次の記号は `||`。見た目は似てるけど、&&とは通り方が違う。',
+        text: '今度の枝は`||`だ。さっきの&&と違って、二つの条件のどちらかを通れば同じ処理へ入る。',
       },
       {
         speakerId: 'byte',
@@ -334,7 +411,7 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
-        text: '`||` は左右のどちらか一方でもtrueなら、全体がtrueになる。日本語なら「A または B」に近い。',
+        text: '`||`は左右のどちらか一方でもtrueなら全体がtrueになる。かっこがあったら、その内側の小さな条件から決めよう。',
       },
       {
         speakerId: 'byte',
@@ -342,14 +419,14 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
-        text: 'かっこがあったら、まずその内側の「HPが40未満 || 80より大きい」を見る。そのあと外側の&&へ戻ればいい。どの敵になるかは今のHPで追ってみよう。',
+        text: 'どのEnemyがこの枝へ入るか分かれば、incidentがどのstateまで広がっているか見えてくる。',
       },
     ],
   },
   12: {
     id: 'js-forest-combined',
-    label: 'FOREST LESSON',
-    title: '小さく分ければ読める',
+    label: 'TRACE JUNCTION',
+    title: '条件が合流する場所を読み切る',
     lines: [
       {
         speakerId: 'byte',
@@ -357,7 +434,7 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
-        text: 'ここでは新しい記号は増えないよ。&&と||、比較、find()が一緒に出るだけ。',
+        text: 'ここでは新しい記号は増えない。&&と||、比較、find()が一つのjunctionに集まってるだけだ。',
       },
       {
         speakerId: 'byte',
@@ -365,7 +442,7 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
-        text: '長く見えたら、かっこの中 → その外 → find()で前から、の順に小さく分ける。コードを一行丸ごと暗記する必要はない。',
+        text: '長く見えたら、かっこの中 → その外 → find()で前から、の順に小さく分ける。codeを一行丸ごと暗記する必要はない。',
       },
       {
         speakerId: 'byte',
@@ -373,7 +450,7 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
-        text: 'この森を抜ける練習として、敵の並びとHPだけを見て自分で対象を決めてみよう。',
+        text: 'この先の守り人の向こうへtraceが集中してる。まず現在のstateでjunctionの出力を確定しよう。',
       },
     ],
   },

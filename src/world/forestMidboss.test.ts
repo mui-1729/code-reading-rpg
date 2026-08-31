@@ -17,8 +17,8 @@ function forestState(position: { x: number; y: number }) {
   }
 }
 
-describe('JavaScript Forest midboss', () => {
-  it('main trail西側へ固定MID BOSS objectを置き、clear前は直接踏めない', () => {
+describe('JavaScript Forest trace guardian', () => {
+  it('main trail西側へ固定Guardian objectを置き、clear前は直接踏めない', () => {
     expect(
       getTerrain(JS_FOREST_MIDBOSS_POSITION.x, JS_FOREST_MIDBOSS_POSITION.y, JS_FOREST_MAP_ID),
     ).toBe('midboss')
@@ -38,14 +38,14 @@ describe('JavaScript Forest midboss', () => {
     expect(result.terrain).toBe('midboss')
   })
 
-  it('Battle 12未clearではMID BOSS interactionを開始できない', () => {
+  it('condition junction未clearではGuardian interactionを開始できない', () => {
     const progress = createInitialPlayerProgress()
     const intent = resolveWorldInteraction(
       forestState({
         x: JS_FOREST_MIDBOSS_POSITION.x + 1,
         y: JS_FOREST_MIDBOSS_POSITION.y,
       }),
-      { ...progress, clearedStageIds: [7, 8, 9, 10, 11] },
+      { ...progress, clearedStageIds: [7, 8, 9, 1, 10, 11] },
     )
 
     expect(intent).toMatchObject({
@@ -56,7 +56,7 @@ describe('JavaScript Forest midboss', () => {
     })
   })
 
-  it('Battle 12 clear後は固定Battle 13を開始できる', () => {
+  it('condition junction clear後は固定Guardian Battleを開始できる', () => {
     const progress = createInitialPlayerProgress()
     const intent = resolveWorldInteraction(
       forestState({
@@ -65,7 +65,7 @@ describe('JavaScript Forest midboss', () => {
       }),
       {
         ...progress,
-        clearedStageIds: [7, 8, 9, 10, 11, 12],
+        clearedStageIds: [7, 8, 9, 1, 10, 11, 12],
         unlockedStageIds: [...progress.unlockedStageIds, 13],
       },
     )
@@ -79,11 +79,11 @@ describe('JavaScript Forest midboss', () => {
     })
   })
 
-  it('Battle 13 clear後はMID BOSS地点をroadとして通過でき、interactionも消える', () => {
+  it('Guardian clear後は地点をroadとして通過でき、interactionも消える', () => {
     const progress = createInitialPlayerProgress()
     const clearedProgress = {
       ...progress,
-      clearedStageIds: [7, 8, 9, 10, 11, 12, 13],
+      clearedStageIds: [7, 8, 9, 1, 10, 11, 12, 13],
       unlockedStageIds: [...progress.unlockedStageIds, 13],
     }
     const state = forestState({

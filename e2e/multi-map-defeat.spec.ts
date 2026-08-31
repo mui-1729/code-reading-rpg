@@ -66,6 +66,10 @@ test('Village保存状態からBattleで敗北するとOverworld Hubへ戻る', 
   )
 
   await page.goto('/javascript/battle/1?seed=defeat-village-e2e&returnTo=%2Fworld')
+  const story = page.locator('.battle-story-window')
+  await expect(story).toBeVisible()
+  await story.getByRole('button', { name: 'SKIP' }).click()
+  await expect(story).toBeHidden()
 
   const trace = page.getByRole('button', { name: /^TRACE\b/ })
   await expect(trace).toBeEnabled()

@@ -16,7 +16,10 @@ describe('battle session identity', () => {
   })
 
   it('resolves the next battle only inside the same learning area', () => {
+    expect(createBattleSession(1, 'incident-first').nextBattle?.id).toBe(7)
     expect(createBattleSession(7, 'a').nextBattle?.id).toBe(8)
+    expect(createBattleSession(14, 'second-symptom').nextBattle?.id).toBe(2)
+    expect(createBattleSession(22, 'core-approach').nextBattle?.id).toBe(3)
     expect(createBattleSession(3, 'b').nextBattle).toBeUndefined()
     expect(createBattleSession(4, 'c').nextBattle?.id).toBe(5)
     expect(createBattleSession(6, 'd').nextBattle).toBeUndefined()

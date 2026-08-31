@@ -32,10 +32,13 @@ import {
   type WorldRegion,
   type WorldTreasureId,
 } from './worldMap'
+import { isWorldPortalRequirementSatisfied } from './worldPortalAccess'
 
 type BattleRegion = Exclude<WorldRegion, 'hub'>
 type JavaScriptTrainingBattleId = 7 | 8 | 9
+type JavaScriptStoryBattleId = 1 | 2
 type JavaScriptLearningBattleId = 10 | 11 | 12 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22
+type JavaScriptFixedBattleId = JavaScriptStoryBattleId | JavaScriptLearningBattleId
 
 export type EncounterRolls = {
   trigger: number
@@ -104,13 +107,31 @@ function getForestLearningBattleId(
   position: { x: number; y: number },
   clearedStageIds: readonly number[],
 ): JavaScriptLearningBattleId | null {
-  if (mapId !== JS_FOREST_MAP_ID || !clearedStageIds.includes(9)) return null
+  if (mapId !== JS_FOREST_MAP_ID) return null
 
-  if (!clearedStageIds.includes(10)) return 10
-  if (!clearedStageIds.includes(11) && position.x <= 17) return 11
-  if (!clearedStageIds.includes(12) && position.x <= 8) return 12
+  if (!clearedStageIds.includes(10) && isBattleAccessible(10, clearedStageIds)) return 10
+  if (
+    !clearedStageIds.includes(11) &&
+    position.x <= 17 &&
+    isBattleAccessible(11, clearedStageIds)
+  ) {
+    return 11
+  }
+  if (
+    !clearedStageIds.includes(12) &&
+    position.x <= 8 &&
+    isBattleAccessible(12, clearedStageIds)
+  ) {
+    return 12
+  }
   if (!clearedStageIds.includes(13)) return null
-  if (!clearedStageIds.includes(14) && position.x <= 4) return 14
+  if (
+    !clearedStageIds.includes(14) &&
+    position.x <= 4 &&
+    isBattleAccessible(14, clearedStageIds)
+  ) {
+    return 14
+  }
   return null
 }
 
@@ -119,16 +140,58 @@ function getDeepForestLearningBattleId(
   position: { x: number; y: number },
   clearedStageIds: readonly number[],
 ): JavaScriptLearningBattleId | null {
-  if (mapId !== JS_DEEP_FOREST_MAP_ID || !clearedStageIds.includes(14)) return null
+  if (mapId !== JS_DEEP_FOREST_MAP_ID) return null
 
-  if (!clearedStageIds.includes(15)) return 15
-  if (!clearedStageIds.includes(16) && position.x <= 24) return 16
-  if (!clearedStageIds.includes(17) && position.x <= 19) return 17
-  if (!clearedStageIds.includes(18) && position.x <= 14) return 18
-  if (!clearedStageIds.includes(19) && position.x <= 10) return 19
-  if (!clearedStageIds.includes(20) && position.x <= 9) return 20
-  if (!clearedStageIds.includes(21) && position.x <= 7) return 21
-  if (!clearedStageIds.includes(22) && position.x <= 5) return 22
+  if (!clearedStageIds.includes(15) && isBattleAccessible(15, clearedStageIds)) return 15
+  if (
+    !clearedStageIds.includes(16) &&
+    position.x <= 24 &&
+    isBattleAccessible(16, clearedStageIds)
+  ) {
+    return 16
+  }
+  if (
+    !clearedStageIds.includes(17) &&
+    position.x <= 19 &&
+    isBattleAccessible(17, clearedStageIds)
+  ) {
+    return 17
+  }
+  if (
+    !clearedStageIds.includes(18) &&
+    position.x <= 14 &&
+    isBattleAccessible(18, clearedStageIds)
+  ) {
+    return 18
+  }
+  if (
+    !clearedStageIds.includes(19) &&
+    position.x <= 10 &&
+    isBattleAccessible(19, clearedStageIds)
+  ) {
+    return 19
+  }
+  if (
+    !clearedStageIds.includes(20) &&
+    position.x <= 9 &&
+    isBattleAccessible(20, clearedStageIds)
+  ) {
+    return 20
+  }
+  if (
+    !clearedStageIds.includes(21) &&
+    position.x <= 7 &&
+    isBattleAccessible(21, clearedStageIds)
+  ) {
+    return 21
+  }
+  if (
+    !clearedStageIds.includes(22) &&
+    position.x <= 5 &&
+    isBattleAccessible(22, clearedStageIds)
+  ) {
+    return 22
+  }
   return null
 }
 
@@ -145,11 +208,11 @@ export function getDeepForestReviewBattleId(
   return candidates[Math.floor(normalizedRoll * candidates.length)] ?? null
 }
 
-function createJavaScriptLessonEncounter(
+function createJavaScriptFixedEncounter(
   rpgState: RpgState,
   movedState: RpgState,
   next: { x: number; y: number },
-  battleId: JavaScriptLearningBattleId,
+  battleId: JavaScriptFixedBattleId,
 ): WorldMoveResult {
   const encounterNumber = rpgState.encounterCount + 1
   const encounterState: RpgState = {
@@ -197,10 +260,7 @@ export function resolveWorldMove({
   const nextSteps = rpgState.stepsSinceEncounter + 1
   const portal = getWorldPortalAtPosition(mapId, next)
   if (portal) {
-    if (
-      portal.requiredClearedStageId !== undefined &&
-      !progress.clearedStageIds.includes(portal.requiredClearedStageId)
-    ) {
+    if (!isWorldPortalRequirementSatisfied(portal.requiredClearedStageId, progress.clearedStageIds)) {
       return { kind: 'blocked', nextState: rpgState, terrain }
     }
 
@@ -228,12 +288,33 @@ export function resolveWorldMove({
     stepsSinceEncounter: nextSteps,
   }
 
+  // Story Battles are deterministic route beats, not lucky random encounters.
+  // The first symptom is witnessed before training, after BYTE joins the party.
+  // The second symptom happens after Forest investigation at Deep Forest entry.
+  if (
+    mapId === OVERWORLD_MAP_ID &&
+    region === 'javascript' &&
+    rpgState.partyMemberIds.includes('byte') &&
+    !progress.clearedStageIds.includes(1) &&
+    isBattleAccessible(1, progress.clearedStageIds)
+  ) {
+    return createJavaScriptFixedEncounter(rpgState, movedState, next, 1)
+  }
+
+  if (
+    mapId === JS_DEEP_FOREST_MAP_ID &&
+    !progress.clearedStageIds.includes(2) &&
+    isBattleAccessible(2, progress.clearedStageIds)
+  ) {
+    return createJavaScriptFixedEncounter(rpgState, movedState, next, 2)
+  }
+
   if (isEncounterTerrain(terrain)) {
     const lessonBattleId =
       getForestLearningBattleId(mapId, next, progress.clearedStageIds) ??
       getDeepForestLearningBattleId(mapId, next, progress.clearedStageIds)
     if (lessonBattleId !== null) {
-      return createJavaScriptLessonEncounter(rpgState, movedState, next, lessonBattleId)
+      return createJavaScriptFixedEncounter(rpgState, movedState, next, lessonBattleId)
     }
   }
 
@@ -241,10 +322,13 @@ export function resolveWorldMove({
     return { kind: 'moved', nextState: movedState, terrain, region }
   }
 
+  // During the JavaScript main story, Overworld movement carries narrative
+  // beats rather than replay encounters. Forest and Deep Forest still provide
+  // the progressive random-review pools.
   if (
     mapId === OVERWORLD_MAP_ID &&
     region === 'javascript' &&
-    !progress.clearedStageIds.includes(22)
+    !progress.clearedStageIds.includes(3)
   ) {
     return { kind: 'moved', nextState: movedState, terrain, region }
   }

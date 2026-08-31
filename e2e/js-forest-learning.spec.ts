@@ -7,7 +7,16 @@ const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
 const initialSkills = ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label']
 
-async function seedForestGate(page: Page, clearedTraining: boolean) {
+type ForestGateState = 'training-incomplete' | 'incident-only' | 'training-complete'
+
+async function seedForestGate(page: Page, state: ForestGateState) {
+  const clearedStageIds =
+    state === 'training-incomplete'
+      ? [1, 7, 8]
+      : state === 'incident-only'
+        ? [1]
+        : [1, 7, 8, 9]
+
   await page.goto('/')
   await page.evaluate(
     ({ progressKey, rpgKey, tutorialKey, skills, cleared }) => {
@@ -17,14 +26,13 @@ async function seedForestGate(page: Page, clearedTraining: boolean) {
         JSON.stringify({
           version: 4,
           progress: {
-            exp: cleared ? 24 : 16,
-            gold: 0,
+            exp: 12 + Math.max(0, cleared.length - 1) * 8,
+            gold: 20,
             inventory: { patchKit: 0 },
-            clearedStageIds: cleared ? [7, 8, 9] : [7, 8],
+            clearedStageIds: cleared,
             clearedAreaIds: [],
             completedSideQuestIds: [],
-            // #203時点のsave相当。Battle 10はまだ存在しないためrestoreで補完する。
-            unlockedStageIds: [1, 4, 7, 8, 9],
+            unlockedStageIds: [1, 7],
             unlockedSkillIds: skills,
           },
         }),
@@ -63,39 +71,48 @@ async function seedForestGate(page: Page, clearedTraining: boolean) {
       rpgKey: RPG_KEY,
       tutorialKey: TUTORIAL_KEY,
       skills: initialSkills,
-      cleared: clearedTraining,
+      cleared: clearedStageIds,
     },
   )
   await page.goto('/world')
 }
 
 test('Training 9未clearではForest入口が閉じている', async ({ page }) => {
-  await seedForestGate(page, false)
+  await seedForestGate(page, 'training-incomplete')
 
   await expect(page.getByLabel('Open world map')).toHaveAttribute('data-world-map', 'overworld')
   await page.getByRole('button', { name: 'Move left' }).click()
 
   await expect(page.getByLabel('Open world map')).toHaveAttribute('data-world-map', 'overworld')
-  await expect(page.getByText(/GREENFIELD VILLAGEのTRAINを3つ終わらせよう/)).toBeVisible()
+  await expect(page.getByLabel('Next objective')).toContainText('INCIDENT PREP')
 })
 
-test('Training完了後はForestへ入りreload後もlocal mapを保持する', async ({ page }) => {
-  await seedForestGate(page, true)
+test('JS-01 clearだけではForestへ入れずVillage trainingを要求する', async ({ page }) => {
+  await seedForestGate(page, 'incident-only')
+
+  await page.getByRole('button', { name: 'Move left' }).click()
+
+  await expect(page.getByLabel('Open world map')).toHaveAttribute('data-world-map', 'overworld')
+  await expect(page.getByLabel('Next objective')).toContainText('INCIDENT PREP')
+})
+
+test('Village training完了後はForestへ入りreload後もlocal mapを保持する', async ({ page }) => {
+  await seedForestGate(page, 'training-complete')
 
   await page.getByRole('button', { name: 'Move left' }).click()
   const forest = page.getByLabel('Forest map')
   await expect(forest).toHaveAttribute('data-world-map', 'js-forest')
   await expect(page.getByRole('heading', { name: 'JAVASCRIPT FOREST' })).toBeVisible()
-  await expect(page.getByText('FOREST · 1 / 4', { exact: true })).toBeVisible()
-  await expect(page.getByText(/&& — 二つともtrueを読む/)).toBeVisible()
+  await expect(page.getByLabel('Next objective')).toContainText('FOLLOW TRACE · 1')
+  await expect(page.getByLabel('Next objective')).toContainText('二つの条件を両方通る枝')
 
   await page.reload()
   await expect(page.getByLabel('Forest map')).toHaveAttribute('data-world-map', 'js-forest')
   await expect(page.getByRole('heading', { name: 'JAVASCRIPT FOREST' })).toBeVisible()
 })
 
-test('Forest最初のWoodsはRandom抽選ではなくBattle 10の固定Lessonになる', async ({ page }) => {
-  await seedForestGate(page, true)
+test('Forest最初のWoodsはRandom抽選ではなくBattle 10の固定traceになる', async ({ page }) => {
+  await seedForestGate(page, 'training-complete')
 
   await page.getByRole('button', { name: 'Move left' }).click()
   await expect(page.getByLabel('Forest map')).toHaveAttribute('data-world-map', 'js-forest')
@@ -106,16 +123,17 @@ test('Forest最初のWoodsはRandom抽選ではなくBattle 10の固定Lessonに
   await page.getByRole('button', { name: 'Move up' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/10\?/)
-  await expect(page.getByRole('dialog', { name: '二つともtrueなら通る' })).toBeVisible()
+  await expect(page.getByRole('dialog', { name: '二つの条件を通る経路を追う' })).toBeVisible()
 })
 
-test('Forest Battle 10 / 11は初心者Storyで&& / ||を順に説明しfilterを先取りしない', async ({ page }) => {
-  await seedForestGate(page, true)
+test('Forest Battle 10 / 11はincident traceとして&& / ||を順に説明しfilterを先取りしない', async ({ page }) => {
+  await seedForestGate(page, 'training-complete')
 
   await page.goto('/javascript/battle/10?seed=forest-e2e-and&returnTo=%2Fworld')
-  const andStory = page.getByRole('dialog', { name: '二つともtrueなら通る' })
+  const andStory = page.getByRole('dialog', { name: '二つの条件を通る経路を追う' })
   await expect(andStory).toBeVisible()
   await expect(andStory).toContainText('&&')
+  await expect(andStory).toContainText('trace')
   await expect(andStory).not.toContainText('filter()')
   await andStory.getByRole('button', { name: /NEXT/ }).click()
   await expect(andStory).toContainText('左もtrue、右もtrue')
@@ -134,7 +152,7 @@ test('Forest Battle 10 / 11は初心者Storyで&& / ||を順に説明しfilter�
   })
 
   await page.goto('/javascript/battle/11?seed=forest-e2e-or&returnTo=%2Fworld')
-  const orStory = page.getByRole('dialog', { name: 'どちらかtrueなら通る' })
+  const orStory = page.getByRole('dialog', { name: '別の入口からも同じ異常へ入る' })
   await expect(orStory).toBeVisible()
   await expect(orStory).toContainText('||')
   await expect(orStory).not.toContainText('filter()')

@@ -1,5 +1,6 @@
 import { readStoredGameState, readStoredRpg } from './storedGameState'
 import { expect, test, type Page } from '@playwright/test'
+import { JS_FIRST_INCIDENT, JS_SECOND_INCIDENT_PREREQS } from './canonical-progress-fixtures'
 
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -9,10 +10,13 @@ async function seedReplayState(
   worldMapId: 'overworld' | 'js-deep-forest',
   worldPosition: { x: number; y: number },
   patchKit = 0,
+  clearedStageIds: readonly number[] = worldMapId === 'js-deep-forest'
+    ? JS_SECOND_INCIDENT_PREREQS
+    : [],
 ) {
   await page.goto('/')
   await page.evaluate(
-    ({ tutorialKey, rpgKey, mapId, position, patchKit }) => {
+    ({ tutorialKey, rpgKey, mapId, position, patchKit, clearedStageIds }) => {
       localStorage.clear()
       localStorage.setItem('code-reading-rpg:player-progress', JSON.stringify({
         version: 4,
@@ -20,7 +24,7 @@ async function seedReplayState(
           exp: 0,
           gold: 0,
           inventory: { patchKit },
-          clearedStageIds: mapId === 'js-deep-forest' ? [9, 14] : [],
+          clearedStageIds,
           clearedAreaIds: [],
           completedSideQuestIds: [],
           unlockedStageIds: [7],
@@ -44,7 +48,14 @@ async function seedReplayState(
         },
       }))
     },
-    { tutorialKey: TUTORIAL_KEY, rpgKey: RPG_KEY, mapId: worldMapId, position: worldPosition, patchKit },
+    {
+      tutorialKey: TUTORIAL_KEY,
+      rpgKey: RPG_KEY,
+      mapId: worldMapId,
+      position: worldPosition,
+      patchKit,
+      clearedStageIds,
+    },
   )
 }
 
@@ -61,7 +72,7 @@ async function storedRpg(page: Page) {
 
 test('Battle中のREPLAY TUTORIALはWorld開始地点へ戻りMOVEから始める', async ({ page }) => {
   await seedReplayState(page, 'overworld', { x: 8, y: 8 })
-  await page.goto('/javascript/battle/7?seed=replay-from-battle&returnTo=%2Fworld')
+  await page.goto('/javascript/battle/1?seed=replay-from-battle&returnTo=%2Fworld')
 
   const story = page.locator('.battle-story-overlay')
   if (await story.isVisible()) {
@@ -86,7 +97,7 @@ test('Battle中のREPLAY TUTORIALはWorld開始地点へ戻りMOVEから始め�
 })
 
 test('PATCH KIT使用後のTutorial replayはBattle全体をrollbackしてからWorld開始地点へ移動する', async ({ page }) => {
-  await seedReplayState(page, 'overworld', { x: 8, y: 8 }, 2)
+  await seedReplayState(page, 'overworld', { x: 8, y: 8 }, 2, JS_FIRST_INCIDENT)
   await page.goto('/javascript/battle/7?seed=replay-after-kit&returnTo=%2Fworld')
   const story = page.locator('.battle-story-overlay')
   if (await story.isVisible()) await story.getByRole('button', { name: 'SKIP' }).click()
@@ -134,14 +145,15 @@ test('Deep ForestからREPLAYしても同じWorld開始地点へ戻す', async (
   expect(stored.state.currentHp).toBe(73)
 })
 
-test('通常の初回direct Battle entryは従来どおりBattle phaseへfallbackする', async ({ page }) => {
+test('通常の初回direct Battle entryはBattle phaseへfallbackする', async ({ page }) => {
   await page.goto('/')
   await page.evaluate((key) => {
     localStorage.clear()
     localStorage.setItem(key, JSON.stringify({ version: 1, status: 'active', phase: 'field-move' }))
   }, TUTORIAL_KEY)
-  await page.goto('/javascript/battle/7?seed=direct-first-time')
+  await page.goto('/javascript/battle/1?seed=direct-first-time')
 
+  await expect(page).toHaveURL(/\/javascript\/battle\/1/)
   await expect.poll(async () =>
     page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null')?.phase, TUTORIAL_KEY),
   ).toBe('battle')

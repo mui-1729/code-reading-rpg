@@ -4,10 +4,19 @@ const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
-async function seedDeepForestGate(page: Page, clearedFilter14: boolean) {
+type DeepForestState = 'filter-locked' | 'incident-pending' | 'incident-cleared'
+
+async function seedDeepForestGate(page: Page, state: DeepForestState) {
+  const clearedStageIds =
+    state === 'filter-locked'
+      ? [7, 8, 9, 1, 10, 11, 12, 13]
+      : state === 'incident-pending'
+        ? [7, 8, 9, 1, 10, 11, 12, 13, 14]
+        : [7, 8, 9, 1, 10, 11, 12, 13, 14, 2]
+
   await page.goto('/')
   await page.evaluate(
-    ({ progressKey, rpgKey, tutorialKey, cleared14 }) => {
+    ({ progressKey, rpgKey, tutorialKey, cleared }) => {
       localStorage.clear()
       localStorage.setItem(
         progressKey,
@@ -17,13 +26,10 @@ async function seedDeepForestGate(page: Page, clearedFilter14: boolean) {
             exp: 160,
             gold: 54,
             inventory: { patchKit: 0 },
-            clearedStageIds: cleared14
-              ? [7, 8, 9, 10, 11, 12, 13, 14]
-              : [7, 8, 9, 10, 11, 12, 13],
+            clearedStageIds: cleared,
             clearedAreaIds: [],
             completedSideQuestIds: [],
-            // #209時点のsave相当。14 clear済みならrestoreで15を補完する。
-            unlockedStageIds: [1, 4, 7, 8, 9, 10, 11, 12, 13, 14],
+            unlockedStageIds: [7],
             unlockedSkillIds: [
               'trace',
               'pulse',
@@ -71,14 +77,14 @@ async function seedDeepForestGate(page: Page, clearedFilter14: boolean) {
       progressKey: PROGRESS_KEY,
       rpgKey: RPG_KEY,
       tutorialKey: TUTORIAL_KEY,
-      cleared14: clearedFilter14,
+      cleared: clearedStageIds,
     },
   )
   await page.goto('/world')
 }
 
 test('Battle 14未clearではDeep Forest入口が閉じている', async ({ page }) => {
-  await seedDeepForestGate(page, false)
+  await seedDeepForestGate(page, 'filter-locked')
 
   const forest = page.getByLabel('Forest map')
   await expect(forest).toHaveAttribute('data-world-map', 'js-forest')
@@ -88,32 +94,44 @@ test('Battle 14未clearではDeep Forest入口が閉じている', async ({ page
   await expect(page.getByLabel('Forest map')).toHaveAttribute('data-world-x', '2')
 })
 
-test('Battle 14 clear後はDeep Forestへ入りreload後もmapを保持する', async ({ page }) => {
-  await seedDeepForestGate(page, true)
+test('Battle 14 clear後はDeep Forestへ入り、最初のmovementでsecond incident Battle 2を固定再現する', async ({ page }) => {
+  await seedDeepForestGate(page, 'incident-pending')
 
-  await expect(page.getByText('DEEP FOREST ROUTE', { exact: true })).toBeVisible()
+  await expect(page.getByLabel('Next objective')).toContainText('SECOND SYMPTOM')
   await page.getByRole('button', { name: 'Move left' }).click()
 
   const deepForest = page.getByLabel('Deep Forest map')
   await expect(deepForest).toHaveAttribute('data-world-map', 'js-deep-forest')
   await expect(page.getByRole('heading', { name: 'JAVASCRIPT DEEP FOREST' })).toBeVisible()
-  await expect(page.getByText('DEEP FOREST · 1 / 8', { exact: true })).toBeVisible()
+  await expect(page.getByLabel('Next objective')).toContainText('SECOND SYMPTOM')
 
-  await page.reload()
-  await expect(page.getByLabel('Deep Forest map')).toHaveAttribute('data-world-map', 'js-deep-forest')
+  await page.getByRole('button', { name: 'Move up' }).click()
+
+  await expect(page).toHaveURL(/\/javascript\/battle\/2\?/)
+  const story = page.getByRole('dialog', { name: '異常が複数targetへ広がっている' })
+  await expect(story).toBeVisible()
+  await expect(story).toContainText('複数')
+  await expect(story).toContainText('別症状')
+
+  await story.getByRole('button', { name: /NEXT/ }).click()
+  await expect(story).toContainText('filter()')
+  await expect(story).toContainText('&&')
+  await expect(story).toContainText('||')
 })
 
-test('Deep Forest最初のWoodsでBattle 15を固定導入しfilter()の条件差を説明する', async ({ page }) => {
-  await seedDeepForestGate(page, true)
+test('second incident clear後はDeep ForestでBattle 15を固定導入し共有traceを追う', async ({ page }) => {
+  await seedDeepForestGate(page, 'incident-cleared')
   await page.getByRole('button', { name: 'Move left' }).click()
   await expect(page.getByLabel('Deep Forest map')).toHaveAttribute('data-world-map', 'js-deep-forest')
+  await expect(page.getByLabel('Next objective')).toContainText('SHARED TRACE · FILTER')
 
   await page.getByRole('button', { name: 'Move up' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/15\?/)
-  const story = page.getByRole('dialog', { name: '条件の向きが変わっても、全部を見る' })
+  const story = page.getByRole('dialog', { name: '同じfilter()でも条件が変わる' })
   await expect(story).toBeVisible()
   await expect(story).toContainText('filter()')
+  await expect(story).toContainText('二つ目の症状')
   await expect(story).not.toContainText('Slime')
   await expect(story).not.toContainText('Boar')
   await expect(story).not.toContainText('Guardian')

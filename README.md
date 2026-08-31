@@ -11,15 +11,15 @@ Title
 ↓
 REAL WORLD briefingからCODE WORLDへCONNECT
 ↓
-Overworldを入口にVillage / Forest / Deep Forest / TypeScript Frontierを行き来
+Openingで最初の異変を実際に体験
 ↓
-固定Lesson / Random Encounter / MID BOSS / Final Bossでコードを読む
+Villageで「さっき読めなかった部分」だけを小さく確認
 ↓
-SkillをSELECT → 同じSkillをもう一度押してEXECUTE
+Forest / Deep Forestへ同じincidentのtraceを追う
 ↓
-EXP / Gold / Level Up等を段階表示
+Code Coreでroot causeを止める
 ↓
-元のmap・座標へ戻り、次の地域やBossへ進む
+REAL WORLDへRETURNしてincident close
 ```
 
 Stage SelectやArea Selectへ戻って進行する構造ではありません。旧Area / Field URLは`/world`へredirectします。
@@ -33,7 +33,7 @@ Stage SelectやArea Selectへ戻って進行する構造ではありません。
 - 11×9 viewport / Player追従camera
 - 上下左右の画面外へ移動可能
 - tileは固定正方形
-- JavaScript地方 = Village → Forest → Deep Forest → Overworld final incident → Code Core
+- JavaScript地方 = first live incident → Village preparation → Forest trace → second symptom → Deep Forest root trace → Code Core
 - TypeScript地方 = TypeScript Frontier
 - Central Hub / Road / Water / Mountain
 - 固定Boss地点
@@ -41,15 +41,45 @@ Stage SelectやArea Selectへ戻って進行する構造ではありません。
 - World座標をLocalStorage保存
 - Desktop: Arrow / WASD、Mobile: D-Pad + INTERACT
 
+### JavaScript story progression
+
+プレイヤーへ見せるStory番号は、JavaScript編内で`JS-01`から連番にします。
+
+```text
+JS-01  LIVE INCIDENT
+↓
+JS-02  hp / comparison
+JS-03  name / ===
+JS-04  find()
+↓
+JS-05〜09  Forest trace
+↓
+JS-10  SECOND SYMPTOM
+↓
+JS-11〜18  Deep Forest root trace
+↓
+JS-19  ROOT CAUSE / Code Core
+```
+
+重要な方針:
+
+- **最初にincidentを見てから学ぶ。** syntaxを先に履修してからincidentへ戻る構造にはしない
+- Villageは独立したtutorial syllabusではなく、JS-01で読めなかった`hp` / `name` / `find()`を切り出して確認する場所
+- Forest / Deep Forestでは「次のsyntaxだから」ではなく、同じincidentのtraceを追う途中で必要になったcodeを読む
+- Battle 22後は来た道を戻らず、Deep Forest西口からCode Coreへ直接進む
+
+内部では既存save / URL互換のためnumeric `battleId`を維持しています。numeric IDはchapter番号ではなくlegacy runtime identifierです。Story順はsemantic progression keyで管理し、画面上の`JS-01...JS-19` / `TS-01...TS-03`とは分離します。
+
 ### Random Encounter
 
 - JavaScript Forest / Deep Forestではclear済みLessonを段階的に再出題
+- JavaScriptのfirst incident / second symptomはStory上の固定beatとして発生し、未clear中はRandom復習にしない
 - TypeScript FrontierではBattle 4 / 5を進行に応じて出題
 - 最低5歩のcooldown
 - terrainごとの遭遇率
 - Road / Hubは安全地帯
 - Battle後は元のWorld位置へ復帰
-- JavaScriptはBattle 7〜22 → 1 → 2 → Boss 3、TypeScriptは4 → 5 → Boss 6
+- new conceptをRandom Encounterで初登場させない
 
 ### Battle / code reading
 
@@ -61,6 +91,7 @@ Stage SelectやArea Selectへ戻って進行する構造ではありません。
 - code variants / multi-line code / 行別HELP
 - Battle + seedごとに表示コードを固有化し、別Battleで同じ文字列を再利用しない
 - 既存の1行 / 3行読解構造は維持
+- correct target / 正解Skillを実行前に表示しない
 
 ### RPG progression
 
@@ -74,7 +105,9 @@ Stage SelectやArea Selectへ戻って進行する構造ではありません。
 - 仲間BYTE
 - BYTEは1 ACTIONに1回、コードが選んだtargetのうちSkill後に生存する先頭1体へ追撃する
 
-PlayerProgress v4とRpgState v5は責務を分けたまま、単一revision snapshotで同時保存します。旧分割saveから移行し、backup復旧・到達不可map位置の正規化・storage eventによる別tab同期に対応します。
+最初のlive incidentはLv1で体験できる難易度にし、Villageの3つの小Battleを経てForestへ入る頃にLv2へ到達する程度の成長速度にしています。Story順変更だけを理由にShop / InnのEconomy budgetは崩しません。
+
+PlayerProgress v4とRpgState v5は責務を分けたまま、単一revision snapshotで同時保存します。旧分割saveから移行し、backup復旧・到達不可map位置の正規化・storage eventによる別tab同期に対応します。Battle開始snapshotを含むroot schema v2で、未完了Battleのreload・離脱時はHPとItemも一緒に開始状態へ戻します。
 
 ### Pause menu
 
@@ -108,7 +141,7 @@ World camera追従後も実World座標の変化でMOVE成功を判定します�
 
 ## Learning content
 
-### JavaScript Grassland
+### JavaScript地方
 
 - property access / 比較
 - `find()` / `filter()` / `map()` / `sort()`
@@ -119,7 +152,7 @@ World camera追従後も実World座標の変化でMOVE成功を判定します�
 - optional chaining / nullish coalescing
 - nested object / 中間変数 / 複数行code
 
-### TypeScript Forest
+### TypeScript Frontier
 
 - primitive / type annotation
 - function parameter / return type
@@ -141,6 +174,7 @@ TypeScript表示コードをruntimeで`eval()`することはありません。
 - Tutorialと重複する説明を常設しない
 - 読解に必要な値は確認可能、targetや正解Skillは先に表示しない
 - RPG成長でコード読解自体を不要にしない
+- numeric legacy Battle IDをプレイヤー向けchapter番号として見せない
 
 ## Routes
 
@@ -150,6 +184,8 @@ TypeScript表示コードをruntimeで`eval()`することはありません。
 /javascript/battle/$battleId?seed=...&returnTo=/world
 /typescript/battle/$battleId?seed=...&returnTo=/world
 ```
+
+`$battleId`は互換用のinternal IDです。Storyの表示番号とは一致を要求しません。
 
 Legacy redirect:
 

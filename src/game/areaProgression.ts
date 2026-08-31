@@ -3,7 +3,14 @@ import { battles } from './battles'
 import type { Battle } from './types'
 
 export function getBattlesForArea(areaId: string): Battle[] {
-  return battles.filter((battle) => battle.areaId === areaId)
+  const areaBattles = battles.filter((battle) => battle.areaId === areaId)
+  const area = areaById[areaId]
+  if (!area) return areaBattles
+
+  const order = new Map(area.battleIds.map((battleId, index) => [battleId, index]))
+  return [...areaBattles].sort(
+    (left, right) => (order.get(left.id) ?? Number.MAX_SAFE_INTEGER) - (order.get(right.id) ?? Number.MAX_SAFE_INTEGER),
+  )
 }
 
 export function getAreaForBattle(battleId: number): AreaDefinition | undefined {

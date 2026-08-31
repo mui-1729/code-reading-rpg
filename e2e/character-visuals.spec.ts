@@ -13,6 +13,24 @@ async function skipTutorial(page: Page) {
   }, TUTORIAL_KEY)
 }
 
+async function seedFirstIncidentClear(page: Page) {
+  await page.evaluate((key) => {
+    localStorage.setItem(key, JSON.stringify({
+      version: 4,
+      progress: {
+        exp: 12,
+        gold: 20,
+        inventory: { patchKit: 0 },
+        clearedStageIds: [1],
+        clearedAreaIds: [],
+        completedSideQuestIds: [],
+        unlockedStageIds: [1, 7],
+        unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
+      },
+    }))
+  }, PROGRESS_KEY)
+}
+
 async function seedTypeScriptAccess(page: Page) {
   await page.evaluate((key) => {
     localStorage.setItem(key, JSON.stringify({
@@ -33,6 +51,7 @@ async function seedTypeScriptAccess(page: Page) {
 
 async function seedVillage(page: Page) {
   await skipTutorial(page)
+  await seedFirstIncidentClear(page)
   await page.evaluate((key) => {
     localStorage.setItem(key, JSON.stringify({
       version: 4,
@@ -55,6 +74,7 @@ async function seedVillage(page: Page) {
 
 test('Village Training StoryでTRAINER MIOのpixel portraitを表示する', async ({ page }) => {
   await skipTutorial(page)
+  await seedFirstIncidentClear(page)
   await page.goto('/javascript/battle/7?seed=village-training%3A7&returnTo=%2Fworld')
 
   const portrait = page.getByAltText('TRAINER MIO portrait')

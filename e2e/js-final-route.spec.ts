@@ -4,7 +4,9 @@ const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
-const baseCleared = [7, 8, 9, 10, 11, 12, 13, 14, 15]
+const throughDeepFilter = [7, 8, 9, 1, 10, 11, 12, 13, 14, 2, 15]
+const throughBattle21 = [...throughDeepFilter, 16, 17, 18, 19, 20, 21]
+const throughDeepForest = [...throughBattle21, 22]
 
 async function seedWorld(
   page: Page,
@@ -29,8 +31,7 @@ async function seedWorld(
             clearedStageIds,
             clearedAreaIds: [],
             completedSideQuestIds: [],
-            // 古いv4 saveでもrestore時にclear済みstageから後続unlockを補完する。
-            unlockedStageIds: [1, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+            unlockedStageIds: [7],
             unlockedSkillIds: [
               'trace',
               'pulse',
@@ -87,9 +88,9 @@ async function seedWorld(
   await page.goto('/world')
 }
 
-test('Battle 15後のDeep ForestでBattle 16 map()を固定導入する', async ({ page }) => {
+test('Battle 15後のDeep ForestでBattle 16 map()をtrace変換として固定導入する', async ({ page }) => {
   await seedWorld(page, {
-    clearedStageIds: baseCleared,
+    clearedStageIds: throughDeepFilter,
     mapId: 'js-deep-forest',
     position: { x: 24, y: 8 },
   })
@@ -97,16 +98,21 @@ test('Battle 15後のDeep ForestでBattle 16 map()を固定導入する', async 
   await page.getByRole('button', { name: 'Move left' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/16\?/)
-  const story = page.getByRole('dialog', { name: '一つずつ、別の形へ変える' })
+  const story = page.getByRole('dialog', { name: '同じEnemyが別の形で渡されている' })
   await expect(story).toBeVisible()
-  await expect(story).toContainText('map()')
+  await expect(story).toContainText('trace')
+  await expect(story).toContainText('{ enemy, hp }')
   await expect(story).not.toContainText('Slime')
   await expect(story).not.toContainText('Goblin')
+
+  await story.getByRole('button', { name: /NEXT/ }).click()
+  await expect(story).toContainText('map()')
+  await expect(story).toContainText('新しい配列')
 })
 
-test('Battle 18後のDeep Forestで第二MID BOSS Battle 19を固定する', async ({ page }) => {
+test('Battle 18後のDeep ForestでRoot Guardian Battle 19を固定する', async ({ page }) => {
   await seedWorld(page, {
-    clearedStageIds: [...baseCleared, 16, 17, 18],
+    clearedStageIds: [...throughDeepFilter, 16, 17, 18],
     mapId: 'js-deep-forest',
     position: { x: 11, y: 9 },
   })
@@ -114,16 +120,20 @@ test('Battle 18後のDeep Forestで第二MID BOSS Battle 19を固定する', asy
   await page.getByRole('button', { name: 'Move left' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/19\?/)
-  const story = page.getByRole('dialog', { name: '新しい記号なしで読み切る' })
+  const story = page.getByRole('dialog', { name: 'Root Guardianのjunctionを突破する' })
   await expect(story).toBeVisible()
+  await expect(story).toContainText('incident')
+  await expect(story).toContainText('junction')
+
+  await story.getByRole('button', { name: /NEXT/ }).click()
   await expect(story).toContainText('新しいsyntaxはない')
   await expect(story).toContainText('some()')
   await expect(story).toContainText('every()')
 })
 
-test('最深部ではBattle 22 reduce()を固定導入する', async ({ page }) => {
+test('最深部ではBattle 22 reduce()をfinal traceとして固定導入する', async ({ page }) => {
   await seedWorld(page, {
-    clearedStageIds: [...baseCleared, 16, 17, 18, 19, 20, 21],
+    clearedStageIds: throughBattle21,
     mapId: 'js-deep-forest',
     position: { x: 6, y: 9 },
   })
@@ -131,16 +141,20 @@ test('最深部ではBattle 22 reduce()を固定導入する', async ({ page }) 
   await page.getByRole('button', { name: 'Move left' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/22\?/)
-  const story = page.getByRole('dialog', { name: '途中結果を一つへまとめる' })
+  const story = page.getByRole('dialog', { name: '複数の候補が最後に一つへ集約される' })
   await expect(story).toBeVisible()
-  await expect(story).toContainText('reduce()')
   await expect(story).toContainText('best')
+  await expect(story).toContainText('Deep Forest最後のtrace')
   await expect(story).not.toContainText('Guardian')
+
+  await story.getByRole('button', { name: /NEXT/ }).click()
+  await expect(story).toContainText('reduce()')
+  await expect(story).toContainText('attackDamage')
 })
 
 test('Battle 22前はJavaScript Final Boss 3へ挑戦できない', async ({ page }) => {
   await seedWorld(page, {
-    clearedStageIds: [...baseCleared, 16, 17, 18, 19, 20, 21, 1, 2],
+    clearedStageIds: throughBattle21,
     mapId: 'overworld',
     position: { x: 8, y: 4 },
   })
@@ -148,12 +162,14 @@ test('Battle 22前はJavaScript Final Boss 3へ挑戦できない', async ({ pag
   await page.getByRole('button', { name: 'Interact' }).click()
 
   await expect(page).toHaveURL(/\/world$/)
-  await expect(page.getByText('Code Coreへ挑む前に、Deep ForestのLesson 15〜22を最後まで読み切ろう。')).toBeVisible()
+  await expect(
+    page.getByText('Code Coreへ挑む前に、Deep Forestのtraceをroot causeまで最後まで追おう。'),
+  ).toBeVisible()
 })
 
-test('Battle 22と既存Battle 1 / 2完了後だけFinal Boss 3を開始できる', async ({ page }) => {
+test('incident routeとBattle 22完了後にFinal Boss 3を開始できる', async ({ page }) => {
   await seedWorld(page, {
-    clearedStageIds: [...baseCleared, 16, 17, 18, 19, 20, 21, 22, 1, 2],
+    clearedStageIds: throughDeepForest,
     mapId: 'overworld',
     position: { x: 8, y: 4 },
   })
@@ -163,5 +179,6 @@ test('Battle 22と既存Battle 1 / 2完了後だけFinal Boss 3を開始でき�
   await expect(page).toHaveURL(/\/javascript\/battle\/3\?/)
   const story = page.getByRole('dialog', { name: 'Code Coreへ' })
   await expect(story).toBeVisible()
-  await expect(story).toContainText('root cause')
+  await expect(story).toContainText('ROOT CAUSE')
+  await expect(story).toContainText('二つの症状')
 })
