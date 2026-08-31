@@ -1,5 +1,10 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
-import { JS_BATTLE_1_PREREQS, JS_COMPLETE, JS_MIDBOSS_PREREQS } from './canonical-progress-fixtures'
+import {
+  JS_BATTLE_1_PREREQS,
+  JS_COMPLETE,
+  JS_MIDBOSS_PREREQS,
+  JS_SECOND_INCIDENT_PREREQS,
+} from './canonical-progress-fixtures'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -96,7 +101,7 @@ async function expectDialogFocusTrap(page: Page, dialog: Locator) {
 test('@cross-browser registered Sprout/Boar/Guardian visuals render in the built artifact', async ({
   page,
 }) => {
-  await seedState(page, { clearedStageIds: [...JS_MIDBOSS_PREREQS, 13, 14] })
+  await seedState(page, { clearedStageIds: [...JS_SECOND_INCIDENT_PREREQS, 2] })
   await page.goto('/javascript/battle/14?seed=quality-visuals-forest&returnTo=%2Fworld')
   await dismissStory(page)
 
@@ -171,7 +176,7 @@ test('@cross-browser CODE HELP, CODE DATA, and Story keep focus inside and resto
   await seedState(page, { clearedStageIds: JS_MIDBOSS_PREREQS })
   await page.goto('/javascript/battle/13?seed=quality-modal-focus&returnTo=%2Fworld')
 
-  const story = page.getByRole('dialog', { name: '今までの読み方だけで進む' })
+  const story = page.getByRole('dialog', { name: '異常の経路を守る相手を越える' })
   await expect(story).toBeVisible()
   await expect(story).toHaveAttribute('aria-modal', 'true')
   await expectDialogFocusTrap(page, story)
