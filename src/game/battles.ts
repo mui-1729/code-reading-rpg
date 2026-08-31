@@ -19,7 +19,7 @@ export const battles: Battle[] = [
     subtitle: 'まず現場で症状を再現する。全部のcodeを理解できなくてもいい。現在のstateと実際に選ばれるtargetを見て、何を読めるようになる必要があるか掴もう',
     recommendedLevel: 1,
     expReward: 12,
-    goldReward: 6,
+    goldReward: 20,
     enemies: [
       enemy('slime-a', 'Slime', 34, 'Nibble', 5, '●'),
       enemy('goblin-a', 'Goblin', 72, 'Heavy Slash', 8, '▲'),
