@@ -22,10 +22,16 @@ function storedProgress(
 }
 
 describe('Forest progression save normalization', () => {
-  it('#203時点でBattle 9までclearしたv4 saveは最初のincident 1へ進む', () => {
+  it('旧routeでTrainingを開始済みなら新しいopening incidentを通過済みとして補う', () => {
+    const restored = restorePlayerProgress(storedProgress([7]))
+    expect(restored.clearedStageIds).toContain(1)
+    expect(restored.unlockedStageIds).toContain(8)
+  })
+
+  it('#203時点でBattle 9までclearしたv4 saveは後戻りせずForest traceへ進む', () => {
     const restored = restorePlayerProgress(storedProgress([7, 8, 9]))
-    expect(restored.unlockedStageIds).toContain(1)
-    expect(restored.unlockedStageIds).not.toContain(10)
+    expect(restored.clearedStageIds).toContain(1)
+    expect(restored.unlockedStageIds).toContain(10)
   })
 
   it('Battle 10 clear済みsaveへBattle 11とLINK unlockを補い、通過済みincident 1も履歴化する', () => {
