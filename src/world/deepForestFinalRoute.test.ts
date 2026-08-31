@@ -13,7 +13,7 @@ import {
   OVERWORLD_MAP_ID,
 } from './worldMap'
 
-const throughFilter = [7, 8, 9, 1, 10, 11, 12, 13, 14]
+const throughFilter = [1, 7, 8, 9, 10, 11, 12, 13, 14]
 const through15 = [...throughFilter, 2, 15]
 
 function deepForestMove(
@@ -51,17 +51,18 @@ function expectFixedBattle(
 }
 
 describe('JavaScript incident-driven final world route', () => {
-  it('Village preparation後はOverworldで最初の実incidentを固定再現する', () => {
+  it('BYTE合流後はTraining前のOverworldで最初の実incidentを固定再現する', () => {
     const progress = createInitialPlayerProgress()
     const rpgState = {
       ...createInitialRpgState(),
+      partyMemberIds: ['byte'],
       worldMapId: OVERWORLD_MAP_ID,
       worldPosition: { x: 14, y: 13 },
     }
 
     const result = resolveWorldMove({
       rpgState,
-      progress: { ...progress, clearedStageIds: [7, 8, 9] },
+      progress,
       dx: -1,
       dy: 0,
       encounterRolls: { trigger: 0.99, battle: 0.99 },
@@ -70,6 +71,22 @@ describe('JavaScript incident-driven final world route', () => {
     expect(result.kind).toBe('encounter')
     if (result.kind !== 'encounter') return
     expect(result.battle.battleId).toBe(1)
+  })
+
+  it('BYTE未加入なら同じ草原へ入ってもfirst incidentを開始しない', () => {
+    const result = resolveWorldMove({
+      rpgState: {
+        ...createInitialRpgState(),
+        worldMapId: OVERWORLD_MAP_ID,
+        worldPosition: { x: 14, y: 13 },
+      },
+      progress: createInitialPlayerProgress(),
+      dx: -1,
+      dy: 0,
+      encounterRolls: { trigger: 0.99, battle: 0.99 },
+    })
+
+    expect(result.kind).toBe('moved')
   })
 
   it('Forest filter trace後はDeep Forest最初の移動で二つ目の実incidentを固定再現する', () => {
