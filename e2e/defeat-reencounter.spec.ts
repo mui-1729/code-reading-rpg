@@ -81,7 +81,7 @@ test('Random Encounter敗北後は開始地点へ戻り、直後に再encounter�
   await expect(page).toHaveURL(/\/javascript\/battle\/\d+\?/)
   await expect(page.locator('.battle-console')).toBeVisible()
 
-  // HP=1なので最初のenemy turnで敗北する。
+  // Battle開始snapshotはencounterを発生させた移動後の座標 (10, 11)。
   await executeSkill(page, 'TRACE')
   await expect(page.getByText('DEFEAT', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: /RETURN TO CHECKPOINT/ }).click()
@@ -89,7 +89,7 @@ test('Random Encounter敗北後は開始地点へ戻り、直後に再encounter�
   await expect(page).toHaveURL(/\/world$/)
   const viewport = page.getByLabel('Open world map')
   await expect(viewport).toHaveAttribute('data-world-x', '10')
-  await expect(viewport).toHaveAttribute('data-world-y', '10')
+  await expect(viewport).toHaveAttribute('data-world-y', '11')
 
   // checkpoint return resets the encounter counter, so one movement cannot
   // immediately throw the player back into another Random Encounter.
