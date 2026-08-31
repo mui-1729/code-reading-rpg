@@ -47,7 +47,8 @@ test('first START briefs a real world incident then CONNECTs into incident-drive
   await expect(page).toHaveURL(/\/world$/)
   await expect(page.getByLabel('Open world map')).toBeVisible()
   await expect(page.getByLabel('Next objective')).toContainText('BYTEと合流する')
-  await expect(page.getByLabel('Next objective')).toContainText('incident')
+  await expect(page.getByLabel('Next objective')).toContainText('Openingで見たtarget異常')
+  await expect(page.getByLabel('Next objective')).toContainText('まず再現する')
 })
 
 test('after the opening is seen, CONTINUE enters the world and opening can be replayed', async ({ page }) => {
