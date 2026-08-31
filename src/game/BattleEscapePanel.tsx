@@ -10,9 +10,10 @@ type BattleEscapePanelProps = {
   seed: string
   returnTo?: string
   actionLocked: boolean
+  onRun: () => void
 }
 
-export function BattleEscapePanel({ areaId, battleId, seed, returnTo, actionLocked }: BattleEscapePanelProps) {
+export function BattleEscapePanel({ areaId, battleId, seed, returnTo, actionLocked, onRun }: BattleEscapePanelProps) {
   const navigate = useNavigate()
   const { progress } = useProgress()
   if (!getAreaCapability(areaId, 'escape')) return null
@@ -26,6 +27,7 @@ export function BattleEscapePanel({ areaId, battleId, seed, returnTo, actionLock
   const escape = () => {
     if (!allowed || actionLocked) return
     gameAudio.playSe('confirm')
+    onRun()
     navigate({ to: '/world' })
   }
 

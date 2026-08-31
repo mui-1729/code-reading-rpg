@@ -1,6 +1,6 @@
 import { readStoredGameState } from './storedGameState'
 import { expect, test, type Page } from '@playwright/test'
-import { JS_BATTLE_1_PREREQS } from './canonical-progress-fixtures'
+import { JS_BATTLE_1_PREREQS, JS_COMPLETE } from './canonical-progress-fixtures'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -13,6 +13,7 @@ async function seedItemState(
     patchKit?: number
     currentHp?: number
     worldPosition?: { x: number; y: number }
+    clearedStageIds?: readonly number[]
   } = {},
 ) {
   await page.goto('/')
@@ -69,7 +70,7 @@ async function seedItemState(
       patchKit: options.patchKit ?? 0,
       currentHp: options.currentHp ?? 108,
       worldPosition: options.worldPosition ?? { x: 20, y: 14 },
-      clearedStageIds: [...JS_BATTLE_1_PREREQS],
+      clearedStageIds: options.clearedStageIds ?? [...JS_BATTLE_1_PREREQS],
     },
   )
 }
@@ -149,7 +150,7 @@ test.describe('Item / Inventory UX', () => {
     expect(stored.progress.progress.inventory.patchKit).toBe(0)
   })
 
-  test('同じStageを別seedでreplayするとBattle itemの使用回数をresetする', async ({ page }) => {
+  test('未完了Stageを別seedで開くと回復と消費をrollbackして使用回数もresetする', async ({ page }) => {
     await seedItemState(page, { patchKit: 2, currentHp: 40 })
     await page.goto('/javascript/battle/1?seed=item-replay-a&returnTo=%2Fworld')
 
@@ -162,7 +163,8 @@ test.describe('Item / Inventory UX', () => {
     item = page.locator('.battle-item-row[data-item-id="patch-kit"]')
     await expect(item).toHaveAttribute('data-item-state', 'available')
     await expect(item.getByText('READY · BATTLE ONLY', { exact: true })).toBeVisible()
-    await expect(item.getByRole('button', { name: /PATCH KIT ×1/ })).toBeEnabled()
+    await expect(item.getByRole('button', { name: /PATCH KIT ×2/ })).toBeEnabled()
+    await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('40/108')
   })
 
   test('BattleでNO STOCK / HP FULLを明示して使用不可にする', async ({ page }) => {
@@ -188,6 +190,7 @@ test.describe('Item / Inventory UX', () => {
       gold: 10,
       patchKit: 2,
       worldPosition: { x: 30, y: 18 },
+      clearedStageIds: JS_COMPLETE,
     })
     await page.goto('/world')
 

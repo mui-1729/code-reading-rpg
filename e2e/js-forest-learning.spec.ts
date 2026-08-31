@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { readStoredGameState } from './storedGameState'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -120,6 +121,10 @@ test('Forest Battle 10 / 11は初心者Storyで&& / ||を順に説明しfilter�
   await expect(andStory).toContainText('左もtrue、右もtrue')
   await expect(andStory).not.toContainText('filter()')
 
+  // End the unfinished attempt before installing the next Story's clear fixture.
+  // Otherwise reload correctly rolls the synthetic clear back with that attempt.
+  await page.goto('/world')
+  await expect.poll(async () => (await readStoredGameState(page)).battleSession).toBeNull()
   await page.evaluate(() => {
     const key = 'code-reading-rpg:game-state'
     const stored = JSON.parse(localStorage.getItem(key) ?? 'null')

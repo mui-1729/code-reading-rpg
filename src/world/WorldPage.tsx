@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { gameAudio } from '../audio/gameAudio'
 import { useBgm } from '../audio/useBgm'
@@ -426,19 +426,6 @@ export function WorldPage() {
       : isForest
         ? forestObjective
         : javascriptNextObjective
-
-  useEffect(() => {
-    const rewards: string[] = []
-    if (progress.clearedAreaIds.includes('javascript')) rewards.push('branch-saber')
-    if (progress.clearedAreaIds.includes('typescript')) rewards.push('typed-mail')
-    if (rewards.length === 0) return
-
-    setRpgState((current) => {
-      const missing = rewards.filter((id) => !current.ownedEquipmentIds.includes(id))
-      if (missing.length === 0) return current
-      return { ...current, ownedEquipmentIds: [...current.ownedEquipmentIds, ...missing] }
-    })
-  }, [progress.clearedAreaIds, setRpgState])
 
   const enterBattle = useCallback(
     (battleId: number, battleRegion: 'javascript' | 'typescript', seed: string) => {

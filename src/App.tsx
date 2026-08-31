@@ -4,6 +4,7 @@ import { gameAudio } from './audio/gameAudio'
 import { useBattleRuntime } from './battle/BattleRuntimeContext'
 import { createDefeatRecoveryState, withBattleHp } from './battle/resultHandoff'
 import { createBattleSession, type BattleReturnPath } from './battle/session'
+import { useBattleSession } from './battle/useBattleSession'
 import { consumePatchKit } from './economy'
 import { BattleItemPanel } from './economy/BattleItemPanel'
 import { BattleEscapePanel } from './game/BattleEscapePanel'
@@ -67,8 +68,8 @@ const cloneEnemies = (enemies: Enemy[]) => enemies.map((enemy) => ({ ...enemy })
 function App({ battleId, seed, returnTo }: AppProps) {
   const navigate = useNavigate()
   const { setSnapshot } = useBattleRuntime()
-  const { progress, stats: baseStats, setProgress } = useProgress()
-  const { rpgState, setRpgState } = useRpg()
+  const { progress, stats: baseStats } = useProgress()
+  const { rpgState } = useRpg()
   const playerStats = useMemo(
     () => getCombatStats(baseStats, rpgState),
     [baseStats, rpgState],
@@ -82,6 +83,9 @@ function App({ battleId, seed, returnTo }: AppProps) {
   )
   const { battle, nextBattle } = session
   const battleArea = areaById[battle.areaId]
+  const { schedule, updateState, finish } = useBattleSession({
+    areaId: battle.areaId, battleId, seed: String(seed), returnTo,
+  })
 
   const [phase, setPhase] = useState<Phase>('battle')
   const [enemies, setEnemies] = useState<Enemy[]>(cloneEnemies(battle.enemies))
@@ -185,16 +189,16 @@ function App({ battleId, seed, returnTo }: AppProps) {
     gameAudio.stopBgm()
     gameAudio.playSe('victory')
     if (reward.newLevel > reward.previousLevel) {
-      setTimeout(() => gameAudio.playSe('levelUp'), 420)
+      schedule(() => gameAudio.playSe('levelUp'), 420)
     }
     if (reward.firstClear) {
-      setTimeout(() => gameAudio.playSe('stageClear'), 720)
+      schedule(() => gameAudio.playSe('stageClear'), 720)
     }
     if (reward.unlockedSkillId) {
-      setTimeout(() => gameAudio.playSe('skillUnlock'), 1040)
+      schedule(() => gameAudio.playSe('skillUnlock'), 1040)
     }
 
-    setProgress(battleResult.progress)
+    finish('VICTORY', (current) => ({ ...current, progress: battleResult.progress }))
     setVictoryReward(reward)
     const clearedArea = reward.clearedAreaId ? areaById[reward.clearedAreaId] : undefined
     const equipmentId = clearedArea?.clearRewardEquipmentId
@@ -218,7 +222,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
     const survivors = attack.attackers.map(({ enemy }) => enemy)
 
     if (survivors.length === 0) {
-      setTimeout(completeVictory, BATTLE_MOTION.resultDelayMs)
+      schedule(completeVictory, BATTLE_MOTION.resultDelayMs)
       return
     }
 
@@ -228,9 +232,9 @@ function App({ battleId, seed, returnTo }: AppProps) {
     setEnemyTurnActive(true)
     gameAudio.playSe('enemyAttack')
 
-    setTimeout(() => {
+    schedule(() => {
       survivors.forEach((enemy, index) => {
-        setTimeout(
+        schedule(
           () => addLog('enemy', `${enemy.name} / ${enemy.attackName} → ${damages[index] ?? 1} DMG`),
           index * 90,
         )
@@ -239,18 +243,21 @@ function App({ battleId, seed, returnTo }: AppProps) {
       gameAudio.playSe('playerHit')
       setPlayerHit(true)
       setPlayerDamagePopup(totalDamage)
-      setRpgState((current) => withBattleHp(current, nextPlayerHp))
+      updateState((current) => ({ ...current, rpgState: withBattleHp(current.rpgState, nextPlayerHp) }))
 
-      setTimeout(() => {
+      schedule(() => {
         setPlayerHit(false)
         setPlayerDamagePopup(null)
         setEnemyTurnActive(false)
 
         if (nextPlayerHp === 0) {
-          setTimeout(() => {
+          schedule(() => {
             gameAudio.stopBgm()
             gameAudio.playSe('defeat')
-            setRpgState((current) => createDefeatRecoveryState(current, playerStats.maxHp))
+            finish('DEFEAT', (current) => ({
+              ...current,
+              rpgState: createDefeatRecoveryState(current.rpgState, playerStats.maxHp),
+            }))
             setPhase('defeat')
           }, BATTLE_MOTION.resultDelayMs)
         } else {
@@ -275,7 +282,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
     })
     const { targets, skillDamage: skillPower } = action
 
-    setTimeout(() => {
+    schedule(() => {
       setSkillWindup(false)
 
       if (targets.length === 0) {
@@ -297,7 +304,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
 
       gameAudio.playSe('enemyHit')
       if (newlyDefeatedIds.length > 0) {
-        setTimeout(() => gameAudio.playSe('enemyDefeat'), 100)
+        schedule(() => gameAudio.playSe('enemyDefeat'), 100)
       }
       setAnimatingIds(targetIds)
       setDefeatingIds(newlyDefeatedIds)
@@ -313,7 +320,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
           .filter(Boolean)
           .join(' + ')
         setPartyFollowUpActive(true)
-        setTimeout(() => setPartyFollowUpActive(false), 260)
+        schedule(() => setPartyFollowUpActive(false), 260)
         const followUpTarget = targets.find((target) => target.id === partyFollowUpTargetId)
         addLog(
           'system',
@@ -324,13 +331,13 @@ function App({ battleId, seed, returnTo }: AppProps) {
         addLog('system', 'BOSS GUARD → Skill damage to Boss capped at 1')
       }
 
-      setTimeout(() => {
+      schedule(() => {
         setAnimatingIds([])
         setDamagePopups({})
       }, BATTLE_MOTION.hitMs)
 
-      setTimeout(() => setDefeatingIds([]), BATTLE_MOTION.defeatMs)
-      setTimeout(() => runEnemyTurn(nextEnemies), BATTLE_MOTION.hitMs)
+      schedule(() => setDefeatingIds([]), BATTLE_MOTION.defeatMs)
+      schedule(() => runEnemyTurn(nextEnemies), BATTLE_MOTION.hitMs)
     }, BATTLE_MOTION.skillWindupMs)
   }
 
@@ -354,8 +361,9 @@ function App({ battleId, seed, returnTo }: AppProps) {
     if (!result.consumed) return
 
     gameAudio.playSe('confirm')
-    setProgress(result.progress)
-    setRpgState((current) => withBattleHp(current, result.hp))
+    updateState((current) => ({
+      ...current, progress: result.progress, rpgState: withBattleHp(current.rpgState, result.hp),
+    }))
     setPatchKitUsed(true)
     setLastPatchKitHeal(result.healed)
     addLog('system', `PATCH KIT → +${result.healed} HP`)
@@ -392,8 +400,9 @@ function App({ battleId, seed, returnTo }: AppProps) {
     open: explainedSkill !== null,
     onEscape: closeCodeHelp,
   })
+  const resultCovered = Boolean(storyEvent || explainedSkill)
   const resultDialogRef = useModalFocus<HTMLElement>({
-    open: phase !== 'battle',
+    open: phase !== 'battle' && !resultCovered,
     onEscape: goReturnDestination,
   })
 
@@ -541,7 +550,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
 
       <section className="battle-console pixel-window">
         <BattleItemPanel progress={progress} hp={playerHp} maxHp={playerStats.maxHp} usedThisBattle={patchKitUsed} lastHeal={lastPatchKitHeal} actionLocked={isResolving || phase !== 'battle' || Boolean(storyEvent)} onUse={handlePatchKit} />
-        <BattleEscapePanel areaId={battle.areaId} battleId={battle.id} seed={String(seed)} returnTo={returnTo} actionLocked={isResolving || phase !== 'battle' || Boolean(storyEvent)} />
+        <BattleEscapePanel areaId={battle.areaId} battleId={battle.id} seed={String(seed)} returnTo={returnTo} actionLocked={isResolving || phase !== 'battle' || Boolean(storyEvent)} onRun={() => finish('RUN')} />
 
         <div className="skill-grid">
           {availableSkills.map((skill) => {
@@ -591,7 +600,12 @@ function App({ battleId, seed, returnTo }: AppProps) {
       )}
 
       {phase === 'victory' && (
-        <div className="overlay result-overlay victory-overlay" role="presentation">
+        <div
+          className="overlay result-overlay victory-overlay"
+          role="presentation"
+          inert={resultCovered}
+          aria-hidden={resultCovered || undefined}
+        >
           <section
             ref={resultDialogRef}
             className={`result-card victory-card pixel-window result-card-enter result-sequence-host ${resultSequenceDone ? 'result-sequence-complete' : ''}`}
@@ -620,7 +634,12 @@ function App({ battleId, seed, returnTo }: AppProps) {
       )}
 
       {phase === 'defeat' && (
-        <div className="overlay result-overlay defeat-overlay" role="presentation">
+        <div
+          className="overlay result-overlay defeat-overlay"
+          role="presentation"
+          inert={resultCovered}
+          aria-hidden={resultCovered || undefined}
+        >
           <section
             ref={resultDialogRef}
             className="result-card defeat-card pixel-window result-card-enter"

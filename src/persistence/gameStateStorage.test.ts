@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createInitialPlayerProgress, serializePlayerProgress } from '../progression'
 import { createInitialRpgState, serializeRpgState } from '../rpg'
+import { rollbackBattleSession, startBattleSession, updateBattleSession } from '../battle/sessionTransaction'
 import {
   JS_DEEP_FOREST_MAP_ID,
   JS_FOREST_MAP_ID,
@@ -26,11 +27,49 @@ describe('logical game-state storage', () => {
 
     expect(parseGameStateSnapshot(raw)).toEqual({ revision: 12, progress, rpgState })
     expect(JSON.parse(raw)).toMatchObject({
-      version: 1,
+      version: 2,
       revision: 12,
       progress: { version: 4 },
       rpg: { version: 5 },
     })
+  })
+
+  it('root v1 migrates without inventing a battle session or losing state', () => {
+    const previous = { revision: 19, progress: createInitialPlayerProgress(), rpgState: createInitialRpgState() }
+    const legacy = JSON.parse(serializeGameStateSnapshot(previous))
+    legacy.version = 1
+    delete legacy.battleSession
+    const migrated = parseGameStateSnapshot(JSON.stringify(legacy))
+    expect(migrated).toEqual(previous)
+    expect(JSON.parse(serializeGameStateSnapshot(migrated!))).toMatchObject({ version: 2, battleSession: null })
+  })
+
+  it('unfinished session persists its start snapshot and reload rolls back HP and inventory together', () => {
+    const before = {
+      revision: 9,
+      progress: { ...createInitialPlayerProgress(), inventory: { patchKit: 2 } },
+      rpgState: { ...createInitialRpgState(), currentHp: 40 },
+    }
+    const identity = { id: 'attempt', areaId: 'javascript', battleId: 7, seed: 'fixed' }
+    const started = startBattleSession(before, identity)
+    const changed = updateBattleSession(started, identity.id, (current) => ({
+      ...current,
+      progress: { ...current.progress, inventory: { patchKit: 1 } },
+      rpgState: { ...current.rpgState, currentHp: 64 },
+    }))
+    const restored = parseGameStateSnapshot(serializeGameStateSnapshot(changed))!
+    expect(restored.battleSession).toMatchObject({ identity, progress: { inventory: { patchKit: 2 } }, rpgState: { currentHp: 40 } })
+    expect(rollbackBattleSession(restored)).toEqual({ ...before, battleSession: undefined })
+  })
+
+  it.each(['identity', 'progress', 'rpg'])('corrupt session %s rejects the whole root and recovers backup', (part) => {
+    const before = { revision: 4, progress: createInitialPlayerProgress(), rpgState: createInitialRpgState() }
+    const backupRaw = serializeGameStateSnapshot(before)
+    const identity = { id: 'attempt', areaId: 'javascript', battleId: 7, seed: 'fixed' }
+    const broken = JSON.parse(serializeGameStateSnapshot(startBattleSession({ ...before, revision: 5 }, identity)))
+    broken.battleSession[part] = {}
+    expect(parseGameStateSnapshot(JSON.stringify(broken))).toBeNull()
+    expect(restoreGameState({ currentRaw: JSON.stringify(broken), backupRaw, legacyProgressRaw: null, legacyRpgRaw: null })).toEqual(before)
   })
 
   it('root snapshotが壊れていれば直前のvalid backupへrecoverする', () => {

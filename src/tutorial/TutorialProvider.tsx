@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useBattleSessionContext } from '../battle/BattleSessionContext'
 import { useRpg } from '../rpg'
 import { OVERWORLD_MAP_ID, WORLD_START } from '../world/worldMap'
 import { TutorialContext } from './TutorialContext'
@@ -30,6 +31,7 @@ function loadInitialTutorialState() {
 
 export function TutorialProvider({ children }: TutorialProviderProps) {
   const { setRpgState } = useRpg()
+  const { abort: abortBattle } = useBattleSessionContext()
   const [state, setState] = useState(loadInitialTutorialState)
   const worldInteractionConfirmed = useRef(false)
 
@@ -110,6 +112,9 @@ export function TutorialProvider({ children }: TutorialProviderProps) {
     }
 
     worldInteractionConfirmed.current = false
+    // Replay leaves Battle: roll back its tentative HP/items before applying the
+    // new World position. Later App cleanup must not undo this transition.
+    abortBattle()
     setRpgState((current) => ({
       ...current,
       worldMapId: OVERWORLD_MAP_ID,
@@ -122,7 +127,7 @@ export function TutorialProvider({ children }: TutorialProviderProps) {
       window.history.replaceState(null, '', '/world')
       window.dispatchEvent(new PopStateEvent('popstate'))
     }
-  }, [setRpgState])
+  }, [abortBattle, setRpgState])
 
   useEffect(() => {
     window.addEventListener(PROGRESS_RESET_EVENT, reset)

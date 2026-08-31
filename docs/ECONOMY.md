@@ -198,6 +198,8 @@ Battle Item state:
 - stock -1
 - 同Battle2回目は使用不可
 
+Battleは開始時のHP・在庫を含む全体snapshotを持つ。RUN / Victory / Defeatでは消費を確定する。未完Battleのreload / browser back / route leaveでは回復量と消費を両方開始状態へ戻し、敵・turn・使用枠も新しいattemptに揃える。reloadを繰り返して回復だけを積み増すことはできない。
+
 Pause > ITEMS / Shop / Battle / TYPE CACHE rewardは同じItem definition / visualを共有する。
 
 ## Inn / Rest
@@ -244,7 +246,7 @@ Legacy migration:
 - RpgState v1 / v2 / v3 / v4 → v5（未使用Party Equipmentを除去）
 - legacy current HP / known Equipmentは可能な範囲で保持
 
-LocalStorageのcommitは両stateを含む単一revision snapshot。直前backup復旧とstale tab上書き回避を行い、旧分割keyはmigration入力としてだけ読む。
+LocalStorageのcommitは両stateとBattle開始snapshotを含むroot schema v2の単一revision。旧root v1はsessionなしとして移行する。直前backup復旧とstale tab上書き回避を行い、旧分割keyはmigration入力としてだけ読む。Area clear装備報酬はregistryに従ってProgress更新と同じsnapshotへ付与する。
 
 `RESET PROGRESS`はPlayerProgressとRpgStateを初期化する。Sound設定は別storageなので保持する。
 

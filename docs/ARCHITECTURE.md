@@ -22,7 +22,7 @@ Browser
   ↓
 React 19 + TanStack Router
   ↓
-GameStateProvider (ProgressContext + RpgContext)
+GameStateProvider (ProgressContext + RpgContext + BattleSessionContext)
   ↓
 TutorialProvider
   ↓
@@ -82,6 +82,8 @@ src/
 ├── routeComponents.tsx         # Home / Opening / Battle route adapters
 ├── router.tsx                  # current routes + legacy redirects
 ├── game/                       # code-reading Battle domain
+├── battle/                     # Battle session transaction / runtime snapshot / lifecycle
+├── persistence/                # atomic root save / provider / migration / cross-tab sync
 ├── world/                      # Open World domain + World UI
 ├── progression/                # EXP / Gold / clears / unlock / consumable
 ├── rpg/                        # HP / Equipment / Party / World persistence
@@ -169,9 +171,24 @@ variationしても次は変えない。
 - attack / damage motion
 - story scene connection
 
-Battle sessionの一時stateはLocalStorageのsource of truthにしない。
+Enemy / turn / selected Skill / `patchKitUsed`等の一時stateはLocalStorageのsource of truthにしない。`battle/sessionTransaction.ts`は開始時の`PlayerProgress + RpgState + Battle identity`を`BattleSessionSnapshot`として保持するpure transaction境界。
 
-永続HPは`RpgState.currentHp`へ接続し、Battle中のdamage / healをRPG stateへ反映する。
+永続HPは`RpgState.currentHp`へ接続し、Battle中のdamage / heal / Item消費は同じroot saveの開始snapshotとともに仮更新する。終了policyは次の通り。
+
+| Event | Persistent state / runtime |
+| --- | --- |
+| START | 開始時のProgress / RPG全体とarea・Battle ID・seed・returnTo・attempt IDをsnapshot |
+| VICTORY | 報酬・clear・registry装備報酬・現HP・消費を同時commit |
+| DEFEAT | 現行のfull HP / Hub位置 / cooldown回復policyと消費をcommit |
+| RUN | 現HP・消費をcommit、報酬なし |
+| ABORT | browser back / route leave / 別Battle移動では開始snapshotへ全体rollback |
+| RELOAD | 未完sessionを開始snapshotへ全体rollback後、新しいattemptとして敵・turn・per-battle flagsも初期化 |
+
+reloadでItem使用枠だけを回復したり、Enemyだけを初期化して消費を残したりしない。Retry / checkpoint UXの変更はこの基盤と分離する。
+
+`useBattleSession`はmount / unmountをSTART / ABORTへ接続する。StrictModeのsetup / cleanup / setupは同じ開始snapshotへ戻る。全Battle timerをunmount時にcancelし、persistent mutationもattempt IDでguardする。別tabの新revisionを採用したBattleは古いEnemy / turnと混ぜずWorldへ退出する。
+
+別tabの未完Battleを受信したWorld / Pauseは開始snapshotのProgress / RPGを参照する。そこでの操作は同じ開始値を計算baseにし、未完sessionのrollbackと新しい操作を1commitにまとめる。他tabの仮HPで計算した移動・Shop結果を、rollback後の在庫と合成しない。
 
 `BattleRuntimeProvider`はphase / resolving / enemies / HP / selected Skill / turn / resultのread-only snapshotを共有する。TutorialはそのsnapshotからSELECT / EXECUTEと実行完了を判断し、DOM参照はhighlightの配置だけに使う。
 
@@ -304,7 +321,7 @@ v1 / v2 / v3 / v4からv5へmigrationし、未使用partyEquipmentを除去す�
 
 ### Logical save transaction
 
-`persistence/GameStateProvider` が両stateのReact ownershipをまとめる。Treasure / Shop / Inn / Itemの同期更新は同じcommitへbatchされ、`gameStateStorage`が両stateを含むrevision snapshotを1keyへatomicに保存する。旧分割keyはmigration専用。直前backupからのrecovery、portal graphに基づくlocked map位置の正規化、storage event同期、stale revisionの上書き回避をこの境界で行う。
+`persistence/GameStateProvider` が両stateとBattle開始snapshotのReact ownershipをまとめる。Treasure / Shop / Inn / Itemの同期更新は同じcommitへbatchされ、`gameStateStorage`がroot schema v2のrevision snapshotを1keyへatomicに保存する。root v1はsessionなしとして移行し、Progress v4 / RPG v5は維持する。旧分割keyはmigration専用。直前backupからのrecovery、portal graphに基づくlocked map位置の正規化、storage event同期、stale revisionの上書き回避をこの境界で行う。Area clear装備報酬もregistryから同じnormalizationで補完し、World mount effectへ依存しない。
 
 ### TutorialState v1
 
@@ -406,6 +423,7 @@ Unit Test:
 - independent displayed-code oracle / shared combat turn resolver
 - progression / migration
 - RpgState normalization
+- Battle START / commit / rollback / stale attempt guard / root v1→v2 migration
 - World resolver
 - Economy / Equipment / Party
 - Tutorial reducer / storage
@@ -417,6 +435,7 @@ Playwright E2E:
 - movement / interaction
 - Random Encounter → Battle → World return
 - HP persistence / Recovery / Defeat
+- Battle reload全体rollback / browser back後timer停止 / RUN消費commit
 - Treasure / Shop / Equipment
 - BYTE / follow-up
 - Pause / CODEX / SYSTEM

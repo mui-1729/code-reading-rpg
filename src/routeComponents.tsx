@@ -191,7 +191,7 @@ export function BattleRoutePage() {
   }, [area, battleId, exists, navigate, returnTo, searchSeed, seed])
 
   if (!route) return <NotFoundBattle areaId={area?.id} />
-  return <App key={`${battleId}:${seed}`} battleId={route.battleId} seed={seed} returnTo={returnTo} />
+  return <App key={`${route.area.id}:${battleId}:${seed}:${returnTo ?? ''}`} battleId={route.battleId} seed={seed} returnTo={returnTo} />
 }
 
 function NotFoundBattle({ areaId }: { areaId?: string }) {

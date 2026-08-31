@@ -1,4 +1,7 @@
 import { createInitialPlayerProgress, getPlayerStats } from '../progression/progression'
+import type { BattleSessionSnapshot } from '../battle/sessionTransaction'
+import { areas } from '../game/areas'
+import { grantAreaClearEquipment } from '../rpg/areaRewards'
 import {
   migrateStoredPlayerProgress,
   PLAYER_PROGRESS_STORAGE_KEY,
@@ -17,12 +20,13 @@ import { OVERWORLD_MAP_ID, WORLD_MAP_STARTS, WORLD_PORTALS } from '../world/worl
 
 export const GAME_STATE_STORAGE_KEY = 'code-reading-rpg:game-state'
 export const GAME_STATE_BACKUP_STORAGE_KEY = 'code-reading-rpg:game-state-backup'
-export const GAME_STATE_SCHEMA_VERSION = 1
+export const GAME_STATE_SCHEMA_VERSION = 2
 
 export type GameStateSnapshot = {
   revision: number
   progress: PlayerProgress
   rpgState: RpgState
+  battleSession?: BattleSessionSnapshot
 }
 
 export type GameStateWriteDecision =
@@ -33,6 +37,7 @@ type StoredGameState = {
   revision: number
   progress: unknown
   rpg: unknown
+  battleSession: unknown
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -76,6 +81,7 @@ export function normalizeRpgStateForProgress(
   progress: PlayerProgress,
   rpgState: RpgState,
 ): RpgState {
+  rpgState = grantAreaClearEquipment(progress, rpgState, areas)
   const reachable = new Set<string>([OVERWORLD_MAP_ID])
   let addedMap = true
   while (addedMap) {
@@ -114,6 +120,11 @@ export function serializeGameStateSnapshot(snapshot: GameStateSnapshot): string 
     revision: snapshot.revision,
     progress: storedEnvelope(serializePlayerProgress(snapshot.progress)),
     rpg: storedEnvelope(serializeRpgState(snapshot.rpgState)),
+    battleSession: snapshot.battleSession ? {
+      identity: snapshot.battleSession.identity,
+      progress: storedEnvelope(serializePlayerProgress(snapshot.battleSession.progress)),
+      rpg: storedEnvelope(serializeRpgState(snapshot.battleSession.rpgState)),
+    } : null,
   }
   return JSON.stringify(stored)
 }
@@ -125,7 +136,7 @@ export function parseGameStateSnapshot(raw: string | null): GameStateSnapshot | 
     const stored: unknown = JSON.parse(raw)
     if (
       !isRecord(stored) ||
-      stored.version !== GAME_STATE_SCHEMA_VERSION ||
+      (stored.version !== 1 && stored.version !== GAME_STATE_SCHEMA_VERSION) ||
       !Number.isSafeInteger(stored.revision) ||
       (stored.revision as number) < 0
     ) {
@@ -140,7 +151,37 @@ export function parseGameStateSnapshot(raw: string | null): GameStateSnapshot | 
       progress,
       restoreRpgState(JSON.stringify(stored.rpg), stats.maxHp),
     )
-    return { revision: stored.revision as number, progress, rpgState }
+    const snapshot: GameStateSnapshot = { revision: stored.revision as number, progress, rpgState }
+    if (stored.version === 1) return snapshot
+    if (stored.battleSession === null) return snapshot
+    const session = stored.battleSession
+    if (!isRecord(session) || !isRecord(session.identity)) return null
+    const identity = session.identity
+    if (
+      typeof identity.id !== 'string' || identity.id.length === 0 ||
+      typeof identity.areaId !== 'string' || identity.areaId.length === 0 ||
+      !Number.isSafeInteger(identity.battleId) || (identity.battleId as number) <= 0 ||
+      typeof identity.seed !== 'string' || identity.seed.length === 0 ||
+      (identity.returnTo !== undefined && typeof identity.returnTo !== 'string')
+    ) return null
+    const startProgress = migrateStoredPlayerProgress(session.progress)
+    if (!startProgress || !isCompleteStoredRpg(session.rpg)) return null
+    const startRpg = normalizeRpgStateForProgress(
+      startProgress,
+      restoreRpgState(JSON.stringify(session.rpg), getPlayerStats(startProgress.exp).maxHp),
+    )
+    snapshot.battleSession = {
+      identity: {
+        id: identity.id,
+        areaId: identity.areaId,
+        battleId: identity.battleId as number,
+        seed: identity.seed,
+        ...(identity.returnTo === undefined ? {} : { returnTo: identity.returnTo as string }),
+      },
+      progress: startProgress,
+      rpgState: startRpg,
+    }
+    return snapshot
   } catch {
     return null
   }

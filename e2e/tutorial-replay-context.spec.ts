@@ -1,4 +1,4 @@
-import { readStoredRpg } from './storedGameState'
+import { readStoredGameState, readStoredRpg } from './storedGameState'
 import { expect, test, type Page } from '@playwright/test'
 
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
@@ -8,17 +8,18 @@ async function seedReplayState(
   page: Page,
   worldMapId: 'overworld' | 'js-deep-forest',
   worldPosition: { x: number; y: number },
+  patchKit = 0,
 ) {
   await page.goto('/')
   await page.evaluate(
-    ({ tutorialKey, rpgKey, mapId, position }) => {
+    ({ tutorialKey, rpgKey, mapId, position, patchKit }) => {
       localStorage.clear()
       localStorage.setItem('code-reading-rpg:player-progress', JSON.stringify({
         version: 4,
         progress: {
           exp: 0,
           gold: 0,
-          inventory: { patchKit: 0 },
+          inventory: { patchKit },
           clearedStageIds: mapId === 'js-deep-forest' ? [9, 14] : [],
           clearedAreaIds: [],
           completedSideQuestIds: [],
@@ -43,7 +44,7 @@ async function seedReplayState(
         },
       }))
     },
-    { tutorialKey: TUTORIAL_KEY, rpgKey: RPG_KEY, mapId: worldMapId, position: worldPosition },
+    { tutorialKey: TUTORIAL_KEY, rpgKey: RPG_KEY, mapId: worldMapId, position: worldPosition, patchKit },
   )
 }
 
@@ -81,6 +82,39 @@ test('Battle中のREPLAY TUTORIALはWorld開始地点へ戻りMOVEから始め�
   expect(stored.state.currentHp).toBe(73)
   expect(stored.state.encounterCount).toBe(12)
   expect(stored.state.openedTreasureIds).toEqual(['js-debug-cache'])
+  expect((await readStoredGameState(page)).battleSession).toBeNull()
+})
+
+test('PATCH KIT使用後のTutorial replayはBattle全体をrollbackしてからWorld開始地点へ移動する', async ({ page }) => {
+  await seedReplayState(page, 'overworld', { x: 8, y: 8 }, 2)
+  await page.goto('/javascript/battle/7?seed=replay-after-kit&returnTo=%2Fworld')
+  const story = page.locator('.battle-story-overlay')
+  if (await story.isVisible()) await story.getByRole('button', { name: 'SKIP' }).click()
+  await page.locator('.patch-kit-action').click()
+  await expect.poll(() => readStoredGameState(page)).toMatchObject({
+    progress: { progress: { inventory: { patchKit: 1 } } },
+    rpg: { state: { currentHp: 97 } },
+  })
+  await replayTutorial(page)
+  await expect(page).toHaveURL(/\/world$/)
+  await expect(page.locator('.tutorial-prompt-field')).toContainText('MOVE')
+  await expect(page.getByLabel('Open world map')).toHaveAttribute('data-world-x', '20')
+  await expect(page.getByLabel('Open world map')).toHaveAttribute('data-world-y', '14')
+  await expect.poll(() => readStoredGameState(page)).toMatchObject({
+    battleSession: null,
+    progress: { progress: { inventory: { patchKit: 2 }, gold: 0 } },
+    rpg: { state: {
+      currentHp: 73, worldMapId: 'overworld', worldPosition: { x: 20, y: 14 },
+      stepsSinceEncounter: 0, encounterCount: 12, partyMemberIds: ['byte'],
+    } },
+  })
+  await page.reload()
+  await expect(page.locator('.tutorial-prompt-field')).toContainText('MOVE')
+  await expect.poll(() => readStoredGameState(page)).toMatchObject({
+    battleSession: null,
+    progress: { progress: { inventory: { patchKit: 2 } } },
+    rpg: { state: { currentHp: 73, worldPosition: { x: 20, y: 14 } } },
+  })
 })
 
 test('Deep ForestからREPLAYしても同じWorld開始地点へ戻す', async ({ page }) => {

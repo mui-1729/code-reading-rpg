@@ -1,6 +1,6 @@
 import { readStoredProgress, readStoredRpg } from './storedGameState'
 import { expect, test, type Page } from '@playwright/test'
-import { JS_BATTLE_1_PREREQS } from './canonical-progress-fixtures'
+import { JS_BATTLE_1_PREREQS, JS_COMPLETE } from './canonical-progress-fixtures'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -136,7 +136,7 @@ test.describe('Open World RPG loop', () => {
     await expect.poll(() => playerPosition(page)).toEqual({ x: 10, y: 11 })
 
     const stored = await storedRpgState(page)
-    expect(stored.version).toBe(4)
+    expect(stored.version).toBe(5)
     expect(stored.state.worldMapId).toBe('overworld')
     expect(stored.state.worldPosition).toEqual({ x: 10, y: 11 })
     expect(stored.state.encounterCount).toBe(5)
@@ -235,7 +235,11 @@ test.describe('Open World RPG loop', () => {
 
   test('TS TreasureはPATCH KITとGoldを一度だけ付与しreload後もOPENを維持する', async ({ page }) => {
     await seedStorage(page, {
-      progress: createProgress({ gold: 10, inventory: { patchKit: 2 } }),
+      progress: createProgress({
+        gold: 10,
+        inventory: { patchKit: 2 },
+        clearedStageIds: JS_COMPLETE,
+      }),
       rpg: createRpgState({ worldPosition: { x: 30, y: 18 } }),
     })
 
@@ -342,9 +346,9 @@ test.describe('Open World RPG loop', () => {
   test('JS Boss clear rewardのBranch Saberを装備するとBattle POWERへ反映される', async ({ page }) => {
     await seedStorage(page, {
       progress: createProgress({
-        clearedStageIds: [1, 2, 3],
+        clearedStageIds: JS_COMPLETE,
         clearedAreaIds: ['javascript'],
-        unlockedStageIds: [1, 4, 2, 3],
+        unlockedStageIds: [7],
       }),
     })
 

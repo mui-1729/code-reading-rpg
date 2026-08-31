@@ -57,7 +57,7 @@ test('legacy split saveを単一revisionへ移行しlocked mapをnormalizeする
   await expect
     .poll(() => readStoredGameState(page))
     .toMatchObject({
-      version: 1,
+      version: 2,
       progress: { progress: { gold: 42, inventory: { patchKit: 1 } } },
       rpg: {
         version: 5,

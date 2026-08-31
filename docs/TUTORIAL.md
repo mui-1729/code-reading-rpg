@@ -92,13 +92,13 @@ INTERACTを押して調べる
 
 Tutorial側でbattle-select / battle-executeを永続化しない。
 
-Battle DOMからselected Skillを判定する。
+BattleRuntimeのReact snapshotからselected Skillと実行状態を判定する。表示文言やCSS classは進行判定のsource of truthにしない。
 
 ```text
-.skill-card.selected なし
+snapshot.selectedSkillId なし
 → SELECT
 
-.skill-card.selected あり
+snapshot.selectedSkillId あり
 → EXECUTE
 ```
 
@@ -134,9 +134,9 @@ CODE HELP使用は必須にしない。
 
 TutorialをSKIP / COMPLETEした後でも、Pause MENUのSYSTEMから`REPLAY TUTORIAL`を選べる。
 
-- Worldで実行: `field-move`から再開
-- Battleで実行: route検知によりBattle Tutorialへ進む
-- PlayerProgress / RpgState / Equipment / Partyは変更しない
+- World / Battleのどちらで実行しても、Overworld開始地点へ移動し`field-move`から再開する
+- Battleで実行: 未完sessionのHP / Item等を開始snapshotへrollbackしてから、World位置とEncounter歩数を再設定する
+- PlayerProgress / Equipment / Party等の確定済み進行は維持する。Battleの仮回復・仮消費だけはABORT policyに従って両方戻す
 
 ## Persistence
 
@@ -170,7 +170,7 @@ src/tutorial/
 └── *.test.ts
 ```
 
-TutorialPromptは既存World / Battle DOMを観測し、Tutorial専用分岐をWorld Domain / Battle Domainへ入れない。
+TutorialPromptはWorldの実座標DOMを観測する。Battleでは`BattleRuntimeProvider`のselected Skill / phase / resolving / modal状態を購読し、DOM参照はhighlight配置だけに使う。route判定はArea registryから導出し、Tutorial専用分岐をBattleのtarget / damage domainへ入れない。
 
 RESETはProgressionの共通reset eventを受けてTutorialProvider自身が行う。
 

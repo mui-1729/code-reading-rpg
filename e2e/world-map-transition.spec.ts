@@ -21,7 +21,7 @@ async function seedWorld(page: Page) {
             clearedStageIds: [],
             clearedAreaIds: [],
             completedSideQuestIds: [],
-            unlockedStageIds: [1, 4],
+            unlockedStageIds: [7],
             unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
           },
         }),
@@ -76,7 +76,7 @@ test('Overworld → Village → reload → Overworldのround tripを保存する
   await expect(viewport).toHaveAttribute('data-world-x', '10')
   await expect(viewport).toHaveAttribute('data-world-y', '12')
 
-  await expect.poll(async () => (await storedRpgState(page)).version).toBe(4)
+  await expect.poll(async () => (await storedRpgState(page)).version).toBe(5)
   await expect.poll(async () => (await storedRpgState(page)).state.worldMapId).toBe('js-village')
   await expect.poll(async () => (await storedRpgState(page)).state.worldPosition).toEqual({
     x: 10,

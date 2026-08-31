@@ -399,6 +399,8 @@ Defeat時だけ、
 
 としてHubへ戻す。
 
+Battle開始時のProgress / RPG全体はroot saveのsession snapshotへ保存する。Victory / Defeat / RUNでは現在のHP・Item消費（Defeatは上記回復policy）を確定し、browser back / route leave / 別Battle移動は開始snapshotへ戻す。未完Battleのreloadも同じ全体rollback後に敵・turn・Item使用枠を初期化する。HPやItemだけを前の試行から引き継ぐpartial restoreは行わない。
+
 ## 10. Save migration / normalization
 
 RpgState schemaはv5。v4からはmigrationで未使用partyEquipmentだけを除去し、既存の装備・仲間・HP・World進行を保持する。
@@ -433,7 +435,7 @@ PlayerProgressもv4を維持し、schema bumpせず進行からderived unlockを
 
 #203 / #205 / #207 / #209 / #212 / #214時点のv4 saveから後続routeへ進める。未知map ID / bounds外positionはOverworld開始地点へfallbackする。
 
-ProgressとRPG stateは単一revision snapshotとして保存・復元する。portal graphの解放条件を満たさないForest / Deep Forest / TypeScript内に位置だけが残る場合もOverworld開始地点へ戻する。
+ProgressとRPG stateはBattle開始snapshotを含むroot schema v2の単一revisionとして保存・復元する。旧root v1 / 旧分割saveを移行し、portal graphの解放条件を満たさないForest / Deep Forest / TypeScript内に位置だけが残る場合もOverworld開始地点へ戻す。
 
 ## 11. World Objective
 

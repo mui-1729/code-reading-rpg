@@ -1,10 +1,11 @@
 import { expect, test, type Page } from '@playwright/test'
+import { JS_MIDBOSS_PREREQS } from './canonical-progress-fixtures'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
-async function seedWorldAtlas(page: Page, clearedStageIds: number[] = []) {
+async function seedWorldAtlas(page: Page, clearedStageIds: readonly number[] = []) {
   await page.goto('/')
   await page.evaluate(
     ({ progressKey, rpgKey, tutorialKey, clearedStageIds }) => {
@@ -21,7 +22,7 @@ async function seedWorldAtlas(page: Page, clearedStageIds: number[] = []) {
             clearedStageIds,
             clearedAreaIds: [],
             completedSideQuestIds: [],
-            unlockedStageIds: [1, 4, 7],
+            unlockedStageIds: [7],
             unlockedSkillIds: ['trace', 'pulse', 'nova'],
           },
         }),
@@ -61,7 +62,7 @@ async function openAtlas(page: Page) {
 }
 
 test('MENUのMAPから5地域と現在地を確認できる', async ({ page }) => {
-  await seedWorldAtlas(page)
+  await seedWorldAtlas(page, JS_MIDBOSS_PREREQS)
   const atlas = await openAtlas(page)
 
   await expect(atlas).toBeVisible()
@@ -75,7 +76,7 @@ test('MENUのMAPから5地域と現在地を確認できる', async ({ page }) =
 })
 
 test('各regionはworldMap定義と同じterrain gridで道と分岐を表示する', async ({ page }) => {
-  await seedWorldAtlas(page)
+  await seedWorldAtlas(page, JS_MIDBOSS_PREREQS)
   const atlas = await openAtlas(page)
 
   const forest = atlas.locator('[data-atlas-map="js-forest"]')
