@@ -1,6 +1,6 @@
-import { readStoredRpg } from './storedGameState'
+import { readStoredGameState, readStoredRpg } from './storedGameState'
 import { expect, test } from '@playwright/test'
-import { JS_BATTLE_1_PREREQS } from './canonical-progress-fixtures'
+import { JS_FIRST_INCIDENT } from './canonical-progress-fixtures'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -61,11 +61,18 @@ test('Village保存状態からBattleで敗北するとOverworld Hubへ戻る', 
       rpgKey: RPG_KEY,
       tutorialKey: TUTORIAL_KEY,
       skills: initialSkills,
-      clearedStageIds: [...JS_BATTLE_1_PREREQS],
+      clearedStageIds: [...JS_FIRST_INCIDENT],
     },
   )
 
-  await page.goto('/javascript/battle/1?seed=defeat-village-e2e&returnTo=%2Fworld')
+  await page.goto('/javascript/battle/7?seed=defeat-village-e2e&returnTo=%2Fworld')
+  await expect.poll(() => readStoredGameState(page)).toMatchObject({
+    version: 2,
+    battleSession: {
+      identity: { battleId: 7 },
+      rpg: { state: { worldMapId: 'js-village', worldPosition: { x: 10, y: 12 } } },
+    },
+  })
   const story = page.locator('.battle-story-window')
   await expect(story).toBeVisible()
   await story.getByRole('button', { name: 'SKIP' }).click()
