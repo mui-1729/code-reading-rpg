@@ -92,11 +92,11 @@ export function GameStateProvider({ children }: { children: ReactNode }) {
       return next === current ? current : { ...next, dirty: true }
     })
   }, [])
-  const abort = useCallback<BattleSessionContextValue['abort']>((id) => {
+  const abort = useCallback<BattleSessionContextValue['abort']>((id, mode = 'abort') => {
     if (id === undefined || localBattleId.current === id) localBattleId.current = null
     setLocalSessionId((current) => id === undefined || current === id ? null : current)
     setState((current) => {
-      const next = rollbackBattleSession(current, id)
+      const next = rollbackBattleSession(current, id, mode)
       return next === current ? current : { ...next, dirty: true }
     })
   }, [])
