@@ -66,6 +66,32 @@ async function battleBackground(page: Page) {
   return page.locator('.battle-stage').evaluate((element) => getComputedStyle(element).backgroundImage)
 }
 
+test('CODE WORLD探索はdark dashboardよりfieldを主役にする', async ({ page }) => {
+  await seedPresentationState(page)
+  await page.goto('/world')
+
+  const panel = page.locator('.world-panel')
+  const viewport = page.getByLabel('Open world map')
+  const objective = page.getByLabel('Next objective')
+
+  await expect(panel).toBeVisible()
+  await expect(viewport).toBeVisible()
+  await expect(objective).toBeVisible()
+
+  const presentation = await panel.evaluate((element) => ({
+    backgroundColor: getComputedStyle(element).backgroundColor,
+    headingFont: getComputedStyle(element.querySelector('.world-header h1')!).fontFamily,
+  }))
+  expect(presentation.backgroundColor).not.toBe('rgb(8, 8, 18)')
+  expect(presentation.headingFont.toLowerCase()).toContain('georgia')
+
+  const viewportBox = await viewport.boundingBox()
+  const objectiveBox = await objective.boundingBox()
+  expect(viewportBox).not.toBeNull()
+  expect(objectiveBox).not.toBeNull()
+  expect(viewportBox!.height).toBeGreaterThan(objectiveBox!.height * 4)
+})
+
 test('ForestとTypeScriptはscene dataと背景visualが明確に異なる', async ({ page }) => {
   await seedPresentationState(page)
 
@@ -104,4 +130,18 @@ test('JS / TS Final Bossは名前・silhouette・sceneが別identityになる', 
   await expect(tsBoss).toHaveAttribute('data-boss-display-name', 'CONTRACT TITAN')
   await expect(tsBoss.locator('[data-enemy-visual-id]')).toHaveAttribute('data-enemy-visual-id', 'contract-titan')
   await expect(tsBoss.getByText('CODE NAME · Boss', { exact: true })).toBeVisible()
+})
+
+test('mobileでもWorld/Boss sceneがpage全体を横overflowさせない', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await seedPresentationState(page)
+
+  await page.goto('/world')
+  await expect(page.getByLabel('Open world map')).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+
+  await page.goto('/typescript/battle/6?seed=presentation-mobile-boss&returnTo=%2Fworld')
+  await expect(page.locator('.battle-stage')).toHaveAttribute('data-battle-scene', 'typescript-core-boss')
+  await expect(page.getByText('CONTRACT TITAN', { exact: true })).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
 })
