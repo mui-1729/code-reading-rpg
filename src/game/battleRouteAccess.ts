@@ -30,13 +30,16 @@ export function getBattleRouteLockReason(area: BattleRouteArea, battleId: number
   }
 
   if (battleId === 1) {
-    return 'Villageのincident preparation（Battle 7〜9）を完了し、草原で最初の症状を再現しよう。'
+    return '最初のlive incidentはWorldでBYTEと合流し、西の草原へ進むと始まる。'
+  }
+  if (battleId === 7 || battleId === 8 || battleId === 9) {
+    return 'まず草原で最初のtarget異常を実際に見てから、Villageで読めなかった部分を確認しよう。'
   }
   if (battleId === 2) {
-    return '最初のincidentからForestのtraceをBattle 14まで追い、Deep Forest入口へ進もう。'
+    return '最初のincidentを観察してVillageで基礎を確認し、ForestのtraceをBattle 14相当まで追ってDeep Forest入口へ進もう。'
   }
   if (battleId === 3) {
-    return '二つのincidentを確認し、Deep ForestのtraceをBattle 22までroot causeへ追おう。'
+    return '二つのincidentを確認し、Deep Forestのtraceを最後までroot causeへ追おう。'
   }
   return 'このBattleはまだ解放されていない。WorldのNEXT OBJECTIVEから順に進もう。'
 }
