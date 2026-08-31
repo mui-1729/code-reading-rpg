@@ -14,13 +14,13 @@ async function seedWorld(page: Page) {
         JSON.stringify({
           version: 4,
           progress: {
-            exp: 0,
-            gold: 0,
+            exp: 12,
+            gold: 20,
             inventory: { patchKit: 0 },
-            clearedStageIds: [],
+            clearedStageIds: [1],
             clearedAreaIds: [],
             completedSideQuestIds: [],
-            unlockedStageIds: [1, 4],
+            unlockedStageIds: [1, 7],
             unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
           },
         }),
@@ -36,8 +36,8 @@ async function seedWorld(page: Page) {
               accessory: null,
             },
             ownedEquipmentIds: ['training-blade', 'traveler-coat'],
-            partyMemberIds: [],
-            partyEquipment: {},
+            partyMemberIds: ['byte'],
+            partyEquipment: { byte: { weapon: null, armor: null, accessory: null } },
             worldPosition: { x: 14, y: 13 },
             stepsSinceEncounter: 8,
             encounterCount: 0,
@@ -60,7 +60,7 @@ async function storedRpgState(page: Page) {
   return page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), RPG_KEY)
 }
 
-test('Overworld → Village → reload → Overworldのround tripを保存する', async ({ page }) => {
+test('JS-01後のOverworld → Village → reload → Overworld round tripを保存する', async ({ page }) => {
   await seedWorld(page)
 
   const viewport = page.locator('.world-viewport')
