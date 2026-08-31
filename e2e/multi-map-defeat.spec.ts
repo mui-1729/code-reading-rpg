@@ -8,7 +8,7 @@ const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
 const initialSkills = ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label']
 
-test('Village保存状態からBattleで敗北するとOverworld Hubへ戻る', async ({ page }) => {
+test('Village保存状態からBattleで敗北してもcheckpointへ開始HPのまま戻る', async ({ page }) => {
   await page.goto('/')
   await page.evaluate(
     ({ progressKey, rpgKey, tutorialKey, skills, clearedStageIds }) => {
@@ -85,21 +85,26 @@ test('Village保存状態からBattleで敗北するとOverworld Hubへ戻る', 
   await trace.click()
   await expect(page.getByText('DEFEAT', { exact: true })).toBeVisible()
 
-  await expect.poll(async () =>
-    readStoredRpg(page),
-  ).toMatchObject({
-    version: 5,
-    state: {
-      worldMapId: 'overworld',
-      worldPosition: { x: 20, y: 14 },
-      currentHp: 108,
-      stepsSinceEncounter: 8,
+  // Defeat itself is not a commit point: the root still contains the tentative 0 HP
+  // plus the immutable Battle-start snapshot until the player chooses a policy.
+  await expect.poll(() => readStoredGameState(page)).toMatchObject({
+    battleSession: {
+      rpg: { state: { currentHp: 1, worldMapId: 'js-village', worldPosition: { x: 10, y: 12 } } },
     },
   })
 
-  await page.getByRole('button', { name: /RETURN TO HUB/ }).click()
+  await page.getByRole('button', { name: /RETURN TO CHECKPOINT/ }).click()
   await expect(page).toHaveURL(/\/world$/)
-  await expect(page.getByLabel('Open world map')).toHaveAttribute('data-world-map', 'overworld')
-  await expect(page.getByLabel('Open world map')).toHaveAttribute('data-world-x', '20')
-  await expect(page.getByLabel('Open world map')).toHaveAttribute('data-world-y', '14')
+  await expect(page.getByLabel('Village map')).toHaveAttribute('data-world-map', 'js-village')
+  await expect(page.getByLabel('Village map')).toHaveAttribute('data-world-x', '10')
+  await expect(page.getByLabel('Village map')).toHaveAttribute('data-world-y', '12')
+  await expect.poll(async () => readStoredRpg(page)).toMatchObject({
+    version: 5,
+    state: {
+      worldMapId: 'js-village',
+      worldPosition: { x: 10, y: 12 },
+      currentHp: 1,
+      stepsSinceEncounter: 0,
+    },
+  })
 })
