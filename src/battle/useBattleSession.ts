@@ -1,7 +1,12 @@
 import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useBattleSessionContext } from './BattleSessionContext'
-import type { BattleCommitEvent, BattleSessionIdentity, BattleStateAction } from './sessionTransaction'
+import type {
+  BattleCommitEvent,
+  BattleRollbackMode,
+  BattleSessionIdentity,
+  BattleStateAction,
+} from './sessionTransaction'
 
 export function useBattleSession(identity: Omit<BattleSessionIdentity, 'id'>) {
   const { start, update, commit, abort, externalRevision } = useBattleSessionContext()
@@ -19,7 +24,7 @@ export function useBattleSession(identity: Omit<BattleSessionIdentity, 'id'>) {
       mounted.current = false
       pending.forEach(clearTimeout)
       pending.clear()
-      abort(attempt.id)
+      abort(attempt.id, 'abort')
     }
   }, [abort, attempt, start])
 
@@ -46,5 +51,8 @@ export function useBattleSession(identity: Omit<BattleSessionIdentity, 'id'>) {
   const finish = useCallback((event: BattleCommitEvent, action?: BattleStateAction) => {
     if (mounted.current) commit(attempt.id, event, action)
   }, [attempt.id, commit])
-  return { schedule, updateState, finish }
+  const rollback = useCallback((mode: BattleRollbackMode = 'abort') => {
+    if (mounted.current) abort(attempt.id, mode)
+  }, [abort, attempt.id])
+  return { schedule, updateState, finish, rollback }
 }
