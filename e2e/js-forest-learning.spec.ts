@@ -146,6 +146,6 @@ test('Forest Battle 10 / 11はincident traceとして&& / ||を順に説明しfi
   await expect(orStory).toContainText('||')
   await expect(orStory).not.toContainText('filter()')
   await orStory.getByRole('button', { name: /NEXT/ }).click()
-  await expect(orStory).toContainText('どちらか一つでもtrue')
+  await expect(orStory).toContainText('どちらか一方でもtrue')
   await expect(orStory).not.toContainText('filter()')
 })
