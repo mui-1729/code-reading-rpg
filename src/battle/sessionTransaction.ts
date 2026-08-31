@@ -14,7 +14,7 @@ export type BattlePersistentState = { progress: PlayerProgress; rpgState: RpgSta
 /** Only the immutable attempt-start state is persisted, never half a combat turn. */
 export type BattleSessionSnapshot = BattlePersistentState & { identity: BattleSessionIdentity }
 export type BattleTransactionState = BattlePersistentState & { battleSession?: BattleSessionSnapshot }
-export type BattleCommitEvent = 'VICTORY' | 'DEFEAT' | 'RUN'
+export type BattleCommitEvent = 'VICTORY'
 export type BattleRollbackMode = 'retry' | 'checkpoint' | 'abort' | 'reload'
 export type BattleStateAction = (current: BattlePersistentState) => BattlePersistentState
 
@@ -68,10 +68,6 @@ export function commitBattleSession<T extends BattleTransactionState>(
   action: BattleStateAction = (current) => current,
 ): T {
   if (state.battleSession?.identity.id !== id) return state
-  switch (event) {
-    case 'VICTORY':
-    case 'DEFEAT':
-    case 'RUN':
-      return { ...state, ...action(state), battleSession: undefined }
-  }
+  if (event !== 'VICTORY') return state
+  return { ...state, ...action(state), battleSession: undefined }
 }
