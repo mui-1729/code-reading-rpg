@@ -1,5 +1,4 @@
 import { expect, test, type Page } from '@playwright/test'
-import { JS_BATTLE_1_PREREQS } from './canonical-progress-fixtures'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -13,10 +12,10 @@ const createProgress = (overrides: Record<string, unknown> = {}) => ({
     exp: 0,
     gold: 0,
     inventory: { patchKit: 0 },
-    clearedStageIds: [...JS_BATTLE_1_PREREQS],
+    clearedStageIds: [],
     clearedAreaIds: [],
     completedSideQuestIds: [],
-    unlockedStageIds: [7],
+    unlockedStageIds: [1],
     unlockedSkillIds: initialSkills,
     ...overrides,
   },
@@ -109,6 +108,8 @@ test.describe('Open World RPG loop', () => {
     await seedStorage(page, {
       progress: createProgress(),
       rpg: createRpgState({
+        partyMemberIds: ['byte'],
+        partyEquipment: { byte: { weapon: null, armor: null, accessory: null } },
         worldPosition: { x: 10, y: 10 },
         stepsSinceEncounter: 4,
         encounterCount: 4,
@@ -119,10 +120,10 @@ test.describe('Open World RPG loop', () => {
     await expect(page).toHaveURL(/\/world$/)
     await expect.poll(() => playerPosition(page)).toEqual({ x: 10, y: 10 })
 
-    // Village preparation後はRandom rollに依存せず、JavaScript側の次のmovementでfirst incidentを再現する。
+    // BYTE合流後は教材履修を要求せず、JavaScript側の次のmovementで最初のlive incidentを固定再現する。
     await page.getByRole('button', { name: 'Move down' }).click()
     await expect(page).toHaveURL(/\/javascript\/battle\/1\?/)
-    await expect(page.getByText('CHAPTER 01', { exact: false })).toBeVisible()
+    await expect(page.getByText('JS-01', { exact: false })).toBeVisible()
     await dismissStory(page)
 
     await executeSkill(page, 'TRACE')
@@ -153,13 +154,14 @@ test.describe('Open World RPG loop', () => {
 
     const progress = await storedProgress(page)
     expect(progress.progress.clearedStageIds).toContain(1)
-    expect(progress.progress.unlockedStageIds).toContain(10)
+    expect(progress.progress.unlockedStageIds).toContain(7)
+    expect(progress.progress.unlockedStageIds).not.toContain(10)
     expect(progress.progress.unlockedStageIds).not.toContain(2)
 
-    // Battle 1 clearでLV2になりmax HPは108→116へ増えるが、残HPは自動回復しない。
+    // JS-01だけではLV2へ上げず、最初の観察後もmax HPは108のまま残HPを引き継ぐ。
     await page.goto('/javascript/battle/1?seed=hp-carry-e2e&returnTo=%2Fworld')
     await expect(page.locator('.player-panel .status-label-row strong')).toHaveText(
-      `${stored.state.currentHp}/116`,
+      `${stored.state.currentHp}/108`,
     )
   })
 
