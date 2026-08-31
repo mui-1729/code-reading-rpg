@@ -111,14 +111,19 @@ test('Battle 14 clear後はDeep Forestへ入り、最初のmovementでsecond inc
   const story = page.getByRole('dialog', { name: '異常が複数targetへ広がっている' })
   await expect(story).toBeVisible()
   await expect(story).toContainText('複数')
+  await expect(story).toContainText('別症状')
+
+  await story.getByRole('button', { name: /NEXT/ }).click()
   await expect(story).toContainText('filter()')
+  await expect(story).toContainText('&&')
+  await expect(story).toContainText('||')
 })
 
 test('second incident clear後はDeep ForestでBattle 15を固定導入し共有traceを追う', async ({ page }) => {
   await seedDeepForestGate(page, 'incident-cleared')
   await page.getByRole('button', { name: 'Move left' }).click()
   await expect(page.getByLabel('Deep Forest map')).toHaveAttribute('data-world-map', 'js-deep-forest')
-  await expect(page.getByLabel('Next objective')).toContainText('FOLLOW SHARED TRACE')
+  await expect(page.getByLabel('Next objective')).toContainText('SHARED TRACE · FILTER')
 
   await page.getByRole('button', { name: 'Move up' }).click()
 
