@@ -16,7 +16,7 @@ async function seedEconomyLoop(page: Page) {
           version: 4,
           progress: {
             exp: 0,
-            gold: 64,
+            gold: 50,
             inventory: { patchKit: 0 },
             clearedStageIds,
             clearedAreaIds: [],
@@ -98,6 +98,7 @@ test('Battle Gold → Shop purchase/equip → Inn → reload → next canonical 
   await executeSkill(page, 'TRACE')
   await expect(page.getByText('VICTORY', { exact: true })).toBeVisible()
 
+  // First incident keeps the established 20 G reward: 50 + 20 = 70.
   await expect.poll(async () => (await storedState(page)).progress.progress.gold).toBe(70)
   const skip = page.getByRole('button', { name: 'SKIP' })
   if (await skip.isVisible()) await skip.click()
