@@ -26,7 +26,7 @@ export function getBattleRouteLockReason(area: BattleRouteArea, battleId: number
   if (!node || node.area !== area) return 'このBattleは存在しない。Worldへ戻ろう。'
 
   if (area === 'typescript') {
-    return 'JavaScript地方のFinal Bossと、TypeScript地方の前のBattleを先に完了しよう。'
+    return 'JavaScript地方のFinal Bossと、TypeScript地方の前のStory beatを先に完了しよう。'
   }
 
   if (battleId === 1) {
@@ -36,10 +36,10 @@ export function getBattleRouteLockReason(area: BattleRouteArea, battleId: number
     return 'まず草原で最初のtarget異常を実際に見てから、Villageで読めなかった部分を確認しよう。'
   }
   if (battleId === 2) {
-    return '最初のincidentを観察してVillageで基礎を確認し、ForestのtraceをBattle 14相当まで追ってDeep Forest入口へ進もう。'
+    return '最初のincidentを観察してVillageで基礎を確認し、Forestで影響範囲のtraceまで追ってDeep Forest入口へ進もう。'
   }
   if (battleId === 3) {
     return '二つのincidentを確認し、Deep Forestのtraceを最後までroot causeへ追おう。'
   }
-  return 'このBattleはまだ解放されていない。WorldのNEXT OBJECTIVEから順に進もう。'
+  return 'このStory beatはまだ解放されていない。WorldのNEXT OBJECTIVEから順に進もう。'
 }
