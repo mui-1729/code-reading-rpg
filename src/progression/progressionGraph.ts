@@ -7,15 +7,22 @@ export type ProgressionNode = {
   prerequisites: readonly string[]
 }
 
-// `battleId` is a persisted/runtime compatibility identifier. It is not a
-// chapter number and must not define story order. Stable semantic keys keep the
-// route readable when an Area gains, removes, or reorders Battles.
+// `battleId` is a legacy persisted/runtime identifier. It is deliberately not
+// the player-facing chapter number and must never define story order. Stable
+// semantic keys define the route, while display numbers are derived from each
+// area's current sequence. That lets us insert/reorder story beats without
+// renumbering saves, URLs, or every later Area.
 const javascriptNodes = [
-  { key: 'js-training-hp', battleId: 7, area: 'javascript', prerequisites: [] },
+  { key: 'js-incident-first', battleId: 1, area: 'javascript', prerequisites: [] },
+  {
+    key: 'js-training-hp',
+    battleId: 7,
+    area: 'javascript',
+    prerequisites: ['js-incident-first'],
+  },
   { key: 'js-training-name', battleId: 8, area: 'javascript', prerequisites: ['js-training-hp'] },
   { key: 'js-training-find', battleId: 9, area: 'javascript', prerequisites: ['js-training-name'] },
-  { key: 'js-incident-first', battleId: 1, area: 'javascript', prerequisites: ['js-training-find'] },
-  { key: 'js-forest-and', battleId: 10, area: 'javascript', prerequisites: ['js-incident-first'] },
+  { key: 'js-forest-and', battleId: 10, area: 'javascript', prerequisites: ['js-training-find'] },
   { key: 'js-forest-or', battleId: 11, area: 'javascript', prerequisites: ['js-forest-and'] },
   { key: 'js-forest-combined', battleId: 12, area: 'javascript', prerequisites: ['js-forest-or'] },
   { key: 'js-forest-guardian', battleId: 13, area: 'javascript', prerequisites: ['js-forest-combined'] },
@@ -33,7 +40,7 @@ const javascriptNodes = [
     key: 'js-final-code-core',
     battleId: 3,
     area: 'javascript',
-    prerequisites: ['js-incident-first', 'js-incident-second', 'js-deep-reduce'],
+    prerequisites: ['js-deep-reduce'],
   },
 ] as const satisfies readonly ProgressionNode[]
 
@@ -75,6 +82,21 @@ export function getAreaBattleSequence(area: ProgressionArea): readonly number[] 
 
 export function getAreaProgressionKeys(area: ProgressionArea): readonly string[] {
   return nodesByArea[area].map((node) => node.key)
+}
+
+export function getBattleStoryNumber(battleId: number): number | undefined {
+  const node = getProgressionNode(battleId)
+  if (!node) return undefined
+  const index = nodesByArea[node.area].findIndex((candidate) => candidate.key === node.key)
+  return index >= 0 ? index + 1 : undefined
+}
+
+export function getBattleDisplayCode(battleId: number): string | undefined {
+  const node = getProgressionNode(battleId)
+  const storyNumber = getBattleStoryNumber(battleId)
+  if (!node || storyNumber === undefined) return undefined
+  const prefix = node.area === 'javascript' ? 'JS' : 'TS'
+  return `${prefix}-${String(storyNumber).padStart(2, '0')}`
 }
 
 function isProgressionKeySatisfied(
