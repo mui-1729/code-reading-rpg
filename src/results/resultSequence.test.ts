@@ -4,11 +4,28 @@ import { createVictoryResultSequence } from './resultSequence'
 describe('typed victory result handoff', () => {
   const reward = { expGained: 40, goldGained: 20, previousLevel: 1, newLevel: 2, firstClear: true, unlockedStageId: 8, unlockedSkillId: 'trace' }
 
-  it('replayは実際のEXP/Goldだけを表示する', () => {
+  it('replayは実際のEXP/Goldに加えて100%/50% policyを明示する', () => {
     expect(createVictoryResultSequence({ expGained: 10, goldGained: 5, previousLevel: 1, newLevel: 1, firstClear: false })).toEqual([
       { id: 'exp', title: 'EXP GAINED', detail: '+10', tone: 'reward' },
       { id: 'gold', title: 'GOLD GAINED', detail: '+5 G', tone: 'reward' },
+      { id: 'replay', title: 'REPLAY CLEAR · EXP 100% / GOLD 50%', tone: 'clear' },
     ])
+  })
+
+  it('Level Upは実際に増えたMAX HP / POWERをvisible eventへ含める', () => {
+    expect(createVictoryResultSequence(reward).find((item) => item.id === 'level')).toEqual({
+      id: 'level',
+      title: 'LEVEL UP! · MAX HP +8 · POWER +2%',
+      detail: '1 → 2',
+      tone: 'level',
+    })
+  })
+
+  it('stage unlockはinternal numeric IDではなくplayer-facing codeで表示する', () => {
+    expect(createVictoryResultSequence(reward).find((item) => item.id === 'stage')).toMatchObject({
+      title: 'STAGE CLEAR',
+      detail: 'STAGE JS-03 UNLOCKED',
+    })
   })
 
   it('Boss unlockは独立したprogress eventを保つ', () => {

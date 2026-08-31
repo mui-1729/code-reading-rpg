@@ -289,7 +289,7 @@ Equipment slotsは`weapon` / `armor` / `accessory`。Attack / Defense / maxHPへ
 
 現在の仲間`BYTE`は1 ACTIONに1回、Playerがcodeから選んだtarget群のうちSkill後に生存する先頭1体だけへfollow-upする。全滅時は追撃しない。複数targetで追撃damageを乗算せず、選択外の相手へ自動攻撃しない。仲間に独立HP / Defense / Equipmentはなく、Pauseでは実効のfollow-up情報だけを示す。
 
-`PATCH KIT`は30 G、Battle中1回、最大24 HP回復。現在HPと在庫はそれぞれRpgState / PlayerProgressへ保存する。
+`PATCH KIT`は30 G、Battle中1回、最大24 HP回復。Battle中の消費/回復はattempt transaction内のtentative stateで、VICTORY時だけpersistent結果としてcommitする。RETRY / RETURN / RUN / reloadではBattle開始snapshotへ戻す。
 
 ## 9. World Objective
 
@@ -323,12 +323,27 @@ RpgStateはschema v5。旧v1 / v2 / v3 / v4からmigrationし、未使用のpart
 
 World portal graphとProgressから到達可能mapを導出し、locked Forest / Deep Forest / TypeScript内だけに位置がある不整合はOverworld開始地点へ戻す。`storage` eventでnewer revisionを取り込み、保存前に新しいrevisionを検出したstale tabは上書きせず新snapshotを採用する。LocalStorageにcompare-and-swapはないため完全同時書き込みの排他までは保証しない。
 
+unfinished `battleSession`がroot saveに残っている場合はreload時にSTART snapshotへrollbackし、Enemy/turnだけ初期化されてPlayer HP/Itemだけ減ったpartial restoreを作らない。
+
 `RESET PROGRESS`はPlayerProgress / RpgState / TutorialStateを初期化し、Sound settingsは保持する。
 
-## 11. 再攻略
+## 11. 再攻略 / Defeat
 
 ReplayでもEXPは100%、Goldは50%。EnemyをLevel連動で弱くせず、Equipmentを極端に強くせず、Partyがtargetを自動決定しない。
 
-Battle session / Defeat / Retryの確定policyは#266 Priority Aで扱い、root saveのtransaction境界と矛盾しない形で固定する。
+Defeatは即commit / full healしない。
+
+```text
+DEFEAT
+├─ RETRY BATTLE
+│   → START HP / Item / Progressへrollback
+│   → 同じBattle / seed
+└─ RETURN TO CHECKPOINT
+    → START map / local position / HP / Itemへrollback
+    → no full heal
+    → encounter cooldownだけreset
+```
+
+RUN / browser back / route abort / reloadもSTART snapshotへrollbackする。VICTORYだけがBattle中HP / Itemとrewardをpersistent outcomeとしてcommitする。詳細は[`BATTLE_SESSION.md`](./BATTLE_SESSION.md)を参照する。
 
 今後のprogression追加は先にsemantic canonical graph、player-facing numbering、Skill mastery/trial、map gate、Objective、route guard、save normalizationを更新し、同じ到達可能性をUnit / E2Eで固定する。

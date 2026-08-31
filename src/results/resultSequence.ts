@@ -1,3 +1,5 @@
+import { getMaxHpForLevel, getPowerMultiplierForLevel } from '../progression/progression'
+import { getBattleDisplayCode } from '../progression/progressionGraph'
 import type { BattleVictoryReward } from '../progression/types'
 import type { WorldProgressFeedback } from '../world/worldObjective'
 
@@ -27,11 +29,28 @@ export function createVictoryResultSequence(
     { id: 'exp', title: 'EXP GAINED', detail: `+${reward.expGained}`, tone: 'reward' },
     { id: 'gold', title: 'GOLD GAINED', detail: `+${reward.goldGained} G`, tone: 'reward' },
   ]
+  if (!reward.firstClear) {
+    items.push({ id: 'replay', title: 'REPLAY CLEAR · EXP 100% / GOLD 50%', tone: 'clear' })
+  }
   if (reward.newLevel > reward.previousLevel) {
-    items.push({ id: 'level', title: 'LEVEL UP!', detail: `${reward.previousLevel} → ${reward.newLevel}`, tone: 'level' })
+    const maxHpDelta = getMaxHpForLevel(reward.newLevel) - getMaxHpForLevel(reward.previousLevel)
+    const powerDelta = Math.round(
+      (getPowerMultiplierForLevel(reward.newLevel) - getPowerMultiplierForLevel(reward.previousLevel)) * 100,
+    )
+    items.push({
+      id: 'level',
+      title: `LEVEL UP! · MAX HP +${maxHpDelta} · POWER +${powerDelta}%`,
+      detail: `${reward.previousLevel} → ${reward.newLevel}`,
+      tone: 'level',
+    })
   }
   if (reward.firstClear && !presentation.worldFeedback) {
-    items.push({ id: 'stage', title: 'STAGE CLEAR', detail: reward.unlockedStageId ? `STAGE ${reward.unlockedStageId} UNLOCKED` : undefined, tone: 'clear' })
+    items.push({
+      id: 'stage',
+      title: 'STAGE CLEAR',
+      detail: reward.unlockedStageId ? `STAGE ${getBattleDisplayCode(reward.unlockedStageId)} UNLOCKED` : undefined,
+      tone: 'clear',
+    })
   }
   if (reward.unlockedSkillId) {
     items.push({ id: 'skill', title: 'SKILL UNLOCKED', detail: presentation.unlockedSkillName ?? reward.unlockedSkillId, tone: 'unlock' })

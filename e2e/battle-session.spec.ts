@@ -95,7 +95,7 @@ test('SPA browser back aborts the attempt and no pending attack timer can mutate
   await expect(page.getByLabel('Open world map')).toBeVisible()
 })
 
-test('RUN commits current HP and consumed kit without rewards and reload retains that result', async ({ page }) => {
+test('RUN aborts tentative HP / kit changes without rewards and reload retains the start snapshot', async ({ page }) => {
   await enterEncounter(page)
   const initial = await readStoredGameState(page)
   await useKit(page)
@@ -103,14 +103,15 @@ test('RUN commits current HP and consumed kit without rewards and reload retains
   await expect(page).toHaveURL(/\/world$/)
   await expect.poll(() => readStoredGameState(page)).toMatchObject({
     battleSession: null,
-    progress: { progress: { gold: 70, exp: 0, inventory: { patchKit: 1 }, clearedStageIds: initial.progress.progress.clearedStageIds } },
-    rpg: { state: { currentHp: 64, worldPosition: initial.rpg.state.worldPosition } },
+    progress: initial.progress,
+    rpg: initial.rpg,
   })
   await page.reload()
   await expect(page.getByLabel('Open world map')).toBeVisible()
   await expect.poll(() => readStoredGameState(page)).toMatchObject({
     battleSession: null,
-    progress: { progress: { inventory: { patchKit: 1 } } }, rpg: { state: { currentHp: 64 } },
+    progress: initial.progress,
+    rpg: initial.rpg,
   })
 })
 

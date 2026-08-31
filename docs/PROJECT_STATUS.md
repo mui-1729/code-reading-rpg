@@ -129,8 +129,8 @@ stable map:
 - viewport 11 × 9
 - `worldMapId + local worldPosition`をRpgState v5で保存
 - `/world` route上でmap transition
-- local mapからBattleへ入り、same map / positionへ戻る
-- Defeat時だけOverworld Hubへ戻す
+- local mapからBattleへ入り、Victory / RUN / checkpoint returnでpolicyに応じてsame map / positionへ戻る
+- Defeatは即Hub転送せず、RETRYかcheckpoint returnを選ぶ
 
 ### Portal gate authority
 
@@ -162,6 +162,7 @@ TypeScript Frontier   -> JS-19 clear required
 - Boss GUARD
 - staged result sequence
 - persistent HP
+- START snapshot / tentative update / commit / rollbackのBattle transaction
 
 Skill unlockは表示だけではない。Lesson clearでMASTEREDになったSkillは後続Battleのauthored poolで実際に利用可能になる。
 
@@ -182,6 +183,7 @@ Story / CODE HELPは読み方を説明するが、現在盤面のcorrect target�
 - BYTE party / follower
 - Skill mastery / trial
 - CODEXのMASTERED Skill表示
+- Defeat RETRY / RETURN TO CHECKPOINT
 
 BYTEはPlayerがcodeから選んだ**同じtarget**へ追撃し、correct targetを自動決定しない。
 
@@ -231,7 +233,11 @@ TS-01 / TS-02 / TS-03でも新しいSkillはcurrent BattleではTRIAL、そのcl
 - `RpgState` schema v5（未使用Party Equipmentを除去）
 - RpgState v1〜v4 → v5 migration
 - Progress / RPGの単一revision snapshot、backup recovery、storage event同期、stale tab上書き回避
-- root schema v2にBattle開始snapshotを保持し、reload / ABORTは全体rollback、VICTORY / DEFEAT / RUNは定義済みpolicyでcommit
+- root schema v2にBattle開始snapshotを保持する
+- Battle中HP / Itemはtentative stateとして同じroot transaction内で扱う
+- VICTORYだけがBattle success commit point
+- RETRY / RETURN TO CHECKPOINT / RUN / browser back / reload / ABORTはSTART snapshotへrollbackする
+- checkpoint returnは全回復せず、開始HP / Item / map / local positionを戻してencounter cooldownだけresetする
 - current `worldMapId + local worldPosition`を保存
 - unknown map / bounds外locationはHubへfallback
 - portal graph上でlocked mapにある位置もHubへnormalize
@@ -273,6 +279,11 @@ numeric IDを維持するのは互換性のためであり、将来のchapter追
 - main route EXPでJS Final clear時にLv5へ到達する
 - JS-01だけのgrindで高Levelほど必要勝利数が急増する
 - Replay EXPは100%、Replay Goldは50%
+- Level Up resultにMAX HP / POWER deltaが出る
+- reload / browser back / RUNはBattle START snapshotへrollbackする
+- RETRYは同じ開始HP / Itemへ戻る
+- checkpoint returnはno full healで開始地点へ戻り、直後の再encounterを防ぐ
+- VICTORYだけがBattle中HP / Item / rewardをcommitする
 - old save normalization
 - Economy invariant
 - displayed code / TargetRule semantics一致
@@ -290,12 +301,12 @@ npm run test:e2e
 
 ## 10. 次の優先順位
 
-#266 Priority Sを固定した後:
+#266 Priority S / Aを固定した後:
 
-1. #266 Priority A — Defeat / Retry / Inn / Battle session / Reward presentation
-2. #265 — RPG-first visual / audio / game feel
-3. #260 — World Atlas / exploration UI
-4. #262 — Character relationship / continuity
+1. #265 — RPG-first visual / audio / game feel
+2. #260 — World Atlas / exploration UI
+3. #262 — Character relationship / continuity
+4. #259 — Battle / Pause Mobile / accessibility
 5. #246 — Database prototype
 
 新region追加時も、
