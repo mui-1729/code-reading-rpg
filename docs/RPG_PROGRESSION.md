@@ -13,7 +13,7 @@ Fixed Story Beat / Fixed Lesson / Random Encounter / MID BOSS / Final Boss
 ↓
 Code Reading Battle
 ↓
-EXP / Gold / CLEAR / unlock
+EXP / Gold / CLEAR / mastery
 ↓
 元のmap・座標へreturn、またはtraceの先のmapへ前進
 ↓
@@ -41,6 +41,8 @@ JavaScript編では、**教材を先に終えてからincidentへ戻るのでは
 
 `completedSideQuestIds`はlegacy save互換のため保持する。LevelはEXPから導出し、保存しない。
 
+`unlockedStageIds` / `unlockedSkillIds`はどちらも**clear履歴から再導出できるcache**として扱い、stored bitそのものをauthorityにしない。
+
 ### RpgState v5
 
 ```ts
@@ -61,15 +63,32 @@ PlayerProgressへWorld座標やEquipmentを混ぜない。両stateはGameStatePr
 
 ## 3. Level / combat stats
 
+Level `L` に対して `n = L - 1` とする。
+
 ```text
-累計必要EXP = 20 * level * (level - 1)
-base maxHP = 100 + (level - 1) * 8
-base powerMultiplier = 1 + (level - 1) * 0.02
+累計必要EXP = 5n^3 + 15n^2 + 20n
+base maxHP = 100 + n * 8
+base powerMultiplier = 1 + n * 0.02
 ```
+
+主なEXP境界:
+
+```text
+Lv1       0 EXP
+Lv2      40 EXP
+Lv3     140 EXP
+Lv4     330 EXP
+Lv5     640 EXP
+Lv6   1,100 EXP
+Lv7   1,740 EXP
+Lv8   2,590 EXP
+```
+
+必要EXPは高Levelほど強く増やす。目的はgrindを禁止することではなく、**序盤の弱いBattleだけを周回するほど時間効率が自然に落ちる普通のRPG成長**にすること。
 
 Equipment bonusを加えた`CombatStats`をBattleへ渡す。Skill damage、Defense mitigation、BYTE follow-up、Boss Guard、persistent HPはpure combat turn resolverで解決し、runtimeとsolvabilityが同じ計算を使う。
 
-Level / Equipmentはdamageと生存余地を増やすが、`TargetRule`を変更しない。
+Level / Equipmentはdamageと生存余地を増やすが、`TargetRule`を変更しない。十分に時間をかけてLevelを上げたPlayerが多少楽になること自体は許容するが、通常進行ではcode readingを主な攻略手段にする。
 
 ## 4. Canonical progression graph
 
@@ -151,9 +170,73 @@ TS-03  ROOT CAUSE
 
 route accessibility / next Battle / unlockはcanonical graphから導出する。勝利処理はprerequisiteを飛ばしたunlockを作らず、clear bitを一部だけ偽装してもtransitive prerequisiteを満たさなければ後続Battleを解放しない。通常進行へStage Selectを戻さない。
 
-初回CLEARはEXP / Gold / clear / unlockを適用し、replayはEXP / Goldだけを再獲得できる。
+初回CLEARはEXP / Gold / clear / masteryを適用する。ReplayもEXPは同量獲得でき、Goldだけ50%へ減衰する。
 
-## 5. Multi-map World / Encounter
+## 5. Skill mastery / trial
+
+`unlockedSkillIds`は、Playerが**以後のBattleで通常利用できるMASTERED Skill**を表す。
+
+Fresh saveのstarter Skill:
+
+```text
+TRACE
+PULSE
+NOVA
+```
+
+新しいSkillは原則として次の流れにする。
+
+```text
+Lesson Battle
+→ そのBattle中だけTRIALとして利用可能
+↓ clear
+MASTERED
+↓
+後続Battleのauthored skill poolで通常利用可能
+```
+
+Battle UIは、
+
+- そのStory beat開始時点までにMASTERED済み
+- current LessonでTRIAL指定される
+
+のどちらかを満たすSkillだけを表示する。generator / solvabilityも同じavailabilityを使う。
+
+TRIALはcurrent Lessonで実際に読むSkillだけへ絞る。later incident / Boss用の派生Skillは、同conceptという理由だけで早期解放せず、**そのSkillが使うsyntaxがすべて学習済みになったStory beatでMASTERED**へする。
+
+例:
+
+```text
+JS-05 &&
+→ TRIAL LINK
+→ clear後 LINK MASTERED
+
+JS-06 ||
+→ TRIAL FORK
+→ clear後 FORK MASTERED
+
+JS-09 filter()
+→ TRIAL GATHER
+→ clear後 GATHER / VIPER / LOCK / ALERT MASTERED
+
+JS-13 some()
+→ TRIAL SIGNAL
+→ clear後 SIGNAL / SWEEP MASTERED
+
+JS-16 sort()
+→ TRIAL ORDER
+→ clear後 ORDER / MOON EDGE MASTERED
+
+JS-18 reduce()
+→ TRIAL REDUCE FOCUS
+→ clear後 REDUCE FOCUS / JUDGE MASTERED
+```
+
+TypeScriptもTS-01 / TS-02 / TS-03で同じTRIAL → MASTERED規則を使う。
+
+これにより「SKILL UNLOCKED」というrewardが単なる表示ではなく、後続のincident / Bossで実際のplayer agencyへつながる一方、未学習syntaxを含む派生Skillが早く出ることも防ぐ。PauseのCODEXでは現在のMASTERED Skillを確認できる。
+
+## 6. Multi-map World / Encounter
 
 - `overworld` — Hub、JS-01のlive incident、Village入口、Code Core接続
 - `js-village` — JS-02〜04の固定Preparation。Random Encounterなし
@@ -190,19 +273,17 @@ JS-19 clear
 
 JS-18 clear後はDeep Forest西口からCode Core手前へ直接抜ける。終盤に草原やVillageへ戻って古いBattleを消化するbacktrackは行わない。
 
-## 6. Learning pacing / Level pacing
+## 7. Learning pacing / Level pacing
 
-Story reorderでRPG成長を壊さない。
+main Story初回clearだけの累計EXPは、JS-19 clear時に640 EXP = Lv5へ到達する。
 
-- JS-01はLv1で体験できる難易度
-- JS-01だけで即Lv2にはしない
-- Village JS-02〜04を終える頃にLv1後半〜Lv2へ近づく
-- Forest調査を進めてJS-10へ到達する頃にrecommended Lv3と整合させる
-- Deep Forestを通してFinal直前にrecommended Lv5へ自然に近づける
+Final recommended Lv5はhard gateではなくstretch target。Final直前はLv4で、Random / Replayを少し挟めば事前にLv5へ近づける一方、寄り道なしでもcodeを正しく読めれば挑戦できる余地を残す。
 
-Battle 1のGoldは既存Economy budgetを守るため20 Gを維持し、Story reorderだけを理由にShop / Inn価格や初回予算を崩さない。
+JS-01（12 EXP）だけを繰り返す場合はLv5まで約54勝、Lv6まで約92勝、Lv8まで約216勝必要。長時間育成するplaystyleは許容するが、普通にStoryを進める方が大幅に効率的になる。
 
-## 7. Equipment / Party / Economy
+Battle 1のGoldは既存Economy budgetを守るため20 Gを維持し、Story reorderやEXP curveだけを理由にShop / Inn価格や初回予算を崩さない。
+
+## 8. Equipment / Party / Economy
 
 Equipment slotsは`weapon` / `armor` / `accessory`。Attack / Defense / maxHPへbonusを加えるが、code readingを代替しない。
 
@@ -210,7 +291,7 @@ Equipment slotsは`weapon` / `armor` / `accessory`。Attack / Defense / maxHPへ
 
 `PATCH KIT`は30 G、Battle中1回、最大24 HP回復。現在HPと在庫はそれぞれRpgState / PlayerProgressへ保存する。
 
-## 8. World Objective
+## 9. World Objective
 
 ObjectiveはPlayerProgressからpureに導出し、World / Pause / Battle後feedbackが同じ`worldObjective` sourceを使う。
 
@@ -220,9 +301,9 @@ JavaScriptは19 Story beat、TypeScriptは3 Story beatのcanonical graphに沿�
 
 player-facing objectiveへlegacy numeric Battle IDを露出しない。
 
-## 9. Save restore / reset
+## 10. Save restore / reset
 
-PlayerProgressはschema v4。旧v1 / v2 / v3からmigrationし、canonical progression graphからunlockを再導出する。
+PlayerProgressはschema v4。旧v1 / v2 / v3からmigrationし、canonical progression graphからstage unlockを、validなtransitive clear履歴からSkill masteryを再導出する。stored `unlockedSkillIds`へ後半Skillを書き足しても先取りできない。
 
 #261以前のsaveは旧順序を前提にしているため、進行済み地域から必要なStory beatを補完して**既存Playerを新しい序盤へ強制的に戻さない**。
 
@@ -240,12 +321,14 @@ RpgStateはschema v5。旧v1 / v2 / v3 / v4からmigrationし、未使用のpart
 
 `code-reading-rpg:game-state`の1回の`setItem`がcommit point。直前のvalid snapshotをbackupへ保持し、壊れたrootからは最新のvalid revisionを復旧する。旧Progress / RPG分割keyは初回migration入力のみで、root保存後は削除する。片側だけのlegacy saveはvalid側を保持し、他方を初期化する。
 
-World portal graphとProgressから到達可能mapを導出し、locked Forest / Deep Forest / TypeScript内だけに位置がある不整合はOverworld開始地点へ戻する。`storage` eventでnewer revisionを取り込み、保存前に新しいrevisionを検出したstale tabは上書きせず新snapshotを採用する。LocalStorageにcompare-and-swapはないため完全同時書き込みの排他までは保証しない。
+World portal graphとProgressから到達可能mapを導出し、locked Forest / Deep Forest / TypeScript内だけに位置がある不整合はOverworld開始地点へ戻す。`storage` eventでnewer revisionを取り込み、保存前に新しいrevisionを検出したstale tabは上書きせず新snapshotを採用する。LocalStorageにcompare-and-swapはないため完全同時書き込みの排他までは保証しない。
 
 `RESET PROGRESS`はPlayerProgress / RpgState / TutorialStateを初期化し、Sound settingsは保持する。
 
-## 10. 再攻略
+## 11. 再攻略
 
-負けた場合はWorldへ戻るかRETRYする。Random EncounterでEXP / Goldを得られるが、EnemyをLevel連動で弱くせず、Equipmentを極端に強くせず、Partyがtargetを自動決定しない。
+ReplayでもEXPは100%、Goldは50%。EnemyをLevel連動で弱くせず、Equipmentを極端に強くせず、Partyがtargetを自動決定しない。
 
-今後のprogression追加は先にsemantic canonical graph、player-facing numbering、map gate、Objective、route guard、save normalizationを更新し、同じ到達可能性をUnit / E2Eで固定する。
+Battle session / Defeat / Retryの確定policyは#266 Priority Aで扱い、root saveのtransaction境界と矛盾しない形で固定する。
+
+今後のprogression追加は先にsemantic canonical graph、player-facing numbering、Skill mastery/trial、map gate、Objective、route guard、save normalizationを更新し、同じ到達可能性をUnit / E2Eで固定する。

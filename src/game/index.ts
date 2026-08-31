@@ -12,13 +12,17 @@ export {
 } from './areas'
 export { getAreaForBattle, getBattlesForArea, getBossBattleForArea } from './areaProgression'
 export { battles } from './battles'
+export {
+  getAvailableSkillCardsForBattle as getSkillCardsForBattle,
+  getBattleSkillAvailability,
+  getUnavailableAuthoredSkillIds,
+} from './availableSkills'
 export { generateBattle } from './generator'
 export { skillDefinitionById, skillDefinitions } from './skillDefinitions'
 export {
   allSkillDefinitionById,
   allSkillDefinitions,
   getSkillCardForBattle,
-  getSkillCardsForBattle,
   skills,
 } from './skills'
 export {

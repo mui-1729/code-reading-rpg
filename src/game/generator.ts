@@ -1,6 +1,6 @@
 import { battles } from './battles'
+import { getAvailableSkillCardsForBattle } from './availableSkills'
 import { createSeededRandom, type Seed, type SeededRandom } from './random'
-import { getSkillCardsForBattle } from './skills'
 import { hasInitialValidTarget, isBattleSolvable } from './solvability'
 import { getTargets } from './targeting'
 import type { Battle, SkillCard } from './types'
@@ -14,7 +14,7 @@ export function generateBattle(battleId: number, seed: Seed): Battle | undefined
   if (!template) return undefined
 
   const random = createSeededRandom(`${String(seed)}:battle:${template.id}`)
-  const skillCards = getSkillCardsForBattle(template, seed)
+  const skillCards = getAvailableSkillCardsForBattle(template, seed)
 
   for (let attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt += 1) {
     const candidate = createCandidate(template, random)

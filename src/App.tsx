@@ -115,8 +115,8 @@ function App({ battleId, seed, returnTo }: AppProps) {
   const [inspectedEnemyKey, setInspectedEnemyKey] = useState<string | null>(null)
 
   const availableSkills = useMemo(
-    () => getSkillCardsForBattle(battle, seed),
-    [battle, seed],
+    () => getSkillCardsForBattle(battle, seed, progress.unlockedSkillIds),
+    [battle, progress.unlockedSkillIds, seed],
   )
   const selectedSkill = useMemo(
     () => availableSkills.find((skill) => skill.id === selectedSkillId) ?? null,

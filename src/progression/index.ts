@@ -2,7 +2,9 @@ export {
   BASE_PLAYER_HP,
   DEFAULT_INITIAL_SKILL_IDS,
   DEFAULT_INITIAL_STAGE_IDS,
-  EXP_CURVE_FACTOR,
+  EXP_CURVE_CUBIC_FACTOR,
+  EXP_CURVE_LINEAR_FACTOR,
+  EXP_CURVE_QUADRATIC_FACTOR,
   HP_PER_LEVEL,
   POWER_MULTIPLIER_PER_LEVEL,
 } from './constants'
@@ -37,6 +39,14 @@ export {
   progressionNodes,
   TYPESCRIPT_BATTLE_SEQUENCE,
 } from './progressionGraph'
+export {
+  getBattleStartMasteredSkillIds,
+  getBattleTrialSkillIds,
+  getMasteredSkillIds,
+  getSkillUnlocksForStage,
+  INITIAL_MASTERED_SKILL_IDS,
+  isSkillAvailableForBattle,
+} from './skillMastery'
 export {
   migrateStoredPlayerProgress,
   PLAYER_PROGRESS_SCHEMA_VERSION,

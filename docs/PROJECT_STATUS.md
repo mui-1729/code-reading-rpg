@@ -1,6 +1,6 @@
 # CODE//READ RPG — Project Status
 
-最終更新: 2026-08-31
+最終更新: 2026-09-01
 
 この文書は、**このゲームが何を目指していて、今どこまで実装され、次に何を作るべきか**を短く把握するためのcurrent snapshotです。
 
@@ -156,12 +156,14 @@ TypeScript Frontier   -> JS-19 clear required
 - safe internal `TargetRule`; display codeを`eval()`しない
 - seeded Enemy / Skill / code variation
 - semantic code variation
-- battle-aware learned-syntax policy
-- solvability / uniqueness regression tests
+- **MASTERED Skill + current Lesson TRIALだけをBattleへ出すavailability resolver**
+- generator / solvabilityも同じSkill availabilityを利用
 - CODE HELP / CODE DATA
 - Boss GUARD
 - staged result sequence
 - persistent HP
+
+Skill unlockは表示だけではない。Lesson clearでMASTEREDになったSkillは後続Battleのauthored poolで実際に利用可能になる。
 
 Story / CODE HELPは読み方を説明するが、現在盤面のcorrect target名 / 対象数はPlayerへ残す。
 
@@ -169,26 +171,43 @@ Story / CODE HELPは読み方を説明するが、現在盤面のcorrect target�
 
 実装済み:
 
-- EXP / Level
+- EXP / nonlinear Level curve
 - persistent HP
 - Weapon / Armor / Accessory
 - Shop / explicit equip
 - PATCH KIT
 - paid Inn
-- first-clear / replay Gold
+- Replay EXP 100% / Replay Gold 50%
 - Treasure
 - BYTE party / follower
+- Skill mastery / trial
+- CODEXのMASTERED Skill表示
 
 BYTEはPlayerがcodeから選んだ**同じtarget**へ追撃し、correct targetを自動決定しない。
 
-Story reorderだけを理由にEconomyを変更しない。JS-01はGold 20 Gを維持し、EXPだけ序盤のoverlevelを防ぐよう抑える。
+### EXP curve
 
-目安:
+Level `L`、`n = L - 1`として:
 
-- JS-01: Lv1のまま
-- Village完了〜Forest序盤: Lv2帯
-- JS-10付近: recommended Lv3と整合
-- Final付近: recommended Lv5へ自然に近づく
+```text
+累計必要EXP = 5n^3 + 15n^2 + 20n
+```
+
+主な境界:
+
+```text
+Lv2    40
+Lv3   140
+Lv4   330
+Lv5   640
+Lv6 1,100
+Lv7 1,740
+Lv8 2,590
+```
+
+ReplayでもEXPは減らさない。grindを禁止するのではなく、**高Levelほど必要EXPを強く増やし、弱い序盤Battleだけでは自然に効率が落ちる**設計。
+
+Story初回clearだけならJS-19 clear時に640 EXP = Lv5へ届く。Story reorderやEXP curveだけを理由にEconomyを変更せず、JS-01はGold 20 Gを維持する。
 
 ## 7. TypeScript
 
@@ -201,6 +220,8 @@ TS-01 CONTRACT TRACE
 ```
 
 internal compatibility IDは4 / 5 / 6。
+
+TS-01 / TS-02 / TS-03でも新しいSkillはcurrent BattleではTRIAL、そのclear後にMASTEREDとして後続へ引き継ぐ。
 
 今後のbeginner Story passでもJavaScriptと同様に、technical termから始めず**現象 → 普通の言葉 → 型情報**の順にする。
 
@@ -216,6 +237,8 @@ internal compatibility IDは4 / 5 / 6。
 - portal graph上でlocked mapにある位置もHubへnormalize
 - semantic prerequisiteを推移的に検証
 - forged / partial clear bitでは後続へ進めない
+- `unlockedStageIds` / `unlockedSkillIds`はclear履歴から再導出するcacheで、stored bit自体をauthorityにしない
+- Skill masteryもtransitive prerequisiteを満たしたvalid clearだけから導出する
 
 #261以前のsaveは新しい序盤へ巻き戻さない。
 
@@ -230,18 +253,26 @@ numeric IDを維持するのは互換性のためであり、将来のchapter追
 回帰対象:
 
 - fresh saveの最初のStory BattleはJS-01
+- fresh saveのMASTERED SkillはTRACE / PULSE / NOVAのみ
 - JS-01前はVillageへ入れない
 - JS-01 clear後にVillageへ進める
 - JS-02 → JS-03 → JS-04
 - JS-04前はForestへ入れない
 - JS-04後にForestへ進める
 - Forest JS-05〜09
+- current Lessonの新SkillはTRIALとして使える
+- clear後のSkillは後続BattleでMASTEREDとして利用できる
+- 未MASTERED / 非TRIAL SkillはBattleへ出ない
+- generatorも同じSkill availabilityでsolvabilityを判定する
 - JS-09後にDeep ForestでJS-10 fixed second symptom
 - JS-10後にDeep Forest JS-11〜18
 - MID BOSSをRandom poolへ入れない
 - new conceptをRandomで初登場させない
 - JS-18後にCode Coreへ直接進む
 - JS-19はfull semantic prerequisite chain完了までlocked
+- main route EXPでJS Final clear時にLv5へ到達する
+- JS-01だけのgrindで高Levelほど必要勝利数が急増する
+- Replay EXPは100%、Replay Goldは50%
 - old save normalization
 - Economy invariant
 - displayed code / TargetRule semantics一致
@@ -259,12 +290,13 @@ npm run test:e2e
 
 ## 10. 次の優先順位
 
-JavaScript incident-first routeがgreenになった後:
+#266 Priority Sを固定した後:
 
-1. Battle runtime responsibility split (#196)
-2. TypeScript visual / beginner Story pass
-3. Database編prototype
-4. RPG depthの追加
+1. #266 Priority A — Defeat / Retry / Inn / Battle session / Reward presentation
+2. #265 — RPG-first visual / audio / game feel
+3. #260 — World Atlas / exploration UI
+4. #262 — Character relationship / continuity
+5. #246 — Database prototype
 
 新region追加時も、
 
