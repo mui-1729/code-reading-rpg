@@ -124,13 +124,13 @@ test('reloadはBattle attemptをrollbackして開始HP / Itemへ戻す', async (
   await dismissStory(page)
 
   await page.getByRole('button', { name: /PATCH KIT ×1/ }).click()
-  await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/100')
+  await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
   await expect(page.getByText('PATCH KIT ×0', { exact: true })).toBeVisible()
 
   await page.reload()
   await dismissStory(page)
 
-  await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('40/100')
+  await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('40/108')
   await expect(page.getByRole('button', { name: /PATCH KIT ×1/ })).toBeEnabled()
   await expect.poll(async () => (await readStoredRpg(page))?.state.currentHp).toBe(40)
   await expect.poll(async () => (await readStoredProgress(page))?.progress.inventory.patchKit).toBe(1)
@@ -144,7 +144,7 @@ test('browser backはBattle attemptをABORTしWorld snapshotを変更しない',
   await dismissStory(page)
 
   await page.getByRole('button', { name: /PATCH KIT ×1/ }).click()
-  await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/100')
+  await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
   await page.goBack()
 
   await expect(page).toHaveURL(/\/world$/)
@@ -161,7 +161,7 @@ test('Victoryだけattempt-local HP / Itemとrewardをpersistent stateへcommit�
   await dismissStory(page)
 
   await page.getByRole('button', { name: /PATCH KIT ×1/ }).click()
-  await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('94/100')
+  await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('94/108')
   await executeSkill(page, 'TRACE')
   await executeSkill(page, 'PULSE')
   await executeSkill(page, 'TRACE')
