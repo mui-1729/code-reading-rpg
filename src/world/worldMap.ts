@@ -128,6 +128,7 @@ export const WORLD_PORTALS: readonly WorldPortal[] = [
     toMapId: JS_VILLAGE_MAP_ID,
     targetPosition: WORLD_MAP_STARTS[JS_VILLAGE_MAP_ID],
     label: 'GREENFIELD VILLAGE',
+    requiredClearedStageId: 1,
   },
   {
     fromMapId: JS_VILLAGE_MAP_ID,
@@ -142,7 +143,7 @@ export const WORLD_PORTALS: readonly WorldPortal[] = [
     toMapId: JS_FOREST_MAP_ID,
     targetPosition: WORLD_MAP_STARTS[JS_FOREST_MAP_ID],
     label: 'JAVASCRIPT FOREST',
-    requiredClearedStageId: 1,
+    requiredClearedStageId: 9,
   },
   {
     fromMapId: JS_FOREST_MAP_ID,
