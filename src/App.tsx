@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'reac
 import { useNavigate } from '@tanstack/react-router'
 import { gameAudio } from './audio/gameAudio'
 import { useBattleRuntime } from './battle/BattleRuntimeContext'
-import { createDefeatRecoveryState, withBattleHp } from './battle/resultHandoff'
+import { withBattleHp } from './battle/resultHandoff'
 import { createBattleSession, type BattleReturnPath } from './battle/session'
 import { useBattleSession } from './battle/useBattleSession'
 import { consumePatchKit } from './economy'
@@ -83,7 +83,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
   )
   const { battle, nextBattle } = session
   const battleArea = areaById[battle.areaId]
-  const { schedule, updateState, finish } = useBattleSession({
+  const { schedule, updateState, finish, rollback } = useBattleSession({
     areaId: battle.areaId, battleId, seed: String(seed), returnTo,
   })
 
@@ -254,10 +254,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
           schedule(() => {
             gameAudio.stopBgm()
             gameAudio.playSe('defeat')
-            finish('DEFEAT', (current) => ({
-              ...current,
-              rpgState: createDefeatRecoveryState(current.rpgState, playerStats.maxHp),
-            }))
+            setIsResolving(false)
             setPhase('defeat')
           }, BATTLE_MOTION.resultDelayMs)
         } else {
@@ -387,6 +384,18 @@ function App({ battleId, seed, returnTo }: AppProps) {
     navigate({ to: '/world' })
   }
 
+  const retryBattle = () => {
+    gameAudio.playSe('confirm')
+    rollback('retry')
+    requestAnimationFrame(() => window.location.reload())
+  }
+
+  const returnToCheckpoint = () => {
+    gameAudio.playSe('confirm')
+    rollback('checkpoint')
+    requestAnimationFrame(() => void navigate({ to: '/world' }))
+  }
+
   const openCodeHelp = (skill: SkillCard) => {
     gameAudio.playSe('confirm')
     setExplainedSkill(skill)
@@ -403,7 +412,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
   const resultCovered = Boolean(storyEvent || explainedSkill)
   const resultDialogRef = useModalFocus<HTMLElement>({
     open: phase !== 'battle' && !resultCovered,
-    onEscape: goReturnDestination,
+    onEscape: phase === 'defeat' ? returnToCheckpoint : goReturnDestination,
   })
 
   const playerHpPercent = Math.max(0, Math.min(100, (playerHp / playerStats.maxHp) * 100))
@@ -550,7 +559,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
 
       <section className="battle-console pixel-window">
         <BattleItemPanel progress={progress} hp={playerHp} maxHp={playerStats.maxHp} usedThisBattle={patchKitUsed} lastHeal={lastPatchKitHeal} actionLocked={isResolving || phase !== 'battle' || Boolean(storyEvent)} onUse={handlePatchKit} />
-        <BattleEscapePanel areaId={battle.areaId} battleId={battle.id} seed={String(seed)} returnTo={returnTo} actionLocked={isResolving || phase !== 'battle' || Boolean(storyEvent)} onRun={() => finish('RUN')} />
+        <BattleEscapePanel areaId={battle.areaId} battleId={battle.id} seed={String(seed)} returnTo={returnTo} actionLocked={isResolving || phase !== 'battle' || Boolean(storyEvent)} onRun={() => rollback('abort')} />
 
         <div className="skill-grid">
           {availableSkills.map((skill) => {
@@ -649,8 +658,10 @@ function App({ battleId, seed, returnTo }: AppProps) {
             tabIndex={-1}
           >
             <div className="eyebrow">DEFEAT</div>
+            <p className="result-note">RETRYはBattle開始時のHP / Itemへ戻る。RETURNも全回復せず、開始地点へ戻る。</p>
             <div className="defeat-actions">
-              <button className="primary-button" onClick={goReturnDestination}>▶ RETURN TO HUB</button>
+              <button className="primary-button" onClick={retryBattle}>▶ RETRY BATTLE</button>
+              <button className="secondary-button" onClick={returnToCheckpoint}>◀ RETURN TO CHECKPOINT</button>
               <button className="secondary-button" onClick={() => openCodeHelp(availableSkills[0])}>CODE HELP</button>
             </div>
           </section>
