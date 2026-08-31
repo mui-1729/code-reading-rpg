@@ -211,23 +211,6 @@ export function resolveWorldMove({
   const nextSteps = rpgState.stepsSinceEncounter + 1
   const portal = getWorldPortalAtPosition(mapId, next)
   if (portal) {
-    // Story gates are intentionally stricter than the legacy portal metadata.
-    // The player first witnesses the live incident, then enters Village to
-    // learn only the missing basics; Forest opens after that preparation.
-    if (
-      mapId === OVERWORLD_MAP_ID &&
-      portal.toMapId === JS_VILLAGE_MAP_ID &&
-      !progress.clearedStageIds.includes(1)
-    ) {
-      return { kind: 'blocked', nextState: rpgState, terrain }
-    }
-    if (
-      mapId === OVERWORLD_MAP_ID &&
-      portal.toMapId === JS_FOREST_MAP_ID &&
-      !progress.clearedStageIds.includes(9)
-    ) {
-      return { kind: 'blocked', nextState: rpgState, terrain }
-    }
     if (
       portal.requiredClearedStageId !== undefined &&
       !progress.clearedStageIds.includes(portal.requiredClearedStageId)
