@@ -148,6 +148,34 @@ test('map transitionはAREA titleとregion field BGMを同じscene identityか�
   await expect(page.locator('.world-entry-transition')).toContainText('GREENFIELD VILLAGE')
 })
 
+test('@cross-browser @responsive World AREA transitionは各viewportで横overflowせずscene identityを維持する', async ({ page }) => {
+  await seedWorld(page, {
+    position: { x: 14, y: 13 },
+    clearedStageIds: [1],
+  })
+  await page.goto('/world')
+
+  const viewport = page.locator('.world-viewport')
+  await page.getByRole('button', { name: 'Move up' }).click()
+  await expect(viewport).toHaveAttribute('data-world-map', 'js-village')
+  await expect(viewport).toHaveAttribute('data-world-scene', 'greenfield-village')
+  await expect(page.locator('.world-entry-transition')).toContainText('GREENFIELD VILLAGE')
+
+  const sizes = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    clientWidth: document.documentElement.clientWidth,
+  }))
+  expect(sizes.scrollWidth).toBeLessThanOrEqual(sizes.clientWidth)
+
+  const viewportBox = await viewport.boundingBox()
+  const transitionBox = await page.locator('.world-entry-transition').boundingBox()
+  expect(viewportBox).not.toBeNull()
+  expect(transitionBox).not.toBeNull()
+  if (!viewportBox || !transitionBox) return
+  expect(transitionBox.x).toBeGreaterThanOrEqual(viewportBox.x - 1)
+  expect(transitionBox.x + transitionBox.width).toBeLessThanOrEqual(viewportBox.x + viewportBox.width + 1)
+})
+
 test('Battle entryはarena identityに合わせた短いRPG transitionを持つ', async ({ page }) => {
   const cleared = [1, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22, 3]
   await seedWorld(page, { clearedStageIds: cleared })
