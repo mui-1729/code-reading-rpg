@@ -95,6 +95,25 @@ test('Playerは移動方向を向き、2-frame stepと1tile補間をpresentation
   await expect(player).toHaveAttribute('data-step-frame', '0')
 })
 
+test('walking補間中の連続入力もqueueせず最新座標とfacingへ収束する', async ({ page }) => {
+  await seedWorld(page)
+  await page.goto('/world')
+
+  const player = page.locator('.world-player-sprite')
+  const right = page.getByRole('button', { name: 'Move right' })
+  const left = page.getByRole('button', { name: 'Move left' })
+
+  await right.click()
+  await left.click()
+  await right.click()
+
+  await expect(player).toHaveAttribute('data-world-x', '21')
+  await expect(player).toHaveAttribute('data-world-y', '14')
+  await expect(player).toHaveAttribute('data-facing', 'right')
+  await expect(player).toHaveAttribute('data-step-frame', '1')
+  await expect.poll(() => player.getAttribute('data-walking')).toBeNull()
+})
+
 test('reduced-motionでは補間を切るがfacing情報は残す', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await seedWorld(page)
