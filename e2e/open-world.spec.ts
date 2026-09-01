@@ -213,8 +213,8 @@ test.describe('Open World RPG loop', () => {
     await expect.poll(async () => (await storedProgress(page)).progress.gold).toBe(30)
 
     await page.reload()
-    await page.getByRole('button', { name: 'Pause menuを開く' }).click()
-    const dialog = page.getByRole('dialog', { name: 'Pause menu' })
+    await page.getByRole('button', { name: 'メニューを開く' }).click()
+    const dialog = page.getByRole('dialog', { name: 'メニュー' })
     await expect(dialog.getByText('108 / 108', { exact: true })).toBeVisible()
     await expect(dialog.getByText('30 G', { exact: true })).toBeVisible()
   })
@@ -244,9 +244,9 @@ test.describe('Open World RPG loop', () => {
     await expect(page.getByText(/すでに空だ/)).toBeVisible()
     await expect.poll(async () => (await storedProgress(page)).progress.gold).toBe(25)
 
-    await page.getByRole('button', { name: 'Pause menuを開く' }).click()
-    const dialog = page.getByRole('dialog', { name: 'Pause menu' })
-    await dialog.getByRole('button', { name: 'EQUIPMENT' }).click()
+    await page.getByRole('button', { name: 'メニューを開く' }).click()
+    const dialog = page.getByRole('dialog', { name: 'メニュー' })
+    await dialog.getByRole('button', { name: '装備' }).click()
     await expect(dialog.getByText('Debug Charm', { exact: true }).first()).toBeVisible()
   })
 
@@ -331,19 +331,19 @@ test.describe('Open World RPG loop', () => {
     await page.reload()
     await expect.poll(() => playerPosition(page)).toEqual({ x: 21, y: 14 })
 
-    await page.getByRole('button', { name: 'Pause menuを開く' }).click()
-    const dialog = page.getByRole('dialog', { name: 'Pause menu' })
+    await page.getByRole('button', { name: 'メニューを開く' }).click()
+    const dialog = page.getByRole('dialog', { name: 'メニュー' })
     await expect(dialog.getByText('77 G', { exact: true })).toBeVisible()
     await expect(dialog.getByText('72 / 108', { exact: true })).toBeVisible()
 
-    await dialog.getByRole('button', { name: 'EQUIPMENT' }).click()
+    await dialog.getByRole('button', { name: '装備' }).click()
     await expect(dialog.getByText('Branch Saber', { exact: true }).first()).toBeVisible()
 
-    await dialog.getByRole('button', { name: 'PARTY' }).click()
-    await expect(dialog.getByText(/BYTE · SCOUT/)).toBeVisible()
+    await dialog.getByRole('button', { name: '仲間' }).click()
+    await expect(dialog.getByText(/BYTE · 斥候/)).toBeVisible()
   })
 
-  test('BYTE加入がPause PARTYとBattle follow-upへ反映される', async ({ page }) => {
+  test('BYTE加入がメニューの仲間とBattle follow-upへ反映される', async ({ page }) => {
     await seedStorage(page, {
       rpg: createRpgState({ worldPosition: { x: 20, y: 13 } }),
     })
@@ -352,10 +352,10 @@ test.describe('Open World RPG loop', () => {
     await page.getByRole('button', { name: 'INTERACT' }).click()
     await expect(page.getByText(/BYTE joined the party!/)).toBeVisible()
 
-    await page.getByRole('button', { name: 'Pause menuを開く' }).click()
-    const dialog = page.getByRole('dialog', { name: 'Pause menu' })
-    await dialog.getByRole('button', { name: 'PARTY' }).click()
-    await expect(dialog.getByText(/BYTE · SCOUT/)).toBeVisible()
+    await page.getByRole('button', { name: 'メニューを開く' }).click()
+    const dialog = page.getByRole('dialog', { name: 'メニュー' })
+    await dialog.getByRole('button', { name: '仲間' }).click()
+    await expect(dialog.getByText(/BYTE · 斥候/)).toBeVisible()
     await page.keyboard.press('Escape')
 
     await page.goto('/javascript/battle/1?seed=party-e2e&returnTo=%2Fworld')
@@ -373,9 +373,9 @@ test.describe('Open World RPG loop', () => {
     })
 
     await page.goto('/world')
-    await page.getByRole('button', { name: 'Pause menuを開く' }).click()
-    const dialog = page.getByRole('dialog', { name: 'Pause menu' })
-    await dialog.getByRole('button', { name: 'EQUIPMENT' }).click()
+    await page.getByRole('button', { name: 'メニューを開く' }).click()
+    const dialog = page.getByRole('dialog', { name: 'メニュー' })
+    await dialog.getByRole('button', { name: '装備' }).click()
 
     const branchSaber = dialog.getByRole('button', { name: /Branch Saber/ })
     await expect(branchSaber).toBeVisible()
