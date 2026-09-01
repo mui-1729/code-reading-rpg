@@ -74,7 +74,7 @@ async function seedWorld(
   )
 }
 
-test('Playerは移動方向を向き、2-frame stepと1tile補間をpresentationとして持つ', async ({ page }) => {
+test('Playerは移動方向を向き、2-frame stepと実画面の1tile補間を持つ', async ({ page }) => {
   await seedWorld(page)
   await page.goto('/world')
 
@@ -83,7 +83,24 @@ test('Playerは移動方向を向き、2-frame stepと1tile補間をpresentation
   await expect(player).toHaveAttribute('data-step-frame', '0')
   expect(await player.evaluate((element) => getComputedStyle(element).transitionDuration)).toContain('0.15s')
 
-  await page.getByRole('button', { name: 'Move right' }).click()
+  const cameraPan = await page.evaluate(async () => {
+    const button = document.querySelector<HTMLButtonElement>('button[aria-label="Move right"]')
+    button?.click()
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+    const snapshot = document.querySelector<HTMLElement>('.world-camera-snapshot')
+    if (!snapshot) return null
+    const style = getComputedStyle(snapshot)
+    return {
+      facing: snapshot.dataset.cameraFacing,
+      animationName: style.animationName,
+      animationDuration: style.animationDuration,
+    }
+  })
+
+  expect(cameraPan).not.toBeNull()
+  expect(cameraPan?.facing).toBe('right')
+  expect(cameraPan?.animationName).toContain('world-camera-pan')
+  expect(cameraPan?.animationDuration).toContain('0.15s')
   await expect(player).toHaveAttribute('data-world-x', '21')
   await expect(player).toHaveAttribute('data-facing', 'right')
   await expect(player).toHaveAttribute('data-step-frame', '1')
@@ -114,7 +131,7 @@ test('walking補間中の連続入力もqueueせず最新座標とfacingへ収�
   await expect.poll(() => player.getAttribute('data-walking')).toBeNull()
 })
 
-test('reduced-motionでは補間を切るがfacing情報は残す', async ({ page }) => {
+test('reduced-motionでは補間を完全に切るがfacing情報は残す', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await seedWorld(page)
   await page.goto('/world')
@@ -125,6 +142,8 @@ test('reduced-motionでは補間を切るがfacing情報は残す', async ({ pag
   await page.getByRole('button', { name: 'Move right' }).click()
   await expect(player).toHaveAttribute('data-facing', 'right')
   await expect(player).toHaveAttribute('data-world-x', '21')
+  const cameraDisplay = await page.locator('.world-camera-snapshot').evaluate((element) => getComputedStyle(element).display)
+  expect(cameraDisplay).toBe('none')
 })
 
 test('map transitionはAREA titleとregion field BGMを同じscene identityから切り替える', async ({ page }) => {
