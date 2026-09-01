@@ -287,7 +287,23 @@ Battle 1のGoldは既存Economy budgetを守るため20 Gを維持し、Story re
 
 Equipment slotsは`weapon` / `armor` / `accessory`。Attack / Defense / maxHPへbonusを加えるが、code readingを代替しない。
 
-現在の仲間`BYTE`は1 ACTIONに1回、Playerがcodeから選んだtarget群のうちSkill後に生存する先頭1体だけへfollow-upする。全滅時は追撃しない。複数targetで追撃damageを乗算せず、選択外の相手へ自動攻撃しない。仲間に独立HP / Defense / Equipmentはなく、Pauseでは実効のfollow-up情報だけを示す。
+現在の仲間`BYTE`は1 ACTIONに1回、Playerがcodeから選んだtarget群のうちSkill後に生存する先頭1体だけへfollow-upする。全滅時は追撃しない。複数targetで追撃damageを乗算せず、選択外の相手へ自動攻撃しない。仲間に独立HP / Defense / Equipmentは持たせず、育成grindでcode readingを迂回できない構造を維持する。
+
+### Party Rank
+
+仲間にはPlayer Levelそのものをdamage bonusとして流用せず、**仲間自身の軽量成長stateとしてRank 1〜5**を定義する。現時点では個別EXPを保存せず、冒険全体の成長に同期する次の節目からpureに導出する。
+
+```text
+Player Lv1〜2 → Party Rank 1
+Player Lv3〜4 → Party Rank 2
+Player Lv5〜6 → Party Rank 3
+Player Lv7〜8 → Party Rank 4
+Player Lv9〜   → Party Rank 5
+```
+
+BYTEはRank 1でfollow-up 7、Rankが1上がるたびに+2、Rank 5で15。将来memberも`baseFollowUpDamage`と`followUpDamagePerRank`をdefinitionに持ち、同じRank progressionを使う。Pause → PARTYには現在Rank、実効follow-up、次RankのPlayer Level条件、Rankごとの伸びを表示する。
+
+Rankは保存せずPlayer Levelから導出するため、RpgState schema v5にfield追加はなく**save migration不要**。既存save・途中加入member・将来追加memberも現在の冒険Levelに対応したRankから開始する。BattleとPauseはどちらも`getPartyMemberGrowth()` / `getPartyFollowUpDamage()`の同一計算を使い、表示値と実damageを分岐させない。
 
 `PATCH KIT`は30 G、Battle中1回、最大24 HP回復。Battle中の消費/回復はattempt transaction内のtentative stateで、VICTORY時だけpersistent結果としてcommitする。RETRY / RETURN / RUN / reloadではBattle開始snapshotへ戻す。
 
@@ -311,7 +327,7 @@ PlayerProgressはschema v4。旧v1 / v2 / v3からmigrationし、canonical progr
 - 旧saveでDeep Forest相当へ進んでいる → second symptomも論理的に通過済みとして補完
 - JavaScript Boss 3 clear済み → modern JavaScript arc全体をcompletedとしてnormalize
 
-RpgStateはschema v5。旧v1 / v2 / v3 / v4からmigrationし、未使用のpartyEquipmentを除去する。restore時に次をnormalizeする。
+RpgStateはschema v5。旧v1 / v2 / v3 / v4からmigrationし、未使用のpartyEquipmentを除去する。Party Rankは保存fieldではなくPlayer Levelからの派生値なので、Rank導入のためのschema更新・migrationは行わない。restore時に次をnormalizeする。
 
 - map ID / map bounds / legacy TypeScript座標
 - known Equipment / Party / Treasure ID

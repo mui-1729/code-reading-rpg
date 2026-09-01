@@ -23,8 +23,15 @@ export type {
 } from './equipmentPresentation'
 export { getCombatStats, getIncomingDamage, getSkillDamage } from './combat'
 export type { CombatStats } from './combat'
-export { getPartyFollowUpDamage, partyMemberById, partyMembers } from './party'
-export type { PartyMemberDefinition } from './party'
+export {
+  getPartyFollowUpDamage,
+  getPartyMemberGrowth,
+  getPartyRank,
+  PARTY_MAX_RANK,
+  partyMemberById,
+  partyMembers,
+} from './party'
+export type { PartyMemberDefinition, PartyMemberGrowth } from './party'
 export {
   characterVisuals,
   equipmentVisuals,
