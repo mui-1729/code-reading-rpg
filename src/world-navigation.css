@@ -7,13 +7,21 @@
 .world-next-objective > strong { font-size: 12px; line-height: 1.35; }
 
 .world-message {
-  min-height: 44px;
+  box-sizing: border-box;
+  height: 64px;
+  min-height: 64px;
   padding: 8px 11px;
+  overflow-y: auto;
+  transition: opacity 120ms ease;
 }
 
-.world-message[data-log-priority='ambient'] { display: none; }
+.world-message[data-log-priority='ambient'] {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
 .world-message span { font-size: 7px; }
-.world-message p { margin-top: 3px; font-size: 10px; }
+.world-message p { margin-top: 3px; font-size: 10px; line-height: 1.35; }
 
 .atlas-detail-canvas { box-sizing: border-box; }
 
@@ -59,4 +67,8 @@
   .world-next-objective { margin-bottom: 8px; }
   .world-message { margin-top: 7px; }
   .world-controls { margin-top: 7px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .world-message { transition: none; }
 }
