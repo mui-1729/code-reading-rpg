@@ -1,13 +1,13 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
-async function seedWorld(page: Parameters<typeof test>[0] extends never ? never : any) {
+async function seedWorld(page: Page) {
   await page.goto('/')
   await page.evaluate(
-    ({ progressKey, rpgKey, tutorialKey }: { progressKey: string; rpgKey: string; tutorialKey: string }) => {
+    ({ progressKey, rpgKey, tutorialKey }) => {
       localStorage.clear()
       localStorage.setItem(
         progressKey,
