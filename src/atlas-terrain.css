@@ -217,7 +217,7 @@
 }
 
 .atlas-zoom::after {
-  content: 'FIT';
+  content: '全体';
   min-width: 50px;
   height: 34px;
   display: grid;
@@ -243,7 +243,7 @@
   padding: 0 8px;
   font-size: 9px;
 }
-.atlas-zoom button[aria-label^='Zoom'] { min-width: 34px; padding: 0; font-size: 16px; }
+.atlas-zoom button[aria-label] { min-width: 34px; padding: 0; font-size: 16px; }
 .atlas-zoom button.is-active { border-color: var(--gold); color: var(--gold); }
 
 @media (max-width: 620px) {
