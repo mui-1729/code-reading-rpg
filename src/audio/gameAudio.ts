@@ -16,6 +16,10 @@ export type SoundEffect =
 export type BgmTrack =
   | 'menu'
   | 'field'
+  | 'fieldVillage'
+  | 'fieldForest'
+  | 'fieldDeepForest'
+  | 'fieldTypeScript'
   | 'battle'
   | 'battleForest'
   | 'battleDeepForest'
@@ -49,6 +53,10 @@ export const DEFAULT_AUDIO_SETTINGS: AudioSettings = {
 export const BGM_TRACKS: readonly BgmTrack[] = [
   'menu',
   'field',
+  'fieldVillage',
+  'fieldForest',
+  'fieldDeepForest',
+  'fieldTypeScript',
   'battle',
   'battleForest',
   'battleDeepForest',
@@ -60,7 +68,7 @@ export const BGM_TRACKS: readonly BgmTrack[] = [
 
 export const BGM_PATTERNS: Readonly<Record<BgmTrack, BgmPattern>> = {
   menu: {
-    notes: [261.63, 329.63, 392, 329.63, 293.66, 349.23, 440, 349.23],
+    notes: [261.63, 329.63, 392, 329.63, 293.66, 349.23, 440, 349.23, 261.63, 329.63, 392, 493.88, 440, 392, 349.23, 293.66],
     stepMs: 260,
     noteMs: 205,
     type: 'triangle',
@@ -69,7 +77,7 @@ export const BGM_PATTERNS: Readonly<Record<BgmTrack, BgmPattern>> = {
     bassVolume: 0.05,
   },
   field: {
-    notes: [220, 261.63, 329.63, 261.63, 246.94, 293.66, 369.99, 293.66],
+    notes: [220, 261.63, 329.63, 261.63, 246.94, 293.66, 369.99, 293.66, 220, 277.18, 329.63, 392, 329.63, 293.66, 261.63, 246.94],
     stepMs: 220,
     noteMs: 170,
     type: 'square',
@@ -77,8 +85,44 @@ export const BGM_PATTERNS: Readonly<Record<BgmTrack, BgmPattern>> = {
     bassEvery: 4,
     bassVolume: 0.052,
   },
+  fieldVillage: {
+    notes: [261.63, 329.63, 392, 329.63, 293.66, 349.23, 392, 349.23, 261.63, 293.66, 329.63, 392, 440, 392, 349.23, 293.66],
+    stepMs: 255,
+    noteMs: 205,
+    type: 'triangle',
+    volume: 0.068,
+    bassEvery: 4,
+    bassVolume: 0.042,
+  },
+  fieldForest: {
+    notes: [196, 246.94, 293.66, 246.94, 220, 261.63, 329.63, 261.63, 196, 233.08, 293.66, 349.23, 293.66, 261.63, 233.08, 220],
+    stepMs: 235,
+    noteMs: 185,
+    type: 'triangle',
+    volume: 0.072,
+    bassEvery: 4,
+    bassVolume: 0.047,
+  },
+  fieldDeepForest: {
+    notes: [146.83, 174.61, 220, 196, 164.81, 196, 233.08, 174.61, 146.83, 164.81, 196, 220, 196, 174.61, 164.81, 130.81],
+    stepMs: 265,
+    noteMs: 215,
+    type: 'sawtooth',
+    volume: 0.058,
+    bassEvery: 4,
+    bassVolume: 0.044,
+  },
+  fieldTypeScript: {
+    notes: [293.66, 369.99, 440, 369.99, 329.63, 415.3, 493.88, 415.3, 277.18, 349.23, 440, 523.25, 440, 392, 329.63, 293.66],
+    stepMs: 210,
+    noteMs: 158,
+    type: 'triangle',
+    volume: 0.07,
+    bassEvery: 4,
+    bassVolume: 0.04,
+  },
   battle: {
-    notes: [196, 246.94, 293.66, 246.94, 220, 261.63, 329.63, 261.63],
+    notes: [196, 246.94, 293.66, 246.94, 220, 261.63, 329.63, 261.63, 196, 233.08, 293.66, 349.23, 329.63, 293.66, 261.63, 220],
     stepMs: 180,
     noteMs: 140,
     type: 'square',
@@ -87,7 +131,7 @@ export const BGM_PATTERNS: Readonly<Record<BgmTrack, BgmPattern>> = {
     bassVolume: 0.06,
   },
   battleForest: {
-    notes: [174.61, 220, 261.63, 220, 196, 246.94, 293.66, 246.94],
+    notes: [174.61, 220, 261.63, 220, 196, 246.94, 293.66, 246.94, 174.61, 207.65, 261.63, 311.13, 293.66, 261.63, 220, 196],
     stepMs: 205,
     noteMs: 158,
     type: 'triangle',
@@ -96,7 +140,7 @@ export const BGM_PATTERNS: Readonly<Record<BgmTrack, BgmPattern>> = {
     bassVolume: 0.058,
   },
   battleDeepForest: {
-    notes: [146.83, 174.61, 220, 196, 164.81, 196, 233.08, 174.61],
+    notes: [146.83, 174.61, 220, 196, 164.81, 196, 233.08, 174.61, 130.81, 164.81, 207.65, 246.94, 220, 196, 174.61, 146.83],
     stepMs: 225,
     noteMs: 180,
     type: 'sawtooth',
@@ -105,7 +149,7 @@ export const BGM_PATTERNS: Readonly<Record<BgmTrack, BgmPattern>> = {
     bassVolume: 0.052,
   },
   battleTypeScript: {
-    notes: [293.66, 369.99, 440, 369.99, 329.63, 415.3, 493.88, 415.3],
+    notes: [293.66, 369.99, 440, 369.99, 329.63, 415.3, 493.88, 415.3, 277.18, 349.23, 440, 523.25, 493.88, 440, 392, 329.63],
     stepMs: 170,
     noteMs: 122,
     type: 'triangle',
@@ -114,7 +158,7 @@ export const BGM_PATTERNS: Readonly<Record<BgmTrack, BgmPattern>> = {
     bassVolume: 0.048,
   },
   battleBoss: {
-    notes: [130.81, 164.81, 196, 130.81, 146.83, 174.61, 207.65, 146.83],
+    notes: [130.81, 164.81, 196, 130.81, 146.83, 174.61, 207.65, 146.83, 123.47, 155.56, 196, 233.08, 207.65, 174.61, 146.83, 130.81],
     stepMs: 165,
     noteMs: 138,
     type: 'square',
@@ -123,7 +167,7 @@ export const BGM_PATTERNS: Readonly<Record<BgmTrack, BgmPattern>> = {
     bassVolume: 0.07,
   },
   battleJsBoss: {
-    notes: [110, 130.81, 164.81, 123.47, 98, 146.83, 174.61, 116.54],
+    notes: [110, 130.81, 164.81, 123.47, 98, 146.83, 174.61, 116.54, 103.83, 138.59, 164.81, 196, 174.61, 146.83, 123.47, 98],
     stepMs: 190,
     noteMs: 165,
     type: 'sawtooth',
@@ -132,7 +176,7 @@ export const BGM_PATTERNS: Readonly<Record<BgmTrack, BgmPattern>> = {
     bassVolume: 0.075,
   },
   battleTsBoss: {
-    notes: [246.94, 369.99, 277.18, 415.3, 220, 329.63, 261.63, 392],
+    notes: [246.94, 369.99, 277.18, 415.3, 220, 329.63, 261.63, 392, 233.08, 349.23, 293.66, 440, 261.63, 392, 329.63, 493.88],
     stepMs: 155,
     noteMs: 118,
     type: 'square',
@@ -211,6 +255,7 @@ class GameAudioEngine {
 
   requestBgm(track: BgmTrack): void {
     this.desiredBgm = track
+    if (typeof document !== 'undefined') document.body.dataset.bgmTrack = track
     this.startDesiredBgm()
   }
 
@@ -223,6 +268,7 @@ class GameAudioEngine {
     this.desiredBgm = null
     this.activeBgm = null
     this.bgmStep = 0
+    if (typeof document !== 'undefined') delete document.body.dataset.bgmTrack
     if (this.bgmTimer !== null && typeof window !== 'undefined') {
       window.clearInterval(this.bgmTimer)
     }
