@@ -1,0 +1,41 @@
+.world-character-overlay {
+  transition:
+    left 150ms linear,
+    top 150ms linear;
+}
+
+.world-player-pixel,
+.world-follower-pixel {
+  transform-origin: 50% 75%;
+}
+
+.world-player-sprite[data-facing='left'] .world-player-pixel {
+  transform: scaleX(-1);
+}
+
+.world-player-sprite[data-facing='right'] .world-player-pixel {
+  transform: scaleX(1);
+}
+
+.world-player-sprite[data-walking='true'][data-step-frame='1'] .world-player-pixel {
+  translate: 0 -2px;
+}
+
+.world-player-sprite[data-walking='true'][data-facing='left'][data-step-frame='1'] .world-player-pixel {
+  transform: scaleX(-1);
+}
+
+.world-follower-sprite[data-walking='true'][data-step-frame='1'] .world-follower-pixel {
+  translate: 0 -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .world-character-overlay {
+    transition: none;
+  }
+
+  .world-player-pixel,
+  .world-follower-pixel {
+    translate: none !important;
+  }
+}
