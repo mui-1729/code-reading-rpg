@@ -35,6 +35,9 @@ export type BattleVictoryReward = {
   newLevel: number
   firstClear: boolean
   unlockedStageId?: number
+  /** All Skills that became MASTERED from this clear. */
+  unlockedSkillIds?: string[]
+  /** First newly MASTERED Skill, kept for existing single-unlock presentation/SE callers. */
   unlockedSkillId?: string
   clearedAreaId?: string
 }
