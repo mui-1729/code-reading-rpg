@@ -5,6 +5,13 @@ import { characterVisuals } from '../rpg/visualAssets'
 import { resolveWorldInteraction, type WorldInteractionIntent } from './worldActions'
 import { WorldLogPolicy } from './WorldLogPolicy'
 import {
+  getAdjacentWorldNpc,
+  getWorldNpcDefinition,
+  getWorldNpcDialogue,
+  getWorldNpcPlacementsForMap,
+  type WorldNpcPlacement,
+} from './worldCharacters'
+import {
   getWorldFacing,
   getWorldScenePresentation,
   isAdjacentWorldStep,
@@ -14,7 +21,7 @@ import {
   type WorldFacing,
   type WorldSceneEventDetail,
 } from './worldPresentation'
-import type { Terrain, WorldCell, WorldMapId } from './worldMap'
+import { TS_FRONTIER_MAP_ID, type Terrain, type WorldCell, type WorldMapId } from './worldMap'
 import {
   getWorldSpriteStyle,
   isWorldPositionVisible,
@@ -38,6 +45,11 @@ type CameraPan = {
   key: string
   facing: WorldFacing
   cells: readonly WorldCell[]
+}
+
+type ActiveConversation = {
+  placement: WorldNpcPlacement
+  lineIndex: number
 }
 
 function useWorldSpriteMotion(mapId: WorldMapId, position: WorldPosition): SpriteMotion {
@@ -160,6 +172,12 @@ function getPlayerFieldSprite(facing: WorldFacing): string {
   return characterVisuals.player.field
 }
 
+function getNpcFieldVisual(npcId: string): string | null {
+  if (npcId === 'trainer-mio') return characterVisuals.trainerMio.field
+  if (npcId === 'type-warden') return characterVisuals.typeWarden.portrait
+  return null
+}
+
 function getInteractionPresentation(intent: WorldInteractionIntent): { label: string; disabled: boolean } {
   switch (intent.kind) {
     case 'party':
@@ -171,10 +189,16 @@ function getInteractionPresentation(intent: WorldInteractionIntent): { label: st
     case 'treasure':
       return { label: intent.opened ? 'CHECK CHEST' : 'OPEN CHEST', disabled: false }
     case 'training':
-      return { label: intent.battleId === null ? 'TRAINING CLEAR' : 'TRAIN WITH MIO', disabled: false }
+      return { label: intent.battleId === null ? 'TALK TO MIO' : 'TRAIN WITH MIO', disabled: false }
     case 'midboss':
       return { label: intent.unlocked ? 'CHALLENGE MID BOSS' : 'CHECK MID BOSS', disabled: false }
     case 'boss':
+      if (intent.region === 'typescript') {
+        return {
+          label: intent.unlocked ? 'CHALLENGE FRONTIER COMPILER' : 'CHECK FRONTIER COMPILER',
+          disabled: false,
+        }
+      }
       return { label: intent.unlocked ? 'CHALLENGE BOSS' : 'CHECK BOSS', disabled: false }
     case 'none':
       return { label: 'INTERACT', disabled: true }
@@ -218,6 +242,8 @@ export function WorldViewport(props: {
 
   const renderCell = (cell: WorldCell) => {
     const terrain = props.getTerrain?.(cell) ?? cell.terrain
+    const isFrontierCompiler =
+      props.mapId === TS_FRONTIER_MAP_ID && terrain === 'boss'
     return (
       <div
         key={`${cell.mapId}:${cell.x}:${cell.y}`}
@@ -227,7 +253,13 @@ export function WorldViewport(props: {
         data-world-x={cell.x}
         data-world-y={cell.y}
       >
-        {props.renderObject(cell, terrain)}
+        {isFrontierCompiler ? (
+          <span className="world-object boss-object" aria-label="Frontier Compiler Boss">
+            COMPILER
+          </span>
+        ) : (
+          props.renderObject(cell, terrain)
+        )}
       </div>
     )
   }
@@ -274,6 +306,7 @@ export function WorldCharacterLayer(props: {
   const { followerJoined, followerPosition, mapId, playerPosition, viewportStart } = props
   const playerMotion = useWorldSpriteMotion(mapId, playerPosition)
   const followerMotion = useWorldSpriteMotion(mapId, followerPosition)
+  const worldNpcs = getWorldNpcPlacementsForMap(mapId)
 
   return (
     <div
@@ -283,6 +316,31 @@ export function WorldCharacterLayer(props: {
       data-world-x={playerPosition.x}
       data-world-y={playerPosition.y}
     >
+      {worldNpcs
+        .filter((placement) => isWorldPositionVisible(placement.position, viewportStart))
+        .map((placement) => {
+          const npc = getWorldNpcDefinition(placement)
+          const visual = getNpcFieldVisual(placement.npcId)
+          return (
+            <span
+              key={`npc:${placement.npcId}`}
+              className={`world-npc-sprite world-character-overlay npc-${placement.npcId}`}
+              style={getWorldSpriteStyle(placement.position, viewportStart)}
+              data-world-npc={placement.npcId}
+              data-world-map={mapId}
+              data-world-x={placement.position.x}
+              data-world-y={placement.position.y}
+              title={npc.name}
+            >
+              {visual ? (
+                <img className="world-follower-pixel" src={visual} alt="" />
+              ) : (
+                <span className="world-resident-marker">◆</span>
+              )}
+            </span>
+          )
+        })}
+
       {followerJoined && isWorldPositionVisible(followerPosition, viewportStart) && (
         <span
           key={`follower:${mapId}`}
@@ -324,8 +382,18 @@ export function WorldControls(props: {
 }) {
   const { progress } = useProgress()
   const { rpgState } = useRpg()
-  const inferred = getInteractionPresentation(resolveWorldInteraction(rpgState, progress))
+  const baseIntent = resolveWorldInteraction(rpgState, progress)
+  const adjacentNpc = getAdjacentWorldNpc(rpgState.worldMapId, rpgState.worldPosition)
+  const trainingStillActive =
+    adjacentNpc?.npcId === 'trainer-mio' &&
+    baseIntent.kind === 'training' &&
+    baseIntent.battleId !== null
+  const conversationalNpc = adjacentNpc && !trainingStillActive ? adjacentNpc : undefined
+  const inferred = conversationalNpc
+    ? { label: `TALK TO ${getWorldNpcDefinition(conversationalNpc).name}`, disabled: false }
+    : getInteractionPresentation(baseIntent)
   const { interact, interactLabel = inferred.label, interactDisabled = inferred.disabled, move } = props
+  const [conversation, setConversation] = useState<ActiveConversation | null>(null)
   const moveRef = useRef(move)
   const delayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const repeatRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -334,6 +402,10 @@ export function WorldControls(props: {
   useEffect(() => {
     moveRef.current = move
   }, [move])
+
+  useEffect(() => {
+    setConversation(null)
+  }, [rpgState.worldMapId, rpgState.worldPosition.x, rpgState.worldPosition.y])
 
   const stopHold = useCallback(() => {
     if (delayRef.current !== null) clearTimeout(delayRef.current)
@@ -345,18 +417,20 @@ export function WorldControls(props: {
   useEffect(() => stopHold, [stopHold])
 
   const startHold = useCallback((dx: number, dy: number) => {
+    if (conversation) return
     stopHold()
     pointerClickRef.current = true
     moveRef.current(dx, dy)
     delayRef.current = setTimeout(() => {
       repeatRef.current = setInterval(() => moveRef.current(dx, dy), 120)
     }, 280)
-  }, [stopHold])
+  }, [conversation, stopHold])
 
   const directionButton = (label: string, glyph: string, dx: number, dy: number) => (
     <button
       type="button"
       aria-label={label}
+      disabled={conversation !== null}
       onPointerDown={() => startHold(dx, dy)}
       onPointerUp={stopHold}
       onPointerCancel={() => {
@@ -368,6 +442,7 @@ export function WorldControls(props: {
         pointerClickRef.current = false
       }}
       onClick={() => {
+        if (conversation) return
         if (pointerClickRef.current) {
           pointerClickRef.current = false
           return
@@ -378,6 +453,32 @@ export function WorldControls(props: {
       {glyph}
     </button>
   )
+
+  const openConversation = () => {
+    if (!conversationalNpc) {
+      interact()
+      return
+    }
+    setConversation({ placement: conversationalNpc, lineIndex: 0 })
+  }
+
+  const conversationData = conversation
+    ? getWorldNpcDialogue(conversation.placement, progress)
+    : null
+  const conversationLine = conversationData?.dialogue.lines[conversation?.lineIndex ?? 0]
+  const isConversationLast =
+    conversation !== null &&
+    conversationData !== null &&
+    conversation.lineIndex >= conversationData.dialogue.lines.length - 1
+
+  const advanceConversation = () => {
+    if (!conversation || !conversationData) return
+    if (isConversationLast) {
+      setConversation(null)
+      return
+    }
+    setConversation({ ...conversation, lineIndex: conversation.lineIndex + 1 })
+  }
 
   return (
     <div className="world-controls" aria-label="World controls">
@@ -392,11 +493,36 @@ export function WorldControls(props: {
         type="button"
         className="primary-button world-interact"
         aria-label={interactLabel === 'INTERACT' ? 'INTERACT' : `INTERACT · ${interactLabel}`}
-        onClick={interact}
-        disabled={interactDisabled}
+        onClick={openConversation}
+        disabled={interactDisabled || conversation !== null}
       >
         {interactLabel}
       </button>
+
+      {conversation && conversationData && conversationLine && (
+        <section
+          className="world-npc-conversation pixel-inner-window"
+          role="dialog"
+          aria-label={`${conversationData.npc.name} conversation`}
+        >
+          <div className="dialogue-speaker">
+            <span>{conversationData.npc.roleLabel}</span>
+            <strong>{conversationData.npc.name}</strong>
+            <span className="dialogue-progress">
+              {conversation.lineIndex + 1}/{conversationData.dialogue.lines.length}
+            </span>
+          </div>
+          <p>{conversationLine}</p>
+          <div className="dialogue-actions">
+            <button type="button" className="secondary-button" onClick={() => setConversation(null)}>
+              CLOSE
+            </button>
+            <button type="button" className="primary-button" onClick={advanceConversation}>
+              {isConversationLast ? '▶ DONE' : '▶ NEXT'}
+            </button>
+          </div>
+        </section>
+      )}
     </div>
   )
 }
