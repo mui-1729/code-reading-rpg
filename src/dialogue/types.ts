@@ -19,7 +19,7 @@ export type DialogueEntry = {
 export type NpcDefinition = {
   id: string
   name: string
-  role: 'mentor' | 'scout' | 'maintainer'
+  role: 'mentor' | 'scout' | 'maintainer' | 'resident'
   roleLabel: string
   visualId: string | null
   dialogues: DialogueEntry[]
