@@ -44,7 +44,7 @@ test('mobile TutorialでBYTEを実際に加入させ、追従と役割を確認�
   await expect(page.locator('.tutorial-prompt-field')).toContainText(/BYTEに話しかける/)
 
   await page.getByRole('button', { name: 'INTERACT' }).click()
-  await expect(page.getByText(/BYTE joined the party!/)).toBeVisible()
+  await expect(page.locator('.tutorial-prompt-field')).toContainText('BYTEが仲間になった！')
   await expect.poll(async () => (await storedTutorial(page))?.phase).toBe('party-join')
   await expect.poll(async () => (await storedRpg(page))?.state?.partyMemberIds).toContain('byte')
 
