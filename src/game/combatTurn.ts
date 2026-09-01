@@ -38,7 +38,7 @@ export function resolvePlayerAction(input: {
   const skillDamageByTargetId = Object.fromEntries(
     targets.map((target) => [
       target.id,
-      resolveBossGuardDamage(input.battle, enemies, target, skillDamage),
+      resolveBossGuardDamage(input.battle, enemies, target, skillDamage, input.skill),
     ]),
   )
   const targetIds = new Set(targets.map((target) => target.id))
@@ -61,6 +61,7 @@ export function resolvePlayerAction(input: {
         enemiesAfterSkill,
         followUpTarget,
         partyFollowUpDamage,
+        input.skill,
       )
     : 0
   const damageByTargetId = Object.fromEntries(
