@@ -40,9 +40,9 @@ async function seedForestMastery(page: import('@playwright/test').Page) {
 test('CODEXはclear履歴から導出したMASTERED Skillを表示する', async ({ page }) => {
   await seedForestMastery(page)
 
-  await page.getByRole('button', { name: 'Pause menuを開く' }).click()
-  const dialog = page.getByRole('dialog', { name: 'Pause menu' })
-  await dialog.getByRole('button', { name: 'CODEX' }).click()
+  await page.getByRole('button', { name: 'メニューを開く' }).click()
+  const dialog = page.getByRole('dialog', { name: 'メニュー' })
+  await dialog.getByRole('button', { name: 'コード図鑑' }).click()
 
   const codex = dialog.getByLabel('Code Codex')
   await expect(codex).toContainText('13 CONCEPTS · 9 MASTERED')
