@@ -91,11 +91,11 @@ test('Training完了後もVillageでMIOへ戻って会話できる', async ({ pa
     position: { x: 12, y: 8 },
   })
 
-  const talk = page.getByRole('button', { name: 'INTERACT · TALK TO TRAINER MIO' })
+  const talk = page.getByRole('button', { name: 'INTERACT · TRAINER MIOと話す' })
   await expect(talk).toBeEnabled()
   await talk.click()
 
-  const conversation = page.getByRole('dialog', { name: 'TRAINER MIO conversation' })
+  const conversation = page.getByRole('dialog', { name: 'TRAINER MIOとの会話' })
   await expect(conversation).toBeVisible()
   await expect(conversation).toContainText('もうTRAINへ戻らなくていい')
   await expect(conversation).toContainText('森で、自分の読み方を使う番')
@@ -108,11 +108,11 @@ test('Villageのordinary residentはmain progression外で生活の会話を持�
     position: { x: 3, y: 4 },
   })
 
-  const talk = page.getByRole('button', { name: 'INTERACT · TALK TO VILLAGE CHILD' })
+  const talk = page.getByRole('button', { name: 'INTERACT · VILLAGE CHILDと話す' })
   await expect(talk).toBeEnabled()
   await talk.click()
 
-  const conversation = page.getByRole('dialog', { name: 'VILLAGE CHILD conversation' })
+  const conversation = page.getByRole('dialog', { name: 'VILLAGE CHILDとの会話' })
   await expect(conversation).toBeVisible()
   await expect(conversation).toContainText('MIOは怖くないよ')
   await expect(conversation).not.toContainText('find()')
@@ -126,14 +126,14 @@ test('TypeScriptではWARDEN NPCとBattle 6のFrontier Compilerを別objectと�
     position: { x: 29, y: 6 },
   })
 
-  const talk = page.getByRole('button', { name: 'INTERACT · TALK TO TYPE WARDEN' })
+  const talk = page.getByRole('button', { name: 'INTERACT · TYPE WARDENと話す' })
   await expect(talk).toBeEnabled()
   await talk.click()
-  const conversation = page.getByRole('dialog', { name: 'TYPE WARDEN conversation' })
+  const conversation = page.getByRole('dialog', { name: 'TYPE WARDENとの会話' })
   await expect(conversation).toContainText('Frontier Compiler')
-  await conversation.getByRole('button', { name: '▶ NEXT' }).click()
+  await conversation.getByRole('button', { name: '▶ 次へ' }).click()
   await expect(conversation).toContainText('私はここに残って境界を支える')
-  await conversation.getByRole('button', { name: 'CLOSE' }).click()
+  await conversation.getByRole('button', { name: '閉じる' }).click()
 
   await page.evaluate((key) => {
     const stored = JSON.parse(localStorage.getItem(key) ?? 'null')
@@ -145,6 +145,6 @@ test('TypeScriptではWARDEN NPCとBattle 6のFrontier Compilerを別objectと�
 
   await expect(page.getByLabel('Frontier Compiler Boss')).toBeVisible()
   await expect(
-    page.getByRole('button', { name: 'INTERACT · CHALLENGE FRONTIER COMPILER' }),
+    page.getByRole('button', { name: 'INTERACT · FRONTIER COMPILERに挑む' }),
   ).toBeEnabled()
 })
