@@ -17,14 +17,33 @@ UIは、**Open World探索とコード読解に必要な情報を優先し、常
 - 状態変化は短い一時feedbackを優先する
 - **Battleではcode panelより先に「誰と・どこで戦っているか」が視覚的に読めること**
 
+## Game-wide semantic palette
+
+画面ごとに別themeを作らず、Title / World / Battle / Pauseで色の意味を共有する。
+
+| Role | 基本色 | 用途 |
+| --- | --- | --- |
+| Base chrome | dark + blue / purple | frame、button、selected、focus |
+| Gold | gold | Gold通貨、price、reward、rareなど意味のある強調 |
+| Success | green | heal、safe、clear、equipped |
+| Danger | red | damage、danger、locked warning |
+| Region accent | sceneごとの補助色 | terrain、map frame、背景decorなど地域identity |
+
+- Worldだけを全面的な金・茶paletteにしない
+- `gold`を通常frame / 通常buttonへ広げすぎない
+- Region色はmap / scene内部へ限定し、常設UI chromeのsemantic colorと混ぜない
+- focus / selected / warning / successは画面をまたいで同じ意味で使う
+- fantasy textureやframe shapeは維持してよいが、色の意味はgame-wide tokenを優先する
+- contrast / focus-visibleを壊さない
+
 ## Visual layerの分離
 
-全画面へ同じ黒/neon/monospace skinを掛けない。世界観上の役割に応じてvisual grammarを分ける。
+全画面へ同じ黒/neon/monospace skinを掛けない。世界観上の役割に応じてvisual grammarを分ける。ただし**visual grammarの違いとUI paletteの意味は分離する**。
 
 | Layer | 主役 | Visual grammar |
 | --- | --- | --- |
 | REAL WORLD / system | CONNECT / system framing | terminal / dark / technical / monospaceを使ってよい |
-| CODE WORLD exploration | fantasy field / character / terrain | wood / stone / parchment系frame、terrainとspriteを主役にする |
+| CODE WORLD exploration | fantasy field / character / terrain | terrain / scene texture / fantasy frame shapeを主役にし、chrome色はgame-wide semantic paletteを共有 |
 | CODE WORLD Battle | arena / monster / Player / Party | Region scenery + RPG hierarchy。code cardは下段のrule UI |
 | code / runtime data | code / object / intermediate state | monospace / technical contrastを維持 |
 
@@ -32,10 +51,10 @@ CODE WORLDでもtechnical labelを全廃しない。重要なのは、**fantasy 
 
 ### CODE WORLDでfantasyへ寄せる箇所
 
-- World panel / map frame
+- World panel / map frameの形・texture
 - Region / location title
-- Objectiveの外枠
-- D-Pad / INTERACT等のRPG操作chrome
+- Objectiveの外枠形状
+- D-Pad / INTERACT等のRPG操作chrome形状
 - Battle arena
 - Enemy / Player / Party
 - Boss identity
