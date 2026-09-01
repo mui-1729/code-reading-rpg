@@ -21,6 +21,12 @@ type VictoryPresentation = {
   equipment?: { id: string; name: string }
 }
 
+const worldFeedbackHeadings: Record<WorldProgressFeedback['heading'], string> = {
+  'WORLD PROGRESS': '進行更新',
+  'BOSS UNLOCKED': 'ボス解放',
+  'WORLD COMPLETE': '攻略完了',
+}
+
 function getUnlockedSkillIds(reward: BattleVictoryReward): string[] {
   if (reward.unlockedSkillIds) return reward.unlockedSkillIds
   return reward.unlockedSkillId ? [reward.unlockedSkillId] : []
@@ -106,7 +112,7 @@ export function createVictoryResultSequence(
     const feedback = presentation.worldFeedback
     items.push({
       id: 'world-progress',
-      title: feedback.heading,
+      title: worldFeedbackHeadings[feedback.heading],
       detail: [feedback.label, feedback.progressLabel, feedback.next && `次 → ${feedback.next}`]
         .filter(Boolean)
         .join(' · '),
