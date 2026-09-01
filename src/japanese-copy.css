@@ -1,0 +1,3 @@
+.world-atlas[data-atlas-zoom='fit'] .atlas-zoom::after {
+  content: '全体';
+}
