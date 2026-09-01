@@ -13,36 +13,33 @@ export const npcDefinitions: NpcDefinition[] = [
         id: 'archivist-area-clear',
         condition: { kind: 'areaCleared', areaId: JAVASCRIPT_AREA_ID },
         lines: [
-          'Code Coreは安定した。戦闘システムも全部正常に戻ってる。',
-          '最初は小さなターゲットバグに見えたけど、原因は複数の機能が使っていた共通コードだった。',
-          '一つ直して終わりじゃなく、ログを追ってつながりを見つけたのが今回の勝因だ。いい仕事だったよ。',
+          'Code Coreは安定した。現実側の戦闘システムも正常に戻った。',
+          '前に一度、目の前の症状だけ急いで塞いで、別の場所へ不具合を押し出したことがある。だから今回は、分からないところで立ち止まれる君に任せた。',
+          '派手に当てる人より、読んでから動ける人の方が長いincidentでは強い。次もそのままでいい。',
         ],
       },
       {
         id: 'archivist-stage-2',
         condition: { kind: 'stageCleared', stageId: 2 },
         lines: [
-          'ログをまとめると、異常は全部同じ共通処理につながってる。',
-          '場所は西のCode Core。そこが壊れて、王国中の戦闘処理へ変な値を流してるみたいだ。',
-          '次が最後。Coreの中へ入って、暴走している処理そのものを止めよう。',
+          '二つの症状が同じ先へ流れている。焦って名前を付けるのはまだ早い。',
+          'BYTEには現地のtraceを任せる。君は最後まで、自分で確かめたものだけを材料にして進んでくれ。',
         ],
       },
       {
         id: 'archivist-stage-1',
         condition: { kind: 'stageCleared', stageId: 1 },
         lines: [
-          'ターゲット処理は直ったね。でも別の機能からも同じようなエラーが出始めた。',
-          'BYTEがログを集めてくれてる。次は一つの関数だけじゃなく、どこまでバグが広がっているか見よう。',
-          '新しいコードも増えるけど、前に読んだ処理はそのまま使う。少しずつ追えば大丈夫。',
+          '最初の症状は再現できたね。原因を決めつけずに戻ってきたのは正解だ。',
+          'BYTEは見つけるのが速いぶん、仮説も速い。MIOはその癖をよく知ってる。二人の間で必要な読み方だけ拾ってこよう。',
         ],
       },
       {
         id: 'archivist-start',
         condition: { kind: 'always' },
         lines: [
-          '今日からJavaScript王国の開発チームに入ってもらう。君は新人Code Knightだ。',
-          '最初の仕事は戦闘システムのバグ修正。攻撃が違う敵へ飛ぶことがあるらしい。',
-          '技に書かれたJavaScriptを読んで、どの敵が選ばれるのか確かめながら直していこう。',
+          '今日から開発チームに入ってもらう。君は新人Code Knightだ。',
+          '私はLEAD ADA。急ぐ場面ほど、分からないことを分かったふりしない人を信用する。まず現場を見てきて。',
         ],
       },
     ],
@@ -57,26 +54,17 @@ export const npcDefinitions: NpcDefinition[] = [
       {
         id: 'lambda-level-3',
         condition: { kind: 'minLevel', level: 3 },
-        lines: [
-          'Code Coreの中は処理が長くなる。でも一気に全部理解しようとしなくていい。',
-          'filter、sort、reduceみたいに、処理を一段ずつ追えば最後に何が選ばれるか見えてくる。',
-        ],
+        lines: ['長い道も一歩ずつだ。読み切れない夜は、途中で印を付けて眠ればいい。'],
       },
       {
         id: 'lambda-stage-1',
         condition: { kind: 'stageCleared', stageId: 1 },
-        lines: [
-          '次から敵が増える。複数の候補を残したり、条件を組み合わせたりするコードも出てくるよ。',
-          '迷ったら「今この行で何が残ったか」だけ考えると読みやすい。',
-        ],
+        lines: ['森へ行くなら、水筒を忘れないこと。難しい顔をしていても喉は乾くからね。'],
       },
       {
         id: 'lambda-start',
         condition: { kind: 'always' },
-        lines: [
-          '技名よりコードを見よう。JavaScriptが実際に返した値が、そのまま攻撃対象になる。',
-          'まずはfind()みたいな短い処理から読めばいい。',
-        ],
+        lines: ['ここでは皆、何かを読み違える。恥ずかしいのは間違えることより、確かめないことさ。'],
       },
     ],
   },
@@ -91,26 +79,124 @@ export const npcDefinitions: NpcDefinition[] = [
         id: 'byte-area-clear',
         condition: { kind: 'areaCleared', areaId: JAVASCRIPT_AREA_ID },
         lines: [
-          'ログきれいになった！ Code Coreも戦闘システムも全部greenだ。',
-          '最初の小さいバグからここまで来るとは思わなかったな。',
-          '次のエリアでも変な動き見つけたら、また一緒にデバッグしようぜ。',
+          '西の森、静かになったね。最初は僕が全部説明しないとって思ってた。',
+          'でも後半は、君が止まった場所だけ見れば十分だった。次も僕は横でtraceを見失わないようにするよ。',
         ],
       },
       {
         id: 'byte-level-2',
         condition: { kind: 'minLevel', level: 2 },
         lines: [
-          'ログ拾ってきた。ターゲットだけじゃなく、複数の敵を選ぶ処理でも変な結果が出てる。',
-          'しかも全部、西のCode Coreを通った直後からおかしくなってる。かなり怪しいぞ。',
+          '僕、ログを拾うのは得意なんだけど、怪しいものを見つけると先に答えを決めたくなるんだ。MIOには昔からそこを怒られてる。',
+          'だから今度は僕が決めない。どこから読むか、先に君の考えを聞かせて。',
         ],
       },
       {
         id: 'byte-start',
         condition: { kind: 'always' },
         lines: [
-          '俺はBYTE。ログを追ったり、変な動きを探したりするのが得意なんだ。',
-          '最初のバグ、俺も一緒に見るよ。分からなくなったら敵のHPとコードを順番に確認しよう。',
+          '僕はBYTE。足跡みたいに残ったログを追うのが好きなんだ。',
+          '一人だと見つけた瞬間に走り出しちゃうから、今回は君と一緒に見たい。分からないところもそのまま持っていこう。',
         ],
+      },
+    ],
+  },
+  {
+    id: 'trainer-mio',
+    name: 'TRAINER MIO',
+    role: 'mentor',
+    roleLabel: 'VILLAGE GUIDE',
+    visualId: 'trainer-mio',
+    dialogues: [
+      {
+        id: 'mio-area-clear',
+        condition: { kind: 'areaCleared', areaId: JAVASCRIPT_AREA_ID },
+        lines: [
+          'おかえり。森の方から聞こえていた嫌な音、止まったね。',
+          'BYTEも少し変わったでしょ。前は答えを見つけると人の話を最後まで聞かなかった。君と組ませて正解だったみたい。',
+        ],
+      },
+      {
+        id: 'mio-training-complete',
+        condition: { kind: 'stageCleared', stageId: 9 },
+        lines: [
+          'もうTRAINへ戻らなくていいよ。ここからは森で、自分の読み方を使う番。',
+          'BYTE、先に答えを言わないこと。昔みたいに一人で走って木にぶつからない。',
+          'BYTEなら「それ今言う？」って顔をするだろうけど、君なら分かるよね。二人で帰っておいで。',
+        ],
+      },
+      {
+        id: 'mio-training-progress',
+        condition: { kind: 'stageCleared', stageId: 7 },
+        lines: [
+          '一つ読めたら十分。BYTEは三つ先まで走りたがるけど、私は一つずつ確かめる方が好き。',
+          '次も分からないところだけ持ってきて。全部を授業にするつもりはないよ。',
+        ],
+      },
+      {
+        id: 'mio-start',
+        condition: { kind: 'always' },
+        lines: [
+          'BYTEから聞いてるよ。私はMIO。この村で旅人が足を止める場所を守ってる。',
+          '現場で引っかかったところだけ、一緒に小さくしよう。終わったらちゃんと森へ返すから安心して。',
+        ],
+      },
+    ],
+  },
+  {
+    id: 'village-child',
+    name: 'VILLAGE CHILD',
+    role: 'resident',
+    roleLabel: 'GREENFIELD RESIDENT',
+    visualId: null,
+    dialogues: [
+      {
+        id: 'child-area-clear',
+        condition: { kind: 'areaCleared', areaId: JAVASCRIPT_AREA_ID },
+        lines: ['森の音、静かになった！ 今度BYTEと競走するんだ。あの子、曲がり角だけちょっと苦手なんだよ。'],
+      },
+      {
+        id: 'child-start',
+        condition: { kind: 'always' },
+        lines: ['旅の人？ MIOは怖くないよ。声が静かなときの方が、だいたい本気で心配してるだけ。'],
+      },
+    ],
+  },
+  {
+    id: 'forest-traveler',
+    name: 'FOREST TRAVELER',
+    role: 'resident',
+    roleLabel: 'WEARY TRAVELER',
+    visualId: null,
+    dialogues: [
+      {
+        id: 'traveler-area-clear',
+        condition: { kind: 'areaCleared', areaId: JAVASCRIPT_AREA_ID },
+        lines: ['西の道が落ち着いたって？ なら明日の朝に出るよ。村のパンを三つも買っちまったしな。'],
+      },
+      {
+        id: 'traveler-start',
+        condition: { kind: 'always' },
+        lines: ['森から戻ってきたところだ。奥へ行くほど木々がざわついて、獣まで落ち着かなくてね。今日はここで休むよ。'],
+      },
+    ],
+  },
+  {
+    id: 'misfire-adventurer',
+    name: 'WANDERING ADVENTURER',
+    role: 'resident',
+    roleLabel: 'STRANDED ADVENTURER',
+    visualId: null,
+    dialogues: [
+      {
+        id: 'adventurer-area-clear',
+        condition: { kind: 'areaCleared', areaId: JAVASCRIPT_AREA_ID },
+        lines: ['技がちゃんと狙った方へ飛ぶ！ やっと旅を再開できる。次に会ったら、森の向こうの景色を教えるよ。'],
+      },
+      {
+        id: 'adventurer-start',
+        condition: { kind: 'always' },
+        lines: ['この前から剣の技が狙った方へ飛ばなくてさ。腕が鈍ったのかと思って、森へ入るのをやめてたんだ。'],
       },
     ],
   },
@@ -118,39 +204,39 @@ export const npcDefinitions: NpcDefinition[] = [
     id: 'type-warden',
     name: 'TYPE WARDEN',
     role: 'maintainer',
-    roleLabel: 'SYSTEM MAINTAINER',
+    roleLabel: 'FRONTIER WARDEN',
     visualId: 'type-warden',
     dialogues: [
       {
         id: 'type-warden-area-clear',
         condition: { kind: 'areaCleared', areaId: TYPESCRIPT_AREA_ID },
         lines: [
-          'Shared Contractの整合性を確認した。Frontier Compilerも新旧data shapeを正常に処理している。',
-          '型が保証することと実際の値・条件を分けて追えたから、根本原因まで辿り着けた。incident closeだ。',
+          'Frontier Compilerは静まった。私はまた、この境界を見張る仕事へ戻れる。',
+          '君たちが来る前は、守ることと閉じることを同じだと思い始めていた。外から来た目は必要だな。',
         ],
       },
       {
         id: 'type-warden-stage-5',
         condition: { kind: 'stageCleared', stageId: 5 },
         lines: [
-          'optionalとunionの異常が、同じTargetPolicy contractにつながった。',
-          '次は東のFrontier Compilerだ。narrowing、generic、keyofを上から追って共通contractを直す。',
+          '異変の先は東のFrontier Compilerだ。あれは私ではない。この地のcontractを解釈する古い機構だ。',
+          '私はここに残って境界を支える。奥の判断は君とBYTEに任せる。',
         ],
       },
       {
         id: 'type-warden-stage-4',
         condition: { kind: 'stageCleared', stageId: 4 },
         lines: [
-          '入口の型注釈と実行条件は確認できた。でもAPI更新後の異常はそこだけじゃない。',
-          '次はlimitが複数候補になるログと、値自体が無いログを追う。unionとoptionalを見ていこう。',
+          '入口だけの異変ではなかったようだ。私も長くここに居すぎて、いつもの景色を疑いにくくなっていた。',
+          'BYTEは騒がしいが、見慣れたものを変だと言える。それはこのFrontierでは貴重だ。',
         ],
       },
       {
         id: 'type-warden-start',
         condition: { kind: 'always' },
         lines: [
-          'Enemy API更新後からTypeScript Frontierのtarget処理がずれている。まず入口の処理を調査してほしい。',
-          '型は手がかりだが、攻撃対象を決めるのは実行時の値と条件だ。両方をつなげて読もう。',
+          '私はTYPE WARDEN。このFrontierを守る者だ。君たちと戦うために待っていたわけではない。',
+          '東で暴れているのはFrontier Compilerだ。私は道と境界を保つ。調査は君たちに頼みたい。',
         ],
       },
     ],
@@ -165,26 +251,17 @@ export const npcDefinitions: NpcDefinition[] = [
       {
         id: 'narrowing-scholar-stage-5',
         condition: { kind: 'stageCleared', stageId: 5 },
-        lines: [
-          'Shared Contractを読むときも、narrowingでは「条件を通った後に何が確定したか」を見る。type predicateも同じだ。',
-          '`keyof Enemy`が出たら型名で止まらず、実際にkeyへ入っているproperty名まで追おう。',
-        ],
+        lines: ['古い石碑は文字より欠け方を見ると面白い。残っているものから、失われた形を想像できる。'],
       },
       {
         id: 'narrowing-scholar-stage-4',
         condition: { kind: 'stageCleared', stageId: 4 },
-        lines: [
-          '`limit?: number`なら、読む側では`number | undefined`として考える。',
-          'APIから値が来ないcaseもある。だから`!== undefined`が後続でnumberとして扱える根拠になる。',
-        ],
+        lines: ['Frontierの夜は冷える。考え事をするなら焚き火の近くにしなさい。'],
       },
       {
         id: 'narrowing-scholar-start',
         condition: { kind: 'always' },
-        lines: [
-          '`const limit: number = 55`の`: number`は実行時に55を変えない。',
-          '今回のincidentでも「型が何を保証するか」と「式が実際に何を返すか」を分けるのが最初の一歩だ。',
-        ],
+        lines: ['この土地の石は硬いが、住人まで硬くなる必要はない。旅人には温かい茶を出すのが私の流儀だ。'],
       },
     ],
   },
@@ -192,32 +269,23 @@ export const npcDefinitions: NpcDefinition[] = [
     id: 'compiler-scout',
     name: 'COMPILER SCOUT',
     role: 'scout',
-    roleLabel: 'REVIEW SCOUT',
+    roleLabel: 'FRONTIER SCOUT',
     visualId: null,
     dialogues: [
       {
         id: 'compiler-scout-area-clear',
         condition: { kind: 'areaCleared', areaId: TYPESCRIPT_AREA_ID },
-        lines: [
-          'Frontier Compiler green。Shared Contractの復旧を確認した。',
-          '別seedでも型の保証と現在値を追って同じruleへ辿り着ければ、今回の読解は再現できる。',
-        ],
+        lines: ['東の見回りから戻った。今夜は久しぶりに、警報じゃなく風の音だけで眠れそうだ。'],
       },
       {
         id: 'compiler-scout-level-3',
         condition: { kind: 'minLevel', level: 3 },
-        lines: [
-          'Finalは複合コードになる。narrowingと`keyof`だけ見直してからCompilerへ向かうのもありだ。',
-          '一気に読むより、候補を絞る行→値を読む行→最後に選ぶ行の順で追え。',
-        ],
+        lines: ['奥へ行くなら靴紐を締め直せ。石段は急だ。'],
       },
       {
         id: 'compiler-scout-start',
         condition: { kind: 'always' },
-        lines: [
-          'incident中でもBattleのseedで盤面は変わる。答えの位置を覚えても通用しないぞ。',
-          '型情報はヒント、最終判断は現在のdata。曖昧な概念だけ看板で確認して調査を進めよう。',
-        ],
+        lines: ['東の巡回は私の担当だ。最近はCompilerの方から嫌な振動が来る。近づくなら足元に気をつけろ。'],
       },
     ],
   },
