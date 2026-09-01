@@ -54,6 +54,52 @@ type ActiveConversation = {
   origin: WorldPosition
 }
 
+const objectiveLabelTranslations: ReadonlyArray<readonly [RegExp, string]> = [
+  [/^JAVASCRIPT CLEAR$/, 'JavaScript地方クリア'],
+  [/^NEXT OBJECTIVE$/, '次の目的'],
+  [/^LIVE INCIDENT$/, '発生中の異常'],
+  [/^INCIDENT PREP/, '異常の調査準備'],
+  [/^FOLLOW THE TRACE$/, '経路を追う'],
+  [/^FOLLOW SHARED TRACE$/, '共通経路を追う'],
+  [/^FOLLOW TRACE/, '経路を追う'],
+  [/^TRACE BLOCKED$/, '経路が塞がれている'],
+  [/^IMPACT RANGE$/, '影響範囲'],
+  [/^SECOND SYMPTOM$/, '二つ目の症状'],
+  [/^ROOT TRACE$/, '根本経路を追う'],
+  [/^ROOT CAUSE$/, '根本原因'],
+  [/^TRACE READY$/, '追跡準備完了'],
+  [/^TRACE JUNCTION$/, '経路の合流点'],
+  [/^FOREST LOCKED$/, 'Forest未開放'],
+]
+
+function localizeObjectiveLabel(label: string): string {
+  for (const [pattern, replacement] of objectiveLabelTranslations) {
+    if (pattern.test(label)) return label.replace(pattern, replacement)
+  }
+  return label
+}
+
+function localizeWorldNarrative(text: string): string {
+  return text
+    .replace(/root cause/gi, '根本原因')
+    .replace(/call path/gi, '呼び出し経路')
+    .replace(/data flow/gi, 'データの流れ')
+    .replace(/main trail/gi, '主要ルート')
+    .replace(/MID BOSS/g, '中ボス')
+    .replace(/Battle/g, '戦闘')
+    .replace(/target/gi, '対象')
+    .replace(/incident/gi, '異常')
+    .replace(/trace/gi, '経路')
+    .replace(/selector/gi, '選択処理')
+    .replace(/junction/gi, '合流点')
+    .replace(/state/gi, '状態')
+    .replace(/boolean/gi, '真偽値')
+    .replace(/barrier/gi, '障壁')
+    .replace(/syntax/gi, '構文')
+    .replace(/stats/gi, '情報')
+    .replace(/data/gi, 'データ')
+}
+
 function useWorldSpriteMotion(mapId: WorldMapId, position: WorldPosition): SpriteMotion {
   const positionX = position.x
   const positionY = position.y
@@ -162,7 +208,7 @@ function WorldEntryTransition({ mapId }: { mapId: WorldMapId }) {
   if (!visible) return null
   return (
     <div className="world-entry-transition" aria-hidden="true">
-      <span>AREA</span>
+      <span>エリア</span>
       <strong>{title}</strong>
     </div>
   )
@@ -183,41 +229,42 @@ function getNpcFieldVisual(npcId: string): string | null {
 function getInteractionPresentation(intent: WorldInteractionIntent): { label: string; disabled: boolean } {
   switch (intent.kind) {
     case 'party':
-      return { label: 'TALK TO BYTE', disabled: false }
+      return { label: 'BYTEと話す', disabled: false }
     case 'shop':
-      return { label: 'OPEN SHOP', disabled: false }
+      return { label: 'ショップを見る', disabled: false }
     case 'recovery':
-      return { label: 'REST AT INN', disabled: false }
+      return { label: '宿で休む', disabled: false }
     case 'treasure':
-      return { label: intent.opened ? 'CHECK CHEST' : 'OPEN CHEST', disabled: false }
+      return { label: intent.opened ? '宝箱を調べる' : '宝箱を開ける', disabled: false }
     case 'training':
-      return { label: intent.battleId === null ? 'TALK TO MIO' : 'TRAIN WITH MIO', disabled: false }
+      return { label: intent.battleId === null ? 'MIOと話す' : 'MIOと訓練する', disabled: false }
     case 'midboss':
-      return { label: intent.unlocked ? 'CHALLENGE MID BOSS' : 'CHECK MID BOSS', disabled: false }
+      return { label: intent.unlocked ? '中ボスに挑む' : '中ボスを調べる', disabled: false }
     case 'boss':
       if (intent.region === 'typescript') {
         return {
-          label: intent.unlocked ? 'CHALLENGE FRONTIER COMPILER' : 'CHECK FRONTIER COMPILER',
+          label: intent.unlocked ? 'Frontier Compilerに挑む' : 'Frontier Compilerを調べる',
           disabled: false,
         }
       }
-      return { label: intent.unlocked ? 'CHALLENGE BOSS' : 'CHECK BOSS', disabled: false }
+      return { label: intent.unlocked ? 'ボスに挑む' : 'ボスを調べる', disabled: false }
     case 'map-transition':
-      return { label: `ENTER ${intent.label}`, disabled: false }
+      return { label: `${intent.label}へ入る`, disabled: false }
     case 'none':
       return { label: 'INTERACT', disabled: true }
   }
 }
 
 export function WorldObjectiveCard({ objective }: { objective: WorldObjective }) {
+  const detail = localizeWorldNarrative(objective.detail)
   return (
     <section
       className={`world-next-objective pixel-inner-window ${objective.clear ? 'is-clear' : ''}`}
-      aria-label="Next objective"
-      title={objective.detail}
+      aria-label="次の目的"
+      title={detail}
     >
-      <span>{objective.label}</span>
-      <strong>{objective.title}</strong>
+      <span>{localizeObjectiveLabel(objective.label)}</span>
+      <strong>{localizeWorldNarrative(objective.title)}</strong>
     </section>
   )
 }
@@ -393,7 +440,7 @@ export function WorldControls(props: {
     baseIntent.battleId !== null
   const conversationalNpc = adjacentNpc && !trainingStillActive ? adjacentNpc : undefined
   const inferred = conversationalNpc
-    ? { label: `TALK TO ${getWorldNpcDefinition(conversationalNpc).name}`, disabled: false }
+    ? { label: `${getWorldNpcDefinition(conversationalNpc).name}と話す`, disabled: false }
     : getInteractionPresentation(baseIntent)
   const { interact, interactLabel = inferred.label, interactDisabled = inferred.disabled, move } = props
   const [conversation, setConversation] = useState<ActiveConversation | null>(null)
@@ -484,7 +531,7 @@ export function WorldControls(props: {
   }
 
   return (
-    <div className="world-controls" aria-label="World controls">
+    <div className="world-controls" aria-label="フィールド操作">
       <WorldLogPolicy />
       <div className="world-dpad">
         {directionButton('Move up', '▲', 0, -1)}
@@ -506,7 +553,7 @@ export function WorldControls(props: {
         <section
           className="world-npc-conversation pixel-inner-window"
           role="dialog"
-          aria-label={`${conversationData.npc.name} conversation`}
+          aria-label={`${conversationData.npc.name}との会話`}
         >
           <div className="dialogue-speaker">
             <span>{conversationData.npc.roleLabel}</span>
@@ -518,10 +565,10 @@ export function WorldControls(props: {
           <p>{conversationLine}</p>
           <div className="dialogue-actions">
             <button type="button" className="secondary-button" onClick={() => setConversation(null)}>
-              CLOSE
+              閉じる
             </button>
             <button type="button" className="primary-button" onClick={advanceConversation}>
-              {isConversationLast ? '▶ DONE' : '▶ NEXT'}
+              {isConversationLast ? '▶ 完了' : '▶ 次へ'}
             </button>
           </div>
         </section>
