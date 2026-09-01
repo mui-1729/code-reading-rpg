@@ -1,0 +1,62 @@
+.world-next-objective {
+  padding: 9px 12px;
+  gap: 4px;
+}
+
+.world-next-objective > span { font-size: 8px; }
+.world-next-objective > strong { font-size: 12px; line-height: 1.35; }
+
+.world-message {
+  min-height: 44px;
+  padding: 8px 11px;
+}
+
+.world-message[data-log-priority='ambient'] { display: none; }
+.world-message span { font-size: 7px; }
+.world-message p { margin-top: 3px; font-size: 10px; }
+
+.atlas-detail-canvas { box-sizing: border-box; }
+
+.world-dpad {
+  grid-template-columns: repeat(3, 46px);
+  grid-template-rows: repeat(2, 46px);
+  gap: 5px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.world-dpad button {
+  min-width: 46px;
+  min-height: 46px;
+  touch-action: none;
+}
+
+.world-interact {
+  min-height: 46px;
+  padding-inline: 14px;
+}
+
+.world-interact:disabled {
+  border-color: #353548;
+  background: #11111a;
+  color: #716f80;
+  cursor: default;
+  box-shadow: none;
+}
+
+@media (max-width: 460px) {
+  .world-dpad {
+    grid-template-columns: repeat(3, 46px);
+    grid-template-rows: repeat(2, 46px);
+  }
+
+  .world-controls { gap: 9px; }
+  .world-interact { min-width: 132px; font-size: 9px; }
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  .world-shell { padding-top: 4px; padding-bottom: 58px; }
+  .world-next-objective { margin-bottom: 8px; }
+  .world-message { margin-top: 7px; }
+  .world-controls { margin-top: 7px; }
+}

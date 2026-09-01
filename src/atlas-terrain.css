@@ -1,9 +1,74 @@
+.atlas-region-nav {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.atlas-region-nav button {
+  min-width: 0;
+  min-height: 52px;
+  padding: 8px 9px;
+  display: grid;
+  gap: 4px;
+  align-content: center;
+  text-align: left;
+  border: 2px solid #303045;
+  background: #0d0d17;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.atlas-region-nav button.is-selected {
+  border-color: var(--gold);
+  box-shadow: inset 0 -3px 0 #7f6824;
+}
+
+.atlas-region-nav button.is-current strong { color: var(--gold); }
+.atlas-region-nav button:disabled {
+  cursor: default;
+  border-style: dashed;
+  color: #6f6d7d;
+  background: #090910;
+}
+
+.atlas-region-nav strong {
+  overflow: hidden;
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.atlas-region-nav span {
+  overflow: hidden;
+  color: #9290a3;
+  font-size: 6px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.atlas-detail-canvas {
+  min-width: 0;
+  max-width: none;
+  margin: 0 auto;
+  padding: 14px;
+  transition: width 120ms ease;
+}
+
+.atlas-map-detail {
+  width: 100%;
+  min-height: 0;
+}
+
 .atlas-terrain-field {
   display: grid;
-  align-content: stretch;
-  gap: 7px;
   min-height: 0;
-  padding: 8px;
+  padding: 10px;
+}
+
+.atlas-terrain-stage {
+  position: relative;
+  width: 100%;
 }
 
 .atlas-terrain-grid {
@@ -24,31 +89,48 @@
   min-height: 0;
   overflow: hidden;
   background: #26302b;
-  color: #08080d;
-  font-size: 6px;
+  color: rgba(255, 255, 255, .3);
+  font-family: monospace;
+  font-size: clamp(3px, .7vw, 7px);
+  font-weight: 900;
   line-height: 1;
 }
 
-/* world.css uses terrain pseudo-elements for the playable map. Atlas cells only
-   need compact color blocks, so keep those world decorations out of the atlas. */
+/* Atlas has its own compact patterns. Never inherit full-size playable-map pseudo art. */
 .atlas-terrain-cell::before,
-.atlas-terrain-cell::after {
-  content: none;
-}
+.atlas-terrain-cell::after { content: none; }
 
 .atlas-terrain-cell.terrain-mountain,
-.atlas-terrain-cell.terrain-house { background: #292830; }
-.atlas-terrain-cell.terrain-water { background: #285a78; }
-.atlas-terrain-cell.terrain-road { background: #b3925f; }
-.atlas-terrain-cell.terrain-stone { background: #858997; }
-.atlas-terrain-cell.terrain-crystal { background: #7756a4; }
-.atlas-terrain-cell.terrain-ruins { background: #51495f; }
+.atlas-terrain-cell.terrain-house {
+  background: repeating-linear-gradient(135deg, #292830 0 4px, #383740 4px 6px);
+}
+.atlas-terrain-cell.terrain-water {
+  background: repeating-linear-gradient(0deg, #285a78 0 3px, #347092 3px 4px);
+}
+.atlas-terrain-cell.terrain-road {
+  background: repeating-linear-gradient(90deg, #b3925f 0 5px, #9d7d4e 5px 6px);
+}
+.atlas-terrain-cell.terrain-stone {
+  background: repeating-linear-gradient(135deg, #858997 0 4px, #6e7280 4px 5px);
+}
+.atlas-terrain-cell.terrain-crystal {
+  background: repeating-linear-gradient(45deg, #7756a4 0 4px, #9474be 4px 5px);
+}
+.atlas-terrain-cell.terrain-ruins {
+  background: repeating-conic-gradient(#51495f 0 25%, #686071 0 50%) 0 0 / 6px 6px;
+}
 .atlas-terrain-cell.terrain-town { background: #68865b; }
 .atlas-terrain-cell.terrain-grass { background: #4f8247; }
-.atlas-terrain-cell.terrain-tall-grass { background: #39643b; }
-.atlas-terrain-cell.terrain-woods { background: #2e6039; }
+.atlas-terrain-cell.terrain-tall-grass {
+  background: repeating-linear-gradient(75deg, #39643b 0 3px, #4b7950 3px 4px);
+}
+.atlas-terrain-cell.terrain-woods {
+  background: radial-gradient(circle, #477b4e 20%, transparent 22%) 0 0 / 6px 6px, #2e6039;
+}
 .atlas-terrain-cell.terrain-deep-woods,
-.atlas-terrain-cell.terrain-forest { background: #1d432b; }
+.atlas-terrain-cell.terrain-forest {
+  background: radial-gradient(circle, #31563b 20%, transparent 22%) 0 0 / 6px 6px, #1d432b;
+}
 .atlas-terrain-cell.terrain-village { background: #82b970; }
 .atlas-terrain-cell.terrain-gate,
 .atlas-terrain-cell.terrain-exit { background: #6796df; }
@@ -61,7 +143,7 @@
 .atlas-terrain-cell.terrain-recovery { background: #82bed5; }
 
 .atlas-terrain-cell.is-locked {
-  background: #301820;
+  background: repeating-linear-gradient(45deg, #301820 0 3px, #541e2d 3px 5px);
   box-shadow: inset 0 0 0 1px #ff6f88;
 }
 
@@ -70,21 +152,48 @@
   z-index: 2;
   overflow: visible;
   background: #fff;
+  color: #1c1018;
   box-shadow: 0 0 0 1px #ff4f8b, 0 0 5px #ff4f8b;
-  font-weight: 900;
 }
 
-.atlas-landmark-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px 7px;
-  min-height: 11px;
+.atlas-landmark-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
+
+.atlas-landmark-pin {
+  position: absolute;
+  z-index: 4;
+  width: clamp(11px, 2.1vw, 18px);
+  height: clamp(11px, 2.1vw, 18px);
+  display: grid;
+  place-items: center;
+  transform: translate(-50%, -50%);
+  border: 1px solid #08080d;
+  background: #f7df7a;
+  color: #141018;
+  font-family: monospace;
+  font-size: clamp(7px, 1.2vw, 11px);
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 1px 1px 0 #08080d;
+}
+
+.atlas-landmark-pin.is-exit { background: #8ec4ff; }
+.atlas-landmark-pin.is-boss,
+.atlas-landmark-pin.is-midboss { background: #ff718a; }
+.atlas-landmark-pin.is-treasure { background: #ffe06a; }
+.atlas-landmark-pin.is-shop { background: #77ddba; }
+.atlas-landmark-pin.is-inn { background: #9ee6f6; }
+.atlas-landmark-pin.is-training { background: #ffb56f; }
+.atlas-landmark-pin.is-village { background: #a9e593; }
+.atlas-landmark-pin.is-opened { opacity: .45; filter: grayscale(.65); }
 
 .atlas-terrain-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 10px;
+  gap: 6px 11px;
   color: #aaa7ba;
   font-size: 7px;
   font-weight: 900;
@@ -96,31 +205,35 @@
   gap: 4px;
 }
 
-.atlas-terrain-legend .atlas-legend-swatch {
-  position: relative;
-  width: 9px;
-  height: 9px;
-  overflow: hidden;
-  border: 1px solid #59586d;
+.atlas-terrain-legend b {
+  min-width: 11px;
+  color: #f4e291;
+  font-family: monospace;
+  text-align: center;
 }
 
-.atlas-terrain-legend .atlas-legend-road { background: #b3925f; }
-.atlas-terrain-legend .atlas-legend-woods { background: #2e6039; }
-.atlas-terrain-legend .atlas-legend-water { background: #285a78; }
-.atlas-terrain-legend .atlas-legend-gate { background: #6796df; }
-.atlas-terrain-legend .atlas-legend-boss { background: #db525a; }
-.atlas-terrain-legend .atlas-legend-treasure { background: #efc94e; }
-.atlas-terrain-legend .atlas-legend-player {
-  background: #fff;
-  box-shadow: 0 0 0 1px #ff4f8b;
+.atlas-zoom button {
+  width: auto;
+  min-width: 42px;
+  padding: 0 8px;
+  font-size: 9px;
 }
+.atlas-zoom button[aria-label^='Zoom'] { min-width: 34px; padding: 0; font-size: 16px; }
+.atlas-zoom button.is-active { border-color: var(--gold); color: var(--gold); }
 
 @media (max-width: 620px) {
-  .atlas-terrain-field {
-    padding: 7px;
+  .atlas-region-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .atlas-terrain-cell.is-player {
-    box-shadow: 0 0 0 1px #ff4f8b;
-  }
+  .atlas-region-nav button { min-height: 48px; }
+  .atlas-detail-canvas { padding: 8px; }
+  .atlas-terrain-field { padding: 7px; }
+  .atlas-landmark-pin { width: 13px; height: 13px; font-size: 8px; }
+  .atlas-terrain-cell.is-player { box-shadow: 0 0 0 1px #ff4f8b; }
+  .atlas-zoom { justify-content: flex-start; flex-wrap: wrap; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atlas-detail-canvas { transition: none; }
 }

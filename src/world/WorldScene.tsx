@@ -1,5 +1,9 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useProgress } from '../progression'
+import { useRpg } from '../rpg'
 import { characterVisuals } from '../rpg/visualAssets'
+import { resolveWorldInteraction, type WorldInteractionIntent } from './worldActions'
+import { WorldLogPolicy } from './WorldLogPolicy'
 import {
   getWorldFacing,
   getWorldScenePresentation,
@@ -41,11 +45,7 @@ function useWorldSpriteMotion(mapId: WorldMapId, position: WorldPosition): Sprit
   const positionY = position.y
   const previousRef = useRef({ mapId, position: { x: positionX, y: positionY } })
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [motion, setMotion] = useState<SpriteMotion>({
-    facing: 'down',
-    walking: false,
-    stepFrame: 0,
-  })
+  const [motion, setMotion] = useState<SpriteMotion>({ facing: 'down', walking: false, stepFrame: 0 })
 
   useLayoutEffect(() => {
     const currentPosition = { x: positionX, y: positionY }
@@ -70,7 +70,6 @@ function useWorldSpriteMotion(mapId: WorldMapId, position: WorldPosition): Sprit
     }
 
     previousRef.current = { mapId, position: currentPosition }
-
     return () => {
       if (timerRef.current !== null) {
         clearTimeout(timerRef.current)
@@ -125,13 +124,7 @@ function useWorldCameraPan(
       setPan(null)
     }
 
-    previousRef.current = {
-      mapId,
-      playerPosition: currentPlayer,
-      viewportStart: currentViewport,
-      cells,
-    }
-
+    previousRef.current = { mapId, playerPosition: currentPlayer, viewportStart: currentViewport, cells }
     return () => {
       if (timerRef.current !== null) {
         clearTimeout(timerRef.current)
@@ -163,10 +156,29 @@ function WorldEntryTransition({ mapId }: { mapId: WorldMapId }) {
 
 function getPlayerFieldSprite(facing: WorldFacing): string {
   if (facing === 'up') return '/pixel-art/characters/code-knight-field-up.svg'
-  if (facing === 'left' || facing === 'right') {
-    return '/pixel-art/characters/code-knight-field-side.svg'
-  }
+  if (facing === 'left' || facing === 'right') return '/pixel-art/characters/code-knight-field-side.svg'
   return characterVisuals.player.field
+}
+
+function getInteractionPresentation(intent: WorldInteractionIntent): { label: string; disabled: boolean } {
+  switch (intent.kind) {
+    case 'party':
+      return { label: 'TALK TO BYTE', disabled: false }
+    case 'shop':
+      return { label: 'OPEN SHOP', disabled: false }
+    case 'recovery':
+      return { label: 'REST AT INN', disabled: false }
+    case 'treasure':
+      return { label: intent.opened ? 'CHECK CHEST' : 'OPEN CHEST', disabled: false }
+    case 'training':
+      return { label: intent.battleId === null ? 'TRAINING CLEAR' : 'TRAIN WITH MIO', disabled: false }
+    case 'midboss':
+      return { label: intent.unlocked ? 'CHALLENGE MID BOSS' : 'CHECK MID BOSS', disabled: false }
+    case 'boss':
+      return { label: intent.unlocked ? 'CHALLENGE BOSS' : 'CHECK BOSS', disabled: false }
+    case 'none':
+      return { label: 'INTERACT', disabled: true }
+  }
 }
 
 export function WorldObjectiveCard({ objective }: { objective: WorldObjective }) {
@@ -174,10 +186,10 @@ export function WorldObjectiveCard({ objective }: { objective: WorldObjective })
     <section
       className={`world-next-objective pixel-inner-window ${objective.clear ? 'is-clear' : ''}`}
       aria-label="Next objective"
+      title={objective.detail}
     >
       <span>{objective.label}</span>
       <strong>{objective.title}</strong>
-      <p>{objective.detail}</p>
     </section>
   )
 }
@@ -200,11 +212,7 @@ export function WorldViewport(props: {
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const detail: WorldSceneEventDetail = {
-      mapId: props.mapId,
-      sceneId: scene.sceneId,
-      bgmTrack: scene.bgmTrack,
-    }
+    const detail: WorldSceneEventDetail = { mapId: props.mapId, sceneId: scene.sceneId, bgmTrack: scene.bgmTrack }
     window.dispatchEvent(new CustomEvent<WorldSceneEventDetail>(WORLD_SCENE_EVENT, { detail }))
   }, [props.mapId, scene.bgmTrack, scene.sceneId])
 
@@ -226,12 +234,7 @@ export function WorldViewport(props: {
 
   const renderSnapshotTerrain = (cell: WorldCell) => {
     const terrain = props.getTerrain?.(cell) ?? cell.terrain
-    return (
-      <div
-        key={`snapshot:${cell.mapId}:${cell.x}:${cell.y}`}
-        className={`world-tile terrain-${terrain}`}
-      />
-    )
+    return <div key={`snapshot:${cell.mapId}:${cell.x}:${cell.y}`} className={`world-tile terrain-${terrain}`} />
   }
 
   return (
@@ -307,11 +310,7 @@ export function WorldCharacterLayer(props: {
         data-walking={playerMotion.walking || undefined}
         data-step-frame={playerMotion.stepFrame}
       >
-        <img
-          className="world-player-pixel"
-          src={getPlayerFieldSprite(playerMotion.facing)}
-          alt=""
-        />
+        <img className="world-player-pixel" src={getPlayerFieldSprite(playerMotion.facing)} alt="" />
       </span>
     </div>
   )
@@ -321,26 +320,81 @@ export function WorldControls(props: {
   move: (dx: number, dy: number) => void
   interact: () => void
   interactLabel?: string
+  interactDisabled?: boolean
 }) {
-  const { interact, interactLabel = 'INTERACT', move } = props
+  const { progress } = useProgress()
+  const { rpgState } = useRpg()
+  const inferred = getInteractionPresentation(resolveWorldInteraction(rpgState, progress))
+  const { interact, interactLabel = inferred.label, interactDisabled = inferred.disabled, move } = props
+  const moveRef = useRef(move)
+  const delayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const repeatRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pointerClickRef = useRef(false)
+
+  useEffect(() => {
+    moveRef.current = move
+  }, [move])
+
+  const stopHold = useCallback(() => {
+    if (delayRef.current !== null) clearTimeout(delayRef.current)
+    if (repeatRef.current !== null) clearInterval(repeatRef.current)
+    delayRef.current = null
+    repeatRef.current = null
+  }, [])
+
+  useEffect(() => stopHold, [stopHold])
+
+  const startHold = useCallback((dx: number, dy: number) => {
+    stopHold()
+    pointerClickRef.current = true
+    moveRef.current(dx, dy)
+    delayRef.current = setTimeout(() => {
+      repeatRef.current = setInterval(() => moveRef.current(dx, dy), 120)
+    }, 280)
+  }, [stopHold])
+
+  const directionButton = (label: string, glyph: string, dx: number, dy: number) => (
+    <button
+      type="button"
+      aria-label={label}
+      onPointerDown={() => startHold(dx, dy)}
+      onPointerUp={stopHold}
+      onPointerCancel={() => {
+        stopHold()
+        pointerClickRef.current = false
+      }}
+      onPointerLeave={() => {
+        stopHold()
+        pointerClickRef.current = false
+      }}
+      onClick={() => {
+        if (pointerClickRef.current) {
+          pointerClickRef.current = false
+          return
+        }
+        moveRef.current(dx, dy)
+      }}
+    >
+      {glyph}
+    </button>
+  )
 
   return (
     <div className="world-controls" aria-label="World controls">
+      <WorldLogPolicy />
       <div className="world-dpad">
-        <button type="button" aria-label="Move up" onClick={() => move(0, -1)}>
-          ▲
-        </button>
-        <button type="button" aria-label="Move left" onClick={() => move(-1, 0)}>
-          ◀
-        </button>
-        <button type="button" aria-label="Move down" onClick={() => move(0, 1)}>
-          ▼
-        </button>
-        <button type="button" aria-label="Move right" onClick={() => move(1, 0)}>
-          ▶
-        </button>
+        {directionButton('Move up', '▲', 0, -1)}
+        {directionButton('Move left', '◀', -1, 0)}
+        {directionButton('Move down', '▼', 0, 1)}
+        {directionButton('Move right', '▶', 1, 0)}
       </div>
-      <button type="button" className="primary-button world-interact" onClick={interact}>
+      <button
+        type="button"
+        className="primary-button world-interact"
+        aria-label={interactLabel === 'INTERACT' ? 'INTERACT' : `INTERACT · ${interactLabel}`}
+        onClick={interact}
+        disabled={interactDisabled}
+      >
         {interactLabel}
       </button>
     </div>
