@@ -25,7 +25,7 @@ describe('battle story event resolver', () => {
   it('resolves JavaScript Forest story events', () => {
     expect(getBattleStoryEvent('/javascript/battle/10', 'pre')?.title).toBe('Forestで自分の読み順を決める')
     expect(getBattleStoryEvent('/javascript/battle/11', 'pre')?.title).toBe('別の入口からも同じ異常へ入る')
-    expect(getBattleStoryEvent('/javascript/battle/12', 'post')?.title).toBe('複数の条件が一つの経路へ集まった')
+    expect(getBattleStoryEvent('/javascript/battle/12', 'post')?.title).toBe('BYTEが一歩後ろへ下がる')
   })
 
   it('resolves TypeScript story events', () => {
