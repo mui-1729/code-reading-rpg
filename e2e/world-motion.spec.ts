@@ -161,6 +161,8 @@ test('map transitionはAREA titleとregion field BGMを同じscene identityか�
   await expect.poll(() => page.evaluate(() => document.body.dataset.bgmTrack)).toBe('field')
 
   await page.getByRole('button', { name: 'Move up' }).click()
+  await expect(viewport).toHaveAttribute('data-world-map', 'overworld')
+  await page.getByRole('button', { name: 'INTERACT · ENTER GREENFIELD VILLAGE' }).click()
 
   await expect(viewport).toHaveAttribute('data-world-map', 'js-village')
   await expect(viewport).toHaveAttribute('data-world-scene', 'greenfield-village')
@@ -178,6 +180,9 @@ test('@cross-browser @responsive World AREA transitionは各viewportで横overfl
 
   const viewport = page.locator('.world-viewport')
   await page.getByRole('button', { name: 'Move up' }).click()
+  await expect(viewport).toHaveAttribute('data-world-map', 'overworld')
+  await page.getByRole('button', { name: 'INTERACT · ENTER GREENFIELD VILLAGE' }).click()
+  await expect(viewport).toHaveAttribute('data-world-map', 'js-village')
 
   const transitionLayout = await page.locator('.world-entry-transition').evaluate((transition) => {
     const viewportElement = transition.parentElement
@@ -202,7 +207,6 @@ test('@cross-browser @responsive World AREA transitionは各viewportで横overfl
     transitionLayout.viewport.x + transitionLayout.viewport.width + 1,
   )
 
-  await expect(viewport).toHaveAttribute('data-world-map', 'js-village')
   await expect(viewport).toHaveAttribute('data-world-scene', 'greenfield-village')
 })
 
