@@ -28,9 +28,9 @@ describe('typed victory result handoff', () => {
     })
   })
 
-  it('Boss unlockは独立したprogress eventを保つ', () => {
+  it('Boss unlockはdomain headingを保ったまま日本語presentationへ変換する', () => {
     const items = createVictoryResultSequence(reward, {
-      worldFeedback: { kind: 'bossUnlocked', region: 'javascript', heading: 'ボス解放', label: 'KINGDOM', progressLabel: '18 / 19', next: '西のBOSSへ' },
+      worldFeedback: { kind: 'bossUnlocked', region: 'javascript', heading: 'BOSS UNLOCKED', label: 'KINGDOM', progressLabel: '18 / 19', next: '西のBOSSへ' },
     })
     expect(items.at(-1)).toMatchObject({ title: 'ボス解放', tone: 'progress', detail: 'KINGDOM · 18 / 19 · 次 → 西のBOSSへ' })
   })
@@ -43,16 +43,16 @@ describe('typed victory result handoff', () => {
 
   it('World progressがある場合はStage clearを重複表示しない', () => {
     const items = createVictoryResultSequence(reward, {
-      worldFeedback: { kind: 'progress', region: 'javascript', heading: '進行更新', label: 'KINGDOM', progressLabel: '1 / 19' },
+      worldFeedback: { kind: 'progress', region: 'javascript', heading: 'WORLD PROGRESS', label: 'KINGDOM', progressLabel: '1 / 19' },
     })
     expect(items.some((item) => item.id === 'stage')).toBe(false)
-    expect(items.at(-1)).toMatchObject({ id: 'world-progress', tone: 'progress' })
+    expect(items.at(-1)).toMatchObject({ id: 'world-progress', title: '進行更新', tone: 'progress' })
   })
 
   it('area completionは関連結果をまとめ、equipment IDを保持する', () => {
     const items = createVictoryResultSequence({ ...reward, clearedAreaId: 'javascript' }, {
       clearedAreaTitle: 'KINGDOM',
-      worldFeedback: { kind: 'complete', region: 'javascript', heading: '攻略完了', label: 'KINGDOM', progressLabel: '19 / 19' },
+      worldFeedback: { kind: 'complete', region: 'javascript', heading: 'WORLD COMPLETE', label: 'KINGDOM', progressLabel: '19 / 19' },
       equipment: { id: 'branch-saber', name: 'Branch Saber' },
     })
     expect(items.filter((item) => item.tone === 'clear')).toEqual([
