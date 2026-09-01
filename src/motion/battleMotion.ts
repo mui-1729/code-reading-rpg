@@ -1,9 +1,11 @@
 export const BATTLE_MOTION = {
   skillWindupMs: 140,
+  semanticFeedbackMs: 420,
   hitMs: 360,
   defeatMs: 420,
-  enemyWindupMs: 320,
-  playerHitMs: 360,
+  enemyWindupMs: 220,
+  enemyAttackStepMs: 420,
+  playerHitMs: 280,
   resultDelayMs: 180,
 } as const
 
