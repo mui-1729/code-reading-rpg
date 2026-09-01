@@ -85,7 +85,9 @@ test('INTERACTは対象がない時disabledで近くの対象を具体名で示�
   await expect(page.getByRole('button', { name: 'INTERACT', exact: true })).toBeDisabled()
 
   await seedWorld(page, { position: { x: 20, y: 13 }, partyMemberIds: [] })
-  await expect(page.getByRole('button', { name: 'TALK TO BYTE', exact: true })).toBeEnabled()
+  const byteInteract = page.getByRole('button', { name: /TALK TO BYTE/ })
+  await expect(byteInteract).toBeEnabled()
+  await expect(byteInteract).toHaveText('TALK TO BYTE')
 })
 
 test('通常歩行のterrain echoはFIELD LOGを占有せずaria-liveもしない', async ({ page }) => {
@@ -105,9 +107,21 @@ test('D-Pad hold repeatで1 tapずつ連打せず複数tile移動できる', asy
   const start = await playerPosition(page)
   const down = page.getByRole('button', { name: 'Move down' })
 
-  await down.dispatchEvent('pointerdown', { pointerId: 1, pointerType: 'touch', isPrimary: true })
+  await down.dispatchEvent('pointerdown', {
+    button: 0,
+    buttons: 1,
+    pointerId: 1,
+    pointerType: 'touch',
+    isPrimary: true,
+  })
   await page.waitForTimeout(560)
-  await down.dispatchEvent('pointerup', { pointerId: 1, pointerType: 'touch', isPrimary: true })
+  await down.dispatchEvent('pointerup', {
+    button: 0,
+    buttons: 0,
+    pointerId: 1,
+    pointerType: 'touch',
+    isPrimary: true,
+  })
 
   const end = await playerPosition(page)
   expect(Math.abs(end.x - start.x) + Math.abs(end.y - start.y)).toBeGreaterThanOrEqual(2)
@@ -127,4 +141,17 @@ test('mobile D-Pad / INTERACTは44px以上のtouch targetを維持する', async
     expect(size.width).toBeGreaterThanOrEqual(44)
     expect(size.height).toBeGreaterThanOrEqual(44)
   }
+})
+
+test('mobile landscapeでもmap・D-Pad・context interactionが同じviewportで操作できる', async ({ page }) => {
+  await page.setViewportSize({ width: 844, height: 390 })
+  await seedWorld(page, { position: { x: 20, y: 13 }, partyMemberIds: [] })
+
+  await expect(page.getByLabel('CODE WORLD map')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Move left' })).toBeVisible()
+  await expect(page.getByRole('button', { name: /TALK TO BYTE/ })).toBeVisible()
+
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth),
+  ).toBe(false)
 })
