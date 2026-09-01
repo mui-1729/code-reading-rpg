@@ -130,7 +130,7 @@ test('未解放regionは名称とlandmarkをspoilerせずUNKNOWNとして残す'
   await page.getByRole('button', { name: '×' }).click()
   await seedWorldAtlas(page, JS_COMPLETE, 'overworld', { x: 20, y: 14 })
   const discoveredAtlas = await openAtlas(page)
-  await expect(discoveredAtlas.getByText('TS FRONTIER', { exact: true })).toBeVisible()
+  await expect(discoveredAtlas.locator('[data-atlas-region="ts-frontier"]')).toContainText('TS FRONTIER')
   await expect(discoveredAtlas.locator('[data-atlas-region="ts-frontier"]')).toBeEnabled()
 })
 
