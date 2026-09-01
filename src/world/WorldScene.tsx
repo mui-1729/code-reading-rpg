@@ -50,6 +50,8 @@ type CameraPan = {
 type ActiveConversation = {
   placement: WorldNpcPlacement
   lineIndex: number
+  mapId: WorldMapId
+  origin: WorldPosition
 }
 
 function useWorldSpriteMotion(mapId: WorldMapId, position: WorldPosition): SpriteMotion {
@@ -242,8 +244,7 @@ export function WorldViewport(props: {
 
   const renderCell = (cell: WorldCell) => {
     const terrain = props.getTerrain?.(cell) ?? cell.terrain
-    const isFrontierCompiler =
-      props.mapId === TS_FRONTIER_MAP_ID && terrain === 'boss'
+    const isFrontierCompiler = props.mapId === TS_FRONTIER_MAP_ID && terrain === 'boss'
     return (
       <div
         key={`${cell.mapId}:${cell.x}:${cell.y}`}
@@ -394,6 +395,13 @@ export function WorldControls(props: {
     : getInteractionPresentation(baseIntent)
   const { interact, interactLabel = inferred.label, interactDisabled = inferred.disabled, move } = props
   const [conversation, setConversation] = useState<ActiveConversation | null>(null)
+  const activeConversation =
+    conversation &&
+    conversation.mapId === rpgState.worldMapId &&
+    conversation.origin.x === rpgState.worldPosition.x &&
+    conversation.origin.y === rpgState.worldPosition.y
+      ? conversation
+      : null
   const moveRef = useRef(move)
   const delayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const repeatRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -402,10 +410,6 @@ export function WorldControls(props: {
   useEffect(() => {
     moveRef.current = move
   }, [move])
-
-  useEffect(() => {
-    setConversation(null)
-  }, [rpgState.worldMapId, rpgState.worldPosition.x, rpgState.worldPosition.y])
 
   const stopHold = useCallback(() => {
     if (delayRef.current !== null) clearTimeout(delayRef.current)
@@ -417,20 +421,20 @@ export function WorldControls(props: {
   useEffect(() => stopHold, [stopHold])
 
   const startHold = useCallback((dx: number, dy: number) => {
-    if (conversation) return
+    if (activeConversation) return
     stopHold()
     pointerClickRef.current = true
     moveRef.current(dx, dy)
     delayRef.current = setTimeout(() => {
       repeatRef.current = setInterval(() => moveRef.current(dx, dy), 120)
     }, 280)
-  }, [conversation, stopHold])
+  }, [activeConversation, stopHold])
 
   const directionButton = (label: string, glyph: string, dx: number, dy: number) => (
     <button
       type="button"
       aria-label={label}
-      disabled={conversation !== null}
+      disabled={activeConversation !== null}
       onPointerDown={() => startHold(dx, dy)}
       onPointerUp={stopHold}
       onPointerCancel={() => {
@@ -442,7 +446,7 @@ export function WorldControls(props: {
         pointerClickRef.current = false
       }}
       onClick={() => {
-        if (conversation) return
+        if (activeConversation) return
         if (pointerClickRef.current) {
           pointerClickRef.current = false
           return
@@ -459,25 +463,30 @@ export function WorldControls(props: {
       interact()
       return
     }
-    setConversation({ placement: conversationalNpc, lineIndex: 0 })
+    setConversation({
+      placement: conversationalNpc,
+      lineIndex: 0,
+      mapId: rpgState.worldMapId,
+      origin: { ...rpgState.worldPosition },
+    })
   }
 
-  const conversationData = conversation
-    ? getWorldNpcDialogue(conversation.placement, progress)
+  const conversationData = activeConversation
+    ? getWorldNpcDialogue(activeConversation.placement, progress)
     : null
-  const conversationLine = conversationData?.dialogue.lines[conversation?.lineIndex ?? 0]
+  const conversationLine = conversationData?.dialogue.lines[activeConversation?.lineIndex ?? 0]
   const isConversationLast =
-    conversation !== null &&
+    activeConversation !== null &&
     conversationData !== null &&
-    conversation.lineIndex >= conversationData.dialogue.lines.length - 1
+    activeConversation.lineIndex >= conversationData.dialogue.lines.length - 1
 
   const advanceConversation = () => {
-    if (!conversation || !conversationData) return
+    if (!activeConversation || !conversationData) return
     if (isConversationLast) {
       setConversation(null)
       return
     }
-    setConversation({ ...conversation, lineIndex: conversation.lineIndex + 1 })
+    setConversation({ ...activeConversation, lineIndex: activeConversation.lineIndex + 1 })
   }
 
   return (
@@ -494,12 +503,12 @@ export function WorldControls(props: {
         className="primary-button world-interact"
         aria-label={interactLabel === 'INTERACT' ? 'INTERACT' : `INTERACT · ${interactLabel}`}
         onClick={openConversation}
-        disabled={interactDisabled || conversation !== null}
+        disabled={interactDisabled || activeConversation !== null}
       >
         {interactLabel}
       </button>
 
-      {conversation && conversationData && conversationLine && (
+      {activeConversation && conversationData && conversationLine && (
         <section
           className="world-npc-conversation pixel-inner-window"
           role="dialog"
@@ -509,7 +518,7 @@ export function WorldControls(props: {
             <span>{conversationData.npc.roleLabel}</span>
             <strong>{conversationData.npc.name}</strong>
             <span className="dialogue-progress">
-              {conversation.lineIndex + 1}/{conversationData.dialogue.lines.length}
+              {activeConversation.lineIndex + 1}/{conversationData.dialogue.lines.length}
             </span>
           </div>
           <p>{conversationLine}</p>
