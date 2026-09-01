@@ -37,6 +37,12 @@ function getUnlockedSkillNames(
   )
 }
 
+function getWorldFeedbackHeading(feedback: WorldProgressFeedback): string {
+  if (feedback.kind === 'bossUnlocked') return 'ボス解放'
+  if (feedback.kind === 'complete') return '攻略完了'
+  return '進行更新'
+}
+
 /** Domain fields choose result events; translated UI strings never act as discriminants. */
 export function createVictoryResultSequence(
   reward: BattleVictoryReward,
@@ -106,7 +112,7 @@ export function createVictoryResultSequence(
     const feedback = presentation.worldFeedback
     items.push({
       id: 'world-progress',
-      title: feedback.heading,
+      title: getWorldFeedbackHeading(feedback),
       detail: [feedback.label, feedback.progressLabel, feedback.next && `次 → ${feedback.next}`]
         .filter(Boolean)
         .join(' · '),
