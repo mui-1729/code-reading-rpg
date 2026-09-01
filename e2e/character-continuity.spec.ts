@@ -130,6 +130,7 @@ test('TypeScriptではWARDEN NPCとBattle 6のFrontier Compilerを別objectと�
   await talk.click()
   const conversation = page.getByRole('dialog', { name: 'TYPE WARDEN conversation' })
   await expect(conversation).toContainText('Frontier Compiler')
+  await conversation.getByRole('button', { name: '▶ NEXT' }).click()
   await expect(conversation).toContainText('私はここに残って境界を支える')
   await conversation.getByRole('button', { name: 'CLOSE' }).click()
 
