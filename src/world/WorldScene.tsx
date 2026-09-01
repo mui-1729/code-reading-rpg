@@ -5,8 +5,10 @@ import {
   getWorldScenePresentation,
   isAdjacentWorldStep,
   WORLD_ENTRY_TITLE_MS,
+  WORLD_SCENE_EVENT,
   WORLD_STEP_MS,
   type WorldFacing,
+  type WorldSceneEventDetail,
 } from './worldPresentation'
 import type { Terrain, WorldCell, WorldMapId } from './worldMap'
 import {
@@ -72,7 +74,7 @@ function useWorldSpriteMotion(mapId: WorldMapId, position: WorldPosition): Sprit
 }
 
 function useWorldEntryTitle(mapId: WorldMapId): string | null {
-  const [title, setTitle] = useState(() => getWorldScenePresentation(mapId).title)
+  const [title, setTitle] = useState<string | null>(() => getWorldScenePresentation(mapId).title)
 
   useEffect(() => {
     setTitle(getWorldScenePresentation(mapId).title)
@@ -118,12 +120,23 @@ export function WorldViewport(props: {
   const scene = getWorldScenePresentation(props.mapId)
   const entryTitle = useWorldEntryTitle(props.mapId)
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const detail: WorldSceneEventDetail = {
+      mapId: props.mapId,
+      sceneId: scene.sceneId,
+      bgmTrack: scene.bgmTrack,
+    }
+    window.dispatchEvent(new CustomEvent<WorldSceneEventDetail>(WORLD_SCENE_EVENT, { detail }))
+  }, [props.mapId, scene.bgmTrack, scene.sceneId])
+
   return (
     <div
       className={`world-viewport pixel-inner-window ${props.className ?? ''}`}
       aria-label={props.label}
       data-world-map={props.mapId}
       data-world-scene={scene.sceneId}
+      data-world-bgm-track={scene.bgmTrack}
       data-world-x={props.playerPosition.x}
       data-world-y={props.playerPosition.y}
     >
