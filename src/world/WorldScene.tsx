@@ -3,6 +3,7 @@ import { useProgress } from '../progression'
 import { useRpg } from '../rpg'
 import { characterVisuals } from '../rpg/visualAssets'
 import { resolveWorldInteraction, type WorldInteractionIntent } from './worldActions'
+import { WorldLogPolicy } from './WorldLogPolicy'
 import {
   getWorldFacing,
   getWorldScenePresentation,
@@ -380,6 +381,7 @@ export function WorldControls(props: {
 
   return (
     <div className="world-controls" aria-label="World controls">
+      <WorldLogPolicy />
       <div className="world-dpad">
         {directionButton('Move up', '▲', 0, -1)}
         {directionButton('Move left', '◀', -1, 0)}
