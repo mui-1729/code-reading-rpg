@@ -1,18 +1,25 @@
-/* CODE WORLD presentation: fantasy field is primary; technical chrome is secondary. */
+/* CODE WORLD presentation: fantasy field is primary; game-wide semantic colors stay consistent. */
 .world-shell {
   width: min(100% - 24px, 1120px);
+  --world-ui-frame: #54547c;
+  --world-ui-frame-dark: #292944;
+  --world-ui-surface: var(--panel);
+  --world-ui-surface-raised: var(--panel-2);
+  --world-ui-text: #f8f6e8;
+  --world-ui-muted: #aaa8c3;
+  --world-ui-focus: var(--blue);
 }
 
 .world-shell .world-panel {
   padding: 16px 16px 22px;
   background:
-    linear-gradient(rgba(255, 255, 255, .018), rgba(0, 0, 0, .07)),
-    #241f18;
-  border-color: #8f7650;
-  outline-color: #3d3021;
+    linear-gradient(rgba(255, 255, 255, .018), rgba(0, 0, 0, .08)),
+    var(--world-ui-surface);
+  border-color: var(--world-ui-frame);
+  outline-color: var(--world-ui-frame-dark);
   box-shadow:
-    0 0 0 3px #15110d,
-    0 0 0 6px #4e3c28,
+    0 0 0 3px #05050b,
+    0 0 0 6px #3e3e61,
     7px 8px 0 rgba(0, 0, 0, .42);
 }
 
@@ -24,30 +31,30 @@
 }
 
 .world-shell .world-header .eyebrow {
-  color: #d7bd7b;
+  color: var(--world-ui-focus);
 }
 
 .world-shell .world-header h1 {
   margin-top: 2px;
-  color: #f4e7c7;
+  color: var(--world-ui-text);
   font-family: Georgia, 'Times New Roman', serif;
   font-weight: 800;
   letter-spacing: -.025em;
-  text-shadow: 2px 2px 0 #332718;
+  text-shadow: 2px 2px 0 #151526;
 }
 
 .world-shell .world-header p {
-  color: #c6baa3;
+  color: var(--world-ui-muted);
 }
 
 .world-shell .world-mini-status {
-  border-color: #745f3e;
-  background: rgba(35, 29, 20, .72);
-  box-shadow: inset 0 0 0 2px #3a2e1f;
+  border-color: #555579;
+  background: rgba(16, 16, 29, .82);
+  box-shadow: inset 0 0 0 2px #282841;
 }
 
 .world-shell .world-mini-status span {
-  color: #e2c77f;
+  color: #c8d8ff;
 }
 
 .world-shell .world-next-objective {
@@ -58,48 +65,50 @@
   align-items: baseline;
   column-gap: 12px;
   row-gap: 3px;
-  border: 2px solid #8b734b;
+  border: 2px solid var(--world-ui-focus);
   outline: 0;
   background:
-    linear-gradient(90deg, rgba(218, 181, 102, .08), transparent 62%),
-    #2c271d;
-  box-shadow: inset 0 0 0 2px #4a3c28;
+    linear-gradient(90deg, rgba(79, 140, 255, .10), transparent 62%),
+    var(--world-ui-surface-raised);
+  box-shadow: inset 0 0 0 2px #292944;
 }
 
 .world-shell .world-next-objective > span {
-  color: #d9b96c;
+  color: #8fb5ff;
   font-size: 8px;
 }
 
 .world-shell .world-next-objective > strong {
-  color: #f0dfb5;
+  color: var(--world-ui-text);
   font-family: Georgia, 'Times New Roman', serif;
   font-size: 15px;
 }
 
 .world-shell .world-next-objective > p {
   grid-column: 2;
-  color: #cfc2a9;
+  color: #c3c1d8;
   font-size: 10px;
 }
 
 .world-shell .world-next-objective.is-clear {
-  border-color: #6f8e54;
-  background: #22291d;
+  border-color: var(--green);
+  background:
+    linear-gradient(90deg, rgba(141, 219, 82, .08), transparent 62%),
+    #171f19;
 }
 
 .world-shell .world-viewport {
-  border: 5px solid #5d492f;
-  outline: 3px solid #17120e;
+  border: 5px solid var(--world-ui-frame);
+  outline: 3px solid #11111d;
   box-shadow:
-    inset 0 0 0 2px rgba(255, 238, 190, .10),
+    inset 0 0 0 2px rgba(255, 255, 255, .08),
     0 8px 0 rgba(0, 0, 0, .34);
 }
 
-/* Region map palettes remain in terrain CSS; these frames make the change feel like travel. */
+/* Region identity belongs to the scene frame, not the global UI chrome. */
 .world-viewport[data-world-map='js-village'] {
-  border-color: #7b623d;
-  outline-color: #332719;
+  border-color: #6b8855;
+  outline-color: #263521;
 }
 
 .world-viewport[data-world-map='js-forest'] {
@@ -121,18 +130,18 @@
 }
 
 .world-shell .world-message {
-  border: 2px solid #6b5739;
+  border: 2px solid #555579;
   outline: 0;
-  background: rgba(43, 36, 25, .9);
-  box-shadow: inset 0 0 0 2px #382d1f;
+  background: rgba(12, 12, 23, .92);
+  box-shadow: inset 0 0 0 2px #282841;
 }
 
 .world-shell .world-message span {
-  color: #d4b86f;
+  color: #8fb5ff;
 }
 
 .world-shell .world-message p {
-  color: #e0d5bd;
+  color: #dddbea;
 }
 
 .world-shell .world-controls {
@@ -140,23 +149,30 @@
 }
 
 .world-shell .world-dpad button {
-  border-color: #6e593b;
-  background: linear-gradient(#4a3a27, #35291d);
-  color: #f2e1bc;
-  box-shadow: inset 0 0 0 2px #241b13;
-  text-shadow: 1px 1px 0 #17100b;
+  border-color: #5b628b;
+  background: linear-gradient(#353b5f, #242840);
+  color: #eef2ff;
+  box-shadow: inset 0 0 0 2px #151729;
+  text-shadow: 1px 1px 0 #0c0d17;
 }
 
 .world-shell .world-dpad button:hover {
-  border-color: #a68a59;
-  background: linear-gradient(#59462e, #3d2f20);
+  border-color: #829de0;
+  background: linear-gradient(#414a76, #2b3150);
 }
 
 .world-shell .world-interact {
-  border-color: #9b7945;
-  background: linear-gradient(#86612f, #684722);
-  color: #fff1c9;
-  box-shadow: inset 0 0 0 2px #432b16, 3px 3px 0 #17100b;
+  border-color: #79a7ff;
+  background: linear-gradient(#4f8cff, #3765bd);
+  color: #fff;
+  box-shadow: inset 0 0 0 2px #244681, 3px 3px 0 #0c0d17;
+}
+
+.world-shell .world-interact:disabled {
+  border-color: #42445f;
+  background: #171724;
+  color: #77788d;
+  box-shadow: none;
 }
 
 /* Technical terms remain intentionally technical inside fantasy chrome. */
