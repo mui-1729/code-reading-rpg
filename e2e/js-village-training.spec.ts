@@ -94,9 +94,9 @@ test('first incident後にVillageで必要な読み方をBattle 7→8→9で確�
   await seedVillageTraining(page)
 
   const viewport = page.getByLabel('Village map')
-  const objective = page.getByLabel('Next objective')
+  const objective = page.getByLabel('次の目的')
   await expect(viewport).toHaveAttribute('data-world-map', 'js-village')
-  await expect(objective).toContainText('INCIDENT PREP · 1 / 3')
+  await expect(objective).toContainText('調査準備 · 1 / 3')
   await expect(objective).toContainText('HP条件')
   await expect(page.getByText('TRAIN', { exact: true })).toBeVisible()
 
@@ -108,7 +108,7 @@ test('first incident後にVillageで必要な読み方をBattle 7→8→9で確�
   await comparisonStory.getByRole('button', { name: 'SKIP' }).click()
 
   await finishBattle(page, ['TRACE', 'NOVA', 'TRACE'])
-  await expect(objective).toContainText('INCIDENT PREP · 2 / 3')
+  await expect(objective).toContainText('調査準備 · 2 / 3')
   await expect(objective).toContainText('name条件')
   expect((await storedProgress(page)).progress.clearedStageIds).toEqual([1, 7])
   expect((await storedProgress(page)).progress.unlockedStageIds).toContain(8)
@@ -121,8 +121,8 @@ test('first incident後にVillageで必要な読み方をBattle 7→8→9で確�
   await equalityStory.getByRole('button', { name: 'SKIP' }).click()
 
   await finishBattle(page, ['PULSE', 'NOVA', 'TRACE'])
-  await expect(objective).toContainText('INCIDENT PREP · 3 / 3')
-  await expect(objective).toContainText('selector')
+  await expect(objective).toContainText('調査準備 · 3 / 3')
+  await expect(objective).toContainText('選択処理')
   expect((await storedProgress(page)).progress.clearedStageIds).toEqual([1, 7, 8])
   expect((await storedProgress(page)).progress.unlockedStageIds).toContain(9)
 
@@ -136,9 +136,9 @@ test('first incident後にVillageで必要な読み方をBattle 7→8→9で確�
   await findStory.getByRole('button', { name: 'SKIP' }).click()
 
   await finishBattle(page, ['PULSE', 'TRACE', 'NOVA', 'TRACE'])
-  await expect(objective).toContainText('TRACE READY')
-  await expect(objective).toContainText('最初のincidentの続きをForestへ追う')
-  await expect(objective).toHaveAttribute('title', /同じBattleをやり直すのではなく/)
+  await expect(objective).toContainText('追跡準備完了')
+  await expect(objective).toContainText('最初の異常の続きをForestへ追う')
+  await expect(objective).toHaveAttribute('title', /同じ戦闘をやり直すのではなく/)
 
   const progress = await storedProgress(page)
   expect(progress.progress.clearedStageIds).toEqual([1, 7, 8, 9])
@@ -147,6 +147,6 @@ test('first incident後にVillageで必要な読み方をBattle 7→8→9で確�
 
   await page.reload()
   await expect(page.getByLabel('Village map')).toHaveAttribute('data-world-map', 'js-village')
-  await expect(page.getByLabel('Next objective')).toContainText('TRACE READY')
-  await expect(page.getByLabel('Next objective')).toContainText('Forest')
+  await expect(page.getByLabel('次の目的')).toContainText('追跡準備完了')
+  await expect(page.getByLabel('次の目的')).toContainText('Forest')
 })
