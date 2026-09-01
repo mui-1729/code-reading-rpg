@@ -148,5 +148,5 @@ test('first incident後にVillageで必要な読み方をBattle 7→8→9で確�
   await page.reload()
   await expect(page.getByLabel('Village map')).toHaveAttribute('data-world-map', 'js-village')
   await expect(page.getByLabel('Next objective')).toContainText('TRACE READY')
-  await expect(page.getByLabel('Next objective')).toContainText('FOREST')
+  await expect(page.getByLabel('Next objective')).toContainText('Forest')
 })
