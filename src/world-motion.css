@@ -10,19 +10,15 @@
 }
 
 .world-player-sprite[data-facing='left'] .world-player-pixel {
-  transform: scaleX(-1);
+  scale: -1 1;
 }
 
 .world-player-sprite[data-facing='right'] .world-player-pixel {
-  transform: scaleX(1);
+  scale: 1 1;
 }
 
 .world-player-sprite[data-walking='true'][data-step-frame='1'] .world-player-pixel {
   translate: 0 -2px;
-}
-
-.world-player-sprite[data-walking='true'][data-facing='left'][data-step-frame='1'] .world-player-pixel {
-  transform: scaleX(-1);
 }
 
 .world-follower-sprite[data-walking='true'][data-step-frame='1'] .world-follower-pixel {
