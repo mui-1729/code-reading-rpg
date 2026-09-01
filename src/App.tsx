@@ -26,6 +26,10 @@ import {
   isBossGuardActive,
 } from './game/bossGuard'
 import { BattleCodeData, type RuntimeEnemy } from './inspector'
+import {
+  getBattleSemanticFeedback,
+  type BattleSemanticFeedback,
+} from './motion/battleFeedback'
 import { BATTLE_MOTION, getNewlyDefeatedIds } from './motion/battleMotion'
 import {
   applyBattleVictory,
@@ -102,6 +106,8 @@ function App({ battleId, seed, returnTo }: AppProps) {
   const [playerHit, setPlayerHit] = useState(false)
   const [skillWindup, setSkillWindup] = useState(false)
   const [enemyTurnActive, setEnemyTurnActive] = useState(false)
+  const [activeEnemyId, setActiveEnemyId] = useState<string | null>(null)
+  const [semanticFeedback, setSemanticFeedback] = useState<BattleSemanticFeedback | null>(null)
   const [isResolving, setIsResolving] = useState(false)
   const [patchKitUsed, setPatchKitUsed] = useState(false)
   const [lastPatchKitHeal, setLastPatchKitHeal] = useState<number | null>(null)
@@ -226,50 +232,66 @@ function App({ battleId, seed, returnTo }: AppProps) {
       playerHp,
       defense: playerStats.defense,
     })
-    const survivors = attack.attackers.map(({ enemy }) => enemy)
 
-    if (survivors.length === 0) {
+    if (attack.attackers.length === 0) {
       schedule(completeVictory, BATTLE_MOTION.resultDelayMs)
       return
     }
 
-    const damages = attack.attackers.map(({ damage }) => damage)
-    const totalDamage = attack.totalDamage
-    const nextPlayerHp = attack.playerHp
     setEnemyTurnActive(true)
-    gameAudio.playSe('enemyAttack')
+    const lastAttackIndex = attack.attackers.length - 1
 
-    schedule(() => {
-      survivors.forEach((enemy, index) => {
-        schedule(
-          () => addLog('enemy', `${enemy.name} / ${enemy.attackName} → ${damages[index] ?? 1} DMG`),
-          index * 90,
-        )
-      })
+    attack.attackers.forEach(({ enemy, damage, playerHpAfter }, index) => {
+      const windupDelay = BATTLE_MOTION.enemyWindupMs + index * BATTLE_MOTION.enemyAttackStepMs
+      const impactDelay = windupDelay + BATTLE_MOTION.enemyImpactDelayMs
 
-      gameAudio.playSe('playerHit')
-      setPlayerHit(true)
-      setPlayerDamagePopup(totalDamage)
-      updateState((current) => ({ ...current, rpgState: withBattleHp(current.rpgState, nextPlayerHp) }))
+      schedule(() => {
+        setActiveEnemyId(enemy.id)
+        gameAudio.playSe('enemyAttack')
+        addLog('enemy', `${enemy.name} / ${enemy.attackName} → ${damage} DMG`)
+      }, windupDelay)
+
+      schedule(() => {
+        gameAudio.playSe('playerHit')
+        setPlayerHit(true)
+        setPlayerDamagePopup(damage)
+        updateState((current) => ({
+          ...current,
+          rpgState: withBattleHp(current.rpgState, playerHpAfter),
+        }))
+      }, impactDelay)
 
       schedule(() => {
         setPlayerHit(false)
         setPlayerDamagePopup(null)
-        setEnemyTurnActive(false)
+        setActiveEnemyId(null)
+      }, impactDelay + BATTLE_MOTION.playerHitMs)
+    })
 
-        if (nextPlayerHp === 0) {
-          schedule(() => {
-            gameAudio.stopBgm()
-            gameAudio.playSe('defeat')
-            setIsResolving(false)
-            setPhase('defeat')
-          }, BATTLE_MOTION.resultDelayMs)
-        } else {
-          setTurn((currentTurn) => currentTurn + 1)
+    const resolutionDelay =
+      BATTLE_MOTION.enemyWindupMs +
+      lastAttackIndex * BATTLE_MOTION.enemyAttackStepMs +
+      BATTLE_MOTION.enemyImpactDelayMs +
+      BATTLE_MOTION.playerHitMs
+
+    schedule(() => {
+      setEnemyTurnActive(false)
+      setActiveEnemyId(null)
+      setPlayerHit(false)
+      setPlayerDamagePopup(null)
+
+      if (attack.playerHp === 0) {
+        schedule(() => {
+          gameAudio.stopBgm()
+          gameAudio.playSe('defeat')
           setIsResolving(false)
-        }
-      }, BATTLE_MOTION.playerHitMs)
-    }, BATTLE_MOTION.enemyWindupMs)
+          setPhase('defeat')
+        }, BATTLE_MOTION.resultDelayMs)
+      } else {
+        setTurn((currentTurn) => currentTurn + 1)
+        setIsResolving(false)
+      }
+    }, resolutionDelay)
   }
 
   const activateSkill = (skill: SkillCard) => {
@@ -285,14 +307,17 @@ function App({ battleId, seed, returnTo }: AppProps) {
       partyFollowUpDamage,
     })
     const { targets, skillDamage: skillPower } = action
+    const feedback = getBattleSemanticFeedback(skill.rule, enemies, targets)
 
     schedule(() => {
       setSkillWindup(false)
+      setSemanticFeedback(feedback)
+      schedule(() => setSemanticFeedback(null), BATTLE_MOTION.semanticFeedbackMs)
 
       if (targets.length === 0) {
         addLog('player', `${skill.name} → NO TARGET`)
         gameAudio.playSe('cancel')
-        runEnemyTurn(enemies)
+        schedule(() => runEnemyTurn(enemies), BATTLE_MOTION.semanticFeedbackMs)
         return
       }
 
@@ -341,7 +366,10 @@ function App({ battleId, seed, returnTo }: AppProps) {
       }, BATTLE_MOTION.hitMs)
 
       schedule(() => setDefeatingIds([]), BATTLE_MOTION.defeatMs)
-      schedule(() => runEnemyTurn(nextEnemies), BATTLE_MOTION.hitMs)
+      schedule(
+        () => runEnemyTurn(nextEnemies),
+        Math.max(BATTLE_MOTION.hitMs, BATTLE_MOTION.semanticFeedbackMs),
+      )
     }, BATTLE_MOTION.skillWindupMs)
   }
 
@@ -519,14 +547,19 @@ function App({ battleId, seed, returnTo }: AppProps) {
                 ? battlePresentation.bossVisualId
                 : enemy.visualId,
             })
+            const semanticTraced = semanticFeedback?.tracedEnemyIds.includes(enemy.id) ?? false
+            const semanticTarget = semanticFeedback?.targetEnemyIds.includes(enemy.id) ?? false
             return (
               <article
-                className={`enemy-card ${battleArea.capabilities.codeData ? 'code-data-clickable' : ''} ${inspectedEnemyKey === enemy.id ? 'code-data-inspected' : ''} ${defeated ? 'defeated' : ''} ${animatingIds.includes(enemy.id) ? 'hit' : ''} ${defeatingIds.includes(enemy.id) ? 'defeating' : ''} ${isBossEnemy ? 'is-boss-enemy' : ''}`}
+                className={`enemy-card ${battleArea.capabilities.codeData ? 'code-data-clickable' : ''} ${inspectedEnemyKey === enemy.id ? 'code-data-inspected' : ''} ${defeated ? 'defeated' : ''} ${animatingIds.includes(enemy.id) ? 'hit' : ''} ${defeatingIds.includes(enemy.id) ? 'defeating' : ''} ${isBossEnemy ? 'is-boss-enemy' : ''} ${activeEnemyId === enemy.id ? 'enemy-attacking' : ''} ${semanticTraced ? 'semantic-traced' : ''} ${semanticTarget ? 'semantic-target' : ''}`}
                 key={enemy.id}
                 role={battleArea.capabilities.codeData ? 'button' : undefined}
                 tabIndex={battleArea.capabilities.codeData ? 0 : undefined}
                 data-enemy-role={enemy.role}
                 data-boss-display-name={isBossEnemy ? displayName : undefined}
+                data-semantic-traced={semanticTraced || undefined}
+                data-semantic-target={semanticTarget || undefined}
+                data-enemy-attacking={activeEnemyId === enemy.id || undefined}
                 aria-label={battleArea.capabilities.codeData ? `${displayName}のコード上のデータを確認` : undefined}
                 onClick={(event) => {
                   if (!battleArea.capabilities.codeData || phase !== 'battle' || storyEvent || explainedSkill) return
@@ -585,6 +618,18 @@ function App({ battleId, seed, returnTo }: AppProps) {
             )
           })}
         </section>
+        {semanticFeedback && (
+          <div
+            className={`battle-semantic-feedback semantic-${semanticFeedback.family}`}
+            role="status"
+            aria-live="polite"
+            data-semantic-family={semanticFeedback.family}
+          >
+            <span>RULE RESOLVED</span>
+            <strong>{semanticFeedback.label}</strong>
+            <small>{semanticFeedback.detail}</small>
+          </div>
+        )}
         <div className="stage-ground" aria-hidden="true" />
       </section>
 

@@ -108,16 +108,29 @@ describe('actual combat turn resolver', () => {
     expect(result.damageByTargetId).toEqual({ defeated: 20 })
   })
 
-  it('生存Enemyだけの攻撃へDefense mitigationを適用しpersistent HPの次値を返す', () => {
+  it('Enemy attackを順番通りの個別damageと各hit後HPへ解決する', () => {
     const result = resolveEnemyAttack({
-      enemies: [enemy('alive', 'Goblin', 10, 10), enemy('dead', 'Slime', 0, 99)],
-      playerHp: 12,
+      enemies: [enemy('first', 'Goblin', 10, 10), enemy('second', 'Boar', 10, 8), enemy('dead', 'Slime', 0, 99)],
+      playerHp: 20,
       defense: stats.defense,
     })
 
-    expect(result.attackers.map(({ enemy: attacker }) => attacker.id)).toEqual(['alive'])
-    expect(result.attackers[0]?.damage).toBe(8)
-    expect(result.totalDamage).toBe(8)
-    expect(result.playerHp).toBe(4)
+    expect(result.attackers.map(({ enemy: attacker }) => attacker.id)).toEqual(['first', 'second'])
+    expect(result.attackers.map(({ damage }) => damage)).toEqual([8, 6])
+    expect(result.attackers.map(({ playerHpAfter }) => playerHpAfter)).toEqual([12, 6])
+    expect(result.totalDamage).toBe(14)
+    expect(result.playerHp).toBe(6)
+  })
+
+  it('途中でHP 0になったら後続Enemyはattack sequenceへ入れない', () => {
+    const result = resolveEnemyAttack({
+      enemies: [enemy('lethal', 'Goblin', 10, 10), enemy('late', 'Boar', 10, 8)],
+      playerHp: 5,
+      defense: stats.defense,
+    })
+
+    expect(result.attackers.map(({ enemy: attacker }) => attacker.id)).toEqual(['lethal'])
+    expect(result.attackers[0]?.playerHpAfter).toBe(0)
+    expect(result.playerHp).toBe(0)
   })
 })

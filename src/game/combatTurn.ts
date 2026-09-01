@@ -17,8 +17,14 @@ export type PlayerActionResolution = {
   guardedBossTargeted: boolean
 }
 
+export type EnemyAttackStep = {
+  enemy: Enemy
+  damage: number
+  playerHpAfter: number
+}
+
 export type EnemyAttackResolution = {
-  attackers: Array<{ enemy: Enemy; damage: number }>
+  attackers: EnemyAttackStep[]
   totalDamage: number
   playerHp: number
 }
@@ -102,17 +108,24 @@ export function resolveEnemyAttack(input: {
   playerHp: number
   defense: number
 }): EnemyAttackResolution {
-  const attackers = input.enemies
-    .filter((enemy) => enemy.hp > 0)
-    .map((enemy) => ({
+  let playerHp = Math.max(0, input.playerHp)
+  const attackers: EnemyAttackStep[] = []
+
+  for (const enemy of input.enemies) {
+    if (enemy.hp <= 0 || playerHp <= 0) continue
+
+    const damage = getIncomingDamage(enemy.attackDamage, input.defense)
+    playerHp = Math.max(0, playerHp - damage)
+    attackers.push({
       enemy: { ...enemy },
-      damage: getIncomingDamage(enemy.attackDamage, input.defense),
-    }))
-  const totalDamage = attackers.reduce((total, attack) => total + attack.damage, 0)
+      damage,
+      playerHpAfter: playerHp,
+    })
+  }
 
   return {
     attackers,
-    totalDamage,
-    playerHp: Math.max(0, input.playerHp - totalDamage),
+    totalDamage: attackers.reduce((total, attack) => total + attack.damage, 0),
+    playerHp,
   }
 }
