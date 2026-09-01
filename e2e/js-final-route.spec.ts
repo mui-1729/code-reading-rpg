@@ -163,7 +163,7 @@ test('Battle 22前はJavaScript Final Boss 3へ挑戦できない', async ({ pag
 
   await expect(page).toHaveURL(/\/world$/)
   await expect(
-    page.getByText('Code Coreへ挑む前に、Deep Forestのtraceをroot causeまで最後まで追おう。'),
+    page.getByText('Code Coreへ挑む前に、Deep Forestの経路を根本原因まで最後まで追おう。'),
   ).toBeVisible()
 })
 
