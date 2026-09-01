@@ -157,23 +157,32 @@ test('@cross-browser @responsive World AREA transitionは各viewportで横overfl
 
   const viewport = page.locator('.world-viewport')
   await page.getByRole('button', { name: 'Move up' }).click()
+
+  const transitionLayout = await page.locator('.world-entry-transition').evaluate((transition) => {
+    const viewportElement = transition.parentElement
+    if (!viewportElement) return null
+    const viewportBox = viewportElement.getBoundingClientRect()
+    const transitionBox = transition.getBoundingClientRect()
+    return {
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+      viewport: { x: viewportBox.x, width: viewportBox.width },
+      transition: { x: transitionBox.x, width: transitionBox.width },
+      text: transition.textContent,
+    }
+  })
+
+  expect(transitionLayout).not.toBeNull()
+  if (!transitionLayout) return
+  expect(transitionLayout.text).toContain('GREENFIELD VILLAGE')
+  expect(transitionLayout.scrollWidth).toBeLessThanOrEqual(transitionLayout.clientWidth)
+  expect(transitionLayout.transition.x).toBeGreaterThanOrEqual(transitionLayout.viewport.x - 1)
+  expect(transitionLayout.transition.x + transitionLayout.transition.width).toBeLessThanOrEqual(
+    transitionLayout.viewport.x + transitionLayout.viewport.width + 1,
+  )
+
   await expect(viewport).toHaveAttribute('data-world-map', 'js-village')
   await expect(viewport).toHaveAttribute('data-world-scene', 'greenfield-village')
-  await expect(page.locator('.world-entry-transition')).toContainText('GREENFIELD VILLAGE')
-
-  const sizes = await page.evaluate(() => ({
-    scrollWidth: document.documentElement.scrollWidth,
-    clientWidth: document.documentElement.clientWidth,
-  }))
-  expect(sizes.scrollWidth).toBeLessThanOrEqual(sizes.clientWidth)
-
-  const viewportBox = await viewport.boundingBox()
-  const transitionBox = await page.locator('.world-entry-transition').boundingBox()
-  expect(viewportBox).not.toBeNull()
-  expect(transitionBox).not.toBeNull()
-  if (!viewportBox || !transitionBox) return
-  expect(transitionBox.x).toBeGreaterThanOrEqual(viewportBox.x - 1)
-  expect(transitionBox.x + transitionBox.width).toBeLessThanOrEqual(viewportBox.x + viewportBox.width + 1)
 })
 
 test('Battle entryはarena identityに合わせた短いRPG transitionを持つ', async ({ page }) => {
