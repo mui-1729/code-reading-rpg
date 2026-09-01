@@ -12,7 +12,7 @@ const withClears = (clearedStageIds: number[], clearedAreaIds: string[] = []) =>
 })
 
 describe('World Objective', () => {
-  it('初期状態は最初のlive incidentを示しTypeScriptはまだ進めない', () => {
+  it('初期状態は最初の異常を示しTypeScriptはまだ進めない', () => {
     const progress = createInitialPlayerProgress()
 
     expect(getWorldObjective('javascript', progress)).toMatchObject({
@@ -20,7 +20,7 @@ describe('World Objective', () => {
       clearedBattles: 0,
       totalBattles: 19,
       status: 'encounter',
-      next: 'LIVE INCIDENT // 草原で最初のtarget異常を再現する',
+      next: '最初の異常 // 草原で対象の異常を再現する',
       bossUnlocked: false,
     })
     expect(getWorldObjective('typescript', progress)).toMatchObject({
@@ -28,7 +28,7 @@ describe('World Objective', () => {
       clearedBattles: 0,
       totalBattles: 3,
       status: 'encounter',
-      next: 'NEXT // Worldを探索する',
+      next: '次の目的 // Worldを探索する',
       bossUnlocked: false,
     })
   })
@@ -40,39 +40,39 @@ describe('World Objective', () => {
       clearedBattles: 1,
       totalBattles: 19,
       status: 'encounter',
-      next: 'INCIDENT PREP // Villageで必要な読み方を確認する',
+      next: '事件の準備 // Villageで必要な読み方を確認する',
       bossUnlocked: false,
     })
   })
 
-  it('Village preparation完了後は同じ症状を再戦せずForest traceへ進む', () => {
+  it('Village preparation完了後は同じ症状を再戦せずForestの手がかりへ進む', () => {
     const progress = withClears([1, 7, 8, 9])
 
     expect(getWorldObjective('javascript', progress)).toMatchObject({
       clearedBattles: 4,
-      next: 'FOLLOW TRACE // Forestでtarget条件の流れを追う',
+      next: '手がかりを追う // Forestで対象条件の流れを追う',
       bossUnlocked: false,
     })
   })
 
-  it('Forest filterまで追うと二つ目のlive symptomを案内する', () => {
+  it('Forest filterまで追うと二つ目の症状を案内する', () => {
     const progress = withClears([1, 7, 8, 9, 10, 11, 12, 13, 14])
 
     expect(getWorldObjective('javascript', progress)).toMatchObject({
       clearedBattles: 9,
-      next: 'SECOND SYMPTOM // Deep Forest入口で影響拡大を確認する',
+      next: '第二の異常 // Deep Forest入口で影響拡大を確認する',
       bossUnlocked: false,
     })
   })
 
-  it('JavaScript routeをFinal手前まで完了するとCode Coreをroot causeとして案内する', () => {
+  it('JavaScript routeをFinal手前まで完了するとCode Coreを根本原因として案内する', () => {
     const progress = withClears(JS_BEFORE_BOSS)
 
     expect(getWorldObjective('javascript', progress)).toMatchObject({
       clearedBattles: 18,
       totalBattles: 19,
       status: 'boss',
-      next: 'ROOT CAUSE // Code Coreを確認する',
+      next: '根本原因 // Code Coreを確認する',
       bossUnlocked: true,
     })
   })
@@ -84,14 +84,14 @@ describe('World Objective', () => {
       clearedBattles: 19,
       totalBattles: 19,
       status: 'clear',
-      next: 'INCIDENT CLOSED // TypeScript地方へ進む',
+      next: '事件解決 // TypeScript地方へ進む',
       bossUnlocked: true,
     })
     expect(getWorldObjective('typescript', progress)).toMatchObject({
       clearedBattles: 0,
       totalBattles: 3,
       status: 'encounter',
-      next: 'INVESTIGATE // API更新後のtargetずれを再現する',
+      next: '調査 // API更新後の対象ずれを再現する',
       bossUnlocked: false,
     })
   })
@@ -103,12 +103,12 @@ describe('World Objective', () => {
       clearedBattles: 1,
       totalBattles: 3,
       status: 'encounter',
-      next: 'INVESTIGATE // optional / unionの波及経路を追う',
+      next: '調査 // optional / unionの波及経路を追う',
       bossUnlocked: false,
     })
   })
 
-  it('TypeScript Battle 5 CLEAR後はFrontier Compilerをroot causeとして案内する', () => {
+  it('TypeScript Battle 5 CLEAR後はFrontier Compilerを根本原因として案内する', () => {
     const progress = withClears([...JS_COMPLETE, 4, 5], ['javascript'])
 
     expect(getWorldObjective('typescript', progress)).toMatchObject({
@@ -116,19 +116,19 @@ describe('World Objective', () => {
       clearedBattles: 2,
       totalBattles: 3,
       status: 'boss',
-      next: 'ROOT CAUSE // 東のFrontier Compilerを確認する',
+      next: '根本原因 // 東のFrontier Compilerを確認する',
       bossUnlocked: true,
     })
   })
 
-  it('TypeScript Boss CLEAR後はincident closeとRETURNを示す', () => {
+  it('TypeScript Boss CLEAR後は事件解決とREAL WORLDへの帰還を示す', () => {
     const progress = withClears([...JS_COMPLETE, 4, 5, 6], ['javascript', 'typescript'])
 
     expect(getWorldObjective('typescript', progress)).toMatchObject({
       clearedBattles: 3,
       totalBattles: 3,
       status: 'clear',
-      next: 'INCIDENT CLOSED // REAL WORLDへRETURN済み',
+      next: '事件解決 // REAL WORLDへ帰還済み',
       bossUnlocked: true,
     })
   })
@@ -144,24 +144,24 @@ describe('World Objective', () => {
       heading: 'WORLD PROGRESS',
       label: 'JAVASCRIPT KINGDOM',
       progressLabel: '1 / 19',
-      next: 'INCIDENT PREP // Villageで必要な読み方を確認する',
+      next: '事件の準備 // Villageで必要な読み方を確認する',
     })
     expect(getWorldProgressChange(withClears([1, 7, 8]), afterTraining)).toMatchObject({
       heading: 'WORLD PROGRESS',
       progressLabel: '4 / 19',
-      next: 'FOLLOW TRACE // Forestでtarget条件の流れを追う',
+      next: '手がかりを追う // Forestで対象条件の流れを追う',
     })
     expect(getWorldProgressChange(withClears(JS_BEFORE_BOSS.slice(0, -1)), beforeBoss)).toMatchObject({
       heading: 'BOSS UNLOCKED',
       label: 'JAVASCRIPT KINGDOM',
       progressLabel: '18 / 19',
-      next: 'ROOT CAUSE // Code Coreを確認する',
+      next: '根本原因 // Code Coreを確認する',
     })
     expect(getWorldProgressChange(beforeBoss, afterBoss)).toMatchObject({
       heading: 'WORLD COMPLETE',
       label: 'JAVASCRIPT KINGDOM',
       progressLabel: '19 / 19',
-      next: 'INCIDENT CLOSED // TypeScript地方へ進む',
+      next: '事件解決 // TypeScript地方へ進む',
     })
   })
 
@@ -173,13 +173,13 @@ describe('World Objective', () => {
     expect(getWorldProgressChange(initial, afterFirst)).toMatchObject({
       label: 'TYPESCRIPT FRONTIER',
       progressLabel: '1 / 3',
-      next: 'INVESTIGATE // optional / unionの波及経路を追う',
+      next: '調査 // optional / unionの波及経路を追う',
     })
     expect(getWorldProgressChange(afterFirst, afterSecond)).toMatchObject({
       heading: 'BOSS UNLOCKED',
       label: 'TYPESCRIPT FRONTIER',
       progressLabel: '2 / 3',
-      next: 'ROOT CAUSE // 東のFrontier Compilerを確認する',
+      next: '根本原因 // 東のFrontier Compilerを確認する',
     })
   })
 
