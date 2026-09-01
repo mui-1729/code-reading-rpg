@@ -94,6 +94,7 @@ test('Playerは移動方向を向き、2-frame stepと実画面の1tile補間を
       facing: snapshot.dataset.cameraFacing,
       animationName: style.animationName,
       animationDuration: style.animationDuration,
+      worldObjectCount: snapshot.querySelectorAll('.world-object').length,
     }
   })
 
@@ -101,6 +102,7 @@ test('Playerは移動方向を向き、2-frame stepと実画面の1tile補間を
   expect(cameraPan?.facing).toBe('right')
   expect(cameraPan?.animationName).toContain('world-camera-pan')
   expect(cameraPan?.animationDuration).toContain('0.15s')
+  expect(cameraPan?.worldObjectCount).toBe(0)
   await expect(player).toHaveAttribute('data-world-x', '21')
   await expect(player).toHaveAttribute('data-facing', 'right')
   await expect(player).toHaveAttribute('data-step-frame', '1')
