@@ -52,5 +52,5 @@ test('World Atlasは発見済みregionの接続関係をportal定義から表示
   await expect(routes).toContainText('FOREST')
   await expect(routes).toContainText('DEEP FOREST')
   await expect(routes).toContainText('TS FRONTIER')
-  await expect(routes.getByText('CONNECTED', { exact: true })).toHaveCount(4)
+  await expect(routes.getByText('CONNECTED', { exact: true })).toHaveCount(5)
 })
