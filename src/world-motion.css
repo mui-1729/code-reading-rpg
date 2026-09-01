@@ -1,0 +1,217 @@
+.world-character-overlay {
+  transition:
+    left 150ms linear,
+    top 150ms linear;
+}
+
+.world-player-pixel,
+.world-follower-pixel {
+  transform-origin: 50% 75%;
+}
+
+.world-player-sprite[data-facing='left'] .world-player-pixel {
+  transform: scaleX(-1);
+}
+
+.world-player-sprite[data-facing='right'] .world-player-pixel {
+  transform: scaleX(1);
+}
+
+.world-player-sprite[data-walking='true'][data-step-frame='1'] .world-player-pixel {
+  translate: 0 -2px;
+}
+
+.world-player-sprite[data-walking='true'][data-facing='left'][data-step-frame='1'] .world-player-pixel {
+  transform: scaleX(-1);
+}
+
+.world-follower-sprite[data-walking='true'][data-step-frame='1'] .world-follower-pixel {
+  translate: 0 -2px;
+}
+
+.world-camera-snapshot {
+  --world-camera-pan-x: 0%;
+  --world-camera-pan-y: 0%;
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  grid-template-columns: repeat(11, minmax(0, 1fr));
+  grid-template-rows: repeat(9, minmax(0, 1fr));
+  pointer-events: none;
+  will-change: translate;
+  animation: world-camera-pan 150ms linear forwards;
+}
+
+.world-camera-snapshot[data-camera-facing='right'] {
+  --world-camera-pan-x: -9.090909%;
+}
+
+.world-camera-snapshot[data-camera-facing='left'] {
+  --world-camera-pan-x: 9.090909%;
+}
+
+.world-camera-snapshot[data-camera-facing='down'] {
+  --world-camera-pan-y: -11.111111%;
+}
+
+.world-camera-snapshot[data-camera-facing='up'] {
+  --world-camera-pan-y: 11.111111%;
+}
+
+.world-entry-transition {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  display: grid;
+  place-content: center;
+  gap: 8px;
+  pointer-events: none;
+  text-align: center;
+  background:
+    linear-gradient(90deg, rgba(13, 21, 18, 0.12), rgba(13, 21, 18, 0.86) 24%, rgba(13, 21, 18, 0.86) 76%, rgba(13, 21, 18, 0.12));
+  animation: world-area-entry 720ms ease-out forwards;
+}
+
+.world-entry-transition span {
+  font-family: var(--pixel-font, monospace);
+  font-size: 0.72rem;
+  letter-spacing: 0.24em;
+  opacity: 0.72;
+}
+
+.world-entry-transition strong {
+  max-width: min(78vw, 620px);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(1rem, 4vw, 1.65rem);
+  letter-spacing: 0.09em;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.55);
+}
+
+.battle-screen::before,
+.battle-screen::after {
+  position: fixed;
+  z-index: 2000;
+  pointer-events: none;
+}
+
+.battle-screen::before {
+  content: '';
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 50%, transparent 0 18%, rgba(6, 9, 14, 0.78) 58%, rgba(6, 9, 14, 0.96) 100%);
+  animation: battle-entry-wipe 520ms ease-out forwards;
+}
+
+.battle-screen::after {
+  content: 'ENCOUNTER';
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  padding: 10px 18px;
+  border-block: 2px solid currentColor;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(1rem, 4vw, 1.7rem);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  white-space: nowrap;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.7);
+  animation: battle-entry-title 520ms ease-out forwards;
+}
+
+body[data-battle-arena='training'] .battle-screen::after {
+  content: 'TRAINING';
+}
+
+body[data-battle-arena='boss'] .battle-screen::after {
+  content: 'BOSS APPROACH';
+}
+
+body[data-battle-arena='incident'] .battle-screen::after {
+  content: 'INCIDENT';
+}
+
+@keyframes world-camera-pan {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: var(--world-camera-pan-x) var(--world-camera-pan-y);
+  }
+}
+
+@keyframes world-area-entry {
+  0% {
+    opacity: 1;
+    clip-path: inset(0 50% 0 50%);
+  }
+  22% {
+    clip-path: inset(0 0 0 0);
+  }
+  68% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes battle-entry-wipe {
+  0% {
+    opacity: 1;
+    clip-path: circle(10% at 50% 50%);
+  }
+  45% {
+    opacity: 1;
+    clip-path: circle(80% at 50% 50%);
+  }
+  100% {
+    opacity: 0;
+    clip-path: circle(140% at 50% 50%);
+  }
+}
+
+@keyframes battle-entry-title {
+  0% {
+    opacity: 0;
+    scale: 0.86;
+  }
+  24% {
+    opacity: 1;
+    scale: 1;
+  }
+  68% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    scale: 1.03;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .world-character-overlay {
+    transition: none !important;
+  }
+
+  .world-player-pixel,
+  .world-follower-pixel {
+    translate: none !important;
+  }
+
+  .world-camera-snapshot {
+    display: none !important;
+    animation: none !important;
+  }
+
+  .world-entry-transition {
+    animation: none;
+    background: rgba(13, 21, 18, 0.58);
+  }
+
+  .battle-screen::before,
+  .battle-screen::after {
+    display: none;
+  }
+}
