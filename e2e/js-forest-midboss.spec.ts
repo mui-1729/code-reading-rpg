@@ -90,14 +90,14 @@ test('Battle 12未clearではForest MID BOSSを開始できない', async ({ pag
   await page.getByRole('button', { name: 'INTERACT' }).click()
 
   await expect(page).toHaveURL(/\/world$/)
-  await expect(page.getByText(/Forestで条件のtraceを最後まで追おう/)).toBeVisible()
+  await expect(page.getByText(/Forestで条件の経路を最後まで追おう/)).toBeVisible()
 })
 
 test('Battle 12 clear済みsaveはtrace-blocked objectiveからBattle 13へ進める', async ({ page }) => {
   await seedMidboss(page, 'ready')
 
-  await expect(page.getByLabel('Next objective')).toContainText('TRACE BLOCKED')
-  await expect(page.getByLabel('Next objective')).toContainText('traceを塞ぐ守り人を突破する')
+  await expect(page.getByLabel('次の目的')).toContainText('経路封鎖')
+  await expect(page.getByLabel('次の目的')).toContainText('経路を塞ぐ守り人を突破する')
   await expect(page.getByLabel('JavaScript Forest Mid-Boss')).toBeVisible()
 
   await page.getByRole('button', { name: 'INTERACT' }).click()
@@ -120,8 +120,8 @@ test('Battle 13 clear後は守り人がいたmain trailを西へ通過できimpa
 
   const forest = page.getByLabel('Forest map')
   await expect(forest).toHaveAttribute('data-world-x', '6')
-  await expect(page.getByLabel('Next objective')).toContainText('IMPACT RANGE')
-  await expect(page.getByLabel('Next objective')).toContainText('複数targetへ広がる影響')
+  await expect(page.getByLabel('次の目的')).toContainText('影響範囲')
+  await expect(page.getByLabel('次の目的')).toContainText('複数の対象へ広がる影響')
 
   await page.getByRole('button', { name: 'Move left' }).click()
 
