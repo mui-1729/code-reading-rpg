@@ -31,7 +31,9 @@ type SpriteMotion = {
 }
 
 function useWorldSpriteMotion(mapId: WorldMapId, position: WorldPosition): SpriteMotion {
-  const previousRef = useRef({ mapId, position: { ...position } })
+  const positionX = position.x
+  const positionY = position.y
+  const previousRef = useRef({ mapId, position: { x: positionX, y: positionY } })
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [motion, setMotion] = useState<SpriteMotion>({
     facing: 'down',
@@ -40,15 +42,16 @@ function useWorldSpriteMotion(mapId: WorldMapId, position: WorldPosition): Sprit
   })
 
   useLayoutEffect(() => {
+    const currentPosition = { x: positionX, y: positionY }
     const previous = previousRef.current
     const sameMap = previous.mapId === mapId
-    const walked = sameMap && isAdjacentWorldStep(previous.position, position)
+    const walked = sameMap && isAdjacentWorldStep(previous.position, currentPosition)
 
     if (timerRef.current !== null) clearTimeout(timerRef.current)
 
     if (walked) {
       setMotion((current) => ({
-        facing: getWorldFacing(previous.position, position, current.facing),
+        facing: getWorldFacing(previous.position, currentPosition, current.facing),
         walking: true,
         stepFrame: current.stepFrame === 0 ? 1 : 0,
       }))
@@ -56,11 +59,11 @@ function useWorldSpriteMotion(mapId: WorldMapId, position: WorldPosition): Sprit
         setMotion((current) => ({ ...current, walking: false }))
         timerRef.current = null
       }, WORLD_STEP_MS)
-    } else if (!sameMap || previous.position.x !== position.x || previous.position.y !== position.y) {
+    } else if (!sameMap || previous.position.x !== positionX || previous.position.y !== positionY) {
       setMotion((current) => ({ ...current, walking: false }))
     }
 
-    previousRef.current = { mapId, position: { ...position } }
+    previousRef.current = { mapId, position: currentPosition }
 
     return () => {
       if (timerRef.current !== null) {
@@ -68,21 +71,27 @@ function useWorldSpriteMotion(mapId: WorldMapId, position: WorldPosition): Sprit
         timerRef.current = null
       }
     }
-  }, [mapId, position.x, position.y])
+  }, [mapId, positionX, positionY])
 
   return motion
 }
 
-function useWorldEntryTitle(mapId: WorldMapId): string | null {
-  const [title, setTitle] = useState<string | null>(() => getWorldScenePresentation(mapId).title)
+function WorldEntryTransition({ mapId }: { mapId: WorldMapId }) {
+  const [visible, setVisible] = useState(true)
+  const title = getWorldScenePresentation(mapId).title
 
   useEffect(() => {
-    setTitle(getWorldScenePresentation(mapId).title)
-    const timer = setTimeout(() => setTitle(null), WORLD_ENTRY_TITLE_MS)
+    const timer = setTimeout(() => setVisible(false), WORLD_ENTRY_TITLE_MS)
     return () => clearTimeout(timer)
-  }, [mapId])
+  }, [])
 
-  return title
+  if (!visible) return null
+  return (
+    <div className="world-entry-transition" role="status" aria-live="polite">
+      <span>AREA</span>
+      <strong>{title}</strong>
+    </div>
+  )
 }
 
 function getPlayerFieldSprite(facing: WorldFacing): string {
@@ -118,7 +127,6 @@ export function WorldViewport(props: {
   children: ReactNode
 }) {
   const scene = getWorldScenePresentation(props.mapId)
-  const entryTitle = useWorldEntryTitle(props.mapId)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -156,12 +164,7 @@ export function WorldViewport(props: {
         )
       })}
       {props.children}
-      {entryTitle && (
-        <div className="world-entry-transition" role="status" aria-live="polite">
-          <span>AREA</span>
-          <strong>{entryTitle}</strong>
-        </div>
-      )}
+      <WorldEntryTransition key={props.mapId} mapId={props.mapId} />
     </div>
   )
 }
