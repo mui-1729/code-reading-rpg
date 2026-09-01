@@ -1,3 +1,4 @@
+import { allSkillDefinitionById } from '../game/skills'
 import { getMaxHpForLevel, getPowerMultiplierForLevel } from '../progression/progression'
 import { getBattleDisplayCode } from '../progression/progressionGraph'
 import type { BattleVictoryReward } from '../progression/types'
@@ -18,6 +19,22 @@ type VictoryPresentation = {
   clearedAreaTitle?: string
   worldFeedback?: WorldProgressFeedback | null
   equipment?: { id: string; name: string }
+}
+
+function getUnlockedSkillIds(reward: BattleVictoryReward): string[] {
+  if (reward.unlockedSkillIds) return reward.unlockedSkillIds
+  return reward.unlockedSkillId ? [reward.unlockedSkillId] : []
+}
+
+function getUnlockedSkillNames(
+  reward: BattleVictoryReward,
+  presentation: VictoryPresentation,
+): string[] {
+  return getUnlockedSkillIds(reward).map((skillId, index) =>
+    index === 0 && presentation.unlockedSkillName
+      ? presentation.unlockedSkillName
+      : allSkillDefinitionById[skillId]?.name ?? skillId,
+  )
 }
 
 /** Domain fields choose result events; translated UI strings never act as discriminants. */
@@ -52,8 +69,14 @@ export function createVictoryResultSequence(
       tone: 'clear',
     })
   }
-  if (reward.unlockedSkillId) {
-    items.push({ id: 'skill', title: 'SKILL UNLOCKED', detail: presentation.unlockedSkillName ?? reward.unlockedSkillId, tone: 'unlock' })
+  const unlockedSkillNames = getUnlockedSkillNames(reward, presentation)
+  if (unlockedSkillNames.length > 0) {
+    items.push({
+      id: 'skill',
+      title: unlockedSkillNames.length > 1 ? 'SKILLS UNLOCKED' : 'SKILL UNLOCKED',
+      detail: unlockedSkillNames.join(' / '),
+      tone: 'unlock',
+    })
   }
   if (reward.clearedAreaId) {
     const completion = presentation.worldFeedback?.kind === 'complete'
