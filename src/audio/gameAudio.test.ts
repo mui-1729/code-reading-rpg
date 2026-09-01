@@ -32,17 +32,20 @@ describe('game audio settings', () => {
 
   it('mute解除中はSE/BGMを別音量として扱う', () => {
     const settings = { muted: false, seVolume: 0.7, bgmVolume: 0.2 }
-
     expect(getChannelVolume(settings, 'se')).toBe(0.7)
     expect(getChannelVolume(settings, 'bgm')).toBe(0.2)
   })
 })
 
 describe('game BGM', () => {
-  it('field / region battle / Bossごとに再生patternを持つ', () => {
+  it('field / region field / region battle / Bossごとに再生patternを持つ', () => {
     expect(BGM_TRACKS).toEqual([
       'menu',
       'field',
+      'fieldVillage',
+      'fieldForest',
+      'fieldDeepForest',
+      'fieldTypeScript',
       'battle',
       'battleForest',
       'battleDeepForest',
@@ -61,6 +64,27 @@ describe('game BGM', () => {
     }
   })
 
+  it('探索fieldはregionごとに同じ8音loopへfallbackしない', () => {
+    const fieldTracks = [
+      BGM_PATTERNS.field,
+      BGM_PATTERNS.fieldVillage,
+      BGM_PATTERNS.fieldForest,
+      BGM_PATTERNS.fieldDeepForest,
+      BGM_PATTERNS.fieldTypeScript,
+    ]
+    for (const pattern of fieldTracks) expect(pattern.notes.length).toBeGreaterThanOrEqual(16)
+    expect(BGM_PATTERNS.fieldVillage.notes).not.toEqual(BGM_PATTERNS.fieldForest.notes)
+    expect(BGM_PATTERNS.fieldForest.notes).not.toEqual(BGM_PATTERNS.fieldDeepForest.notes)
+    expect(BGM_PATTERNS.fieldDeepForest.notes).not.toEqual(BGM_PATTERNS.fieldTypeScript.notes)
+  })
+
+  it('Battleも短い8音loopに戻さずregion / Boss identityを維持する', () => {
+    const battleTracks = BGM_TRACKS.filter((track) => track.startsWith('battle'))
+    for (const track of battleTracks) {
+      expect(BGM_PATTERNS[track].notes.length).toBeGreaterThanOrEqual(16)
+    }
+  })
+
   it('JS / TS Final Bossは同じBGM patternへfallbackしない', () => {
     expect(BGM_PATTERNS.battleJsBoss.notes).not.toEqual(BGM_PATTERNS.battleTsBoss.notes)
     expect(BGM_PATTERNS.battleJsBoss.type).not.toBe(BGM_PATTERNS.battleTsBoss.type)
@@ -69,7 +93,7 @@ describe('game BGM', () => {
   it('現在request中のtrackだけがcleanupで停止できる', () => {
     expect(shouldReleaseBgm('battle', 'battle')).toBe(true)
     expect(shouldReleaseBgm('battleForest', 'battle')).toBe(false)
-    expect(shouldReleaseBgm('field', 'battle')).toBe(false)
+    expect(shouldReleaseBgm('fieldForest', 'field')).toBe(false)
     expect(shouldReleaseBgm('menu', 'field')).toBe(false)
     expect(shouldReleaseBgm(null, 'menu')).toBe(false)
   })
