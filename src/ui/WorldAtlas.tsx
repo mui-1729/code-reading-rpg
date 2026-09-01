@@ -43,6 +43,14 @@ type AtlasLandmark = {
   opened?: boolean
 }
 
+type AtlasRoute = {
+  id: string
+  from: AtlasMap
+  to: AtlasMap
+  locked: boolean
+  requirement: string | null
+}
+
 const ATLAS_BASE_WIDTH = 650
 
 const atlasMaps: AtlasMap[] = [
@@ -110,6 +118,38 @@ function isMapDiscovered(
   if (mapId === rpgState.worldMapId || mapId === OVERWORLD_MAP_ID) return true
   const gate = getMapGateStatus(mapId, progress.clearedStageIds)
   return gate === null || gate === 'OPEN'
+}
+
+function getDiscoveredRoutes(progress: PlayerProgress, rpgState: RpgState): AtlasRoute[] {
+  const mapById = new Map(atlasMaps.map((map) => [map.id, map]))
+  const seen = new Set<string>()
+  const routes: AtlasRoute[] = []
+
+  for (const portal of WORLD_PORTALS) {
+    const from = mapById.get(portal.fromMapId)
+    const to = mapById.get(portal.toMapId)
+    if (!from || !to) continue
+    if (!isMapDiscovered(from.id, progress, rpgState) || !isMapDiscovered(to.id, progress, rpgState)) continue
+
+    const pair = [from.id, to.id].sort().join(':')
+    if (seen.has(pair)) continue
+    seen.add(pair)
+
+    const locked =
+      portal.requiredClearedStageId !== undefined &&
+      !isRequiredStageSatisfied(portal.requiredClearedStageId, progress.clearedStageIds)
+    routes.push({
+      id: pair,
+      from,
+      to,
+      locked,
+      requirement: portal.requiredClearedStageId
+        ? getBattleDisplayCode(portal.requiredClearedStageId) ?? `STAGE ${portal.requiredClearedStageId}`
+        : null,
+    })
+  }
+
+  return routes
 }
 
 function buildMapCells(mapId: WorldMapId, clearedStageIds: readonly number[]): AtlasCell[] {
@@ -242,7 +282,7 @@ function AtlasTerrainMap({ map, progress, rpgState }: { map: AtlasMap; progress:
                           : landmark.kind === 'inn'
                             ? '✚'
                             : landmark.kind === 'training'
-                              ? '!' 
+                              ? '!'
                               : '⌂'}
               </span>
             ))}
@@ -264,6 +304,7 @@ export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
   const [fit, setFit] = useState(true)
   const selectedMap = atlasMaps.find((map) => map.id === selectedMapId) ?? atlasMaps[0]
   const detailWidth = fit ? '100%' : `${ATLAS_BASE_WIDTH * (zoom / 100)}px`
+  const routes = useMemo(() => getDiscoveredRoutes(progress, rpgState), [progress, rpgState])
 
   return (
     <section className="world-atlas" aria-label="World Atlas" data-atlas-zoom={fit ? 'fit' : zoom}>
@@ -312,6 +353,20 @@ export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
           )
         })}
       </nav>
+
+      <section className="atlas-route-network" aria-label="Discovered region connections">
+        <strong className="atlas-route-title">ROUTES</strong>
+        <div className="atlas-route-list">
+          {routes.map((route) => (
+            <span className={`atlas-route ${route.locked ? 'is-locked' : 'is-open'}`} key={route.id}>
+              <b>{route.from.label}</b>
+              <span aria-hidden="true">↔</span>
+              <b>{route.to.label}</b>
+              <small>{route.locked ? `LOCKED · ${route.requirement ?? 'STORY'}` : 'CONNECTED'}</small>
+            </span>
+          ))}
+        </div>
+      </section>
 
       <div className="atlas-scrollport">
         <div className="atlas-detail-canvas" style={{ width: detailWidth }}>
