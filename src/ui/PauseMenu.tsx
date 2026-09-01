@@ -27,14 +27,24 @@ import { WorldAtlas } from './WorldAtlas'
 type PauseTab = 'status' | 'map' | 'items' | 'equipment' | 'party' | 'codex' | 'system'
 
 const tabs: Array<{ id: PauseTab; label: string }> = [
-  { id: 'status', label: 'STATUS' },
-  { id: 'map', label: 'MAP' },
-  { id: 'items', label: 'ITEMS' },
-  { id: 'equipment', label: 'EQUIPMENT' },
-  { id: 'party', label: 'PARTY' },
-  { id: 'codex', label: 'CODEX' },
-  { id: 'system', label: 'SYSTEM' },
+  { id: 'status', label: 'ステータス' },
+  { id: 'map', label: 'マップ' },
+  { id: 'items', label: 'アイテム' },
+  { id: 'equipment', label: '装備' },
+  { id: 'party', label: '仲間' },
+  { id: 'codex', label: 'コード図鑑' },
+  { id: 'system', label: '設定' },
 ]
+
+const equipmentSlotLabels: Record<EquipmentSlot, string> = {
+  weapon: '武器',
+  armor: '防具',
+  accessory: 'アクセサリ',
+}
+
+const partyRoleLabels: Record<string, string> = {
+  SCOUT: '斥候',
+}
 
 const toPercent = (value: number) => Math.round(value * 100)
 
@@ -155,9 +165,9 @@ export function PauseMenu() {
           setAudioSettings(gameAudio.getSettings())
           setOpen(true)
         }}
-        aria-label="Pause menuを開く"
+        aria-label="メニューを開く"
       >
-        MENU
+        メニュー
       </button>
 
       {open && (
@@ -167,7 +177,7 @@ export function PauseMenu() {
             className="pause-menu pixel-window"
             role="dialog"
             aria-modal="true"
-            aria-label="Pause menu"
+            aria-label="メニュー"
             onClick={(event) => event.stopPropagation()}
           >
             <header className="pause-header pause-header-actions">
@@ -175,13 +185,13 @@ export function PauseMenu() {
                 className="close-button"
                 type="button"
                 onClick={closeMenu}
-                aria-label="Pause menuを閉じる"
+                aria-label="メニューを閉じる"
               >
                 ×
               </button>
             </header>
 
-            <nav className="pause-tabs" aria-label="Pause menu sections">
+            <nav className="pause-tabs" aria-label="メニュー項目">
               {tabs.map((entry) => (
                 <button
                   type="button"
@@ -201,15 +211,15 @@ export function PauseMenu() {
               {tab === 'status' && (
                 <section className="pause-section">
                   <div className="pause-stat-grid">
-                    <div><span>LEVEL</span><strong>{combatStats.level}</strong></div>
+                    <div><span>LV</span><strong>{combatStats.level}</strong></div>
                     <div><span>EXP</span><strong>{progress.exp} / {nextLevelExp}</strong></div>
-                    <div><span>GOLD</span><strong>{progress.gold} G</strong></div>
+                    <div><span>所持金</span><strong>{progress.gold} G</strong></div>
                     <div><span>HP</span><strong>{rpgState.currentHp} / {combatStats.maxHp}</strong></div>
-                    <div><span>ATTACK</span><strong>{combatStats.attack}</strong></div>
-                    <div><span>DEFENSE</span><strong>{combatStats.defense}</strong></div>
+                    <div><span>攻撃</span><strong>{combatStats.attack}</strong></div>
+                    <div><span>防御</span><strong>{combatStats.defense}</strong></div>
                   </div>
 
-                  <div className="world-objective-list" aria-label="World objectives">
+                  <div className="world-objective-list" aria-label="地域ごとの目的">
                     {worldObjectives.map((objective) => (
                       <article
                         className={`world-objective-row pixel-inner-window is-${objective.status}`}
@@ -219,7 +229,7 @@ export function PauseMenu() {
                           <span>{objective.label}</span>
                           <strong>{objective.clearedBattles} / {objective.totalBattles}</strong>
                         </header>
-                        <p>{objective.status === 'clear' ? 'AREA CLEAR' : `NEXT → ${objective.next}`}</p>
+                        <p>{objective.status === 'clear' ? 'エリアクリア' : `次 → ${objective.next}`}</p>
                       </article>
                     ))}
                   </div>
@@ -229,7 +239,7 @@ export function PauseMenu() {
               {tab === 'map' && <WorldAtlas progress={progress} rpgState={rpgState} />}
 
               {tab === 'items' && (
-                <section className="pause-section item-inventory-grid" aria-label="Item inventory">
+                <section className="pause-section item-inventory-grid" aria-label="アイテム一覧">
                   {itemDefinitions.map((item) => {
                     const count = getItemCount(progress, item.id)
                     return (
@@ -255,7 +265,7 @@ export function PauseMenu() {
                         </div>
                         <p>{item.description}</p>
                         <div className={`item-stock-state ${count > 0 ? 'has-stock' : 'no-stock'}`}>
-                          {count > 0 ? 'READY IN BATTLE' : 'NO STOCK'}
+                          {count > 0 ? '戦闘で使用可能' : '所持なし'}
                         </div>
                       </article>
                     )
@@ -274,11 +284,11 @@ export function PauseMenu() {
                         data-equipment-slot={slot}
                       >
                         <header>
-                          <span>{slot.toUpperCase()}</span>
+                          <span>{equipmentSlotLabels[slot]}</span>
                           <strong>
                             {equippedId
                               ? ownedEquipment.find((item) => item.id === equippedId)?.name ?? equippedId
-                              : 'EMPTY'}
+                              : '未装備'}
                           </strong>
                         </header>
                         <div className="equipment-options">
@@ -295,7 +305,7 @@ export function PauseMenu() {
                                 disabled={equipped}
                                 data-equipment-id={item.id}
                                 data-equipment-state={equipped ? 'equipped' : 'owned'}
-                                aria-label={`${item.name}${equipped ? ' equipped' : ' を装備'}`}
+                                aria-label={`${item.name}${equipped ? ' 装備中' : ' を装備'}`}
                               >
                                 <span className="equipment-option-main">
                                   {presentation.visual && (
@@ -309,15 +319,15 @@ export function PauseMenu() {
                                   <span className="equipment-option-title">
                                     <strong>{item.name}</strong>
                                     <em className={`equipment-state-badge is-${equipped ? 'equipped' : 'owned'}`}>
-                                      {equipped ? 'EQUIPPED' : 'OWNED'}
+                                      {equipped ? '装備中' : '所持'}
                                     </em>
                                   </span>
                                 </span>
                                 <small>{presentation.statSummary}</small>
                                 <span className="equipment-comparison">
                                   {equipped
-                                    ? 'CURRENT LOADOUT'
-                                    : `VS ${presentation.currentEquipmentName} · ${presentation.deltaSummary}`}
+                                    ? '現在の装備'
+                                    : `比較: ${presentation.currentEquipmentName} · ${presentation.deltaSummary}`}
                                 </span>
                                 <span className="equipment-description">{item.description}</span>
                               </button>
@@ -329,7 +339,7 @@ export function PauseMenu() {
                             onClick={() => unequip(slot)}
                             disabled={!equippedId}
                           >
-                            EMPTY
+                            装備を外す
                           </button>
                         </div>
                       </div>
@@ -343,9 +353,9 @@ export function PauseMenu() {
                   <article className="pixel-inner-window pause-list-row party-row">
                     <div>
                       <strong>CODE KNIGHT</strong>
-                      <p>LV {combatStats.level} · HP {rpgState.currentHp}/{combatStats.maxHp} · ATK {combatStats.attack} · DEF {combatStats.defense}</p>
+                      <p>LV {combatStats.level} · HP {rpgState.currentHp}/{combatStats.maxHp} · 攻撃 {combatStats.attack} · 防御 {combatStats.defense}</p>
                     </div>
-                    <span>LEADER</span>
+                    <span>リーダー</span>
                   </article>
                   {rpgState.partyMemberIds.length === 0 ? (
                     <p className="pause-empty">仲間はいない。HubにいるBYTEに話しかけると加入する。</p>
@@ -357,15 +367,17 @@ export function PauseMenu() {
                       return (
                         <article className="pixel-inner-window pause-list-row party-row" key={member.id}>
                           <div>
-                            <strong>{member.name} · {member.role} · RANK {growth.rank}</strong>
-                            <p>FOLLOW-UP {growth.followUpDamage} · 1 ACTION / 1 SELECTED TARGET</p>
+                            <strong>
+                              {member.name} · {partyRoleLabels[member.role] ?? member.role} · ランク {growth.rank}
+                            </strong>
+                            <p>追撃 {growth.followUpDamage} · 1行動につき選択中の1体へ</p>
                             <p className="party-growth-note">
                               {growth.nextRankAtPlayerLevel === null
-                                ? `MAX RANK · FOLLOW-UP +${member.followUpDamagePerRank} / RANK`
-                                : `NEXT RANK → PLAYER LV ${growth.nextRankAtPlayerLevel} · FOLLOW-UP +${member.followUpDamagePerRank}`}
+                                ? `最大ランク · ランクごとに追撃 +${member.followUpDamagePerRank}`
+                                : `次のランク → プレイヤーLV ${growth.nextRankAtPlayerLevel} · ランクごとに追撃 +${member.followUpDamagePerRank}`}
                             </p>
                           </div>
-                          <span>ALLY</span>
+                          <span>仲間</span>
                         </article>
                       )
                     })
@@ -384,8 +396,8 @@ export function PauseMenu() {
                   <div className="pause-audio-panel pixel-inner-window">
                     <header className="pause-audio-header">
                       <div>
-                        <span>SOUND</span>
-                        <p>BGMとSEはここだけで設定します。</p>
+                        <span>サウンド</span>
+                        <p>BGMとSEはここで設定します。</p>
                       </div>
                       <strong>{audioSettings.muted ? 'OFF' : 'ON'}</strong>
                     </header>
@@ -396,7 +408,7 @@ export function PauseMenu() {
                       onClick={toggleSound}
                       aria-pressed={audioSettings.muted}
                     >
-                      {audioSettings.muted ? 'SOUND OFF' : 'SOUND ON'}
+                      {audioSettings.muted ? 'サウンド OFF' : 'サウンド ON'}
                     </button>
 
                     <label className="audio-slider">
@@ -413,7 +425,7 @@ export function PauseMenu() {
                             seVolume: Number(event.target.value) / 100,
                           })
                         }
-                        aria-label="Sound effect volume"
+                        aria-label="SE音量"
                       />
                     </label>
 
@@ -431,7 +443,7 @@ export function PauseMenu() {
                             bgmVolume: Number(event.target.value) / 100,
                           })
                         }
-                        aria-label="Background music volume"
+                        aria-label="BGM音量"
                       />
                     </label>
                   </div>
@@ -446,12 +458,12 @@ export function PauseMenu() {
                         closeMenu()
                       }}
                     >
-                      REPLAY TUTORIAL
+                      チュートリアルをやり直す
                     </button>
                   </div>
 
                   <div className="pause-reset-panel pixel-inner-window">
-                    <p>進行・装備・仲間・World位置を最初からやり直します。Sound設定は保持します。</p>
+                    <p>進行・装備・仲間・World位置を最初からやり直します。サウンド設定は保持します。</p>
                     <button
                       type="button"
                       className={resetArmed ? 'danger-button' : 'secondary-button'}
@@ -464,7 +476,7 @@ export function PauseMenu() {
                         closeMenu()
                       }}
                     >
-                      {resetArmed ? 'CONFIRM RESET PROGRESS' : 'RESET PROGRESS'}
+                      {resetArmed ? '本当に進行をリセットする' : '進行をリセット'}
                     </button>
                   </div>
                 </section>

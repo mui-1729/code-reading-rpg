@@ -52,13 +52,14 @@ type AtlasRoute = {
 }
 
 const ATLAS_BASE_WIDTH = 650
+const OPEN_GATE_LABEL = '開通'
 
 const atlasMaps: AtlasMap[] = [
-  { id: OVERWORLD_MAP_ID, label: 'OVERWORLD', subtitle: 'Hub · crossroads' },
-  { id: JS_VILLAGE_MAP_ID, label: 'GREENFIELD VILLAGE', subtitle: 'JavaScript · village' },
-  { id: JS_FOREST_MAP_ID, label: 'FOREST', subtitle: 'JavaScript · branch routes' },
-  { id: JS_DEEP_FOREST_MAP_ID, label: 'DEEP FOREST', subtitle: 'JavaScript · deepest route' },
-  { id: TS_FRONTIER_MAP_ID, label: 'TS FRONTIER', subtitle: 'TypeScript · frontier' },
+  { id: OVERWORLD_MAP_ID, label: 'OVERWORLD', subtitle: 'Hub · 交差点' },
+  { id: JS_VILLAGE_MAP_ID, label: 'GREENFIELD VILLAGE', subtitle: 'JavaScript · 村' },
+  { id: JS_FOREST_MAP_ID, label: 'FOREST', subtitle: 'JavaScript · 分岐路' },
+  { id: JS_DEEP_FOREST_MAP_ID, label: 'DEEP FOREST', subtitle: 'JavaScript · 最深部' },
+  { id: TS_FRONTIER_MAP_ID, label: 'TS FRONTIER', subtitle: 'TypeScript · 辺境' },
 ]
 
 const TERRAIN_GLYPH: Partial<Record<Terrain, string>> = {
@@ -78,15 +79,15 @@ const TERRAIN_GLYPH: Partial<Record<Terrain, string>> = {
 }
 
 const LANDMARK_BY_TERRAIN: Partial<Record<Terrain, Pick<AtlasLandmark, 'kind' | 'label'>>> = {
-  gate: { kind: 'exit', label: 'GATE' },
-  exit: { kind: 'exit', label: 'EXIT' },
-  boss: { kind: 'boss', label: 'BOSS' },
-  midboss: { kind: 'midboss', label: 'MID BOSS' },
-  treasure: { kind: 'treasure', label: 'TREASURE' },
-  shop: { kind: 'shop', label: 'SHOP' },
-  recovery: { kind: 'inn', label: 'INN' },
-  training: { kind: 'training', label: 'TRAINING' },
-  village: { kind: 'village', label: 'VILLAGE' },
+  gate: { kind: 'exit', label: '門' },
+  exit: { kind: 'exit', label: '出口' },
+  boss: { kind: 'boss', label: 'ボス' },
+  midboss: { kind: 'midboss', label: '中ボス' },
+  treasure: { kind: 'treasure', label: '宝箱' },
+  shop: { kind: 'shop', label: 'ショップ' },
+  recovery: { kind: 'inn', label: '宿' },
+  training: { kind: 'training', label: '訓練所' },
+  village: { kind: 'village', label: '村' },
 }
 
 function isRequiredStageSatisfied(
@@ -105,9 +106,9 @@ function getMapGateStatus(mapId: WorldMapId, clearedStageIds: readonly number[])
   )
   if (!entrance?.requiredClearedStageId) return null
 
-  if (isRequiredStageSatisfied(entrance.requiredClearedStageId, clearedStageIds)) return 'OPEN'
+  if (isRequiredStageSatisfied(entrance.requiredClearedStageId, clearedStageIds)) return OPEN_GATE_LABEL
   const displayCode = getBattleDisplayCode(entrance.requiredClearedStageId)
-  return `LOCKED · CLEAR ${displayCode ?? 'STORY PROGRESS'}`
+  return `未開通 · ${displayCode ?? 'ストーリー進行'}をクリア`
 }
 
 function isMapDiscovered(
@@ -117,7 +118,7 @@ function isMapDiscovered(
 ): boolean {
   if (mapId === rpgState.worldMapId || mapId === OVERWORLD_MAP_ID) return true
   const gate = getMapGateStatus(mapId, progress.clearedStageIds)
-  return gate === null || gate === 'OPEN'
+  return gate === null || gate === OPEN_GATE_LABEL
 }
 
 function getDiscoveredRoutes(progress: PlayerProgress, rpgState: RpgState): AtlasRoute[] {
@@ -196,7 +197,7 @@ function buildLandmarks(
         x: cell.x,
         y: cell.y,
         ...definition,
-        label: treasure ? 'TREASURE' : definition.label,
+        label: treasure ? '宝箱' : definition.label,
         opened: treasure ? openedTreasureIds.includes(treasure.id) : false,
       })
       continue
@@ -226,11 +227,11 @@ function AtlasTerrainMap({ map, progress, rpgState }: { map: AtlasMap; progress:
           <strong>{map.label}</strong>
           <span>{map.subtitle}</span>
         </div>
-        {isCurrent && <em>CURRENT</em>}
+        {isCurrent && <em>現在地</em>}
       </header>
 
       <div className="atlas-terrain-field">
-        <div className="atlas-terrain-stage" aria-label={`${map.label} terrain map`}>
+        <div className="atlas-terrain-stage" aria-label={`${map.label} 地形マップ`}>
           <div
             className="atlas-terrain-grid"
             style={{
@@ -247,7 +248,7 @@ function AtlasTerrainMap({ map, progress, rpgState }: { map: AtlasMap; progress:
                 <span
                   key={`${cell.x}:${cell.y}`}
                   className={`atlas-terrain-cell terrain-${cell.terrain} ${cell.locked ? 'is-locked' : ''} ${playerHere ? 'is-player' : ''}`}
-                  aria-label={playerHere ? 'YOU' : undefined}
+                  aria-label={playerHere ? '現在地' : undefined}
                   aria-hidden={playerHere ? undefined : true}
                 >
                   {playerHere ? '●' : TERRAIN_GLYPH[cell.terrain] ?? ''}
@@ -256,7 +257,7 @@ function AtlasTerrainMap({ map, progress, rpgState }: { map: AtlasMap; progress:
             })}
           </div>
 
-          <div className="atlas-landmark-layer" aria-label={`${map.label} landmarks`}>
+          <div className="atlas-landmark-layer" aria-label={`${map.label} の目印`}>
             {landmarks.map((landmark) => (
               <span
                 key={landmark.id}
@@ -266,7 +267,7 @@ function AtlasTerrainMap({ map, progress, rpgState }: { map: AtlasMap; progress:
                   top: `${((landmark.y + 0.5) / dimensions.height) * 100}%`,
                 }}
                 data-atlas-landmark={landmark.kind}
-                aria-label={`${landmark.label}${landmark.opened ? ' · OPENED' : ''}`}
+                aria-label={`${landmark.label}${landmark.opened ? ' · 開封済み' : ''}`}
                 title={landmark.label}
               >
                 {landmark.kind === 'exit'
@@ -291,8 +292,8 @@ function AtlasTerrainMap({ map, progress, rpgState }: { map: AtlasMap; progress:
       </div>
 
       <footer>
-        <span>{landmarks.filter((landmark) => !landmark.opened).length} LANDMARKS ACTIVE</span>
-        {gateStatus && <strong className={gateStatus === 'OPEN' ? 'is-open' : 'is-locked'}>{gateStatus}</strong>}
+        <span>未確認の目印 {landmarks.filter((landmark) => !landmark.opened).length}</span>
+        {gateStatus && <strong className={gateStatus === OPEN_GATE_LABEL ? 'is-open' : 'is-locked'}>{gateStatus}</strong>}
       </footer>
     </article>
   )
@@ -307,32 +308,32 @@ export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
   const routes = useMemo(() => getDiscoveredRoutes(progress, rpgState), [progress, rpgState])
 
   return (
-    <section className="world-atlas" aria-label="World Atlas" data-atlas-zoom={fit ? 'fit' : zoom}>
+    <section className="world-atlas" aria-label="ワールドマップ" data-atlas-zoom={fit ? 'fit' : zoom}>
       <header className="atlas-header">
         <div>
-          <span className="eyebrow">WORLD ATLAS</span>
-          <h3>DISCOVERED REGIONS</h3>
-          <p>CURRENT · {atlasMaps.find((map) => map.id === rpgState.worldMapId)?.label ?? 'UNKNOWN'}</p>
+          <span className="eyebrow">ワールドマップ</span>
+          <h3>発見済みエリア</h3>
+          <p>現在地 · {atlasMaps.find((map) => map.id === rpgState.worldMapId)?.label ?? '不明'}</p>
         </div>
-        <div className="atlas-zoom" aria-label="World Atlas zoom controls">
-          <button type="button" className={fit ? 'is-active' : ''} onClick={() => setFit(true)}>FIT</button>
+        <div className="atlas-zoom" aria-label="ワールドマップ倍率">
+          <button type="button" className={fit ? 'is-active' : ''} onClick={() => setFit(true)}>全体</button>
           <button type="button" onClick={() => { setFit(false); setZoom(100) }}>100%</button>
           <button
             type="button"
-            aria-label="Zoom out world atlas"
+            aria-label="ワールドマップを縮小"
             onClick={() => { setFit(false); setZoom((current) => Math.max(75, current - 25)) }}
             disabled={!fit && zoom === 75}
           >−</button>
           <button
             type="button"
-            aria-label="Zoom in world atlas"
+            aria-label="ワールドマップを拡大"
             onClick={() => { setFit(false); setZoom((current) => Math.min(150, current + 25)) }}
             disabled={!fit && zoom === 150}
           >+</button>
         </div>
       </header>
 
-      <nav className="atlas-region-nav" aria-label="World Atlas regions">
+      <nav className="atlas-region-nav" aria-label="ワールドマップのエリア">
         {atlasMaps.map((map) => {
           const discovered = isMapDiscovered(map.id, progress, rpgState)
           const current = map.id === rpgState.worldMapId
@@ -347,22 +348,22 @@ export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
               aria-pressed={selected}
               onClick={() => setSelectedMapId(map.id)}
             >
-              <strong>{discovered ? map.label : 'UNKNOWN REGION'}</strong>
-              <span>{current ? 'CURRENT' : discovered ? map.subtitle : 'Not discovered yet'}</span>
+              <strong>{discovered ? map.label : '未発見エリア'}</strong>
+              <span>{current ? '現在地' : discovered ? map.subtitle : 'まだ発見していない'}</span>
             </button>
           )
         })}
       </nav>
 
-      <section className="atlas-route-network" aria-label="Discovered region connections">
-        <strong className="atlas-route-title">ROUTES</strong>
+      <section className="atlas-route-network" aria-label="発見済みエリアのつながり">
+        <strong className="atlas-route-title">エリアのつながり</strong>
         <div className="atlas-route-list">
           {routes.map((route) => (
             <span className={`atlas-route ${route.locked ? 'is-locked' : 'is-open'}`} key={route.id}>
               <b>{route.from.label}</b>
               <span aria-hidden="true">↔</span>
               <b>{route.to.label}</b>
-              <small>{route.locked ? `LOCKED · ${route.requirement ?? 'STORY'}` : 'CONNECTED'}</small>
+              <small>{route.locked ? `未開通 · ${route.requirement ?? 'ストーリー進行'}` : '接続済み'}</small>
             </span>
           ))}
         </div>
@@ -374,17 +375,17 @@ export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
         </div>
       </div>
 
-      <div className="atlas-terrain-legend" aria-label="Terrain legend">
-        <span><b>·</b>PATH</span>
-        <span><b>♠</b>WOODS</span>
-        <span><b>≈</b>WATER</span>
-        <span><b>◇</b>CRYSTAL</span>
-        <span><b>↔</b>EXIT</span>
-        <span><b>★</b>BOSS</span>
-        <span><b>◆</b>TREASURE</span>
-        <span><b>●</b>YOU</span>
+      <div className="atlas-terrain-legend" aria-label="地形の凡例">
+        <span><b>·</b>道</span>
+        <span><b>♠</b>森</span>
+        <span><b>≈</b>水</span>
+        <span><b>◇</b>クリスタル</span>
+        <span><b>↔</b>出口</span>
+        <span><b>★</b>ボス</span>
+        <span><b>◆</b>宝箱</span>
+        <span><b>●</b>現在地</span>
       </div>
-      <p className="atlas-legend">Only discovered routes are named. Select a region to inspect its landmarks.</p>
+      <p className="atlas-legend">発見済みの経路だけ名前を表示します。エリアを選ぶと目印を確認できます。</p>
     </section>
   )
 }
