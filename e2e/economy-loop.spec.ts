@@ -130,10 +130,10 @@ test('Battle Gold → Shop purchase/equip → Inn → reload → next canonical 
   await page.getByRole('button', { name: 'Move down' }).click()
   await page.getByRole('button', { name: 'INTERACT' }).click()
 
-  const inn = page.getByRole('dialog', { name: 'Inn / Rest' })
+  const inn = page.getByRole('dialog', { name: '宿' })
   await expect(inn.getByText('20 G → 0 G', { exact: true })).toBeVisible()
-  await inn.getByRole('button', { name: '▶ REST' }).click()
-  await expect(page.getByText(/FULL RECOVERY/)).toBeVisible()
+  await inn.getByRole('button', { name: '▶ 休む' }).click()
+  await expect(page.locator('.world-message')).toContainText('全回復')
 
   stored = await storedState(page)
   expect(stored.progress.progress.gold).toBe(0)
