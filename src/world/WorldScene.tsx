@@ -326,10 +326,13 @@ export function WorldControls(props: {
   const inferred = getInteractionPresentation(resolveWorldInteraction(rpgState, progress))
   const { interact, interactLabel = inferred.label, interactDisabled = inferred.disabled, move } = props
   const moveRef = useRef(move)
-  moveRef.current = move
   const delayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const repeatRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const pointerClickRef = useRef(false)
+
+  useEffect(() => {
+    moveRef.current = move
+  }, [move])
 
   const stopHold = useCallback(() => {
     if (delayRef.current !== null) clearTimeout(delayRef.current)
