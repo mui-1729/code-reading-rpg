@@ -6,7 +6,7 @@ export const characterVisuals = {
   byte: {
     field: '/pixel-art/characters/byte-field.svg',
     battle: '/pixel-art/characters/byte-battle.svg',
-    portrait: '/pixel-art/characters/byte-field.svg',
+    portrait: '/pixel-art/characters/byte-portrait.svg',
   },
   leadAda: {
     portrait: '/pixel-art/characters/lead-ada-portrait.svg',
