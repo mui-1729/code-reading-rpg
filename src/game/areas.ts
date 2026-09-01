@@ -61,6 +61,7 @@ export const areas: readonly AreaDefinition[] = [
     bossBattleId: 3,
     clearRewardEquipmentId: 'branch-saber',
     storyEvent: (battleId: number, phase: 'pre' | 'post') =>
+      getJavaScriptCharacterStoryEvent(battleId, phase) ??
       getJavaScriptIncidentOpeningEvent(battleId, phase) ??
       getJavaScriptDeepForestStoryEvent(battleId, phase) ??
       getJavaScriptFilterStoryEvent(battleId, phase) ??
@@ -84,7 +85,8 @@ export const areas: readonly AreaDefinition[] = [
     bossBattleId: 6,
     clearRewardEquipmentId: 'typed-mail',
     storyEvent: (battleId: number, phase: 'pre' | 'post') =>
-      phase === 'pre' ? getTypeScriptPreBattleEvent(battleId) : getTypeScriptPostBattleEvent(battleId),
+      getTypeScriptCharacterStoryEvent(battleId, phase) ??
+      (phase === 'pre' ? getTypeScriptPreBattleEvent(battleId) : getTypeScriptPostBattleEvent(battleId)),
   },
 ]
 
@@ -143,6 +145,10 @@ export function parseBattleRoute(pathname: string, definitions: readonly AreaDef
 
   return null
 }
+import {
+  getJavaScriptCharacterStoryEvent,
+  getTypeScriptCharacterStoryEvent,
+} from '../story/characterStoryOverrides'
 import { getJavaScriptPostBattleEvent, getJavaScriptPreBattleEvent } from '../story/javascriptBattleEvents'
 import { getJavaScriptDeepForestStoryEvent } from '../story/javascriptDeepForestEvents'
 import { getJavaScriptFilterStoryEvent } from '../story/javascriptFilterEvents'
