@@ -9,6 +9,7 @@
 - 技術語を使う場合も、キャラクターの目的や感情から自然に出る量に留める。
 - CODE WORLDの普通の住人までエンジニア口調にしない。
 - 関係性の変化は長い説明ではなく、言葉の任せ方・距離感・再訪会話で見せる。
+- visual identityはpaletteだけに依存しない。小サイズ・grayscaleでも silhouette / accessory / posture のどれかで主要人物を見分けられる状態を保つ。
 
 ## PLAYER / Code Knight
 
@@ -26,6 +27,7 @@
   - MIOからは、教え込む対象ではなく現場へ戻すべき旅人として扱われる。
   - WARDENからは外から来た観察者として信頼される。
 - **JavaScript arc**: 現場を見る → 必要な読み方だけ補う → 自分の順番でtraceを追う → Code Core判断を任される。
+- **Visual identity**: Code Knightのhelmet、縦長のfield silhouette、武器を持つadventurer shape。同行NPCより「PLAYERの鎧」を先に認識できること。
 - **Never**: 「全部理解してから進める完璧な天才」にしない。正解を知っている前提の台詞を持たせない。
 
 ## BYTE
@@ -47,6 +49,7 @@
   1. **Early** — 「一緒に見よう」。PLAYERを導きながら、自分も仮説へ走らないよう同行を求める。
   2. **Middle** — 「どこから読む？」。説明する前にPLAYERの読み順を聞く。
   3. **Late** — 「……任せた」。trace監視は続けるが、最後の判断をPLAYERへ渡す。
+- **Visual identity**: 小柄なdebug companion。conversation portraitでは右上へ伸びるantennaと片側のdebug lensを持つ。field sprite流用だけで顔を済ませない。
 - **Never**: **「俺」「〜ぜ」口調にしない**。歩くCODE HELPにしない。Battleの正解targetを先に指示しない。
 
 ## TRAINER MIO
@@ -63,6 +66,7 @@
   - BYTE: 先走る癖を昔から知る。からかえる程度に長い付き合い。
   - PLAYER: 生徒ではなく、必要な準備が済めば森へ送り返す旅人。
 - **JavaScript arc**: 初回incident後に不足だけ補う → Training完了後は「もう戻らなくていい」と送り出す → Area clear後に二人の変化を迎える。
+- **Visual identity**: 頭頂の高いbunと首元の明るいscarf。field / portraitの両方で同じ縦方向のsilhouetteを残す。
 - **Never**: ずっとsyntax授業を続ける教師にしない。PLAYERをForestへ進ませない理由を作らない。
 
 ## LEAD ADA
@@ -81,6 +85,7 @@
   - BYTE: 発見の速さを信頼しつつ、仮説を急ぐ癖も把握している。
   - MIO: BYTEを現場へ戻せる相手として信頼している。
 - **JavaScript arc**: 仕事を渡す上司 → 遠隔で事実を照合するlead → 自分の失敗を開示し、二人の判断を信頼するlead。
+- **Visual identity**: 左へ重い非対称hair、右耳のheadset / mic、角張ったshoulder line。MIOのbunやWARDENのhoodと頭部外形を共有しない。
 - **Never**: PLAYERを交換可能な作業員として扱わない。毎回Objectiveだけ話す人に戻さない。
 
 ## TYPE WARDEN
@@ -98,7 +103,25 @@
   - BYTE: 騒がしいが、慣れを壊して異変を言語化できる点を認める。
 - **TypeScript arc**: 調査を案内する守人 → 自分の慣れによるblind spotを認める → Frontier Compiler戦では帰路を守り、判断を二人へ渡す。
 - **Battle 6との関係**: **TYPE WARDEN本人はBossではない。Battle 6の敵対objectは `FRONTIER COMPILER`。**
+- **Visual identity**: 尖ったhoodと左右へ張る大型pauldron / cloak。人型portraitの通常hair＋shirt silhouetteへ戻さない。
 - **Never**: WARDEN自身をBattle 6のmonster/bossとして表示しない。突然PLAYERへ敵対させない。
+
+## Visual identity review rule
+
+主要characterの造形は、色を外しても最低1つのstrong cueを残す。
+
+| Character | grayscale / small-size cue |
+| --- | --- |
+| PLAYER | helmet + armed knight silhouette |
+| BYTE | antenna + asymmetric debug lens + small companion shape |
+| MIO | high bun + scarf |
+| ADA | asymmetric swept hair + headset / mic + square shoulders |
+| WARDEN | pointed hood + oversized pauldrons / cloak |
+
+- ADA / MIO / WARDENを同一rect配置のpalette swapにしない。
+- conversation portraitを24px前後へ縮小しても、頭部外形かaccessoryのどちらかが残ること。
+- 新しい主要character追加時はrole / voiceだけでなくsilhouette差をreviewする。
+- `src/rpg/characterVisualIdentity.test.ts`は色値を無視したportrait rect signatureの重複を検出する。asset変更時はこのtestを弱めず、意図したmotifへ更新する。
 
 ## Ordinary residents / optional threads
 
