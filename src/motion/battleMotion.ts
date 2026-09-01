@@ -5,8 +5,11 @@ export const BATTLE_MOTION = {
   defeatMs: 420,
   enemyWindupMs: 180,
   enemyImpactDelayMs: 100,
-  enemyAttackStepMs: 440,
-  playerHitMs: 260,
+  // Keep each attacker highlighted through its complete hit reaction. The next
+  // attacker starts exactly when that reaction ends, so there is no blank gap
+  // where ENEMY TURN is active but no source is visually identifiable.
+  enemyAttackStepMs: 520,
+  playerHitMs: 420,
   resultDelayMs: 180,
 } as const
 
