@@ -3,7 +3,7 @@ import { useNavigate, useParams, useRouterState, useSearch } from '@tanstack/rea
 import App from './App'
 import { useBgm } from './audio/useBgm'
 import { useProgress } from './progression'
-import { useRpg } from './rpg'
+import { getStorySpeakerVisual, useRpg } from './rpg'
 import { hasExistingRun } from './story/openingProgress'
 import {
   areaById,
@@ -66,6 +66,7 @@ export function HomePage() {
   if (openingIndex !== null) {
     const scene = javascriptOpeningScenes[openingIndex]
     const isLast = openingIndex === javascriptOpeningScenes.length - 1
+    const speakerVisual = getStorySpeakerVisual(scene.speakerId)
 
     const next = () => {
       if (isLast) {
@@ -101,7 +102,18 @@ export function HomePage() {
               {storyLayerLabels[scene.layer]}
             </div>
             <div className="opening-kicker">{scene.kicker}</div>
-            <div className="opening-speaker">{scene.speaker}</div>
+            <div className="opening-speaker-card">
+              {speakerVisual && (
+                <img
+                  className="opening-speaker-portrait"
+                  src={speakerVisual}
+                  alt={`${scene.speaker} portrait`}
+                  width="64"
+                  height="64"
+                />
+              )}
+              <div className="opening-speaker">{scene.speaker}</div>
+            </div>
             <div className="opening-copy">
               {scene.lines.map((line) => <p key={line}>{line}</p>)}
             </div>
