@@ -325,6 +325,8 @@ export function WorldControls(props: {
   const { rpgState } = useRpg()
   const inferred = getInteractionPresentation(resolveWorldInteraction(rpgState, progress))
   const { interact, interactLabel = inferred.label, interactDisabled = inferred.disabled, move } = props
+  const moveRef = useRef(move)
+  moveRef.current = move
   const delayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const repeatRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const pointerClickRef = useRef(false)
@@ -341,11 +343,11 @@ export function WorldControls(props: {
   const startHold = useCallback((dx: number, dy: number) => {
     stopHold()
     pointerClickRef.current = true
-    move(dx, dy)
+    moveRef.current(dx, dy)
     delayRef.current = setTimeout(() => {
-      repeatRef.current = setInterval(() => move(dx, dy), 120)
+      repeatRef.current = setInterval(() => moveRef.current(dx, dy), 120)
     }, 280)
-  }, [move, stopHold])
+  }, [stopHold])
 
   const directionButton = (label: string, glyph: string, dx: number, dy: number) => (
     <button
@@ -353,14 +355,20 @@ export function WorldControls(props: {
       aria-label={label}
       onPointerDown={() => startHold(dx, dy)}
       onPointerUp={stopHold}
-      onPointerCancel={stopHold}
-      onPointerLeave={stopHold}
+      onPointerCancel={() => {
+        stopHold()
+        pointerClickRef.current = false
+      }}
+      onPointerLeave={() => {
+        stopHold()
+        pointerClickRef.current = false
+      }}
       onClick={() => {
         if (pointerClickRef.current) {
           pointerClickRef.current = false
           return
         }
-        move(dx, dy)
+        moveRef.current(dx, dy)
       }}
     >
       {glyph}
