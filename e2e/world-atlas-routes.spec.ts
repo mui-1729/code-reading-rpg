@@ -4,7 +4,7 @@ const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
-test('World Atlasは発見済みregionの接続関係をportal定義から表示する', async ({ page }) => {
+test('ワールドマップは発見済みregionの接続関係をportal定義から表示する', async ({ page }) => {
   await page.goto('/')
   await page.evaluate(
     ({ progressKey, rpgKey, tutorialKey }) => {
@@ -43,14 +43,14 @@ test('World Atlasは発見済みregionの接続関係をportal定義から表示
   )
 
   await page.goto('/world')
-  await page.getByRole('button', { name: 'Pause menuを開く' }).click()
-  await page.getByRole('button', { name: 'MAP', exact: true }).click()
+  await page.getByRole('button', { name: 'メニューを開く' }).click()
+  await page.getByRole('button', { name: 'マップ', exact: true }).click()
 
-  const routes = page.getByRole('region', { name: 'Discovered region connections' })
+  const routes = page.getByRole('region', { name: '発見済みエリアのつながり' })
   await expect(routes).toContainText('OVERWORLD')
   await expect(routes).toContainText('GREENFIELD VILLAGE')
   await expect(routes).toContainText('FOREST')
   await expect(routes).toContainText('DEEP FOREST')
   await expect(routes).toContainText('TS FRONTIER')
-  await expect(routes.getByText('CONNECTED', { exact: true })).toHaveCount(5)
+  await expect(routes.getByText('接続済み', { exact: true })).toHaveCount(5)
 })
