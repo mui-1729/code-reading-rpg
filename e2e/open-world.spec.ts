@@ -197,7 +197,7 @@ test.describe('Open World RPG loop', () => {
     await expect(page.getByLabel('Inn / Rest')).toBeVisible()
     await page.getByRole('button', { name: 'INTERACT' }).click()
 
-    const inn = page.getByRole('dialog', { name: 'Inn / Rest' })
+    const inn = page.getByRole('dialog', { name: '宿' })
     await expect(inn).toBeVisible()
     await expect(inn.getByText('40 / 108', { exact: true })).toBeVisible()
     await expect(inn.getByText('+68 HP', { exact: true })).toBeVisible()
@@ -207,8 +207,8 @@ test.describe('Open World RPG loop', () => {
     expect((await storedRpgState(page)).state.currentHp).toBe(40)
     expect((await storedProgress(page)).progress.gold).toBe(50)
 
-    await inn.getByRole('button', { name: '▶ REST' }).click()
-    await expect(page.getByText(/FULL RECOVERY/)).toBeVisible()
+    await inn.getByRole('button', { name: '▶ 休む' }).click()
+    await expect(page.locator('.world-message')).toContainText('全回復')
     await expect.poll(async () => (await storedRpgState(page)).state.currentHp).toBe(108)
     await expect.poll(async () => (await storedProgress(page)).progress.gold).toBe(30)
 
