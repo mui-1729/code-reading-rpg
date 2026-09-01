@@ -170,12 +170,15 @@ export function PauseMenu() {
             aria-label="Pause menu"
             onClick={(event) => event.stopPropagation()}
           >
-            <header className="pause-header">
-              <div>
-                <span className="eyebrow">PAUSE</span>
-                <h2>CODE KNIGHT</h2>
-              </div>
-              <button className="close-button" type="button" onClick={closeMenu}>×</button>
+            <header className="pause-header pause-header-actions">
+              <button
+                className="close-button"
+                type="button"
+                onClick={closeMenu}
+                aria-label="Pause menuを閉じる"
+              >
+                ×
+              </button>
             </header>
 
             <nav className="pause-tabs" aria-label="Pause menu sections">
