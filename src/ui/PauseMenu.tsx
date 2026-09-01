@@ -15,7 +15,7 @@ import {
   equipmentDefinitions,
   getCombatStats,
   getEquipmentPresentation,
-  getPartyFollowUpDamage,
+  getPartyMemberGrowth,
   partyMemberById,
   useRpg,
   type EquipmentSlot,
@@ -352,12 +352,18 @@ export function PauseMenu() {
                   ) : (
                     rpgState.partyMemberIds.map((memberId) => {
                       const member = partyMemberById[memberId]
-                      if (!member) return null
+                      const growth = getPartyMemberGrowth(memberId, combatStats.level)
+                      if (!member || !growth) return null
                       return (
                         <article className="pixel-inner-window pause-list-row party-row" key={member.id}>
                           <div>
-                            <strong>{member.name} · {member.role}</strong>
-                            <p>FOLLOW-UP {getPartyFollowUpDamage([member.id], combatStats.level)} · 1 ACTION / 1 SELECTED TARGET</p>
+                            <strong>{member.name} · {member.role} · RANK {growth.rank}</strong>
+                            <p>FOLLOW-UP {growth.followUpDamage} · 1 ACTION / 1 SELECTED TARGET</p>
+                            <p className="party-growth-note">
+                              {growth.nextRankAtPlayerLevel === null
+                                ? `MAX RANK · FOLLOW-UP +${member.followUpDamagePerRank} / RANK`
+                                : `NEXT RANK → PLAYER LV ${growth.nextRankAtPlayerLevel} · FOLLOW-UP +${member.followUpDamagePerRank}`}
+                            </p>
                           </div>
                           <span>ALLY</span>
                         </article>
