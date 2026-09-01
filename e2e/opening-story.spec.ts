@@ -48,9 +48,9 @@ test('first START introduces the team then CONNECTs into the incident-driven COD
   await page.getByRole('button', { name: '▶ EXPLORE CODE WORLD' }).click()
   await expect(page).toHaveURL(/\/world$/)
   await expect(page.getByLabel('Open world map')).toBeVisible()
-  const objective = page.getByLabel('Next objective')
+  const objective = page.getByLabel('次の目的')
   await expect(objective).toContainText('BYTEと合流する')
-  await expect(objective).toHaveAttribute('title', /Openingで見たtarget異常/)
+  await expect(objective).toHaveAttribute('title', /Openingで見た対象異常/)
   await expect(objective).toHaveAttribute('title', /まず再現する/)
 })
 
