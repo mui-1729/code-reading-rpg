@@ -30,6 +30,12 @@ type SpriteMotion = {
   stepFrame: 0 | 1
 }
 
+type CameraPan = {
+  key: string
+  facing: WorldFacing
+  cells: readonly WorldCell[]
+}
+
 function useWorldSpriteMotion(mapId: WorldMapId, position: WorldPosition): SpriteMotion {
   const positionX = position.x
   const positionY = position.y
@@ -74,6 +80,67 @@ function useWorldSpriteMotion(mapId: WorldMapId, position: WorldPosition): Sprit
   }, [mapId, positionX, positionY])
 
   return motion
+}
+
+function useWorldCameraPan(
+  mapId: WorldMapId,
+  playerPosition: WorldPosition,
+  viewportStart: WorldPosition,
+  cells: readonly WorldCell[],
+): CameraPan | null {
+  const playerX = playerPosition.x
+  const playerY = playerPosition.y
+  const viewportX = viewportStart.x
+  const viewportY = viewportStart.y
+  const previousRef = useRef({
+    mapId,
+    playerPosition: { x: playerX, y: playerY },
+    viewportStart: { x: viewportX, y: viewportY },
+    cells,
+  })
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [pan, setPan] = useState<CameraPan | null>(null)
+
+  useLayoutEffect(() => {
+    const currentPlayer = { x: playerX, y: playerY }
+    const currentViewport = { x: viewportX, y: viewportY }
+    const previous = previousRef.current
+    const sameMap = previous.mapId === mapId
+    const walked = sameMap && isAdjacentWorldStep(previous.playerPosition, currentPlayer)
+    const cameraShifted = sameMap && isAdjacentWorldStep(previous.viewportStart, currentViewport)
+
+    if (timerRef.current !== null) clearTimeout(timerRef.current)
+
+    if (walked && cameraShifted) {
+      setPan({
+        key: `${mapId}:${viewportX}:${viewportY}:${playerX}:${playerY}`,
+        facing: getWorldFacing(previous.playerPosition, currentPlayer),
+        cells: previous.cells,
+      })
+      timerRef.current = setTimeout(() => {
+        setPan(null)
+        timerRef.current = null
+      }, WORLD_STEP_MS)
+    } else {
+      setPan(null)
+    }
+
+    previousRef.current = {
+      mapId,
+      playerPosition: currentPlayer,
+      viewportStart: currentViewport,
+      cells,
+    }
+
+    return () => {
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current)
+        timerRef.current = null
+      }
+    }
+  }, [cells, mapId, playerX, playerY, viewportX, viewportY])
+
+  return pan
 }
 
 function WorldEntryTransition({ mapId }: { mapId: WorldMapId }) {
@@ -127,6 +194,9 @@ export function WorldViewport(props: {
   children: ReactNode
 }) {
   const scene = getWorldScenePresentation(props.mapId)
+  const firstCell = props.cells[0]
+  const viewportStart = firstCell ? { x: firstCell.x, y: firstCell.y } : props.playerPosition
+  const cameraPan = useWorldCameraPan(props.mapId, props.playerPosition, viewportStart, props.cells)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -138,6 +208,22 @@ export function WorldViewport(props: {
     window.dispatchEvent(new CustomEvent<WorldSceneEventDetail>(WORLD_SCENE_EVENT, { detail }))
   }, [props.mapId, scene.bgmTrack, scene.sceneId])
 
+  const renderCell = (cell: WorldCell) => {
+    const terrain = props.getTerrain?.(cell) ?? cell.terrain
+    return (
+      <div
+        key={`${cell.mapId}:${cell.x}:${cell.y}`}
+        className={`world-tile terrain-${terrain}`}
+        title={props.terrainLabels[terrain] ?? terrain}
+        data-world-map={cell.mapId}
+        data-world-x={cell.x}
+        data-world-y={cell.y}
+      >
+        {props.renderObject(cell, terrain)}
+      </div>
+    )
+  }
+
   return (
     <div
       className={`world-viewport pixel-inner-window ${props.className ?? ''}`}
@@ -148,21 +234,17 @@ export function WorldViewport(props: {
       data-world-x={props.playerPosition.x}
       data-world-y={props.playerPosition.y}
     >
-      {props.cells.map((cell) => {
-        const terrain = props.getTerrain?.(cell) ?? cell.terrain
-        return (
-          <div
-            key={`${cell.mapId}:${cell.x}:${cell.y}`}
-            className={`world-tile terrain-${terrain}`}
-            title={props.terrainLabels[terrain] ?? terrain}
-            data-world-map={cell.mapId}
-            data-world-x={cell.x}
-            data-world-y={cell.y}
-          >
-            {props.renderObject(cell, terrain)}
-          </div>
-        )
-      })}
+      {props.cells.map(renderCell)}
+      {cameraPan && (
+        <div
+          key={cameraPan.key}
+          className="world-camera-snapshot"
+          data-camera-facing={cameraPan.facing}
+          aria-hidden="true"
+        >
+          {cameraPan.cells.map(renderCell)}
+        </div>
+      )}
       {props.children}
       <WorldEntryTransition key={props.mapId} mapId={props.mapId} />
     </div>
