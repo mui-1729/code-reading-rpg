@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { WorldViewport } from './WorldScene'
+import { getWorldScenePresentation } from './worldPresentation'
 import { getWorldSpriteStyle, isWorldPositionVisible } from './worldSceneGeometry'
 import {
   VIEWPORT_WIDTH as WORLD_VIEWPORT_COLUMNS,
@@ -38,6 +39,7 @@ describe('shared World viewport', () => {
   it.each<WorldMapId>(['overworld', 'js-village', 'js-forest', 'js-deep-forest', 'ts-frontier'])(
     '%s keeps coordinate identity while region data owns terrain and object presentation',
     (mapId) => {
+      const presentation = getWorldScenePresentation(mapId)
       const html = renderToStaticMarkup(
         createElement(WorldViewport, {
           mapId,
@@ -45,17 +47,22 @@ describe('shared World viewport', () => {
           cells: [{ mapId, x: 9, y: 4, terrain: 'midboss', region: 'javascript' }],
           label: `${mapId} map`,
           terrainLabels: { road: 'Open road' },
-        getTerrain: () => 'road' as const,
+          getTerrain: () => 'road' as const,
           renderObject: (cell, terrain) => `${cell.mapId}:${terrain}`,
           children: 'character layer',
         }),
       )
 
       expect(html).toContain(`aria-label="${mapId} map"`)
-      expect(html).toContain(`data-world-map="${mapId}" data-world-x="8" data-world-y="4"`)
+      expect(html).toContain(`data-world-map="${mapId}"`)
+      expect(html).toContain('data-world-x="8"')
+      expect(html).toContain('data-world-y="4"')
+      expect(html).toContain(`data-world-scene="${presentation.sceneId}"`)
+      expect(html).toContain(`data-world-bgm-track="${presentation.bgmTrack}"`)
       expect(html).toContain('class="world-tile terrain-road" title="Open road"')
-      expect(html).toContain(`data-world-map="${mapId}" data-world-x="9" data-world-y="4"`)
+      expect(html).toContain('data-world-x="9"')
       expect(html).toContain(`${mapId}:road</div>character layer`)
+      expect(html).toContain(presentation.title)
       expect(html).not.toContain('terrain-midboss')
     },
   )
