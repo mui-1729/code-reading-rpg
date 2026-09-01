@@ -29,6 +29,36 @@
   translate: 0 -2px;
 }
 
+.world-camera-snapshot {
+  --world-camera-pan-x: 0%;
+  --world-camera-pan-y: 0%;
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  grid-template-columns: repeat(11, minmax(0, 1fr));
+  grid-template-rows: repeat(9, minmax(0, 1fr));
+  pointer-events: none;
+  will-change: translate;
+  animation: world-camera-pan 150ms linear forwards;
+}
+
+.world-camera-snapshot[data-camera-facing='right'] {
+  --world-camera-pan-x: -9.090909%;
+}
+
+.world-camera-snapshot[data-camera-facing='left'] {
+  --world-camera-pan-x: 9.090909%;
+}
+
+.world-camera-snapshot[data-camera-facing='down'] {
+  --world-camera-pan-y: -11.111111%;
+}
+
+.world-camera-snapshot[data-camera-facing='up'] {
+  --world-camera-pan-y: 11.111111%;
+}
+
 .world-entry-transition {
   position: absolute;
   inset: 0;
@@ -101,6 +131,15 @@ body[data-battle-arena='incident'] .battle-screen::after {
   content: 'INCIDENT';
 }
 
+@keyframes world-camera-pan {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: var(--world-camera-pan-x) var(--world-camera-pan-y);
+  }
+}
+
 @keyframes world-area-entry {
   0% {
     opacity: 1;
@@ -159,6 +198,11 @@ body[data-battle-arena='incident'] .battle-screen::after {
   .world-player-pixel,
   .world-follower-pixel {
     translate: none !important;
+  }
+
+  .world-camera-snapshot {
+    display: none !important;
+    animation: none !important;
   }
 
   .world-entry-transition {
