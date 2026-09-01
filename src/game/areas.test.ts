@@ -19,7 +19,7 @@ describe('area definitions', () => {
     expect(areaById.javascript.battleIds).toEqual(getAreaBattleSequence('javascript'))
     expect(areaById.typescript.battleIds).toEqual(getAreaBattleSequence('typescript'))
     expect(areaById.javascript.storyEvent?.(1, 'pre')?.id).toBe('js-before-first-incident-field-observation')
-    expect(areaById.javascript.storyEvent?.(9, 'post')?.id).toBe('js-training-complete-return-to-trace')
+    expect(areaById.javascript.storyEvent?.(9, 'post')?.id).toBe('js-training-complete-character')
   })
 
   it('Area idが一意でlookupと一致する', () => {
