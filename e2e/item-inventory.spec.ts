@@ -87,13 +87,13 @@ async function storedState(page: Page) {
 }
 
 test.describe('Item / Inventory UX', () => {
-  test('existing v4 inventoryをPause item cardへそのまま表示する', async ({ page }) => {
+  test('existing v4 inventoryをメニューのitem cardへそのまま表示する', async ({ page }) => {
     await seedItemState(page, { patchKit: 2 })
     await page.goto('/world')
 
-    await page.getByRole('button', { name: 'Pause menuを開く' }).click()
-    const pause = page.getByRole('dialog', { name: 'Pause menu' })
-    await pause.getByRole('button', { name: 'ITEMS' }).click()
+    await page.getByRole('button', { name: 'メニューを開く' }).click()
+    const pause = page.getByRole('dialog', { name: 'メニュー' })
+    await pause.getByRole('button', { name: 'アイテム' }).click()
 
     const item = pause.locator('[data-item-id="patch-kit"]')
     await expect(item).toHaveAttribute('data-item-count', '2')
@@ -101,10 +101,10 @@ test.describe('Item / Inventory UX', () => {
     await expect(item.getByText('PATCH KIT', { exact: true })).toBeVisible()
     await expect(item.getByText('HP +24', { exact: true })).toBeVisible()
     await expect(item.getByText('BATTLE ONLY · 1 USE', { exact: true })).toBeVisible()
-    await expect(item.getByText('READY IN BATTLE', { exact: true })).toBeVisible()
+    await expect(item.getByText('戦闘で使用可能', { exact: true })).toBeVisible()
   })
 
-  test('Shop購入したPATCH KITを同じvisualでPause inventoryへ反映する', async ({ page }) => {
+  test('Shop購入したPATCH KITを同じvisualでメニューinventoryへ反映する', async ({ page }) => {
     await seedItemState(page, {
       gold: 30,
       patchKit: 0,
@@ -113,22 +113,22 @@ test.describe('Item / Inventory UX', () => {
     await page.goto('/world')
 
     await page.getByRole('button', { name: 'INTERACT' }).click()
-    const shop = page.getByRole('dialog', { name: 'World shop' })
+    const shop = page.getByRole('dialog', { name: 'ショップ' })
     const item = shop.locator('[data-item-id="patch-kit"]')
     await expect(item).toHaveAttribute('data-item-state', 'available')
     await expect(item.locator('img')).toHaveAttribute('src', '/pixel-art/items/patch-kit.svg')
     await expect(item.getByText('HP +24', { exact: true })).toBeVisible()
     await expect(item.getByText('BATTLE ONLY · 1 USE', { exact: true })).toBeVisible()
-    await item.getByRole('button', { name: '▶ BUY' }).click()
+    await item.getByRole('button', { name: '▶ 購入' }).click()
 
     const stored = await storedState(page)
     expect(stored.progress.progress.gold).toBe(0)
     expect(stored.progress.progress.inventory.patchKit).toBe(1)
 
     await shop.getByRole('button', { name: 'ショップを閉じる' }).click()
-    await page.getByRole('button', { name: 'Pause menuを開く' }).click()
-    const pause = page.getByRole('dialog', { name: 'Pause menu' })
-    await pause.getByRole('button', { name: 'ITEMS' }).click()
+    await page.getByRole('button', { name: 'メニューを開く' }).click()
+    const pause = page.getByRole('dialog', { name: 'メニュー' })
+    await pause.getByRole('button', { name: 'アイテム' }).click()
     const inventoryItem = pause.locator('[data-item-id="patch-kit"]')
     await expect(inventoryItem).toHaveAttribute('data-item-count', '1')
     await expect(inventoryItem.locator('img')).toHaveAttribute('src', '/pixel-art/items/patch-kit.svg')
