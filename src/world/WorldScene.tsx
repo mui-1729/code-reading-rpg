@@ -405,7 +405,6 @@ export function WorldControls(props: {
   const moveRef = useRef(move)
   const delayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const repeatRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const pointerClickRef = useRef(false)
 
   useEffect(() => {
     moveRef.current = move
@@ -423,7 +422,6 @@ export function WorldControls(props: {
   const startHold = useCallback((dx: number, dy: number) => {
     if (activeConversation) return
     stopHold()
-    pointerClickRef.current = true
     moveRef.current(dx, dy)
     delayRef.current = setTimeout(() => {
       repeatRef.current = setInterval(() => moveRef.current(dx, dy), 120)
@@ -435,22 +433,16 @@ export function WorldControls(props: {
       type="button"
       aria-label={label}
       disabled={activeConversation !== null}
-      onPointerDown={() => startHold(dx, dy)}
+      onPointerDown={(event) => {
+        if (event.button !== 0) return
+        startHold(dx, dy)
+      }}
       onPointerUp={stopHold}
-      onPointerCancel={() => {
-        stopHold()
-        pointerClickRef.current = false
-      }}
-      onPointerLeave={() => {
-        stopHold()
-        pointerClickRef.current = false
-      }}
-      onClick={() => {
+      onPointerCancel={stopHold}
+      onPointerLeave={stopHold}
+      onClick={(event) => {
         if (activeConversation) return
-        if (pointerClickRef.current) {
-          pointerClickRef.current = false
-          return
-        }
+        if (event.detail !== 0) return
         moveRef.current(dx, dy)
       }}
     >
