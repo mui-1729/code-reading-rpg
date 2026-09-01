@@ -92,8 +92,8 @@ test('Battle 13未clearでは西側Woodsへ入ってもfilter traceを先取り�
 test('Battle 13 clear済みsaveは西側WoodsでBattle 14をimpact-range traceとして固定導入する', async ({ page }) => {
   await seedFilterLesson(page, true)
 
-  await expect(page.getByLabel('Next objective')).toContainText('IMPACT RANGE')
-  await expect(page.getByLabel('Next objective')).toContainText('複数targetへ広がる影響')
+  await expect(page.getByLabel('次の目的')).toContainText('影響範囲')
+  await expect(page.getByLabel('次の目的')).toContainText('複数の対象へ広がる影響')
 
   await page.getByRole('button', { name: 'Move up' }).click()
 
