@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { AppRouter } from './AppRouter'
 import { AudioUnlock } from './audio/AudioUnlock'
+import { WorldLogPolicy } from './world/WorldLogPolicy'
 import './styles.css'
 import './opening.css'
 import './layout-fixes.css'
@@ -35,5 +36,6 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AppRouter />
     <AudioUnlock />
+    <WorldLogPolicy />
   </StrictMode>,
 )
