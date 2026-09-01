@@ -61,15 +61,24 @@ async function storedRpgState(page: Page) {
   return readStoredRpg(page)
 }
 
-test('JS-01後のOverworld → Village → reload → Overworld round tripを保存する', async ({ page }) => {
+test('JS-01後はVillage入口で止まりINTERACTで入ってreload後もround tripを保存する', async ({ page }) => {
   await seedWorld(page)
 
   const viewport = page.locator('.world-viewport')
   await expect(viewport).toHaveAttribute('data-world-map', 'overworld')
   await expect(viewport).toHaveAttribute('data-world-x', '14')
   await expect(viewport).toHaveAttribute('data-world-y', '13')
+  await expect(page.getByRole('button', { name: 'INTERACT · ENTER GREENFIELD VILLAGE' })).toBeEnabled()
 
   await page.getByRole('button', { name: 'Move up' }).click()
+
+  await expect(page.getByRole('heading', { name: 'CODE WORLD' })).toBeVisible()
+  await expect(viewport).toHaveAttribute('data-world-map', 'overworld')
+  await expect(viewport).toHaveAttribute('data-world-x', '14')
+  await expect(viewport).toHaveAttribute('data-world-y', '13')
+  await expect(page.getByText('Village入口だ。INTERACTで入る。')).toBeVisible()
+
+  await page.getByRole('button', { name: 'INTERACT · ENTER GREENFIELD VILLAGE' }).click()
 
   await expect(page.getByRole('heading', { name: 'GREENFIELD VILLAGE' })).toBeVisible()
   await expect(viewport).toHaveAttribute('data-world-map', 'js-village')
