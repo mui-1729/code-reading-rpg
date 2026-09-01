@@ -3,6 +3,7 @@ import { expect, test, type Page } from '@playwright/test'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
+const GAME_STATE_KEY = 'code-reading-rpg:game-state'
 
 async function seedState(
   page: Page,
@@ -135,10 +136,11 @@ test('TypeScriptではWARDEN NPCとBattle 6のFrontier Compilerを別objectと�
   await conversation.getByRole('button', { name: 'CLOSE' }).click()
 
   await page.evaluate((key) => {
-    const stored = JSON.parse(localStorage.getItem(key) ?? '{}')
-    stored.state.worldPosition = { x: 27, y: 5 }
+    const stored = JSON.parse(localStorage.getItem(key) ?? 'null')
+    stored.rpg.state.worldPosition = { x: 27, y: 5 }
+    stored.revision += 1
     localStorage.setItem(key, JSON.stringify(stored))
-  }, RPG_KEY)
+  }, GAME_STATE_KEY)
   await page.reload()
 
   await expect(page.getByLabel('Frontier Compiler Boss')).toBeVisible()
