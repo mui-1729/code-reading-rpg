@@ -30,7 +30,7 @@
   --world-camera-pan-y: 0%;
   position: absolute;
   inset: 0;
-  z-index: 6;
+  z-index: 3;
   display: grid;
   grid-template-columns: repeat(11, minmax(0, 1fr));
   grid-template-rows: repeat(9, minmax(0, 1fr));
