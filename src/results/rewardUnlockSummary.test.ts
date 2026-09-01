@@ -38,7 +38,7 @@ describe('victory mastery reward summary', () => {
 
     expect(createVictoryResultSequence(result.reward).find((item) => item.id === 'skill')).toEqual({
       id: 'skill',
-      title: 'SKILLS UNLOCKED',
+      title: 'スキル解放',
       detail: 'GATHER / VIPER / LOCK / ALERT',
       tone: 'unlock',
     })
