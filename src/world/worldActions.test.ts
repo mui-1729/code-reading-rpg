@@ -121,9 +121,10 @@ describe('World action resolver', () => {
     expect(result.kind).toBe('blocked')
     expect(result.terrain).toBe('village')
     expect(result.nextState).toBe(state)
+    expect(resolveWorldInteraction(state, createInitialPlayerProgress())).toEqual({ kind: 'none' })
   })
 
-  it('最初のincident clear後はVillage mapへtransitionする', () => {
+  it('最初のincident clear後はVillage入口で止まりinteractionでVillage mapへ入る', () => {
     const state = {
       ...createInitialRpgState(),
       worldPosition: { x: 14, y: 13 },
@@ -135,16 +136,19 @@ describe('World action resolver', () => {
       unlockedStageIds: [1, 7],
     }
 
-    const result = resolveWorldMove({ rpgState: state, progress, dx: 0, dy: -1 })
+    const moveResult = resolveWorldMove({ rpgState: state, progress, dx: 0, dy: -1 })
+    expect(moveResult.kind).toBe('blocked')
+    expect(moveResult.terrain).toBe('village')
+    expect(moveResult.nextState).toBe(state)
 
-    expect(result.kind).toBe('transition')
-    if (result.kind !== 'transition') return
-    expect(result.terrain).toBe('village')
-    expect(result.fromMapId).toBe(OVERWORLD_MAP_ID)
-    expect(result.toMapId).toBe(JS_VILLAGE_MAP_ID)
-    expect(result.nextState.worldMapId).toBe(JS_VILLAGE_MAP_ID)
-    expect(result.nextState.worldPosition).toEqual({ x: 10, y: 12 })
-    expect(result.nextState.stepsSinceEncounter).toBe(9)
+    const intent = resolveWorldInteraction(state, progress)
+    expect(intent.kind).toBe('map-transition')
+    if (intent.kind !== 'map-transition') return
+    expect(intent.toMapId).toBe(JS_VILLAGE_MAP_ID)
+    expect(intent.label).toBe('GREENFIELD VILLAGE')
+    expect(intent.nextState.worldMapId).toBe(JS_VILLAGE_MAP_ID)
+    expect(intent.nextState.worldPosition).toEqual({ x: 10, y: 12 })
+    expect(intent.nextState.stepsSinceEncounter).toBe(9)
   })
 
   it('Village南口へ進むとOverworldへtransitionして入口前へ戻る', () => {
