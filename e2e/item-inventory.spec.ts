@@ -100,7 +100,7 @@ test.describe('Item / Inventory UX', () => {
     await expect(item.locator('img')).toHaveAttribute('src', '/pixel-art/items/patch-kit.svg')
     await expect(item.getByText('PATCH KIT', { exact: true })).toBeVisible()
     await expect(item.getByText('HP +24', { exact: true })).toBeVisible()
-    await expect(item.getByText('BATTLE ONLY · 1 USE', { exact: true })).toBeVisible()
+    await expect(item.getByText('戦闘専用 · 1回', { exact: true })).toBeVisible()
     await expect(item.getByText('戦闘で使用可能', { exact: true })).toBeVisible()
   })
 
@@ -118,7 +118,7 @@ test.describe('Item / Inventory UX', () => {
     await expect(item).toHaveAttribute('data-item-state', 'available')
     await expect(item.locator('img')).toHaveAttribute('src', '/pixel-art/items/patch-kit.svg')
     await expect(item.getByText('HP +24', { exact: true })).toBeVisible()
-    await expect(item.getByText('BATTLE ONLY · 1 USE', { exact: true })).toBeVisible()
+    await expect(item.getByText('戦闘専用 · 1回', { exact: true })).toBeVisible()
     await item.getByRole('button', { name: '▶ 購入' }).click()
 
     const stored = await storedState(page)
@@ -134,7 +134,7 @@ test.describe('Item / Inventory UX', () => {
     await expect(inventoryItem.locator('img')).toHaveAttribute('src', '/pixel-art/items/patch-kit.svg')
   })
 
-  test('BattleでPATCH KITを使用するとHPとstockを更新しUSED理由を表示する', async ({ page }) => {
+  test('BattleでPATCH KITを使用するとHPとstockを更新し使用済み理由を表示する', async ({ page }) => {
     await seedItemState(page, { patchKit: 1, currentHp: 40 })
     await page.goto('/javascript/battle/1?seed=item-use-e2e&returnTo=%2Fworld')
     await dismissStory(page)
@@ -142,7 +142,7 @@ test.describe('Item / Inventory UX', () => {
     const item = page.locator('.battle-item-row[data-item-id="patch-kit"]')
     await expect(item).toHaveAttribute('data-item-state', 'available')
     await expect(item.locator('img')).toHaveAttribute('src', '/pixel-art/items/patch-kit.svg')
-    await expect(item.getByText('READY · BATTLE ONLY', { exact: true })).toBeVisible()
+    await expect(item.getByText('使用可能 · 戦闘専用', { exact: true })).toBeVisible()
 
     const useButton = item.getByRole('button', { name: /PATCH KIT ×1/ })
     await expect(useButton).toBeEnabled()
@@ -151,7 +151,7 @@ test.describe('Item / Inventory UX', () => {
     await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
     await expect(item).toHaveAttribute('data-item-state', 'already-used')
     await expect(item.getByText('PATCH KIT ×0', { exact: true })).toBeVisible()
-    await expect(item.getByText('RECOVERED +24 HP · USED THIS BATTLE', { exact: true })).toBeVisible()
+    await expect(item.getByText('+24 HP回復 · この戦闘では使用済み', { exact: true })).toBeVisible()
 
     const stored = await storedState(page)
     expect(stored.rpg.state.currentHp).toBe(64)
@@ -172,19 +172,19 @@ test.describe('Item / Inventory UX', () => {
     await dismissStory(page)
     item = page.locator('.battle-item-row[data-item-id="patch-kit"]')
     await expect(item).toHaveAttribute('data-item-state', 'available')
-    await expect(item.getByText('READY · BATTLE ONLY', { exact: true })).toBeVisible()
+    await expect(item.getByText('使用可能 · 戦闘専用', { exact: true })).toBeVisible()
     await expect(item.getByRole('button', { name: /PATCH KIT ×2/ })).toBeEnabled()
     await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('40/108')
   })
 
-  test('BattleでNO STOCK / HP FULLを明示して使用不可にする', async ({ page }) => {
+  test('Battleで所持なし / HP満タンを明示して使用不可にする', async ({ page }) => {
     await seedItemState(page, { patchKit: 0, currentHp: 40 })
     await page.goto('/javascript/battle/1?seed=item-no-stock-e2e&returnTo=%2Fworld')
     await dismissStory(page)
 
     let item = page.locator('.battle-item-row[data-item-id="patch-kit"]')
     await expect(item).toHaveAttribute('data-item-state', 'no-stock')
-    await expect(item.getByText('NO STOCK', { exact: true })).toBeVisible()
+    await expect(item.getByText('所持なし', { exact: true })).toBeVisible()
     await expect(item.getByRole('button', { name: /PATCH KIT ×0/ })).toBeDisabled()
 
     await seedItemState(page, { patchKit: 1, currentHp: 108 })
@@ -193,7 +193,7 @@ test.describe('Item / Inventory UX', () => {
 
     item = page.locator('.battle-item-row[data-item-id="patch-kit"]')
     await expect(item).toHaveAttribute('data-item-state', 'hp-full')
-    await expect(item.getByText('HP FULL', { exact: true })).toBeVisible()
+    await expect(item.getByText('HP満タン', { exact: true })).toBeVisible()
     await expect(item.getByRole('button', { name: /PATCH KIT ×1/ })).toBeDisabled()
   })
 
@@ -207,13 +207,13 @@ test.describe('Item / Inventory UX', () => {
     await page.goto('/world')
 
     await page.getByRole('button', { name: 'INTERACT' }).click()
-    await expect(page.getByText(/TYPE CACHE OPEN/)).toBeVisible()
+    await expect(page.getByText(/TYPE CACHE 開封/)).toBeVisible()
 
     const reward = page.locator('[data-item-reward-id="patch-kit"]')
     await expect(reward).toBeVisible()
     await expect(reward).toHaveAttribute('data-item-reward-count', '1')
     await expect(reward.locator('img')).toHaveAttribute('src', '/pixel-art/items/patch-kit.svg')
-    await expect(reward.getByText('ITEM ACQUIRED', { exact: true })).toBeVisible()
+    await expect(reward.getByText('アイテム獲得', { exact: true })).toBeVisible()
     await expect(reward.getByText('PATCH KIT ×1', { exact: true })).toBeVisible()
 
     const stored = await storedState(page)
