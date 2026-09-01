@@ -1,5 +1,11 @@
-import type { ReactNode } from 'react'
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { characterVisuals } from '../rpg/visualAssets'
+import {
+  getWorldFacing,
+  isAdjacentWorldStep,
+  WORLD_STEP_MS,
+  type WorldFacing,
+} from './worldPresentation'
 import type { Terrain, WorldCell, WorldMapId } from './worldMap'
 import {
   getWorldSpriteStyle,
@@ -12,6 +18,63 @@ export type WorldObjective = {
   title: string
   detail: string
   clear: boolean
+}
+
+type SpriteMotion = {
+  facing: WorldFacing
+  walking: boolean
+  stepFrame: 0 | 1
+}
+
+function useWorldSpriteMotion(mapId: WorldMapId, position: WorldPosition): SpriteMotion {
+  const previousRef = useRef({ mapId, position: { ...position } })
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [motion, setMotion] = useState<SpriteMotion>({
+    facing: 'down',
+    walking: false,
+    stepFrame: 0,
+  })
+
+  useLayoutEffect(() => {
+    const previous = previousRef.current
+    const sameMap = previous.mapId === mapId
+    const walked = sameMap && isAdjacentWorldStep(previous.position, position)
+
+    if (timerRef.current !== null) clearTimeout(timerRef.current)
+
+    if (walked) {
+      setMotion((current) => ({
+        facing: getWorldFacing(previous.position, position, current.facing),
+        walking: true,
+        stepFrame: current.stepFrame === 0 ? 1 : 0,
+      }))
+      timerRef.current = setTimeout(() => {
+        setMotion((current) => ({ ...current, walking: false }))
+        timerRef.current = null
+      }, WORLD_STEP_MS)
+    } else if (!sameMap || previous.position.x !== position.x || previous.position.y !== position.y) {
+      setMotion((current) => ({ ...current, walking: false }))
+    }
+
+    previousRef.current = { mapId, position: { ...position } }
+
+    return () => {
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current)
+        timerRef.current = null
+      }
+    }
+  }, [mapId, position.x, position.y])
+
+  return motion
+}
+
+function getPlayerFieldSprite(facing: WorldFacing): string {
+  if (facing === 'up') return '/pixel-art/characters/code-knight-field-up.svg'
+  if (facing === 'left' || facing === 'right') {
+    return '/pixel-art/characters/code-knight-field-side.svg'
+  }
+  return characterVisuals.player.field
 }
 
 export function WorldObjectiveCard({ objective }: { objective: WorldObjective }) {
@@ -74,6 +137,8 @@ export function WorldCharacterLayer(props: {
   followerJoined: boolean
 }) {
   const { followerJoined, followerPosition, mapId, playerPosition, viewportStart } = props
+  const playerMotion = useWorldSpriteMotion(mapId, playerPosition)
+  const followerMotion = useWorldSpriteMotion(mapId, followerPosition)
 
   return (
     <div
@@ -85,24 +150,36 @@ export function WorldCharacterLayer(props: {
     >
       {followerJoined && isWorldPositionVisible(followerPosition, viewportStart) && (
         <span
+          key={`follower:${mapId}`}
           className="world-follower-sprite world-character-overlay"
           style={getWorldSpriteStyle(followerPosition, viewportStart)}
           data-world-map={mapId}
           data-world-x={followerPosition.x}
           data-world-y={followerPosition.y}
+          data-facing={followerMotion.facing}
+          data-walking={followerMotion.walking || undefined}
+          data-step-frame={followerMotion.stepFrame}
         >
           <img className="world-follower-pixel" src={characterVisuals.byte.field} alt="" />
         </span>
       )}
 
       <span
+        key={`player:${mapId}`}
         className="world-player-sprite world-character-overlay"
         style={getWorldSpriteStyle(playerPosition, viewportStart)}
         data-world-map={mapId}
         data-world-x={playerPosition.x}
         data-world-y={playerPosition.y}
+        data-facing={playerMotion.facing}
+        data-walking={playerMotion.walking || undefined}
+        data-step-frame={playerMotion.stepFrame}
       >
-        <img className="world-player-pixel" src={characterVisuals.player.field} alt="" />
+        <img
+          className="world-player-pixel"
+          src={getPlayerFieldSprite(playerMotion.facing)}
+          alt=""
+        />
       </span>
     </div>
   )
