@@ -84,7 +84,7 @@ test('Training 9未clearではForest入口が閉じている', async ({ page }) 
   await page.getByRole('button', { name: 'Move left' }).click()
 
   await expect(page.getByLabel('Open world map')).toHaveAttribute('data-world-map', 'overworld')
-  await expect(page.getByLabel('Next objective')).toContainText('INCIDENT PREP')
+  await expect(page.getByLabel('次の目的')).toContainText('調査準備')
 })
 
 test('JS-01 clearだけではForestへ入れずVillage trainingを要求する', async ({ page }) => {
@@ -93,7 +93,7 @@ test('JS-01 clearだけではForestへ入れずVillage trainingを要求する',
   await page.getByRole('button', { name: 'Move left' }).click()
 
   await expect(page.getByLabel('Open world map')).toHaveAttribute('data-world-map', 'overworld')
-  await expect(page.getByLabel('Next objective')).toContainText('INCIDENT PREP')
+  await expect(page.getByLabel('次の目的')).toContainText('調査準備')
 })
 
 test('Village training完了後はForestへ入りreload後もlocal mapを保持する', async ({ page }) => {
@@ -103,8 +103,8 @@ test('Village training完了後はForestへ入りreload後もlocal mapを保持�
   const forest = page.getByLabel('Forest map')
   await expect(forest).toHaveAttribute('data-world-map', 'js-forest')
   await expect(page.getByRole('heading', { name: 'JAVASCRIPT FOREST' })).toBeVisible()
-  await expect(page.getByLabel('Next objective')).toContainText('FOLLOW TRACE · 1')
-  await expect(page.getByLabel('Next objective')).toContainText('二つの条件を両方通る枝')
+  await expect(page.getByLabel('次の目的')).toContainText('経路を追う · 1')
+  await expect(page.getByLabel('次の目的')).toContainText('二つの条件を両方通る枝')
 
   await page.reload()
   await expect(page.getByLabel('Forest map')).toHaveAttribute('data-world-map', 'js-forest')
