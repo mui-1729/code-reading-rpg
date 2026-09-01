@@ -86,7 +86,7 @@ test('390px幅でShop / Inn / メニューが横overflowせずEscapeで閉じら
   await page.reload()
 
   await page.getByRole('button', { name: 'INTERACT' }).click()
-  const inn = page.getByRole('dialog', { name: 'Inn / Rest' })
+  const inn = page.getByRole('dialog', { name: '宿' })
   await expect(inn).toBeVisible()
   await expectNoHorizontalOverflow(page)
   await page.keyboard.press('Escape')
