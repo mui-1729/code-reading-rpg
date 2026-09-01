@@ -224,6 +224,16 @@ export function WorldViewport(props: {
     )
   }
 
+  const renderSnapshotTerrain = (cell: WorldCell) => {
+    const terrain = props.getTerrain?.(cell) ?? cell.terrain
+    return (
+      <div
+        key={`snapshot:${cell.mapId}:${cell.x}:${cell.y}`}
+        className={`world-tile terrain-${terrain}`}
+      />
+    )
+  }
+
   return (
     <div
       className={`world-viewport pixel-inner-window ${props.className ?? ''}`}
@@ -242,7 +252,7 @@ export function WorldViewport(props: {
           data-camera-facing={cameraPan.facing}
           aria-hidden="true"
         >
-          {cameraPan.cells.map(renderCell)}
+          {cameraPan.cells.map(renderSnapshotTerrain)}
         </div>
       )}
       {props.children}
