@@ -4,7 +4,7 @@ const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
-test('Pause PARTYでBYTE自身のRank・追撃値・次の成長条件を確認できる', async ({ page }) => {
+test('メニューの仲間でBYTE自身のRank・追撃値・次の成長条件を確認できる', async ({ page }) => {
   await page.goto('/')
   await page.evaluate(
     ({ progressKey, rpgKey, tutorialKey }) => {
@@ -43,11 +43,11 @@ test('Pause PARTYでBYTE自身のRank・追撃値・次の成長条件を確認�
   )
 
   await page.goto('/world')
-  await page.getByRole('button', { name: 'Pause menuを開く' }).click()
-  await page.getByRole('button', { name: 'PARTY', exact: true }).click()
+  await page.getByRole('button', { name: 'メニューを開く' }).click()
+  await page.getByRole('button', { name: '仲間', exact: true }).click()
 
-  const byte = page.getByText(/BYTE · SCOUT · RANK 3/).locator('..')
-  await expect(byte).toContainText('FOLLOW-UP 11')
-  await expect(byte).toContainText('NEXT RANK → PLAYER LV 7')
-  await expect(byte).toContainText('FOLLOW-UP +2')
+  const byte = page.getByText(/BYTE · 斥候 · ランク 3/).locator('..')
+  await expect(byte).toContainText('追撃 11')
+  await expect(byte).toContainText('次のランク → プレイヤーLV 7')
+  await expect(byte).toContainText('ランクごとに追撃 +2')
 })
