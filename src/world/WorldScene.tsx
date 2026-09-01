@@ -389,6 +389,7 @@ export function WorldControls(props: {
       <button
         type="button"
         className="primary-button world-interact"
+        aria-label={interactLabel === 'INTERACT' ? 'INTERACT' : `INTERACT · ${interactLabel}`}
         onClick={interact}
         disabled={interactDisabled}
       >
