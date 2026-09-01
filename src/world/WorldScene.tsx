@@ -1,8 +1,10 @@
-import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { characterVisuals } from '../rpg/visualAssets'
 import {
   getWorldFacing,
+  getWorldScenePresentation,
   isAdjacentWorldStep,
+  WORLD_ENTRY_TITLE_MS,
   WORLD_STEP_MS,
   type WorldFacing,
 } from './worldPresentation'
@@ -69,6 +71,18 @@ function useWorldSpriteMotion(mapId: WorldMapId, position: WorldPosition): Sprit
   return motion
 }
 
+function useWorldEntryTitle(mapId: WorldMapId): string | null {
+  const [title, setTitle] = useState(() => getWorldScenePresentation(mapId).title)
+
+  useEffect(() => {
+    setTitle(getWorldScenePresentation(mapId).title)
+    const timer = setTimeout(() => setTitle(null), WORLD_ENTRY_TITLE_MS)
+    return () => clearTimeout(timer)
+  }, [mapId])
+
+  return title
+}
+
 function getPlayerFieldSprite(facing: WorldFacing): string {
   if (facing === 'up') return '/pixel-art/characters/code-knight-field-up.svg'
   if (facing === 'left' || facing === 'right') {
@@ -101,11 +115,15 @@ export function WorldViewport(props: {
   renderObject: (cell: WorldCell, terrain: Terrain) => ReactNode
   children: ReactNode
 }) {
+  const scene = getWorldScenePresentation(props.mapId)
+  const entryTitle = useWorldEntryTitle(props.mapId)
+
   return (
     <div
       className={`world-viewport pixel-inner-window ${props.className ?? ''}`}
       aria-label={props.label}
       data-world-map={props.mapId}
+      data-world-scene={scene.sceneId}
       data-world-x={props.playerPosition.x}
       data-world-y={props.playerPosition.y}
     >
@@ -125,6 +143,12 @@ export function WorldViewport(props: {
         )
       })}
       {props.children}
+      {entryTitle && (
+        <div className="world-entry-transition" role="status" aria-live="polite">
+          <span>AREA</span>
+          <strong>{entryTitle}</strong>
+        </div>
+      )}
     </div>
   )
 }
