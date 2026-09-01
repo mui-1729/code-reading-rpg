@@ -153,7 +153,7 @@ body[data-battle-arena='incident'] .battle-screen::after {
 
 @media (prefers-reduced-motion: reduce) {
   .world-character-overlay {
-    transition: none;
+    transition: none !important;
   }
 
   .world-player-pixel,
