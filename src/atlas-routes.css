@@ -1,0 +1,55 @@
+.atlas-route-network {
+  display: grid;
+  gap: 7px;
+  padding: 9px;
+  border: 2px solid #2f3048;
+  background: #0b0b14;
+}
+
+.atlas-route-title {
+  color: #8f8ca3;
+  font-size: 8px;
+  letter-spacing: .08em;
+}
+
+.atlas-route-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.atlas-route {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 5px;
+  padding: 7px 8px;
+  border: 2px solid #41425e;
+  background: #11111d;
+  color: #dddbea;
+  font-size: 7px;
+}
+
+.atlas-route b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.atlas-route b:last-of-type { text-align: right; }
+.atlas-route > span { color: var(--blue); font-size: 11px; }
+.atlas-route small {
+  grid-column: 1 / -1;
+  color: #8f8ca3;
+  font-size: 6px;
+  text-align: center;
+}
+
+.atlas-route.is-open { border-color: #4f638d; }
+.atlas-route.is-locked { border-style: dashed; opacity: .72; }
+
+@media (max-width: 620px) {
+  .atlas-route-list { grid-template-columns: 1fr; }
+  .atlas-route { font-size: 6px; }
+}
