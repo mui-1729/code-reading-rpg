@@ -15,6 +15,8 @@
 .world-message span { font-size: 7px; }
 .world-message p { margin-top: 3px; font-size: 10px; }
 
+.atlas-detail-canvas { box-sizing: border-box; }
+
 .world-dpad {
   grid-template-columns: repeat(3, 46px);
   grid-template-rows: repeat(2, 46px);
