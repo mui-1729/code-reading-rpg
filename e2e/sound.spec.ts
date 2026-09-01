@@ -19,24 +19,24 @@ async function prepareWorld(page: import('@playwright/test').Page) {
 }
 
 async function openPauseMenu(page: import('@playwright/test').Page) {
-  await page.getByRole('button', { name: 'Pause menuを開く' }).click()
-  return page.getByRole('dialog', { name: 'Pause menu' })
+  await page.getByRole('button', { name: 'メニューを開く' }).click()
+  return page.getByRole('dialog', { name: 'メニュー' })
 }
 
-test('Sound設定はPause SYSTEMだけにありreload後も保持される', async ({ page }) => {
+test('サウンド設定はメニューの設定だけにありreload後も保持される', async ({ page }) => {
   await prepareWorld(page)
 
   await expect(page.locator('.audio-settings-toggle')).toHaveCount(0)
 
   let dialog = await openPauseMenu(page)
-  await dialog.getByRole('button', { name: 'SYSTEM' }).click()
-  const se = dialog.getByLabel('Sound effect volume')
-  const bgm = dialog.getByLabel('Background music volume')
+  await dialog.getByRole('button', { name: '設定' }).click()
+  const se = dialog.getByLabel('SE音量')
+  const bgm = dialog.getByLabel('BGM音量')
 
   await se.fill('65')
   await bgm.fill('35')
-  await dialog.getByRole('button', { name: 'SOUND ON' }).click()
-  await expect(dialog.getByRole('button', { name: 'SOUND OFF' })).toBeVisible()
+  await dialog.getByRole('button', { name: 'サウンド ON' }).click()
+  await expect(dialog.getByRole('button', { name: 'サウンド OFF' })).toBeVisible()
 
   const stored = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? 'null'), AUDIO_KEY)
   expect(stored).toEqual({
@@ -46,20 +46,20 @@ test('Sound設定はPause SYSTEMだけにありreload後も保持される', asy
 
   await page.reload()
   dialog = await openPauseMenu(page)
-  await dialog.getByRole('button', { name: 'SYSTEM' }).click()
-  await expect(dialog.getByRole('button', { name: 'SOUND OFF' })).toBeVisible()
-  await expect(dialog.getByLabel('Sound effect volume')).toHaveValue('65')
-  await expect(dialog.getByLabel('Background music volume')).toHaveValue('35')
+  await dialog.getByRole('button', { name: '設定' }).click()
+  await expect(dialog.getByRole('button', { name: 'サウンド OFF' })).toBeVisible()
+  await expect(dialog.getByLabel('SE音量')).toHaveValue('65')
+  await expect(dialog.getByLabel('BGM音量')).toHaveValue('35')
 })
 
-test('RESET PROGRESSはEconomy/RPG stateを初期化しSound設定は保持する', async ({ page }) => {
+test('進行リセットはEconomy/RPG stateを初期化しサウンド設定は保持する', async ({ page }) => {
   await prepareWorld(page)
 
   let dialog = await openPauseMenu(page)
-  await dialog.getByRole('button', { name: 'SYSTEM' }).click()
-  await dialog.getByLabel('Sound effect volume').fill('65')
-  await dialog.getByLabel('Background music volume').fill('35')
-  await dialog.getByRole('button', { name: 'SOUND ON' }).click()
+  await dialog.getByRole('button', { name: '設定' }).click()
+  await dialog.getByLabel('SE音量').fill('65')
+  await dialog.getByLabel('BGM音量').fill('35')
+  await dialog.getByRole('button', { name: 'サウンド ON' }).click()
   await page.keyboard.press('Escape')
 
   await page.evaluate(
@@ -110,9 +110,9 @@ test('RESET PROGRESSはEconomy/RPG stateを初期化しSound設定は保持す�
 
   dialog = await openPauseMenu(page)
   await expect(dialog.getByText('77 G', { exact: true })).toBeVisible()
-  await dialog.getByRole('button', { name: 'SYSTEM' }).click()
-  await dialog.getByRole('button', { name: 'RESET PROGRESS' }).click()
-  await dialog.getByRole('button', { name: 'CONFIRM RESET PROGRESS' }).click()
+  await dialog.getByRole('button', { name: '設定' }).click()
+  await dialog.getByRole('button', { name: '進行をリセット', exact: true }).click()
+  await dialog.getByRole('button', { name: '本当に進行をリセットする', exact: true }).click()
 
   await expect.poll(async () => readStoredProgress(page)).toMatchObject({
     version: 4,
@@ -145,13 +145,13 @@ test('RESET PROGRESSはEconomy/RPG stateを初期化しSound設定は保持す�
   })
 })
 
-test('Codexは独立buttonを持たずPause CODEXから参照できる', async ({ page }) => {
+test('Codexは独立buttonを持たずメニューのコード図鑑から参照できる', async ({ page }) => {
   await prepareWorld(page)
 
   await expect(page.locator('.codex-toggle')).toHaveCount(0)
 
   const dialog = await openPauseMenu(page)
-  await dialog.getByRole('button', { name: 'CODEX' }).click()
+  await dialog.getByRole('button', { name: 'コード図鑑' }).click()
   const codex = dialog.getByLabel('Code Codex')
 
   await expect(codex.getByRole('tab', { name: 'JAVASCRIPT' })).toHaveAttribute('aria-selected', 'true')
