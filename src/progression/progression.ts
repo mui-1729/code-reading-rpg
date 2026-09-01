@@ -120,6 +120,7 @@ export function applyBattleVictory(
 
   let unlockedStageId: number | undefined
   let unlockedSkillId: string | undefined
+  let unlockedSkillIds: string[] | undefined
   let clearedAreaId: string | undefined
 
   if (firstClear) {
@@ -145,7 +146,8 @@ export function applyBattleVictory(
   const beforeMasteredSkills = new Set(getMasteredSkillIds(progress.clearedStageIds))
   next.unlockedSkillIds = getMasteredSkillIds(next.clearedStageIds)
   if (firstClear) {
-    unlockedSkillId = next.unlockedSkillIds.find((skillId) => !beforeMasteredSkills.has(skillId))
+    unlockedSkillIds = next.unlockedSkillIds.filter((skillId) => !beforeMasteredSkills.has(skillId))
+    unlockedSkillId = unlockedSkillIds[0]
   }
 
   if (firstClear && input.clearAreaId && !next.clearedAreaIds.includes(input.clearAreaId)) {
@@ -162,6 +164,7 @@ export function applyBattleVictory(
       newLevel: getLevelForExp(next.exp),
       firstClear,
       unlockedStageId,
+      unlockedSkillIds,
       unlockedSkillId,
       clearedAreaId,
     },
