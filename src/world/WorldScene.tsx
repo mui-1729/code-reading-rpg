@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { characterVisuals } from '../rpg/visualAssets'
 import {
   getWorldFacing,
@@ -174,10 +174,10 @@ export function WorldObjectiveCard({ objective }: { objective: WorldObjective })
     <section
       className={`world-next-objective pixel-inner-window ${objective.clear ? 'is-clear' : ''}`}
       aria-label="Next objective"
+      title={objective.detail}
     >
       <span>{objective.label}</span>
       <strong>{objective.title}</strong>
-      <p>{objective.detail}</p>
     </section>
   )
 }
@@ -321,26 +321,65 @@ export function WorldControls(props: {
   move: (dx: number, dy: number) => void
   interact: () => void
   interactLabel?: string
+  interactDisabled?: boolean
 }) {
-  const { interact, interactLabel = 'INTERACT', move } = props
+  const { interact, interactLabel = 'INTERACT', interactDisabled = false, move } = props
+  const delayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const repeatRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pointerClickRef = useRef(false)
+
+  const stopHold = useCallback(() => {
+    if (delayRef.current !== null) clearTimeout(delayRef.current)
+    if (repeatRef.current !== null) clearInterval(repeatRef.current)
+    delayRef.current = null
+    repeatRef.current = null
+  }, [])
+
+  useEffect(() => stopHold, [stopHold])
+
+  const startHold = useCallback((dx: number, dy: number) => {
+    stopHold()
+    pointerClickRef.current = true
+    move(dx, dy)
+    delayRef.current = setTimeout(() => {
+      repeatRef.current = setInterval(() => move(dx, dy), 120)
+    }, 280)
+  }, [move, stopHold])
+
+  const directionButton = (label: string, glyph: string, dx: number, dy: number) => (
+    <button
+      type="button"
+      aria-label={label}
+      onPointerDown={() => startHold(dx, dy)}
+      onPointerUp={stopHold}
+      onPointerCancel={stopHold}
+      onPointerLeave={stopHold}
+      onClick={() => {
+        if (pointerClickRef.current) {
+          pointerClickRef.current = false
+          return
+        }
+        move(dx, dy)
+      }}
+    >
+      {glyph}
+    </button>
+  )
 
   return (
     <div className="world-controls" aria-label="World controls">
       <div className="world-dpad">
-        <button type="button" aria-label="Move up" onClick={() => move(0, -1)}>
-          ▲
-        </button>
-        <button type="button" aria-label="Move left" onClick={() => move(-1, 0)}>
-          ◀
-        </button>
-        <button type="button" aria-label="Move down" onClick={() => move(0, 1)}>
-          ▼
-        </button>
-        <button type="button" aria-label="Move right" onClick={() => move(1, 0)}>
-          ▶
-        </button>
+        {directionButton('Move up', '▲', 0, -1)}
+        {directionButton('Move left', '◀', -1, 0)}
+        {directionButton('Move down', '▼', 0, 1)}
+        {directionButton('Move right', '▶', 1, 0)}
       </div>
-      <button type="button" className="primary-button world-interact" onClick={interact}>
+      <button
+        type="button"
+        className="primary-button world-interact"
+        onClick={interact}
+        disabled={interactDisabled}
+      >
         {interactLabel}
       </button>
     </div>
