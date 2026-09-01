@@ -87,7 +87,7 @@ function WorldEntryTransition({ mapId }: { mapId: WorldMapId }) {
 
   if (!visible) return null
   return (
-    <div className="world-entry-transition" role="status" aria-live="polite">
+    <div className="world-entry-transition" aria-hidden="true">
       <span>AREA</span>
       <strong>{title}</strong>
     </div>
