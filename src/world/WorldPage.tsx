@@ -473,7 +473,7 @@ export function WorldPage() {
                       : result.terrain === 'village'
                         ? !progress.clearedStageIds.includes(1)
                           ? 'Villageへ行く前に、BYTEと草原の最初のtarget異常を実際に見よう。'
-                          : 'Villageへの道がまだ開いていない。'
+                          : 'Village入口だ。INTERACTで入る。'
                         : result.terrain === 'woods'
                           ? !progress.clearedStageIds.includes(1)
                             ? 'Forestへ進む前に、BYTEと草原で最初のtarget異常を実際に見よう。'
@@ -527,6 +527,19 @@ export function WorldPage() {
     if (shopOpen || innOpen || document.body.dataset.rpgPaused === 'true') return
 
     const intent = resolveWorldInteraction(rpgState, progress)
+
+    if (intent.kind === 'map-transition') {
+      if (byteJoined) {
+        setFollowerPosition({
+          x: intent.nextState.worldPosition.x,
+          y: intent.nextState.worldPosition.y + 1,
+        })
+      }
+      setRpgState(intent.nextState)
+      gameAudio.playSe('confirm')
+      setMessage(`${intent.label}へ入った。さっきのincidentで読めなかった部分だけMIOと確認しよう。`)
+      return
+    }
 
     if (intent.kind === 'training') {
       if (intent.battleId === null) {
@@ -673,6 +686,7 @@ export function WorldPage() {
             : '近くに調べられるものはない。',
     )
   }, [
+    byteJoined,
     enterBattle,
     innOpen,
     isDeepForest,

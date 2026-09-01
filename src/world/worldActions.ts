@@ -20,6 +20,7 @@ import {
   JS_FOREST_MAP_ID,
   JS_FOREST_MIDBOSS_POSITION,
   JS_VILLAGE_MAP_ID,
+  JS_VILLAGE_POSITION,
   JS_VILLAGE_TRAINING_POSITION,
   OVERWORLD_MAP_ID,
   RECOVERY_POSITION,
@@ -264,6 +265,12 @@ export function resolveWorldMove({
       return { kind: 'blocked', nextState: rpgState, terrain }
     }
 
+    // GREENFIELD VILLAGE is a deliberate RPG interaction: walking into the
+    // entrance stops at the threshold, then INTERACT performs the transition.
+    if (mapId === OVERWORLD_MAP_ID && portal.toMapId === JS_VILLAGE_MAP_ID) {
+      return { kind: 'blocked', nextState: rpgState, terrain }
+    }
+
     const region = getWorldRegion(portal.targetPosition.x, portal.toMapId)
     return {
       kind: 'transition',
@@ -421,6 +428,12 @@ export type WorldInteractionIntent =
       seed: string
     }
   | {
+      kind: 'map-transition'
+      nextState: RpgState
+      toMapId: WorldMapId
+      label: string
+    }
+  | {
       kind: 'none'
     }
 
@@ -486,6 +499,27 @@ export function resolveWorldInteraction(
   }
 
   if (rpgState.worldMapId !== OVERWORLD_MAP_ID) return { kind: 'none' }
+
+  if (isAdjacent(position, JS_VILLAGE_POSITION)) {
+    const portal = getWorldPortalAtPosition(OVERWORLD_MAP_ID, JS_VILLAGE_POSITION)
+    if (
+      portal &&
+      portal.toMapId === JS_VILLAGE_MAP_ID &&
+      isWorldPortalRequirementSatisfied(portal.requiredClearedStageId, progress.clearedStageIds)
+    ) {
+      return {
+        kind: 'map-transition',
+        toMapId: portal.toMapId,
+        label: portal.label,
+        nextState: {
+          ...rpgState,
+          worldMapId: portal.toMapId,
+          worldPosition: { ...portal.targetPosition },
+          stepsSinceEncounter: rpgState.stepsSinceEncounter + 1,
+        },
+      }
+    }
+  }
 
   if (isAdjacent(position, BYTE_POSITION)) {
     return {
