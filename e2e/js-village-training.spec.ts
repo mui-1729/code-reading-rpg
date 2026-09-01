@@ -138,7 +138,7 @@ test('first incident後にVillageで必要な読み方をBattle 7→8→9で確�
   await finishBattle(page, ['PULSE', 'TRACE', 'NOVA', 'TRACE'])
   await expect(objective).toContainText('TRACE READY')
   await expect(objective).toContainText('最初のincidentの続きをForestへ追う')
-  await expect(objective).toContainText('同じBattleをやり直すのではなく')
+  await expect(objective).toHaveAttribute('title', /同じBattleをやり直すのではなく/)
 
   const progress = await storedProgress(page)
   expect(progress.progress.clearedStageIds).toEqual([1, 7, 8, 9])
