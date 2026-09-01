@@ -5,7 +5,7 @@ const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
-const initialSkills = ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label']
+const initialSkills = ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label', 'ts-narrow']
 
 const rpg = {
   version: 3,
@@ -86,9 +86,7 @@ test.describe('Boss GUARD', () => {
 
     const boss = page.locator('.enemy-card.is-boss-enemy')
     await expect(page.getByLabel('Boss Guard ACTIVE')).toBeVisible()
-    await expect(page.getByLabel('Boss Guard ACTIVE')).toContainText(
-      'enemies.some(e => e.role !== "boss" && e.hp > 0)',
-    )
+    await expect(page.getByLabel('Boss Guard ACTIVE')).toContainText('JS GUARD // minion alive')
 
     const guardedHpBefore = await enemyHp(boss)
     await executeSkill(page, 'ALERT')
@@ -111,7 +109,7 @@ test.describe('Boss GUARD', () => {
     await expect.poll(() => enemyHp(boss)).toBeLessThan(hpBeforeOpenHit - 1)
   })
 
-  test('TS BossでもGUARDがBossだけを1 damageへ抑える', async ({ page }) => {
+  test('TS Bossは通常selectorをSealし、NARROW JUDGEでContractをpierceする', async ({ page }) => {
     await seedStorage(page, [...TS_BOSS_PREREQS])
     await page.goto('/typescript/battle/6?seed=boss-guard-ts-e2e&returnTo=%2Fworld')
 
@@ -122,11 +120,19 @@ test.describe('Boss GUARD', () => {
     const boss = page.locator('.enemy-card.is-boss-enemy')
     const goblin = page.locator('.enemy-card').filter({ hasText: 'Goblin' })
     await expect(page.getByLabel('Boss Guard ACTIVE')).toBeVisible()
+    await expect(page.getByLabel('Boss Guard ACTIVE')).toContainText(
+      'TS CONTRACT // NARROW JUDGE / KEY INDEX pierces',
+    )
 
-    const bossHpBefore = await enemyHp(boss)
+    const sealedBossHp = await enemyHp(boss)
     const goblinHpBefore = await enemyHp(goblin)
     await executeSkill(page, 'TYPE GUARD')
-    await expect.poll(() => enemyHp(boss)).toBe(bossHpBefore - 1)
+    await expect.poll(() => enemyHp(boss)).toBe(sealedBossHp - 1)
     await expect.poll(() => enemyHp(goblin)).toBeLessThan(goblinHpBefore - 1)
+    await expect(page.getByText('TURN 02')).toBeVisible()
+
+    const bossHpBeforePierce = await enemyHp(boss)
+    await executeSkill(page, 'NARROW JUDGE')
+    await expect.poll(() => enemyHp(boss)).toBeLessThan(bossHpBeforePierce - 1)
   })
 })
