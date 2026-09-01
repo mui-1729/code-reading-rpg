@@ -49,12 +49,12 @@ test('mobile TutorialでBYTEを実際に加入させ、追従と役割を確認�
   await expect.poll(async () => (await storedRpg(page))?.state?.partyMemberIds).toContain('byte')
 
   const prompt = page.locator('.tutorial-prompt-field')
-  await expect(prompt).toContainText('PARTY')
+  await expect(prompt).toContainText('仲間')
   await expect(prompt).toContainText('Worldでは後ろから追従する')
-  await expect(prompt).toContainText('同じtargetへ追撃する')
+  await expect(prompt).toContainText('同じ対象へ追撃する')
   await expect(page.locator('.world-follower-sprite')).toBeVisible()
 
-  await prompt.getByRole('button', { name: 'NEXT · BATTLE' }).click()
+  await prompt.getByRole('button', { name: '次へ · 戦闘' }).click()
   await expect.poll(async () => (await storedTutorial(page))?.phase).toBe('battle')
   expect((await storedTutorial(page))?.status).toBe('active')
 })
@@ -79,11 +79,11 @@ test('party-joinはreload後もBYTE加入状態を保ち重複加入しない', 
   await expect.poll(async () => (await storedTutorial(page))?.phase).toBe('party-join')
 
   await page.reload()
-  await expect(page.locator('.tutorial-prompt-field')).toContainText('BYTE joined!')
+  await expect(page.locator('.tutorial-prompt-field')).toContainText('BYTEが仲間になった！')
   expect((await storedRpg(page))?.state?.partyMemberIds).toEqual(['byte'])
 })
 
-test('SYSTEMからTutorialを最初からやり直しても加入済みBYTEを壊さずINTERACTを再体験する', async ({ page }) => {
+test('設定からTutorialを最初からやり直しても加入済みBYTEを壊さずINTERACTを再体験する', async ({ page }) => {
   await page.goto('/')
   await page.evaluate(({ tutorialKey, rpgKey }) => {
     localStorage.clear()
@@ -107,10 +107,10 @@ test('SYSTEMからTutorialを最初からやり直しても加入済みBYTEを�
   await page.goto('/world')
 
   await expect(page.locator('.tutorial-prompt')).toHaveCount(0)
-  await page.getByRole('button', { name: 'Pause menuを開く' }).click()
-  const menu = page.getByRole('dialog', { name: 'Pause menu' })
-  await menu.getByRole('button', { name: 'SYSTEM' }).click()
-  await menu.getByRole('button', { name: 'REPLAY TUTORIAL' }).click()
+  await page.getByRole('button', { name: 'メニューを開く' }).click()
+  const menu = page.getByRole('dialog', { name: 'メニュー' })
+  await menu.getByRole('button', { name: '設定' }).click()
+  await menu.getByRole('button', { name: 'チュートリアルをやり直す' }).click()
 
   await expect(page.locator('.tutorial-prompt-field')).toContainText('MOVE')
   await page.getByRole('button', { name: 'Move left' }).click()
