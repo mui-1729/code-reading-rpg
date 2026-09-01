@@ -202,6 +202,8 @@ function getInteractionPresentation(intent: WorldInteractionIntent): { label: st
         }
       }
       return { label: intent.unlocked ? 'CHALLENGE BOSS' : 'CHECK BOSS', disabled: false }
+    case 'map-transition':
+      return { label: `ENTER ${intent.label}`, disabled: false }
     case 'none':
       return { label: 'INTERACT', disabled: true }
   }
