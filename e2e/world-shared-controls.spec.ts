@@ -74,9 +74,9 @@ for (const region of [
     await expect(player).toHaveAttribute('data-world-x', String(region.position.x + 2))
     await expect(follower).toHaveAttribute('data-world-x', String(region.position.x + 1))
 
-    await page.getByRole('button', { name: 'Pause menuを開く', exact: true }).focus()
+    await page.getByRole('button', { name: 'メニューを開く', exact: true }).focus()
     await page.keyboard.press('Enter')
-    await expect(page.getByRole('dialog', { name: 'Pause menu' })).toBeVisible()
+    await expect(page.getByRole('dialog', { name: 'メニュー' })).toBeVisible()
     await page.keyboard.press('ArrowLeft')
     await expect(player).toHaveAttribute('data-world-x', String(region.position.x + 2))
   })
