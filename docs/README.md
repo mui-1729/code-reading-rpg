@@ -9,6 +9,7 @@
 | [`PROJECT_STATUS.md`](./PROJECT_STATUS.md) | 目的、現状実装、残っている負債、次に実装する候補 |
 | [`GAME_DESIGN.md`](./GAME_DESIGN.md) | ゲームとして守るコア原則 |
 | [`WORLD_DIRECTION.md`](./WORLD_DIRECTION.md) | REAL WORLDの新人エンジニアとfantasyなCODE WORLDをつなぐ世界観・テーマ・今後の機能方針 |
+| [`CHARACTERS.md`](./CHARACTERS.md) | PLAYER / BYTE / MIO / ADA / TYPE WARDENの声・弱さ・関係性・Neverルール |
 | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | 現行コードの責務境界とstate ownership |
 | [`ROADMAP.md`](./ROADMAP.md) | 次に何を作るか。実装済み項目はfutureへ残さない |
 | [`ENGINEER_STORY_ROADMAP.md`](./ENGINEER_STORY_ROADMAP.md) | 各技術編を「エンジニアの仕事」としてつなぐ長期コンテンツ方針 |
@@ -18,6 +19,7 @@
 ### World / RPG
 
 - [`WORLD_DIRECTION.md`](./WORLD_DIRECTION.md) — 二層世界、Region表現、Battle / Boss / NPC / RPG systemの世界観上の位置づけ
+- [`CHARACTERS.md`](./CHARACTERS.md) — 主要キャラクターのCharacter Bible、関係性arc、ordinary resident / optional thread方針
 - [`OPEN_WORLD_DESIGN.md`](./OPEN_WORLD_DESIGN.md) — World、Encounter、HP持続、Treasure、Objective
 - [`RPG_PROGRESSION.md`](./RPG_PROGRESSION.md) — EXP / Level / unlock / save progression
 - [`ECONOMY.md`](./ECONOMY.md) — 現在のGold / PATCH KIT / Shop仕様
@@ -59,7 +61,7 @@
 
 1. current code + tests
 2. `PROJECT_STATUS.md` / `ARCHITECTURE.md`
-3. `GAME_DESIGN.md` / `WORLD_DIRECTION.md` / 対象systemのcurrent design doc
+3. `GAME_DESIGN.md` / `WORLD_DIRECTION.md` / `CHARACTERS.md` / 対象systemのcurrent design doc
 4. `ROADMAP.md` / `ENGINEER_STORY_ROADMAP.md`
 5. historical / one-off implementation notes
 

@@ -12,7 +12,7 @@ describe('battle story event resolver', () => {
     expect(getBattleStoryEvent('/javascript/battle/7', 'pre')?.title).toBe('まず、ログの数字を一つ読む')
     expect(getBattleStoryEvent('/javascript/battle/8', 'pre')?.title).toBe('ログにある名前の条件も読む')
     expect(getBattleStoryEvent('/javascript/battle/9', 'pre')?.title).toBe('実際のselectorがどこで止まるか追う')
-    expect(getBattleStoryEvent('/javascript/battle/9', 'post')?.title).toBe('さっき見た異常を、今度は読んで追える')
+    expect(getBattleStoryEvent('/javascript/battle/9', 'post')?.title).toBe('MIOから森へ送り出される')
   })
 
   it('does not replay a pre-story after that Battle is cleared', () => {
@@ -23,9 +23,9 @@ describe('battle story event resolver', () => {
   })
 
   it('resolves JavaScript Forest story events', () => {
-    expect(getBattleStoryEvent('/javascript/battle/10', 'pre')?.title).toBe('二つの条件を通る経路を追う')
+    expect(getBattleStoryEvent('/javascript/battle/10', 'pre')?.title).toBe('Forestで自分の読み順を決める')
     expect(getBattleStoryEvent('/javascript/battle/11', 'pre')?.title).toBe('別の入口からも同じ異常へ入る')
-    expect(getBattleStoryEvent('/javascript/battle/12', 'post')?.title).toBe('複数の条件が一つの経路へ集まった')
+    expect(getBattleStoryEvent('/javascript/battle/12', 'post')?.title).toBe('BYTEが一歩後ろへ下がる')
   })
 
   it('resolves TypeScript story events', () => {

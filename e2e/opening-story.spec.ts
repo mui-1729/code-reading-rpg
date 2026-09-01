@@ -8,7 +8,7 @@ const resetOpening = async (page: import('@playwright/test').Page) => {
   await page.reload()
 }
 
-test('first START briefs a real world incident then CONNECTs into incident-driven CODE WORLD investigation', async ({ page }) => {
+test('first START introduces the team then CONNECTs into the incident-driven CODE WORLD investigation', async ({ page }) => {
   await resetOpening(page)
 
   await expect(page.getByRole('button', { name: 'START' })).toBeVisible()
@@ -23,7 +23,9 @@ test('first START briefs a real world incident then CONNECTs into incident-drive
   await page.getByRole('button', { name: 'NEXT ▶' }).click()
   await expect(page.locator('.opening-layer-badge')).toHaveText('REAL WORLD')
   await expect(page.locator('.opening-kicker')).toHaveText('INCIDENT MONITOR')
-  await expect(page.locator('.opening-copy')).toContainText('CODE WORLDへCONNECT')
+  await expect(page.locator('.opening-speaker')).toHaveText('BYTE')
+  await expect(page.locator('.opening-copy')).toContainText('僕はBYTE')
+  await expect(page.locator('.opening-copy')).toContainText('先に答えを決めたくなる')
 
   await page.getByRole('button', { name: 'NEXT ▶' }).click()
   await expect(page.locator('.opening-layer-badge')).toHaveText('CONNECT')
@@ -34,14 +36,14 @@ test('first START briefs a real world incident then CONNECTs into incident-drive
   await expect(page.locator('.opening-layer-badge')).toHaveText('CODE WORLD')
   await expect(page.locator('.opening-kicker')).toHaveText('JAVASCRIPT GRASSLAND')
   await expect(page.locator('.opening-copy')).toContainText('現実側のtarget bug')
-  await expect(page.locator('.opening-copy')).toContainText('実際の症状をその場で再現')
+  await expect(page.locator('.opening-copy')).toContainText('実際の症状')
 
   await page.getByRole('button', { name: 'NEXT ▶' }).click()
   await expect(page.locator('.opening-layer-badge')).toHaveText('CODE WORLD')
   await expect(page.locator('.opening-kicker')).toHaveText('MISSION START')
   await expect(page.locator('.opening-copy')).toContainText('最初にやるのは研修じゃない')
   await expect(page.locator('.opening-copy')).toContainText('現場でtarget異常')
-  await expect(page.locator('.opening-copy')).toContainText('traceをroot causeまで追う')
+  await expect(page.locator('.opening-copy')).toContainText('VillageのMIO')
 
   await page.getByRole('button', { name: '▶ EXPLORE CODE WORLD' }).click()
   await expect(page).toHaveURL(/\/world$/)

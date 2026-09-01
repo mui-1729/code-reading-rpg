@@ -69,6 +69,7 @@ describe('JavaScript story progression', () => {
     expect(npcById.archivist).toMatchObject({ name: 'LEAD ADA', role: 'mentor', roleLabel: 'SENIOR ENGINEER', visualId: 'lead-ada' })
     expect(npcById['lambda-sage']).toMatchObject({ name: 'LAMBDA', role: 'mentor', roleLabel: 'CODE MENTOR' })
     expect(npcById['byte-scout']).toMatchObject({ name: 'BYTE', role: 'scout', roleLabel: 'DEBUGGER', visualId: 'byte' })
+    expect(npcById['trainer-mio']).toMatchObject({ name: 'TRAINER MIO', role: 'mentor', visualId: 'trainer-mio' })
 
     expect(javascriptQuest?.title).toBe('JavaScript王国のバグを追え')
     expect(javascriptQuest?.steps.map((step) => step.label)).toEqual([
@@ -78,7 +79,7 @@ describe('JavaScript story progression', () => {
     ])
   })
 
-  it('ends with the shared Code Core fixed and the system restored', () => {
+  it('ends with the Code Core fixed and shows ADA/BYTE relationship change rather than status-only dialogue', () => {
     const adaEnding = npcById.archivist?.dialogues.find(
       (dialogue) => dialogue.id === 'archivist-area-clear',
     )
@@ -87,8 +88,9 @@ describe('JavaScript story progression', () => {
     )
 
     expect(adaEnding?.lines.join(' ')).toContain('Code Coreは安定した')
-    expect(adaEnding?.lines.join(' ')).toContain('共通コード')
-    expect(byteEnding?.lines.join(' ')).toContain('全部green')
+    expect(adaEnding?.lines.join(' ')).toContain('立ち止まれる君')
+    expect(byteEnding?.lines.join(' ')).toContain('最初は僕が全部説明しないと')
+    expect(byteEnding?.lines.join(' ')).toContain('君が止まった場所')
   })
 
   it('incident系Skillは後半の実incident / Finalでも既習syntaxを捨てずに積み上げる', () => {

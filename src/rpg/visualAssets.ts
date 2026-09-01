@@ -6,7 +6,7 @@ export const characterVisuals = {
   byte: {
     field: '/pixel-art/characters/byte-field.svg',
     battle: '/pixel-art/characters/byte-battle.svg',
-    portrait: '/pixel-art/characters/byte-field.svg',
+    portrait: '/pixel-art/characters/byte-portrait.svg',
   },
   leadAda: {
     portrait: '/pixel-art/characters/lead-ada-portrait.svg',
@@ -17,6 +17,29 @@ export const characterVisuals = {
   },
   typeWarden: {
     portrait: '/pixel-art/characters/type-warden-portrait.svg',
+  },
+} as const
+
+export const characterVisualIdentity = {
+  player: {
+    silhouette: 'helmeted-armed-knight',
+    cues: ['helmet', 'weapon'],
+  },
+  byte: {
+    silhouette: 'small-antenna-debugger',
+    cues: ['antenna', 'asymmetric-debug-lens'],
+  },
+  trainerMio: {
+    silhouette: 'high-bun-village-guide',
+    cues: ['high-bun', 'scarf'],
+  },
+  leadAda: {
+    silhouette: 'asymmetric-headset-lead',
+    cues: ['swept-hair', 'headset-mic', 'square-shoulders'],
+  },
+  typeWarden: {
+    silhouette: 'hooded-wide-pauldron-warden',
+    cues: ['pointed-hood', 'oversized-pauldrons', 'cloak'],
   },
 } as const
 

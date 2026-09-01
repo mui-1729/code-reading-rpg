@@ -123,20 +123,21 @@ test('Forest最初のWoodsはRandom抽選ではなくBattle 10の固定traceに�
   await page.getByRole('button', { name: 'Move up' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/10\?/)
-  await expect(page.getByRole('dialog', { name: '二つの条件を通る経路を追う' })).toBeVisible()
+  await expect(page.getByRole('dialog', { name: 'Forestで自分の読み順を決める' })).toBeVisible()
 })
 
-test('Forest Battle 10 / 11はincident traceとして&& / ||を順に説明しfilterを先取りしない', async ({ page }) => {
+test('Forest Battle 10はBYTEが読む順を委ね、Battle 11は次のtraceだけを説明する', async ({ page }) => {
   await seedForestGate(page, 'training-complete')
 
   await page.goto('/javascript/battle/10?seed=forest-e2e-and&returnTo=%2Fworld')
-  const andStory = page.getByRole('dialog', { name: '二つの条件を通る経路を追う' })
+  const andStory = page.getByRole('dialog', { name: 'Forestで自分の読み順を決める' })
   await expect(andStory).toBeVisible()
-  await expect(andStory).toContainText('&&')
   await expect(andStory).toContainText('trace')
+  await expect(andStory).toContainText('二つの条件')
   await expect(andStory).not.toContainText('filter()')
   await andStory.getByRole('button', { name: /NEXT/ }).click()
-  await expect(andStory).toContainText('左もtrue、右もtrue')
+  await expect(andStory).toContainText('先に言わない')
+  await expect(andStory).toContainText('君が決めた順')
   await expect(andStory).not.toContainText('filter()')
 
   // End the unfinished attempt before installing the next Story's clear fixture.

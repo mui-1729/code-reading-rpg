@@ -113,8 +113,9 @@ test.describe('Boss GUARD', () => {
     await seedStorage(page, [...TS_BOSS_PREREQS])
     await page.goto('/typescript/battle/6?seed=boss-guard-ts-e2e&returnTo=%2Fworld')
 
-    const briefing = page.getByRole('dialog', { name: 'Frontier Compilerへ' })
+    const briefing = page.getByRole('dialog', { name: 'WARDENではなく、古い機構を止める' })
     await expect(briefing).toBeVisible()
+    await expect(briefing).toContainText('Frontier Compilerは私ではない')
     await briefing.getByRole('button', { name: 'SKIP' }).click()
 
     const boss = page.locator('.enemy-card.is-boss-enemy')

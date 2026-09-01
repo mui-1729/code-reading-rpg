@@ -17,7 +17,7 @@ describe('pixel visual assets', () => {
   })
 
   it('maps story speakers to intended character portraits', () => {
-    expect(getStorySpeakerVisual('byte')).toContain('byte-field')
+    expect(getStorySpeakerVisual('byte')).toContain('byte-portrait')
     expect(getStorySpeakerVisual('lead-ada')).toContain('lead-ada-portrait')
     expect(getStorySpeakerVisual('trainer-mio')).toContain('trainer-mio-portrait')
     expect(getStorySpeakerVisual('type-warden')).toContain('type-warden-portrait')
