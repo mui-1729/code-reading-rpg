@@ -46,9 +46,10 @@ test('first START briefs a real world incident then CONNECTs into incident-drive
   await page.getByRole('button', { name: '▶ EXPLORE CODE WORLD' }).click()
   await expect(page).toHaveURL(/\/world$/)
   await expect(page.getByLabel('Open world map')).toBeVisible()
-  await expect(page.getByLabel('Next objective')).toContainText('BYTEと合流する')
-  await expect(page.getByLabel('Next objective')).toContainText('Openingで見たtarget異常')
-  await expect(page.getByLabel('Next objective')).toContainText('まず再現する')
+  const objective = page.getByLabel('Next objective')
+  await expect(objective).toContainText('BYTEと合流する')
+  await expect(objective).toHaveAttribute('title', /Openingで見たtarget異常/)
+  await expect(objective).toHaveAttribute('title', /まず再現する/)
 })
 
 test('after the opening is seen, CONTINUE enters the world and opening can be replayed', async ({ page }) => {
