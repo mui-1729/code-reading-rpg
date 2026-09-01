@@ -1,3 +1,4 @@
+import type { BgmTrack } from '../audio/gameAudio'
 import {
   JS_DEEP_FOREST_MAP_ID,
   JS_FOREST_MAP_ID,
@@ -8,13 +9,18 @@ import {
 } from './worldMap'
 
 export type WorldFacing = 'up' | 'down' | 'left' | 'right'
-export type WorldFieldTrack =
-  | 'field'
-  | 'fieldVillage'
-  | 'fieldForest'
-  | 'fieldDeepForest'
-  | 'fieldTypeScript'
+export type WorldFieldTrack = Extract<
+  BgmTrack,
+  'field' | 'fieldVillage' | 'fieldForest' | 'fieldDeepForest' | 'fieldTypeScript'
+>
 
+export type WorldSceneEventDetail = {
+  mapId: WorldMapId
+  sceneId: string
+  bgmTrack: WorldFieldTrack
+}
+
+export const WORLD_SCENE_EVENT = 'code-reading-rpg:world-scene'
 export const WORLD_STEP_MS = 150
 export const WORLD_ENTRY_TITLE_MS = 720
 
