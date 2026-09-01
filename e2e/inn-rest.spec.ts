@@ -67,33 +67,33 @@ async function storedInnState(page: Page) {
   return readStoredGameState(page)
 }
 
-test.describe('Inn / Rest', () => {
-  test('HP fullでは20GをchargeせずREST不可を明示する', async ({ page }) => {
+test.describe('宿', () => {
+  test('HP満タンでは20Gを消費せず休めないことを明示する', async ({ page }) => {
     await seedInnState(page, { gold: 50, currentHp: 108 })
 
     await page.getByRole('button', { name: 'INTERACT' }).click()
-    const inn = page.getByRole('dialog', { name: 'Inn / Rest' })
+    const inn = page.getByRole('dialog', { name: '宿' })
     await expect(inn.getByText('108 / 108', { exact: true })).toBeVisible()
-    await expect(inn.getByText('FULL', { exact: true })).toBeVisible()
+    await expect(inn.getByText('満タン', { exact: true })).toBeVisible()
     await expect(inn.getByText('50 G → 50 G', { exact: true })).toBeVisible()
-    await expect(inn.getByText('NO CHARGE · HP FULL', { exact: true })).toBeVisible()
-    await expect(inn.getByRole('button', { name: 'HP FULL' })).toBeDisabled()
+    await expect(inn.getByText('料金不要 · HP満タン', { exact: true })).toBeVisible()
+    await expect(inn.getByRole('button', { name: 'HP満タン' })).toBeDisabled()
 
     const stored = await storedInnState(page)
     expect(stored.progress.progress.gold).toBe(50)
     expect(stored.rpg.state.currentHp).toBe(108)
   })
 
-  test('Gold不足ではSHORT不足額を表示しHP / Goldを変更しない', async ({ page }) => {
+  test('ゴールド不足では不足額を表示しHP / Goldを変更しない', async ({ page }) => {
     await seedInnState(page, { gold: 7, currentHp: 40 })
 
     await page.getByRole('button', { name: 'INTERACT' }).click()
-    const inn = page.getByRole('dialog', { name: 'Inn / Rest' })
+    const inn = page.getByRole('dialog', { name: '宿' })
     await expect(inn.getByText('40 / 108', { exact: true })).toBeVisible()
     await expect(inn.getByText('+68 HP', { exact: true })).toBeVisible()
     await expect(inn.getByText('7 G → —', { exact: true })).toBeVisible()
-    await expect(inn.locator('.inn-cost-card em')).toHaveText('SHORT 13 G')
-    await expect(inn.getByRole('button', { name: 'SHORT 13 G' })).toBeDisabled()
+    await expect(inn.locator('.inn-cost-card em')).toHaveText('あと 13 G必要')
+    await expect(inn.getByRole('button', { name: 'あと 13 G必要' })).toBeDisabled()
 
     const stored = await storedInnState(page)
     expect(stored.progress.progress.gold).toBe(7)
