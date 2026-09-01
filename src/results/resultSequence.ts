@@ -43,11 +43,11 @@ export function createVictoryResultSequence(
   presentation: VictoryPresentation = {},
 ): ResultSequenceItem[] {
   const items: ResultSequenceItem[] = [
-    { id: 'exp', title: 'EXP GAINED', detail: `+${reward.expGained}`, tone: 'reward' },
-    { id: 'gold', title: 'GOLD GAINED', detail: `+${reward.goldGained} G`, tone: 'reward' },
+    { id: 'exp', title: '獲得EXP', detail: `+${reward.expGained}`, tone: 'reward' },
+    { id: 'gold', title: '獲得ゴールド', detail: `+${reward.goldGained} G`, tone: 'reward' },
   ]
   if (!reward.firstClear) {
-    items.push({ id: 'replay', title: 'REPLAY CLEAR · EXP 100% / GOLD 50%', tone: 'clear' })
+    items.push({ id: 'replay', title: '再クリア · EXP 100% / GOLD 50%', tone: 'clear' })
   }
   if (reward.newLevel > reward.previousLevel) {
     const maxHpDelta = getMaxHpForLevel(reward.newLevel) - getMaxHpForLevel(reward.previousLevel)
@@ -56,7 +56,7 @@ export function createVictoryResultSequence(
     )
     items.push({
       id: 'level',
-      title: `LEVEL UP! · MAX HP +${maxHpDelta} · POWER +${powerDelta}%`,
+      title: `レベルアップ！ · 最大HP +${maxHpDelta} · 威力 +${powerDelta}%`,
       detail: `${reward.previousLevel} → ${reward.newLevel}`,
       tone: 'level',
     })
@@ -64,8 +64,10 @@ export function createVictoryResultSequence(
   if (reward.firstClear && !presentation.worldFeedback) {
     items.push({
       id: 'stage',
-      title: 'STAGE CLEAR',
-      detail: reward.unlockedStageId ? `STAGE ${getBattleDisplayCode(reward.unlockedStageId)} UNLOCKED` : undefined,
+      title: 'ステージクリア',
+      detail: reward.unlockedStageId
+        ? `STAGE ${getBattleDisplayCode(reward.unlockedStageId)} 解放`
+        : undefined,
       tone: 'clear',
     })
   }
@@ -73,28 +75,52 @@ export function createVictoryResultSequence(
   if (unlockedSkillNames.length > 0) {
     items.push({
       id: 'skill',
-      title: unlockedSkillNames.length > 1 ? 'SKILLS UNLOCKED' : 'SKILL UNLOCKED',
+      title: 'スキル解放',
       detail: unlockedSkillNames.join(' / '),
       tone: 'unlock',
     })
   }
   if (reward.clearedAreaId) {
     const completion = presentation.worldFeedback?.kind === 'complete'
-      ? [presentation.worldFeedback.label, presentation.worldFeedback.progressLabel, presentation.worldFeedback.next].filter(Boolean).join(' · ')
+      ? [
+          presentation.worldFeedback.label,
+          presentation.worldFeedback.progressLabel,
+          presentation.worldFeedback.next,
+        ]
+          .filter(Boolean)
+          .join(' · ')
       : null
-    items.push({ id: 'area', title: 'AREA CLEAR', detail: [presentation.clearedAreaTitle ?? reward.clearedAreaId, completion].filter(Boolean).join(' · '), tone: 'clear' })
+    items.push({
+      id: 'area',
+      title: 'エリアクリア',
+      detail: [presentation.clearedAreaTitle ?? reward.clearedAreaId, completion]
+        .filter(Boolean)
+        .join(' · '),
+      tone: 'clear',
+    })
   }
-  if (presentation.worldFeedback && !(reward.clearedAreaId && presentation.worldFeedback.kind === 'complete')) {
+  if (
+    presentation.worldFeedback &&
+    !(reward.clearedAreaId && presentation.worldFeedback.kind === 'complete')
+  ) {
     const feedback = presentation.worldFeedback
     items.push({
       id: 'world-progress',
       title: feedback.heading,
-      detail: [feedback.label, feedback.progressLabel, feedback.next && `NEXT → ${feedback.next}`].filter(Boolean).join(' · '),
+      detail: [feedback.label, feedback.progressLabel, feedback.next && `次 → ${feedback.next}`]
+        .filter(Boolean)
+        .join(' · '),
       tone: feedback.kind === 'complete' ? 'clear' : 'progress',
     })
   }
   if (presentation.equipment) {
-    items.push({ id: 'equipment', title: 'EQUIPMENT ACQUIRED', detail: presentation.equipment.name, tone: 'unlock', equipmentId: presentation.equipment.id })
+    items.push({
+      id: 'equipment',
+      title: '装備獲得',
+      detail: presentation.equipment.name,
+      tone: 'unlock',
+      equipmentId: presentation.equipment.id,
+    })
   }
   return items
 }
