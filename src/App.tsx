@@ -10,6 +10,7 @@ import { BattleItemPanel } from './economy/BattleItemPanel'
 import { BattleEscapePanel } from './game/BattleEscapePanel'
 import {
   areaById,
+  getBattlePresentation,
   getEnemyVisualId,
   getSkillCardsForBattle,
   resolveEnemyAttack,
@@ -83,6 +84,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
   )
   const { battle, nextBattle } = session
   const battleArea = areaById[battle.areaId]
+  const battlePresentation = getBattlePresentation(battle)
   const { schedule, updateState, finish, rollback } = useBattleSession({
     areaId: battle.areaId, battleId, seed: String(seed), returnTo,
   })
@@ -158,18 +160,23 @@ function App({ battleId, seed, returnTo }: AppProps) {
   }, [battle.areaId, battle.id, battleArea.capabilities, codeDataOpen, enemies, explainedSkill, isResolving, phase, playerHp, playerStats.maxHp, selectedSkillId, setSnapshot, storyEvent, turn, victoryReward])
 
   useEffect(() => {
-    gameAudio.requestBgm('battle')
-    return () => gameAudio.stopBgm()
-  }, [battleId])
+    const track = battlePresentation.bgmTrack
+    gameAudio.requestBgm(track)
+    return () => gameAudio.releaseBgm(track)
+  }, [battlePresentation.bgmTrack])
 
   useLayoutEffect(() => {
     document.body.dataset.battlePhase = phase
     document.body.dataset.battleResolving = isResolving ? 'true' : 'false'
+    document.body.dataset.battleScene = battlePresentation.sceneId
+    document.body.dataset.battleArena = battlePresentation.arenaKind
     return () => {
       delete document.body.dataset.battlePhase
       delete document.body.dataset.battleResolving
+      delete document.body.dataset.battleScene
+      delete document.body.dataset.battleArena
     }
-  }, [isResolving, phase])
+  }, [battlePresentation.arenaKind, battlePresentation.sceneId, isResolving, phase])
 
   const addLog = (tone: LogEntry['tone'], text: string) => {
     setLogs((current) => [...current.slice(-4), { id: Date.now() + Math.random(), tone, text }])
@@ -426,12 +433,19 @@ function App({ battleId, seed, returnTo }: AppProps) {
           <h1>CODE//READ RPG</h1>
           <p>{battle.title} — {battle.subtitle}</p>
         </div>
-        <div className={`turn-pill ${enemyTurnActive ? 'enemy-turn-active' : ''}`}>
-          {enemyTurnActive ? 'ENEMY TURN' : `TURN ${String(turn).padStart(2, '0')}`}
+        <div className="battle-location-stack">
+          <span className="battle-location-chip">{battlePresentation.locationLabel}</span>
+          <div className={`turn-pill ${enemyTurnActive ? 'enemy-turn-active' : ''}`}>
+            {enemyTurnActive ? 'ENEMY TURN' : `TURN ${String(turn).padStart(2, '0')}`}
+          </div>
         </div>
       </header>
 
-      <section className={`battle-stage pixel-window ${skillWindup ? 'skill-windup' : ''}`}>
+      <section
+        className={`battle-stage pixel-window battle-scene-${battlePresentation.sceneId} battle-arena-${battlePresentation.arenaKind} ${skillWindup ? 'skill-windup' : ''}`}
+        data-battle-scene={battlePresentation.sceneId}
+        data-battle-arena={battlePresentation.arenaKind}
+      >
         <div className="stage-sky" aria-hidden="true">
           <span className="stage-moon" />
           <span className="stage-star star-a">✦</span>
@@ -439,6 +453,9 @@ function App({ battleId, seed, returnTo }: AppProps) {
           <span className="stage-star star-c">✧</span>
           <span className="stage-mountain mountain-a" />
           <span className="stage-mountain mountain-b" />
+          <span className="stage-landmark landmark-a" />
+          <span className="stage-landmark landmark-b" />
+          <span className="stage-atmosphere" />
         </div>
 
         <aside className={`status-strip player-panel ${playerHit ? 'player-hit' : ''}`}>
@@ -493,15 +510,24 @@ function App({ battleId, seed, returnTo }: AppProps) {
           {enemies.map((enemy) => {
             const hpPercent = (enemy.hp / enemy.maxHp) * 100
             const defeated = enemy.hp <= 0
-            const visualId = getEnemyVisualId(enemy)
             const isBossEnemy = enemy.role === 'boss'
+            const displayName = isBossEnemy && battlePresentation.bossDisplayName
+              ? battlePresentation.bossDisplayName
+              : enemy.name
+            const visualId = getEnemyVisualId({
+              visualId: isBossEnemy && battlePresentation.bossVisualId
+                ? battlePresentation.bossVisualId
+                : enemy.visualId,
+            })
             return (
               <article
                 className={`enemy-card ${battleArea.capabilities.codeData ? 'code-data-clickable' : ''} ${inspectedEnemyKey === enemy.id ? 'code-data-inspected' : ''} ${defeated ? 'defeated' : ''} ${animatingIds.includes(enemy.id) ? 'hit' : ''} ${defeatingIds.includes(enemy.id) ? 'defeating' : ''} ${isBossEnemy ? 'is-boss-enemy' : ''}`}
                 key={enemy.id}
                 role={battleArea.capabilities.codeData ? 'button' : undefined}
                 tabIndex={battleArea.capabilities.codeData ? 0 : undefined}
-                aria-label={battleArea.capabilities.codeData ? `${enemy.name}のコード上のデータを確認` : undefined}
+                data-enemy-role={enemy.role}
+                data-boss-display-name={isBossEnemy ? displayName : undefined}
+                aria-label={battleArea.capabilities.codeData ? `${displayName}のコード上のデータを確認` : undefined}
                 onClick={(event) => {
                   if (!battleArea.capabilities.codeData || phase !== 'battle' || storyEvent || explainedSkill) return
                   event.currentTarget.focus()
@@ -527,7 +553,12 @@ function App({ battleId, seed, returnTo }: AppProps) {
                   <span className="sprite-face">{enemy.glyph}</span>
                 </div>
                 <div className="enemy-name-row">
-                  <h2>{enemy.name}</h2>
+                  <div>
+                    <h2>{displayName}</h2>
+                    {displayName !== enemy.name && (
+                      <small className="enemy-code-name">CODE NAME · {enemy.name}</small>
+                    )}
+                  </div>
                   <span>{enemy.hp}/{enemy.maxHp}</span>
                 </div>
                 <div className="hp-track enemy-track">

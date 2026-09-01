@@ -15,6 +15,40 @@ UIは、**Open World探索とコード読解に必要な情報を優先し、常
 - 正解target / 正解Skill / damage previewを表示しない
 - Mobileでは固定UIを最小化する
 - 状態変化は短い一時feedbackを優先する
+- **Battleではcode panelより先に「誰と・どこで戦っているか」が視覚的に読めること**
+
+## Visual layerの分離
+
+全画面へ同じ黒/neon/monospace skinを掛けない。世界観上の役割に応じてvisual grammarを分ける。
+
+| Layer | 主役 | Visual grammar |
+| --- | --- | --- |
+| REAL WORLD / system | CONNECT / system framing | terminal / dark / technical / monospaceを使ってよい |
+| CODE WORLD exploration | fantasy field / character / terrain | wood / stone / parchment系frame、terrainとspriteを主役にする |
+| CODE WORLD Battle | arena / monster / Player / Party | Region scenery + RPG hierarchy。code cardは下段のrule UI |
+| code / runtime data | code / object / intermediate state | monospace / technical contrastを維持 |
+
+CODE WORLDでもtechnical labelを全廃しない。重要なのは、**fantasy worldの全部をterminalへ見せず、codeだけがworld内で異質なruleとして読めるcontrastを作ること**。
+
+### CODE WORLDでfantasyへ寄せる箇所
+
+- World panel / map frame
+- Region / location title
+- Objectiveの外枠
+- D-Pad / INTERACT等のRPG操作chrome
+- Battle arena
+- Enemy / Player / Party
+- Boss identity
+
+### technical visualを残す箇所
+
+- Skill code
+- CODE HELPのcode block
+- CODE DATA / runtime data
+- code上のEnemy name
+- system/debug用途の小label
+
+fantasy表示名とcode上のnameが異なる場合は、fantasy名を主表示しつつ`CODE NAME`を併記する。
 
 ## Open World
 
@@ -38,11 +72,11 @@ UIは、**Open World探索とコード読解に必要な情報を優先し、常
 - encounter確率
 - 「草むらを歩くと敵が出ます」のような繰り返し説明
 
-terrain自体で学習regionを理解できることを優先する。
+terrain自体で学習regionを理解できることを優先する。World外枠やObjective cardはmapより強い黒/neon dashboardにせず、fieldを囲むRPG chromeとして扱う。
 
 ```text
-JavaScript = grass / tall-grass
-TypeScript = forest
+JavaScript = grass / tall-grass / woods
+TypeScript = stone / crystal / geometric terrain
 Hub / road = safe zone
 ```
 
@@ -55,16 +89,10 @@ Open WorldではStage Selectがないため、進行方向は必要。ただし�
 方針:
 
 - Pause STATUSにWorld Objectiveを表示
+- World上は現在の目的だけをcompactに示す
 - Battle victory時のみ短いprogress feedback
 - Boss解放時は分かりやすく伝える
 - 具体的な正解code / targetは教えない
-
-例:
-
-```text
-JAVASCRIPT GRASSLAND 2 / 3
-NEXT: 西のBOSSへ
-```
 
 ## Pause
 
@@ -151,6 +179,66 @@ Equipment / Partyの効果:
 - Party follow-upは小さい補助行で表示する
 
 ただしTargetRuleの答えを先に見せない。
+
+### RPG-first Battle visual grammar
+
+Battleを「暗いpanel上にcode cardを並べた画面」にしない。Playerがcodeを読む前に、最低限次を判別できることを基準にする。
+
+```text
+WHERE   どのRegion / 場所で戦っているか
+WHO     Enemyのsilhouette / role / Boss identity
+DANGER  normal / incident / training / Bossのどれか
+STATE   HP / NEXT / Guardなど、現在の盤面
+RULE    その後でSkill codeを読む
+```
+
+scene identityはBattleごとにpresentation layerで解決し、学習logicや`TargetRule`へvisual条件を混ぜない。
+
+現在のBattle scene系統:
+
+| Scene | Visual cue | Audio cue |
+| --- | --- | --- |
+| Overworld incident | open grassland / distant ridge | base Battle |
+| Village training | training yard / fence / house silhouette | base Battle |
+| JavaScript Forest | dense green canopy / trunks | Forest Battle |
+| JavaScript Deep Forest | dark roots / corrupted natural tones | Deep Forest Battle |
+| TypeScript Frontier | stone/crystal / geometric grid | TypeScript Battle |
+| JavaScript Final | organic corrupted Code Core | JS Final Boss |
+| TypeScript Final | geometric crystal contract vault | TS Final Boss |
+
+最低でも、**ForestとTypeScript、通常戦とBossはscreenshotだけで区別できる**こと。
+
+### Enemy identity
+
+- Enemy visualは表示名の1文字glyphだけへ依存しない
+- Sprout / Boar / Guardian等はsilhouetteとpaletteでroleを判別できるようにする
+- standard / elite / bossはcard hierarchyでも差を持たせる
+- Final Bossはgeneric `Boss` spriteを使い回さない
+- JS FinalとTS Finalを単なるpalette swapにしない
+- Player / joined PartyはBattle stage内に存在して見えること
+
+code上のdata nameとfantasy表示名が異なる場合は、fantasy identityを主表示しつつ`CODE NAME`を併記する。これによりRPGとしての固有名を持たせても、CODE DATA / 表示codeとの対応を失わない。
+
+### Boss readability
+
+BossはHP量だけで区別しない。
+
+- arena border / scenery / BGMを通常戦から変える
+- Boss silhouetteを通常Enemyより強くする
+- Boss Guardは`ACTIVE / OPEN`が敵card上で視覚的に分かる
+- Guardの解除条件を答えとして強調しすぎず、現在状態とruleを比較できる形にする
+
+### Mobile
+
+scene decorationはcode readabilityより下位。狭いviewportでは背景decorを弱めてもよいが、以下は残す。
+
+- scene identity
+- Boss / normal差
+- Enemy HP / NEXT
+- Skill code
+- SELECT / EXECUTE
+
+背景のためにEnemy cardやcodeを横方向へ押し出さない。
 
 ## PATCH KIT
 

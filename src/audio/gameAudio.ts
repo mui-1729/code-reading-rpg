@@ -13,7 +13,16 @@ export type SoundEffect =
   | 'skillUnlock'
   | 'stageClear'
 
-export type BgmTrack = 'menu' | 'field' | 'battle'
+export type BgmTrack =
+  | 'menu'
+  | 'field'
+  | 'battle'
+  | 'battleForest'
+  | 'battleDeepForest'
+  | 'battleTypeScript'
+  | 'battleBoss'
+  | 'battleJsBoss'
+  | 'battleTsBoss'
 
 export type AudioSettings = {
   muted: boolean
@@ -37,7 +46,17 @@ export const DEFAULT_AUDIO_SETTINGS: AudioSettings = {
   bgmVolume: 0.28,
 }
 
-export const BGM_TRACKS: readonly BgmTrack[] = ['menu', 'field', 'battle']
+export const BGM_TRACKS: readonly BgmTrack[] = [
+  'menu',
+  'field',
+  'battle',
+  'battleForest',
+  'battleDeepForest',
+  'battleTypeScript',
+  'battleBoss',
+  'battleJsBoss',
+  'battleTsBoss',
+]
 
 export const BGM_PATTERNS: Readonly<Record<BgmTrack, BgmPattern>> = {
   menu: {
@@ -65,6 +84,60 @@ export const BGM_PATTERNS: Readonly<Record<BgmTrack, BgmPattern>> = {
     type: 'square',
     volume: 0.1,
     bassEvery: 4,
+    bassVolume: 0.06,
+  },
+  battleForest: {
+    notes: [174.61, 220, 261.63, 220, 196, 246.94, 293.66, 246.94],
+    stepMs: 205,
+    noteMs: 158,
+    type: 'triangle',
+    volume: 0.09,
+    bassEvery: 4,
+    bassVolume: 0.058,
+  },
+  battleDeepForest: {
+    notes: [146.83, 174.61, 220, 196, 164.81, 196, 233.08, 174.61],
+    stepMs: 225,
+    noteMs: 180,
+    type: 'sawtooth',
+    volume: 0.075,
+    bassEvery: 2,
+    bassVolume: 0.052,
+  },
+  battleTypeScript: {
+    notes: [293.66, 369.99, 440, 369.99, 329.63, 415.3, 493.88, 415.3],
+    stepMs: 170,
+    noteMs: 122,
+    type: 'triangle',
+    volume: 0.085,
+    bassEvery: 4,
+    bassVolume: 0.048,
+  },
+  battleBoss: {
+    notes: [130.81, 164.81, 196, 130.81, 146.83, 174.61, 207.65, 146.83],
+    stepMs: 165,
+    noteMs: 138,
+    type: 'square',
+    volume: 0.105,
+    bassEvery: 2,
+    bassVolume: 0.07,
+  },
+  battleJsBoss: {
+    notes: [110, 130.81, 164.81, 123.47, 98, 146.83, 174.61, 116.54],
+    stepMs: 190,
+    noteMs: 165,
+    type: 'sawtooth',
+    volume: 0.095,
+    bassEvery: 2,
+    bassVolume: 0.075,
+  },
+  battleTsBoss: {
+    notes: [246.94, 369.99, 277.18, 415.3, 220, 329.63, 261.63, 392],
+    stepMs: 155,
+    noteMs: 118,
+    type: 'square',
+    volume: 0.09,
+    bassEvery: 3,
     bassVolume: 0.06,
   },
 }

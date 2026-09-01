@@ -1,0 +1,117 @@
+/* #265: lightweight CSS pixel details for the authored early-game monsters. */
+.enemy-sprite.sprout::before {
+  content: "";
+  position: absolute;
+  left: 17px;
+  top: 28px;
+  width: 8px;
+  height: 8px;
+  background: #f2f2d2;
+  box-shadow:
+    22px 0 0 #f2f2d2,
+    4px 3px 0 -2px #172318,
+    26px 3px 0 -2px #172318;
+}
+
+.enemy-sprite.sprout::after {
+  content: "";
+  position: absolute;
+  left: 18px;
+  top: -17px;
+  width: 29px;
+  height: 23px;
+  background: #72bd55;
+  border: 5px solid #28522b;
+  clip-path: polygon(0 58%, 46% 44%, 56% 0, 68% 42%, 100% 28%, 82% 74%, 50% 100%, 18% 82%);
+}
+
+.enemy-sprite.boar::before {
+  content: "";
+  position: absolute;
+  left: 20px;
+  top: 25px;
+  width: 30px;
+  height: 20px;
+  background: #c98559;
+  border: 5px solid #5b3427;
+  box-shadow:
+    -14px 13px 0 -8px #efe0bd,
+    24px 13px 0 -8px #efe0bd;
+}
+
+.enemy-sprite.boar::after {
+  content: "";
+  position: absolute;
+  left: 15px;
+  top: 16px;
+  width: 7px;
+  height: 7px;
+  background: #f7d978;
+  box-shadow: 40px 0 0 #f7d978;
+}
+
+.enemy-sprite.guardian::before,
+.enemy-sprite.root-guardian::before {
+  content: "";
+  position: absolute;
+  left: 17px;
+  top: 25px;
+  width: 34px;
+  height: 30px;
+  background: #263820;
+  border: 5px solid #789153;
+  box-shadow: inset 7px 8px 0 -4px #d8c46f, inset -7px 8px 0 -4px #d8c46f;
+}
+
+.enemy-sprite.guardian::after,
+.enemy-sprite.root-guardian::after {
+  content: "";
+  position: absolute;
+  left: -9px;
+  top: -11px;
+  width: 86px;
+  height: 25px;
+  background: #354d2c;
+  border: 5px solid #1c2d1c;
+  clip-path: polygon(0 100%, 14% 28%, 34% 72%, 50% 0, 66% 72%, 86% 28%, 100% 100%);
+}
+
+.enemy-card[data-enemy-role="elite"] {
+  border-color: #b89150;
+  box-shadow: inset 0 0 0 3px #44361f;
+}
+
+.enemy-card[data-enemy-role="elite"]::before {
+  content: "ELITE";
+  display: block;
+  width: fit-content;
+  margin: -5px 0 7px auto;
+  padding: 2px 5px;
+  border: 2px solid #9a753f;
+  background: #171109;
+  color: #e0bc70;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.enemy-card[data-enemy-role="boss"]::before {
+  content: "BOSS";
+  display: block;
+  width: fit-content;
+  margin: -5px 0 7px auto;
+  padding: 2px 5px;
+  border: 2px solid #b99048;
+  background: #1c1308;
+  color: #f0ce79;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+@media (max-width: 700px) {
+  .enemy-card[data-enemy-role="elite"]::before,
+  .enemy-card[data-enemy-role="boss"]::before {
+    margin-top: -2px;
+  }
+}

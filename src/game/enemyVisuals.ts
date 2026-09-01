@@ -1,7 +1,16 @@
 import type { Enemy } from './types'
 
 const enemyVisualIds = new Set([
-  'slime', 'goblin', 'golem', 'boss', 'sprout', 'boar', 'guardian', 'root-guardian',
+  'slime',
+  'goblin',
+  'golem',
+  'boss',
+  'sprout',
+  'boar',
+  'guardian',
+  'root-guardian',
+  'core-wyrm',
+  'contract-titan',
 ])
 
 export const ENEMY_VISUAL_FALLBACK_ID = 'enemy-fallback'

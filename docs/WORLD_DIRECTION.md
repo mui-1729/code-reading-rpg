@@ -519,3 +519,69 @@ Battle engine / TargetRule / seeded generatorをworldごとに複製しない。
 > **普通のRPGとして冒険を始められ、世界のルールを読むためにコードを少しずつ覚え、気づいたら自分でJavaScriptを追えるようになっている。**
 
 この状態へ近づく案を優先する。
+
+---
+
+## 20. RPG-first Battle presentation
+
+Battleはlearning UIへ入るための待合画面ではなく、**World探索で出会った場所・敵・異変がそのまま戦闘へ連続するRPG scene**として扱う。
+
+Playerがcodeを読む前に、screenshotだけで次を判断できることを目標にする。
+
+1. どのRegionにいるか
+2. training / ordinary / incident / Bossのどれか
+3. どのEnemyが危険そうか
+4. Player / Partyがそこに参加していること
+5. Final Bossがその地方のroot causeを象徴する固有存在であること
+
+### Scene continuity
+
+FieldとBattleで景色を無関係にしない。
+
+```text
+Overworld incident
+→ open grassland / ridge
+
+Village lesson
+→ training yard / fence / house
+
+JavaScript Forest
+→ tree trunks / green canopy
+
+Deep Forest
+→ roots / darker corrupted nature
+
+TypeScript Frontier
+→ stone / crystal / geometric structure
+```
+
+背景を毎Battleのdecorative wallpaperとして個別に作るのではなく、`scene identity`をdomainから解決し、同じRegionのBattleは共通visual grammarを使う。
+
+### Final Boss identity
+
+Final Bossをgeneric `Boss`という見た目だけで済ませない。
+
+- JavaScript Final: organic / root / runtime corruptionのidentity
+- TypeScript Final: contract / crystal / geometric structureのidentity
+- 両者はsilhouette、scene、BGMを共有しない
+- paletteだけ変えた同型spriteにしない
+
+一方、code上のEnemy dataをRPG名へ無理に書き換えてlearning semanticsを変えない。fantasy表示名とcode上のnameが異なる場合は`CODE NAME`を併記し、**RPG identityとcode-readingの正確さを両立する**。
+
+### Audio identity
+
+BGMもmenu / field / generic battleの3種類だけへ固定しない。少なくともRegion Battle / Boss tierで差を持たせる。
+
+Audioは答えを教えるsignalではなく、
+
+- どこに来たか
+- ordinaryかBossか
+- Finalへ到達した重さ
+
+を補強するRPG feedbackとして使う。
+
+### Presentation boundary
+
+scene / sprite / BGMのために`TargetRule`、display code、solvability、progression prerequisiteを変更しない。
+
+Battle presentationはgameplay semanticsの上に載る独立layerとし、visual都合で正解targetを変えたり、Enemy valueを見えにくくしたりしない。

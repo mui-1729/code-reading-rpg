@@ -17,6 +17,8 @@ export {
   getBattleSkillAvailability,
   getUnavailableAuthoredSkillIds,
 } from './availableSkills'
+export { getBattlePresentation } from './battlePresentation'
+export type { BattleArenaKind, BattlePresentation, BattleSceneId } from './battlePresentation'
 export { generateBattle } from './generator'
 export { skillDefinitionById, skillDefinitions } from './skillDefinitions'
 export {
