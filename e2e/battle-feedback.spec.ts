@@ -68,8 +68,6 @@ test('Skillは選択時にtarget previewせず、実行後だけfirst-match trac
 
   const pulse = page.getByRole('button', { name: /^PULSE\b/ })
   const feedback = page.locator('.battle-semantic-feedback')
-  const slime = page.locator('.enemy-card').filter({ hasText: 'Slime' })
-  const goblin = page.locator('.enemy-card').filter({ hasText: 'Goblin' })
 
   await expect(feedback).toHaveCount(0)
   await expect(page.locator('[data-semantic-target="true"]')).toHaveCount(0)
@@ -83,14 +81,19 @@ test('Skillは選択時にtarget previewせず、実行後だけfirst-match trac
 
   await expect(feedback).toHaveAttribute('data-semantic-family', 'first-match')
   await expect(feedback).toContainText('FIRST MATCH')
-  await expect(slime).toHaveAttribute('data-semantic-traced', 'true')
-  await expect(goblin).toHaveAttribute('data-semantic-traced', 'true')
-  await expect(goblin).toHaveAttribute('data-semantic-target', 'true')
+  await expect(feedback).toContainText('で停止')
+
+  // PULSEのsemantic variantはseedごとにGoblin/Slimeを取り得る。
+  // E2Eでは表示名を決め打ちせず、実際にresolvedされたtargetがtrace済みであることを確認する。
+  const resolvedTarget = page.locator('.enemy-card[data-semantic-target="true"]')
+  await expect(resolvedTarget).toHaveCount(1)
+  await expect(resolvedTarget).toHaveAttribute('data-semantic-traced', 'true')
 })
 
-test('Enemy Turnは攻撃者ごとにNEXT damageを対応させて順番に表示する', async ({ page }) => {
+test('Enemy Turnは生存している攻撃者ごとにNEXT damageを対応させて順番に表示する', async ({ page }) => {
   await seedReplay(page)
-  await page.goto('/javascript/battle/1?seed=feedback-enemy-turn&returnTo=%2Fworld')
+  // このseedではPULSEがGoblinを選び、Slime/Goblinの両方が生存してEnemy Turnへ入る。
+  await page.goto('/javascript/battle/1?seed=feedback-reduced&returnTo=%2Fworld')
 
   const pulse = page.getByRole('button', { name: /^PULSE\b/ })
   const slime = page.locator('.enemy-card').filter({ hasText: 'Slime' })
