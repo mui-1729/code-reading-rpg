@@ -20,6 +20,29 @@ export const characterVisuals = {
   },
 } as const
 
+export const characterVisualIdentity = {
+  player: {
+    silhouette: 'helmeted-armed-knight',
+    cues: ['helmet', 'weapon'],
+  },
+  byte: {
+    silhouette: 'small-antenna-debugger',
+    cues: ['antenna', 'asymmetric-debug-lens'],
+  },
+  trainerMio: {
+    silhouette: 'high-bun-village-guide',
+    cues: ['high-bun', 'scarf'],
+  },
+  leadAda: {
+    silhouette: 'asymmetric-headset-lead',
+    cues: ['swept-hair', 'headset-mic', 'square-shoulders'],
+  },
+  typeWarden: {
+    silhouette: 'hooded-wide-pauldron-warden',
+    cues: ['pointed-hood', 'oversized-pauldrons', 'cloak'],
+  },
+} as const
+
 const storySpeakerPortraits: Readonly<Record<string, string>> = {
   byte: characterVisuals.byte.portrait,
   'lead-ada': characterVisuals.leadAda.portrait,
