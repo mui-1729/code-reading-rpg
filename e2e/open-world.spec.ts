@@ -228,7 +228,7 @@ test.describe('Open World RPG loop', () => {
     await page.goto('/world')
     await expect(page.getByLabel('js-debug-cache treasure closed')).toBeVisible()
     await page.getByRole('button', { name: 'INTERACT' }).click()
-    await expect(page.getByText(/DEBUG CACHE OPEN/)).toBeVisible()
+    await expect(page.getByText(/DEBUG CACHE 開封/)).toBeVisible()
 
     await expect.poll(async () => (await storedProgress(page)).progress.gold).toBe(25)
     await expect.poll(async () => (await storedRpgState(page)).state.openedTreasureIds).toEqual([
@@ -263,7 +263,7 @@ test.describe('Open World RPG loop', () => {
     await page.goto('/world')
     await expect(page.getByLabel('ts-supply-cache treasure closed')).toBeVisible()
     await page.getByRole('button', { name: 'INTERACT' }).click()
-    await expect(page.getByText(/TYPE CACHE OPEN/)).toBeVisible()
+    await expect(page.getByText(/TYPE CACHE 開封/)).toBeVisible()
 
     await expect.poll(async () => (await storedProgress(page)).progress.gold).toBe(45)
     await expect.poll(async () => (await storedProgress(page)).progress.inventory.patchKit).toBe(3)
@@ -350,7 +350,7 @@ test.describe('Open World RPG loop', () => {
 
     await page.goto('/world')
     await page.getByRole('button', { name: 'INTERACT' }).click()
-    await expect(page.getByText(/BYTE joined the party!/)).toBeVisible()
+    await expect(page.locator('.world-message')).toContainText('BYTEが仲間になった！')
 
     await page.getByRole('button', { name: 'メニューを開く' }).click()
     const dialog = page.getByRole('dialog', { name: 'メニュー' })
