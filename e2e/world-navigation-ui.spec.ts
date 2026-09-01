@@ -74,7 +74,7 @@ async function playerPosition(page: Page) {
 
 test('World常設objectiveは一行に絞りdetailはmapを隠さない', async ({ page }) => {
   await seedWorld(page)
-  const objective = page.getByLabel('Next objective')
+  const objective = page.getByLabel('次の目的')
   await expect(objective).toBeVisible()
   await expect(objective.locator('strong')).toBeVisible()
   await expect(objective.locator('p')).toHaveCount(0)
@@ -85,12 +85,12 @@ test('INTERACTは対象がない時disabledで近くの対象を具体名で示�
   await expect(page.getByRole('button', { name: 'INTERACT', exact: true })).toBeDisabled()
 
   await seedWorld(page, { position: { x: 20, y: 13 }, partyMemberIds: [] })
-  const byteInteract = page.getByRole('button', { name: /TALK TO BYTE/ })
+  const byteInteract = page.getByRole('button', { name: 'INTERACT · BYTEと話す', exact: true })
   await expect(byteInteract).toBeEnabled()
-  await expect(byteInteract).toHaveText('TALK TO BYTE')
+  await expect(byteInteract).toHaveText('BYTEと話す')
 })
 
-test('通常歩行のterrain echoはFIELD LOGを占有せずaria-liveもしない', async ({ page }) => {
+test('通常歩行のterrain echoは冒険ログを占有せずaria-liveもしない', async ({ page }) => {
   await seedWorld(page)
   const log = page.locator('.world-message')
   await expect(log).toHaveAttribute('data-log-priority', 'event')
@@ -149,7 +149,7 @@ test('mobile landscapeでもmap・D-Pad・context interactionが同じviewport�
 
   await expect(page.getByLabel('Open world map')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Move left' })).toBeVisible()
-  await expect(page.getByRole('button', { name: /TALK TO BYTE/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'INTERACT · BYTEと話す', exact: true })).toBeVisible()
 
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth),
