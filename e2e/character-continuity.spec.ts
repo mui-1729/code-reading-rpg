@@ -105,7 +105,7 @@ test('Villageのordinary residentはmain progression外で生活の会話を持�
   await seedState(page, {
     clearedStageIds: [1, 7, 8, 9],
     mapId: 'js-village',
-    position: { x: 3, y: 4 },
+    position: { x: 8, y: 9 },
   })
 
   const talk = page.getByRole('button', { name: 'INTERACT · VILLAGE CHILDと話す' })
