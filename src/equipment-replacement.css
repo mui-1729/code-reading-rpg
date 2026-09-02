@@ -1,4 +1,0 @@
-/* Equipment is replacement-first: null remains a save-compatible state, not a player action. */
-.equipment-empty-option {
-  display: none !important;
-}
