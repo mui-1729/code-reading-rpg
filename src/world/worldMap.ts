@@ -127,7 +127,7 @@ export const WORLD_PORTALS: readonly WorldPortal[] = [
     position: JS_VILLAGE_POSITION,
     toMapId: JS_VILLAGE_MAP_ID,
     targetPosition: WORLD_MAP_STARTS[JS_VILLAGE_MAP_ID],
-    label: 'GREENFIELD VILLAGE',
+    label: 'グリーンフィールド村',
     requiredClearedStageId: 1,
   },
   {
@@ -135,14 +135,14 @@ export const WORLD_PORTALS: readonly WorldPortal[] = [
     position: JS_VILLAGE_EXIT_POSITION,
     toMapId: OVERWORLD_MAP_ID,
     targetPosition: { x: 14, y: 13 },
-    label: 'JAVASCRIPT GRASSLAND',
+    label: 'JavaScript草原',
   },
   {
     fromMapId: OVERWORLD_MAP_ID,
     position: JS_FOREST_POSITION,
     toMapId: JS_FOREST_MAP_ID,
     targetPosition: WORLD_MAP_STARTS[JS_FOREST_MAP_ID],
-    label: 'JAVASCRIPT FOREST',
+    label: 'JavaScriptの森',
     requiredClearedStageId: 9,
   },
   {
@@ -150,14 +150,14 @@ export const WORLD_PORTALS: readonly WorldPortal[] = [
     position: JS_FOREST_EXIT_POSITION,
     toMapId: OVERWORLD_MAP_ID,
     targetPosition: { x: 8, y: 14 },
-    label: 'JAVASCRIPT GRASSLAND',
+    label: 'JavaScript草原',
   },
   {
     fromMapId: JS_FOREST_MAP_ID,
     position: JS_FOREST_DEEP_FOREST_POSITION,
     toMapId: JS_DEEP_FOREST_MAP_ID,
     targetPosition: WORLD_MAP_STARTS[JS_DEEP_FOREST_MAP_ID],
-    label: 'JAVASCRIPT DEEP FOREST',
+    label: 'JavaScript深層の森',
     requiredClearedStageId: 14,
   },
   {
@@ -165,14 +165,14 @@ export const WORLD_PORTALS: readonly WorldPortal[] = [
     position: JS_DEEP_FOREST_EXIT_POSITION,
     toMapId: JS_FOREST_MAP_ID,
     targetPosition: { x: 2, y: 10 },
-    label: 'JAVASCRIPT FOREST',
+    label: 'JavaScriptの森',
   },
   {
     fromMapId: JS_DEEP_FOREST_MAP_ID,
     position: JS_DEEP_FOREST_CORE_EXIT_POSITION,
     toMapId: OVERWORLD_MAP_ID,
     targetPosition: { x: 8, y: 6 },
-    label: 'CODE CORE APPROACH',
+    label: 'Code Core前',
     requiredClearedStageId: 22,
   },
   {
@@ -180,7 +180,7 @@ export const WORLD_PORTALS: readonly WorldPortal[] = [
     position: TS_FRONTIER_GATE_POSITION,
     toMapId: TS_FRONTIER_MAP_ID,
     targetPosition: WORLD_MAP_STARTS[TS_FRONTIER_MAP_ID],
-    label: 'TYPESCRIPT FRONTIER',
+    label: 'TypeScript辺境',
     requiredClearedStageId: 3,
   },
   {
@@ -188,7 +188,7 @@ export const WORLD_PORTALS: readonly WorldPortal[] = [
     position: TS_FRONTIER_EXIT_POSITION,
     toMapId: OVERWORLD_MAP_ID,
     targetPosition: { x: 22, y: 14 },
-    label: 'CENTRAL HUB',
+    label: '中央Hub',
   },
 ]
 
@@ -210,11 +210,11 @@ export function getWorldMapDimensions(mapId: WorldMapId) {
 }
 
 export function getWorldMapLabel(mapId: WorldMapId) {
-  if (mapId === JS_VILLAGE_MAP_ID) return 'GREENFIELD VILLAGE'
-  if (mapId === JS_FOREST_MAP_ID) return 'JAVASCRIPT FOREST'
-  if (mapId === JS_DEEP_FOREST_MAP_ID) return 'JAVASCRIPT DEEP FOREST'
-  if (mapId === TS_FRONTIER_MAP_ID) return 'TYPESCRIPT FRONTIER'
-  return 'CODE WORLD OVERWORLD'
+  if (mapId === JS_VILLAGE_MAP_ID) return 'グリーンフィールド村'
+  if (mapId === JS_FOREST_MAP_ID) return 'JavaScriptの森'
+  if (mapId === JS_DEEP_FOREST_MAP_ID) return 'JavaScript深層の森'
+  if (mapId === TS_FRONTIER_MAP_ID) return 'TypeScript辺境'
+  return 'JavaScript草原'
 }
 
 export function isWorldPositionInBounds(
