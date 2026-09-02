@@ -38,9 +38,11 @@ async function enterEncounter(page: Page, beforeEncounter?: () => Promise<void>)
 }
 
 async function useKit(page: Page) {
-  await page.locator('.patch-kit-action').click()
+  const item = page.locator('.battle-item-row')
+  await item.locator('.battle-item-toggle').click()
+  await item.locator('.patch-kit-action').click()
   await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
-  await expect(page.locator('.battle-item-row')).toHaveAttribute('data-item-state', 'already-used')
+  await expect(item).toHaveAttribute('data-item-state', 'already-used')
   await expect.poll(() => readStoredGameState(page)).toMatchObject({
     progress: { progress: { inventory: { patchKit: 1 } } },
     rpg: { state: { currentHp: 64 } },
