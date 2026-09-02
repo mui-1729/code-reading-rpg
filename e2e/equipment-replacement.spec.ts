@@ -72,7 +72,7 @@ test('未装備slotは自然な比較を表示し、装備解除ではなく付�
   await expect(pause.getByRole('button', { name: '装備を外す' })).toBeHidden()
 
   await accessorySlot.locator('button[data-equipment-id="life-charm"]').click()
-  await expect(accessorySlot.getByText('Life Charm', { exact: true })).toBeVisible()
+  await expect(accessorySlot.getByRole('button', { name: 'Life Charm 装備中' })).toBeVisible()
 
   const storedAccessory = await page.evaluate((rpgKey) => {
     const raw = localStorage.getItem(rpgKey)
