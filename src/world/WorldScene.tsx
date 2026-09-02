@@ -205,7 +205,7 @@ function getInteractionPresentation(intent: WorldInteractionIntent): { label: st
     case 'map-transition':
       return { label: `${intent.label}へ入る`, disabled: false }
     case 'none':
-      return { label: 'INTERACT', disabled: true }
+      return { label: 'アクション', disabled: true }
   }
 }
 
@@ -294,7 +294,7 @@ export function WorldViewport(props: {
         data-world-y={cell.y}
       >
         {isFrontierCompiler ? (
-          <span className="world-object boss-object" aria-label="Frontier Compiler Boss">
+          <span className="world-object boss-object" aria-label="FRONTIER COMPILER ボス">
             COMPILER
           </span>
         ) : (
@@ -524,15 +524,15 @@ export function WorldControls(props: {
     <div className="world-controls" aria-label="ワールド操作">
       <WorldLogPolicy />
       <div className="world-dpad">
-        {directionButton('Move up', '▲', 0, -1)}
-        {directionButton('Move left', '◀', -1, 0)}
-        {directionButton('Move down', '▼', 0, 1)}
-        {directionButton('Move right', '▶', 1, 0)}
+        {directionButton('上へ移動', '▲', 0, -1)}
+        {directionButton('左へ移動', '◀', -1, 0)}
+        {directionButton('下へ移動', '▼', 0, 1)}
+        {directionButton('右へ移動', '▶', 1, 0)}
       </div>
       <button
         type="button"
         className="primary-button world-interact"
-        aria-label={interactLabel === 'INTERACT' ? 'INTERACT' : `INTERACT · ${interactLabel}`}
+        aria-label={interactLabel}
         onClick={openConversation}
         disabled={interactDisabled || activeConversation !== null}
       >
