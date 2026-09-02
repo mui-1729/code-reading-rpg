@@ -54,13 +54,14 @@ export function getEquipmentPresentation(
     attack: (equipment.bonuses.attack ?? 0) - (currentEquipment?.bonuses.attack ?? 0),
     defense: (equipment.bonuses.defense ?? 0) - (currentEquipment?.bonuses.defense ?? 0),
   }
+  const formattedDelta = formatEquipmentDelta(delta)
 
   return {
     visual: getEquipmentVisual(equipment.id),
     statSummary: formatEquipmentBonuses(equipment.bonuses),
     currentEquipmentId,
-    currentEquipmentName: currentEquipment?.name ?? 'EMPTY',
+    currentEquipmentName: currentEquipment?.name ?? '未装備',
     delta,
-    deltaSummary: formatEquipmentDelta(delta),
+    deltaSummary: currentEquipment ? formattedDelta : `装備すると ${formattedDelta}`,
   }
 }

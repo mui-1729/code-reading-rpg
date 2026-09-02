@@ -33,11 +33,11 @@ describe('equipment presentation', () => {
     expect(presentation?.deltaSummary).toBe('DEF -2 · HP +14')
   })
 
-  it('compares an accessory against an empty slot', () => {
+  it('describes equipping into an empty slot without player-facing EMPTY copy', () => {
     const presentation = getEquipmentPresentation('life-charm', EMPTY_EQUIPMENT)
 
-    expect(presentation?.currentEquipmentName).toBe('EMPTY')
-    expect(presentation?.deltaSummary).toBe('HP +16')
+    expect(presentation?.currentEquipmentName).toBe('未装備')
+    expect(presentation?.deltaSummary).toBe('装備すると HP +16')
   })
 
   it('marks the currently equipped definition as unchanged', () => {
