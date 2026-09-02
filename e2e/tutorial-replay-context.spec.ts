@@ -101,6 +101,7 @@ test('PATCH KIT使用後のTutorial replayはBattle全体をrollbackしてから
   await page.goto('/javascript/battle/7?seed=replay-after-kit&returnTo=%2Fworld')
   const story = page.locator('.battle-story-overlay')
   if (await story.isVisible()) await story.getByRole('button', { name: 'SKIP' }).click()
+  await page.locator('.battle-item-toggle').click()
   await page.locator('.patch-kit-action').click()
   await expect.poll(() => readStoredGameState(page)).toMatchObject({
     progress: { progress: { inventory: { patchKit: 1 } } },
