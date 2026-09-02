@@ -8,11 +8,11 @@ const resetOpening = async (page: import('@playwright/test').Page) => {
   await page.reload()
 }
 
-test('first START introduces the team then CONNECTs into the incident-driven CODE WORLD investigation', async ({ page }) => {
+test('最初の開始でteamを紹介しincident-driven CODE WORLD調査へ接続する', async ({ page }) => {
   await resetOpening(page)
 
-  await expect(page.getByRole('button', { name: 'START' })).toBeVisible()
-  await page.getByRole('button', { name: 'START' }).click()
+  await expect(page.getByRole('button', { name: 'はじめる' })).toBeVisible()
+  await page.getByRole('button', { name: 'はじめる' }).click()
 
   await expect(page.locator('.opening-layer-badge')).toHaveText('REAL WORLD')
   await expect(page.locator('.opening-kicker')).toHaveText('DEVELOPMENT ROOM')
@@ -20,32 +20,32 @@ test('first START introduces the team then CONNECTs into the incident-driven COD
   await expect(page.locator('.opening-copy')).toContainText('新人エンジニア')
   await expect(page.locator('.opening-copy')).toContainText('最初のincident')
 
-  await page.getByRole('button', { name: 'NEXT ▶' }).click()
+  await page.getByRole('button', { name: '次へ ▶' }).click()
   await expect(page.locator('.opening-layer-badge')).toHaveText('REAL WORLD')
   await expect(page.locator('.opening-kicker')).toHaveText('INCIDENT MONITOR')
   await expect(page.locator('.opening-speaker')).toHaveText('BYTE')
   await expect(page.locator('.opening-copy')).toContainText('僕はBYTE')
   await expect(page.locator('.opening-copy')).toContainText('先に答えを決めたくなる')
 
-  await page.getByRole('button', { name: 'NEXT ▶' }).click()
+  await page.getByRole('button', { name: '次へ ▶' }).click()
   await expect(page.locator('.opening-layer-badge')).toHaveText('CONNECT')
   await expect(page.locator('.opening-kicker')).toHaveText('CONNECT')
   await expect(page.locator('.opening-copy')).toContainText('codeが世界のrule')
 
-  await page.getByRole('button', { name: 'NEXT ▶' }).click()
+  await page.getByRole('button', { name: '次へ ▶' }).click()
   await expect(page.locator('.opening-layer-badge')).toHaveText('CODE WORLD')
   await expect(page.locator('.opening-kicker')).toHaveText('JAVASCRIPT GRASSLAND')
   await expect(page.locator('.opening-copy')).toContainText('現実側のtarget bug')
   await expect(page.locator('.opening-copy')).toContainText('実際の症状')
 
-  await page.getByRole('button', { name: 'NEXT ▶' }).click()
+  await page.getByRole('button', { name: '次へ ▶' }).click()
   await expect(page.locator('.opening-layer-badge')).toHaveText('CODE WORLD')
   await expect(page.locator('.opening-kicker')).toHaveText('MISSION START')
   await expect(page.locator('.opening-copy')).toContainText('最初にやるのは研修じゃない')
   await expect(page.locator('.opening-copy')).toContainText('現場でtarget異常')
   await expect(page.locator('.opening-copy')).toContainText('VillageのMIO')
 
-  await page.getByRole('button', { name: '▶ EXPLORE CODE WORLD' }).click()
+  await page.getByRole('button', { name: '▶ CODE WORLDを探索' }).click()
   await expect(page).toHaveURL(/\/world$/)
   await expect(page.getByLabel('Open world map')).toBeVisible()
   const objective = page.getByLabel('次の目的')
@@ -54,19 +54,19 @@ test('first START introduces the team then CONNECTs into the incident-driven COD
   await expect(objective).toHaveAttribute('title', /まず再現する/)
 })
 
-test('after the opening is seen, CONTINUE enters the world and opening can be replayed', async ({ page }) => {
+test('Opening確認済みなら続きから入り、Openingを見直せる', async ({ page }) => {
   await page.goto('/')
   await page.evaluate((key) => window.localStorage.setItem(key, 'seen'), openingKey)
   await page.reload()
 
-  await expect(page.getByRole('button', { name: 'CONTINUE' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'VIEW OPENING' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '続きから' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'オープニングを見る' })).toBeVisible()
 
-  await page.getByRole('button', { name: 'VIEW OPENING' }).click()
+  await page.getByRole('button', { name: 'オープニングを見る' }).click()
   await expect(page.locator('.opening-layer-badge')).toHaveText('REAL WORLD')
   await expect(page.locator('.opening-kicker')).toHaveText('DEVELOPMENT ROOM')
 
-  await page.getByRole('button', { name: 'SKIP' }).click()
+  await page.getByRole('button', { name: 'スキップ' }).click()
   await expect(page).toHaveURL(/\/world$/)
 })
 
@@ -102,11 +102,11 @@ test('TypeScript Chapter 1 starts as a new real world incident and enters CODE W
   await expect(briefing.locator('.story-world-layer')).toHaveText('REAL WORLD')
   await expect(briefing).toContainText('次の仕事だ')
 
-  await briefing.getByRole('button', { name: '▶ NEXT' }).click()
+  await briefing.getByRole('button', { name: '▶ 次へ' }).click()
   await expect(briefing.locator('.story-world-layer')).toHaveText('REMOTE LINK')
   await expect(briefing).toContainText('TypeScript Frontier')
 
-  await briefing.getByRole('button', { name: '▶ NEXT' }).click()
+  await briefing.getByRole('button', { name: '▶ 次へ' }).click()
   await expect(briefing.locator('.story-world-layer')).toHaveText('CODE WORLD')
   await expect(briefing).toContainText('CONNECT先をTypeScript Frontierへ切り替えた')
 })
