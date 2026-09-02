@@ -7,16 +7,6 @@
   padding: 9px 12px;
 }
 
-body[data-battle-resolving='true'] .pause-trigger {
-  pointer-events: none;
-  opacity: .55;
-}
-
-body[data-battle-phase='victory'] .pause-trigger,
-body[data-battle-phase='defeat'] .pause-trigger {
-  display: none;
-}
-
 .pause-overlay {
   position: fixed;
   inset: 0;
@@ -31,7 +21,10 @@ body[data-battle-phase='defeat'] .pause-trigger {
 .pause-menu {
   width: min(760px, 100%);
   max-height: min(760px, 92vh);
-  overflow: auto;
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
   padding: 22px;
   background: #090912;
 }
@@ -47,12 +40,24 @@ body[data-battle-phase='defeat'] .pause-trigger {
   margin: 6px 0 0;
 }
 
+.pause-battle-policy {
+  max-width: 46ch;
+  margin: 8px 0 0;
+  color: #aaa7ba;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
 .pause-tabs {
   display: flex;
   gap: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
   overflow-x: auto;
   margin: 18px 0;
   padding-bottom: 5px;
+  background: #090912;
 }
 
 .pause-tabs button {
@@ -74,7 +79,11 @@ body[data-battle-phase='defeat'] .pause-trigger {
 }
 
 .pause-content {
-  min-height: 280px;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 2px 2px 8px;
 }
 
 .pause-section {
@@ -234,6 +243,14 @@ body[data-battle-phase='defeat'] .pause-trigger {
 
 .equipment-empty-option:disabled {
   opacity: .45 !important;
+}
+
+.equipment-battle-lock {
+  margin: 0;
+  color: #fff0a5;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .06em;
 }
 
 .party-row span {
@@ -491,15 +508,16 @@ body[data-battle-phase='defeat'] .pause-trigger {
 
   .pause-tabs {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     overflow: visible;
     gap: 6px;
   }
 
   .pause-tabs button {
     min-width: 0;
-    padding: 8px 4px;
-    font-size: 7px;
+    min-height: 40px;
+    padding: 9px 5px;
+    font-size: 9px;
   }
 
   .pause-stat-grid {

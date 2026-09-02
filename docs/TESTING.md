@@ -17,7 +17,7 @@
 9. Level / Equipmentだけでcode-reading requirementを消さない
 10. Skill名だけでtarget semanticsを固定予測できない
 11. 全Enemy / NPC visual IDが有効なrenderまたはvisible fallbackを持つ
-12. modal / Pause中にbackground interaction・runtime progressionが起きない
+12. modal中にbackground interactionが起きず、Battle MENUはturn処理中に開けない
 
 同じ実装をtest oracleへ流用してgreenにしない。display semanticsはcode fingerprint、expected target、POWERを持つreview-owned fixtureで独立検証し、表示codeを`eval()` / `new Function()`で実行しない。
 
@@ -144,6 +144,7 @@ Party:
 - motion helper
 - result sequence grouping / order
 - reduced-motionをpresentationだけに閉じ込める
+- reduced-motionではResultのauto advanceを止め、manual NEXT / SKIPを維持する
 
 ## 4. Generator / Solvability
 
@@ -251,6 +252,10 @@ PRごとに最低限:
 - short / landscapeでCODE HELPが読める
 - mobileでselected codeとEnemy dataを比較できる
 - Pauseがfocusをtrapし、background input / Battle progressionを止める
+- Battle MENUは行動の合間だけ開き、装備変更を禁止する（Worldでは変更可能）
+- Pause contentをscrollしてもsection navigationが使える
+- TypeScript FrontierのCODEX初期選択がTypeScriptになる
+- selected SkillのHELPを開き、source改行とvisual wrapを混同しない
 - Victory / Defeat上にMENUを重ねない
 
 ## 8. Production

@@ -18,14 +18,15 @@ Code Codex
 
 ## 開き方
 
-World Map / Area Select / Fieldで利用する。
+Worldの`MENU → CODEX`から利用する。Battleでは行動の合間の`BATTLE MENU → CODEX`から参照できる。
 
-- Keyboard: `C` = OPEN / CLOSE
-- `Esc` = CLOSE
-- Mobile: 右下の`CODEX`ボタン
-- Battle中: 非表示
+- 独立したCODEXボタンや`C` shortcutは持たない
+- `Esc`でMENUを閉じ、起点へfocusを戻す
+- header / section navigationを残し、長いconcept一覧だけをscrollする
+- TypeScript Frontier上の`/world`、またはTypeScript Battleで開くとTypeScriptを初期選択する
+- JavaScript / TypeScriptの選択状態を支援技術にも伝える
 
-Battle中の解説は`CODE HELP`を使う。
+現在のSkillに即したBattle中の解説は`CODE HELP`を使う。現在の正解targetをCODEXやHELPで先に教えない。
 
 ## Source of truth
 

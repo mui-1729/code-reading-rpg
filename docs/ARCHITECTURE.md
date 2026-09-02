@@ -192,6 +192,8 @@ reloadでItem使用枠だけを回復したり、Enemyだけを初期化して�
 
 `BattleRuntimeProvider`はphase / resolving / enemies / HP / selected Skill / turn / resultのread-only snapshotを共有する。TutorialはそのsnapshotからSELECT / EXECUTEと実行完了を判断し、DOM参照はhighlightの配置だけに使う。
 
+Battle MENUの可否もこのsnapshotから決める。行動の合間だけ開き、resolving / Story / HELP / DATA / Resultとは重ねない。Battle中の装備は参照専用で、Worldに戻ってから変更する。MENUをBattle timerの途中freeze機構として扱わない。
+
 Victory transactionからtyped result eventを生成する。`BattleResultSequence`はそれを順次表示し、報酬文言・勝利DOM・隠しWorld feedbackをparseしない。CODE DATAはraw attackDamageとDEF適用後incomingDamageを分離してpropsで受け取る。
 
 Enemyのsprite / Boss presentation / GUARDはstable `visualId` / `role`、Story portraitは`speakerId`で決定する。code-reading ruleが明示的に読む`name`は学習dataとして維持する。
@@ -391,6 +393,7 @@ Partyが独自にcorrect targetを決めない。
 
 ```text
 STATUS
+MAP
 ITEMS
 EQUIPMENT
 PARTY
@@ -399,6 +402,10 @@ SYSTEM
 ```
 
 EXP / Gold / Equipment / Party / Sound等を通常HUDへ詰め込まずPauseへ寄せる。
+
+header / navigationとcontentのscroll領域を分離し、選択状態をaccessibility属性に反映する。CODEXの初期languageはBattleのAreaと現在のWorld mapを考慮する。
+
+Mobile BattleではEnemyのRPG cardと選択中Skill codeを近接配置し、source改行単位の行番号を表示する。presentationは既存Enemy / Skill propsを利用し、target計算を追加しない。
 
 ### CODE DATA
 
@@ -413,6 +420,8 @@ runtime data / derived valueを確認できるが、
 ### Audio / motion / pixel art
 
 state changeのfeedbackであり、Game Domainのsource of truthにしない。
+
+Resultの自動送りは`prefers-reduced-motion`へ追従し、reduce時はNEXT / SKIPのみで進める。報酬transaction自体のタイミングは変更しない。
 
 ## 14. Testing boundary
 

@@ -168,6 +168,8 @@ Skill unlockは表示だけではない。Lesson clearでMASTEREDになったSki
 
 Story / CODE HELPは読み方を説明するが、現在盤面のcorrect target名 / 対象数はPlayerへ残す。
 
+MobileではEnemyの現在値と選択中codeを近接表示する。CODE HELPは選択中Skillを優先し、source行番号と画面の折返しを区別する。Battle MENUは行動の合間だけ開き、装備変更はWorldに限定する。Pauseのnavigationを残してcontentだけscrollし、TS FrontierではCODEXがTypeScriptから開く。reduced-motionではResultを手動送りにする。
+
 ## 6. RPG / Economy
 
 実装済み:

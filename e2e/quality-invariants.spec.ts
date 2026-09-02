@@ -156,9 +156,13 @@ test('@cross-browser Pause traps focus and blocks Battle interaction/progression
 test('@responsive short/landscape viewport keeps multiline CODE HELP readable', async ({
   page,
 }) => {
-  await seedState(page, { clearedStageIds: JS_MIDBOSS_PREREQS })
-  await page.goto('/javascript/battle/13?seed=quality-code-help&returnTo=%2Fworld')
+  await seedState(page, { clearedStageIds: JS_COMPLETE })
+  await page.goto('/javascript/battle/20?seed=quality-code-help&returnTo=%2Fworld')
   await dismissStory(page)
+  const order = page.locator('[data-skill-id="order"]')
+  await order.click()
+  const source = (await order.locator('pre code').textContent()) ?? ''
+  expect(source.split('\n').length).toBeGreaterThan(1)
   await page.getByRole('button', { name: 'コード解説を開く' }).click()
 
   const modal = page.locator('.explain-modal')
@@ -167,7 +171,9 @@ test('@responsive short/landscape viewport keeps multiline CODE HELP readable', 
   const viewport = page.viewportSize()
   expect(bounds?.y ?? -1).toBeGreaterThanOrEqual(0)
   expect((bounds?.y ?? 0) + (bounds?.height ?? 0)).toBeLessThanOrEqual(viewport?.height ?? 0)
-  await expect(modal.locator('pre code')).toBeVisible()
+  await expect(modal.locator('.source-code-line pre code').first()).toBeVisible()
+  await expect(modal.locator('.source-code-line')).toHaveCount(source.split('\n').length)
+  expect((await modal.locator('.source-code-line pre code').allTextContents()).join('\n')).toBe(source)
 })
 
 test('@cross-browser CODE HELP, CODE DATA, and Story keep focus inside and restore their opener', async ({
@@ -192,6 +198,7 @@ test('@cross-browser CODE HELP, CODE DATA, and Story keep focus inside and resto
   await page.keyboard.press('Escape')
   await expect(help).toBeHidden()
   await expect(helpTrigger).toBeFocused()
+  await expect(page.locator('body')).not.toHaveCSS('overflow', 'hidden')
 
   const dataTrigger = page.getByRole('button', { name: 'コードで使う実データを確認' })
   await dataTrigger.focus()
@@ -202,6 +209,7 @@ test('@cross-browser CODE HELP, CODE DATA, and Story keep focus inside and resto
   await page.keyboard.press('Escape')
   await expect(data).toBeHidden()
   await expect(dataTrigger).toBeFocused()
+  await expect(page.locator('body')).not.toHaveCSS('overflow', 'hidden')
 })
 
 test('@cross-browser Victory/Defeat result dialog traps focus and blocks Battle background', async ({
@@ -252,27 +260,120 @@ test('@cross-browser post-Battle Story exclusively owns focus until the Victory 
   const result = page.getByRole('dialog', { name: 'Victory result' })
   await expect(result).toBeVisible()
   await expect(overlay).not.toHaveAttribute('inert', '')
+  await expect(page.locator('body')).toHaveCSS('overflow', 'hidden')
   await expect(result.getByRole('button').first()).toBeFocused()
   await result.getByRole('button', { name: /RETURN TO WORLD/ }).click()
   await expect(page).toHaveURL(/\/world$/)
+  await expect(page.locator('body')).not.toHaveCSS('overflow', 'hidden')
 })
 
-test('@responsive mobile keeps selected code and Enemy runtime data comparable', async ({
+test('@responsive mobile keeps all three Enemy cards and selected code comparable without horizontal overflow', async ({
   page,
 }) => {
-  await seedState(page, { clearedStageIds: JS_BATTLE_1_PREREQS })
-  await page.goto('/javascript/battle/1?seed=quality-code-data&returnTo=%2Fworld')
+  await seedState(page, { clearedStageIds: [...JS_SECOND_INCIDENT_PREREQS, 2] })
+  await page.goto('/javascript/battle/2?seed=quality-code-data&returnTo=%2Fworld')
   await dismissStory(page)
 
   const trace = page.getByRole('button', { name: /^TRACE\b/ })
   await trace.click()
-  await page.getByRole('button', { name: 'コードで使う実データを確認' }).click()
 
-  await expect(trace.locator('pre code')).toBeVisible()
+  const geometry = await page.evaluate(() => {
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+    const rows = Array.from(document.querySelectorAll<HTMLElement>('.enemy-card'))
+    const selected = document.querySelector<HTMLElement>('.selected-skill-reading')
+    const sourceLines = Array.from(document.querySelectorAll<HTMLElement>('.selected-skill-reading .source-code-line'))
+    const referenceButtons = Array.from(document.querySelectorAll<HTMLElement>(
+      '.battle-reference-actions > .floating-code-data, .battle-reference-actions > .floating-help',
+    ))
+    const secondaryActions = document.querySelector<HTMLElement>('.battle-secondary-actions')
+    const withinWidth = (element: HTMLElement) => {
+      const bounds = element.getBoundingClientRect()
+      return bounds.left >= -1 && bounds.right <= viewportWidth + 1 && bounds.width > 0
+    }
+    const overlaps = (first: DOMRect, second: DOMRect) =>
+      first.left < second.right && first.right > second.left && first.top < second.bottom && first.bottom > second.top
+    const compactMode = viewportWidth <= 900 || (viewportHeight <= 520 && viewportWidth <= 1100)
+    const mobileReading = compactMode
+    const readingElements = mobileReading && selected ? [...rows, selected] : []
+    const readingBounds = readingElements.map((element) => element.getBoundingClientRect())
+    const readingTop = readingBounds.length > 0 ? Math.min(...readingBounds.map((bounds) => bounds.top)) : 0
+    const readingBottom = readingBounds.length > 0 ? Math.max(...readingBounds.map((bounds) => bounds.bottom)) : 0
+    return {
+      rowCount: rows.length,
+      mobileReading,
+      rowsWithinWidth: rows.every(withinWidth),
+      rowFieldsWithinWidth: rows.every((row) =>
+        Array.from(row.querySelectorAll<HTMLElement>(
+          '.enemy-name-row h2, .enemy-name-row > span, .enemy-role, .enemy-raw-attack, .intent-box',
+        )).every((field) => {
+          const card = row.getBoundingClientRect()
+          const bounds = field.getBoundingClientRect()
+          return withinWidth(field) && bounds.left >= card.left && bounds.right <= card.right &&
+            bounds.top >= card.top && bounds.bottom <= card.bottom
+        }),
+      ),
+      readableSprites: rows.every((row) => {
+        const sprite = row.querySelector<HTMLElement>('.enemy-sprite')?.getBoundingClientRect()
+        return Boolean(sprite && sprite.width >= 40 && sprite.height >= 40)
+      }),
+      visibleHpBars: rows.every((row) => {
+        const track = row.querySelector<HTMLElement>('.enemy-track')?.getBoundingClientRect()
+        return Boolean(track && track.width > 0 && track.height >= 6)
+      }),
+      rowsHaveRuntimeData: rows.every((row) =>
+        Boolean(
+          row.querySelector('.enemy-name-row h2') &&
+          row.querySelector('.enemy-name-row > span') &&
+          row.querySelector('.enemy-raw-attack strong') &&
+          row.querySelector('.intent-box strong'),
+        ),
+      ),
+      selectedWithinWidth: selected ? withinWidth(selected) : false,
+      sourceLineCount: sourceLines.length,
+      selectedCodeVisible: sourceLines.every(withinWidth),
+      referenceButtonCount: referenceButtons.length,
+      referenceButtonsInline: referenceButtons.every((button) => getComputedStyle(button).position === 'static'),
+      referenceButtonsWithinWidth: referenceButtons.every(withinWidth),
+      referenceButtonsOverlapActions: secondaryActions
+        ? referenceButtons.some((button) => overlaps(button.getBoundingClientRect(), secondaryActions.getBoundingClientRect()))
+        : true,
+      horizontalOverflow: document.documentElement.scrollWidth - viewportWidth,
+      readingUnionHeight: readingBottom - readingTop,
+      viewportHeight,
+    }
+  })
+
+  expect(geometry.rowCount).toBe(3)
+  expect(geometry.rowsWithinWidth).toBe(true)
+  expect(geometry.rowFieldsWithinWidth).toBe(true)
+  expect(geometry.rowsHaveRuntimeData).toBe(true)
+  expect(geometry.readableSprites).toBe(true)
+  expect(geometry.visibleHpBars).toBe(true)
+  expect(geometry.horizontalOverflow).toBeLessThanOrEqual(1)
+  if (geometry.mobileReading) {
+    expect(geometry.selectedWithinWidth).toBe(true)
+    expect(geometry.sourceLineCount).toBeGreaterThan(0)
+    expect(geometry.selectedCodeVisible).toBe(true)
+    expect(geometry.readingUnionHeight).toBeLessThanOrEqual(geometry.viewportHeight)
+    expect(geometry.referenceButtonCount).toBe(2)
+    expect(geometry.referenceButtonsInline).toBe(true)
+    expect(geometry.referenceButtonsWithinWidth).toBe(true)
+    expect(geometry.referenceButtonsOverlapActions).toBe(false)
+  } else {
+    await expect(trace.locator('pre code')).toBeVisible()
+  }
+
+  // Keep the existing live DATA contract alongside the compact reading layout.
+  await page.getByRole('button', { name: 'コードで使う実データを確認' }).click()
   const data = page.getByRole('dialog', { name: 'Code data' })
   await expect(data).toBeVisible()
   await expect(data.getByRole('heading', { name: 'TRACE' })).toBeVisible()
   await expect(data.getByText('enemies', { exact: true }).first()).toBeVisible()
+  const dataBounds = await data.boundingBox()
+  const viewport = page.viewportSize()
+  expect(dataBounds?.y ?? -1).toBeGreaterThanOrEqual(0)
+  expect((dataBounds?.y ?? 0) + (dataBounds?.height ?? 0)).toBeLessThanOrEqual(viewport?.height ?? 0)
 })
 
 test('@responsive current Atlas card is in the scrollport immediately after opening', async ({

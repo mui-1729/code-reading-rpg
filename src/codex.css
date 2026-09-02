@@ -19,6 +19,11 @@
   cursor: pointer;
 }
 
+.codex-tabs button:focus-visible {
+  position: relative;
+  z-index: 1;
+}
+
 .codex-tabs button.is-active {
   border-color: var(--green);
   background: #102119;
@@ -33,6 +38,16 @@
   font-size: 10px;
   font-weight: 900;
   letter-spacing: .08em;
+}
+
+.codex-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.codex-panel:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 4px;
 }
 
 .codex-summary strong {

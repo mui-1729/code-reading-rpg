@@ -121,12 +121,17 @@ Tabs:
 
 ```text
 STATUS
+MAP
 ITEMS
 EQUIPMENT
 PARTY
 CODEX
 SYSTEM
 ```
+
+headerとsection navigationは固定し、内容だけをscrollする。選択中のsectionをaccessibility stateでも伝え、keyboardで各sectionへ移動できる。
+
+WorldではMENU中の移動・interactionを止める。Battleでは「行動の合間に確認するBATTLE MENU」とし、進行中のanimation / damage timerを途中停止する機能にはしない。resolving中、およびStory / HELP / DATA / Victory / Defeat中には開けない。開ける時点には未完了のturn処理がない。
 
 ### STATUS
 
@@ -149,13 +154,15 @@ SYSTEM
 - bonus
 - equip / unequip
 
+装備の変更はWorldで行う。Battle MENUではloadoutとbonusを参照できるが、equip / unequipはdisabledにする。Battle中の無償な装備変更でPOWER / Defense / Max HPを変えない。
+
 装備比較のためだけにWorld HUDへAttack/Defenseを出さない。
 
 ### PARTY
 
 - Leader
 - joined member
-- member role / base stats
+- member role / Party Rank / follow-upの対象と回数
 
 Partyが正解targetを自動で示すような説明はしない。
 
@@ -166,6 +173,7 @@ Partyが正解targetを自動で示すような説明はしない。
 - JavaScript / TypeScript tabs
 - concept / summary / code / notes
 - 独立した常設CODEX button / overlay / shortcutは持たない
+- TypeScript Frontier上のWorldとTypeScript Battleでは、開いたときTypeScriptを初期選択する
 
 Codex自体が説明UIなので外側の説明を増やさない。
 
@@ -259,16 +267,20 @@ scene decorationはcode readabilityより下位。狭いviewportでは背景deco
 
 背景のためにEnemy cardやcodeを横方向へ押し出さない。
 
+MobileでもEnemyはsprite・HPバー・NEXTを持つRPGのcard表示を維持し、小さなdata行だけにはしない。3体の現在値と選択中codeは近接配置して比較する。Skill一覧はcompactなSELECT / EXECUTE操作として残し、全Skillの長いcodeを縦に積まない。Enemyの横scrollに依存せず、name / hp / attackDamageとDefense適用後のNEXTを区別する。Battle名とLessonのsubtitleはMobileでも表示し、brand名より現在の判断を優先する。
+
+CODE HELPは選択中Skillを最初に開く（未選択時だけ先頭Skill）。番号はsourceの改行に対応し、狭い画面で折り返したvisual lineとは区別する。HELP / DATAはdialogとしてfocusを閉じ込め、Escapeで閉じた後に起点へfocusを戻す。短い画面ではdialog内をscrollする。
+
 ## PATCH KIT
 
-Battle中、所持時だけcompact actionとして表示する。
+Battle中、Skill選択の後にcompactなsecondary actionとして表示する。
 
 ```text
 PATCH KIT ×N · +24 HP
 ```
 
 - full HP / resolving / usedならdisabled
-- 未所持なら空欄を出さない
+- 未所持ならNO STOCKとdisabled状態を示す
 - target判断へ影響する情報は付けない
 
 ## Result Sequence
@@ -287,6 +299,8 @@ World Objective Update
 ```
 
 click / tap / auto advance / skipを維持する。
+
+`prefers-reduced-motion: reduce`ではauto advanceを止め、NEXT / SKIPで読む速度をPlayerが決める。設定の変更にも追従する。
 
 関連の強い情報だけgroup化する。
 
