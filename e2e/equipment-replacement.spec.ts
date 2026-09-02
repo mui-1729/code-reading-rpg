@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { readStoredGameState } from './storedGameState'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -74,9 +75,6 @@ test('未装備slotは自然な比較を表示し、装備解除ではなく付�
   await accessorySlot.locator('button[data-equipment-id="life-charm"]').click()
   await expect(accessorySlot.getByRole('button', { name: 'Life Charm 装備中' })).toBeVisible()
 
-  const storedAccessory = await page.evaluate((rpgKey) => {
-    const raw = localStorage.getItem(rpgKey)
-    return raw ? JSON.parse(raw).state.equipment.accessory : null
-  }, RPG_KEY)
-  expect(storedAccessory).toBe('life-charm')
+  const stored = await readStoredGameState(page)
+  expect(stored.rpg.state.equipment.accessory).toBe('life-charm')
 })
