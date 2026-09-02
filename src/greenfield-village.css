@@ -1,0 +1,200 @@
+/* GREENFIELD VILLAGE: a safe rest-and-training stop before the Forest. */
+.world-viewport[data-world-map='js-village'] {
+  background:
+    radial-gradient(circle at 50% 45%, rgba(255, 222, 135, .09), transparent 42%),
+    #151a18;
+}
+
+.world-viewport[data-world-map='js-village'] .world-entry-transition::after {
+  content: 'MIOと読めなかった所を整理し、森へ向かうための安全な中継地点';
+  max-width: min(78vw, 620px);
+  margin-top: 2px;
+  color: #d7d1bd;
+  font-size: clamp(.62rem, 2.5vw, .78rem);
+  line-height: 1.55;
+  letter-spacing: .04em;
+}
+
+/* Houses read as buildings instead of a repeated wall texture. */
+.world-viewport[data-world-map='js-village'] .terrain-house {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(66, 49, 39, .8);
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, .05) 0 28%, transparent 29%),
+    repeating-linear-gradient(0deg, #6a4a36 0 18%, #533927 19% 36%);
+  box-shadow: inset 0 5px 0 #38251d;
+}
+
+.world-viewport[data-world-map='js-village'] .terrain-house::before {
+  content: '';
+  position: absolute;
+  inset: 16% 20% 12%;
+  border: 2px solid #32231c;
+  background:
+    linear-gradient(90deg, #a3d2ce 0 38%, #385e62 39% 48%, #a3d2ce 49% 86%, #385e62 87%),
+    #a3d2ce;
+  opacity: .82;
+}
+
+.world-viewport[data-world-map='js-village'] :is(
+  .terrain-house[data-world-x='4'][data-world-y='5'],
+  .terrain-house[data-world-x='16'][data-world-y='5'],
+  .terrain-house[data-world-x='5'][data-world-y='11'],
+  .terrain-house[data-world-x='15'][data-world-y='11']
+)::after {
+  content: '入口';
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  translate: -50% 0;
+  padding: 1px 3px;
+  border: 1px solid #2a1b16;
+  background: #d5b56f;
+  color: #2a1b16;
+  font-size: 7px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+/* The central yard is the first landmark the player sees from the entrance. */
+.world-viewport[data-world-map='js-village'] .terrain-training {
+  position: relative;
+  outline: 2px solid rgba(255, 216, 111, .8);
+  outline-offset: -3px;
+  background:
+    repeating-linear-gradient(45deg, rgba(255, 224, 125, .12) 0 4px, transparent 4px 8px),
+    #5b603a;
+}
+
+.world-viewport[data-world-map='js-village'] .terrain-training::after {
+  content: '訓練';
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  translate: -50% 0;
+  padding: 1px 3px;
+  background: rgba(30, 24, 16, .86);
+  color: #ffe38a;
+  font-size: 7px;
+  font-weight: 900;
+}
+
+/* A small meeting square and bench create life without adding a new system. */
+.world-viewport[data-world-map='js-village'] .world-tile[data-world-x='10'][data-world-y='8']::after {
+  content: '✦';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  display: grid;
+  place-items: center;
+  width: 44%;
+  aspect-ratio: 1;
+  border: 2px solid #536c68;
+  border-radius: 50%;
+  background: #8fc2bf;
+  color: #eafcff;
+  font-size: 10px;
+  box-shadow: 0 2px 0 #263b3c;
+}
+
+.world-viewport[data-world-map='js-village'] .world-tile[data-world-x='13'][data-world-y='8']::after {
+  content: '';
+  position: absolute;
+  left: 16%;
+  right: 16%;
+  bottom: 24%;
+  height: 24%;
+  border-block: 3px solid #35281f;
+  background: #9b7047;
+  box-shadow: 4px 4px 0 #3c2c22;
+}
+
+.world-viewport[data-world-map='js-village'] .terrain-exit {
+  position: relative;
+  outline: 2px solid rgba(175, 220, 171, .7);
+  outline-offset: -3px;
+}
+
+.world-viewport[data-world-map='js-village'] .terrain-exit::after {
+  content: '出口 ↓';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  padding: 2px 4px;
+  background: rgba(15, 28, 20, .9);
+  color: #c8f4ba;
+  font-size: 7px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+/* Existing resident markers become recognizable people, with lightweight variation. */
+.world-viewport[data-world-map='js-village'] .world-resident-marker {
+  --resident-hair: #3c2b25;
+  --resident-skin: #e7b987;
+  --resident-coat: #6b7a55;
+  display: block;
+  position: relative;
+  width: 24px;
+  height: 30px;
+  font-size: 0;
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, .55));
+}
+
+.world-viewport[data-world-map='js-village'] .world-resident-marker::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 1px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #191716;
+  background:
+    linear-gradient(var(--resident-hair) 0 35%, transparent 36%),
+    var(--resident-skin);
+  box-shadow: inset 3px 6px 0 rgba(255, 255, 255, .12);
+}
+
+.world-viewport[data-world-map='js-village'] .world-resident-marker::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 13px;
+  width: 16px;
+  height: 14px;
+  border: 2px solid #191716;
+  background: var(--resident-coat);
+  clip-path: polygon(18% 0, 82% 0, 100% 72%, 76% 72%, 76% 100%, 54% 100%, 50% 72%, 46% 100%, 24% 100%, 24% 72%, 0 72%);
+}
+
+.world-viewport[data-world-map='js-village'] .npc-village-child .world-resident-marker {
+  --resident-hair: #7b4b31;
+  --resident-coat: #4b86a8;
+  scale: .88;
+  transform-origin: center bottom;
+}
+
+.world-viewport[data-world-map='js-village'] .npc-forest-traveler .world-resident-marker {
+  --resident-hair: #4a4032;
+  --resident-coat: #7b6b46;
+}
+
+.world-viewport[data-world-map='js-village'] .npc-misfire-adventurer .world-resident-marker {
+  --resident-hair: #302b35;
+  --resident-coat: #7c5369;
+}
+
+@media (max-width: 700px) {
+  .world-viewport[data-world-map='js-village'] .world-entry-transition::after {
+    max-width: 86vw;
+    font-size: .62rem;
+  }
+
+  .world-viewport[data-world-map='js-village'] .world-resident-marker {
+    scale: .9;
+    transform-origin: center bottom;
+  }
+}
