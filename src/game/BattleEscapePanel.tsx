@@ -24,8 +24,12 @@ export function BattleEscapePanel({ areaId, battleId, seed, returnTo, actionLock
     clearedStageIds: progress.clearedStageIds,
   })
 
+  // Keep a non-rendered layout anchor for reference-action geometry without exposing
+  // a disabled RUN command or fixed-battle explanation to the player.
+  if (!allowed) return <div className="battle-escape-row" hidden aria-hidden="true" />
+
   const escape = () => {
-    if (!allowed || actionLocked) return
+    if (actionLocked) return
     gameAudio.playSe('confirm')
     onRun()
     navigate({ to: '/world' })
@@ -33,14 +37,16 @@ export function BattleEscapePanel({ areaId, battleId, seed, returnTo, actionLock
 
   return (
     <div className="battle-escape-row">
-      <button type="button" className="secondary-button battle-escape-action" onClick={escape} disabled={!allowed || actionLocked}>
-        {allowed ? 'RUN · ESCAPE' : 'RUN LOCKED · FIXED BATTLE'}
+      <button
+        type="button"
+        className="secondary-button battle-escape-action"
+        onClick={escape}
+        disabled={actionLocked}
+        aria-label="RUN · ESCAPE"
+        title="この戦闘から離脱してWorldへ戻る"
+      >
+        RUN
       </button>
-      <span className="battle-item-state">
-        {allowed
-          ? 'Random Encounterから離脱し、元いたWorld位置へ戻る · reward / clearなし'
-          : 'Fixed Lesson / Bossは最後まで挑戦する'}
-      </span>
     </div>
   )
 }

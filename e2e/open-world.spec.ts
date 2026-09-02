@@ -125,7 +125,7 @@ test.describe('Open World RPG loop', () => {
     // BYTE合流後は教材履修を要求せず、JavaScript側の次のmovementで最初のlive incidentを固定再現する。
     await page.getByRole('button', { name: 'Move down' }).click()
     await expect(page).toHaveURL(/\/javascript\/battle\/1\?/)
-    await expect(page.getByText('JS-01', { exact: false })).toBeVisible()
+    await expect(page.locator('.battle-console')).toBeVisible()
     await dismissStory(page)
 
     await executeSkill(page, 'TRACE')
@@ -176,6 +176,7 @@ test.describe('Open World RPG loop', () => {
     await page.goto('/javascript/battle/1?seed=patch-hp-e2e&returnTo=%2Fworld')
     await dismissStory(page)
     await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('40/108')
+    await page.locator('.battle-item-toggle').click()
     await page.getByRole('button', { name: /PATCH KIT ×1/ }).click()
     await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
 

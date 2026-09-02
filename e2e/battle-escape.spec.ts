@@ -65,7 +65,6 @@ test('clear済みOverworld Random Encounterから逃走すると同じWorld位�
   const run = page.getByRole('button', { name: 'RUN · ESCAPE' })
   await expect(run).toBeVisible()
   await expect(run).toBeEnabled()
-  await expect(page.getByText(/元いたWorld位置へ戻る/)).toBeVisible()
   await run.click()
 
   await expect(page).toHaveURL(/\/world$/)
@@ -79,7 +78,7 @@ test('clear済みOverworld Random Encounterから逃走すると同じWorld位�
   expect((await storedRpg(page)).state.currentHp).toBe(73)
 })
 
-test('未clearのfirst incidentはRandom風seedでも逃走できない', async ({ page }) => {
+test('未clearのfirst incidentはRandom風seedでもRUNを表示しない', async ({ page }) => {
   await seed(page, [...JS_BATTLE_1_PREREQS])
   await page.goto('/javascript/battle/1?seed=encounter%3Aoverworld%3A5%3A10%3A11&returnTo=%2Fworld')
 
@@ -87,12 +86,11 @@ test('未clearのfirst incidentはRandom風seedでも逃走できない', async 
   await expect(story).toBeVisible()
   await story.getByRole('button', { name: 'SKIP' }).click()
 
-  const run = page.getByRole('button', { name: 'RUN LOCKED · FIXED BATTLE' })
-  await expect(run).toBeVisible()
-  await expect(run).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'RUN · ESCAPE' })).toHaveCount(0)
+  await expect(page.getByText('FIXED BATTLE', { exact: false })).toHaveCount(0)
 })
 
-test('fixed Lesson / Training / Boss / Mid-Bossは逃走不可を明示する', async ({ page }) => {
+test('fixed Lesson / Training / Boss / Mid-BossではRUN UIそのものを表示しない', async ({ page }) => {
   await seed(page, [...JS_BOSS_PREREQS])
 
   for (const url of [
@@ -101,13 +99,12 @@ test('fixed Lesson / Training / Boss / Mid-Bossは逃走不可を明示する', 
     '/javascript/battle/3?seed=boss%3Ajs%3A1&returnTo=%2Fworld',
   ]) {
     await page.goto(url)
-    const run = page.getByRole('button', { name: 'RUN LOCKED · FIXED BATTLE' })
-    await expect(run).toBeVisible()
-    await expect(run).toBeDisabled()
+    await expect(page.getByRole('button', { name: 'RUN · ESCAPE' })).toHaveCount(0)
+    await expect(page.getByText('FIXED BATTLE', { exact: false })).toHaveCount(0)
   }
 })
 
-test('clear済みlocal map Random復習Battleは逃走できる', async ({ page }) => {
+test('clear済みlocal map Random復習BattleだけRUNを表示する', async ({ page }) => {
   await seed(page, [...JS_FIRST_INCIDENT, 10])
   await page.goto('/javascript/battle/10?seed=encounter%3Ajs-forest%3A7%3A20%3A9&returnTo=%2Fworld')
 
