@@ -44,8 +44,10 @@ test('プレイヤー向け主要UIは日本語を基本にしtechnical termを�
   await page.goto('/world')
 
   await expect(page.getByText(/JavaScript地方/)).toBeVisible()
-  await expect(page.getByRole('button', { name: 'INTERACT · ショップを見る' })).toBeVisible()
-  await page.getByRole('button', { name: 'INTERACT · ショップを見る' }).click()
+  await expect(page.getByRole('button', { name: 'ショップを見る' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '右へ移動' })).toBeVisible()
+  await expect(page.getByRole('button', { name: /^INTERACT/ })).toHaveCount(0)
+  await page.getByRole('button', { name: 'ショップを見る' }).click()
   const shop = page.getByRole('dialog', { name: 'ショップ' })
   await expect(shop.getByText('所持ゴールド', { exact: true })).toBeVisible()
   await shop.getByRole('button', { name: 'ショップを閉じる' }).click()
