@@ -35,8 +35,8 @@ export type BattleItemUseState = {
 export const patchKitItem: ItemDefinition = {
   id: 'patch-kit',
   name: 'PATCH KIT',
-  categoryLabel: 'BATTLE ITEM',
-  description: '壊れた戦闘装備を応急修復し、HPを回復する携帯用kit。',
+  categoryLabel: '戦闘アイテム',
+  description: '壊れた戦闘装備を応急修復し、HPを回復する携帯用キット。',
   price: 30,
   visual: '/pixel-art/items/patch-kit.svg',
   effect: {
@@ -62,14 +62,14 @@ export function getItemCount(progress: PlayerProgress, itemId: ItemId) {
 
 export function getItemEffectSummary(item: ItemDefinition) {
   if (item.effect.kind === 'heal') return `HP +${item.effect.amount}`
-  return 'UTILITY'
+  return '補助効果'
 }
 
 export function getItemUsageSummary(item: ItemDefinition) {
   if (item.usage.location === 'battle') {
-    return `BATTLE ONLY · ${item.usage.maxUsesPerBattle} USE`
+    return `戦闘専用 · ${item.usage.maxUsesPerBattle}回`
   }
-  return 'FIELD ONLY'
+  return 'フィールド専用'
 }
 
 export function getBattleItemUseState(input: {
@@ -86,17 +86,17 @@ export function getBattleItemUseState(input: {
   const count = getItemCount(input.progress, input.itemId)
 
   if (input.usedThisBattle && item.usage.maxUsesPerBattle <= 1) {
-    return { canUse: false, reason: 'already-used', reasonLabel: 'USED THIS BATTLE' }
+    return { canUse: false, reason: 'already-used', reasonLabel: 'この戦闘では使用済み' }
   }
   if (count <= 0) {
-    return { canUse: false, reason: 'no-stock', reasonLabel: 'NO STOCK' }
+    return { canUse: false, reason: 'no-stock', reasonLabel: '所持なし' }
   }
   if (item.effect.kind === 'heal' && hp >= maxHp) {
-    return { canUse: false, reason: 'hp-full', reasonLabel: 'HP FULL' }
+    return { canUse: false, reason: 'hp-full', reasonLabel: 'HP満タン' }
   }
   if (input.actionLocked) {
-    return { canUse: false, reason: 'action-locked', reasonLabel: 'ACTION LOCKED' }
+    return { canUse: false, reason: 'action-locked', reasonLabel: '行動不可' }
   }
 
-  return { canUse: true, reason: 'available', reasonLabel: 'READY · BATTLE ONLY' }
+  return { canUse: true, reason: 'available', reasonLabel: '使用可能 · 戦闘専用' }
 }

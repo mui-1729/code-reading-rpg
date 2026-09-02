@@ -26,12 +26,12 @@ export function BattleItemPanel({ progress, hp, maxHp, usedThisBattle, lastHeal,
           <span>{effectSummary} · {getItemUsageSummary(patchKitItem)}</span>
         </span>
       </div>
-      <button type="button" className="secondary-button patch-kit-action" onClick={onUse} disabled={!itemUseState.canUse} aria-label={`${patchKitItem.name} ×${count} · ${effectSummary}`}>
-        ▶ USE
+      <button type="button" className="secondary-button patch-kit-action" onClick={onUse} disabled={!itemUseState.canUse} aria-label={`${patchKitItem.name} ×${count}を使う · ${effectSummary}`}>
+        ▶ 使う
       </button>
       <span className="battle-item-state" aria-live="polite">
         {lastHeal !== null && usedThisBattle
-          ? `RECOVERED +${lastHeal} HP · ${itemUseState.reasonLabel}`
+          ? `+${lastHeal} HP回復 · ${itemUseState.reasonLabel}`
           : itemUseState.reasonLabel}
       </span>
     </div>

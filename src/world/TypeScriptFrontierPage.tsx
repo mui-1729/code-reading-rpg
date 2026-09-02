@@ -18,44 +18,44 @@ import { useWorldKeyboardControls } from './useWorldKeyboardControls'
 import type { WorldPosition } from './worldSceneGeometry'
 
 const terrainLabels: Record<string, string> = {
-  mountain: 'Collapsed Boundary',
-  stone: 'Rune Stone Road',
-  crystal: 'Crystal Field · TypeScript encounter',
-  ruins: 'Ancient Ruins · TypeScript encounter',
-  gate: 'Region Gate',
+  mountain: '崩れた境界',
+  stone: 'ルーン石の道',
+  crystal: 'Crystal Field · TypeScript戦闘',
+  ruins: 'Ancient Ruins · TypeScript戦闘',
+  gate: '地方の門',
   boss: 'Type Warden',
   treasure: 'Type Cache',
-  grass: 'Frontier Grass',
-  forest: 'Typed Forest · TypeScript encounter',
+  grass: 'Frontierの草地',
+  forest: '型の森 · TypeScript戦闘',
 }
 
 function getObjective(clearedStageIds: readonly number[]) {
   if (!clearedStageIds.includes(4)) {
     return {
       label: 'TYPESCRIPT · 1 / 3',
-      title: '型ラベルがtarget ruleへどう影響するか読む',
-      detail: 'GATEから東のCrystal Field / Ruinsへ進もう。最初のEncounterはBattle 4。',
+      title: '型ラベルが対象ルールへどう影響するか読む',
+      detail: 'GATEから東のCrystal Field / Ruinsへ進もう。最初の戦闘はBattle 4。',
       clear: false,
     }
   }
   if (!clearedStageIds.includes(5)) {
     return {
       label: 'TYPESCRIPT · 2 / 3',
-      title: 'もう一つの型ruleを読み比べる',
-      detail: 'さらに東へ進み、Battle 5で型情報を使った別のtarget ruleを読む。',
+      title: 'もう一つの型ルールを読み比べる',
+      detail: 'さらに東へ進み、Battle 5で型情報を使った別の対象ルールを読む。',
       clear: false,
     }
   }
   if (!clearedStageIds.includes(6)) {
     return {
-      label: 'TYPESCRIPT · 3 / 3 · BOSS',
+      label: 'TYPESCRIPT · 3 / 3 · ボス',
       title: '北東のTYPE WARDENへ向かう',
-      detail: '二つのTypeScript Battleを読み終えた。北東のBOSSの隣でINTERACTし、Battle 6へ挑もう。',
+      detail: '二つのTypeScript戦闘を読み終えた。北東のボスの隣でINTERACTし、Battle 6へ挑もう。',
       clear: false,
     }
   }
   return {
-    label: 'TYPESCRIPT CLEAR',
+    label: 'TYPESCRIPT クリア',
     title: 'TypeScript Frontierの異変を止めた',
     detail: '西のGATEからCentral Hubへ戻れる。',
     clear: true,
@@ -67,7 +67,7 @@ export function TypeScriptFrontierPage() {
   const { progress, setProgress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
   const [message, setMessage] = useState(
-    'Rune Stone Roadを進み、Crystal / RuinsでTypeScriptのruleを読もう。',
+    'ルーン石の道を進み、Crystal / RuinsでTypeScriptのルールを読もう。',
   )
   useBgm('field')
 
@@ -120,7 +120,7 @@ export function TypeScriptFrontierPage() {
       if (byteJoined) setFollowerPosition(position)
       setRpgState(result.nextState)
       if (result.kind === 'encounter') {
-        setMessage('TYPE ENCOUNTER!')
+        setMessage('TypeScript戦闘！')
         enterBattle(result.battle.battleId, result.battle.seed)
         return
       }
@@ -151,7 +151,7 @@ export function TypeScriptFrontierPage() {
       setRpgState(result.rpgState)
       gameAudio.playSe('confirm')
       setMessage(
-        `${result.definition.name} OPEN // +${result.definition.reward.gold}G` +
+        `${result.definition.name} 開封 → +${result.definition.reward.gold} G` +
           (result.definition.reward.patchKit > 0
             ? ` / PATCH KIT ×${result.definition.reward.patchKit}`
             : ''),
@@ -163,7 +163,7 @@ export function TypeScriptFrontierPage() {
       if (!progress.unlockedStageIds.includes(6) && !progress.clearedStageIds.includes(5)) {
         gameAudio.playSe('cancel')
         setMessage(
-          'BYTE: まずFrontierのBattle 4 / 5を終わらせよう。二つの型ruleが揃えばTYPE WARDENへ挑める。',
+          'BYTE: まずFrontierのBattle 4 / 5を終わらせよう。二つの型ルールが揃えばTYPE WARDENへ挑める。',
         )
         return
       }
@@ -173,8 +173,8 @@ export function TypeScriptFrontierPage() {
 
     setMessage(
       progress.clearedStageIds.includes(5)
-        ? '北東のTYPE WARDENへ向かおう。BOSSの隣でINTERACT。'
-        : '石畳を外れてCRYSTAL / RUINSへ入るとTypeScript Battleが起こる。',
+        ? '北東のTYPE WARDENへ向かおう。ボスの隣でINTERACT。'
+        : '石畳を外れてCrystal / Ruinsへ入るとTypeScript戦闘が起こる。',
     )
   }, [enterBattle, position, progress, rpgState, setProgress, setRpgState, visibleCells])
 
@@ -185,11 +185,11 @@ export function TypeScriptFrontierPage() {
       <section className="pixel-window world-panel typescript-frontier-panel">
         <header className="world-header">
           <div>
-            <div className="eyebrow">LOCAL MAP // TYPESCRIPT FRONTIER</div>
+            <div className="eyebrow">ローカルマップ // TYPESCRIPT FRONTIER</div>
             <h1>TYPESCRIPT FRONTIER</h1>
             <p>
               JavaScriptの草原とは別の地方。Rune Stone Roadを軸に、Crystal FieldとAncient
-              Ruinsで型のruleを読む。
+              Ruinsで型のルールを読む。
             </p>
           </div>
         </header>
@@ -242,7 +242,7 @@ export function TypeScriptFrontierPage() {
         </WorldViewport>
 
         <section className="world-message pixel-inner-window" aria-live="polite">
-          <span>FRONTIER LOG</span>
+          <span>フロンティアログ</span>
           <p>{message}</p>
         </section>
 

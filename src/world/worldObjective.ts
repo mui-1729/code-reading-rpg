@@ -48,14 +48,14 @@ const definitions: readonly RegionDefinition[] = [
     label: 'JAVASCRIPT KINGDOM',
     areaId: 'javascript',
     bossBattleId: 3,
-    clearNext: 'INCIDENT CLOSED // TypeScript地方へ進む',
+    clearNext: '事件解決 // TypeScript地方へ進む',
   },
   {
     region: 'typescript',
     label: 'TYPESCRIPT FRONTIER',
     areaId: 'typescript',
     bossBattleId: 6,
-    clearNext: 'INCIDENT CLOSED // REAL WORLDへRETURN済み',
+    clearNext: '事件解決 // REAL WORLDへ帰還済み',
   },
 ]
 
@@ -64,32 +64,32 @@ function getDefinition(region: WorldObjectiveRegion): RegionDefinition {
 }
 
 function getNextLabel(region: WorldObjectiveRegion, battleId: number | undefined): string {
-  if (battleId === undefined) return 'NEXT // Worldを探索する'
+  if (battleId === undefined) return '次の目的 // Worldを探索する'
 
   const progressionKey = getProgressionNode(battleId)?.key
 
   if (region === 'typescript') {
-    if (progressionKey === 'ts-api-contract') return 'INVESTIGATE // API更新後のtargetずれを再現する'
-    if (progressionKey === 'ts-optional-union') return 'INVESTIGATE // optional / unionの波及経路を追う'
-    return 'ROOT CAUSE // 東のFrontier Compilerを確認する'
+    if (progressionKey === 'ts-api-contract') return '調査 // API更新後の対象ずれを再現する'
+    if (progressionKey === 'ts-optional-union') return '調査 // optional / unionの波及経路を追う'
+    return '根本原因 // 東のFrontier Compilerを確認する'
   }
 
   if (progressionKey?.startsWith('js-training-')) {
-    return 'INCIDENT PREP // Villageで必要な読み方を確認する'
+    return '事件の準備 // Villageで必要な読み方を確認する'
   }
   if (progressionKey === 'js-incident-first') {
-    return 'LIVE INCIDENT // 草原で最初のtarget異常を再現する'
+    return '最初の異常 // 草原で対象の異常を再現する'
   }
   if (progressionKey?.startsWith('js-forest-')) {
-    return 'FOLLOW TRACE // Forestでtarget条件の流れを追う'
+    return '手がかりを追う // Forestで対象条件の流れを追う'
   }
   if (progressionKey === 'js-incident-second') {
-    return 'SECOND SYMPTOM // Deep Forest入口で影響拡大を確認する'
+    return '第二の異常 // Deep Forest入口で影響拡大を確認する'
   }
   if (progressionKey?.startsWith('js-deep-')) {
-    return 'ROOT TRACE // Deep Forestを西へ進み原因へ近づく'
+    return '原因を追う // Deep Forestを西へ進み原因へ近づく'
   }
-  return 'ROOT CAUSE // Code Coreを確認する'
+  return '根本原因 // Code Coreを確認する'
 }
 
 export function getWorldObjective(

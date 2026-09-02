@@ -80,7 +80,7 @@ test('Forestの南branchには寄り道Treasureがあり取得後もreloadでOPE
   await expect(page.getByLabel('js-forest-supply treasure closed')).toBeVisible()
 
   await page.getByRole('button', { name: 'INTERACT' }).click()
-  await expect(page.getByText(/FOREST SUPPLY OPEN/)).toBeVisible()
+  await expect(page.getByText(/FOREST SUPPLY 開封/)).toBeVisible()
   await expect(page.getByLabel('js-forest-supply treasure opened')).toBeVisible()
 
   await page.reload()

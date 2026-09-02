@@ -223,7 +223,6 @@ export function TutorialPrompt() {
         if (!worldRoute) completeFieldInteraction()
         return
       }
-
     }
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -312,7 +311,7 @@ export function TutorialPrompt() {
             : coarsePointer
               ? 'INTERACTでBYTEに話しかける'
               : 'Enter / SpaceでBYTEに話しかける',
-          detail: byteJoined ? '再加入はせず、Party操作だけ確認する' : '実際にPartyへ加入させよう',
+          detail: byteJoined ? '再加入はせず、仲間との操作だけ確認する' : '実際に仲間へ加入させよう',
           className: 'tutorial-prompt-field',
         }
       : {
@@ -323,24 +322,24 @@ export function TutorialPrompt() {
         }
   } else if (state.phase === 'party-join' && routeKind === 'field') {
     copy = {
-      label: 'PARTY',
-      title: byteJoined ? 'BYTE joined! 仲間になった' : 'BYTEをPartyへ加入させよう',
+      label: '仲間',
+      title: byteJoined ? 'BYTEが仲間になった！' : 'BYTEを仲間へ加入させよう',
       detail: byteJoined
-        ? 'Worldでは後ろから追従する。PauseのPARTYで確認でき、Battleではあなたが読んだ同じtargetへ追撃する。'
-        : 'BYTEの隣でINTERACTしてPartyへ加入させる',
+        ? 'Worldでは後ろから追従する。メニューの「仲間」で確認でき、戦闘ではあなたが読んだ同じ対象へ追撃する。'
+        : 'BYTEの隣でINTERACTして仲間へ加入させる',
       className: 'tutorial-prompt-field',
     }
   } else if (state.phase === 'battle' && routeKind === 'battle' && battleReady) {
     copy = selectedSkillId
       ? {
-          label: 'EXECUTE',
-          title: '選んだSkillをもう一度押して実行',
-          detail: 'BYTEは答えを選ばず、あなたが読んだ同じtargetへ追撃する',
+          label: '実行',
+          title: '選んだスキルをもう一度押して実行',
+          detail: 'BYTEは答えを選ばず、あなたが読んだ同じ対象へ追撃する',
           className: 'tutorial-prompt-battle',
         }
       : {
-          label: 'SELECT',
-          title: 'コードを読んで、Skillを1枚選ぼう',
+          label: '選択',
+          title: 'コードを読んで、スキルを1枚選ぼう',
           detail: '困ったら右下の ? から CODE HELP を確認できる',
           className: 'tutorial-prompt-battle',
         }
@@ -356,9 +355,9 @@ export function TutorialPrompt() {
         {copy.detail && <small>{copy.detail}</small>}
       </div>
       {state.phase === 'party-join' && byteJoined && (
-        <button type="button" className="tutorial-skip" onClick={enterBattle}>NEXT · BATTLE</button>
+        <button type="button" className="tutorial-skip" onClick={enterBattle}>次へ · 戦闘</button>
       )}
-      <button type="button" className="tutorial-skip" onClick={skip}>SKIP</button>
+      <button type="button" className="tutorial-skip" onClick={skip}>スキップ</button>
     </aside>
   )
 }

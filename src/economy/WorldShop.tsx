@@ -27,6 +27,19 @@ type WorldShopProps = {
   onMessage: (message: string) => void
 }
 
+const equipmentSlotLabels = {
+  weapon: '武器',
+  armor: '防具',
+  accessory: 'アクセサリー',
+} as const
+
+const equipmentStateLabels = {
+  available: '購入可能',
+  unavailable: '購入不可',
+  owned: '所持済み',
+  equipped: '装備中',
+} as const
+
 export function WorldShop({ open, onClose, onMessage }: WorldShopProps) {
   const { progress, setProgress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
@@ -45,9 +58,9 @@ export function WorldShop({ open, onClose, onMessage }: WorldShopProps) {
       gameAudio.playSe('cancel')
       onMessage(
         result.reason === 'owned'
-          ? 'そのEquipmentはすでに持っている。'
+          ? 'その装備品はすでに持っている。'
           : result.reason === 'insufficient-gold'
-            ? `Goldが足りない。あと ${quote?.shortage ?? 0} G必要。`
+            ? `ゴールドが足りない。あと ${quote?.shortage ?? 0} G必要。`
             : 'その商品は購入できない。',
       )
       return
@@ -81,18 +94,18 @@ export function WorldShop({ open, onClose, onMessage }: WorldShopProps) {
   const renderCostPreview = (quote: ShopItemQuote) => (
     <div className="shop-cost-preview" data-affordable={quote.affordable ? 'true' : 'false'}>
       <span>
-        <small>WALLET</small>
+        <small>所持金</small>
         <strong>{quote.wallet} G</strong>
       </span>
       <span>
-        <small>PRICE</small>
+        <small>価格</small>
         <strong>{quote.price} G</strong>
       </span>
       <span>
-        <small>AFTER</small>
+        <small>購入後</small>
         <strong>{quote.afterPurchaseGold === null ? '—' : `${quote.afterPurchaseGold} G`}</strong>
       </span>
-      {quote.shortage > 0 && <em>SHORT {quote.shortage} G</em>}
+      {quote.shortage > 0 && <em>あと {quote.shortage} G</em>}
     </div>
   )
 
@@ -132,7 +145,7 @@ export function WorldShop({ open, onClose, onMessage }: WorldShopProps) {
             <strong>{getItemEffectSummary(definition)}</strong>
             <span>{getItemUsageSummary(definition)}</span>
           </div>
-          <div className="shop-stock">OWNED ×{count}</div>
+          <div className="shop-stock">所持 ×{count}</div>
           {renderCostPreview(quote)}
           <button
             type="button"
@@ -140,7 +153,7 @@ export function WorldShop({ open, onClose, onMessage }: WorldShopProps) {
             onClick={() => buy(item.id)}
             disabled={quote.state === 'unavailable'}
           >
-            {quote.state === 'available' ? '▶ BUY' : `SHORT ${quote.shortage} G`}
+            {quote.state === 'available' ? '▶ 購入' : `あと ${quote.shortage} G`}
           </button>
         </article>
       )
@@ -172,7 +185,7 @@ export function WorldShop({ open, onClose, onMessage }: WorldShopProps) {
               />
             )}
             <span className="equipment-shop-title">
-              <small>{equipment.slot.toUpperCase()}</small>
+              <small>{equipmentSlotLabels[equipment.slot]}</small>
               <strong>{equipment.name}</strong>
             </span>
           </span>
@@ -181,11 +194,11 @@ export function WorldShop({ open, onClose, onMessage }: WorldShopProps) {
         <p>{equipment.description}</p>
         <div className="equipment-stat-line">{presentation.statSummary}</div>
         <div className="equipment-compare-row">
-          <span>CURRENT · {presentation.currentEquipmentName}</span>
+          <span>現在装備 · {presentation.currentEquipmentName}</span>
           <strong>{presentation.deltaSummary}</strong>
         </div>
         <div className={`equipment-state-badge is-${state}`}>
-          {state.toUpperCase()}
+          {equipmentStateLabels[state]}
         </div>
         {renderCostPreview(quote)}
         <button
@@ -201,15 +214,15 @@ export function WorldShop({ open, onClose, onMessage }: WorldShopProps) {
           disabled={state === 'equipped' || state === 'unavailable'}
         >
           {state === 'equipped'
-            ? 'EQUIPPED'
+            ? '装備中'
             : state === 'owned'
-              ? '▶ EQUIP NOW'
+              ? '▶ 装備する'
               : state === 'available'
-                ? '▶ BUY'
-                : `SHORT ${quote.shortage} G`}
+                ? '▶ 購入'
+                : `あと ${quote.shortage} G`}
         </button>
         {owned && state !== 'equipped' && (
-          <small className="shop-owned-note">OWNED · loadoutは購入時に変更されません</small>
+          <small className="shop-owned-note">所持済み · 購入だけでは現在装備は変わりません</small>
         )}
       </article>
     )
@@ -225,35 +238,35 @@ export function WorldShop({ open, onClose, onMessage }: WorldShopProps) {
         className="shop-panel pixel-window world-shop-panel"
         role="dialog"
         aria-modal="true"
-        aria-label="World shop"
+        aria-label="ショップ"
         tabIndex={-1}
         onClick={(event) => event.stopPropagation()}
       >
         <button type="button" className="close-button" onClick={onClose} aria-label="ショップを閉じる">
           ×
         </button>
-        <div className="eyebrow">CENTRAL HUB // SHOP</div>
-        <h2>SUPPLY & EQUIPMENT</h2>
+        <div className="eyebrow">CENTRAL HUB // ショップ</div>
+        <h2>アイテム・装備</h2>
 
         <div className="shop-wallet pixel-inner-window">
-          <span>AVAILABLE GOLD</span>
+          <span>所持ゴールド</span>
           <strong>{progress.gold} G</strong>
         </div>
 
-        <section className="world-shop-section" aria-label="Consumables">
+        <section className="world-shop-section" aria-label="消耗品">
           <header className="world-shop-section-head">
-            <strong>CONSUMABLE</strong>
-            <span>Battleで使う消耗品</span>
+            <strong>消耗品</strong>
+            <span>戦闘で使うアイテム</span>
           </header>
           <div className="world-shop-list is-consumable">
             {consumables.map(renderShopItem)}
           </div>
         </section>
 
-        <section className="world-shop-section" aria-label="Equipment">
+        <section className="world-shop-section" aria-label="装備品">
           <header className="world-shop-section-head">
-            <strong>EQUIPMENT</strong>
-            <span>恒久的なbuild choice</span>
+            <strong>装備品</strong>
+            <span>能力を継続的に変える装備</span>
           </header>
           <div className="world-shop-list is-equipment">
             {equipment.map(renderShopItem)}

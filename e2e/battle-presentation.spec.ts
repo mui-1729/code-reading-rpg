@@ -72,7 +72,7 @@ test('CODE WORLD探索はdark dashboardよりfieldを主役にする', async ({ 
 
   const panel = page.locator('.world-panel')
   const viewport = page.getByLabel('Open world map')
-  const objective = page.getByLabel('Next objective')
+  const objective = page.getByLabel('次の目的')
 
   await expect(panel).toBeVisible()
   await expect(viewport).toBeVisible()

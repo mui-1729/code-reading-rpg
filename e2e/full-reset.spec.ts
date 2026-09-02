@@ -84,14 +84,14 @@ async function seedPlayedRun(page: import('@playwright/test').Page) {
   await page.goto('/world')
 }
 
-test('RESET PROGRESSはOpeningを含め最初からに戻しSoundだけ保持する', async ({ page }) => {
+test('進行リセットはOpeningを含め最初からに戻しSoundだけ保持する', async ({ page }) => {
   await seedPlayedRun(page)
 
-  await page.getByRole('button', { name: 'Pause menuを開く' }).click()
-  const dialog = page.getByRole('dialog', { name: 'Pause menu' })
-  await dialog.getByRole('button', { name: 'SYSTEM' }).click()
-  await dialog.getByRole('button', { name: 'RESET PROGRESS' }).click()
-  await dialog.getByRole('button', { name: 'CONFIRM RESET PROGRESS' }).click()
+  await page.getByRole('button', { name: 'メニューを開く' }).click()
+  const dialog = page.getByRole('dialog', { name: 'メニュー' })
+  await dialog.getByRole('button', { name: '設定' }).click()
+  await dialog.getByRole('button', { name: '進行をリセット', exact: true }).click()
+  await dialog.getByRole('button', { name: '本当に進行をリセットする', exact: true }).click()
 
   await expect(page).toHaveURL(/\/$/)
   await expect(page.getByRole('button', { name: 'START' })).toBeVisible()

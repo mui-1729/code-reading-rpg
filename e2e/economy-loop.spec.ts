@@ -107,21 +107,21 @@ test('Battle Gold → Shop purchase/equip → Inn → reload → next canonical 
   expect(stored.rpg.state.currentHp).toBeGreaterThan(0)
 
   await page.getByRole('button', { name: 'INTERACT' }).click()
-  const shop = page.getByRole('dialog', { name: 'World shop' })
+  const shop = page.getByRole('dialog', { name: 'ショップ' })
   const lifeCharm = shop.locator('[data-equipment-id="life-charm"]')
   const quote = lifeCharm.locator('.shop-cost-preview')
   await expect(quote.getByText('70 G', { exact: true })).toBeVisible()
   await expect(quote.getByText('50 G', { exact: true })).toBeVisible()
   await expect(quote.getByText('20 G', { exact: true })).toBeVisible()
-  await lifeCharm.getByRole('button', { name: '▶ BUY' }).click()
-  await expect(lifeCharm.getByRole('button', { name: '▶ EQUIP NOW' })).toBeEnabled()
+  await lifeCharm.getByRole('button', { name: '▶ 購入' }).click()
+  await expect(lifeCharm.getByRole('button', { name: '▶ 装備する' })).toBeEnabled()
 
   stored = await storedState(page)
   expect(stored.progress.progress.gold).toBe(20)
   expect(stored.rpg.state.ownedEquipmentIds).toContain('life-charm')
   expect(stored.rpg.state.equipment.accessory).toBeNull()
 
-  await lifeCharm.getByRole('button', { name: '▶ EQUIP NOW' }).click()
+  await lifeCharm.getByRole('button', { name: '▶ 装備する' }).click()
   await expect(lifeCharm).toHaveAttribute('data-equipment-state', 'equipped')
   await shop.getByRole('button', { name: 'ショップを閉じる' }).click()
 
@@ -130,10 +130,10 @@ test('Battle Gold → Shop purchase/equip → Inn → reload → next canonical 
   await page.getByRole('button', { name: 'Move down' }).click()
   await page.getByRole('button', { name: 'INTERACT' }).click()
 
-  const inn = page.getByRole('dialog', { name: 'Inn / Rest' })
+  const inn = page.getByRole('dialog', { name: '宿' })
   await expect(inn.getByText('20 G → 0 G', { exact: true })).toBeVisible()
-  await inn.getByRole('button', { name: '▶ REST' }).click()
-  await expect(page.getByText(/FULL RECOVERY/)).toBeVisible()
+  await inn.getByRole('button', { name: '▶ 休む' }).click()
+  await expect(page.locator('.world-message')).toContainText('全回復')
 
   stored = await storedState(page)
   expect(stored.progress.progress.gold).toBe(0)
@@ -141,10 +141,10 @@ test('Battle Gold → Shop purchase/equip → Inn → reload → next canonical 
   expect(stored.rpg.state.currentHp).toBeGreaterThan(100)
 
   await page.reload()
-  await page.getByRole('button', { name: 'Pause menuを開く' }).click()
-  const pause = page.getByRole('dialog', { name: 'Pause menu' })
+  await page.getByRole('button', { name: 'メニューを開く' }).click()
+  const pause = page.getByRole('dialog', { name: 'メニュー' })
   await expect(pause.getByText('0 G', { exact: true })).toBeVisible()
-  await pause.getByRole('button', { name: 'EQUIPMENT' }).click()
+  await pause.getByRole('button', { name: '装備' }).click()
   await expect(pause.locator('button[data-equipment-id="life-charm"]')).toHaveAttribute(
     'data-equipment-state',
     'equipped',

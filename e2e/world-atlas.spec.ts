@@ -68,21 +68,21 @@ async function seedWorldAtlas(
 }
 
 async function openAtlas(page: Page) {
-  await page.getByRole('button', { name: 'Pause menuを開く' }).click()
-  await page.getByRole('button', { name: 'MAP', exact: true }).click()
-  return page.getByRole('region', { name: 'World Atlas' })
+  await page.getByRole('button', { name: 'メニューを開く' }).click()
+  await page.getByRole('button', { name: 'マップ', exact: true }).click()
+  return page.getByRole('region', { name: 'ワールドマップ' })
 }
 
-test('Atlasはcurrent regionを最初に開きraw座標を通常UIへ出さない', async ({ page }) => {
+test('Atlasは現在地のエリアを最初に開きraw座標を通常UIへ出さない', async ({ page }) => {
   await seedWorldAtlas(page, JS_MIDBOSS_PREREQS)
   const atlas = await openAtlas(page)
 
   await expect(atlas).toBeVisible()
-  await expect(atlas.getByText('CURRENT · FOREST', { exact: true })).toBeVisible()
-  await expect(atlas.getByText(/CURRENT · FOREST \(/)).toHaveCount(0)
+  await expect(atlas.getByText('現在地 · FOREST', { exact: true })).toBeVisible()
+  await expect(atlas.getByText(/現在地 · FOREST \(/)).toHaveCount(0)
   await expect(atlas.locator('[data-atlas-region="js-forest"]')).toHaveAttribute('aria-pressed', 'true')
   await expect(atlas.locator('[data-atlas-map="js-forest"]')).toBeVisible()
-  await expect(atlas.getByLabel('YOU', { exact: true })).toBeVisible()
+  await expect(atlas.getByLabel('現在地', { exact: true })).toBeVisible()
 })
 
 test('選択した1 regionだけをrenderしmap追加で全terrain cellを積み上げない', async ({ page }) => {
@@ -102,7 +102,7 @@ test('選択した1 regionだけをrenderしmap追加で全terrain cellを積み
   await expect(atlas.locator('[data-atlas-map]')).toHaveCount(1)
 })
 
-test('EXIT / MID BOSS / TREASUREはterrain下の文字一覧ではなく実位置pinで見える', async ({ page }) => {
+test('出口 / 中ボス / 宝箱はterrain下の文字一覧ではなく実位置pinで見える', async ({ page }) => {
   await seedWorldAtlas(page, JS_MIDBOSS_PREREQS)
   const atlas = await openAtlas(page)
 
@@ -119,15 +119,15 @@ test('EXIT / MID BOSS / TREASUREはterrain下の文字一覧ではなく実位�
   expect(treasurePosition.top).toMatch(/%$/)
 })
 
-test('未解放regionは名称とlandmarkをspoilerせずUNKNOWNとして残す', async ({ page }) => {
+test('未解放regionは名称とlandmarkをspoilerせず未発見として残す', async ({ page }) => {
   await seedWorldAtlas(page, [], 'overworld', { x: 20, y: 14 })
   const atlas = await openAtlas(page)
 
-  await expect(atlas.getByText('UNKNOWN REGION', { exact: true })).toHaveCount(4)
+  await expect(atlas.getByText('未発見エリア', { exact: true })).toHaveCount(4)
   await expect(atlas.getByText('TS FRONTIER', { exact: true })).toHaveCount(0)
   await expect(atlas.locator('[data-atlas-region="ts-frontier"]')).toBeDisabled()
 
-  await page.getByRole('button', { name: 'Pause menuを閉じる' }).click()
+  await page.getByRole('button', { name: 'メニューを閉じる' }).click()
   await seedWorldAtlas(page, JS_COMPLETE, 'overworld', { x: 20, y: 14 })
   const discoveredAtlas = await openAtlas(page)
   await expect(discoveredAtlas.locator('[data-atlas-region="ts-frontier"]')).toContainText('TS FRONTIER')
@@ -150,11 +150,11 @@ test('terrainは色だけでなくpattern / glyphを持つ', async ({ page }) =>
   })
   expect(patterns.water).not.toBe('none')
   expect(patterns.woods).not.toBe('none')
-  await expect(atlas.locator('.atlas-terrain-legend')).toContainText('≈WATER')
-  await expect(atlas.locator('.atlas-terrain-legend')).toContainText('♠WOODS')
+  await expect(atlas.locator('.atlas-terrain-legend')).toContainText('≈水')
+  await expect(atlas.locator('.atlas-terrain-legend')).toContainText('♠森')
 })
 
-test('390pxではFITがdefaultでregion全体をviewport内へ収め100%へ切替可能', async ({ page }) => {
+test('390pxでは全体表示がdefaultでregion全体をviewport内へ収め100%へ切替可能', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedWorldAtlas(page, JS_MIDBOSS_PREREQS)
   const atlas = await openAtlas(page)
@@ -170,18 +170,18 @@ test('390pxではFITがdefaultでregion全体をviewport内へ収め100%へ切�
   await expect(atlas).toHaveAttribute('data-atlas-zoom', '100')
   expect(await scrollport.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true)
 
-  await atlas.getByRole('button', { name: 'FIT', exact: true }).click()
+  await atlas.getByRole('button', { name: '全体', exact: true }).click()
   await expect(atlas).toHaveAttribute('data-atlas-zoom', 'fit')
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth),
   ).toBe(false)
 })
 
-test('zoom controlsはFITから75〜150%のdetail zoomへ移れる', async ({ page }) => {
+test('zoom controlsは全体表示から75〜150%のdetail zoomへ移れる', async ({ page }) => {
   await seedWorldAtlas(page, JS_MIDBOSS_PREREQS)
   const atlas = await openAtlas(page)
-  const zoomIn = atlas.getByRole('button', { name: 'Zoom in world atlas' })
-  const zoomOut = atlas.getByRole('button', { name: 'Zoom out world atlas' })
+  const zoomIn = atlas.getByRole('button', { name: 'ワールドマップを拡大' })
+  const zoomOut = atlas.getByRole('button', { name: 'ワールドマップを縮小' })
 
   await zoomIn.click()
   await expect(atlas).toHaveAttribute('data-atlas-zoom', '125')

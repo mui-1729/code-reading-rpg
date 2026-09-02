@@ -102,7 +102,7 @@ async function expectAnimatedResult(page: Page, text: string) {
   for (let index = 0; index < 8; index += 1) {
     if (await result.isVisible()) return
 
-    const next = sequence.getByRole('button', { name: 'NEXT' })
+    const next = sequence.getByRole('button', { name: '次 →', exact: true })
     if (!(await next.isVisible())) break
     await next.click()
   }
@@ -183,7 +183,7 @@ test('Level Upは増加statを、ReplayはEXP 100% / Gold 50%をresultで明示�
   await executeSkill(page, 'TRACE')
   await expect(page.getByText('VICTORY', { exact: true })).toBeVisible()
   await completeStory(page)
-  await expectAnimatedResult(page, 'LEVEL UP! · MAX HP +8 · POWER +2%')
+  await expectAnimatedResult(page, 'レベルアップ！ · 最大HP +8 · 威力 +2%')
 
   await seedBattleState(page, { exp: 47, gold: 20, clearedStageIds: [1] })
   await page.goto(`/javascript/battle/1?seed=${BATTLE_1_WIN_SEED}&returnTo=%2Fworld`)
@@ -191,5 +191,5 @@ test('Level Upは増加statを、ReplayはEXP 100% / Gold 50%をresultで明示�
   await executeSkill(page, 'PULSE')
   await executeSkill(page, 'TRACE')
   await expect(page.getByText('VICTORY', { exact: true })).toBeVisible()
-  await expectAnimatedResult(page, 'REPLAY CLEAR · EXP 100% / GOLD 50%')
+  await expectAnimatedResult(page, '再クリア · EXP 100% / GOLD 50%')
 })

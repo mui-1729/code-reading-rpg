@@ -81,8 +81,8 @@ test('storage eventで別tabの新revisionを取り込み、次の移動で巻�
   await seedLegacySave(page)
   const second = await context.newPage()
   await second.goto('/world')
-  await second.getByRole('button', { name: 'Pause menuを開く' }).click()
-  const menu = second.getByRole('dialog', { name: 'Pause menu' })
+  await second.getByRole('button', { name: 'メニューを開く' }).click()
+  const menu = second.getByRole('dialog', { name: 'メニュー' })
   await expect(menu.getByText('42 G', { exact: true })).toBeVisible()
 
   const incomingRevision = await page.evaluate(() => {

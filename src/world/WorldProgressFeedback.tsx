@@ -54,7 +54,7 @@ export function WorldProgressFeedback() {
       >
         <img className="item-pixel-icon" src={patchKitItem.visual} alt="" aria-hidden="true" />
         <span>
-          <small>ITEM ACQUIRED</small>
+          <small>アイテム獲得</small>
           <strong>{patchKitItem.name} ×{viewState.itemRewardCount}</strong>
         </span>
       </section>

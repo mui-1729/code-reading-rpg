@@ -68,7 +68,7 @@ test('JS-01後はVillage入口で止まりINTERACTで入ってreload後もround 
   await expect(viewport).toHaveAttribute('data-world-map', 'overworld')
   await expect(viewport).toHaveAttribute('data-world-x', '14')
   await expect(viewport).toHaveAttribute('data-world-y', '13')
-  await expect(page.getByRole('button', { name: 'INTERACT · ENTER GREENFIELD VILLAGE' })).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'INTERACT · GREENFIELD VILLAGEへ入る' })).toBeEnabled()
 
   await page.getByRole('button', { name: 'Move up' }).click()
 
@@ -78,7 +78,7 @@ test('JS-01後はVillage入口で止まりINTERACTで入ってreload後もround 
   await expect(viewport).toHaveAttribute('data-world-y', '13')
   await expect(page.getByText('Village入口だ。INTERACTで入る。')).toBeVisible()
 
-  await page.getByRole('button', { name: 'INTERACT · ENTER GREENFIELD VILLAGE' }).click()
+  await page.getByRole('button', { name: 'INTERACT · GREENFIELD VILLAGEへ入る' }).click()
 
   await expect(page.getByRole('heading', { name: 'GREENFIELD VILLAGE' })).toBeVisible()
   await expect(viewport).toHaveAttribute('data-world-map', 'js-village')

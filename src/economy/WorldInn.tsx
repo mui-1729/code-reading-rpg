@@ -26,8 +26,8 @@ export function WorldInn({ open, onClose, onMessage }: WorldInnProps) {
       gameAudio.playSe('cancel')
       onMessage(
         result.reason === 'full-hp'
-          ? 'INN: HPはすでに満タン。Goldは消費しない。'
-          : `INN: Goldが足りない。あと ${result.quote.shortage} G必要。`,
+          ? '宿: HPはすでに満タン。ゴールドは消費しない。'
+          : `宿: ゴールドが足りない。あと ${result.quote.shortage} G必要。`,
       )
       return
     }
@@ -36,17 +36,17 @@ export function WorldInn({ open, onClose, onMessage }: WorldInnProps) {
     setRpgState(result.rpgState)
     gameAudio.playSe('levelUp')
     onMessage(
-      `INN: -${result.quote.price} G · HP ${result.quote.maxHp} / ${result.quote.maxHp} · FULL RECOVERY`,
+      `宿: -${result.quote.price} G · HP ${result.quote.maxHp} / ${result.quote.maxHp} · 全回復`,
     )
     onClose()
   }
 
   const actionLabel =
     quote.reason === 'full-hp'
-      ? 'HP FULL'
+      ? 'HP満タン'
       : quote.reason === 'insufficient-gold'
-        ? `SHORT ${quote.shortage} G`
-        : '▶ REST'
+        ? `あと ${quote.shortage} G必要`
+        : '▶ 休む'
 
   return (
     <div className="overlay inn-overlay" onClick={onClose}>
@@ -55,41 +55,41 @@ export function WorldInn({ open, onClose, onMessage }: WorldInnProps) {
         className="inn-panel pixel-window"
         role="dialog"
         aria-modal="true"
-        aria-label="Inn / Rest"
+        aria-label="宿"
         tabIndex={-1}
         onClick={(event) => event.stopPropagation()}
       >
-        <button type="button" className="close-button" onClick={onClose} aria-label="Innを閉じる">
+        <button type="button" className="close-button" onClick={onClose} aria-label="宿を閉じる">
           ×
         </button>
-        <div className="eyebrow">CENTRAL HUB // SAFE HOUSE</div>
-        <h2>INN / REST</h2>
-        <p className="inn-description">Hubで休んで、PATCH KITより安く全回復できる。</p>
+        <div className="eyebrow">中央ハブ // 休息所</div>
+        <h2>宿</h2>
+        <p className="inn-description">ここで休むと、PATCH KITより安くHPを全回復できる。</p>
 
         <div className="inn-hp-card pixel-inner-window">
           <span>
-            <small>CURRENT HP</small>
+            <small>現在のHP</small>
             <strong>{quote.currentHp} / {quote.maxHp}</strong>
           </span>
           <span>
-            <small>RECOVER</small>
-            <strong>{quote.healAmount > 0 ? `+${quote.healAmount} HP` : 'FULL'}</strong>
+            <small>回復量</small>
+            <strong>{quote.healAmount > 0 ? `+${quote.healAmount} HP` : '満タン'}</strong>
           </span>
         </div>
 
         <div className="inn-cost-card pixel-inner-window" data-rest-state={quote.reason}>
           <span>
-            <small>PRICE</small>
+            <small>料金</small>
             <strong>{quote.price} G</strong>
           </span>
           <span>
-            <small>GOLD</small>
+            <small>所持金</small>
             <strong>
               {quote.wallet} G → {quote.afterRestGold === null ? '—' : `${quote.afterRestGold} G`}
             </strong>
           </span>
-          {quote.shortage > 0 && <em>SHORT {quote.shortage} G</em>}
-          {quote.reason === 'full-hp' && <em className="is-safe">NO CHARGE · HP FULL</em>}
+          {quote.shortage > 0 && <em>あと {quote.shortage} G必要</em>}
+          {quote.reason === 'full-hp' && <em className="is-safe">料金不要 · HP満タン</em>}
         </div>
 
         <div className="inn-actions">
@@ -102,7 +102,7 @@ export function WorldInn({ open, onClose, onMessage }: WorldInnProps) {
             {actionLabel}
           </button>
           <button type="button" className="secondary-button" onClick={onClose}>
-            CANCEL
+            キャンセル
           </button>
         </div>
       </section>

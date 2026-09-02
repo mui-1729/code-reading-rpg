@@ -134,15 +134,15 @@ test('@cross-browser Pause traps focus and blocks Battle interaction/progression
   const hpBefore = await playerHp.textContent()
   const enemiesBefore = await enemyHp.allTextContents()
 
-  await page.getByRole('button', { name: 'Pause menuを開く' }).click()
-  const dialog = page.getByRole('dialog', { name: 'Pause menu' })
+  await page.getByRole('button', { name: 'メニューを開く' }).click()
+  const dialog = page.getByRole('dialog', { name: 'メニュー' })
   await expect(dialog).toBeVisible()
   await expect(page.locator('body')).toHaveAttribute('data-rpg-paused', 'true')
 
   for (let index = 0; index < 16; index += 1) await page.keyboard.press('Tab')
   expect(
     await page.evaluate(
-      () => document.activeElement?.closest('[aria-label="Pause menu"]') !== null,
+      () => document.activeElement?.closest('[aria-label="メニュー"]') !== null,
     ),
   ).toBe(true)
   await expect(playerHp).toHaveText(hpBefore ?? '')
@@ -150,7 +150,7 @@ test('@cross-browser Pause traps focus and blocks Battle interaction/progression
 
   await page.keyboard.press('Escape')
   await expect(dialog).toBeHidden()
-  await expect(page.getByRole('button', { name: 'Pause menuを開く' })).toBeFocused()
+  await expect(page.getByRole('button', { name: 'メニューを開く' })).toBeFocused()
 })
 
 test('@responsive short/landscape viewport keeps multiline CODE HELP readable', async ({
@@ -284,8 +284,8 @@ test('@responsive current Atlas card is in the scrollport immediately after open
     worldPosition: { x: 5, y: 5 },
   })
   await page.goto('/world')
-  await page.getByRole('button', { name: 'Pause menuを開く' }).click()
-  await page.getByRole('button', { name: 'MAP', exact: true }).click()
+  await page.getByRole('button', { name: 'メニューを開く' }).click()
+  await page.getByRole('button', { name: 'マップ', exact: true }).click()
 
   const visible = await page.locator('.atlas-scrollport').evaluate((scrollport) => {
     const current = scrollport.querySelector('.atlas-map.is-current')

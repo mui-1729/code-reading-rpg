@@ -64,12 +64,12 @@ async function expectNoHorizontalOverflow(page: Page) {
   expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.innerWidth + 1)
 }
 
-test('390px幅でShop / Inn / Pauseが横overflowせずEscapeで閉じられる', async ({ page }) => {
+test('390px幅でShop / Inn / メニューが横overflowせずEscapeで閉じられる', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedMobileState(page)
 
   await page.getByRole('button', { name: 'INTERACT' }).click()
-  const shop = page.getByRole('dialog', { name: 'World shop' })
+  const shop = page.getByRole('dialog', { name: 'ショップ' })
   await expect(shop).toBeVisible()
   await expectNoHorizontalOverflow(page)
   await page.keyboard.press('Escape')
@@ -86,14 +86,14 @@ test('390px幅でShop / Inn / Pauseが横overflowせずEscapeで閉じられる'
   await page.reload()
 
   await page.getByRole('button', { name: 'INTERACT' }).click()
-  const inn = page.getByRole('dialog', { name: 'Inn / Rest' })
+  const inn = page.getByRole('dialog', { name: '宿' })
   await expect(inn).toBeVisible()
   await expectNoHorizontalOverflow(page)
   await page.keyboard.press('Escape')
   await expect(inn).toBeHidden()
 
-  await page.getByRole('button', { name: 'Pause menuを開く' }).click()
-  const pause = page.getByRole('dialog', { name: 'Pause menu' })
+  await page.getByRole('button', { name: 'メニューを開く' }).click()
+  const pause = page.getByRole('dialog', { name: 'メニュー' })
   await expect(pause).toBeVisible()
   await expectNoHorizontalOverflow(page)
   await page.keyboard.press('Escape')

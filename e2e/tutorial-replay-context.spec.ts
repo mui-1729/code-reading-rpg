@@ -60,17 +60,17 @@ async function seedReplayState(
 }
 
 async function replayTutorial(page: Page) {
-  await page.getByRole('button', { name: 'Pause menuを開く' }).click()
-  const menu = page.getByRole('dialog', { name: 'Pause menu' })
-  await menu.getByRole('button', { name: 'SYSTEM' }).click()
-  await menu.getByRole('button', { name: 'REPLAY TUTORIAL' }).click()
+  await page.getByRole('button', { name: 'メニューを開く' }).click()
+  const menu = page.getByRole('dialog', { name: 'メニュー' })
+  await menu.getByRole('button', { name: '設定' }).click()
+  await menu.getByRole('button', { name: 'チュートリアルをやり直す' }).click()
 }
 
 async function storedRpg(page: Page) {
   return readStoredRpg(page)
 }
 
-test('Battle中のREPLAY TUTORIALはWorld開始地点へ戻りMOVEから始める', async ({ page }) => {
+test('Battle中のTutorial replayはWorld開始地点へ戻りMOVEから始める', async ({ page }) => {
   await seedReplayState(page, 'overworld', { x: 8, y: 8 })
   await page.goto('/javascript/battle/1?seed=replay-from-battle&returnTo=%2Fworld')
 
