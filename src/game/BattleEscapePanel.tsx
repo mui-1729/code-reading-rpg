@@ -24,7 +24,9 @@ export function BattleEscapePanel({ areaId, battleId, seed, returnTo, actionLock
     clearedStageIds: progress.clearedStageIds,
   })
 
-  if (!allowed) return null
+  // Keep a non-rendered layout anchor for reference-action geometry without exposing
+  // a disabled RUN command or fixed-battle explanation to the player.
+  if (!allowed) return <div className="battle-escape-row" hidden aria-hidden="true" />
 
   const escape = () => {
     if (actionLocked) return
