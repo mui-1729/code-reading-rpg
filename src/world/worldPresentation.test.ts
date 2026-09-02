@@ -38,7 +38,7 @@ describe('world presentation', () => {
 
     expect(new Set(presentations.map(({ sceneId }) => sceneId)).size).toBe(5)
     expect(new Set(presentations.map(({ bgmTrack }) => bgmTrack)).size).toBe(5)
-    expect(getWorldScenePresentation(JS_VILLAGE_MAP_ID).title).toBe('GREENFIELD VILLAGE')
+    expect(getWorldScenePresentation(JS_VILLAGE_MAP_ID).title).toBe('グリーンフィールド村')
     expect(getWorldScenePresentation(TS_FRONTIER_MAP_ID).bgmTrack).toBe('fieldTypeScript')
   })
 })
