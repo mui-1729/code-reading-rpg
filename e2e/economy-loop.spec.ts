@@ -85,7 +85,7 @@ test('Battle Gold → Shop purchase/equip → Inn → reload → next canonical 
   await seedEconomyLoop(page)
 
   await page.goto('/javascript/battle/1?seed=encounter%3Aoverworld%3A5%3A10%3A11&returnTo=%2Fworld')
-  await expect(page.getByText('JS-01', { exact: false })).toBeVisible()
+  await expect(page.locator('.battle-console')).toBeVisible()
   await dismissStory(page)
 
   await executeSkill(page, 'TRACE')
