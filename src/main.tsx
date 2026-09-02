@@ -35,6 +35,7 @@ import './battle-presentation.css'
 import './battle-enemies.css'
 import './code-world-presentation.css'
 import './battle-reading.css'
+import './battle-command-hierarchy.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
