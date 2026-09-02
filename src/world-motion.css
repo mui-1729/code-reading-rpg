@@ -55,6 +55,84 @@
   --world-camera-pan-y: 11.111111%;
 }
 
+/*
+ * Camera pan keeps the previous terrain snapshot as the visual baseline.
+ * The current viewport is already one tile ahead, so slide its world-space
+ * content from the previous screen position to the new one on the same
+ * 150ms timeline. Static objects live inside these tiles and NPCs live in
+ * the character layer, so both now share the terrain camera transform.
+ */
+.world-viewport:has(.world-camera-snapshot) > .world-tile {
+  z-index: 4;
+  will-change: translate;
+}
+
+.world-viewport:has(.world-camera-snapshot) .world-character-layer {
+  will-change: translate;
+}
+
+.world-viewport:has(.world-camera-snapshot) .world-npc-sprite {
+  transition: none;
+}
+
+.world-viewport:has(.world-camera-snapshot[data-camera-facing='right']) > .world-tile {
+  animation: world-current-tiles-right 150ms linear forwards;
+}
+
+.world-viewport:has(.world-camera-snapshot[data-camera-facing='left']) > .world-tile {
+  animation: world-current-tiles-left 150ms linear forwards;
+}
+
+.world-viewport:has(.world-camera-snapshot[data-camera-facing='down']) > .world-tile {
+  animation: world-current-tiles-down 150ms linear forwards;
+}
+
+.world-viewport:has(.world-camera-snapshot[data-camera-facing='up']) > .world-tile {
+  animation: world-current-tiles-up 150ms linear forwards;
+}
+
+.world-viewport:has(.world-camera-snapshot[data-camera-facing='right']) .world-character-layer {
+  animation: world-current-layer-right 150ms linear forwards;
+}
+
+.world-viewport:has(.world-camera-snapshot[data-camera-facing='left']) .world-character-layer {
+  animation: world-current-layer-left 150ms linear forwards;
+}
+
+.world-viewport:has(.world-camera-snapshot[data-camera-facing='down']) .world-character-layer {
+  animation: world-current-layer-down 150ms linear forwards;
+}
+
+.world-viewport:has(.world-camera-snapshot[data-camera-facing='up']) .world-character-layer {
+  animation: world-current-layer-up 150ms linear forwards;
+}
+
+/*
+ * Player and follower positions already include the new viewportStart.
+ * Counter the parent camera motion so their own left/top transitions remain
+ * the only movement source while stationary NPCs inherit the camera layer.
+ * Party sprites are 56% of one tile, so one tile = 178.571429% of the sprite.
+ */
+.world-viewport:has(.world-camera-snapshot[data-camera-facing='right'])
+  :is(.world-player-sprite, .world-follower-sprite) {
+  animation: world-party-counter-right 150ms linear forwards;
+}
+
+.world-viewport:has(.world-camera-snapshot[data-camera-facing='left'])
+  :is(.world-player-sprite, .world-follower-sprite) {
+  animation: world-party-counter-left 150ms linear forwards;
+}
+
+.world-viewport:has(.world-camera-snapshot[data-camera-facing='down'])
+  :is(.world-player-sprite, .world-follower-sprite) {
+  animation: world-party-counter-down 150ms linear forwards;
+}
+
+.world-viewport:has(.world-camera-snapshot[data-camera-facing='up'])
+  :is(.world-player-sprite, .world-follower-sprite) {
+  animation: world-party-counter-up 150ms linear forwards;
+}
+
 .world-entry-transition {
   position: absolute;
   inset: 0;
@@ -136,6 +214,66 @@ body[data-battle-arena='incident'] .battle-screen::after {
   }
 }
 
+@keyframes world-current-tiles-right {
+  from { translate: 100% 0; }
+  to { translate: 0 0; }
+}
+
+@keyframes world-current-tiles-left {
+  from { translate: -100% 0; }
+  to { translate: 0 0; }
+}
+
+@keyframes world-current-tiles-down {
+  from { translate: 0 100%; }
+  to { translate: 0 0; }
+}
+
+@keyframes world-current-tiles-up {
+  from { translate: 0 -100%; }
+  to { translate: 0 0; }
+}
+
+@keyframes world-current-layer-right {
+  from { translate: 9.090909% 0; }
+  to { translate: 0 0; }
+}
+
+@keyframes world-current-layer-left {
+  from { translate: -9.090909% 0; }
+  to { translate: 0 0; }
+}
+
+@keyframes world-current-layer-down {
+  from { translate: 0 11.111111%; }
+  to { translate: 0 0; }
+}
+
+@keyframes world-current-layer-up {
+  from { translate: 0 -11.111111%; }
+  to { translate: 0 0; }
+}
+
+@keyframes world-party-counter-right {
+  from { translate: -178.571429% 0; }
+  to { translate: 0 0; }
+}
+
+@keyframes world-party-counter-left {
+  from { translate: 178.571429% 0; }
+  to { translate: 0 0; }
+}
+
+@keyframes world-party-counter-down {
+  from { translate: 0 -178.571429%; }
+  to { translate: 0 0; }
+}
+
+@keyframes world-party-counter-up {
+  from { translate: 0 178.571429%; }
+  to { translate: 0 0; }
+}
+
 @keyframes world-area-entry {
   0% {
     opacity: 1;
@@ -199,6 +337,13 @@ body[data-battle-arena='incident'] .battle-screen::after {
   .world-camera-snapshot {
     display: none !important;
     animation: none !important;
+  }
+
+  .world-viewport:has(.world-camera-snapshot) > .world-tile,
+  .world-viewport:has(.world-camera-snapshot) .world-character-layer,
+  .world-viewport:has(.world-camera-snapshot) :is(.world-player-sprite, .world-follower-sprite) {
+    animation: none !important;
+    translate: none !important;
   }
 
   .world-entry-transition {
