@@ -157,7 +157,7 @@ test.describe('Item / Inventory UX', () => {
 
     await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
     await expect(item).toHaveAttribute('data-item-state', 'already-used')
-    await expect(item.getByText('PATCH KIT ×0', { exact: true })).toBeVisible()
+    await expect(item.locator('.patch-kit-action strong')).toHaveText('PATCH KIT ×0')
     await expect(item.getByText('+24 HP回復 · この戦闘では使用済み', { exact: true })).toBeVisible()
 
     const stored = await storedState(page)
@@ -174,7 +174,7 @@ test.describe('Item / Inventory UX', () => {
     let item = page.locator('.battle-item-row[data-item-id="patch-kit"]')
     await item.getByRole('button', { name: /PATCH KIT ×2/ }).click()
     await expect(item).toHaveAttribute('data-item-state', 'already-used')
-    await expect(item.getByText('PATCH KIT ×1', { exact: true })).toBeVisible()
+    await expect(item.locator('.patch-kit-action strong')).toHaveText('PATCH KIT ×1')
 
     await page.goto('/javascript/battle/1?seed=item-replay-b&returnTo=%2Fworld')
     await dismissStory(page)
