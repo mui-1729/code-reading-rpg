@@ -19,11 +19,11 @@ import type { StoryWorldLayer } from './story/types'
 const createRunSeed = () => crypto.randomUUID()
 
 const openingSystemLines: Record<string, string> = {
-  briefing: 'REAL WORLD // TASK ASSIGNED // investigate unexpected target selection',
-  incident: 'INCIDENT // values OK / selected target WRONG',
-  connect: 'CONNECT // runtime model -> CODE WORLD // code = world rule',
-  grassland: 'CODE WORLD // symptom synchronized with REAL WORLD incident',
-  mission: 'OBJECTIVE // HUB: BYTE -> WEST: JAVASCRIPT GRASSLAND',
+  briefing: 'REAL WORLD // 任務：想定外のtarget選択を調査する',
+  incident: 'INCIDENT // 値は正常 / 選ばれたtargetが違う',
+  connect: 'CONNECT // runtime model → CODE WORLD // code = 世界のルール',
+  grassland: 'CODE WORLD // REAL WORLDのincidentと症状が同期',
+  mission: '目的 // HUB：BYTE → 西：JavaScript草原',
 }
 
 const storyLayerLabels: Record<StoryWorldLayer, string> = {
@@ -78,9 +78,9 @@ export function HomePage() {
 
     return (
       <main className="app-shell opening-shell title-screen">
-        <section className="opening-panel pixel-window" aria-label="JavaScript opening story">
+        <section className="opening-panel pixel-window" aria-label="JavaScript オープニングストーリー">
           <div className="opening-progress">
-            <span>OPENING // REAL WORLD → CODE WORLD</span>
+            <span>オープニング // REAL WORLD → CODE WORLD</span>
             <span>{openingIndex + 1} / {javascriptOpeningScenes.length}</span>
           </div>
 
@@ -122,10 +122,10 @@ export function HomePage() {
 
           <div className="opening-actions">
             <button type="button" className="secondary-button" onClick={enterWorld}>
-              SKIP
+              スキップ
             </button>
             <button type="button" className="primary-button" onClick={next}>
-              {isLast ? '▶ EXPLORE CODE WORLD' : 'NEXT ▶'}
+              {isLast ? '▶ CODE WORLDを探索する' : '次へ ▶'}
             </button>
           </div>
         </section>
@@ -156,13 +156,13 @@ export function HomePage() {
           <div className="ground-strip" />
         </div>
 
-        <nav className="title-menu" aria-label="Title menu">
+        <nav className="title-menu" aria-label="タイトルメニュー">
           <button
             className="primary-button menu-button"
-            aria-label={openingSeen ? 'CONTINUE · START RUN' : 'START'}
+            aria-label={openingSeen ? '続きから' : 'はじめる'}
             onClick={start}
           >
-            <span aria-hidden="true">▶</span> {openingSeen ? 'CONTINUE' : 'START'}
+            <span aria-hidden="true">▶</span> {openingSeen ? '続きから' : 'はじめる'}
           </button>
           {openingSeen && (
             <button
@@ -170,12 +170,12 @@ export function HomePage() {
               className="secondary-button opening-replay-button"
               onClick={() => setOpeningIndex(0)}
             >
-              VIEW OPENING
+              オープニングを見る
             </button>
           )}
         </nav>
 
-        <div className="title-footer">REAL INCIDENT // CODE WORLD // READ THE RULES</div>
+        <div className="title-footer">REAL INCIDENT // CODE WORLD // コードのルールを読む</div>
       </section>
     </main>
   )
@@ -214,11 +214,11 @@ function NotFoundBattle({ areaId }: { areaId?: string }) {
   return (
     <main className="app-shell center-shell title-screen">
       <section className="result-card defeat-card pixel-window">
-        <div className="eyebrow">ROUTE ERROR</div>
+        <div className="eyebrow">ルートエラー</div>
         <h2>そのBattleはこのAreaに存在しない</h2>
         {area && <p>{area.title}</p>}
         <button className="primary-button" onClick={() => navigate({ to: '/world' })}>
-          ◀ RETURN TO WORLD
+          ◀ ワールドへ戻る
         </button>
       </section>
     </main>
