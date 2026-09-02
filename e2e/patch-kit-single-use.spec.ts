@@ -74,14 +74,21 @@ async function dismissStory(page: Page) {
   await expect(story).toBeHidden()
 }
 
-test('PATCH KITは在庫2個でも同一Battleで見える操作1つ・使用1回に制限する', async ({ page }) => {
+test('PATCH KITはcompact ITEMから開き、在庫2個でも同一Battleで使用1回に制限する', async ({ page }) => {
   await seedBattle(page)
   await page.goto('/javascript/battle/1?seed=patch-kit-single-use&returnTo=%2Fworld')
   await dismissStory(page)
 
   const item = page.locator('.battle-item-row[data-item-id="patch-kit"]')
+  const itemToggle = item.locator('.battle-item-toggle')
   const patchKit = item.locator('.patch-kit-action')
   await expect(item).toHaveAttribute('data-item-state', 'available')
+  await expect(itemToggle).toBeVisible()
+  await expect(itemToggle).toContainText('ITEM')
+  await expect(itemToggle).toContainText('PATCH KIT ×2')
+  await expect(patchKit).toBeHidden()
+
+  await itemToggle.click()
   await expect(page.locator('.patch-kit-action:visible')).toHaveCount(1)
   await expect(patchKit).toBeEnabled()
   await expect(patchKit).toHaveAttribute('aria-label', /PATCH KIT ×2/)
@@ -102,6 +109,8 @@ test('PATCH KITは在庫2個でも同一Battleで見える操作1つ・使用1�
   const nextItem = page.locator('.battle-item-row[data-item-id="patch-kit"]')
   const nextPatchKit = nextItem.locator('.patch-kit-action')
   await expect(nextItem).toHaveAttribute('data-item-state', 'available')
+  await expect(nextPatchKit).toBeHidden()
+  await nextItem.locator('.battle-item-toggle').click()
   await expect(page.locator('.patch-kit-action:visible')).toHaveCount(1)
   await expect(nextPatchKit).toBeEnabled()
   // Leaving an unfinished attempt rolls back both healing and its item cost.
