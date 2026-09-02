@@ -25,15 +25,16 @@ import { getWorldObjectives } from '../world/worldObjective'
 import { WorldAtlas } from './WorldAtlas'
 
 type PauseTab = 'status' | 'map' | 'items' | 'equipment' | 'party' | 'codex' | 'system'
+type PauseTabDefinition = { id: PauseTab; label: string; icon: string }
 
-const tabs: Array<{ id: PauseTab; label: string }> = [
-  { id: 'status', label: 'ステータス' },
-  { id: 'map', label: 'マップ' },
-  { id: 'items', label: 'アイテム' },
-  { id: 'equipment', label: '装備' },
-  { id: 'party', label: '仲間' },
-  { id: 'codex', label: 'コード図鑑' },
-  { id: 'system', label: '設定' },
+const tabs: PauseTabDefinition[] = [
+  { id: 'status', label: 'ステータス', icon: '/pixel-art/characters/code-knight-field.svg' },
+  { id: 'map', label: 'マップ', icon: '/pixel-art/ui/map.svg' },
+  { id: 'items', label: 'アイテム', icon: '/pixel-art/items/patch-kit.svg' },
+  { id: 'equipment', label: '装備', icon: '/pixel-art/equipment/weapons/training-blade.svg' },
+  { id: 'party', label: '仲間', icon: '/pixel-art/characters/byte-field.svg' },
+  { id: 'codex', label: 'コード図鑑', icon: '/pixel-art/ui/codex.svg' },
+  { id: 'system', label: '設定', icon: '/pixel-art/ui/system.svg' },
 ]
 
 const equipmentSlotLabels: Record<EquipmentSlot, string> = {
@@ -196,13 +197,21 @@ export function PauseMenu() {
                 <button
                   type="button"
                   key={entry.id}
+                  data-pause-tab={entry.id}
                   className={tab === entry.id ? 'is-active' : ''}
                   onClick={() => {
                     setTab(entry.id)
                     setResetArmed(false)
                   }}
                 >
-                  {entry.label}
+                  <img
+                    className="pause-tab-icon"
+                    data-pause-tab-icon={entry.id}
+                    src={entry.icon}
+                    alt=""
+                    aria-hidden="true"
+                  />
+                  <span>{entry.label}</span>
                 </button>
               ))}
             </nav>
