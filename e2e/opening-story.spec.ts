@@ -45,7 +45,7 @@ test('最初の開始でteamを紹介しincident-driven CODE WORLD調査へ接�
   await expect(page.locator('.opening-copy')).toContainText('現場でtarget異常')
   await expect(page.locator('.opening-copy')).toContainText('VillageのMIO')
 
-  await page.getByRole('button', { name: '▶ CODE WORLDを探索' }).click()
+  await page.getByRole('button', { name: '▶ CODE WORLDを探索する' }).click()
   await expect(page).toHaveURL(/\/world$/)
   await expect(page.getByLabel('Open world map')).toBeVisible()
   const objective = page.getByLabel('次の目的')
