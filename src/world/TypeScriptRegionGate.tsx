@@ -4,7 +4,7 @@ import { useRpg } from '../rpg'
 import { isTypeScriptRegionUnlocked, shouldBlockTypeScriptRegionMove } from './regionAccess'
 
 const LOCKED_MESSAGE =
-  'TYPESCRIPT FRONTIER LOCKED // まずJavaScript地方のCode Coreを止めよう。Final Bossを倒すと東へ進める。'
+  'TypeScript辺境は未開通 // まずJavaScript地方のCode Coreを止めよう。Final Bossを倒すと東へ進める。'
 
 export function TypeScriptRegionGate() {
   const { progress } = useProgress()
@@ -43,7 +43,7 @@ export function TypeScriptRegionGate() {
     const onClick = (event: MouseEvent) => {
       const target = event.target
       if (!(target instanceof Element)) return
-      if (target.closest('button[aria-label="Move right"]')) blockAttempt(event)
+      if (target.closest('button[aria-label="右へ移動"]')) blockAttempt(event)
     }
 
     document.addEventListener('keydown', onKeyDown, true)
