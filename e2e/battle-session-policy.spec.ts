@@ -132,7 +132,7 @@ test('reloadはBattle attemptをrollbackして開始HP / Itemへ戻す', async (
   await openBattleItem(page)
   await page.getByRole('button', { name: /PATCH KIT ×1/ }).click()
   await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
-  await expect(page.locator('.patch-kit-action strong')).toHaveText('PATCH KIT ×0')
+  await expect(page.locator('.battle-item-toggle small')).toHaveText('PATCH KIT ×0')
 
   await page.reload()
   await dismissStory(page)
