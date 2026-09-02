@@ -72,7 +72,7 @@ export function createVictoryResultSequence(
       id: 'stage',
       title: 'ステージクリア',
       detail: reward.unlockedStageId
-        ? `STAGE ${getBattleDisplayCode(reward.unlockedStageId)} 解放`
+        ? `ステージ ${getBattleDisplayCode(reward.unlockedStageId)} 解放`
         : undefined,
       tone: 'clear',
     })
