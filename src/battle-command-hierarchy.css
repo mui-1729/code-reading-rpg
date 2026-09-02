@@ -1,0 +1,140 @@
+/* Keep persistent battle UI focused on turn decisions. */
+.battle-screen .topbar {
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+}
+
+.battle-screen .topbar > div:first-child .eyebrow,
+.battle-screen .topbar > div:first-child p {
+  display: none;
+}
+
+.battle-screen .topbar > div:first-child h1 {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.35;
+  letter-spacing: 0;
+  color: #b9b5cb;
+}
+
+.battle-screen .battle-location-stack {
+  margin-left: auto;
+}
+
+.battle-secondary-actions {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.battle-secondary-actions .battle-item-row,
+.battle-secondary-actions .battle-escape-row {
+  margin: 0;
+}
+
+.battle-item-disclosure {
+  position: relative;
+}
+
+.battle-item-disclosure > summary {
+  list-style: none;
+}
+
+.battle-item-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.battle-item-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+
+.battle-item-toggle > span {
+  font-weight: 900;
+}
+
+.battle-item-toggle > small {
+  color: #b9b5cb;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.battle-item-disclosure[open] .battle-item-toggle {
+  border-color: var(--gold);
+}
+
+.battle-item-drawer {
+  position: absolute;
+  z-index: 40;
+  left: 0;
+  top: calc(100% + 6px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 10px;
+  width: min(360px, calc(100vw - 32px));
+  padding: 10px;
+  background: #080812;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .45);
+}
+
+.battle-item-drawer .battle-item-card {
+  min-width: 0;
+}
+
+.battle-item-drawer .battle-item-state {
+  grid-column: 1 / -1;
+}
+
+.battle-escape-action {
+  min-height: 38px;
+  padding: 7px 12px;
+}
+
+@media (max-width: 700px) {
+  .battle-screen .topbar {
+    display: flex;
+    padding: 7px 8px;
+  }
+
+  .battle-screen .topbar > div:first-child {
+    flex: 1 1 auto;
+  }
+
+  .battle-screen .topbar > div:first-child h1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .battle-screen .battle-location-stack {
+    flex: 0 0 auto;
+    margin-top: 0;
+  }
+
+  .battle-secondary-actions {
+    margin-top: 6px;
+  }
+
+  .battle-item-toggle > small {
+    display: none;
+  }
+
+  .battle-item-drawer {
+    position: fixed;
+    z-index: 2100;
+    left: 12px;
+    right: 12px;
+    top: auto;
+    bottom: 12px;
+    width: auto;
+  }
+}
