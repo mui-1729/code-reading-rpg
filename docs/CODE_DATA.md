@@ -12,9 +12,11 @@ Battleに表示されるcodeを読むために必要なruntime dataを、Player�
 
 ## 導線
 
-Battle中は右下の`DATA`からCode Data panelを開ける。
+Battle中は`DATA`からCode Data panelを開ける。
 
 Enemy cardをクリック / タップ / keyboard操作した場合もpanelを開き、そのEnemy objectを選択状態にする。
+
+MobileではEnemyのRPG cardにcore dataを残し、選択中codeを隣接表示する。詳細objectや中間値が必要な場合にDATAを開く。行動処理中・Story・HELP・Result上にはDATAを重ねない。
 
 ## Runtime Context
 
@@ -153,11 +155,13 @@ TargetRule / damage calculation / Battle generatorは変更しない。
 - panelはdialog semanticsを持つ
 - `Esc`で閉じる
 - close buttonにaccessible nameを付ける
+- focusをdialog内に閉じ込め、閉じたら開いたbutton / Enemyへ戻す
 
 ## Mobile
 
 - Enemy tapで開ける
-- panelはbottom側へ配置する
+- 3体のEnemy cardは横scrollせず、core dataと選択中codeを近い位置で比較できる
+- 詳細panelは画面内に収め、内容をscrollできる
 - Skill card操作を恒常的に塞がない
 - `DATA`導線はCODE HELP `?`と重ならない位置へ置く
 

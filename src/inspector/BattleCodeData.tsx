@@ -15,6 +15,7 @@ type BattleCodeDataProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   selectedEnemyKey: string | null
+  actionLocked: boolean
 }
 
 function formatScalar(value: string | number | boolean | null) {
@@ -50,6 +51,7 @@ export function BattleCodeData({
   open,
   onOpenChange: setOpen,
   selectedEnemyKey,
+  actionLocked,
 }: BattleCodeDataProps) {
   const selectedEnemy = selectedEnemyKey
     ? enemies.find((enemy) => enemy.key === selectedEnemyKey) ?? null
@@ -71,6 +73,7 @@ export function BattleCodeData({
         onClick={() => setOpen(!open)}
         aria-label="コードで使う実データを確認"
         aria-expanded={open}
+        disabled={actionLocked}
       >
         DATA
       </button>

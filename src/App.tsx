@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { gameAudio } from './audio/gameAudio'
 import { useBattleRuntime } from './battle/BattleRuntimeContext'
 import { withBattleHp } from './battle/resultHandoff'
 import { createBattleSession, type BattleReturnPath } from './battle/session'
 import { useBattleSession } from './battle/useBattleSession'
+import { SourceCode } from './battle/SourceCode'
 import { consumePatchKit } from './economy'
 import { BattleItemPanel } from './economy/BattleItemPanel'
 import { BattleEscapePanel } from './game/BattleEscapePanel'
@@ -121,6 +122,8 @@ function App({ battleId, seed, returnTo }: AppProps) {
   )
   const [codeDataOpen, setCodeDataOpen] = useState(false)
   const [inspectedEnemyKey, setInspectedEnemyKey] = useState<string | null>(null)
+  const codeHelpOpenerRef = useRef<HTMLElement | null>(null)
+  const getCodeHelpRestoreTarget = useCallback(() => codeHelpOpenerRef.current, [])
 
   const availableSkills = useMemo(
     () => getSkillCardsForBattle(battle, seed, progress.unlockedSkillIds),
@@ -146,6 +149,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
   )
   const bossGuardEnabled = hasBossGuard(battle)
   const bossGuardActive = isBossGuardActive(battle, enemies)
+  const actionLocked = isResolving || phase !== 'battle' || Boolean(storyEvent || explainedSkill || codeDataOpen)
 
   useLayoutEffect(() => {
     setSnapshot({
@@ -374,7 +378,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
   }
 
   const handleSkillClick = (skill: SkillCard) => {
-    if (phase !== 'battle' || isResolving || storyEvent || explainedSkill || codeDataOpen) return
+    if (actionLocked) return
 
     if (selectedSkillId === skill.id) {
       gameAudio.playSe('execute')
@@ -387,7 +391,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
   }
 
   const handlePatchKit = () => {
-    if (phase !== 'battle' || isResolving || patchKitUsed) return
+    if (actionLocked || patchKitUsed) return
 
     const result = consumePatchKit(progress, playerHp, playerStats.maxHp)
     if (!result.consumed) return
@@ -431,7 +435,9 @@ function App({ battleId, seed, returnTo }: AppProps) {
     requestAnimationFrame(() => void navigate({ to: '/world' }))
   }
 
-  const openCodeHelp = (skill: SkillCard) => {
+  const openCodeHelp = (skill: SkillCard, opener: HTMLElement) => {
+    if ((isResolving && phase === 'battle') || storyEvent || codeDataOpen || explainedSkill) return
+    codeHelpOpenerRef.current = opener
     gameAudio.playSe('confirm')
     setExplainedSkill(skill)
   }
@@ -442,11 +448,13 @@ function App({ battleId, seed, returnTo }: AppProps) {
   }
   const codeHelpDialogRef = useModalFocus<HTMLElement>({
     open: explainedSkill !== null,
+    getRestoreFocusTarget: getCodeHelpRestoreTarget,
     onEscape: closeCodeHelp,
   })
   const resultCovered = Boolean(storyEvent || explainedSkill)
   const resultDialogRef = useModalFocus<HTMLElement>({
-    open: phase !== 'battle' && !resultCovered,
+    open: phase !== 'battle',
+    active: !resultCovered,
     onEscape: phase === 'defeat' ? returnToCheckpoint : goReturnDestination,
   })
 
@@ -458,8 +466,8 @@ function App({ battleId, seed, returnTo }: AppProps) {
       <header className="topbar pixel-window">
         <div>
           <div className="eyebrow">{areaLabel} // {battle.label}</div>
-          <h1>CODE//READ RPG</h1>
-          <p>{battle.title} — {battle.subtitle}</p>
+          <h1>{battle.title}</h1>
+          <p>{battle.subtitle}</p>
         </div>
         <div className="battle-location-stack">
           <span className="battle-location-chip">{battlePresentation.locationLabel}</span>
@@ -554,22 +562,23 @@ function App({ battleId, seed, returnTo }: AppProps) {
                 className={`enemy-card ${battleArea.capabilities.codeData ? 'code-data-clickable' : ''} ${inspectedEnemyKey === enemy.id ? 'code-data-inspected' : ''} ${defeated ? 'defeated' : ''} ${animatingIds.includes(enemy.id) ? 'hit' : ''} ${defeatingIds.includes(enemy.id) ? 'defeating' : ''} ${isBossEnemy ? 'is-boss-enemy' : ''} ${activeEnemyId === enemy.id ? 'enemy-attacking' : ''} ${semanticTraced ? 'semantic-traced' : ''} ${semanticTarget ? 'semantic-target' : ''}`}
                 key={enemy.id}
                 role={battleArea.capabilities.codeData ? 'button' : undefined}
-                tabIndex={battleArea.capabilities.codeData ? 0 : undefined}
+                tabIndex={battleArea.capabilities.codeData ? actionLocked ? -1 : 0 : undefined}
                 data-enemy-role={enemy.role}
                 data-boss-display-name={isBossEnemy ? displayName : undefined}
                 data-semantic-traced={semanticTraced || undefined}
                 data-semantic-target={semanticTarget || undefined}
                 data-enemy-attacking={activeEnemyId === enemy.id || undefined}
                 aria-label={battleArea.capabilities.codeData ? `${displayName}のコード上のデータを確認` : undefined}
+                aria-disabled={battleArea.capabilities.codeData ? actionLocked : undefined}
                 onClick={(event) => {
-                  if (!battleArea.capabilities.codeData || phase !== 'battle' || storyEvent || explainedSkill) return
+                  if (!battleArea.capabilities.codeData || actionLocked) return
                   event.currentTarget.focus()
                   setInspectedEnemyKey(enemy.id)
                   setCodeDataOpen(true)
                 }}
                 onKeyDown={(event) => {
                   if (event.key !== 'Enter' && event.key !== ' ') return
-                  if (!battleArea.capabilities.codeData || phase !== 'battle' || storyEvent || explainedSkill) return
+                  if (!battleArea.capabilities.codeData || actionLocked) return
                   event.preventDefault()
                   setInspectedEnemyKey(enemy.id)
                   setCodeDataOpen(true)
@@ -592,7 +601,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
                       <small className="enemy-code-name">CODE NAME · {enemy.name}</small>
                     )}
                   </div>
-                  <span>{enemy.hp}/{enemy.maxHp}</span>
+                  <span aria-label={`HP ${enemy.hp} / ${enemy.maxHp}`}>{enemy.hp}/{enemy.maxHp}</span>
                 </div>
                 <div className="hp-track enemy-track">
                   <div className="hp-fill" style={{ width: `${hpPercent}%` }} />
@@ -614,6 +623,12 @@ function App({ battleId, seed, returnTo }: AppProps) {
                   <strong>{defeated ? '—' : enemy.attackName}</strong>
                   <em>{defeated ? 'DEFEATED' : `${getIncomingDamage(enemy.attackDamage, playerStats.defense)} DMG`}</em>
                 </div>
+                <div className="enemy-code-facts">
+                  <span className="enemy-role">{enemy.role}</span>
+                  <span className="enemy-raw-attack" aria-label={`attackDamage ${enemy.attackDamage}（防御反映前）`} title="attackDamage（防御反映前）">
+                    <span>attackDamage</span> <strong>{enemy.attackDamage}</strong>
+                  </span>
+                </div>
               </article>
             )
           })}
@@ -630,14 +645,24 @@ function App({ battleId, seed, returnTo }: AppProps) {
             <small>{semanticFeedback.detail}</small>
           </div>
         )}
+        <section className="selected-skill-reading" aria-label="選択中Skillのコード">
+          {selectedSkill ? (
+            <>
+              <div className="selected-skill-reading-head">
+                <strong>{selectedSkill.name}</strong>
+                <span>POWER {getSkillDamage(selectedSkill.power, playerStats)}</span>
+              </div>
+              <SourceCode code={selectedSkill.code} scrollable />
+            </>
+          ) : (
+            <p>{isResolving ? 'EXECUTING…' : 'SkillをSELECTしてコードを読む'}</p>
+          )}
+        </section>
         <div className="stage-ground" aria-hidden="true" />
       </section>
 
       <section className="battle-console pixel-window">
-        <BattleItemPanel progress={progress} hp={playerHp} maxHp={playerStats.maxHp} usedThisBattle={patchKitUsed} lastHeal={lastPatchKitHeal} actionLocked={isResolving || phase !== 'battle' || Boolean(storyEvent)} onUse={handlePatchKit} />
-        <BattleEscapePanel areaId={battle.areaId} battleId={battle.id} seed={String(seed)} returnTo={returnTo} actionLocked={isResolving || phase !== 'battle' || Boolean(storyEvent)} onRun={() => rollback('abort')} />
-
-        <div className="skill-grid">
+        <div className="skill-grid" role="group" aria-label="Skills">
           {availableSkills.map((skill) => {
             const selected = selectedSkillId === skill.id
             const skillPower = getSkillDamage(skill.power, playerStats)
@@ -648,7 +673,8 @@ function App({ battleId, seed, returnTo }: AppProps) {
                 data-skill-id={skill.id}
                 className={`skill-card ${selected ? 'selected' : ''}`}
                 onClick={() => handleSkillClick(skill)}
-                disabled={isResolving}
+                disabled={actionLocked}
+                aria-pressed={selected}
               >
                 <div className="skill-card-head">
                   <span>{skill.name}</span>
@@ -659,6 +685,11 @@ function App({ battleId, seed, returnTo }: AppProps) {
               </button>
             )
           })}
+        </div>
+
+        <div className="battle-secondary-actions">
+          <BattleItemPanel progress={progress} hp={playerHp} maxHp={playerStats.maxHp} usedThisBattle={patchKitUsed} lastHeal={lastPatchKitHeal} actionLocked={actionLocked} onUse={handlePatchKit} />
+          <BattleEscapePanel areaId={battle.areaId} battleId={battle.id} seed={String(seed)} returnTo={returnTo} actionLocked={actionLocked} onRun={() => rollback('abort')} />
         </div>
 
         {logs.length > 0 && (
@@ -673,15 +704,28 @@ function App({ battleId, seed, returnTo }: AppProps) {
         )}
       </section>
 
-      {phase === 'battle' && battleArea.capabilities.codeData && (
-        <BattleCodeData
-          enemies={codeDataEnemies}
-          selectedCode={selectedSkill?.code ?? null}
-          selectedSkillName={selectedSkill?.name ?? null}
-          open={codeDataOpen}
-          onOpenChange={setCodeDataOpen}
-          selectedEnemyKey={inspectedEnemyKey}
-        />
+      {phase === 'battle' && (
+        <div className="battle-reference-actions">
+          {battleArea.capabilities.codeData && (
+            <BattleCodeData
+              enemies={codeDataEnemies}
+              selectedCode={selectedSkill?.code ?? null}
+              selectedSkillName={selectedSkill?.name ?? null}
+              open={codeDataOpen}
+              onOpenChange={setCodeDataOpen}
+              actionLocked={isResolving || Boolean(storyEvent || explainedSkill)}
+              selectedEnemyKey={inspectedEnemyKey}
+            />
+          )}
+          <button
+            className="floating-help"
+            onClick={(event) => openCodeHelp(selectedSkill ?? availableSkills[0], event.currentTarget)}
+            aria-label="コード解説を開く"
+            disabled={actionLocked}
+          >
+            ?
+          </button>
+        </div>
       )}
 
       {phase === 'victory' && (
@@ -738,7 +782,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
             <div className="defeat-actions">
               <button className="primary-button" onClick={retryBattle}>▶ RETRY BATTLE</button>
               <button className="secondary-button" onClick={returnToCheckpoint}>◀ RETURN TO CHECKPOINT</button>
-              <button className="secondary-button" onClick={() => openCodeHelp(availableSkills[0])}>CODE HELP</button>
+              <button className="secondary-button" onClick={(event) => openCodeHelp(selectedSkill ?? availableSkills[0], event.currentTarget)}>CODE HELP</button>
             </div>
           </section>
         </div>
@@ -756,14 +800,17 @@ function App({ battleId, seed, returnTo }: AppProps) {
             onClick={(event) => event.stopPropagation()}
           >
             <button type="button" className="close-button" onClick={closeCodeHelp} aria-label="コード解説を閉じる">×</button>
-            <div className="eyebrow">CODE EXPLANATION</div>
-            <h2>{explainedSkill.concept}</h2>
-            <pre><code>{explainedSkill.code}</code></pre>
+            <header className="code-help-head">
+              <div className="eyebrow">CODE EXPLANATION · {explainedSkill.name}</div>
+              <h2>{explainedSkill.concept}</h2>
+            </header>
+            <p className="source-line-note">行番号は元のコードの改行に対応します。画面幅による折り返しは同じ行です。</p>
+            <SourceCode code={explainedSkill.code} />
             {explainedSkill.codeHelpLines && explainedSkill.codeHelpLines.length > 0 && (
               <div className="code-help-steps" aria-label="コードを1行ずつ読む">
                 {explainedSkill.code.split('\n').map((line, index) => (
                   <div className="code-help-step pixel-inner-window" key={`${index}:${line}`}>
-                    <span>LINE {String(index + 1).padStart(2, '0')}</span>
+                    <span>SOURCE LINE {String(index + 1).padStart(2, '0')}</span>
                     <code>{line}</code>
                     <p>{explainedSkill.codeHelpLines?.[index]}</p>
                   </div>
@@ -773,7 +820,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
             <p>{explainedSkill.explanation}</p>
             <div className="explain-switcher">
               {availableSkills.map((skill) => (
-                <button key={skill.id} onClick={() => { gameAudio.playSe('select'); setExplainedSkill(skill) }}>
+                <button key={skill.id} aria-pressed={skill.id === explainedSkill.id} onClick={() => { gameAudio.playSe('select'); setExplainedSkill(skill) }}>
                   {skill.name}
                 </button>
               ))}
@@ -782,16 +829,6 @@ function App({ battleId, seed, returnTo }: AppProps) {
         </div>
       )}
 
-      {phase === 'battle' && (
-        <button
-          className="floating-help"
-          onClick={() => openCodeHelp(availableSkills[0])}
-          aria-label="コード解説を開く"
-          disabled={isResolving}
-        >
-          ?
-        </button>
-      )}
       {storyEvent && (
         <BattleStoryEvent
           key={storyEvent.id}

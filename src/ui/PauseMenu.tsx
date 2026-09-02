@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { writeStoredAudioSettings } from '../audio/audioSettingsStorage'
 import { gameAudio, type AudioSettings } from '../audio/gameAudio'
+import { useBattleRuntime } from '../battle/BattleRuntimeContext'
 import {
   getItemCount,
   getItemEffectSummary,
@@ -23,6 +24,7 @@ import {
 import { useTutorial } from '../tutorial/useTutorial'
 import { getWorldObjectives } from '../world/worldObjective'
 import { WorldAtlas } from './WorldAtlas'
+import { useModalFocus } from './useModalFocus'
 
 type PauseTab = 'status' | 'map' | 'items' | 'equipment' | 'party' | 'codex' | 'system'
 type PauseTabDefinition = { id: PauseTab; label: string; icon: string }
@@ -51,6 +53,7 @@ const toPercent = (value: number) => Math.round(value * 100)
 
 export function PauseMenu() {
   const location = useLocation()
+  const { snapshot: battleRuntime } = useBattleRuntime()
   const { progress, stats, resetProgress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
   const { reset: resetTutorial } = useTutorial()
@@ -58,13 +61,29 @@ export function PauseMenu() {
   const [tab, setTab] = useState<PauseTab>('status')
   const [resetArmed, setResetArmed] = useState(false)
   const [audioSettings, setAudioSettings] = useState<AudioSettings>(() => gameAudio.getSettings())
-  const dialogRef = useRef<HTMLElement>(null)
-  const restoreFocusRef = useRef<HTMLElement | null>(null)
   const combatStats = getCombatStats(stats, rpgState)
   const nextLevelExp = getTotalExpForLevel(stats.level + 1)
   const worldObjectives = getWorldObjectives(progress)
+  const isBattleRoute = location.pathname.includes('/battle/')
+  const battleMenuAvailable = !isBattleRoute || Boolean(
+    battleRuntime &&
+    battleRuntime.phase === 'battle' &&
+    !battleRuntime.isResolving &&
+    !battleRuntime.isModalOpen,
+  )
+  const equipmentLocked = isBattleRoute && battleRuntime !== null
 
-  useEffect(() => {
+  const closeMenu = useCallback(() => {
+    setOpen(false)
+    setResetArmed(false)
+  }, [])
+
+  const dialogRef = useModalFocus<HTMLElement>({
+    open,
+    onEscape: closeMenu,
+  })
+
+  useLayoutEffect(() => {
     if (typeof document === 'undefined') return
     document.body.dataset.rpgPaused = open ? 'true' : 'false'
     return () => {
@@ -73,45 +92,8 @@ export function PauseMenu() {
   }, [open])
 
   useEffect(() => {
-    if (!open) return
-    restoreFocusRef.current ??= document.activeElement instanceof HTMLElement
-      ? document.activeElement
-      : null
-    const dialog = dialogRef.current
-    const focusableSelector =
-      'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-    const focusable = () =>
-      dialog ? Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelector)) : []
-    queueMicrotask(() => focusable()[0]?.focus())
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault()
-        setOpen(false)
-        setResetArmed(false)
-        return
-      }
-      if (event.key !== 'Tab') return
-
-      const elements = focusable()
-      const first = elements[0]
-      const last = elements[elements.length - 1]
-      if (!first || !last) return
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault()
-        last.focus()
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault()
-        first.focus()
-      }
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => {
-      window.removeEventListener('keydown', onKeyDown)
-      restoreFocusRef.current?.focus()
-      restoreFocusRef.current = null
-    }
-  }, [open])
+    if (open && isBattleRoute && !battleMenuAvailable) queueMicrotask(closeMenu)
+  }, [battleMenuAvailable, closeMenu, isBattleRoute, open])
 
   const ownedEquipment = useMemo(
     () => equipmentDefinitions.filter((item) => rpgState.ownedEquipmentIds.includes(item.id)),
@@ -121,6 +103,7 @@ export function PauseMenu() {
   if (location.pathname === '/') return null
 
   const equip = (equipmentId: string) => {
+    if (equipmentLocked) return
     setRpgState((current) => ({
       ...current,
       equipment: equipItem(current.equipment, equipmentId),
@@ -128,6 +111,7 @@ export function PauseMenu() {
   }
 
   const unequip = (slot: EquipmentSlot) => {
+    if (equipmentLocked) return
     setRpgState((current) => ({
       ...current,
       equipment: { ...current.equipment, [slot]: null },
@@ -146,30 +130,23 @@ export function PauseMenu() {
     if (!next.muted) gameAudio.playSe('confirm')
   }
 
-  const closeMenu = () => {
-    setOpen(false)
-    setResetArmed(false)
-  }
-
   return (
     <>
-      <button
-        type="button"
-        className="pause-trigger secondary-button"
-        onClick={(event) => {
-          if (
-            document.body.dataset.battleResolving === 'true' ||
-            document.body.dataset.battlePhase === 'victory' ||
-            document.body.dataset.battlePhase === 'defeat'
-          ) return
-          restoreFocusRef.current = event.currentTarget
-          setAudioSettings(gameAudio.getSettings())
-          setOpen(true)
-        }}
-        aria-label="メニューを開く"
-      >
-        メニュー
-      </button>
+      {battleMenuAvailable && (
+        <button
+          type="button"
+          className="pause-trigger secondary-button"
+          onClick={(event) => {
+            if (!battleMenuAvailable) return
+            event.currentTarget.focus()
+            setAudioSettings(gameAudio.getSettings())
+            setOpen(true)
+          }}
+          aria-label="メニューを開く"
+        >
+          メニュー
+        </button>
+      )}
 
       {open && (
         <div className="pause-overlay" role="presentation" onClick={closeMenu}>
@@ -199,6 +176,7 @@ export function PauseMenu() {
                   key={entry.id}
                   data-pause-tab={entry.id}
                   className={tab === entry.id ? 'is-active' : ''}
+                  aria-pressed={tab === entry.id}
                   onClick={() => {
                     setTab(entry.id)
                     setResetArmed(false)
@@ -216,7 +194,7 @@ export function PauseMenu() {
               ))}
             </nav>
 
-            <div className="pause-content">
+            <div className="pause-content" tabIndex={-1}>
               {tab === 'status' && (
                 <section className="pause-section">
                   <div className="pause-stat-grid">
@@ -311,7 +289,7 @@ export function PauseMenu() {
                                 key={item.id}
                                 className={equipped ? 'is-equipped' : ''}
                                 onClick={() => equip(item.id)}
-                                disabled={equipped}
+                                disabled={equipped || equipmentLocked}
                                 data-equipment-id={item.id}
                                 data-equipment-state={equipped ? 'equipped' : 'owned'}
                                 aria-label={`${item.name}${equipped ? ' 装備中' : ' を装備'}`}
@@ -346,7 +324,7 @@ export function PauseMenu() {
                             type="button"
                             className="equipment-empty-option"
                             onClick={() => unequip(slot)}
-                            disabled={!equippedId}
+                            disabled={!equippedId || equipmentLocked}
                           >
                             装備を外す
                           </button>
@@ -354,6 +332,11 @@ export function PauseMenu() {
                       </div>
                     )
                   })}
+                  {equipmentLocked && (
+                    <p className="equipment-battle-lock" role="status">
+                      バトル中は装備を変更できません
+                    </p>
+                  )}
                 </section>
               )}
 

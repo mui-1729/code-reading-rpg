@@ -114,10 +114,14 @@ PlayerProgress v4とRpgState v5は責務を分けたまま、単一revision snap
 通常画面へ情報を詰め込まず、`MENU`から確認します。
 
 - STATUS: Level / EXP / Gold / Max HP / Attack / Defense
+- MAP: 現在地と各Regionの位置関係
 - ITEMS: PATCH KIT
 - EQUIPMENT: Weapon / Armor / Accessory
 - PARTY: 主人公 / 仲間
+- CODEX: JavaScript / TypeScriptの学習参照
 - SYSTEM: reset等
+
+Battleでは行動の合間にだけMENUを開け、装備変更はWorldで行います。MobileでもEnemyのsprite・HP・NEXTをRPG cardとして残し、その近くで選択中codeと現在値を比較できます。
 
 ### Result presentation
 

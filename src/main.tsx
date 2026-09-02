@@ -34,6 +34,7 @@ import './pixel-art.css'
 import './battle-presentation.css'
 import './battle-enemies.css'
 import './code-world-presentation.css'
+import './battle-reading.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
