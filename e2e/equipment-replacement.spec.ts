@@ -54,7 +54,7 @@ test('未装備slotは自然な比較を表示し、装備解除ではなく付�
 
   await page.goto('/world')
 
-  await page.getByRole('button', { name: 'INTERACT' }).click()
+  await page.getByRole('button', { name: 'ショップを見る' }).click()
   const shop = page.getByRole('dialog', { name: 'ショップ' })
   const lifeCharmShop = shop.locator('[data-equipment-id="life-charm"]')
   await expect(lifeCharmShop.getByText('現在装備 · 未装備', { exact: true })).toBeVisible()
