@@ -102,13 +102,13 @@ test('Village training完了後はForestへ入りreload後もlocal mapを保持�
   await page.getByRole('button', { name: '左へ移動' }).click()
   const forest = page.getByLabel('JavaScriptの森のマップ')
   await expect(forest).toHaveAttribute('data-world-map', 'js-forest')
-  await expect(page.getByRole('heading', { name: 'JavaScriptの森' })).toBeVisible()
+  await expect(page.locator('.world-header')).toBeHidden()
   await expect(page.getByLabel('次の目的')).toContainText('経路を追う · 1')
   await expect(page.getByLabel('次の目的')).toContainText('二つの条件を両方通る枝')
 
   await page.reload()
   await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-map', 'js-forest')
-  await expect(page.getByRole('heading', { name: 'JavaScriptの森' })).toBeVisible()
+  await expect(page.locator('.world-header')).toBeHidden()
 })
 
 test('Forest最初のWoodsはRandom抽選ではなくBattle 10の固定traceになる', async ({ page }) => {

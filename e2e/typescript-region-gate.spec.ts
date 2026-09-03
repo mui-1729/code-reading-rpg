@@ -105,7 +105,7 @@ test('canonical JavaScript route完了後はOverworldから専用TypeScript辺�
   await expect(frontier(page)).toHaveAttribute('data-world-map', 'ts-frontier')
   await expect(frontier(page)).toHaveAttribute('data-world-x', '2')
   await expect(frontier(page)).toHaveAttribute('data-world-y', '10')
-  await expect(page.getByRole('heading', { name: 'TypeScript辺境' })).toBeVisible()
+  await expect(page.locator('.world-header')).toBeHidden()
   await expect(page.getByText('TypeScript辺境は未開通')).toHaveCount(0)
 })
 
