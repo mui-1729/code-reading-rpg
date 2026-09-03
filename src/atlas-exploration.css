@@ -1,0 +1,17 @@
+/* Atlas is an orientation aid, not a complete treasure guide. */
+.atlas-landmark-pin.is-treasure:not(.is-opened) {
+  display: none;
+}
+
+/* Opened treasure may remain as quiet history without competing with route landmarks. */
+.atlas-landmark-pin.is-treasure.is-opened {
+  opacity: .48;
+  scale: .82;
+  filter: grayscale(.45);
+}
+
+@media (max-width: 700px) {
+  .atlas-landmark-pin.is-treasure.is-opened {
+    scale: .72;
+  }
+}
