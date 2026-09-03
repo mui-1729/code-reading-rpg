@@ -68,7 +68,7 @@ test('390px幅でShop / Inn / メニューが横overflowせずEscapeで閉じら
   await page.setViewportSize({ width: 390, height: 844 })
   await seedMobileState(page)
 
-  await page.getByRole('button', { name: 'INTERACT' }).click()
+  await page.getByRole('button', { name: 'ショップを見る' }).click()
   const shop = page.getByRole('dialog', { name: 'ショップ' })
   await expect(shop).toBeVisible()
   await expectNoHorizontalOverflow(page)
@@ -85,7 +85,7 @@ test('390px幅でShop / Inn / メニューが横overflowせずEscapeで閉じら
   })
   await page.reload()
 
-  await page.getByRole('button', { name: 'INTERACT' }).click()
+  await page.getByRole('button', { name: '宿で休む' }).click()
   const inn = page.getByRole('dialog', { name: '宿' })
   await expect(inn).toBeVisible()
   await expectNoHorizontalOverflow(page)
