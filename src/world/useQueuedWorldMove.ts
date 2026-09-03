@@ -5,6 +5,11 @@ type WorldMove = (dx: number, dy: number) => void
 type QueuedStep = { dx: number; dy: number }
 
 const MAX_QUEUED_WORLD_STEPS = 8
+// The queue timer is registered before React commits the camera-pan timer.
+// If both expire at exactly WORLD_STEP_MS, the next logical move can run first
+// and interrupt the previous visual transaction. Leave one frame for the pan
+// cleanup to commit before handing the next step to WorldScene.
+const WORLD_STEP_HANDOFF_MS = 16
 
 function prefersReducedMotion() {
   return typeof window !== 'undefined' &&
@@ -12,7 +17,7 @@ function prefersReducedMotion() {
 }
 
 function getWorldStepDelay() {
-  return prefersReducedMotion() ? 0 : WORLD_STEP_MS
+  return prefersReducedMotion() ? 0 : WORLD_STEP_MS + WORLD_STEP_HANDOFF_MS
 }
 
 export function useQueuedWorldMove(move: WorldMove, disabled = false) {
