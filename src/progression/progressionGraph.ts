@@ -1,4 +1,4 @@
-export type ProgressionArea = 'javascript' | 'typescript'
+export type ProgressionArea = 'javascript' | 'typescript' | 'database'
 
 export type ProgressionNode = {
   key: string
@@ -55,17 +55,28 @@ const typescriptNodes = [
   },
 ] as const satisfies readonly ProgressionNode[]
 
-const nodes: readonly ProgressionNode[] = [...javascriptNodes, ...typescriptNodes]
+const databaseNodes = [
+  {
+    key: 'db-query-reading-prototype',
+    battleId: 23,
+    area: 'database',
+    prerequisites: ['ts-final-shared-contract'],
+  },
+] as const satisfies readonly ProgressionNode[]
+
+const nodes: readonly ProgressionNode[] = [...javascriptNodes, ...typescriptNodes, ...databaseNodes]
 
 export const progressionNodes = nodes
 export const JAVASCRIPT_BATTLE_SEQUENCE = javascriptNodes.map((node) => node.battleId)
 export const TYPESCRIPT_BATTLE_SEQUENCE = typescriptNodes.map((node) => node.battleId)
+export const DATABASE_BATTLE_SEQUENCE = databaseNodes.map((node) => node.battleId)
 
 const nodeByBattleId = new Map(nodes.map((node) => [node.battleId, node]))
 const nodeByKey = new Map(nodes.map((node) => [node.key, node]))
 const nodesByArea: Record<ProgressionArea, readonly ProgressionNode[]> = {
   javascript: javascriptNodes,
   typescript: typescriptNodes,
+  database: databaseNodes,
 }
 
 export function getProgressionNode(battleId: number): ProgressionNode | undefined {
@@ -95,7 +106,7 @@ export function getBattleDisplayCode(battleId: number): string | undefined {
   const node = getProgressionNode(battleId)
   const storyNumber = getBattleStoryNumber(battleId)
   if (!node || storyNumber === undefined) return undefined
-  const prefix = node.area === 'javascript' ? 'JS' : 'TS'
+  const prefix = node.area === 'javascript' ? 'JS' : node.area === 'typescript' ? 'TS' : 'DB'
   return `${prefix}-${String(storyNumber).padStart(2, '0')}`
 }
 
