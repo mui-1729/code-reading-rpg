@@ -8,9 +8,10 @@ type WorldInnProps = {
   open: boolean
   onClose: () => void
   onMessage: (message: string) => void
+  locationLabel?: string
 }
 
-export function WorldInn({ open, onClose, onMessage }: WorldInnProps) {
+export function WorldInn({ open, onClose, onMessage, locationLabel = '中央ハブ' }: WorldInnProps) {
   const { progress, stats, setProgress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
   const combatStats = getCombatStats(stats, rpgState)
@@ -62,7 +63,7 @@ export function WorldInn({ open, onClose, onMessage }: WorldInnProps) {
         <button type="button" className="close-button" onClick={onClose} aria-label="宿を閉じる">
           ×
         </button>
-        <div className="eyebrow">中央ハブ // 休息所</div>
+        <div className="eyebrow">{locationLabel} // 休息所</div>
         <h2>宿</h2>
         <p className="inn-description">ここで休むと、PATCH KITより安くHPを全回復できる。</p>
 
