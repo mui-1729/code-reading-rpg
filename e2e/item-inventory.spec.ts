@@ -154,7 +154,7 @@ test.describe('Item / Inventory UX', () => {
     await dismissStory(page)
     await openBattleItems(page)
 
-    let row = page.locator('.battle-item-browser-row[data-item-id="patch-kit"]')
+    const row = page.locator('.battle-item-browser-row[data-item-id="patch-kit"]')
     await expect(row.locator('img')).toHaveAttribute('src', '/pixel-art/items/patch-kit.svg')
     await expect(row).toContainText('PATCH KIT ×1')
     await expect(row.locator('[data-item-availability="available"]')).toContainText('使用可能')
