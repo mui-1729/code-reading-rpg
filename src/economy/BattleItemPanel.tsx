@@ -20,7 +20,7 @@ export function BattleItemPanel({ progress, hp, maxHp, usedThisBattle, lastHeal,
     <div className="battle-item-row" data-item-id={patchKitItem.id} data-item-state={itemUseState.reason}>
       <details className="battle-item-disclosure">
         <summary className="secondary-button battle-item-toggle">
-          <span>ITEM</span>
+          <span>アイテム</span>
           <small>{patchKitItem.name} ×{count}</small>
         </summary>
         <div className="battle-item-drawer pixel-inner-window">

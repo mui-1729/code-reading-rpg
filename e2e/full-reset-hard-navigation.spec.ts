@@ -29,7 +29,7 @@ test('進行リセットはWorld Tutorialを残さずdocumentごとTitleへ戻�
   await dialog.getByRole('button', { name: '本当に進行をリセットする', exact: true }).click()
 
   await expect(page).toHaveURL(/\/$/)
-  await expect(page.getByRole('button', { name: 'START' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'はじめる' })).toBeVisible()
   await expect(page.locator('.tutorial-prompt-field')).toHaveCount(0)
   await expect.poll(() =>
     page.evaluate(() =>

@@ -75,7 +75,7 @@ async function seedStorage(
 async function dismissStory(page: Page) {
   const story = page.locator('.battle-story-window')
   await expect(story).toBeVisible()
-  await story.getByRole('button', { name: 'SKIP' }).click()
+  await story.getByRole('button', { name: 'スキップ', exact: true }).click()
   await expect(story).toBeHidden()
 }
 
@@ -118,29 +118,29 @@ test.describe('Open World RPG loop', () => {
       }),
     })
 
-    await page.getByRole('button', { name: /START RUN/ }).click()
+    await page.getByRole('button', { name: '続きから' }).click()
     await expect(page).toHaveURL(/\/world$/)
     await expect.poll(() => playerPosition(page)).toEqual({ x: 10, y: 10 })
 
     // BYTE合流後は教材履修を要求せず、JavaScript側の次のmovementで最初のlive incidentを固定再現する。
-    await page.getByRole('button', { name: 'Move down' }).click()
+    await page.getByRole('button', { name: '下へ移動' }).click()
     await expect(page).toHaveURL(/\/javascript\/battle\/1\?/)
     await expect(page.locator('.battle-console')).toBeVisible()
     await dismissStory(page)
 
     await executeSkill(page, 'TRACE')
-    await expect(page.getByText('TURN 02')).toBeVisible()
+    await expect(page.getByText('ターン 2')).toBeVisible()
 
     await executeSkill(page, 'PULSE')
-    await expect(page.getByText('TURN 03')).toBeVisible()
+    await expect(page.getByText('ターン 3')).toBeVisible()
 
     await executeSkill(page, 'TRACE')
-    await expect(page.getByText('VICTORY', { exact: true })).toBeVisible()
+    await expect(page.getByText('勝利', { exact: true })).toBeVisible()
 
-    const skip = page.getByRole('button', { name: 'SKIP' })
+    const skip = page.getByRole('button', { name: 'スキップ', exact: true })
     await expect(skip).toBeVisible()
     await skip.click()
-    await page.getByRole('button', { name: /RETURN TO WORLD/ }).click()
+    await page.getByRole('button', { name: /ワールドへ戻る/ }).click()
 
     await expect(page).toHaveURL(/\/world$/)
     await expect.poll(() => playerPosition(page)).toEqual({ x: 10, y: 11 })
@@ -195,8 +195,8 @@ test.describe('Open World RPG loop', () => {
     })
 
     await page.goto('/world')
-    await expect(page.getByLabel('Inn / Rest')).toBeVisible()
-    await page.getByRole('button', { name: 'INTERACT' }).click()
+    await expect(page.getByLabel('宿', { exact: true })).toBeVisible()
+    await page.getByRole('button', { name: '宿で休む' }).click()
 
     const inn = page.getByRole('dialog', { name: '宿' })
     await expect(inn).toBeVisible()
@@ -227,8 +227,8 @@ test.describe('Open World RPG loop', () => {
     })
 
     await page.goto('/world')
-    await expect(page.getByLabel('js-debug-cache treasure closed')).toBeVisible()
-    await page.getByRole('button', { name: 'INTERACT' }).click()
+    await expect(page.getByLabel('DEBUG CACHE 未開封')).toBeVisible()
+    await page.getByRole('button', { name: '宝箱を開ける' }).click()
     await expect(page.getByText(/DEBUG CACHE 開封/)).toBeVisible()
 
     await expect.poll(async () => (await storedProgress(page)).progress.gold).toBe(25)
@@ -240,8 +240,8 @@ test.describe('Open World RPG loop', () => {
     )
 
     await page.reload()
-    await expect(page.getByLabel('js-debug-cache treasure opened')).toBeVisible()
-    await page.getByRole('button', { name: 'INTERACT' }).click()
+    await expect(page.getByLabel('DEBUG CACHE 開封済み')).toBeVisible()
+    await page.getByRole('button', { name: '宝箱を調べる' }).click()
     await expect(page.getByText(/すでに空だ/)).toBeVisible()
     await expect.poll(async () => (await storedProgress(page)).progress.gold).toBe(25)
 
@@ -262,8 +262,8 @@ test.describe('Open World RPG loop', () => {
     })
 
     await page.goto('/world')
-    await expect(page.getByLabel('ts-supply-cache treasure closed')).toBeVisible()
-    await page.getByRole('button', { name: 'INTERACT' }).click()
+    await expect(page.getByLabel('TYPE CACHE 未開封')).toBeVisible()
+    await page.getByRole('button', { name: '宝箱を開ける' }).click()
     await expect(page.getByText(/TYPE CACHE 開封/)).toBeVisible()
 
     await expect.poll(async () => (await storedProgress(page)).progress.gold).toBe(45)
@@ -273,8 +273,8 @@ test.describe('Open World RPG loop', () => {
     ])
 
     await page.reload()
-    await expect(page.getByLabel('ts-supply-cache treasure opened')).toBeVisible()
-    await page.getByRole('button', { name: 'INTERACT' }).click()
+    await expect(page.getByLabel('TYPE CACHE 開封済み')).toBeVisible()
+    await page.getByRole('button', { name: '宝箱を調べる' }).click()
     await expect(page.getByText(/すでに空だ/)).toBeVisible()
     await expect.poll(async () => (await storedProgress(page)).progress.gold).toBe(45)
     await expect.poll(async () => (await storedProgress(page)).progress.inventory.patchKit).toBe(3)
@@ -291,8 +291,8 @@ test.describe('Open World RPG loop', () => {
     await page.goto('/javascript/battle/1?seed=defeat-hp-e2e&returnTo=%2Fworld')
     await dismissStory(page)
     await executeSkill(page, 'TRACE')
-    await expect(page.getByText('DEFEAT', { exact: true })).toBeVisible()
-    await page.getByRole('button', { name: /RETURN TO CHECKPOINT/ }).click()
+    await expect(page.getByText('敗北', { exact: true })).toBeVisible()
+    await page.getByRole('button', { name: /チェックポイントへ戻る/ }).click()
 
     await expect(page).toHaveURL(/\/world$/)
     await expect.poll(() => playerPosition(page)).toEqual({ x: 10, y: 11 })
@@ -350,7 +350,7 @@ test.describe('Open World RPG loop', () => {
     })
 
     await page.goto('/world')
-    await page.getByRole('button', { name: 'INTERACT' }).click()
+    await page.getByRole('button', { name: 'BYTEと話す' }).click()
     await expect(page.locator('.world-message')).toContainText('BYTEが仲間になった！')
 
     await page.getByRole('button', { name: 'メニューを開く' }).click()
@@ -361,7 +361,7 @@ test.describe('Open World RPG loop', () => {
 
     await page.goto('/javascript/battle/1?seed=party-e2e&returnTo=%2Fworld')
     await dismissStory(page)
-    await expect(page.getByText(/ALLY BYTE · FOLLOW-UP/)).toBeVisible()
+    await expect(page.getByText(/仲間 BYTE · 追撃/)).toBeVisible()
   })
 
   test('JS Boss clear rewardのBranch Saberを装備するとBattle POWERへ反映される', async ({ page }) => {
@@ -385,6 +385,6 @@ test.describe('Open World RPG loop', () => {
 
     await page.goto('/javascript/battle/1?seed=equipment-e2e&returnTo=%2Fworld')
     const trace = page.getByRole('button', { name: /^TRACE\b/ })
-    await expect(trace).toContainText('POWER 40')
+    await expect(trace).toContainText('威力 40')
   })
 })

@@ -85,12 +85,12 @@ async function seedMidboss(page: Page, state: MidbossProgress) {
 test('Battle 12未clearではForest MID BOSSを開始できない', async ({ page }) => {
   await seedMidboss(page, 'locked')
 
-  await expect(page.getByLabel('Forest map')).toHaveAttribute('data-world-map', 'js-forest')
-  await expect(page.getByLabel('JavaScript Forest Mid-Boss')).toBeVisible()
-  await page.getByRole('button', { name: 'INTERACT' }).click()
+  await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-map', 'js-forest')
+  await expect(page.getByLabel('JavaScriptの森 中ボス')).toBeVisible()
+  await page.getByRole('button', { name: '中ボスを調べる' }).click()
 
   await expect(page).toHaveURL(/\/world$/)
-  await expect(page.getByText(/Forestで条件の経路を最後まで追おう/)).toBeVisible()
+  await expect(page.getByText(/JavaScriptの森で条件の経路を最後まで追おう/)).toBeVisible()
 })
 
 test('Battle 12 clear済みsaveはtrace-blocked objectiveからBattle 13へ進める', async ({ page }) => {
@@ -98,9 +98,9 @@ test('Battle 12 clear済みsaveはtrace-blocked objectiveからBattle 13へ進�
 
   await expect(page.getByLabel('次の目的')).toContainText('経路封鎖')
   await expect(page.getByLabel('次の目的')).toContainText('経路を塞ぐ守り人を突破する')
-  await expect(page.getByLabel('JavaScript Forest Mid-Boss')).toBeVisible()
+  await expect(page.getByLabel('JavaScriptの森 中ボス')).toBeVisible()
 
-  await page.getByRole('button', { name: 'INTERACT' }).click()
+  await page.getByRole('button', { name: '中ボスに挑む' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/13\?/)
   const story = page.getByRole('dialog', { name: '異常の経路を守る相手を越える' })
@@ -108,7 +108,7 @@ test('Battle 12 clear済みsaveはtrace-blocked objectiveからBattle 13へ進�
   await expect(story).toContainText('trace')
   await expect(story).not.toContainText('filter()')
 
-  await story.getByRole('button', { name: /NEXT/ }).click()
+  await story.getByRole('button', { name: /次へ/ }).click()
   await expect(story).toContainText('find()')
   await expect(story).toContainText('&&')
   await expect(story).toContainText('||')
@@ -118,12 +118,12 @@ test('Battle 12 clear済みsaveはtrace-blocked objectiveからBattle 13へ進�
 test('Battle 13 clear後は守り人がいたmain trailを西へ通過できimpact range調査へ進む', async ({ page }) => {
   await seedMidboss(page, 'cleared')
 
-  const forest = page.getByLabel('Forest map')
+  const forest = page.getByLabel('JavaScriptの森のマップ')
   await expect(forest).toHaveAttribute('data-world-x', '6')
   await expect(page.getByLabel('次の目的')).toContainText('影響範囲')
   await expect(page.getByLabel('次の目的')).toContainText('複数の対象へ広がる影響')
 
-  await page.getByRole('button', { name: 'Move left' }).click()
+  await page.getByRole('button', { name: '左へ移動' }).click()
 
   await expect(page).toHaveURL(/\/world$/)
   await expect(forest).toHaveAttribute('data-world-x', '5')

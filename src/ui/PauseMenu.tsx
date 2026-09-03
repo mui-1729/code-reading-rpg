@@ -113,6 +113,14 @@ export function PauseMenu() {
     }))
   }
 
+  const unequip = (slot: EquipmentSlot) => {
+    if (equipmentLocked) return
+    setRpgState((current) => ({
+      ...current,
+      equipment: { ...current.equipment, [slot]: null },
+    }))
+  }
+
   const updateAudioSettings = (next: AudioSettings) => {
     const stored = writeStoredAudioSettings(next)
     const applied = gameAudio.setSettings(stored)
@@ -315,6 +323,14 @@ export function PauseMenu() {
                               </button>
                             )
                           })}
+                          <button
+                            type="button"
+                            className="equipment-empty-option"
+                            onClick={() => unequip(slot)}
+                            disabled={!equippedId || equipmentLocked}
+                          >
+                            装備を外す
+                          </button>
                         </div>
                       </div>
                     )

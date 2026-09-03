@@ -30,27 +30,27 @@ const WORLD_SCENES: Record<
 > = {
   [OVERWORLD_MAP_ID]: {
     sceneId: 'javascript-grassland',
-    title: 'JAVASCRIPT GRASSLAND',
+    title: 'JavaScript草原',
     bgmTrack: 'field',
   },
   [JS_VILLAGE_MAP_ID]: {
     sceneId: 'greenfield-village',
-    title: 'GREENFIELD VILLAGE',
+    title: 'グリーンフィールド村',
     bgmTrack: 'fieldVillage',
   },
   [JS_FOREST_MAP_ID]: {
     sceneId: 'javascript-forest',
-    title: 'JAVASCRIPT FOREST',
+    title: 'JavaScriptの森',
     bgmTrack: 'fieldForest',
   },
   [JS_DEEP_FOREST_MAP_ID]: {
     sceneId: 'javascript-deep-forest',
-    title: 'JAVASCRIPT DEEP FOREST',
+    title: 'JavaScript深層の森',
     bgmTrack: 'fieldDeepForest',
   },
   [TS_FRONTIER_MAP_ID]: {
     sceneId: 'typescript-frontier',
-    title: 'TYPESCRIPT FRONTIER',
+    title: 'TypeScript辺境',
     bgmTrack: 'fieldTypeScript',
   },
 }

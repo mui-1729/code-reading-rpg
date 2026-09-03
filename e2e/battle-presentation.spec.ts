@@ -71,7 +71,7 @@ test('CODE WORLD探索はdark dashboardよりfieldを主役にする', async ({ 
   await page.goto('/world')
 
   const panel = page.locator('.world-panel')
-  const viewport = page.getByLabel('Open world map')
+  const viewport = page.getByLabel('ワールドマップ')
   const objective = page.getByLabel('次の目的')
 
   await expect(panel).toBeVisible()
@@ -120,7 +120,7 @@ test('JS / TS Final Bossは名前・silhouette・sceneが別identityになる', 
   const jsBoss = page.locator('[data-enemy-role="boss"]')
   await expect(jsBoss).toHaveAttribute('data-boss-display-name', 'CORE WYRM')
   await expect(jsBoss.locator('[data-enemy-visual-id]')).toHaveAttribute('data-enemy-visual-id', 'core-wyrm')
-  await expect(jsBoss.getByText('CODE NAME · Boss', { exact: true })).toBeVisible()
+  await expect(jsBoss.getByText('コード名 · Boss', { exact: true })).toBeVisible()
 
   await page.goto('/typescript/battle/6?seed=presentation-ts-boss&returnTo=%2Fworld')
   const tsStage = page.locator('.battle-stage')
@@ -129,7 +129,7 @@ test('JS / TS Final Bossは名前・silhouette・sceneが別identityになる', 
   const tsBoss = page.locator('[data-enemy-role="boss"]')
   await expect(tsBoss).toHaveAttribute('data-boss-display-name', 'CONTRACT TITAN')
   await expect(tsBoss.locator('[data-enemy-visual-id]')).toHaveAttribute('data-enemy-visual-id', 'contract-titan')
-  await expect(tsBoss.getByText('CODE NAME · Boss', { exact: true })).toBeVisible()
+  await expect(tsBoss.getByText('コード名 · Boss', { exact: true })).toBeVisible()
 })
 
 test('mobileでもWorld/Boss sceneがpage全体を横overflowさせない', async ({ page }) => {
@@ -137,7 +137,7 @@ test('mobileでもWorld/Boss sceneがpage全体を横overflowさせない', asyn
   await seedPresentationState(page)
 
   await page.goto('/world')
-  await expect(page.getByLabel('Open world map')).toBeVisible()
+  await expect(page.getByLabel('ワールドマップ')).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
 
   await page.goto('/typescript/battle/6?seed=presentation-mobile-boss&returnTo=%2Fworld')

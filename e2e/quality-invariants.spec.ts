@@ -78,7 +78,7 @@ async function dismissStory(page: Page) {
   const story = page.locator('.battle-story-window')
   await story.waitFor({ state: 'visible', timeout: 2_000 }).catch(() => undefined)
   if (!(await story.isVisible().catch(() => false))) return
-  await story.getByRole('button', { name: 'SKIP' }).click()
+  await story.getByRole('button', { name: 'スキップ', exact: true }).click()
   await expect(story).toBeHidden()
 }
 
@@ -192,7 +192,7 @@ test('@cross-browser CODE HELP, CODE DATA, and Story keep focus inside and resto
   const helpTrigger = page.getByRole('button', { name: 'コード解説を開く' })
   await helpTrigger.focus()
   await helpTrigger.click()
-  const help = page.getByRole('dialog', { name: 'Code help' })
+  const help = page.getByRole('dialog', { name: 'コード解説' })
   await expect(help).toBeVisible()
   await expectDialogFocusTrap(page, help)
   await page.keyboard.press('Escape')
@@ -203,7 +203,7 @@ test('@cross-browser CODE HELP, CODE DATA, and Story keep focus inside and resto
   const dataTrigger = page.getByRole('button', { name: 'コードで使う実データを確認' })
   await dataTrigger.focus()
   await dataTrigger.click()
-  const data = page.getByRole('dialog', { name: 'Code data' })
+  const data = page.getByRole('dialog', { name: 'コードデータ' })
   await expect(data).toBeVisible()
   await expectDialogFocusTrap(page, data)
   await page.keyboard.press('Escape')
@@ -223,7 +223,7 @@ test('@cross-browser Victory/Defeat result dialog traps focus and blocks Battle 
   await trace.click()
   await trace.click()
 
-  const result = page.getByRole('dialog', { name: 'Defeat result' })
+  const result = page.getByRole('dialog', { name: '敗北結果' })
   await expect(result).toBeVisible()
   await expect(result).toHaveAttribute('aria-modal', 'true')
   await expectDialogFocusTrap(page, result)
@@ -252,17 +252,17 @@ test('@cross-browser post-Battle Story exclusively owns focus until the Victory 
   await expect(overlay).toHaveAttribute('inert', '')
   await expect(overlay).toHaveAttribute('aria-hidden', 'true')
   await expect(page.getByRole('dialog')).toHaveCount(1)
-  await expect(page.getByRole('dialog', { name: 'Victory result' })).toHaveCount(0)
-  await expect(page.getByRole('button', { name: 'SKIP', exact: true })).toHaveCount(1)
+  await expect(page.getByRole('dialog', { name: '勝利結果' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'スキップ', exact: true })).toHaveCount(1)
   await expectDialogFocusTrap(page, story)
 
-  await story.getByRole('button', { name: 'SKIP', exact: true }).click()
-  const result = page.getByRole('dialog', { name: 'Victory result' })
+  await story.getByRole('button', { name: 'スキップ', exact: true }).click()
+  const result = page.getByRole('dialog', { name: '勝利結果' })
   await expect(result).toBeVisible()
   await expect(overlay).not.toHaveAttribute('inert', '')
   await expect(page.locator('body')).toHaveCSS('overflow', 'hidden')
   await expect(result.getByRole('button').first()).toBeFocused()
-  await result.getByRole('button', { name: /RETURN TO WORLD/ }).click()
+  await result.getByRole('button', { name: /ワールドへ戻る/ }).click()
   await expect(page).toHaveURL(/\/world$/)
   await expect(page.locator('body')).not.toHaveCSS('overflow', 'hidden')
 })
@@ -366,7 +366,7 @@ test('@responsive mobile keeps all three Enemy cards and selected code comparabl
 
   // Keep the existing live DATA contract alongside the compact reading layout.
   await page.getByRole('button', { name: 'コードで使う実データを確認' }).click()
-  const data = page.getByRole('dialog', { name: 'Code data' })
+  const data = page.getByRole('dialog', { name: 'コードデータ' })
   await expect(data).toBeVisible()
   await expect(data.getByRole('heading', { name: 'TRACE' })).toBeVisible()
   await expect(data.getByText('enemies', { exact: true }).first()).toBeVisible()

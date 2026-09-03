@@ -56,14 +56,14 @@ async function seedWorld(page: Page) {
 test('pointer leaveを挟んだ1tapでも左右D-Padは1tileだけ進む', async ({ page }) => {
   await seedWorld(page)
   const viewport = page.locator('.world-viewport')
-  const right = page.getByRole('button', { name: 'Move right' })
+  const right = page.getByRole('button', { name: '右へ移動' })
 
   await right.dispatchEvent('pointerdown', { button: 0, pointerType: 'touch', pointerId: 1 })
   await right.dispatchEvent('pointerleave', { pointerType: 'touch', pointerId: 1 })
   await right.dispatchEvent('click', { detail: 1 })
   await expect(viewport).toHaveAttribute('data-world-x', '21')
 
-  const left = page.getByRole('button', { name: 'Move left' })
+  const left = page.getByRole('button', { name: '左へ移動' })
   await left.dispatchEvent('pointerdown', { button: 0, pointerType: 'touch', pointerId: 2 })
   await left.dispatchEvent('pointercancel', { pointerType: 'touch', pointerId: 2 })
   await left.dispatchEvent('click', { detail: 1 })
@@ -73,7 +73,7 @@ test('pointer leaveを挟んだ1tapでも左右D-Padは1tileだけ進む', async
 test('keyboard activationはpointer経路なしでも1tile進む', async ({ page }) => {
   await seedWorld(page)
   const viewport = page.locator('.world-viewport')
-  const right = page.getByRole('button', { name: 'Move right' })
+  const right = page.getByRole('button', { name: '右へ移動' })
 
   await right.focus()
   await right.press('Enter')

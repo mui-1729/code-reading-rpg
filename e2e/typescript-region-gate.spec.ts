@@ -84,45 +84,45 @@ async function seedWorld(
   await page.goto('/world')
 }
 
-const overworld = (page: Page) => page.getByLabel('Open world map')
-const frontier = (page: Page) => page.getByLabel('TypeScript Frontier map')
+const overworld = (page: Page) => page.getByLabel('ワールドマップ')
+const frontier = (page: Page) => page.getByLabel('TypeScript辺境のマップ')
 
-test('JavaScript未clearではTypeScript GATEへ進めず理由を表示する', async ({ page }) => {
+test('JavaScript未clearではTypeScriptの門へ進めず理由を表示する', async ({ page }) => {
   await seedWorld(page)
 
-  await page.getByRole('button', { name: 'Move right' }).click()
+  await page.getByRole('button', { name: '右へ移動' }).click()
 
   await expect(overworld(page)).toHaveAttribute('data-world-x', '22')
-  await expect(page.getByRole('status')).toContainText('TYPESCRIPT FRONTIER LOCKED')
+  await expect(page.getByRole('status')).toContainText('TypeScript辺境は未開通')
   await expect(page.getByRole('status')).toContainText('Final Boss')
 })
 
-test('canonical JavaScript route完了後はOverworldから専用TypeScript Frontier mapへ遷移する', async ({ page }) => {
+test('canonical JavaScript route完了後はOverworldから専用TypeScript辺境mapへ遷移する', async ({ page }) => {
   await seedWorld(page, { clearedStageIds: JS_COMPLETE })
 
-  await page.getByRole('button', { name: 'Move right' }).click()
+  await page.getByRole('button', { name: '右へ移動' }).click()
 
   await expect(frontier(page)).toHaveAttribute('data-world-map', 'ts-frontier')
   await expect(frontier(page)).toHaveAttribute('data-world-x', '2')
   await expect(frontier(page)).toHaveAttribute('data-world-y', '10')
-  await expect(page.getByRole('heading', { name: 'TYPESCRIPT FRONTIER' })).toBeVisible()
-  await expect(page.getByText('TYPESCRIPT FRONTIER LOCKED')).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'TypeScript辺境' })).toBeVisible()
+  await expect(page.getByText('TypeScript辺境は未開通')).toHaveCount(0)
 })
 
-test('TypeScript Frontierの西GATEからCentral Hubへ往復できる', async ({ page }) => {
+test('TypeScript辺境の西の門からCentral Hubへ往復できる', async ({ page }) => {
   await seedWorld(page, {
     clearedStageIds: JS_COMPLETE,
     worldMapId: 'ts-frontier',
     worldPosition: { x: 2, y: 10 },
   })
 
-  await page.getByRole('button', { name: 'Move left' }).click()
+  await page.getByRole('button', { name: '左へ移動' }).click()
 
   await expect(overworld(page)).toHaveAttribute('data-world-map', 'overworld')
   await expect(overworld(page)).toHaveAttribute('data-world-x', '22')
   await expect(overworld(page)).toHaveAttribute('data-world-y', '14')
 
-  await page.getByRole('button', { name: 'Move right' }).click()
+  await page.getByRole('button', { name: '右へ移動' }).click()
   await expect(frontier(page)).toHaveAttribute('data-world-map', 'ts-frontier')
 })
 
@@ -158,7 +158,7 @@ test('未解放TypeScript側の旧座標saveはOverworld開始地点へnormalize
   })
 })
 
-test('TypeScript local encounterから逃走すると同じFrontier位置へ戻る', async ({ page }) => {
+test('TypeScript local encounterから逃走すると同じ辺境位置へ戻る', async ({ page }) => {
   await seedWorld(page, {
     clearedStageIds: [...JS_COMPLETE, 4],
     unlockedStageIds: [7, 4, 5],
@@ -167,7 +167,7 @@ test('TypeScript local encounterから逃走すると同じFrontier位置へ戻�
   })
 
   await page.goto('/typescript/battle/4?seed=encounter:ts-frontier:1:5:10&returnTo=%2Fworld')
-  const run = page.getByRole('button', { name: 'RUN · ESCAPE' })
+  const run = page.getByRole('button', { name: '逃げる' })
   await expect(run).toBeEnabled()
   await run.click()
 

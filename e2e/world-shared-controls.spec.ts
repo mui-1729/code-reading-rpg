@@ -62,8 +62,8 @@ for (const region of [
     await expect(player).toHaveAttribute('data-world-x', String(region.position.x))
     await expect(page.locator('.world-tile')).toHaveCount(99)
 
-    // Enter activates the focused D-Pad exactly once, not the field INTERACT action.
-    await page.getByRole('button', { name: 'Move right', exact: true }).focus()
+    // Enter activates the focused D-Pad exactly once, not the field interaction action.
+    await page.getByRole('button', { name: '右へ移動', exact: true }).focus()
     await page.keyboard.press('Enter')
     await expect(player).toHaveAttribute('data-world-x', String(region.position.x + 1))
     await expect(follower).toHaveAttribute('data-world-x', String(region.position.x))

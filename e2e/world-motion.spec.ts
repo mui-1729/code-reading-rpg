@@ -84,7 +84,7 @@ test('Playerは移動方向を向き、2-frame stepと実画面の1tile補間を
   expect(await player.evaluate((element) => getComputedStyle(element).transitionDuration)).toContain('0.15s')
 
   const cameraPan = await page.evaluate(async () => {
-    const button = document.querySelector<HTMLButtonElement>('button[aria-label="Move right"]')
+    const button = document.querySelector<HTMLButtonElement>('button[aria-label="右へ移動"]')
     button?.click()
     await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
     const snapshot = document.querySelector<HTMLElement>('.world-camera-snapshot')
@@ -108,7 +108,7 @@ test('Playerは移動方向を向き、2-frame stepと実画面の1tile補間を
   await expect(player).toHaveAttribute('data-step-frame', '1')
   await expect(player.locator('img')).toHaveAttribute('src', /code-knight-field-side\.svg$/)
 
-  await page.getByRole('button', { name: 'Move left' }).click()
+  await page.getByRole('button', { name: '左へ移動' }).click()
   await expect(player).toHaveAttribute('data-world-x', '20')
   await expect(player).toHaveAttribute('data-facing', 'left')
   await expect(player).toHaveAttribute('data-step-frame', '0')
@@ -119,8 +119,8 @@ test('walking補間中の連続入力もqueueせず最新座標とfacingへ収�
   await page.goto('/world')
 
   const player = page.locator('.world-player-sprite')
-  const right = page.getByRole('button', { name: 'Move right' })
-  const left = page.getByRole('button', { name: 'Move left' })
+  const right = page.getByRole('button', { name: '右へ移動' })
+  const left = page.getByRole('button', { name: '左へ移動' })
 
   await right.click()
   await left.click()
@@ -141,7 +141,7 @@ test('reduced-motionでは補間を完全に切るがfacing情報は残す', asy
   const player = page.locator('.world-player-sprite')
   expect(await player.evaluate((element) => getComputedStyle(element).transitionDuration)).toBe('0s')
 
-  await page.getByRole('button', { name: 'Move right' }).click()
+  await page.getByRole('button', { name: '右へ移動' }).click()
   await expect(player).toHaveAttribute('data-facing', 'right')
   await expect(player).toHaveAttribute('data-world-x', '21')
   const cameraDisplay = await page.locator('.world-camera-snapshot').evaluate((element) => getComputedStyle(element).display)
@@ -160,15 +160,15 @@ test('map transitionはAREA titleとregion field BGMを同じscene identityか�
   await expect(viewport).toHaveAttribute('data-world-bgm-track', 'field')
   await expect.poll(() => page.evaluate(() => document.body.dataset.bgmTrack)).toBe('field')
 
-  await page.getByRole('button', { name: 'Move up' }).click()
+  await page.getByRole('button', { name: '上へ移動' }).click()
   await expect(viewport).toHaveAttribute('data-world-map', 'overworld')
-  await page.getByRole('button', { name: 'INTERACT · GREENFIELD VILLAGEへ入る' }).click()
+  await page.getByRole('button', { name: 'グリーンフィールド村へ入る' }).click()
 
   await expect(viewport).toHaveAttribute('data-world-map', 'js-village')
   await expect(viewport).toHaveAttribute('data-world-scene', 'greenfield-village')
   await expect(viewport).toHaveAttribute('data-world-bgm-track', 'fieldVillage')
   await expect.poll(() => page.evaluate(() => document.body.dataset.bgmTrack)).toBe('fieldVillage')
-  await expect(page.locator('.world-entry-transition')).toContainText('GREENFIELD VILLAGE')
+  await expect(page.locator('.world-entry-transition')).toContainText('グリーンフィールド村')
 })
 
 test('@cross-browser @responsive World AREA transitionは各viewportで横overflowせずscene identityを維持する', async ({ page }) => {
@@ -179,9 +179,9 @@ test('@cross-browser @responsive World AREA transitionは各viewportで横overfl
   await page.goto('/world')
 
   const viewport = page.locator('.world-viewport')
-  await page.getByRole('button', { name: 'Move up' }).click()
+  await page.getByRole('button', { name: '上へ移動' }).click()
   await expect(viewport).toHaveAttribute('data-world-map', 'overworld')
-  await page.getByRole('button', { name: 'INTERACT · GREENFIELD VILLAGEへ入る' }).click()
+  await page.getByRole('button', { name: 'グリーンフィールド村へ入る' }).click()
   await expect(viewport).toHaveAttribute('data-world-map', 'js-village')
 
   const transitionLayout = await page.locator('.world-entry-transition').evaluate((transition) => {
@@ -200,7 +200,7 @@ test('@cross-browser @responsive World AREA transitionは各viewportで横overfl
 
   expect(transitionLayout).not.toBeNull()
   if (!transitionLayout) return
-  expect(transitionLayout.text).toContain('GREENFIELD VILLAGE')
+  expect(transitionLayout.text).toContain('グリーンフィールド村')
   expect(transitionLayout.scrollWidth).toBeLessThanOrEqual(transitionLayout.clientWidth)
   expect(transitionLayout.transition.x).toBeGreaterThanOrEqual(transitionLayout.viewport.x - 1)
   expect(transitionLayout.transition.x + transitionLayout.transition.width).toBeLessThanOrEqual(

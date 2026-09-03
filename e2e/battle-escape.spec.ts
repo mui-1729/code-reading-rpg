@@ -62,14 +62,14 @@ test('clear済みOverworld Random Encounterから逃走すると同じWorld位�
   await seed(page, cleared)
   await page.goto('/javascript/battle/1?seed=encounter%3A5%3A10%3A11&returnTo=%2Fworld')
 
-  const run = page.getByRole('button', { name: 'RUN · ESCAPE' })
+  const run = page.getByRole('button', { name: '逃げる' })
   await expect(run).toBeVisible()
   await expect(run).toBeEnabled()
   await run.click()
 
   await expect(page).toHaveURL(/\/world$/)
-  await expect(page.getByLabel('Open world map')).toHaveAttribute('data-world-x', '10')
-  await expect(page.getByLabel('Open world map')).toHaveAttribute('data-world-y', '11')
+  await expect(page.getByLabel('ワールドマップ')).toHaveAttribute('data-world-x', '10')
+  await expect(page.getByLabel('ワールドマップ')).toHaveAttribute('data-world-y', '11')
 
   const progress = await storedProgress(page)
   expect(progress.progress.exp).toBe(0)
@@ -78,19 +78,19 @@ test('clear済みOverworld Random Encounterから逃走すると同じWorld位�
   expect((await storedRpg(page)).state.currentHp).toBe(73)
 })
 
-test('未clearのfirst incidentはRandom風seedでもRUNを表示しない', async ({ page }) => {
+test('未clearのfirst incidentはRandom風seedでも逃げるを表示しない', async ({ page }) => {
   await seed(page, [...JS_BATTLE_1_PREREQS])
   await page.goto('/javascript/battle/1?seed=encounter%3Aoverworld%3A5%3A10%3A11&returnTo=%2Fworld')
 
   const story = page.locator('.battle-story-window')
   await expect(story).toBeVisible()
-  await story.getByRole('button', { name: 'SKIP' }).click()
+  await story.getByRole('button', { name: 'スキップ' }).click()
 
-  await expect(page.getByRole('button', { name: 'RUN · ESCAPE' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: '逃げる' })).toHaveCount(0)
   await expect(page.getByText('FIXED BATTLE', { exact: false })).toHaveCount(0)
 })
 
-test('fixed Lesson / Training / Boss / Mid-BossではRUN UIそのものを表示しない', async ({ page }) => {
+test('fixed Lesson / Training / Boss / Mid-Bossでは逃走UIそのものを表示しない', async ({ page }) => {
   await seed(page, [...JS_BOSS_PREREQS])
 
   for (const url of [
@@ -99,14 +99,14 @@ test('fixed Lesson / Training / Boss / Mid-BossではRUN UIそのものを表示
     '/javascript/battle/3?seed=boss%3Ajs%3A1&returnTo=%2Fworld',
   ]) {
     await page.goto(url)
-    await expect(page.getByRole('button', { name: 'RUN · ESCAPE' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: '逃げる' })).toHaveCount(0)
     await expect(page.getByText('FIXED BATTLE', { exact: false })).toHaveCount(0)
   }
 })
 
-test('clear済みlocal map Random復習BattleだけRUNを表示する', async ({ page }) => {
+test('clear済みlocal map Random復習Battleだけ逃げるを表示する', async ({ page }) => {
   await seed(page, [...JS_FIRST_INCIDENT, 10])
   await page.goto('/javascript/battle/10?seed=encounter%3Ajs-forest%3A7%3A20%3A9&returnTo=%2Fworld')
 
-  await expect(page.getByRole('button', { name: 'RUN · ESCAPE' })).toBeEnabled()
+  await expect(page.getByRole('button', { name: '逃げる' })).toBeEnabled()
 })

@@ -73,7 +73,7 @@ test('camera pan中も固定objectはterrain snapshotより前面に残る', asy
   const shop = page.locator('[data-world-x="20"][data-world-y="12"] .world-object').first()
   await expect(shop).toBeVisible()
 
-  await page.getByRole('button', { name: 'Move right' }).click()
+  await page.getByRole('button', { name: '右へ移動' }).click()
   const snapshot = page.locator('.world-camera-snapshot')
   await expect(snapshot).toBeVisible()
 
@@ -125,7 +125,7 @@ test('camera pan中も固定NPCと対応tileの相対位置が変わらない', 
   const before = await getRelativeOffset()
   expect(before).not.toBeNull()
 
-  await page.getByRole('button', { name: 'Move left' }).click()
+  await page.getByRole('button', { name: '左へ移動' }).click()
   const snapshot = page.locator('.world-camera-snapshot')
   await expect(snapshot).toBeVisible()
   await page.waitForTimeout(40)

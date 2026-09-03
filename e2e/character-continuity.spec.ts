@@ -46,6 +46,7 @@ async function seedState(
             equipment: { weapon: 'training-blade', armor: 'traveler-coat', accessory: null },
             ownedEquipmentIds: ['training-blade', 'traveler-coat'],
             partyMemberIds: ['byte'],
+            partyEquipment: {},
             worldMapId: mapId,
             worldPosition: position,
             stepsSinceEncounter: 8,
@@ -74,11 +75,11 @@ test('Opening初登場でADA/BYTEのportraitと名前を同時に結びつける
   await page.evaluate(() => localStorage.clear())
   await page.reload()
 
-  await page.getByRole('button', { name: 'START' }).click()
+  await page.getByRole('button', { name: 'はじめる' }).click()
   await expect(page.getByText('LEAD ADA', { exact: true })).toBeVisible()
   await expect(page.getByAltText('LEAD ADA portrait')).toBeVisible()
 
-  await page.getByRole('button', { name: 'NEXT ▶' }).click()
+  await page.getByRole('button', { name: '次へ ▶' }).click()
   await expect(page.getByText('BYTE', { exact: true })).toBeVisible()
   await expect(page.getByAltText('BYTE portrait')).toBeVisible()
   await expect(page.getByText(/僕はBYTE/)).toBeVisible()
@@ -91,7 +92,7 @@ test('Training完了後もVillageでMIOへ戻って会話できる', async ({ pa
     position: { x: 12, y: 8 },
   })
 
-  const talk = page.getByRole('button', { name: 'INTERACT · TRAINER MIOと話す' })
+  const talk = page.getByRole('button', { name: 'TRAINER MIOと話す' })
   await expect(talk).toBeEnabled()
   await talk.click()
 
@@ -108,7 +109,7 @@ test('Villageのordinary residentはmain progression外で生活の会話を持�
     position: { x: 8, y: 9 },
   })
 
-  const talk = page.getByRole('button', { name: 'INTERACT · VILLAGE CHILDと話す' })
+  const talk = page.getByRole('button', { name: 'VILLAGE CHILDと話す' })
   await expect(talk).toBeEnabled()
   await talk.click()
 
@@ -126,7 +127,7 @@ test('TypeScriptではWARDEN NPCとBattle 6のFrontier Compilerを別objectと�
     position: { x: 29, y: 6 },
   })
 
-  const talk = page.getByRole('button', { name: 'INTERACT · TYPE WARDENと話す' })
+  const talk = page.getByRole('button', { name: 'TYPE WARDENと話す' })
   await expect(talk).toBeEnabled()
   await talk.click()
   const conversation = page.getByRole('dialog', { name: 'TYPE WARDENとの会話' })
@@ -143,8 +144,8 @@ test('TypeScriptではWARDEN NPCとBattle 6のFrontier Compilerを別objectと�
   }, GAME_STATE_KEY)
   await page.reload()
 
-  await expect(page.getByLabel('Frontier Compiler Boss')).toBeVisible()
+  await expect(page.getByLabel('FRONTIER COMPILER ボス')).toBeVisible()
   await expect(
-    page.getByRole('button', { name: 'INTERACT · FRONTIER COMPILERに挑む' }),
+    page.getByRole('button', { name: 'FRONTIER COMPILERに挑む' }),
   ).toBeEnabled()
 })

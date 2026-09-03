@@ -252,7 +252,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
       schedule(() => {
         setActiveEnemyId(enemy.id)
         gameAudio.playSe('enemyAttack')
-        addLog('enemy', `${enemy.name} / ${enemy.attackName} → ${damage} DMG`)
+        addLog('enemy', `${enemy.name} / ${enemy.attackName} → ${damage} ダメージ`)
       }, windupDelay)
 
       schedule(() => {
@@ -319,7 +319,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
       schedule(() => setSemanticFeedback(null), BATTLE_MOTION.semanticFeedbackMs)
 
       if (targets.length === 0) {
-        addLog('player', `${skill.name} → NO TARGET`)
+        addLog('player', `${skill.name} → 対象なし`)
         gameAudio.playSe('cancel')
         schedule(() => runEnemyTurn(enemies), BATTLE_MOTION.semanticFeedbackMs)
         return
@@ -345,7 +345,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
       setEnemies(nextEnemies)
       addLog(
         'player',
-        `${skill.name} → ${targets.map((target) => target.name).join(' / ')} · ${skillPower} DMG`,
+        `${skill.name} → ${targets.map((target) => target.name).join(' / ')} · ${skillPower} ダメージ`,
       )
       if (partyFollowUpTargetId && resolvedPartyFollowUpDamage > 0) {
         const allies = rpgState.partyMemberIds
@@ -357,11 +357,11 @@ function App({ battleId, seed, returnTo }: AppProps) {
         const followUpTarget = targets.find((target) => target.id === partyFollowUpTargetId)
         addLog(
           'system',
-          `${allies} FOLLOW-UP → ${followUpTarget?.name ?? partyFollowUpTargetId} · ${resolvedPartyFollowUpDamage} DMG`,
+          `${allies} 追撃 → ${followUpTarget?.name ?? partyFollowUpTargetId} · ${resolvedPartyFollowUpDamage} ダメージ`,
         )
       }
       if (guardedBossTargeted) {
-        addLog('system', 'BOSS GUARD → Skill damage to Boss capped at 1')
+        addLog('system', 'ボスガード → ボスへのスキルダメージは1')
       }
 
       schedule(() => {
@@ -472,7 +472,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
         <div className="battle-location-stack">
           <span className="battle-location-chip">{battlePresentation.locationLabel}</span>
           <div className={`turn-pill ${enemyTurnActive ? 'enemy-turn-active' : ''}`}>
-            {enemyTurnActive ? 'ENEMY TURN' : `TURN ${String(turn).padStart(2, '0')}`}
+            {enemyTurnActive ? '敵のターン' : `ターン ${turn}`}
           </div>
         </div>
       </header>
@@ -520,9 +520,9 @@ function App({ battleId, seed, returnTo }: AppProps) {
             {rpgState.partyMemberIds.length > 0 && (
               <>
                 <div className="party-battle-line">
-                  ALLY {rpgState.partyMemberIds.map((id) => partyMemberById[id]?.name ?? id).join(' + ')} · FOLLOW-UP {partyFollowUpDamage}
+                  仲間 {rpgState.partyMemberIds.map((id) => partyMemberById[id]?.name ?? id).join(' + ')} · 追撃 {partyFollowUpDamage}
                 </div>
-                <div className="battle-party-pixels" aria-label="Battle party">
+                <div className="battle-party-pixels" aria-label="戦闘中の仲間">
                   {rpgState.partyMemberIds.map((memberId) => {
                     const member = partyMemberById[memberId]
                     if (!member) return null
@@ -542,7 +542,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
           </div>
         </aside>
 
-        <section className="enemy-grid" aria-label="Enemies">
+        <section className="enemy-grid" aria-label="敵">
           {enemies.map((enemy) => {
             const hpPercent = (enemy.hp / enemy.maxHp) * 100
             const defeated = enemy.hp <= 0
@@ -598,7 +598,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
                   <div>
                     <h2>{displayName}</h2>
                     {displayName !== enemy.name && (
-                      <small className="enemy-code-name">CODE NAME · {enemy.name}</small>
+                      <small className="enemy-code-name">コード名 · {enemy.name}</small>
                     )}
                   </div>
                   <span aria-label={`HP ${enemy.hp} / ${enemy.maxHp}`}>{enemy.hp}/{enemy.maxHp}</span>
@@ -609,19 +609,19 @@ function App({ battleId, seed, returnTo }: AppProps) {
                 {isBossEnemy && bossGuardEnabled && (
                   <div
                     className={`boss-guard ${bossGuardActive ? 'active' : 'open'}`}
-                    aria-label={`Boss Guard ${bossGuardActive ? 'ACTIVE' : 'OPEN'}`}
+                    aria-label={`ボスガード ${bossGuardActive ? '有効' : '解除'}`}
                   >
                     <div className="boss-guard-head">
-                      <span>GUARD</span>
-                      <strong>{bossGuardActive ? 'ACTIVE' : 'OPEN'}</strong>
+                      <span>ガード</span>
+                      <strong>{bossGuardActive ? '有効' : '解除'}</strong>
                     </div>
                     <code>{BOSS_GUARD_CONDITION_CODE}</code>
                   </div>
                 )}
                 <div className="intent-box">
-                  <span>NEXT</span>
+                  <span>次の攻撃</span>
                   <strong>{defeated ? '—' : enemy.attackName}</strong>
-                  <em>{defeated ? 'DEFEATED' : `${getIncomingDamage(enemy.attackDamage, playerStats.defense)} DMG`}</em>
+                  <em>{defeated ? '撃破' : `${getIncomingDamage(enemy.attackDamage, playerStats.defense)} ダメージ`}</em>
                 </div>
                 <div className="enemy-code-facts">
                   <span className="enemy-role">{enemy.role}</span>
@@ -640,7 +640,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
             aria-live="polite"
             data-semantic-family={semanticFeedback.family}
           >
-            <span>RULE RESOLVED</span>
+            <span>判定結果</span>
             <strong>{semanticFeedback.label}</strong>
             <small>{semanticFeedback.detail}</small>
           </div>
@@ -650,19 +650,19 @@ function App({ battleId, seed, returnTo }: AppProps) {
             <>
               <div className="selected-skill-reading-head">
                 <strong>{selectedSkill.name}</strong>
-                <span>POWER {getSkillDamage(selectedSkill.power, playerStats)}</span>
+                <span>威力 {getSkillDamage(selectedSkill.power, playerStats)}</span>
               </div>
               <SourceCode code={selectedSkill.code} scrollable />
             </>
           ) : (
-            <p>{isResolving ? 'EXECUTING…' : 'SkillをSELECTしてコードを読む'}</p>
+            <p>{isResolving ? '実行中…' : 'スキルを選んでコードを読む'}</p>
           )}
         </section>
         <div className="stage-ground" aria-hidden="true" />
       </section>
 
       <section className="battle-console pixel-window">
-        <div className="skill-grid" role="group" aria-label="Skills">
+        <div className="skill-grid" role="group" aria-label="スキル">
           {availableSkills.map((skill) => {
             const selected = selectedSkillId === skill.id
             const skillPower = getSkillDamage(skill.power, playerStats)
@@ -678,10 +678,10 @@ function App({ battleId, seed, returnTo }: AppProps) {
               >
                 <div className="skill-card-head">
                   <span>{skill.name}</span>
-                  <strong>POWER {skillPower}</strong>
+                  <strong>威力 {skillPower}</strong>
                 </div>
                 <pre><code>{skill.code}</code></pre>
-                {selected && <div className="skill-card-foot">▶ EXECUTE</div>}
+                {selected && <div className="skill-card-foot">▶ 実行</div>}
               </button>
             )
           })}
@@ -694,7 +694,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
 
         {logs.length > 0 && (
           <div className="log-panel pixel-inner-window">
-            <div className="log-title">BATTLE LOG</div>
+            <div className="log-title">戦闘ログ</div>
             <div className="log-list">
               {logs.map((log) => (
                 <span key={log.id} className={`log-${log.tone}`}>&gt; {log.text}</span>
@@ -740,11 +740,11 @@ function App({ battleId, seed, returnTo }: AppProps) {
             className={`result-card victory-card pixel-window result-card-enter result-sequence-host ${resultSequenceDone ? 'result-sequence-complete' : ''}`}
             role="dialog"
             aria-modal="true"
-            aria-label="Victory result"
+            aria-label="勝利結果"
             tabIndex={-1}
           >
-            <div className="eyebrow">VICTORY</div>
-            <h2>{battle.title} cleared.</h2>
+            <div className="eyebrow">勝利</div>
+            <h2>{battle.title} クリア</h2>
             {victoryReward && (
               <div className="reward-summary pixel-inner-window">
                 <BattleResultSequence items={resultItems} paused={Boolean(storyEvent)} done={resultSequenceDone} onComplete={completeResultSequence} />
@@ -752,10 +752,10 @@ function App({ battleId, seed, returnTo }: AppProps) {
             )}
             <div className="result-actions">
               <button className="primary-button" onClick={goNextBattle}>
-                {returnTo === '/world' ? '▶ RETURN TO WORLD' : nextBattle ? '▶ NEXT STAGE' : '▶ WORLD'}
+                {returnTo === '/world' ? '▶ ワールドへ戻る' : nextBattle ? '▶ 次のステージ' : '▶ ワールドへ戻る'}
               </button>
               {returnTo !== '/world' && (
-                <button className="secondary-button" onClick={goReturnDestination}>◀ WORLD</button>
+                <button className="secondary-button" onClick={goReturnDestination}>◀ ワールドへ戻る</button>
               )}
             </div>
           </section>
@@ -774,15 +774,15 @@ function App({ battleId, seed, returnTo }: AppProps) {
             className="result-card defeat-card pixel-window result-card-enter"
             role="dialog"
             aria-modal="true"
-            aria-label="Defeat result"
+            aria-label="敗北結果"
             tabIndex={-1}
           >
-            <div className="eyebrow">DEFEAT</div>
-            <p className="result-note">RETRYはBattle開始時のHP / Itemへ戻る。RETURNも全回復せず、開始地点へ戻る。</p>
+            <div className="eyebrow">敗北</div>
+            <p className="result-note">再挑戦ではBattle開始時のHP / Itemへ戻る。チェックポイントへ戻っても全回復せず、開始地点へ戻る。</p>
             <div className="defeat-actions">
-              <button className="primary-button" onClick={retryBattle}>▶ RETRY BATTLE</button>
-              <button className="secondary-button" onClick={returnToCheckpoint}>◀ RETURN TO CHECKPOINT</button>
-              <button className="secondary-button" onClick={(event) => openCodeHelp(selectedSkill ?? availableSkills[0], event.currentTarget)}>CODE HELP</button>
+              <button className="primary-button" onClick={retryBattle}>▶ 再挑戦</button>
+              <button className="secondary-button" onClick={returnToCheckpoint}>◀ チェックポイントへ戻る</button>
+              <button className="secondary-button" onClick={(event) => openCodeHelp(selectedSkill ?? availableSkills[0], event.currentTarget)}>コード解説</button>
             </div>
           </section>
         </div>
@@ -795,13 +795,13 @@ function App({ battleId, seed, returnTo }: AppProps) {
             className="explain-modal pixel-window"
             role="dialog"
             aria-modal="true"
-            aria-label="Code help"
+            aria-label="コード解説"
             tabIndex={-1}
             onClick={(event) => event.stopPropagation()}
           >
             <button type="button" className="close-button" onClick={closeCodeHelp} aria-label="コード解説を閉じる">×</button>
             <header className="code-help-head">
-              <div className="eyebrow">CODE EXPLANATION · {explainedSkill.name}</div>
+              <div className="eyebrow">コード解説 · {explainedSkill.name}</div>
               <h2>{explainedSkill.concept}</h2>
             </header>
             <p className="source-line-note">行番号は元のコードの改行に対応します。画面幅による折り返しは同じ行です。</p>
@@ -810,7 +810,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
               <div className="code-help-steps" aria-label="コードを1行ずつ読む">
                 {explainedSkill.code.split('\n').map((line, index) => (
                   <div className="code-help-step pixel-inner-window" key={`${index}:${line}`}>
-                    <span>SOURCE LINE {String(index + 1).padStart(2, '0')}</span>
+                    <span>コード行 {String(index + 1).padStart(2, '0')}</span>
                     <code>{line}</code>
                     <p>{explainedSkill.codeHelpLines?.[index]}</p>
                   </div>

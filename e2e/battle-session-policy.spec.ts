@@ -79,7 +79,7 @@ async function seedBattleState(
 async function dismissStory(page: Page) {
   const story = page.locator('.battle-story-window')
   await expect(story).toBeVisible()
-  await story.getByRole('button', { name: 'SKIP' }).click()
+  await story.getByRole('button', { name: 'スキップ', exact: true }).click()
   await expect(story).toBeHidden()
 }
 
@@ -108,7 +108,7 @@ async function expectAnimatedResult(page: Page, text: string) {
   for (let index = 0; index < 8; index += 1) {
     if (await result.isVisible()) return
 
-    const next = sequence.getByRole('button', { name: '次 →', exact: true })
+    const next = sequence.getByRole('button', { name: '次へ', exact: true })
     if (!(await next.isVisible())) break
     await next.click()
   }
@@ -147,7 +147,7 @@ test('reloadはBattle attemptをrollbackして開始HP / Itemへ戻す', async (
 test('browser backはBattle attemptをABORTしWorld snapshotを変更しない', async ({ page }) => {
   await seedBattleState(page, { patchKit: 1, currentHp: 40 })
   await page.goto('/world')
-  await expect(page.getByLabel('Open world map')).toHaveAttribute('data-world-x', '10')
+  await expect(page.getByLabel('ワールドマップ')).toHaveAttribute('data-world-x', '10')
   await page.goto('/javascript/battle/1?seed=session-back&returnTo=%2Fworld')
   await dismissStory(page)
 
@@ -157,7 +157,7 @@ test('browser backはBattle attemptをABORTしWorld snapshotを変更しない',
   await page.goBack()
 
   await expect(page).toHaveURL(/\/world$/)
-  const map = page.getByLabel('Open world map')
+  const map = page.getByLabel('ワールドマップ')
   await expect(map).toHaveAttribute('data-world-x', '10')
   await expect(map).toHaveAttribute('data-world-y', '10')
   await expect.poll(async () => (await readStoredRpg(page))?.state.currentHp).toBe(40)
@@ -175,7 +175,7 @@ test('Victoryだけattempt-local HP / Itemとrewardをpersistent stateへcommit�
   await executeSkill(page, 'TRACE')
   await executeSkill(page, 'PULSE')
   await executeSkill(page, 'TRACE')
-  await expect(page.getByText('VICTORY', { exact: true })).toBeVisible()
+  await expect(page.getByText('勝利', { exact: true })).toBeVisible()
 
   await expect.poll(async () => (await readStoredProgress(page))?.progress.inventory.patchKit).toBe(0)
   await expect.poll(async () => (await readStoredProgress(page))?.progress.exp).toBe(12)
@@ -191,7 +191,7 @@ test('Level Upは増加statを、ReplayはEXP 100% / Gold 50%をresultで明示�
   await executeSkill(page, 'TRACE')
   await executeSkill(page, 'PULSE')
   await executeSkill(page, 'TRACE')
-  await expect(page.getByText('VICTORY', { exact: true })).toBeVisible()
+  await expect(page.getByText('勝利', { exact: true })).toBeVisible()
   await completeStory(page)
   await expectAnimatedResult(page, 'レベルアップ！ · 最大HP +8 · 威力 +2%')
 
@@ -200,6 +200,6 @@ test('Level Upは増加statを、ReplayはEXP 100% / Gold 50%をresultで明示�
   await executeSkill(page, 'TRACE')
   await executeSkill(page, 'PULSE')
   await executeSkill(page, 'TRACE')
-  await expect(page.getByText('VICTORY', { exact: true })).toBeVisible()
+  await expect(page.getByText('勝利', { exact: true })).toBeVisible()
   await expectAnimatedResult(page, '再クリア · EXP 100% / GOLD 50%')
 })

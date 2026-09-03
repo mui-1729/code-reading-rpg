@@ -75,7 +75,7 @@ export function BattleCodeData({
         aria-expanded={open}
         disabled={actionLocked}
       >
-        DATA
+        データ
       </button>
 
       {open && (
@@ -85,14 +85,14 @@ export function BattleCodeData({
           className="code-data-panel pixel-window"
           role="dialog"
           aria-modal="true"
-          aria-label="Code data"
+          aria-label="コードデータ"
           tabIndex={-1}
           onClick={(event) => event.stopPropagation()}
         >
           <header className="code-data-head">
             <div>
-              <span className="eyebrow">CODE DATA</span>
-              <h2>{selectedSkillName ?? 'RUNTIME VALUES'}</h2>
+              <span className="eyebrow">コードデータ</span>
+              <h2>{selectedSkillName ?? '実行時の値'}</h2>
             </div>
             <button
               type="button"
@@ -105,16 +105,16 @@ export function BattleCodeData({
           </header>
 
           <p className="code-data-note">
-            displayed codeの <code>enemies</code> は現在生存中（HP &gt; 0）のEnemy配列です。
-            <code> attackDamage</code> はraw値、<code>incomingDamage</code> はPlayer DEF適用後のNEXT damageです。
+            表示中のコードにある <code>enemies</code> は現在生存中（HP &gt; 0）のEnemy配列です。
+            <code> attackDamage</code> はraw値、<code>incomingDamage</code> はPlayer DEF適用後の次のダメージです。
           </p>
 
           {!selectedCode && (
-            <p className="code-data-note">SkillをSELECTすると、そのcode内で作られる途中の値も表示されます。</p>
+            <p className="code-data-note">Skillを選択すると、そのコード内で作られる途中の値も表示されます。</p>
           )}
 
           <section className="code-data-section">
-            <div className="code-data-section-title">RUNTIME CONTEXT</div>
+            <div className="code-data-section-title">実行時の値</div>
             <div className="code-data-variables">
               {codeVariables.map((variable) => (
                 <div className="code-data-variable" key={variable.name}>
@@ -130,7 +130,7 @@ export function BattleCodeData({
           </section>
 
           <section className="code-data-section">
-            <div className="code-data-section-title">ENEMY OBJECT</div>
+            <div className="code-data-section-title">敵オブジェクト</div>
             {selectedEnemy && enemySnapshot ? (
               <>
                 <div className="code-data-selected-enemy">{selectedEnemy.name}</div>
@@ -144,7 +144,7 @@ export function BattleCodeData({
                 </dl>
                 {enemySnapshot.derived.length > 0 && (
                   <div className="code-data-derived">
-                    <div className="code-data-section-title">VALUES FOR THIS ENEMY</div>
+                    <div className="code-data-section-title">この敵に対する値</div>
                     {enemySnapshot.derived.map((item) => (
                       <div className="code-data-variable" key={item.name}>
                         <div className="code-data-variable-head">
@@ -158,7 +158,7 @@ export function BattleCodeData({
                 )}
               </>
             ) : (
-              <p className="code-data-note">Enemyをクリック / タップすると、そのobjectの実データを確認できます。</p>
+              <p className="code-data-note">敵をクリック / タップすると、そのobjectの実データを確認できます。</p>
             )}
           </section>
         </aside>

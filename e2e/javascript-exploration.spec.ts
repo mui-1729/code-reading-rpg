@@ -75,16 +75,16 @@ async function seedExploration(
 test('Forestの南branchには寄り道Treasureがあり取得後もreloadでOPENを保つ', async ({ page }) => {
   await seedExploration(page, 'js-forest', { x: 21, y: 20 })
 
-  const map = page.getByLabel('Forest map')
+  const map = page.getByLabel('JavaScriptの森のマップ')
   await expect(map).toHaveAttribute('data-world-y', '20')
-  await expect(page.getByLabel('js-forest-supply treasure closed')).toBeVisible()
+  await expect(page.getByLabel('FOREST SUPPLY 未開封')).toBeVisible()
 
-  await page.getByRole('button', { name: 'INTERACT' }).click()
+  await page.getByRole('button', { name: '宝箱を開ける' }).click()
   await expect(page.getByText(/FOREST SUPPLY 開封/)).toBeVisible()
-  await expect(page.getByLabel('js-forest-supply treasure opened')).toBeVisible()
+  await expect(page.getByLabel('FOREST SUPPLY 開封済み')).toBeVisible()
 
   await page.reload()
-  await expect(page.getByLabel('js-forest-supply treasure opened')).toBeVisible()
+  await expect(page.getByLabel('FOREST SUPPLY 開封済み')).toBeVisible()
 
   const stored = await readStoredGameState(page)
   expect(stored.progress.progress.gold).toBe(35)
@@ -96,16 +96,16 @@ test('390px幅でもDeep Forestの南branchを安全なtrailとして移動で�
   await page.setViewportSize({ width: 390, height: 844 })
   await seedExploration(page, 'js-deep-forest', { x: 10, y: 20 })
 
-  const map = page.getByLabel('Deep Forest map')
-  await page.getByRole('button', { name: 'Move down' }).click()
-  await page.getByRole('button', { name: 'Move down' }).click()
-  await page.getByRole('button', { name: 'Move right' }).click()
-  await page.getByRole('button', { name: 'Move right' }).click()
-  await page.getByRole('button', { name: 'Move right' }).click()
+  const map = page.getByLabel('JavaScript深層の森のマップ')
+  await page.getByRole('button', { name: '下へ移動' }).click()
+  await page.getByRole('button', { name: '下へ移動' }).click()
+  await page.getByRole('button', { name: '右へ移動' }).click()
+  await page.getByRole('button', { name: '右へ移動' }).click()
+  await page.getByRole('button', { name: '右へ移動' }).click()
 
   await expect(map).toHaveAttribute('data-world-x', '13')
   await expect(map).toHaveAttribute('data-world-y', '22')
-  await expect(page.getByLabel('js-deep-forest-cache treasure closed')).toBeVisible()
+  await expect(page.getByLabel('DEEP CACHE 未開封')).toBeVisible()
   await expect(page).toHaveURL(/\/world$/)
 
   const overflows = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)

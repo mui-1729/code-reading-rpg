@@ -80,12 +80,12 @@ test('World常設objectiveは一行に絞りdetailはmapを隠さない', async 
   await expect(objective.locator('p')).toHaveCount(0)
 })
 
-test('INTERACTは対象がない時disabledで近くの対象を具体名で示す', async ({ page }) => {
+test('アクションは対象がない時disabledで近くの対象を具体名で示す', async ({ page }) => {
   await seedWorld(page, { position: { x: 20, y: 14 }, partyMemberIds: ['byte'] })
-  await expect(page.getByRole('button', { name: 'INTERACT', exact: true })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'アクション', exact: true })).toBeDisabled()
 
   await seedWorld(page, { position: { x: 20, y: 13 }, partyMemberIds: [] })
-  const byteInteract = page.getByRole('button', { name: 'INTERACT · BYTEと話す', exact: true })
+  const byteInteract = page.getByRole('button', { name: 'BYTEと話す', exact: true })
   await expect(byteInteract).toBeEnabled()
   await expect(byteInteract).toHaveText('BYTEと話す')
 })
@@ -96,7 +96,7 @@ test('通常歩行のterrain echoは冒険ログを占有せずaria-liveもし�
   await expect(log).toHaveAttribute('data-log-priority', 'event')
   await expect(log).toHaveAttribute('aria-live', 'polite')
 
-  await page.getByRole('button', { name: 'Move down' }).click()
+  await page.getByRole('button', { name: '下へ移動' }).click()
   await expect(log).toHaveAttribute('data-log-priority', 'ambient')
   await expect(log).toHaveAttribute('aria-live', 'off')
   await expect(log).toBeHidden()
@@ -105,7 +105,7 @@ test('通常歩行のterrain echoは冒険ログを占有せずaria-liveもし�
 test('D-Pad hold repeatで1 tapずつ連打せず複数tile移動できる', async ({ page }) => {
   await seedWorld(page, { position: { x: 20, y: 14 } })
   const start = await playerPosition(page)
-  const down = page.getByRole('button', { name: 'Move down' })
+  const down = page.getByRole('button', { name: '下へ移動' })
 
   await down.dispatchEvent('pointerdown', {
     button: 0,
@@ -127,7 +127,7 @@ test('D-Pad hold repeatで1 tapずつ連打せず複数tile移動できる', asy
   expect(Math.abs(end.x - start.x) + Math.abs(end.y - start.y)).toBeGreaterThanOrEqual(2)
 })
 
-test('mobile D-Pad / INTERACTは44px以上のtouch targetを維持する', async ({ page }) => {
+test('mobile D-Pad / アクションは44px以上のtouch targetを維持する', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedWorld(page)
 
@@ -147,9 +147,9 @@ test('mobile landscapeでもmap・D-Pad・context interactionが同じviewport�
   await page.setViewportSize({ width: 844, height: 390 })
   await seedWorld(page, { position: { x: 20, y: 13 }, partyMemberIds: [] })
 
-  await expect(page.getByLabel('Open world map')).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Move left' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'INTERACT · BYTEと話す', exact: true })).toBeVisible()
+  await expect(page.getByLabel('ワールドマップ')).toBeVisible()
+  await expect(page.getByRole('button', { name: '左へ移動' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'BYTEと話す', exact: true })).toBeVisible()
 
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth),

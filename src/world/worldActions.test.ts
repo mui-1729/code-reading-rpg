@@ -145,7 +145,7 @@ describe('World action resolver', () => {
     expect(intent.kind).toBe('map-transition')
     if (intent.kind !== 'map-transition') return
     expect(intent.toMapId).toBe(JS_VILLAGE_MAP_ID)
-    expect(intent.label).toBe('GREENFIELD VILLAGE')
+    expect(intent.label).toBe('グリーンフィールド村')
     expect(intent.nextState.worldMapId).toBe(JS_VILLAGE_MAP_ID)
     expect(intent.nextState.worldPosition).toEqual({ x: 10, y: 12 })
     expect(intent.nextState.stepsSinceEncounter).toBe(9)

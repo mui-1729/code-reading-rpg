@@ -57,7 +57,7 @@ async function seedReplay(page: Page) {
 
 async function incomingDamage(card: ReturnType<Page['locator']>) {
   const text = await card.locator('.intent-box em').innerText()
-  const match = text.match(/(\d+) DMG/)
+  const match = text.match(/(\d+) ダメージ/)
   if (!match) throw new Error(`Could not read incoming damage: ${text}`)
   return Number(match[1])
 }
@@ -90,7 +90,7 @@ test('Skillは選択時にtarget previewせず、実行後だけfirst-match trac
   await expect(resolvedTarget).toHaveAttribute('data-semantic-traced', 'true')
 })
 
-test('Enemy Turnは生存している攻撃者ごとにNEXT damageを対応させて順番に表示する', async ({ page }) => {
+test('敵のターンは生存している攻撃者ごとに次のdamageを対応させて順番に表示する', async ({ page }) => {
   await seedReplay(page)
   // このseedではPULSEがGoblinを選び、Slime/Goblinの両方が生存してEnemy Turnへ入る。
   await page.goto('/javascript/battle/1?seed=feedback-reduced&returnTo=%2Fworld')
@@ -112,10 +112,10 @@ test('Enemy Turnは生存している攻撃者ごとにNEXT damageを対応さ�
   await expect(goblin).toHaveAttribute('data-enemy-attacking', 'true')
   await expect(playerDamage).toHaveText(`-${goblinDamage}`)
 
-  await expect(page.getByText('TURN 02')).toBeVisible()
+  await expect(page.getByText('ターン 2')).toBeVisible()
   await expect(page.locator('.log-enemy')).toContainText([
-    `Slime / Nibble → ${slimeDamage} DMG`,
-    `Goblin / Heavy Slash → ${goblinDamage} DMG`,
+    `Slime / Nibble → ${slimeDamage} ダメージ`,
+    `Goblin / Heavy Slash → ${goblinDamage} ダメージ`,
   ])
 })
 

@@ -78,7 +78,7 @@ async function seedItemState(
 async function dismissStory(page: Page) {
   const story = page.locator('.battle-story-window')
   await expect(story).toBeVisible()
-  await story.getByRole('button', { name: 'SKIP' }).click()
+  await story.getByRole('button', { name: 'スキップ', exact: true }).click()
   await expect(story).toBeHidden()
 }
 
@@ -118,7 +118,7 @@ test.describe('Item / Inventory UX', () => {
     })
     await page.goto('/world')
 
-    await page.getByRole('button', { name: 'INTERACT' }).click()
+    await page.getByRole('button', { name: 'ショップを見る' }).click()
     const shop = page.getByRole('dialog', { name: 'ショップ' })
     const item = shop.locator('[data-item-id="patch-kit"]')
     await expect(item).toHaveAttribute('data-item-state', 'available')
@@ -217,7 +217,7 @@ test.describe('Item / Inventory UX', () => {
     })
     await page.goto('/world')
 
-    await page.getByRole('button', { name: 'INTERACT' }).click()
+    await page.getByRole('button', { name: '宝箱を開ける' }).click()
     await expect(page.getByText(/TYPE CACHE 開封/)).toBeVisible()
 
     const reward = page.locator('[data-item-reward-id="patch-kit"]')

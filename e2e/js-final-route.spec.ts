@@ -95,7 +95,7 @@ test('Battle 15後のDeep ForestでBattle 16 map()をtrace変換として固定�
     position: { x: 24, y: 8 },
   })
 
-  await page.getByRole('button', { name: 'Move left' }).click()
+  await page.getByRole('button', { name: '左へ移動' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/16\?/)
   const story = page.getByRole('dialog', { name: '同じEnemyが別の形で渡されている' })
@@ -105,7 +105,7 @@ test('Battle 15後のDeep ForestでBattle 16 map()をtrace変換として固定�
   await expect(story).not.toContainText('Slime')
   await expect(story).not.toContainText('Goblin')
 
-  await story.getByRole('button', { name: /NEXT/ }).click()
+  await story.getByRole('button', { name: /次へ/ }).click()
   await expect(story).toContainText('map()')
   await expect(story).toContainText('新しい配列')
 })
@@ -117,7 +117,7 @@ test('Battle 18後のDeep ForestでRoot Guardian Battle 19を固定する', asyn
     position: { x: 11, y: 9 },
   })
 
-  await page.getByRole('button', { name: 'Move left' }).click()
+  await page.getByRole('button', { name: '左へ移動' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/19\?/)
   const story = page.getByRole('dialog', { name: 'Root Guardianのjunctionを突破する' })
@@ -125,7 +125,7 @@ test('Battle 18後のDeep ForestでRoot Guardian Battle 19を固定する', asyn
   await expect(story).toContainText('incident')
   await expect(story).toContainText('junction')
 
-  await story.getByRole('button', { name: /NEXT/ }).click()
+  await story.getByRole('button', { name: /次へ/ }).click()
   await expect(story).toContainText('新しいsyntaxはない')
   await expect(story).toContainText('some()')
   await expect(story).toContainText('every()')
@@ -138,7 +138,7 @@ test('最深部ではBattle 22 reduce()をfinal traceとして固定導入する
     position: { x: 6, y: 9 },
   })
 
-  await page.getByRole('button', { name: 'Move left' }).click()
+  await page.getByRole('button', { name: '左へ移動' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/22\?/)
   const story = page.getByRole('dialog', { name: '複数の候補が最後に一つへ集約される' })
@@ -147,7 +147,7 @@ test('最深部ではBattle 22 reduce()をfinal traceとして固定導入する
   await expect(story).toContainText('Deep Forest最後のtrace')
   await expect(story).not.toContainText('Guardian')
 
-  await story.getByRole('button', { name: /NEXT/ }).click()
+  await story.getByRole('button', { name: /次へ/ }).click()
   await expect(story).toContainText('reduce()')
   await expect(story).toContainText('attackDamage')
 })
@@ -159,11 +159,11 @@ test('Battle 22前はJavaScript Final Boss 3へ挑戦できない', async ({ pag
     position: { x: 8, y: 4 },
   })
 
-  await page.getByRole('button', { name: 'Interact' }).click()
+  await page.getByRole('button', { name: 'ボスを調べる' }).click()
 
   await expect(page).toHaveURL(/\/world$/)
   await expect(
-    page.getByText('Code Coreへ挑む前に、Deep Forestの経路を根本原因まで最後まで追おう。'),
+    page.getByText('Code Coreへ挑む前に、JavaScript深層の森の経路を根本原因まで最後まで追おう。'),
   ).toBeVisible()
 })
 
@@ -174,14 +174,14 @@ test('incident routeとBattle 22完了後にFinal Boss 3を開始できる', asy
     position: { x: 8, y: 4 },
   })
 
-  await page.getByRole('button', { name: 'Interact' }).click()
+  await page.getByRole('button', { name: 'ボスに挑む' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/3\?/)
   const story = page.getByRole('dialog', { name: 'Code Coreへ' })
   await expect(story).toBeVisible()
   await expect(story).toContainText('ROOT CAUSE')
   await expect(story).toContainText('ここまで君が確かめてきた経路を信じる')
-  await story.getByRole('button', { name: '▶ NEXT' }).click()
-  await story.getByRole('button', { name: '▶ NEXT' }).click()
+  await story.getByRole('button', { name: '▶ 次へ' }).click()
+  await story.getByRole('button', { name: '▶ 次へ' }).click()
   await expect(story).toContainText('……任せた')
 })

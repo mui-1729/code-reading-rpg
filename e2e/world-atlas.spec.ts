@@ -78,8 +78,8 @@ test('Atlasは現在地のエリアを最初に開きraw座標を通常UIへ出�
   const atlas = await openAtlas(page)
 
   await expect(atlas).toBeVisible()
-  await expect(atlas.getByText('現在地 · FOREST', { exact: true })).toBeVisible()
-  await expect(atlas.getByText(/現在地 · FOREST \(/)).toHaveCount(0)
+  await expect(atlas.getByText('現在地 · JavaScriptの森', { exact: true })).toBeVisible()
+  await expect(atlas.getByText(/現在地 · JavaScriptの森 \(/)).toHaveCount(0)
   await expect(atlas.locator('[data-atlas-region="js-forest"]')).toHaveAttribute('aria-pressed', 'true')
   await expect(atlas.locator('[data-atlas-map="js-forest"]')).toBeVisible()
   await expect(atlas.getByLabel('現在地', { exact: true })).toBeVisible()
@@ -127,13 +127,13 @@ test('未解放regionは個別placeholderを増やさずcompactな未発見summa
   await expect(atlas.locator('[data-atlas-region="overworld"]')).toBeEnabled()
   await expect(atlas.locator('[data-atlas-region="ts-frontier"]')).toHaveCount(0)
   await expect(atlas.getByText('未発見エリアあり', { exact: true })).toHaveCount(1)
-  await expect(atlas.getByText('TS FRONTIER', { exact: true })).toHaveCount(0)
+  await expect(atlas.getByText('TypeScript辺境', { exact: true })).toHaveCount(0)
 
   await page.getByRole('button', { name: 'メニューを閉じる' }).click()
   await seedWorldAtlas(page, JS_COMPLETE, 'overworld', { x: 20, y: 14 })
   const discoveredAtlas = await openAtlas(page)
   await expect(discoveredAtlas.locator('[data-atlas-region]')).toHaveCount(5)
-  await expect(discoveredAtlas.locator('[data-atlas-region="ts-frontier"]')).toContainText('TS FRONTIER')
+  await expect(discoveredAtlas.locator('[data-atlas-region="ts-frontier"]')).toContainText('TypeScript辺境')
   await expect(discoveredAtlas.getByText('未発見エリアあり', { exact: true })).toHaveCount(0)
 })
 

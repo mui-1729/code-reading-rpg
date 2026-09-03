@@ -144,7 +144,7 @@ describe('JavaScript incident-driven final world route', () => {
     expect(result.kind).toBe('transition')
     if (result.kind !== 'transition') return
     expect(result.toMapId).toBe(OVERWORLD_MAP_ID)
-    expect(result.label).toBe('CODE CORE APPROACH')
+    expect(result.label).toBe('Code Core前')
     expect(result.nextState.worldPosition.x).toBe(JS_BOSS_POSITION.x)
     expect(result.nextState.worldPosition.y).toBeGreaterThan(JS_BOSS_POSITION.y)
   })

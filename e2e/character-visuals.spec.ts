@@ -100,7 +100,7 @@ test('TypeScript StoryでLEAD ADAとTYPE WARDENに固有portraitを表示する'
   await expect(ada).toBeVisible()
   await expect(ada).toHaveAttribute('src', '/pixel-art/characters/lead-ada-portrait.svg')
 
-  await page.getByRole('button', { name: '▶ NEXT' }).click()
+  await page.getByRole('button', { name: '▶ 次へ' }).click()
 
   const warden = page.getByAltText('TYPE WARDEN portrait')
   await expect(warden).toBeVisible()

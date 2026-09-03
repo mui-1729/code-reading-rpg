@@ -25,7 +25,7 @@ export function BattleEscapePanel({ areaId, battleId, seed, returnTo, actionLock
   })
 
   // Keep a non-rendered layout anchor for reference-action geometry without exposing
-  // a disabled RUN command or fixed-battle explanation to the player.
+  // a disabled escape command or fixed-battle explanation to the player.
   if (!allowed) return <div className="battle-escape-row" hidden aria-hidden="true" />
 
   const escape = () => {
@@ -42,10 +42,10 @@ export function BattleEscapePanel({ areaId, battleId, seed, returnTo, actionLock
         className="secondary-button battle-escape-action"
         onClick={escape}
         disabled={actionLocked}
-        aria-label="RUN · ESCAPE"
-        title="この戦闘から離脱してWorldへ戻る"
+        aria-label="逃げる"
+        title="この戦闘から離脱してワールドへ戻る"
       >
-        RUN
+        逃げる
       </button>
     </div>
   )

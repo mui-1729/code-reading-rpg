@@ -65,7 +65,7 @@ test.describe('World Shop', () => {
   test('所持金→価格→購入後を確認してEquipment購入し装備、reload後も維持する', async ({ page }) => {
     await seedShopState(page)
 
-    await page.getByRole('button', { name: 'INTERACT' }).click()
+    await page.getByRole('button', { name: 'ショップを見る' }).click()
     const shop = page.getByRole('dialog', { name: 'ショップ' })
     await expect(shop).toBeVisible()
     await expect(shop.locator('.shop-wallet').getByText('200 G', { exact: true })).toBeVisible()
@@ -124,7 +124,7 @@ test.describe('World Shop', () => {
   test('Gold不足のEquipmentはvisualと比較を残し不足額を明示する', async ({ page }) => {
     await seedShopState(page, 10)
 
-    await page.getByRole('button', { name: 'INTERACT' }).click()
+    await page.getByRole('button', { name: 'ショップを見る' }).click()
     const shop = page.getByRole('dialog', { name: 'ショップ' })
     const vitalCoat = shop.locator('[data-equipment-id="vital-coat"]')
     await expect(vitalCoat).toHaveAttribute('data-equipment-state', 'unavailable')

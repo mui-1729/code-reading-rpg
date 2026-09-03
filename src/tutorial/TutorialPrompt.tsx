@@ -287,7 +287,7 @@ export function TutorialPrompt() {
 
   if (state.phase === 'field-move' && routeKind === 'field') {
     copy = {
-      label: 'MOVE',
+      label: '移動',
       title: byteJoined
         ? coarsePointer
           ? 'D-Padで1歩動いて操作を確認しよう'
@@ -296,28 +296,28 @@ export function TutorialPrompt() {
           ? 'D-PadでBYTEの近くへ歩こう'
           : 'WASD / ArrowでBYTEの近くへ歩こう',
       detail: byteJoined
-        ? 'BYTEは加入済み。移動のあとINTERACTももう一度確認する'
+        ? 'BYTEは加入済み。移動のあとアクションももう一度確認する'
         : '開始地点から左か上へ1歩でBYTEの隣へ行ける',
       className: 'tutorial-prompt-field',
     }
   } else if (state.phase === 'field-interact' && routeKind === 'field') {
     copy = interactionReady
       ? {
-          label: 'INTERACT',
+          label: 'アクション',
           title: byteJoined
             ? coarsePointer
-              ? 'INTERACTで加入済みBYTEに声をかける'
+              ? '画面のアクションで加入済みBYTEに声をかける'
               : 'Enter / Spaceで加入済みBYTEに声をかける'
             : coarsePointer
-              ? 'INTERACTでBYTEに話しかける'
+              ? '画面のアクションでBYTEに話しかける'
               : 'Enter / SpaceでBYTEに話しかける',
           detail: byteJoined ? '再加入はせず、仲間との操作だけ確認する' : '実際に仲間へ加入させよう',
           className: 'tutorial-prompt-field',
         }
       : {
-          label: 'INTERACT',
+          label: 'アクション',
           title: worldRoute ? 'BYTEの隣まで歩こう' : '調べられるものの前まで歩こう',
-          detail: 'BYTEの隣まで来るとINTERACTできる',
+          detail: '対象の隣まで来るとアクションできる',
           className: 'tutorial-prompt-field',
         }
   } else if (state.phase === 'party-join' && routeKind === 'field') {
@@ -326,7 +326,7 @@ export function TutorialPrompt() {
       title: byteJoined ? 'BYTEが仲間になった！' : 'BYTEを仲間へ加入させよう',
       detail: byteJoined
         ? 'Worldでは後ろから追従する。メニューの「仲間」で確認でき、戦闘ではあなたが読んだ同じ対象へ追撃する。'
-        : 'BYTEの隣でINTERACTして仲間へ加入させる',
+        : 'BYTEの隣でアクションして仲間へ加入させる',
       className: 'tutorial-prompt-field',
     }
   } else if (state.phase === 'battle' && routeKind === 'battle' && battleReady) {
@@ -340,7 +340,7 @@ export function TutorialPrompt() {
       : {
           label: '選択',
           title: 'コードを読んで、スキルを1枚選ぼう',
-          detail: '困ったら右下の ? から CODE HELP を確認できる',
+          detail: '困ったら右下の ? からコード解説を確認できる',
           className: 'tutorial-prompt-battle',
         }
   }

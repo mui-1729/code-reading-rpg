@@ -28,18 +28,18 @@ Stage SelectやArea Selectへ戻って進行する構造ではありません。
 
 ### Open World
 
-- Overworld / Greenfield Village / Forest / Deep Forest / TypeScript Frontierの5 map
+- Overworld / グリーンフィールド村 / JavaScriptの森 / JavaScript深層の森 / TypeScript辺境の5 map
 - Overworldは40×28、各regionは独立した意味のあるmapとして接続
 - 11×9 viewport / Player追従camera
 - 上下左右の画面外へ移動可能
 - tileは固定正方形
 - JavaScript地方 = first live incident → Village preparation → Forest trace → second symptom → Deep Forest root trace → Code Core
-- TypeScript地方 = TypeScript Frontier
+- TypeScript地方 = TypeScript辺境
 - Central Hub / Road / Water / Mountain
 - 固定Boss地点
 - HubのShop / 仲間NPC BYTE
 - World座標をLocalStorage保存
-- Desktop: Arrow / WASD、Mobile: D-Pad + INTERACT
+- Desktop: Arrow / WASD、Mobile: D-Pad + contextual action
 
 ### JavaScript story progression
 
@@ -72,9 +72,9 @@ JS-19  ROOT CAUSE / Code Core
 
 ### Random Encounter
 
-- JavaScript Forest / Deep Forestではclear済みLessonを段階的に再出題
+- JavaScriptの森 / JavaScript深層の森ではclear済みLessonを段階的に再出題
 - JavaScriptのfirst incident / second symptomはStory上の固定beatとして発生し、未clear中はRandom復習にしない
-- TypeScript FrontierではBattle 4 / 5を進行に応じて出題
+- TypeScript辺境ではBattle 4 / 5を進行に応じて出題
 - 最低5歩のcooldown
 - terrainごとの遭遇率
 - Road / Hubは安全地帯
@@ -83,12 +83,12 @@ JS-19  ROOT CAUSE / Code Core
 
 ### Battle / code reading
 
-- 1回目SELECT、同じcardの2回目EXECUTE
+- 1回目は選択、同じcardの2回目で実行
 - 表示コードと安全な内部`TargetRule`を対応
-- Enemy HP / NEXT行動
-- CODE HELP / CODE DATA
+- Enemy HP / 次の行動
+- コード解説 / コードデータ
 - seeded generation / solvability
-- code variants / multi-line code / 行別HELP
+- code variants / multi-line code / 行別解説
 - Battle + seedごとに表示コードを固有化し、別Battleで同じ文字列を再利用しない
 - 既存の1行 / 3行読解構造は維持
 - correct target / 正解Skillを実行前に表示しない
@@ -111,17 +111,17 @@ PlayerProgress v4とRpgState v5は責務を分けたまま、単一revision snap
 
 ### Pause menu
 
-通常画面へ情報を詰め込まず、`MENU`から確認します。
+通常画面へ情報を詰め込まず、メニューから確認します。
 
-- STATUS: Level / EXP / Gold / Max HP / Attack / Defense
-- MAP: 現在地と各Regionの位置関係
-- ITEMS: PATCH KIT
-- EQUIPMENT: Weapon / Armor / Accessory
-- PARTY: 主人公 / 仲間
-- CODEX: JavaScript / TypeScriptの学習参照
-- SYSTEM: reset等
+- ステータス: LV / EXP / 所持金 / 最大HP / 攻撃 / 防御
+- マップ: 現在地と各地域の位置関係
+- アイテム: PATCH KIT
+- 装備: 武器 / 防具 / アクセサリ
+- 仲間: 主人公 / 仲間
+- コード図鑑: JavaScript / TypeScriptの学習参照
+- 設定: サウンド / reset等
 
-Battleでは行動の合間にだけMENUを開け、装備変更はWorldで行います。MobileでもEnemyのsprite・HP・NEXTをRPG cardとして残し、その近くで選択中codeと現在値を比較できます。
+Battleでは行動の合間にだけメニューを開け、装備変更はWorldで行います。MobileでもEnemyのsprite・HP・次の行動をRPG cardとして残し、その近くで選択中codeと現在値を比較できます。
 
 ### Result presentation
 
@@ -132,16 +132,16 @@ Battle勝利後の結果は一気に並べず、EXP / Gold / Level Up / Unlock /
 初回だけ既存UIを実際に操作して案内します。
 
 ```text
-MOVE
+移動
 ↓
-INTERACT
+アクション
 ↓
-SELECT
+選択
 ↓
-EXECUTE
+実行
 ```
 
-World camera追従後も実World座標の変化でMOVE成功を判定します。タイトル画面に常設HOW TO PLAYは置きません。
+World camera追従後も実World座標の変化で移動成功を判定します。タイトル画面に常設HOW TO PLAYは置きません。
 
 ## Learning content
 
@@ -156,7 +156,7 @@ World camera追従後も実World座標の変化でMOVE成功を判定します�
 - optional chaining / nullish coalescing
 - nested object / 中間変数 / 複数行code
 
-### TypeScript Frontier
+### TypeScript辺境
 
 - primitive / type annotation
 - function parameter / return type

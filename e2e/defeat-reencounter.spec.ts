@@ -77,23 +77,23 @@ async function executeSkill(page: Page, name: string) {
 test('Random Encounter敗北後は開始地点へ戻り、直後に再encounterしないsafe windowを得る', async ({ page }) => {
   await seedPostLessonEncounter(page)
 
-  await page.getByRole('button', { name: 'Move down' }).click()
+  await page.getByRole('button', { name: '下へ移動' }).click()
   await expect(page).toHaveURL(/\/javascript\/battle\/\d+\?/)
   await expect(page.locator('.battle-console')).toBeVisible()
 
   // Battle開始snapshotはencounterを発生させた移動後の座標 (10, 11)。
   await executeSkill(page, 'TRACE')
-  await expect(page.getByText('DEFEAT', { exact: true })).toBeVisible()
-  await page.getByRole('button', { name: /RETURN TO CHECKPOINT/ }).click()
+  await expect(page.getByText('敗北', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: /チェックポイントへ戻る/ }).click()
 
   await expect(page).toHaveURL(/\/world$/)
-  const viewport = page.getByLabel('Open world map')
+  const viewport = page.getByLabel('ワールドマップ')
   await expect(viewport).toHaveAttribute('data-world-x', '10')
   await expect(viewport).toHaveAttribute('data-world-y', '11')
 
   // checkpoint return resets the encounter counter, so one movement cannot
   // immediately throw the player back into another Random Encounter.
-  await page.getByRole('button', { name: 'Move down' }).click()
+  await page.getByRole('button', { name: '下へ移動' }).click()
   await expect(page).toHaveURL(/\/world$/)
   await expect(page.locator('.battle-console')).toBeHidden()
 })

@@ -53,7 +53,7 @@ async function seedLegacySave(page: Page) {
 
 test('legacy split saveを単一revisionへ移行しlocked mapをnormalizeする', async ({ page }) => {
   await seedLegacySave(page)
-  await expect(page.getByLabel('Open world map')).toBeVisible()
+  await expect(page.getByLabel('ワールドマップ')).toBeVisible()
   await expect
     .poll(() => readStoredGameState(page))
     .toMatchObject({

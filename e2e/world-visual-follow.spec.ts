@@ -96,7 +96,7 @@ test('BYTEは主人公と重ならず、専用layer内で1歩遅れて追従す�
     ;(window as typeof window & { __worldPlayerNode?: Element }).__worldPlayerNode = element
   })
 
-  await page.getByRole('button', { name: 'Move right' }).click()
+  await page.getByRole('button', { name: '右へ移動' }).click()
   await expect.poll(() => spritePosition(page, '.world-player-sprite')).toEqual({ x: 21, y: 14 })
   await expect.poll(() => spritePosition(page, '.world-follower-sprite')).toEqual({ x: 20, y: 14 })
   await expectInsideViewport(page, '.world-player-sprite')

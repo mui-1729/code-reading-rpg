@@ -55,11 +55,11 @@ const ATLAS_BASE_WIDTH = 650
 const OPEN_GATE_LABEL = '開通'
 
 const atlasMaps: AtlasMap[] = [
-  { id: OVERWORLD_MAP_ID, label: 'OVERWORLD', subtitle: 'Hub · 交差点' },
-  { id: JS_VILLAGE_MAP_ID, label: 'GREENFIELD VILLAGE', subtitle: 'JavaScript · 村' },
-  { id: JS_FOREST_MAP_ID, label: 'FOREST', subtitle: 'JavaScript · 分岐路' },
-  { id: JS_DEEP_FOREST_MAP_ID, label: 'DEEP FOREST', subtitle: 'JavaScript · 最深部' },
-  { id: TS_FRONTIER_MAP_ID, label: 'TS FRONTIER', subtitle: 'TypeScript · 辺境' },
+  { id: OVERWORLD_MAP_ID, label: 'JavaScript草原', subtitle: 'Hub · 交差点' },
+  { id: JS_VILLAGE_MAP_ID, label: 'グリーンフィールド村', subtitle: 'JavaScript · 村' },
+  { id: JS_FOREST_MAP_ID, label: 'JavaScriptの森', subtitle: 'JavaScript · 分岐路' },
+  { id: JS_DEEP_FOREST_MAP_ID, label: 'JavaScript深層の森', subtitle: 'JavaScript · 最深部' },
+  { id: TS_FRONTIER_MAP_ID, label: 'TypeScript辺境', subtitle: 'TypeScript · 辺境' },
 ]
 
 const TERRAIN_GLYPH: Partial<Record<Terrain, string>> = {
@@ -145,7 +145,7 @@ function getDiscoveredRoutes(progress: PlayerProgress, rpgState: RpgState): Atla
       to,
       locked,
       requirement: portal.requiredClearedStageId
-        ? getBattleDisplayCode(portal.requiredClearedStageId) ?? `STAGE ${portal.requiredClearedStageId}`
+        ? getBattleDisplayCode(portal.requiredClearedStageId) ?? `ステージ ${portal.requiredClearedStageId}`
         : null,
     })
   }

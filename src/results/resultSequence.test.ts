@@ -24,7 +24,7 @@ describe('typed victory result handoff', () => {
   it('stage unlockはinternal numeric IDではなくplayer-facing codeで表示する', () => {
     expect(createVictoryResultSequence(reward).find((item) => item.id === 'stage')).toMatchObject({
       title: 'ステージクリア',
-      detail: 'STAGE JS-03 解放',
+      detail: 'ステージ JS-03 解放',
     })
   })
 

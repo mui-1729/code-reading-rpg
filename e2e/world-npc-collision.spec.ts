@@ -51,7 +51,7 @@ test('Playerはstatic NPCのtileへ侵入せず隣接位置で止まる', async 
   await expect(resident).toHaveAttribute('data-world-x', '8')
   await expect(resident).toHaveAttribute('data-world-y', '8')
 
-  await page.getByRole('button', { name: 'Move up' }).click()
+  await page.getByRole('button', { name: '上へ移動' }).click()
 
   await expect(player).toHaveAttribute('data-world-x', '8')
   await expect(player).toHaveAttribute('data-world-y', '9')
