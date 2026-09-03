@@ -55,6 +55,11 @@ async function seedReplay(page: Page) {
   )
 }
 
+async function openFight(page: Page) {
+  const fight = page.getByRole('button', { name: '戦う', exact: true })
+  if ((await fight.getAttribute('aria-pressed')) !== 'true') await fight.click()
+}
+
 async function incomingDamage(card: ReturnType<Page['locator']>) {
   const text = await card.locator('.intent-box em').innerText()
   const match = text.match(/(\d+) ダメージ/)
@@ -65,6 +70,7 @@ async function incomingDamage(card: ReturnType<Page['locator']>) {
 test('Skillは選択時にtarget previewせず、実行後だけfirst-match traceを見せる', async ({ page }) => {
   await seedReplay(page)
   await page.goto('/javascript/battle/1?seed=feedback-semantic&returnTo=%2Fworld')
+  await openFight(page)
 
   const pulse = page.getByRole('button', { name: /^PULSE\b/ })
   const feedback = page.locator('.battle-semantic-feedback')
@@ -94,6 +100,7 @@ test('敵のターンは生存している攻撃者ごとに次のdamageを対�
   await seedReplay(page)
   // このseedではPULSEがGoblinを選び、Slime/Goblinの両方が生存してEnemy Turnへ入る。
   await page.goto('/javascript/battle/1?seed=feedback-reduced&returnTo=%2Fworld')
+  await openFight(page)
 
   const pulse = page.getByRole('button', { name: /^PULSE\b/ })
   const slime = page.locator('.enemy-card').filter({ hasText: 'Slime' })
@@ -123,6 +130,7 @@ test('reduced-motionでもsemantic resultの意味情報を静的に残す', asy
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await seedReplay(page)
   await page.goto('/javascript/battle/1?seed=feedback-reduced&returnTo=%2Fworld')
+  await openFight(page)
 
   const pulse = page.getByRole('button', { name: /^PULSE\b/ })
   await pulse.click()
