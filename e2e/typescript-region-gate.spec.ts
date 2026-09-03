@@ -84,7 +84,7 @@ async function seedWorld(
   await page.goto('/world')
 }
 
-const overworld = (page: Page) => page.getByLabel('Open world map')
+const overworld = (page: Page) => page.getByLabel('ワールドマップ')
 const frontier = (page: Page) => page.getByLabel('TypeScript辺境のマップ')
 
 test('JavaScript未clearではTypeScriptの門へ進めず理由を表示する', async ({ page }) => {
