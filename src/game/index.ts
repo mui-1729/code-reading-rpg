@@ -2,6 +2,7 @@ export {
   areaById,
   areas,
   availableAreas,
+  DATABASE_AREA_ID,
   getAreaCapability,
   getAreaDefinition,
   getAreasForWorldMap,
@@ -11,7 +12,7 @@ export {
   TYPESCRIPT_AREA_ID,
 } from './areas'
 export { getAreaForBattle, getBattlesForArea, getBossBattleForArea } from './areaProgression'
-export { battles } from './battles'
+export { battles } from './battleRegistry'
 export {
   getAvailableSkillCardsForBattle as getSkillCardsForBattle,
   getBattleSkillAvailability,
@@ -27,6 +28,7 @@ export {
   getSkillCardForBattle,
   skills,
 } from './skills'
+export { databaseSkillDefinitions } from './databaseSkillDefinitions'
 export {
   typescriptSkillDefinitionById,
   typescriptSkillDefinitions,
