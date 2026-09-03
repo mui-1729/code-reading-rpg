@@ -147,7 +147,7 @@ test('mobile landscapeでもmap・D-Pad・context interactionが同じviewport�
   await page.setViewportSize({ width: 844, height: 390 })
   await seedWorld(page, { position: { x: 20, y: 13 }, partyMemberIds: [] })
 
-  await expect(page.getByLabel('Open world map')).toBeVisible()
+  await expect(page.getByLabel('ワールドマップ')).toBeVisible()
   await expect(page.getByRole('button', { name: '左へ移動' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'BYTEと話す', exact: true })).toBeVisible()
 
