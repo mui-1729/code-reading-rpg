@@ -5,7 +5,7 @@ const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
-test('未装備slotは候補末尾の「なし」を選択状態として表示する', async ({ page }) => {
+test('未装備slotは通常時「なし」を表示し、pickerで比較して装備できる', async ({ page }) => {
   await page.goto('/')
   await page.evaluate(
     ({ progressKey, rpgKey, tutorialKey }) => {
@@ -67,17 +67,21 @@ test('未装備slotは候補末尾の「なし」を選択状態として表示�
   await pause.getByRole('button', { name: '装備' }).click()
 
   const accessorySlot = pause.locator('[data-equipment-slot="accessory"]')
-  const none = accessorySlot.locator('[data-equipment-id="none"]')
+  const trigger = accessorySlot.getByRole('button', { name: /アクセサリを選ぶ/ })
   await expect(accessorySlot.locator('header strong')).toHaveText('なし')
-  await expect(accessorySlot.getByText('比較: 未装備 · 装備すると HP +16', { exact: true })).toBeVisible()
-  await expect(pause.getByText('EMPTY', { exact: true })).toHaveCount(0)
-  await expect(accessorySlot.getByRole('button', { name: '装備を外す' })).toHaveCount(0)
-  await expect(accessorySlot.locator('.equipment-options > button').last()).toHaveAttribute('data-equipment-id', 'none')
-  await expect(none).toHaveAttribute('aria-pressed', 'true')
+  await expect(trigger).toContainText('未装備')
+  await expect(accessorySlot.locator('[data-equipment-id]')).toHaveCount(0)
+  await expect(pause.getByRole('button', { name: '装備を外す' })).toHaveCount(0)
 
-  await accessorySlot.locator('button[data-equipment-id="life-charm"]').click()
-  await expect(accessorySlot.getByRole('button', { name: 'Life Charm 装備中' })).toBeVisible()
-  await expect(none).toHaveAttribute('aria-pressed', 'false')
+  await trigger.click()
+  const picker = page.getByRole('dialog', { name: 'アクセサリを選ぶ' })
+  await expect(picker.getByText('比較: 未装備 · 装備すると HP +16', { exact: true })).toBeVisible()
+  await expect(picker.getByRole('option').last()).toHaveAttribute('data-equipment-id', 'none')
+  await expect(picker.getByRole('option', { name: 'アクセサリ なし 選択中' })).toHaveAttribute('aria-selected', 'true')
+
+  await picker.getByRole('option', { name: 'Life Charm を装備' }).click()
+  await expect(picker).toBeHidden()
+  await expect(accessorySlot.locator('header strong')).toHaveText('Life Charm')
 
   const stored = await readStoredGameState(page)
   expect(stored.rpg.state.equipment.accessory).toBe('life-charm')
