@@ -86,26 +86,26 @@ async function seedDeepForestGate(page: Page, state: DeepForestState) {
 test('Battle 14未clearではDeep Forest入口が閉じている', async ({ page }) => {
   await seedDeepForestGate(page, 'filter-locked')
 
-  const forest = page.getByLabel('Forest map')
+  const forest = page.getByLabel('JavaScriptの森のマップ')
   await expect(forest).toHaveAttribute('data-world-map', 'js-forest')
-  await page.getByRole('button', { name: 'Move left' }).click()
+  await page.getByRole('button', { name: '左へ移動' }).click()
 
-  await expect(page.getByLabel('Forest map')).toHaveAttribute('data-world-map', 'js-forest')
-  await expect(page.getByLabel('Forest map')).toHaveAttribute('data-world-x', '2')
+  await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-map', 'js-forest')
+  await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-x', '2')
 })
 
 test('Battle 14 clear後はDeep Forestへ入り、最初のmovementでsecond incident Battle 2を固定再現する', async ({ page }) => {
   await seedDeepForestGate(page, 'incident-pending')
 
   await expect(page.getByLabel('次の目的')).toContainText('二つ目の症状')
-  await page.getByRole('button', { name: 'Move left' }).click()
+  await page.getByRole('button', { name: '左へ移動' }).click()
 
-  const deepForest = page.getByLabel('Deep Forest map')
+  const deepForest = page.getByLabel('JavaScript深層の森のマップ')
   await expect(deepForest).toHaveAttribute('data-world-map', 'js-deep-forest')
-  await expect(page.getByRole('heading', { name: 'JAVASCRIPT DEEP FOREST' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'JavaScript深層の森' })).toBeVisible()
   await expect(page.getByLabel('次の目的')).toContainText('二つ目の症状')
 
-  await page.getByRole('button', { name: 'Move up' }).click()
+  await page.getByRole('button', { name: '上へ移動' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/2\?/)
   const story = page.getByRole('dialog', { name: '異常が複数targetへ広がっている' })
@@ -113,7 +113,7 @@ test('Battle 14 clear後はDeep Forestへ入り、最初のmovementでsecond inc
   await expect(story).toContainText('複数')
   await expect(story).toContainText('別症状')
 
-  await story.getByRole('button', { name: /NEXT/ }).click()
+  await story.getByRole('button', { name: /次へ/ }).click()
   await expect(story).toContainText('filter()')
   await expect(story).toContainText('&&')
   await expect(story).toContainText('||')
@@ -121,11 +121,11 @@ test('Battle 14 clear後はDeep Forestへ入り、最初のmovementでsecond inc
 
 test('second incident clear後はDeep ForestでBattle 15を固定導入し共有traceを追う', async ({ page }) => {
   await seedDeepForestGate(page, 'incident-cleared')
-  await page.getByRole('button', { name: 'Move left' }).click()
-  await expect(page.getByLabel('Deep Forest map')).toHaveAttribute('data-world-map', 'js-deep-forest')
+  await page.getByRole('button', { name: '左へ移動' }).click()
+  await expect(page.getByLabel('JavaScript深層の森のマップ')).toHaveAttribute('data-world-map', 'js-deep-forest')
   await expect(page.getByLabel('次の目的')).toContainText('共通経路 · FILTER')
 
-  await page.getByRole('button', { name: 'Move up' }).click()
+  await page.getByRole('button', { name: '上へ移動' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/15\?/)
   const story = page.getByRole('dialog', { name: '同じfilter()でも条件が変わる' })
@@ -136,7 +136,7 @@ test('second incident clear後はDeep ForestでBattle 15を固定導入し共有
   await expect(story).not.toContainText('Boar')
   await expect(story).not.toContainText('Guardian')
 
-  await story.getByRole('button', { name: /NEXT/ }).click()
+  await story.getByRole('button', { name: /次へ/ }).click()
   await expect(story).toContainText('HPが45未満')
   await expect(story).toContainText('HPが65より大きい')
 })
