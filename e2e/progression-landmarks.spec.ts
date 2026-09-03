@@ -76,7 +76,7 @@ test('@responsive Forestでは固定Battle 11の前に分岐痕が見え、踏�
   await expect(landmark).toHaveText('分岐痕')
   await expect(landmark).toHaveAttribute('aria-label', '二手に割れた異変の痕跡')
 
-  await page.keyboard.press('ArrowLeft')
+  await page.getByRole('button', { name: '左へ移動' }).click()
   await expect(page).toHaveURL(/\/javascript\/battle\/11/)
 })
 
@@ -93,6 +93,6 @@ test('Deep Forestでも次の固定Battle 16の場所を変換痕として先に
   await expect(landmark).toHaveText('変換痕')
   await expect(landmark).toHaveAttribute('aria-label', '形の違う記録片が散る場所')
 
-  await page.keyboard.press('ArrowLeft')
+  await page.getByRole('button', { name: '左へ移動' }).click()
   await expect(page).toHaveURL(/\/javascript\/battle\/16/)
 })
