@@ -27,6 +27,7 @@ import {
   isWorldPositionVisible,
   type WorldPosition,
 } from './worldSceneGeometry'
+import { useQueuedWorldMove } from './useQueuedWorldMove'
 
 export type WorldObjective = {
   label: string
@@ -454,13 +455,9 @@ export function WorldControls(props: {
     conversation.origin.y === rpgState.worldPosition.y
       ? conversation
       : null
-  const moveRef = useRef(move)
   const delayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const repeatRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  useEffect(() => {
-    moveRef.current = move
-  }, [move])
+  const queuedMove = useQueuedWorldMove(move, activeConversation !== null)
 
   const stopHold = useCallback(() => {
     if (delayRef.current !== null) clearTimeout(delayRef.current)
@@ -474,11 +471,11 @@ export function WorldControls(props: {
   const startHold = useCallback((dx: number, dy: number) => {
     if (activeConversation) return
     stopHold()
-    moveRef.current(dx, dy)
+    queuedMove(dx, dy)
     delayRef.current = setTimeout(() => {
-      repeatRef.current = setInterval(() => moveRef.current(dx, dy), 120)
+      repeatRef.current = setInterval(() => queuedMove(dx, dy), 120)
     }, 280)
-  }, [activeConversation, stopHold])
+  }, [activeConversation, queuedMove, stopHold])
 
   const directionButton = (label: string, glyph: string, dx: number, dy: number) => (
     <button
@@ -495,7 +492,7 @@ export function WorldControls(props: {
       onClick={(event) => {
         if (activeConversation) return
         if (event.detail !== 0) return
-        moveRef.current(dx, dy)
+        queuedMove(dx, dy)
       }}
     >
       {glyph}
