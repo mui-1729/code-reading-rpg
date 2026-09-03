@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { JS_COMPLETE } from './canonical-progress-fixtures'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -9,9 +10,10 @@ async function seedWorld(
   mapId: 'overworld' | 'js-village' | 'js-forest' | 'js-deep-forest' | 'ts-frontier',
   position: { x: number; y: number },
 ) {
+  const clearedStageIds = mapId === 'ts-frontier' ? JS_COMPLETE : [1, 7, 8, 9]
   await page.goto('/')
   await page.evaluate(
-    ({ progressKey, rpgKey, tutorialKey, mapId, position }) => {
+    ({ progressKey, rpgKey, tutorialKey, mapId, position, clearedStageIds }) => {
       localStorage.clear()
       localStorage.setItem(
         progressKey,
@@ -21,8 +23,8 @@ async function seedWorld(
             exp: 0,
             gold: 0,
             inventory: { patchKit: 1 },
-            clearedStageIds: [1, 7, 8, 9],
-            clearedAreaIds: [],
+            clearedStageIds,
+            clearedAreaIds: clearedStageIds.includes(3) ? ['javascript'] : [],
             completedSideQuestIds: [],
             unlockedStageIds: [1, 7],
             unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
@@ -52,7 +54,7 @@ async function seedWorld(
         JSON.stringify({ version: 1, status: 'skipped', phase: 'battle' }),
       )
     },
-    { progressKey: PROGRESS_KEY, rpgKey: RPG_KEY, tutorialKey: TUTORIAL_KEY, mapId, position },
+    { progressKey: PROGRESS_KEY, rpgKey: RPG_KEY, tutorialKey: TUTORIAL_KEY, mapId, position, clearedStageIds },
   )
   await page.goto('/world')
 }
