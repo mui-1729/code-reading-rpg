@@ -43,6 +43,7 @@ export const javascriptOpeningScenes: readonly JavaScriptOpeningScene[] = [
     speaker: 'SYSTEM',
     lines: [
       'REAL WORLDのシステムを、人が歩いて調べられるfantasy worldとして展開する。',
+      'Code KnightはREAL WORLDからCONNECTし、codeを読むことでこの世界のruleを確かめ、異常の原因を追う調査役だ。',
       'ここではcodeが世界のruleだ。誰を狙うか、何が起きるかは、表示されたcodeそのものが決める。',
     ],
   },
@@ -54,6 +55,7 @@ export const javascriptOpeningScenes: readonly JavaScriptOpeningScene[] = [
     speaker: 'BYTE',
     lines: [
       'CONNECT complete。現実側のtarget bugが、この世界では西の草原の戦闘異常として見えている。',
+      '草原や村、森はlessonのために並んだstageじゃない。ここで暮らす人たちの道や生活の中に、現実側の異変が重なって見えている。',
       'まず僕と合流して、一緒に実際の症状を見よう。codeを全部理解できなくてもいい。何が分からないかも調査結果になる。',
     ],
   },
