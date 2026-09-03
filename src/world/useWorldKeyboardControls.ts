@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { useQueuedWorldMove } from './useQueuedWorldMove'
 
 export function useWorldKeyboardControls(options: {
   move: (dx: number, dy: number) => void
@@ -6,6 +7,7 @@ export function useWorldKeyboardControls(options: {
   disabled?: boolean
 }) {
   const { disabled = false, interact, move } = options
+  const queuedMove = useQueuedWorldMove(move, disabled)
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -19,16 +21,16 @@ export function useWorldKeyboardControls(options: {
       const key = event.key.toLowerCase()
       if (key === 'arrowup' || key === 'w') {
         event.preventDefault()
-        move(0, -1)
+        queuedMove(0, -1)
       } else if (key === 'arrowdown' || key === 's') {
         event.preventDefault()
-        move(0, 1)
+        queuedMove(0, 1)
       } else if (key === 'arrowleft' || key === 'a') {
         event.preventDefault()
-        move(-1, 0)
+        queuedMove(-1, 0)
       } else if (key === 'arrowright' || key === 'd') {
         event.preventDefault()
-        move(1, 0)
+        queuedMove(1, 0)
       } else if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault()
         interact()
@@ -37,5 +39,5 @@ export function useWorldKeyboardControls(options: {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [disabled, interact, move])
+  }, [disabled, interact, queuedMove])
 }
