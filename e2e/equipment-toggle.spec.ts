@@ -4,7 +4,8 @@ const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
-test('装備はslotごとの選択式で、候補末尾の「なし」から未装備へ切り替えられる', async ({ page }) => {
+test('装備slotは現在装備1件だけを表示し、pickerから変更と「なし」を選べる', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   await page.evaluate(
     ({ progressKey, rpgKey, tutorialKey }) => {
@@ -57,36 +58,47 @@ test('装備はslotごとの選択式で、候補末尾の「なし」から未�
 
   await page.goto('/world')
   await page.getByRole('button', { name: 'メニューを開く' }).click()
-  await page.getByRole('button', { name: '装備', exact: true }).click()
+  const pause = page.getByRole('dialog', { name: 'メニュー' })
+  await pause.getByRole('button', { name: '装備', exact: true }).click()
 
-  const trainingBlade = page.locator('[data-equipment-id="training-blade"]')
-  const guardEdge = page.locator('[data-equipment-id="guard-edge"]')
-  const weaponSlot = page.locator('[data-equipment-slot="weapon"]')
-  const none = weaponSlot.locator('[data-equipment-id="none"]')
-  const choices = weaponSlot.locator('.equipment-options > button')
+  const weaponSlot = pause.locator('[data-equipment-slot="weapon"]')
+  const weaponTrigger = weaponSlot.getByRole('button', { name: /武器を選ぶ/ })
 
-  await expect(trainingBlade).toHaveAttribute('data-equipment-state', 'equipped')
-  await expect(trainingBlade).toHaveAttribute('aria-label', 'Training Blade 装備中')
-  await expect(trainingBlade).toHaveAttribute('aria-pressed', 'true')
+  await expect(weaponSlot.locator('[data-equipment-id]')).toHaveCount(0)
   await expect(weaponSlot.locator('header strong')).toHaveText('Training Blade')
-  await expect(choices.last()).toHaveAttribute('data-equipment-id', 'none')
-  await expect(none).toHaveAttribute('aria-label', '武器 なし')
+  await expect(weaponTrigger).toHaveAttribute('aria-expanded', 'false')
 
-  await none.click()
-  await expect(none).toHaveAttribute('aria-pressed', 'true')
-  await expect(trainingBlade).toHaveAttribute('aria-pressed', 'false')
+  await weaponTrigger.click()
+  const picker = page.getByRole('dialog', { name: '武器を選ぶ' })
+  await expect(picker).toBeVisible()
+  await expect(weaponTrigger).toHaveAttribute('aria-expanded', 'true')
+
+  const choices = picker.getByRole('option')
+  await expect(choices.last()).toHaveAttribute('data-equipment-id', 'none')
+  await expect(picker.getByRole('option', { name: 'Training Blade 選択中' })).toHaveAttribute('aria-selected', 'true')
+
+  await picker.getByRole('option', { name: 'Guard Edge を装備' }).click()
+  await expect(picker).toBeHidden()
+  await expect(weaponSlot.locator('header strong')).toHaveText('Guard Edge')
+  await expect(weaponTrigger).toHaveAttribute('aria-expanded', 'false')
+
+  await weaponTrigger.click()
+  await expect(page.getByRole('dialog', { name: '武器を選ぶ' })).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog', { name: '武器を選ぶ' })).toBeHidden()
+  await expect(pause).toBeVisible()
+
+  await weaponTrigger.click()
+  const reopened = page.getByRole('dialog', { name: '武器を選ぶ' })
+  await reopened.getByRole('option', { name: '武器 なし' }).click()
+  await expect(reopened).toBeHidden()
   await expect(weaponSlot.locator('header strong')).toHaveText('なし')
 
-  await trainingBlade.click()
-  await expect(trainingBlade).toHaveAttribute('aria-pressed', 'true')
-  await expect(weaponSlot.locator('header strong')).toHaveText('Training Blade')
+  await weaponTrigger.click()
+  const noneSelectedPicker = page.getByRole('dialog', { name: '武器を選ぶ' })
+  await expect(noneSelectedPicker.getByRole('option').last()).toHaveAttribute('data-equipment-id', 'none')
+  await expect(noneSelectedPicker.getByRole('option', { name: '武器 なし 選択中' })).toHaveAttribute('aria-selected', 'true')
 
-  await trainingBlade.click()
-  await expect(trainingBlade).toHaveAttribute('aria-pressed', 'true')
-  await expect(weaponSlot.locator('header strong')).toHaveText('Training Blade')
-
-  await guardEdge.click()
-  await expect(guardEdge).toHaveAttribute('data-equipment-state', 'equipped')
-  await expect(trainingBlade).toHaveAttribute('data-equipment-state', 'owned')
-  await expect(weaponSlot.locator('header strong')).toHaveText('Guard Edge')
+  const menuBox = await pause.boundingBox()
+  expect(menuBox?.height ?? 0).toBeLessThanOrEqual(844 * 0.97)
 })
