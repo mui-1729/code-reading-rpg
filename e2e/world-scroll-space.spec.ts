@@ -58,26 +58,25 @@ async function seedMap(
   await expect(page.locator('.world-controls')).toBeVisible()
 }
 
-async function expectNoTrailingBlank(page: Page) {
-  const metrics = await page.evaluate(() => {
+async function layoutMetrics(page: Page) {
+  return page.evaluate(() => {
     const shell = document.querySelector<HTMLElement>('.world-shell')
-    const controls = document.querySelector<HTMLElement>('.world-controls')
-    if (!shell || !controls) throw new Error('World layout not found')
+    if (!shell) throw new Error('World layout not found')
 
-    const controlsBottom = controls.getBoundingClientRect().bottom + window.scrollY
+    const shellBottom = shell.getBoundingClientRect().bottom + window.scrollY
+    const root = document.documentElement
     return {
-      scrollHeight: document.documentElement.scrollHeight,
-      controlsBottom,
-      trailingSpace: document.documentElement.scrollHeight - controlsBottom,
+      scrollHeight: root.scrollHeight,
+      clientHeight: root.clientHeight,
+      scrollRange: Math.max(0, root.scrollHeight - root.clientHeight),
+      shellBottom,
+      spaceAfterShell: Math.max(0, root.scrollHeight - shellBottom),
       paddingBottom: Number.parseFloat(getComputedStyle(shell).paddingBottom),
     }
   })
-
-  expect(metrics.paddingBottom).toBeLessThanOrEqual(16)
-  expect(metrics.trailingSpace).toBeLessThan(64)
 }
 
-test('World各mapの末尾に旧90px spacerを残さない', async ({ page }) => {
+test('World各mapはcontentがviewport内に収まる時に旧bottom spacer由来のpage scrollを作らない', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
 
   const maps = [
@@ -90,17 +89,20 @@ test('World各mapの末尾に旧90px spacerを残さない', async ({ page }) =>
 
   for (const [mapId, position] of maps) {
     await seedMap(page, mapId, position)
-    await expectNoTrailingBlank(page)
+    const metrics = await layoutMetrics(page)
+    expect(metrics.paddingBottom).toBeLessThanOrEqual(16)
+    expect(metrics.scrollRange).toBeLessThanOrEqual(2)
   }
 })
 
-test('low landscapeでも必要なcontent scrollは維持しつつ末尾だけ詰める', async ({ page }) => {
+test('low landscapeでは必要なcontent scrollだけを維持しdocument末尾に追加spacerを残さない', async ({ page }) => {
   await page.setViewportSize({ width: 844, height: 390 })
   await seedMap(page, 'js-forest', { x: 28, y: 10 })
 
-  await expectNoTrailingBlank(page)
-  const scrollHeight = await page.evaluate(() => document.documentElement.scrollHeight)
-  expect(scrollHeight).toBeGreaterThan(390)
+  const metrics = await layoutMetrics(page)
+  expect(metrics.paddingBottom).toBeLessThanOrEqual(16)
+  expect(metrics.scrollRange).toBeGreaterThan(0)
+  expect(metrics.spaceAfterShell).toBeLessThanOrEqual(2)
 
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
   await expect(page.locator('.world-controls')).toBeVisible()
