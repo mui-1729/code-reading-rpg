@@ -18,18 +18,18 @@ const storedTutorial = (page: Parameters<typeof test>[0]['page']) =>
 const storedRpg = (page: Parameters<typeof test>[0]['page']) =>
   readStoredRpg(page)
 
-test('mobile TutorialがD-Pad移動後にBYTE INTERACTへ進む', async ({ page }) => {
+test('mobile TutorialがD-Pad移動後にBYTEへのアクションへ進む', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedTutorial(page, 'field-move')
   await page.goto('/world')
 
-  await expect(page.locator('.tutorial-prompt-field')).toContainText('MOVE')
+  await expect(page.locator('.tutorial-prompt-field')).toContainText('移動')
   await expect(page.locator('.tutorial-prompt-field')).toContainText('BYTE')
   const player = page.locator('.world-player-sprite')
   const beforeX = await player.evaluate((element) => element.parentElement?.dataset.worldX)
-  await page.getByRole('button', { name: 'Move left' }).click()
+  await page.getByRole('button', { name: '左へ移動' }).click()
   await expect.poll(() => player.evaluate((element) => element.parentElement?.dataset.worldX)).not.toBe(beforeX)
-  await expect(page.locator('.tutorial-prompt-field')).toContainText('INTERACT')
+  await expect(page.locator('.tutorial-prompt-field')).toContainText('アクション')
   await expect(page.locator('.tutorial-prompt-field')).toContainText('BYTE')
   await expect.poll(async () => (await storedTutorial(page))?.phase).toBe('field-interact')
 })
@@ -40,10 +40,10 @@ test('mobile TutorialでBYTEを実際に加入させ、追従と役割を確認�
   await page.goto('/world')
 
   await expect(page.locator('.tutorial-prompt-field')).toContainText('BYTEの隣まで歩こう')
-  await page.getByRole('button', { name: 'Move left' }).click()
+  await page.getByRole('button', { name: '左へ移動' }).click()
   await expect(page.locator('.tutorial-prompt-field')).toContainText(/BYTEに話しかける/)
 
-  await page.getByRole('button', { name: 'INTERACT' }).click()
+  await page.getByRole('button', { name: 'BYTEと話す' }).click()
   await expect(page.locator('.tutorial-prompt-field')).toContainText('BYTEが仲間になった！')
   await expect.poll(async () => (await storedTutorial(page))?.phase).toBe('party-join')
   await expect.poll(async () => (await storedRpg(page))?.state?.partyMemberIds).toContain('byte')
@@ -74,8 +74,8 @@ test('desktop TutorialでもKeyboardでBYTE加入まで操作できる', async (
 test('party-joinはreload後もBYTE加入状態を保ち重複加入しない', async ({ page }) => {
   await seedTutorial(page, 'field-interact')
   await page.goto('/world')
-  await page.getByRole('button', { name: 'Move left' }).click()
-  await page.getByRole('button', { name: 'INTERACT' }).click()
+  await page.getByRole('button', { name: '左へ移動' }).click()
+  await page.getByRole('button', { name: 'BYTEと話す' }).click()
   await expect.poll(async () => (await storedTutorial(page))?.phase).toBe('party-join')
 
   await page.reload()
@@ -83,7 +83,7 @@ test('party-joinはreload後もBYTE加入状態を保ち重複加入しない', 
   expect((await storedRpg(page))?.state?.partyMemberIds).toEqual(['byte'])
 })
 
-test('設定からTutorialを最初からやり直しても加入済みBYTEを壊さずINTERACTを再体験する', async ({ page }) => {
+test('設定からTutorialを最初からやり直しても加入済みBYTEを壊さずアクションを再体験する', async ({ page }) => {
   await page.goto('/')
   await page.evaluate(({ tutorialKey, rpgKey }) => {
     localStorage.clear()
@@ -112,11 +112,11 @@ test('設定からTutorialを最初からやり直しても加入済みBYTEを�
   await menu.getByRole('button', { name: '設定' }).click()
   await menu.getByRole('button', { name: 'チュートリアルをやり直す' }).click()
 
-  await expect(page.locator('.tutorial-prompt-field')).toContainText('MOVE')
-  await page.getByRole('button', { name: 'Move left' }).click()
+  await expect(page.locator('.tutorial-prompt-field')).toContainText('移動')
+  await page.getByRole('button', { name: '左へ移動' }).click()
   await expect.poll(async () => (await storedTutorial(page))?.phase).toBe('field-interact')
-  await expect(page.locator('.tutorial-prompt-field')).toContainText('INTERACT')
-  await page.getByRole('button', { name: 'INTERACT' }).click()
+  await expect(page.locator('.tutorial-prompt-field')).toContainText('アクション')
+  await page.getByRole('button', { name: 'BYTEと話す' }).click()
   await expect.poll(async () => (await storedTutorial(page))?.phase).toBe('party-join')
   expect((await storedRpg(page))?.state?.partyMemberIds).toEqual(['byte'])
 })
