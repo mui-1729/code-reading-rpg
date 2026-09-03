@@ -102,11 +102,14 @@ export function PauseMenu() {
 
   if (location.pathname === '/') return null
 
-  const equip = (equipmentId: string) => {
+  const toggleEquipment = (equipmentId: string, slot: EquipmentSlot) => {
     if (equipmentLocked) return
     setRpgState((current) => ({
       ...current,
-      equipment: equipItem(current.equipment, equipmentId),
+      equipment:
+        current.equipment[slot] === equipmentId
+          ? { ...current.equipment, [slot]: null }
+          : equipItem(current.equipment, equipmentId),
     }))
   }
 
@@ -288,11 +291,11 @@ export function PauseMenu() {
                                 type="button"
                                 key={item.id}
                                 className={equipped ? 'is-equipped' : ''}
-                                onClick={() => equip(item.id)}
-                                disabled={equipped || equipmentLocked}
+                                onClick={() => toggleEquipment(item.id, slot)}
+                                disabled={equipmentLocked}
                                 data-equipment-id={item.id}
                                 data-equipment-state={equipped ? 'equipped' : 'owned'}
-                                aria-label={`${item.name}${equipped ? ' 装備中' : ' を装備'}`}
+                                aria-label={`${item.name}${equipped ? ' 装備中・押すと外す' : ' を装備'}`}
                               >
                                 <span className="equipment-option-main">
                                   {presentation.visual && (
@@ -313,7 +316,7 @@ export function PauseMenu() {
                                 <small>{presentation.statSummary}</small>
                                 <span className="equipment-comparison">
                                   {equipped
-                                    ? '現在の装備'
+                                    ? '現在の装備 · 押すと外す'
                                     : `比較: ${presentation.currentEquipmentName} · ${presentation.deltaSummary}`}
                                 </span>
                                 <span className="equipment-description">{item.description}</span>

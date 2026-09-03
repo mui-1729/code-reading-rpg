@@ -119,19 +119,22 @@ test('出口 / 中ボス / 宝箱はterrain下の文字一覧ではなく実位�
   expect(treasurePosition.top).toMatch(/%$/)
 })
 
-test('未解放regionは名称とlandmarkをspoilerせず未発見として残す', async ({ page }) => {
+test('未解放regionは個別placeholderを増やさずcompactな未発見summaryだけ残す', async ({ page }) => {
   await seedWorldAtlas(page, [], 'overworld', { x: 20, y: 14 })
   const atlas = await openAtlas(page)
 
-  await expect(atlas.getByText('未発見エリア', { exact: true })).toHaveCount(4)
+  await expect(atlas.locator('[data-atlas-region]')).toHaveCount(1)
+  await expect(atlas.locator('[data-atlas-region="overworld"]')).toBeEnabled()
+  await expect(atlas.locator('[data-atlas-region="ts-frontier"]')).toHaveCount(0)
+  await expect(atlas.getByText('未発見エリアあり', { exact: true })).toHaveCount(1)
   await expect(atlas.getByText('TypeScript辺境', { exact: true })).toHaveCount(0)
-  await expect(atlas.locator('[data-atlas-region="ts-frontier"]')).toBeDisabled()
 
   await page.getByRole('button', { name: 'メニューを閉じる' }).click()
   await seedWorldAtlas(page, JS_COMPLETE, 'overworld', { x: 20, y: 14 })
   const discoveredAtlas = await openAtlas(page)
+  await expect(discoveredAtlas.locator('[data-atlas-region]')).toHaveCount(5)
   await expect(discoveredAtlas.locator('[data-atlas-region="ts-frontier"]')).toContainText('TypeScript辺境')
-  await expect(discoveredAtlas.locator('[data-atlas-region="ts-frontier"]')).toBeEnabled()
+  await expect(discoveredAtlas.getByText('未発見エリアあり', { exact: true })).toHaveCount(0)
 })
 
 test('terrainは色だけでなくpattern / glyphを持つ', async ({ page }) => {
@@ -154,7 +157,7 @@ test('terrainは色だけでなくpattern / glyphを持つ', async ({ page }) =>
   await expect(atlas.locator('.atlas-terrain-legend')).toContainText('♠森')
 })
 
-test('390pxでは全体表示がdefaultでregion全体をviewport内へ収め100%へ切替可能', async ({ page }) => {
+test('390pxでは全体表示からdetail zoomへ切替え地図を縦横にpanできる', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedWorldAtlas(page, JS_MIDBOSS_PREREQS)
   const atlas = await openAtlas(page)
@@ -168,10 +171,57 @@ test('390pxでは全体表示がdefaultでregion全体をviewport内へ収め100
 
   await atlas.getByRole('button', { name: '100%', exact: true }).click()
   await expect(atlas).toHaveAttribute('data-atlas-zoom', '100')
-  expect(await scrollport.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true)
+  const panRange = await scrollport.evaluate((el) => ({
+    horizontal: el.scrollWidth - el.clientWidth,
+    vertical: el.scrollHeight - el.clientHeight,
+    touchAction: getComputedStyle(el).touchAction,
+  }))
+  expect(panRange.horizontal).toBeGreaterThan(0)
+  expect(panRange.vertical).toBeGreaterThan(0)
+  expect(panRange.touchAction).toContain('pan-x')
+  expect(panRange.touchAction).toContain('pan-y')
+
+  const moved = await scrollport.evaluate((el) => {
+    el.scrollLeft = el.scrollWidth
+    el.scrollTop = el.scrollHeight
+    return { left: el.scrollLeft, top: el.scrollTop }
+  })
+  expect(moved.left).toBeGreaterThan(0)
+  expect(moved.top).toBeGreaterThan(0)
+  await expect(atlas.getByRole('button', { name: 'ワールドマップを拡大' })).toBeVisible()
 
   await atlas.getByRole('button', { name: '全体', exact: true }).click()
   await expect(atlas).toHaveAttribute('data-atlas-zoom', 'fit')
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth),
+  ).toBe(false)
+})
+
+test('mobile landscapeでも150%地図をpage overflowなしで縦横にpanできる', async ({ page }) => {
+  await page.setViewportSize({ width: 844, height: 390 })
+  await seedWorldAtlas(page, JS_MIDBOSS_PREREQS)
+  const atlas = await openAtlas(page)
+  const scrollport = atlas.locator('.atlas-scrollport')
+  const zoomIn = atlas.getByRole('button', { name: 'ワールドマップを拡大' })
+
+  await zoomIn.click()
+  await zoomIn.click()
+  await expect(atlas).toHaveAttribute('data-atlas-zoom', '150')
+
+  const panRange = await scrollport.evaluate((el) => ({
+    horizontal: el.scrollWidth - el.clientWidth,
+    vertical: el.scrollHeight - el.clientHeight,
+  }))
+  expect(panRange.horizontal).toBeGreaterThan(0)
+  expect(panRange.vertical).toBeGreaterThan(0)
+
+  const moved = await scrollport.evaluate((el) => {
+    el.scrollLeft = el.scrollWidth
+    el.scrollTop = el.scrollHeight
+    return { left: el.scrollLeft, top: el.scrollTop }
+  })
+  expect(moved.left).toBeGreaterThan(0)
+  expect(moved.top).toBeGreaterThan(0)
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth),
   ).toBe(false)

@@ -5,6 +5,7 @@ import {
   type PlayerProgress,
 } from '../progression'
 import type { RpgState } from '../rpg'
+import { getWorldNpcAtPosition } from './worldCharacters'
 import {
   BYTE_POSITION,
   getEncounterBattleId,
@@ -254,7 +255,7 @@ export function resolveWorldMove({
     progress.clearedStageIds.includes(13)
   const terrain: Terrain = midbossCleared ? 'road' : rawTerrain
 
-  if (!isWalkableTerrain(terrain)) {
+  if (!isWalkableTerrain(terrain) || getWorldNpcAtPosition(mapId, next)) {
     return { kind: 'blocked', nextState: rpgState, terrain }
   }
 

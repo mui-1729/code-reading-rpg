@@ -303,12 +303,19 @@ export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
   const [selectedMapId, setSelectedMapId] = useState<WorldMapId>(rpgState.worldMapId)
   const [zoom, setZoom] = useState(100)
   const [fit, setFit] = useState(true)
-  const selectedMap = atlasMaps.find((map) => map.id === selectedMapId) ?? atlasMaps[0]
+  const discoveredMaps = atlasMaps.filter((map) => isMapDiscovered(map.id, progress, rpgState))
+  const hiddenMapCount = atlasMaps.length - discoveredMaps.length
+  const selectedMap = discoveredMaps.find((map) => map.id === selectedMapId) ?? discoveredMaps[0] ?? atlasMaps[0]
   const detailWidth = fit ? '100%' : `${ATLAS_BASE_WIDTH * (zoom / 100)}px`
   const routes = useMemo(() => getDiscoveredRoutes(progress, rpgState), [progress, rpgState])
 
   return (
-    <section className="world-atlas" aria-label="ワールドマップ" data-atlas-zoom={fit ? 'fit' : zoom}>
+    <section
+      className="world-atlas"
+      aria-label="ワールドマップ"
+      data-atlas-zoom={fit ? 'fit' : zoom}
+      data-discovered-route-count={routes.length}
+    >
       <header className="atlas-header">
         <div>
           <span className="eyebrow">ワールドマップ</span>
@@ -334,42 +341,27 @@ export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
       </header>
 
       <nav className="atlas-region-nav" aria-label="ワールドマップのエリア">
-        {atlasMaps.map((map) => {
-          const discovered = isMapDiscovered(map.id, progress, rpgState)
+        {discoveredMaps.map((map) => {
           const current = map.id === rpgState.worldMapId
-          const selected = map.id === selectedMapId
+          const selected = map.id === selectedMap.id
           return (
             <button
               key={map.id}
               type="button"
               className={`${selected ? 'is-selected' : ''} ${current ? 'is-current' : ''}`}
               data-atlas-region={map.id}
-              disabled={!discovered}
               aria-pressed={selected}
               onClick={() => setSelectedMapId(map.id)}
             >
-              <strong>{discovered ? map.label : '未発見エリア'}</strong>
-              <span>{current ? '現在地' : discovered ? map.subtitle : 'まだ発見していない'}</span>
+              <strong>{map.label}</strong>
+              <span>{current ? '現在地' : map.subtitle}</span>
             </button>
           )
         })}
       </nav>
+      {hiddenMapCount > 0 && <p className="atlas-undiscovered-summary">未発見エリアあり</p>}
 
-      <section className="atlas-route-network" aria-label="発見済みエリアのつながり">
-        <strong className="atlas-route-title">エリアのつながり</strong>
-        <div className="atlas-route-list">
-          {routes.map((route) => (
-            <span className={`atlas-route ${route.locked ? 'is-locked' : 'is-open'}`} key={route.id}>
-              <b>{route.from.label}</b>
-              <span aria-hidden="true">↔</span>
-              <b>{route.to.label}</b>
-              <small>{route.locked ? `未開通 · ${route.requirement ?? 'ストーリー進行'}` : '接続済み'}</small>
-            </span>
-          ))}
-        </div>
-      </section>
-
-      <div className="atlas-scrollport">
+      <div className="atlas-scrollport" aria-label="拡大地図の移動領域">
         <div className="atlas-detail-canvas" style={{ width: detailWidth }}>
           <AtlasTerrainMap map={selectedMap} progress={progress} rpgState={rpgState} />
         </div>
@@ -385,7 +377,7 @@ export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
         <span><b>◆</b>宝箱</span>
         <span><b>●</b>現在地</span>
       </div>
-      <p className="atlas-legend">発見済みの経路だけ名前を表示します。エリアを選ぶと目印を確認できます。</p>
+      <p className="atlas-legend">発見済みエリアだけを表示します。エリアを選ぶと出口や目印を確認できます。</p>
     </section>
   )
 }
