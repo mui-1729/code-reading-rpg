@@ -6,7 +6,7 @@ const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
 async function seedWorld(
   page: Page,
-  mapId: 'overworld' | 'js-forest',
+  mapId: 'overworld' | 'js-forest' | 'ts-frontier',
   position: { x: number; y: number },
   clearedStageIds: number[],
 ) {
@@ -24,8 +24,8 @@ async function seedWorld(
           clearedStageIds,
           clearedAreaIds: [],
           completedSideQuestIds: [],
-          unlockedStageIds: [1, 7, 8, 9, 10, 11, 12, 13, 14],
-          unlockedSkillIds: ['trace', 'pulse', 'nova'],
+          unlockedStageIds: [1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+          unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
         },
       }))
       localStorage.setItem(rpgKey, JSON.stringify({
@@ -90,6 +90,22 @@ test('歩いて跨ぐForest portalも同じtransition sequenceを使う', async 
   await expect(viewport).toHaveAttribute('data-world-map', 'js-forest')
   await expect(transition).toHaveAttribute('data-world-transition-phase', 'revealing')
   await expect(viewport).toHaveAttribute('data-world-map', 'js-deep-forest')
+  await expect(transition).toHaveCount(0, { timeout: 1_000 })
+})
+
+test('TypeScript辺境から中央Hubへ戻る境界も共通transition sequenceを使う', async ({ page }) => {
+  await seedWorld(page, 'ts-frontier', { x: 2, y: 10 }, [1, 3, 4, 5])
+
+  const viewport = page.locator('.world-viewport')
+  const transition = page.locator('.world-map-transition')
+  await expect(viewport).toHaveAttribute('data-world-map', 'ts-frontier')
+  await page.getByRole('button', { name: '左へ移動' }).click()
+
+  await expect(transition).toHaveAttribute('data-world-transition-phase', 'covering')
+  await expect(transition).toHaveAttribute('data-world-transition-from', 'ts-frontier')
+  await expect(transition).toHaveAttribute('data-world-transition-to', 'overworld')
+  await expect(transition).toHaveAttribute('data-world-transition-phase', 'revealing')
+  await expect(viewport).toHaveAttribute('data-world-map', 'overworld')
   await expect(transition).toHaveCount(0, { timeout: 1_000 })
 })
 
