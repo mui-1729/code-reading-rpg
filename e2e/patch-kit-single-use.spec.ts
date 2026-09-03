@@ -70,11 +70,11 @@ async function storedProgress(page: Page) {
 async function dismissStory(page: Page) {
   const story = page.locator('.battle-story-window')
   await expect(story).toBeVisible()
-  await story.getByRole('button', { name: 'SKIP' }).click()
+  await story.getByRole('button', { name: 'スキップ', exact: true }).click()
   await expect(story).toBeHidden()
 }
 
-test('PATCH KITはcompact ITEMから開き、在庫2個でも同一Battleで使用1回に制限する', async ({ page }) => {
+test('PATCH KITはcompact アイテムから開き、在庫2個でも同一Battleで使用1回に制限する', async ({ page }) => {
   await seedBattle(page)
   await page.goto('/javascript/battle/1?seed=patch-kit-single-use&returnTo=%2Fworld')
   await dismissStory(page)
@@ -84,7 +84,7 @@ test('PATCH KITはcompact ITEMから開き、在庫2個でも同一Battleで使�
   const patchKit = item.locator('.patch-kit-action')
   await expect(item).toHaveAttribute('data-item-state', 'available')
   await expect(itemToggle).toBeVisible()
-  await expect(itemToggle).toContainText('ITEM')
+  await expect(itemToggle).toContainText('アイテム')
   await expect(itemToggle).toContainText('PATCH KIT ×2')
   await expect(patchKit).toBeHidden()
 
