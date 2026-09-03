@@ -56,6 +56,7 @@ test('初戦は逃走不可をStoryの現場文脈で理解でき、disabled逃�
 
   const story = page.getByRole('dialog')
   await expect(story).toBeVisible()
+  await story.getByRole('button', { name: /次へ/ }).click()
   await expect(story).toContainText('この異変を確認するまでは現場を離れられない')
 
   const skip = story.getByRole('button', { name: /スキップ/ })
