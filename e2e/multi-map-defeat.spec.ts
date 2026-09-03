@@ -78,6 +78,7 @@ test('Village保存状態からBattleで敗北してもcheckpointへ開始HPの�
   await story.getByRole('button', { name: 'スキップ', exact: true }).click()
   await expect(story).toBeHidden()
 
+  await page.getByRole('button', { name: '戦う', exact: true }).click()
   const trace = page.getByRole('button', { name: /^TRACE\b/ })
   await expect(trace).toBeEnabled()
   await trace.click()
