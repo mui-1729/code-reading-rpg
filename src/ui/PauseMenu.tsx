@@ -102,22 +102,13 @@ export function PauseMenu() {
 
   if (location.pathname === '/') return null
 
-  const toggleEquipment = (equipmentId: string, slot: EquipmentSlot) => {
+  const selectEquipment = (equipmentId: string | null, slot: EquipmentSlot) => {
     if (equipmentLocked) return
     setRpgState((current) => ({
       ...current,
-      equipment:
-        current.equipment[slot] === equipmentId
-          ? { ...current.equipment, [slot]: null }
-          : equipItem(current.equipment, equipmentId),
-    }))
-  }
-
-  const unequip = (slot: EquipmentSlot) => {
-    if (equipmentLocked) return
-    setRpgState((current) => ({
-      ...current,
-      equipment: { ...current.equipment, [slot]: null },
+      equipment: equipmentId
+        ? equipItem(current.equipment, equipmentId)
+        : { ...current.equipment, [slot]: null },
     }))
   }
 
@@ -278,10 +269,10 @@ export function PauseMenu() {
                           <strong>
                             {equippedId
                               ? ownedEquipment.find((item) => item.id === equippedId)?.name ?? equippedId
-                              : '未装備'}
+                              : 'なし'}
                           </strong>
                         </header>
-                        <div className="equipment-options">
+                        <div className="equipment-options" aria-label={`${equipmentSlotLabels[slot]}の装備候補`}>
                           {ownedEquipment.filter((item) => item.slot === slot).map((item) => {
                             const presentation = getEquipmentPresentation(item.id, rpgState.equipment)
                             if (!presentation) return null
@@ -291,11 +282,12 @@ export function PauseMenu() {
                                 type="button"
                                 key={item.id}
                                 className={equipped ? 'is-equipped' : ''}
-                                onClick={() => toggleEquipment(item.id, slot)}
+                                onClick={() => selectEquipment(item.id, slot)}
                                 disabled={equipmentLocked}
                                 data-equipment-id={item.id}
                                 data-equipment-state={equipped ? 'equipped' : 'owned'}
-                                aria-label={`${item.name}${equipped ? ' 装備中・押すと外す' : ' を装備'}`}
+                                aria-pressed={equipped}
+                                aria-label={`${item.name}${equipped ? ' 装備中' : ' を装備'}`}
                               >
                                 <span className="equipment-option-main">
                                   {presentation.visual && (
@@ -309,14 +301,14 @@ export function PauseMenu() {
                                   <span className="equipment-option-title">
                                     <strong>{item.name}</strong>
                                     <em className={`equipment-state-badge is-${equipped ? 'equipped' : 'owned'}`}>
-                                      {equipped ? '装備中' : '所持'}
+                                      {equipped ? '選択中' : '所持'}
                                     </em>
                                   </span>
                                 </span>
                                 <small>{presentation.statSummary}</small>
                                 <span className="equipment-comparison">
                                   {equipped
-                                    ? '現在の装備 · 押すと外す'
+                                    ? '現在の装備'
                                     : `比較: ${presentation.currentEquipmentName} · ${presentation.deltaSummary}`}
                                 </span>
                                 <span className="equipment-description">{item.description}</span>
@@ -325,11 +317,21 @@ export function PauseMenu() {
                           })}
                           <button
                             type="button"
-                            className="equipment-empty-option"
-                            onClick={() => unequip(slot)}
-                            disabled={!equippedId || equipmentLocked}
+                            className={!equippedId ? 'is-equipped' : ''}
+                            onClick={() => selectEquipment(null, slot)}
+                            disabled={equipmentLocked}
+                            data-equipment-id="none"
+                            data-equipment-state={!equippedId ? 'equipped' : 'available'}
+                            aria-pressed={!equippedId}
+                            aria-label={`${equipmentSlotLabels[slot]} なし${!equippedId ? ' 選択中' : ''}`}
                           >
-                            装備を外す
+                            <span className="equipment-option-title">
+                              <strong>なし</strong>
+                              <em className={`equipment-state-badge is-${!equippedId ? 'equipped' : 'owned'}`}>
+                                {!equippedId ? '選択中' : '選択'}
+                              </em>
+                            </span>
+                            <span className="equipment-description">この部位には何も装備しない</span>
                           </button>
                         </div>
                       </div>
