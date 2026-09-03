@@ -15,46 +15,217 @@
   letter-spacing: .04em;
 }
 
-/* Houses read as buildings instead of a repeated wall texture. */
+/*
+ * Houses are authored as four multi-tile buildings. The terrain remains the
+ * collision authority, while these coordinate-aware pieces form one roof /
+ * facade instead of repeating a complete miniature house in every cell.
+ */
 .world-viewport[data-world-map='js-village'] .terrain-house {
+  --house-roof: #8e4d3e;
+  --house-roof-dark: #5d3029;
+  --house-wall: #c89d6f;
+  --house-wall-dark: #8c6749;
+  --house-trim: #38261f;
+  --house-window: #9dd4d2;
   position: relative;
   overflow: hidden;
-  border-color: rgba(66, 49, 39, .8);
-  background:
-    linear-gradient(150deg, rgba(255, 255, 255, .05) 0 28%, transparent 29%),
-    repeating-linear-gradient(0deg, #6a4a36 0 18%, #533927 19% 36%);
-  box-shadow: inset 0 5px 0 #38251d;
+  border: 0;
+  background: var(--house-wall);
+  box-shadow: none;
 }
 
-.world-viewport[data-world-map='js-village'] .terrain-house::before {
+/* Northwest home: warm plaster and red roof. */
+.world-viewport[data-world-map='js-village'] .terrain-house:is(
+  [data-world-x='2'], [data-world-x='3'], [data-world-x='4'], [data-world-x='5']
+):is([data-world-y='2'], [data-world-y='3'], [data-world-y='4'], [data-world-y='5']) {
+  --house-roof: #9c523f;
+  --house-roof-dark: #6d342b;
+  --house-wall: #d1aa7b;
+  --house-wall-dark: #9b7651;
+  --house-window: #a8d8d3;
+}
+
+/* Northeast home: moss roof / pale timber, visually distinct from the west. */
+.world-viewport[data-world-map='js-village'] .terrain-house:is(
+  [data-world-x='15'], [data-world-x='16'], [data-world-x='17'], [data-world-x='18']
+):is([data-world-y='2'], [data-world-y='3'], [data-world-y='4'], [data-world-y='5']) {
+  --house-roof: #58704f;
+  --house-roof-dark: #384b37;
+  --house-wall: #c8b282;
+  --house-wall-dark: #917c58;
+  --house-window: #91c6cf;
+}
+
+/* Southwest home: cooler roof and lighter facade. */
+.world-viewport[data-world-map='js-village'] .terrain-house:is(
+  [data-world-x='3'], [data-world-x='4'], [data-world-x='5'], [data-world-x='6']
+):is([data-world-y='9'], [data-world-y='10'], [data-world-y='11']) {
+  --house-roof: #5f6f8d;
+  --house-roof-dark: #3d4961;
+  --house-wall: #cdbb94;
+  --house-wall-dark: #968367;
+  --house-window: #a6d7d9;
+}
+
+/* Southeast home: ochre roof and brick-tinted facade. */
+.world-viewport[data-world-map='js-village'] .terrain-house:is(
+  [data-world-x='14'], [data-world-x='15'], [data-world-x='16'], [data-world-x='17']
+):is([data-world-y='9'], [data-world-y='10'], [data-world-y='11']) {
+  --house-roof: #a66d3f;
+  --house-roof-dark: #70472f;
+  --house-wall: #c98f70;
+  --house-wall-dark: #935f4b;
+  --house-window: #98ced0;
+}
+
+/* Roof crowns. Transparent corners expose village ground and create silhouette. */
+.world-viewport[data-world-map='js-village'] .terrain-house:is(
+  [data-world-y='2'], [data-world-y='9']
+) {
+  background: #6f764e;
+}
+
+.world-viewport[data-world-map='js-village'] .terrain-house:is(
+  [data-world-y='2'], [data-world-y='9']
+)::before {
   content: '';
   position: absolute;
-  inset: 16% 20% 12%;
-  border: 2px solid #32231c;
+  inset: 0;
   background:
-    linear-gradient(90deg, #a3d2ce 0 38%, #385e62 39% 48%, #a3d2ce 49% 86%, #385e62 87%),
-    #a3d2ce;
-  opacity: .82;
+    repeating-linear-gradient(0deg, transparent 0 7px, rgba(255, 255, 255, .08) 7px 9px),
+    var(--house-roof);
+  box-shadow: inset 0 -5px 0 var(--house-roof-dark);
 }
 
-.world-viewport[data-world-map='js-village'] :is(
-  .terrain-house[data-world-x='4'][data-world-y='5'],
-  .terrain-house[data-world-x='16'][data-world-y='5'],
-  .terrain-house[data-world-x='5'][data-world-y='11'],
-  .terrain-house[data-world-x='15'][data-world-y='11']
+.world-viewport[data-world-map='js-village'] .terrain-house:is(
+  [data-world-x='2'][data-world-y='2'],
+  [data-world-x='15'][data-world-y='2'],
+  [data-world-x='3'][data-world-y='9'],
+  [data-world-x='14'][data-world-y='9']
+)::before {
+  clip-path: polygon(100% 0, 100% 100%, 14% 100%);
+}
+
+.world-viewport[data-world-map='js-village'] .terrain-house:is(
+  [data-world-x='5'][data-world-y='2'],
+  [data-world-x='18'][data-world-y='2'],
+  [data-world-x='6'][data-world-y='9'],
+  [data-world-x='17'][data-world-y='9']
+)::before {
+  clip-path: polygon(0 0, 86% 100%, 0 100%);
+}
+
+/* The taller north homes get a second eave row so the roof reads as one mass. */
+.world-viewport[data-world-map='js-village'] .terrain-house[data-world-y='3'] {
+  background:
+    repeating-linear-gradient(90deg, transparent 0 12px, rgba(255, 255, 255, .05) 12px 14px),
+    var(--house-roof);
+  box-shadow: inset 0 -6px 0 var(--house-roof-dark);
+}
+
+/* Chimneys / roof details keep neighboring homes from reading as clones. */
+.world-viewport[data-world-map='js-village'] .terrain-house:is(
+  [data-world-x='3'][data-world-y='2'],
+  [data-world-x='16'][data-world-y='2']
 )::after {
-  content: '入口';
+  content: '';
   position: absolute;
-  left: 50%;
-  bottom: 2px;
-  translate: -50% 0;
-  padding: 1px 3px;
-  border: 1px solid #2a1b16;
-  background: #d5b56f;
-  color: #2a1b16;
-  font-size: 7px;
-  font-weight: 900;
-  white-space: nowrap;
+  right: 14%;
+  bottom: 0;
+  width: 20%;
+  height: 46%;
+  border: 2px solid #382820;
+  background: #725746;
+  box-shadow: inset 0 4px 0 rgba(255, 255, 255, .08);
+}
+
+/* Facades share horizontal timber lines, but inherit each home's palette. */
+.world-viewport[data-world-map='js-village'] .terrain-house:is(
+  [data-world-y='4'], [data-world-y='5'], [data-world-y='10'], [data-world-y='11']
+) {
+  background:
+    linear-gradient(0deg, transparent 0 44%, rgba(70, 46, 34, .14) 45% 51%, transparent 52%),
+    var(--house-wall);
+}
+
+.world-viewport[data-world-map='js-village'] .terrain-house:is(
+  [data-world-y='5'], [data-world-y='11']
+) {
+  box-shadow: inset 0 -5px 0 var(--house-wall-dark);
+}
+
+/* Windows live only on facade cells; doors override them below. */
+.world-viewport[data-world-map='js-village'] .terrain-house:is(
+  [data-world-y='4'], [data-world-y='5'], [data-world-y='10'], [data-world-y='11']
+)::before {
+  content: '';
+  position: absolute;
+  inset: 23% 25% 30%;
+  border: 2px solid var(--house-trim);
+  background:
+    linear-gradient(90deg, transparent 44%, #43636a 45% 55%, transparent 56%),
+    linear-gradient(0deg, transparent 44%, #43636a 45% 55%, transparent 56%),
+    var(--house-window);
+  box-shadow: 0 4px 0 var(--house-wall-dark);
+}
+
+/* South-facing doors: visual shape replaces the old explanatory 「入口」 label. */
+.world-viewport[data-world-map='js-village'] .terrain-house:is(
+  [data-world-x='4'][data-world-y='5'],
+  [data-world-x='16'][data-world-y='5'],
+  [data-world-x='5'][data-world-y='11'],
+  [data-world-x='15'][data-world-y='11']
+)::before {
+  content: none;
+}
+
+.world-viewport[data-world-map='js-village'] .terrain-house:is(
+  [data-world-x='4'][data-world-y='5'],
+  [data-world-x='16'][data-world-y='5'],
+  [data-world-x='5'][data-world-y='11'],
+  [data-world-x='15'][data-world-y='11']
+)::after {
+  content: '';
+  position: absolute;
+  left: 29%;
+  bottom: 0;
+  width: 42%;
+  height: 76%;
+  border: 3px solid var(--house-trim);
+  border-bottom: 0;
+  background:
+    radial-gradient(circle at 76% 53%, #dfc36e 0 5%, transparent 6%),
+    linear-gradient(90deg, rgba(255, 255, 255, .08), transparent 34%),
+    #70472f;
+  box-shadow: inset 0 7px 0 rgba(0, 0, 0, .12);
+}
+
+/* Small doorstep stones connect every front door to the village circulation. */
+.world-viewport[data-world-map='js-village'] .world-tile:is(
+  [data-world-x='4'][data-world-y='6'],
+  [data-world-x='16'][data-world-y='6'],
+  [data-world-x='5'][data-world-y='12'],
+  [data-world-x='15'][data-world-y='12']
+)::after {
+  content: '';
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: 4%;
+  height: 34%;
+  background: #a99370;
+  box-shadow: 0 3px 0 #6d5c48;
+}
+
+/* Southern houses face a short shared lane that joins the central north/south road. */
+.world-viewport[data-world-map='js-village'] .world-tile[data-world-y='12']:is(
+  [data-world-x='5'], [data-world-x='6'], [data-world-x='7'], [data-world-x='8'],
+  [data-world-x='9'], [data-world-x='10'], [data-world-x='11'], [data-world-x='12'],
+  [data-world-x='13'], [data-world-x='14'], [data-world-x='15']
+) {
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .05) 0 12px, transparent 12px 16px),
+    #a88753;
 }
 
 /* The central yard is the first landmark the player sees from the entrance. */
