@@ -65,7 +65,7 @@ async function seedEconomyLoop(page: Page) {
 async function dismissStory(page: Page) {
   const story = page.locator('.battle-story-window')
   await expect(story).toBeVisible()
-  await story.getByRole('button', { name: 'SKIP' }).click()
+  await story.getByRole('button', { name: 'スキップ', exact: true }).click()
   await expect(story).toBeHidden()
 }
 
@@ -91,13 +91,13 @@ test('Battle Gold → Shop purchase/equip → Inn → reload → next canonical 
   await executeSkill(page, 'TRACE')
   await executeSkill(page, 'PULSE')
   await executeSkill(page, 'TRACE')
-  await expect(page.getByText('VICTORY', { exact: true })).toBeVisible()
+  await expect(page.getByText('勝利', { exact: true })).toBeVisible()
 
   // First incident keeps the established 20 G reward: 50 + 20 = 70.
   await expect.poll(async () => (await storedState(page)).progress.progress.gold).toBe(70)
-  const skip = page.getByRole('button', { name: 'SKIP' })
+  const skip = page.getByRole('button', { name: 'スキップ', exact: true })
   if (await skip.isVisible()) await skip.click()
-  await page.getByRole('button', { name: /RETURN TO WORLD/ }).click()
+  await page.getByRole('button', { name: /ワールドへ戻る/ }).click()
   await expect(page).toHaveURL(/\/world$/)
 
   let stored = await storedState(page)
@@ -106,7 +106,7 @@ test('Battle Gold → Shop purchase/equip → Inn → reload → next canonical 
   expect(stored.progress.progress.unlockedStageIds).not.toContain(10)
   expect(stored.rpg.state.currentHp).toBeGreaterThan(0)
 
-  await page.getByRole('button', { name: 'INTERACT' }).click()
+  await page.getByRole('button', { name: 'ショップを見る' }).click()
   const shop = page.getByRole('dialog', { name: 'ショップ' })
   const lifeCharm = shop.locator('[data-equipment-id="life-charm"]')
   const quote = lifeCharm.locator('.shop-cost-preview')
@@ -125,10 +125,10 @@ test('Battle Gold → Shop purchase/equip → Inn → reload → next canonical 
   await expect(lifeCharm).toHaveAttribute('data-equipment-state', 'equipped')
   await shop.getByRole('button', { name: 'ショップを閉じる' }).click()
 
-  await page.getByRole('button', { name: 'Move down' }).click()
-  await page.getByRole('button', { name: 'Move down' }).click()
-  await page.getByRole('button', { name: 'Move down' }).click()
-  await page.getByRole('button', { name: 'INTERACT' }).click()
+  await page.getByRole('button', { name: '下へ移動' }).click()
+  await page.getByRole('button', { name: '下へ移動' }).click()
+  await page.getByRole('button', { name: '下へ移動' }).click()
+  await page.getByRole('button', { name: '宿で休む' }).click()
 
   const inn = page.getByRole('dialog', { name: '宿' })
   await expect(inn.getByText('20 G → 0 G', { exact: true })).toBeVisible()
