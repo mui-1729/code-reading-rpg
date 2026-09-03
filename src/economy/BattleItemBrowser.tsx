@@ -41,7 +41,7 @@ export function BattleItemBrowser({
         <div className="battle-item-browser-list">
           {itemDefinitions.map((item) => {
             const count = getItemCount(progress, item.id)
-            const useState = getBattleItemUseState({
+            const itemState = getBattleItemUseState({
               progress,
               itemId: item.id,
               hp,
@@ -62,7 +62,7 @@ export function BattleItemBrowser({
                   <strong>{item.name} ×{count}</strong>
                   <small>{getItemEffectSummary(item)} · {getItemUsageSummary(item)}</small>
                 </span>
-                <em data-item-availability={useState.reason}>{useState.reasonLabel}</em>
+                <em data-item-availability={itemState.reason}>{itemState.reasonLabel}</em>
               </button>
             )
           })}
@@ -72,7 +72,7 @@ export function BattleItemBrowser({
   }
 
   const count = getItemCount(progress, selectedItem.id)
-  const useState = getBattleItemUseState({
+  const itemState = getBattleItemUseState({
     progress,
     itemId: selectedItem.id,
     hp,
@@ -100,13 +100,13 @@ export function BattleItemBrowser({
       <div className="battle-item-detail-actions">
         <span className="battle-item-state" aria-live="polite">
           {lastPatchKitHeal !== null && patchKitUsed && selectedItem.id === 'patch-kit'
-            ? `+${lastPatchKitHeal} HP回復 · ${useState.reasonLabel}`
-            : useState.reasonLabel}
+            ? `+${lastPatchKitHeal} HP回復 · ${itemState.reasonLabel}`
+            : itemState.reasonLabel}
         </span>
         <button
           type="button"
           className="secondary-button patch-kit-action"
-          disabled={!useState.canUse}
+          disabled={!itemState.canUse}
           onClick={selectedItem.id === 'patch-kit' ? onUsePatchKit : undefined}
           aria-label={`${selectedItem.name} ×${count}を使う · ${getItemEffectSummary(selectedItem)}`}
         >
