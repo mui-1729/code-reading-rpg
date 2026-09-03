@@ -59,6 +59,7 @@ export function PauseMenu() {
   const { reset: resetTutorial } = useTutorial()
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<PauseTab>('status')
+  const [activeEquipmentSlot, setActiveEquipmentSlot] = useState<EquipmentSlot | null>(null)
   const [resetArmed, setResetArmed] = useState(false)
   const [audioSettings, setAudioSettings] = useState<AudioSettings>(() => gameAudio.getSettings())
   const combatStats = getCombatStats(stats, rpgState)
@@ -75,12 +76,21 @@ export function PauseMenu() {
 
   const closeMenu = useCallback(() => {
     setOpen(false)
+    setActiveEquipmentSlot(null)
     setResetArmed(false)
   }, [])
 
+  const handleMenuEscape = useCallback(() => {
+    if (activeEquipmentSlot) {
+      setActiveEquipmentSlot(null)
+      return
+    }
+    closeMenu()
+  }, [activeEquipmentSlot, closeMenu])
+
   const dialogRef = useModalFocus<HTMLElement>({
     open,
-    onEscape: closeMenu,
+    onEscape: handleMenuEscape,
   })
 
   useLayoutEffect(() => {
@@ -94,6 +104,19 @@ export function PauseMenu() {
   useEffect(() => {
     if (open && isBattleRoute && !battleMenuAvailable) queueMicrotask(closeMenu)
   }, [battleMenuAvailable, closeMenu, isBattleRoute, open])
+
+  useEffect(() => {
+    if (!activeEquipmentSlot) return
+    requestAnimationFrame(() => {
+      const selected = document.querySelector<HTMLElement>(
+        `[data-equipment-picker="${activeEquipmentSlot}"] [aria-selected="true"]`,
+      )
+      const first = document.querySelector<HTMLElement>(
+        `[data-equipment-picker="${activeEquipmentSlot}"] [role="option"]`,
+      )
+      ;(selected ?? first)?.focus()
+    })
+  }, [activeEquipmentSlot])
 
   const ownedEquipment = useMemo(
     () => equipmentDefinitions.filter((item) => rpgState.ownedEquipmentIds.includes(item.id)),
@@ -110,6 +133,7 @@ export function PauseMenu() {
         ? equipItem(current.equipment, equipmentId)
         : { ...current.equipment, [slot]: null },
     }))
+    setActiveEquipmentSlot(null)
   }
 
   const updateAudioSettings = (next: AudioSettings) => {
@@ -173,6 +197,7 @@ export function PauseMenu() {
                   aria-pressed={tab === entry.id}
                   onClick={() => {
                     setTab(entry.id)
+                    setActiveEquipmentSlot(null)
                     setResetArmed(false)
                   }}
                 >
@@ -258,6 +283,13 @@ export function PauseMenu() {
                 <section className="pause-section equipment-sections">
                   {(['weapon', 'armor', 'accessory'] as EquipmentSlot[]).map((slot) => {
                     const equippedId = rpgState.equipment[slot]
+                    const equippedItem = equippedId
+                      ? ownedEquipment.find((item) => item.id === equippedId) ?? null
+                      : null
+                    const equippedPresentation = equippedId
+                      ? getEquipmentPresentation(equippedId, rpgState.equipment)
+                      : null
+                    const pickerOpen = activeEquipmentSlot === slot
                     return (
                       <div
                         className="equipment-slot pixel-inner-window"
@@ -266,82 +298,149 @@ export function PauseMenu() {
                       >
                         <header>
                           <span>{equipmentSlotLabels[slot]}</span>
-                          <strong>
-                            {equippedId
-                              ? ownedEquipment.find((item) => item.id === equippedId)?.name ?? equippedId
-                              : 'なし'}
-                          </strong>
+                          <strong>{equippedItem?.name ?? 'なし'}</strong>
                         </header>
-                        <div className="equipment-options" aria-label={`${equipmentSlotLabels[slot]}の装備候補`}>
-                          {ownedEquipment.filter((item) => item.slot === slot).map((item) => {
-                            const presentation = getEquipmentPresentation(item.id, rpgState.equipment)
-                            if (!presentation) return null
-                            const equipped = equippedId === item.id
-                            return (
-                              <button
-                                type="button"
-                                key={item.id}
-                                className={equipped ? 'is-equipped' : ''}
-                                onClick={() => selectEquipment(item.id, slot)}
-                                disabled={equipmentLocked}
-                                data-equipment-id={item.id}
-                                data-equipment-state={equipped ? 'equipped' : 'owned'}
-                                aria-pressed={equipped}
-                                aria-label={`${item.name}${equipped ? ' 装備中' : ' を装備'}`}
-                              >
-                                <span className="equipment-option-main">
-                                  {presentation.visual && (
-                                    <img
-                                      className="equipment-pixel-icon equipment-pause-icon"
-                                      src={presentation.visual}
-                                      alt=""
-                                      aria-hidden="true"
-                                    />
-                                  )}
-                                  <span className="equipment-option-title">
-                                    <strong>{item.name}</strong>
-                                    <em className={`equipment-state-badge is-${equipped ? 'equipped' : 'owned'}`}>
-                                      {equipped ? '選択中' : '所持'}
-                                    </em>
-                                  </span>
-                                </span>
-                                <small>{presentation.statSummary}</small>
-                                <span className="equipment-comparison">
-                                  {equipped
-                                    ? '現在の装備'
-                                    : `比較: ${presentation.currentEquipmentName} · ${presentation.deltaSummary}`}
-                                </span>
-                                <span className="equipment-description">{item.description}</span>
-                              </button>
-                            )
-                          })}
-                          <button
-                            type="button"
-                            className={!equippedId ? 'is-equipped' : ''}
-                            onClick={() => selectEquipment(null, slot)}
-                            disabled={equipmentLocked}
-                            data-equipment-id="none"
-                            data-equipment-state={!equippedId ? 'equipped' : 'available'}
-                            aria-pressed={!equippedId}
-                            aria-label={`${equipmentSlotLabels[slot]} なし${!equippedId ? ' 選択中' : ''}`}
-                          >
-                            <span className="equipment-option-title">
-                              <strong>なし</strong>
-                              <em className={`equipment-state-badge is-${!equippedId ? 'equipped' : 'owned'}`}>
-                                {!equippedId ? '選択中' : '選択'}
-                              </em>
+                        <button
+                          type="button"
+                          className="equipment-slot-trigger"
+                          disabled={equipmentLocked}
+                          aria-expanded={pickerOpen}
+                          aria-controls={`equipment-picker-${slot}`}
+                          aria-haspopup="dialog"
+                          aria-label={`${equipmentSlotLabels[slot]}を選ぶ · 現在 ${equippedItem?.name ?? 'なし'}`}
+                          onClick={() => setActiveEquipmentSlot(slot)}
+                        >
+                          <span className="equipment-slot-current-main">
+                            {equippedPresentation?.visual ? (
+                              <img
+                                className="equipment-pixel-icon equipment-pause-icon"
+                                src={equippedPresentation.visual}
+                                alt=""
+                                aria-hidden="true"
+                              />
+                            ) : (
+                              <span className="equipment-none-icon" aria-hidden="true">—</span>
+                            )}
+                            <span>
+                              <strong>{equippedItem?.name ?? 'なし'}</strong>
+                              <small>{equippedPresentation?.statSummary ?? '未装備'}</small>
                             </span>
-                            <span className="equipment-description">この部位には何も装備しない</span>
-                          </button>
-                        </div>
+                          </span>
+                          <span className="equipment-slot-chevron" aria-hidden="true">▼</span>
+                        </button>
                       </div>
                     )
                   })}
+
                   {equipmentLocked && (
                     <p className="equipment-battle-lock" role="status">
                       バトル中は装備を変更できません
                     </p>
                   )}
+
+                  {activeEquipmentSlot && (() => {
+                    const slot = activeEquipmentSlot
+                    const equippedId = rpgState.equipment[slot]
+                    const candidates = ownedEquipment.filter((item) => item.slot === slot)
+                    return (
+                      <div
+                        className="equipment-picker-backdrop"
+                        role="presentation"
+                        onClick={() => setActiveEquipmentSlot(null)}
+                      >
+                        <section
+                          id={`equipment-picker-${slot}`}
+                          className="equipment-picker pixel-window"
+                          role="dialog"
+                          aria-modal="false"
+                          aria-label={`${equipmentSlotLabels[slot]}を選ぶ`}
+                          data-equipment-picker={slot}
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <header className="equipment-picker-header">
+                            <div>
+                              <span>{equipmentSlotLabels[slot]}</span>
+                              <strong>{equipmentSlotLabels[slot]}を選ぶ</strong>
+                            </div>
+                            <button
+                              type="button"
+                              className="close-button equipment-picker-close"
+                              aria-label={`${equipmentSlotLabels[slot]}の候補を閉じる`}
+                              onClick={() => setActiveEquipmentSlot(null)}
+                            >
+                              ×
+                            </button>
+                          </header>
+                          <div
+                            className="equipment-picker-options"
+                            role="listbox"
+                            aria-label={`${equipmentSlotLabels[slot]}の装備候補`}
+                          >
+                            {candidates.map((item) => {
+                              const presentation = getEquipmentPresentation(item.id, rpgState.equipment)
+                              if (!presentation) return null
+                              const equipped = equippedId === item.id
+                              return (
+                                <button
+                                  type="button"
+                                  role="option"
+                                  key={item.id}
+                                  className={`equipment-picker-option ${equipped ? 'is-equipped' : ''}`}
+                                  onClick={() => selectEquipment(item.id, slot)}
+                                  data-equipment-id={item.id}
+                                  data-equipment-state={equipped ? 'equipped' : 'owned'}
+                                  aria-selected={equipped}
+                                  aria-label={`${item.name}${equipped ? ' 選択中' : ' を装備'}`}
+                                >
+                                  <span className="equipment-option-main">
+                                    {presentation.visual && (
+                                      <img
+                                        className="equipment-pixel-icon equipment-pause-icon"
+                                        src={presentation.visual}
+                                        alt=""
+                                        aria-hidden="true"
+                                      />
+                                    )}
+                                    <span className="equipment-option-title">
+                                      <strong>{item.name}</strong>
+                                      <em className={`equipment-state-badge is-${equipped ? 'equipped' : 'owned'}`}>
+                                        {equipped ? '選択中' : '所持'}
+                                      </em>
+                                    </span>
+                                  </span>
+                                  <small>{presentation.statSummary}</small>
+                                  <span className="equipment-comparison">
+                                    {equipped
+                                      ? '現在の装備'
+                                      : `比較: ${presentation.currentEquipmentName} · ${presentation.deltaSummary}`}
+                                  </span>
+                                  <span className="equipment-description">{item.description}</span>
+                                </button>
+                              )
+                            })}
+                            <button
+                              type="button"
+                              role="option"
+                              className={`equipment-picker-option equipment-none-option ${!equippedId ? 'is-equipped' : ''}`}
+                              onClick={() => selectEquipment(null, slot)}
+                              data-equipment-id="none"
+                              data-equipment-state={!equippedId ? 'equipped' : 'available'}
+                              aria-selected={!equippedId}
+                              aria-label={`${equipmentSlotLabels[slot]} なし${!equippedId ? ' 選択中' : ''}`}
+                            >
+                              <span className="equipment-option-title">
+                                <strong>なし</strong>
+                                <em className={`equipment-state-badge is-${!equippedId ? 'equipped' : 'owned'}`}>
+                                  {!equippedId ? '選択中' : '選択'}
+                                </em>
+                              </span>
+                              <span className="equipment-description">この部位には何も装備しない</span>
+                            </button>
+                          </div>
+                        </section>
+                      </div>
+                    )
+                  })()}
                 </section>
               )}
 
