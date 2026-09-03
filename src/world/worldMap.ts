@@ -24,7 +24,7 @@ const WORLD_MAP_DIMENSIONS: Record<WorldMapId, { width: number; height: number }
   [TS_FRONTIER_MAP_ID]: { width: 31, height: 21 },
 }
 
-export const WORLD_MAP_STARTS: Record<WorldMapId, { x: number; height?: number; y: number }> = {
+export const WORLD_MAP_STARTS: Record<WorldMapId, { x: number; y: number }> = {
   [OVERWORLD_MAP_ID]: { ...WORLD_START },
   [JS_VILLAGE_MAP_ID]: { x: 10, y: 12 },
   [JS_FOREST_MAP_ID]: { x: 28, y: 10 },
