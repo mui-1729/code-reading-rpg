@@ -86,24 +86,28 @@ export const TS_FRONTIER_EXIT_POSITION = { x: 1, y: 10 } as const
 export const WORLD_TREASURES = [
   {
     id: 'js-debug-cache',
+    name: 'DEBUG CACHE',
     mapId: OVERWORLD_MAP_ID,
     position: { x: 10, y: 19 },
     region: 'javascript',
   },
   {
     id: 'js-forest-supply',
+    name: 'FOREST SUPPLY',
     mapId: JS_FOREST_MAP_ID,
     position: { x: 20, y: 20 },
     region: 'javascript',
   },
   {
     id: 'js-deep-forest-cache',
+    name: 'DEEP CACHE',
     mapId: JS_DEEP_FOREST_MAP_ID,
     position: { x: 14, y: 22 },
     region: 'javascript',
   },
   {
     id: 'ts-supply-cache',
+    name: 'TYPE CACHE',
     mapId: TS_FRONTIER_MAP_ID,
     position: { x: 20, y: 15 },
     region: 'typescript',
