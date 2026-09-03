@@ -30,7 +30,7 @@ async function seedVillageRoad(page: Page) {
           partyMemberIds: ['byte'],
           partyEquipment: { byte: { weapon: null, armor: null, accessory: null } },
           worldMapId: 'js-village',
-          worldPosition: { x: 7, y: 7 },
+          worldPosition: { x: 6, y: 6 },
           stepsSinceEncounter: 0,
           encounterCount: 0,
           currentHp: 108,
@@ -105,11 +105,11 @@ test('@responsive 150ms未満の5連続入力を捨てず1stepずつcameraへ流
   await rapidClick(page, Array(5).fill('右へ移動'))
 
   // synchronous burstでは最初の1stepだけがlogical/visual authorityへ入り、残りはqueueされる。
-  await expect(player).toHaveAttribute('data-world-x', '8')
+  await expect(player).toHaveAttribute('data-world-x', '7')
   await expect(page.locator('.world-camera-snapshot')).toHaveCount(1)
 
-  await expect.poll(async () => Number(await player.getAttribute('data-world-x')), { timeout: 2_000 }).toBe(12)
-  await expect(player).toHaveAttribute('data-world-y', '7')
+  await expect.poll(async () => Number(await player.getAttribute('data-world-x')), { timeout: 2_000 }).toBe(11)
+  await expect(player).toHaveAttribute('data-world-y', '6')
   await expect(player).toHaveAttribute('data-facing', 'right')
   await expect.poll(() => page.locator('.world-camera-snapshot').count()).toBe(0)
 
@@ -125,8 +125,8 @@ test('@responsive 150ms未満の5連続入力を捨てず1stepずつcameraへ流
       documentOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     }
   })
-  expect(geometry.viewportX).toBe('12')
-  expect(geometry.playerX).toBe('12')
+  expect(geometry.viewportX).toBe('11')
+  expect(geometry.playerX).toBe('11')
   expect(geometry.snapshotCount).toBe(0)
   expect(geometry.followerVisible).toBe(true)
   expect(geometry.documentOverflow).toBeLessThanOrEqual(1)
@@ -147,7 +147,7 @@ test('20ms級の連打中もterrain / Player / follower / NPCの相対位置を�
 
   await expect.poll(async () => Number(await page.locator('.world-player-sprite').getAttribute('data-world-x')), {
     timeout: 2_000,
-  }).toBe(15)
+  }).toBe(14)
 })
 
 test('rapid入力の途中で方向を変えても順序を保って最終座標へ収束する', async ({ page }) => {
@@ -156,8 +156,8 @@ test('rapid入力の途中で方向を変えても順序を保って最終座標
 
   await rapidClick(page, ['右へ移動', '右へ移動', '左へ移動', '右へ移動', '右へ移動'])
 
-  await expect.poll(async () => Number(await player.getAttribute('data-world-x')), { timeout: 2_000 }).toBe(10)
-  await expect(player).toHaveAttribute('data-world-y', '7')
+  await expect.poll(async () => Number(await player.getAttribute('data-world-x')), { timeout: 2_000 }).toBe(9)
+  await expect(player).toHaveAttribute('data-world-y', '6')
   await expect(player).toHaveAttribute('data-facing', 'right')
   await expect.poll(() => page.locator('.world-camera-snapshot').count()).toBe(0)
 })
@@ -169,7 +169,7 @@ test('prefers-reduced-motionではrapid入力をanimation queue待ちなしで�
 
   await rapidClick(page, ['右へ移動', '右へ移動', '左へ移動', '右へ移動', '右へ移動'])
 
-  await expect(player).toHaveAttribute('data-world-x', '10')
+  await expect(player).toHaveAttribute('data-world-x', '9')
   const snapshots = page.locator('.world-camera-snapshot')
   if (await snapshots.count()) {
     await expect(snapshots.first()).toHaveCSS('display', 'none')
