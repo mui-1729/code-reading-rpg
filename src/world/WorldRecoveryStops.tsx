@@ -18,7 +18,7 @@ function sameTargets(left: readonly RecoveryTarget[], right: readonly RecoveryTa
 }
 
 export function WorldRecoveryStops() {
-  const { progress, stats } = useProgress()
+  const { stats } = useProgress()
   const { rpgState, setRpgState } = useRpg()
   const combatStats = getCombatStats(stats, rpgState)
   const [targets, setTargets] = useState<RecoveryTarget[]>([])
@@ -95,7 +95,6 @@ export function WorldRecoveryStops() {
           {message}
         </div>
       )}
-      <span className="sr-only" data-recovery-progress-gold={progress.gold} />
     </>
   )
 }
