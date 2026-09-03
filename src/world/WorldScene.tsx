@@ -112,7 +112,12 @@ function useWorldCameraPan(
     cells,
   })
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const rapidUntilRef = useRef(0)
   const [pan, setPan] = useState<CameraPan | null>(null)
+
+  useEffect(() => () => {
+    if (timerRef.current !== null) clearTimeout(timerRef.current)
+  }, [])
 
   useLayoutEffect(() => {
     const currentPlayer = { x: playerX, y: playerY }
@@ -121,30 +126,38 @@ function useWorldCameraPan(
     const sameMap = previous.mapId === mapId
     const walked = sameMap && isAdjacentWorldStep(previous.playerPosition, currentPlayer)
     const cameraShifted = sameMap && isAdjacentWorldStep(previous.viewportStart, currentViewport)
+    const now = Date.now()
+    const interruptedActivePan = timerRef.current !== null
 
-    if (timerRef.current !== null) clearTimeout(timerRef.current)
+    if (timerRef.current !== null) {
+      clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
 
     if (walked && cameraShifted) {
-      setPan({
-        key: `${mapId}:${viewportX}:${viewportY}:${playerX}:${playerY}`,
-        facing: getWorldFacing(previous.playerPosition, currentPlayer),
-        cells: previous.cells,
-      })
-      timerRef.current = setTimeout(() => {
+      if (interruptedActivePan || now < rapidUntilRef.current) {
+        // Rapid input must never restart a one-tile keyframe from 100% offset.
+        // Keep every logical movement, but coalesce camera motion to the current
+        // authoritative viewport until input has been quiet for one step window.
+        rapidUntilRef.current = now + WORLD_STEP_MS
         setPan(null)
-        timerRef.current = null
-      }, WORLD_STEP_MS)
+      } else {
+        setPan({
+          key: `${mapId}:${viewportX}:${viewportY}:${playerX}:${playerY}`,
+          facing: getWorldFacing(previous.playerPosition, currentPlayer),
+          cells: previous.cells,
+        })
+        timerRef.current = setTimeout(() => {
+          setPan(null)
+          timerRef.current = null
+        }, WORLD_STEP_MS)
+      }
     } else {
       setPan(null)
+      if (!sameMap) rapidUntilRef.current = 0
     }
 
     previousRef.current = { mapId, playerPosition: currentPlayer, viewportStart: currentViewport, cells }
-    return () => {
-      if (timerRef.current !== null) {
-        clearTimeout(timerRef.current)
-        timerRef.current = null
-      }
-    }
   }, [cells, mapId, playerX, playerY, viewportX, viewportY])
 
   return pan
