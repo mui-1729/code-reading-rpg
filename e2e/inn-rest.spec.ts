@@ -71,7 +71,7 @@ test.describe('宿', () => {
   test('HP満タンでは20Gを消費せず休めないことを明示する', async ({ page }) => {
     await seedInnState(page, { gold: 50, currentHp: 108 })
 
-    await page.getByRole('button', { name: 'INTERACT' }).click()
+    await page.getByRole('button', { name: '宿で休む' }).click()
     const inn = page.getByRole('dialog', { name: '宿' })
     await expect(inn.getByText('108 / 108', { exact: true })).toBeVisible()
     await expect(inn.getByText('満タン', { exact: true })).toBeVisible()
@@ -87,7 +87,7 @@ test.describe('宿', () => {
   test('ゴールド不足では不足額を表示しHP / Goldを変更しない', async ({ page }) => {
     await seedInnState(page, { gold: 7, currentHp: 40 })
 
-    await page.getByRole('button', { name: 'INTERACT' }).click()
+    await page.getByRole('button', { name: '宿で休む' }).click()
     const inn = page.getByRole('dialog', { name: '宿' })
     await expect(inn.getByText('40 / 108', { exact: true })).toBeVisible()
     await expect(inn.getByText('+68 HP', { exact: true })).toBeVisible()
