@@ -80,47 +80,47 @@ async function seedForestGate(page: Page, state: ForestGateState) {
 test('Training 9未clearではForest入口が閉じている', async ({ page }) => {
   await seedForestGate(page, 'training-incomplete')
 
-  await expect(page.getByLabel('Open world map')).toHaveAttribute('data-world-map', 'overworld')
-  await page.getByRole('button', { name: 'Move left' }).click()
+  await expect(page.getByLabel('ワールドマップ')).toHaveAttribute('data-world-map', 'overworld')
+  await page.getByRole('button', { name: '左へ移動' }).click()
 
-  await expect(page.getByLabel('Open world map')).toHaveAttribute('data-world-map', 'overworld')
+  await expect(page.getByLabel('ワールドマップ')).toHaveAttribute('data-world-map', 'overworld')
   await expect(page.getByLabel('次の目的')).toContainText('調査準備')
 })
 
 test('JS-01 clearだけではForestへ入れずVillage trainingを要求する', async ({ page }) => {
   await seedForestGate(page, 'incident-only')
 
-  await page.getByRole('button', { name: 'Move left' }).click()
+  await page.getByRole('button', { name: '左へ移動' }).click()
 
-  await expect(page.getByLabel('Open world map')).toHaveAttribute('data-world-map', 'overworld')
+  await expect(page.getByLabel('ワールドマップ')).toHaveAttribute('data-world-map', 'overworld')
   await expect(page.getByLabel('次の目的')).toContainText('調査準備')
 })
 
 test('Village training完了後はForestへ入りreload後もlocal mapを保持する', async ({ page }) => {
   await seedForestGate(page, 'training-complete')
 
-  await page.getByRole('button', { name: 'Move left' }).click()
-  const forest = page.getByLabel('Forest map')
+  await page.getByRole('button', { name: '左へ移動' }).click()
+  const forest = page.getByLabel('JavaScriptの森のマップ')
   await expect(forest).toHaveAttribute('data-world-map', 'js-forest')
-  await expect(page.getByRole('heading', { name: 'JAVASCRIPT FOREST' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'JavaScriptの森' })).toBeVisible()
   await expect(page.getByLabel('次の目的')).toContainText('経路を追う · 1')
   await expect(page.getByLabel('次の目的')).toContainText('二つの条件を両方通る枝')
 
   await page.reload()
-  await expect(page.getByLabel('Forest map')).toHaveAttribute('data-world-map', 'js-forest')
-  await expect(page.getByRole('heading', { name: 'JAVASCRIPT FOREST' })).toBeVisible()
+  await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-map', 'js-forest')
+  await expect(page.getByRole('heading', { name: 'JavaScriptの森' })).toBeVisible()
 })
 
 test('Forest最初のWoodsはRandom抽選ではなくBattle 10の固定traceになる', async ({ page }) => {
   await seedForestGate(page, 'training-complete')
 
-  await page.getByRole('button', { name: 'Move left' }).click()
-  await expect(page.getByLabel('Forest map')).toHaveAttribute('data-world-map', 'js-forest')
+  await page.getByRole('button', { name: '左へ移動' }).click()
+  await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-map', 'js-forest')
 
-  await page.getByRole('button', { name: 'Move left' }).click()
-  await page.getByRole('button', { name: 'Move left' }).click()
-  await page.getByRole('button', { name: 'Move left' }).click()
-  await page.getByRole('button', { name: 'Move up' }).click()
+  await page.getByRole('button', { name: '左へ移動' }).click()
+  await page.getByRole('button', { name: '左へ移動' }).click()
+  await page.getByRole('button', { name: '左へ移動' }).click()
+  await page.getByRole('button', { name: '上へ移動' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/10\?/)
   await expect(page.getByRole('dialog', { name: 'Forestで自分の読み順を決める' })).toBeVisible()
@@ -135,7 +135,7 @@ test('Forest Battle 10はBYTEが読む順を委ね、Battle 11は次のtraceだ�
   await expect(andStory).toContainText('trace')
   await expect(andStory).toContainText('二つの条件')
   await expect(andStory).not.toContainText('filter()')
-  await andStory.getByRole('button', { name: /NEXT/ }).click()
+  await andStory.getByRole('button', { name: /次へ/ }).click()
   await expect(andStory).toContainText('先に言わない')
   await expect(andStory).toContainText('君が決めた順')
   await expect(andStory).not.toContainText('filter()')
@@ -157,7 +157,7 @@ test('Forest Battle 10はBYTEが読む順を委ね、Battle 11は次のtraceだ�
   await expect(orStory).toBeVisible()
   await expect(orStory).toContainText('||')
   await expect(orStory).not.toContainText('filter()')
-  await orStory.getByRole('button', { name: /NEXT/ }).click()
+  await orStory.getByRole('button', { name: /次へ/ }).click()
   await expect(orStory).toContainText('どちらか一方でもtrue')
   await expect(orStory).not.toContainText('filter()')
 })
