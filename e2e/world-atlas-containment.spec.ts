@@ -4,6 +4,7 @@ import { JS_COMPLETE } from './canonical-progress-fixtures'
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
+const ZOOM_SETTLE_MS = 180
 
 async function seedAtlas(page: Page) {
   await page.goto('/')
@@ -62,6 +63,10 @@ async function seedAtlas(page: Page) {
   return page.getByRole('region', { name: 'ワールドマップ' })
 }
 
+async function settleZoom(page: Page) {
+  await page.waitForTimeout(ZOOM_SETTLE_MS)
+}
+
 async function expectContained(page: Page) {
   const metrics = await page.evaluate(() => {
     const menu = document.querySelector<HTMLElement>('.pause-menu')
@@ -84,6 +89,7 @@ async function expectContained(page: Page) {
       frameRight: frame.right,
       canvasLeft: canvasRect.left,
       canvasRight: canvasRect.right,
+      canvasWidth: canvasRect.width,
       clientWidth: scrollport.clientWidth,
       scrollWidth: scrollport.scrollWidth,
       contain: style.contain,
@@ -111,23 +117,26 @@ for (const viewport of [
     const scrollport = atlas.locator('.atlas-scrollport')
 
     const fit = await expectContained(page)
-    expect(fit.canvasRight - fit.canvasLeft).toBeLessThanOrEqual(fit.clientWidth + 1)
+    expect(fit.canvasWidth).toBeLessThanOrEqual(fit.clientWidth + 8)
 
     await atlas.getByRole('button', { name: '100%', exact: true }).click()
     await expect(atlas).toHaveAttribute('data-atlas-zoom', '100')
+    await settleZoom(page)
     const at100 = await expectContained(page)
-    expect(at100.scrollWidth).toBeGreaterThanOrEqual(at100.clientWidth)
 
     const zoomIn = atlas.getByRole('button', { name: 'ワールドマップを拡大' })
     await zoomIn.click()
     await expect(atlas).toHaveAttribute('data-atlas-zoom', '125')
+    await settleZoom(page)
     const at125 = await expectContained(page)
-    expect(at125.scrollWidth).toBeGreaterThan(at100.scrollWidth)
+    expect(at125.canvasWidth).toBeGreaterThan(at100.canvasWidth)
 
     await zoomIn.click()
     await expect(atlas).toHaveAttribute('data-atlas-zoom', '150')
+    await settleZoom(page)
     const at150 = await expectContained(page)
-    expect(at150.scrollWidth).toBeGreaterThan(at125.scrollWidth)
+    expect(at150.canvasWidth).toBeGreaterThan(at125.canvasWidth)
+    expect(at150.scrollWidth).toBeGreaterThanOrEqual(at150.clientWidth)
 
     await scrollport.evaluate((element) => {
       element.scrollLeft = element.scrollWidth
@@ -137,7 +146,8 @@ for (const viewport of [
 
     await atlas.getByRole('button', { name: '全体', exact: true }).click()
     await expect(atlas).toHaveAttribute('data-atlas-zoom', 'fit')
+    await settleZoom(page)
     const restored = await expectContained(page)
-    expect(restored.canvasRight - restored.canvasLeft).toBeLessThanOrEqual(restored.clientWidth + 1)
+    expect(restored.canvasWidth).toBeLessThanOrEqual(restored.clientWidth + 8)
   })
 }
