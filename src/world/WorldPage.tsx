@@ -27,7 +27,7 @@ import type { WorldPosition } from './worldSceneGeometry'
 const regionLabels = {
   javascript: 'JavaScript 西部',
   hub: '中央ハブ',
-  typescript: 'TypeScript 辺境',
+  typescript: 'TypeScript辺境',
 } as const
 
 const terrainLabels: Record<string, string> = {
@@ -84,7 +84,7 @@ export function WorldPage() {
       return '西の異変は収まった。技は狙った相手へ飛ぶようになった。'
     }
     if (progress.clearedStageIds.includes(22)) {
-      return 'BYTE // 二つの症状から追った経路がCode Coreへ直結した。Deep Forest西口からそのまま最終地点へ進める。'
+      return 'BYTE // 二つの症状から追った経路がCode Coreへ直結した。JavaScript深層の森の西口からそのまま最終地点へ進める。'
     }
     if (progress.clearedStageIds.includes(21)) {
       return 'BYTE // 欠けたデータを含む本番ログまで一致した。残る経路は最後の集約処理だけだ。'
@@ -108,22 +108,22 @@ export function WorldPage() {
       return 'BYTE // 条件が変わってもfilter()の経路を追えた。さらに西でデータの形が変わる。'
     }
     if (progress.clearedStageIds.includes(2)) {
-      return 'BYTE // 二つ目の症状も同じ呼び出し経路へ入った。Deep Forestを西へ進み、根本原因まで追おう。'
+      return 'BYTE // 二つ目の症状も同じ呼び出し経路へ入った。JavaScript深層の森を西へ進み、根本原因まで追おう。'
     }
     if (progress.clearedStageIds.includes(14)) {
-      return 'BYTE // 複数の対象へ広がる影響範囲がDeep Forestへ続いている。入口で二つ目の症状を確認しよう。'
+      return 'BYTE // 複数の対象へ広がる影響範囲がJavaScript深層の森へ続いている。入口で二つ目の症状を確認しよう。'
     }
     if (progress.clearedStageIds.includes(13)) {
       return 'BYTE // 守り人の先で経路が複数の対象へ枝分かれした。影響範囲を全部追う必要がある。'
     }
     if (progress.clearedStageIds.includes(12)) {
-      return 'BYTE // Forestの条件合流点を追えた。経路を塞ぐ守り人を越えよう。'
+      return 'BYTE // JavaScriptの森の条件合流点を追えた。経路を塞ぐ守り人を越えよう。'
     }
     if (progress.clearedStageIds.includes(9)) {
-      return 'BYTE // 最初の異常で読みにくかった選択条件を自分で追えるようになった。再戦せず、その経路を西のForestへ追おう。'
+      return 'BYTE // 最初の異常で読みにくかった選択条件を自分で追えるようになった。再戦せず、その経路を西のJavaScriptの森へ追おう。'
     }
     if (progress.clearedStageIds.includes(1)) {
-      return 'BYTE // 最初の対象異常は再現できた。原因を追う前に、HP・name・find()だけVillageで確認しよう。'
+      return 'BYTE // 最初の対象異常は再現できた。原因を追う前に、HP・name・find()だけグリーンフィールド村で確認しよう。'
     }
     return 'LEAD ADA // 最初の仕事は対象異常の調査。BYTEと合流したら、まず草原で実際の症状をその目で確かめよう。'
   }, [progress.clearedAreaIds, progress.clearedStageIds])
@@ -141,7 +141,7 @@ export function WorldPage() {
       return {
         label: 'NEXT OBJECTIVE',
         title: 'BYTEと合流する',
-        detail: '開始地点の近くにいるBYTEへINTERACT。合流したら西の草原へ進み、Openingで見た対象異常をまず再現する。',
+        detail: '開始地点の近くにいるBYTEへ話しかけよう。合流したら西の草原へ進み、Openingで見た対象異常をまず再現する。',
         clear: false,
       }
     }
@@ -156,8 +156,8 @@ export function WorldPage() {
     if (nextTrainingBattleId !== null) {
       return {
         label: 'INCIDENT PREP',
-        title: 'Villageで読めなかった部分だけ確認する',
-        detail: 'VILLAGEへ入り、TRAINでHP・name・find()を順番に確認する。最初の異常で分からなかった選択条件を読めるようにするためだ。',
+        title: 'グリーンフィールド村で読めなかった部分だけ確認する',
+        detail: 'グリーンフィールド村へ入り、訓練場でHP・name・find()を順番に確認する。最初の異常で分からなかった選択条件を読めるようにするためだ。',
         clear: false,
       }
     }
@@ -169,16 +169,16 @@ export function WorldPage() {
           : '二つの条件を両方通る枝'
       return {
         label: 'FOLLOW THE TRACE',
-        title: `Forestで${traceStep}を追う`,
-        detail: '最初の症状で見た選択条件を読めるようになった。再戦ではなく、西のFORESTへ続く経路を現在の状態とコードから追おう。',
+        title: `JavaScriptの森で${traceStep}を追う`,
+        detail: '最初の症状で見た選択条件を読めるようになった。再戦ではなく、西のJavaScriptの森へ続く経路を現在の状態とコードから追おう。',
         clear: false,
       }
     }
     if (!progress.clearedStageIds.includes(13)) {
       return {
         label: 'TRACE BLOCKED',
-        title: 'Forestの守り人を突破する',
-        detail: '本道を西へ進み、経路を塞ぐMID BOSSの隣でINTERACT。新しい構文ではなく、今までの条件だけで突破する。',
+        title: 'JavaScriptの森の守り人を突破する',
+        detail: '本道を西へ進み、経路を塞ぐ中ボスの隣から挑もう。新しい構文ではなく、今までの条件だけで突破する。',
         clear: false,
       }
     }
@@ -186,23 +186,23 @@ export function WorldPage() {
       return {
         label: 'IMPACT RANGE',
         title: '複数の対象へ広がった影響を全部追う',
-        detail: '守り人の先のWoodsへ進もう。find()の最初の一体だけではなく、filter()で条件に合うもの全部を追う。',
+        detail: '守り人の先の森へ進もう。find()の最初の一体だけではなく、filter()で条件に合うもの全部を追う。',
         clear: false,
       }
     }
     if (!progress.clearedStageIds.includes(2)) {
       return {
         label: 'SECOND SYMPTOM',
-        title: 'Deep Forest入口で二つ目の異常を確認する',
-        detail: 'Forest西端のEXITからDeep Forestへ入ろう。最初の移動で、複数の対象へ広がった実際の異常が再現される。',
+        title: 'JavaScript深層の森の入口で二つ目の異常を確認する',
+        detail: 'JavaScriptの森の西端の出口からJavaScript深層の森へ入ろう。最初の移動で、複数の対象へ広がった実際の異常が再現される。',
         clear: false,
       }
     }
     if (!progress.clearedStageIds.includes(15)) {
       return {
         label: 'FOLLOW SHARED TRACE',
-        title: 'Deep Forestで共有経路を追い続ける',
-        detail: '二つの症状は同じ呼び出し経路へ入った。Woodsへ進み、条件が変わったfilter()でも同じ処理を読み直そう。',
+        title: 'JavaScript深層の森で共有経路を追い続ける',
+        detail: '二つの症状は同じ呼び出し経路へ入った。森へ進み、条件が変わったfilter()でも同じ処理を読み直そう。',
         clear: false,
       }
     }
@@ -222,15 +222,15 @@ export function WorldPage() {
                   : '最後に一つへ集約する処理'
       return {
         label: 'ROOT TRACE',
-        title: `Deep Forestを西へ進み${nextTrace}を追う`,
+        title: `JavaScript深層の森を西へ進み${nextTrace}を追う`,
         detail: '新しい構文を覚えるためではなく、二つの異常がどこへ集約されるかを現在のデータの流れから追い続けよう。',
         clear: false,
       }
     }
     return {
       label: 'ROOT CAUSE',
-      title: 'Deep Forest西口からCode Coreへ進む',
-      detail: '経路はCode Coreへ直結した。最深部の西側EXITからCore手前へ抜け、そのままBOSSの隣でINTERACTしよう。',
+      title: 'JavaScript深層の森の西口からCode Coreへ進む',
+      detail: '経路はCode Coreへ直結した。最深部の西側出口からCore手前へ抜け、そのままボスの隣から挑もう。',
       clear: false,
     }
   }, [byteJoined, nextTrainingBattleId, progress.clearedAreaIds, progress.clearedStageIds])
@@ -240,7 +240,7 @@ export function WorldPage() {
       return {
         label: 'INCIDENT PREP · 1 / 3',
         title: '最初の戦闘で見たHP条件を読む',
-        detail: 'TRAINの隣でINTERACT。対象条件に使われていたenemy.hpと< / >だけを小さく読む。',
+        detail: '訓練場の隣でMIOと訓練しよう。対象条件に使われていたenemy.hpと< / >だけを小さく読む。',
         clear: false,
       }
     }
@@ -248,7 +248,7 @@ export function WorldPage() {
       return {
         label: 'INCIDENT PREP · 2 / 3',
         title: '同じログにあったname条件を読む',
-        detail: 'TRAINでもう一度INTERACT。enemy.nameと===を使って、文字の値を比較する。',
+        detail: '訓練場でもう一度MIOと訓練しよう。enemy.nameと===を使って、文字の値を比較する。',
         clear: false,
       }
     }
@@ -262,8 +262,8 @@ export function WorldPage() {
     }
     return {
       label: 'TRACE READY',
-      title: '最初の異常の続きをForestへ追う',
-      detail: '必要な読み方は揃った。同じ戦闘をやり直すのではなく、南のEXITから草原へ出て西のFORESTへ進み、選択処理の経路を追おう。',
+      title: '最初の異常の続きをJavaScriptの森へ追う',
+      detail: '必要な読み方は揃った。同じ戦闘をやり直すのではなく、南の出口から草原へ出て西のJavaScriptの森へ進み、選択処理の経路を追おう。',
       clear: true,
     }
   }, [nextTrainingBattleId])
@@ -273,15 +273,15 @@ export function WorldPage() {
       return {
         label: 'FOREST LOCKED',
         title: '先に草原の症状を実際に見る',
-        detail: 'Forestへ進む前に、BYTEと最初の対象異常を再現しよう。何が読めないかを知ることも調査の一部だ。',
+        detail: 'JavaScriptの森へ進む前に、BYTEと最初の対象異常を再現しよう。何が読めないかを知ることも調査の一部だ。',
         clear: false,
       }
     }
     if (!progress.clearedStageIds.includes(9)) {
       return {
         label: 'FOREST LOCKED',
-        title: 'Villageで選択処理を読む材料を揃える',
-        detail: '最初の異常は再現済み。MIOとHP・name・find()だけ確認してから、同じ経路をForestへ追おう。',
+        title: 'グリーンフィールド村で選択処理を読む材料を揃える',
+        detail: '最初の異常は再現済み。MIOとHP・name・find()だけ確認してから、同じ経路をJavaScriptの森へ追おう。',
         clear: false,
       }
     }
@@ -289,7 +289,7 @@ export function WorldPage() {
       return {
         label: 'FOLLOW TRACE · 1',
         title: '二つの条件を両方通る枝を追う',
-        detail: 'Woodsへ入り、最初の症状から伸びた経路が&&の左右をどう通るか読む。',
+        detail: '森へ入り、最初の症状から伸びた経路が&&の左右をどう通るか読む。',
         clear: false,
       }
     }
@@ -313,7 +313,7 @@ export function WorldPage() {
       return {
         label: 'TRACE BLOCKED',
         title: '経路を塞ぐ守り人を突破する',
-        detail: '本道を西へ進みMID BOSSの隣でINTERACT。今まで読んだ条件だけで経路を開く。',
+        detail: '本道を西へ進み中ボスの隣から挑もう。今まで読んだ条件だけで経路を開く。',
         clear: false,
       }
     }
@@ -321,22 +321,22 @@ export function WorldPage() {
       return {
         label: 'IMPACT RANGE',
         title: '複数の対象へ広がる影響を全部追う',
-        detail: '守り人の先のWoodsへ入り、find()の一体ではなくfilter()で条件に合うもの全部を追う。',
+        detail: '守り人の先の森へ入り、find()の一体ではなくfilter()で条件に合うもの全部を追う。',
         clear: false,
       }
     }
     if (!progress.clearedStageIds.includes(2)) {
       return {
         label: 'SECOND SYMPTOM AHEAD',
-        title: '西端からDeep Forestへ進む',
-        detail: '影響範囲の経路がDeep Forestへ続いている。EXITを抜けると、二つ目の実際の症状を確認できる。',
+        title: '西端からJavaScript深層の森へ進む',
+        detail: '影響範囲の経路がJavaScript深層の森へ続いている。出口を抜けると、二つ目の実際の症状を確認できる。',
         clear: false,
       }
     }
     return {
       label: 'FOREST TRACE COMPLETE',
-      title: '二つの症状は同じDeep Forestへ続いた',
-      detail: '調査は後戻りせず西へ続く。Deep Forestで共有経路を根本原因まで追おう。',
+      title: '二つの症状は同じJavaScript深層の森へ続いた',
+      detail: '調査は後戻りせず西へ続く。JavaScript深層の森で共有経路を根本原因まで追おう。',
       clear: true,
     }
   }, [progress.clearedStageIds])
@@ -346,7 +346,7 @@ export function WorldPage() {
       return {
         label: 'SECOND SYMPTOM',
         title: '複数の対象へ広がった実際の異常を再現する',
-        detail: 'Deep Forestへ入った直後の最初の移動で固定の異常調査が始まる。Forestで読んだfilter() / && / ||を使って結果を追う。',
+        detail: 'JavaScript深層の森へ入った直後の最初の移動で固定の異常調査が始まる。JavaScriptの森で読んだfilter() / && / ||を使って結果を追う。',
         clear: false,
       }
     }
@@ -354,7 +354,7 @@ export function WorldPage() {
       return {
         label: 'SHARED TRACE · FILTER',
         title: '条件が変わっても同じfilter()を追う',
-        detail: 'Woods / Deep Woodsへ入り、hp > 65でも最後まで見て当てはまるもの全部を集める。',
+        detail: '森 / 深い森へ入り、hp > 65でも最後まで見て当てはまるもの全部を集める。',
         clear: false,
       }
     }
@@ -417,7 +417,7 @@ export function WorldPage() {
     return {
       label: 'ROOT CAUSE LOCATED',
       title: '西口からCode Coreへ直進する',
-      detail: '経路はCode Coreへ直結した。Deep Forest西端のEXITを使えばCore手前へ出られる。来た道を戻る必要はない。',
+      detail: '経路はCode Coreへ直結した。JavaScript深層の森の西端の出口を使えばCore手前へ出られる。来た道を戻る必要はない。',
       clear: true,
     }
   }, [progress.clearedStageIds])
@@ -459,26 +459,26 @@ export function WorldPage() {
         gameAudio.playSe('cancel')
         setMessage(
           result.terrain === 'boss'
-            ? '強い魔物が道を塞いでいる。隣からINTERACT。'
+            ? '強い魔物が道を塞いでいる。隣から挑もう。'
             : result.terrain === 'midboss'
-              ? '森の守り人が道を塞いでいる。隣からINTERACT。'
+              ? '森の守り人が道を塞いでいる。隣から挑もう。'
               : result.terrain === 'recovery'
-                ? '宿だ。隣からINTERACTすると休める。'
+                ? '宿だ。隣から休める。'
                 : result.terrain === 'treasure'
-                  ? '宝箱だ。隣からINTERACTして調べる。'
+                  ? '宝箱だ。隣から調べよう。'
                   : result.terrain === 'house'
                     ? '家がある。今は中へは入れない。'
                     : result.terrain === 'training'
-                      ? '訓練場だ。隣からINTERACTすると異常調査に必要な基礎を確認できる。'
+                      ? '訓練場だ。隣からMIOと異常調査に必要な基礎を確認できる。'
                       : result.terrain === 'village'
                         ? !progress.clearedStageIds.includes(1)
-                          ? 'Villageへ行く前に、BYTEと草原の最初の対象異常を実際に見よう。'
-                          : 'Village入口だ。INTERACTで入る。'
+                          ? 'グリーンフィールド村へ行く前に、BYTEと草原の最初の対象異常を実際に見よう。'
+                          : 'グリーンフィールド村の入口だ。ここから入れる。'
                         : result.terrain === 'woods'
                           ? !progress.clearedStageIds.includes(1)
-                            ? 'Forestへ進む前に、BYTEと草原で最初の対象異常を実際に見よう。'
+                            ? 'JavaScriptの森へ進む前に、BYTEと草原で最初の対象異常を実際に見よう。'
                             : !progress.clearedStageIds.includes(9)
-                              ? 'Forestへ進む前に、Villageで最初の異常に必要なHP・name・find()を確認しよう。'
+                              ? 'JavaScriptの森へ進む前に、グリーンフィールド村で最初の異常に必要なHP・name・find()を確認しよう。'
                               : 'その先へ進むための経路がまだ開いていない。'
                           : 'そこへは進めない。',
         )
@@ -495,8 +495,8 @@ export function WorldPage() {
         setRpgState(result.nextState)
         gameAudio.playSe('confirm')
         setMessage(
-          result.label === 'CODE CORE APPROACH'
-            ? 'Deep Forestの経路を抜けてCode Core手前へ出た。北へ進めば最終ボスだ。'
+          result.label === 'Code Core前'
+            ? 'JavaScript深層の森の経路を抜けてCode Core手前へ出た。北へ進めば最終ボスだ。'
             : result.toMapId === JS_VILLAGE_MAP_ID
               ? `${result.label}へ入った。さっきの異常で読めなかった部分だけMIOと確認しよう。`
               : result.toMapId === JS_DEEP_FOREST_MAP_ID
@@ -544,7 +544,7 @@ export function WorldPage() {
     if (intent.kind === 'training') {
       if (intent.battleId === null) {
         gameAudio.playSe('confirm')
-        setMessage('MIO: 必要な読み方は揃ったよ。同じ戦闘へ戻る必要はない。西のForestへ続く経路を追ってみて。')
+        setMessage('MIO: 必要な読み方は揃ったよ。同じ戦闘へ戻る必要はない。西のJavaScriptの森へ続く経路を追ってみて。')
         return
       }
       enterBattle(intent.battleId, 'javascript', `village-training:${intent.battleId}`)
@@ -554,7 +554,7 @@ export function WorldPage() {
     if (intent.kind === 'midboss') {
       if (!intent.unlocked) {
         gameAudio.playSe('cancel')
-        setMessage('BYTE: まずForestで条件の経路を最後まで追おう。合流点まで読めれば、この守り人の先へ進める。')
+        setMessage('BYTE: まずJavaScriptの森で条件の経路を最後まで追おう。合流点まで読めれば、この守り人の先へ進める。')
         return
       }
       enterBattle(intent.battleId, intent.region, intent.seed)
@@ -568,15 +568,15 @@ export function WorldPage() {
         } else if (nextTrainingBattleId !== null) {
           setMessage('BYTE: 症状は再現できた。MIOにログを見せて、読めなかったHP・name・find()だけ確認しよう。')
         } else if (!progress.clearedStageIds.includes(12)) {
-          setMessage('BYTE: 最初の症状で見た選択処理を今なら読める。経路はForestへ続いてるから、条件を一つずつ追おう。')
+          setMessage('BYTE: 最初の症状で見た選択処理を今なら読める。経路はJavaScriptの森へ続いてるから、条件を一つずつ追おう。')
         } else if (!progress.clearedStageIds.includes(13)) {
           setMessage('BYTE: 経路が森の守り人の向こうへ集まってる。今まで読んだ条件だけで道を開こう。')
         } else if (!progress.clearedStageIds.includes(14)) {
           setMessage('BYTE: 守り人の先で影響が複数の対象へ広がってる。filter()で全部の経路を追おう。')
         } else if (!progress.clearedStageIds.includes(2)) {
-          setMessage('BYTE: 影響範囲はDeep Forestへ続いてる。西端のEXITから入り、二つ目の実際の症状を確認しよう。')
+          setMessage('BYTE: 影響範囲はJavaScript深層の森へ続いてる。西端の出口から入り、二つ目の実際の症状を確認しよう。')
         } else if (!progress.clearedStageIds.includes(15)) {
-          setMessage('BYTE: 二つの症状は同じ経路へ入った。Deep Forestを西へ進み、条件が変わっても経路を追おう。')
+          setMessage('BYTE: 二つの症状は同じ経路へ入った。JavaScript深層の森を西へ進み、条件が変わっても経路を追おう。')
         } else if (!progress.clearedStageIds.includes(16)) {
           setMessage('BYTE: この先で経路のデータ形が変わる。map()の前後を対応させよう。')
         } else if (!progress.clearedStageIds.includes(17)) {
@@ -592,7 +592,7 @@ export function WorldPage() {
         } else if (!progress.clearedStageIds.includes(22)) {
           setMessage('BYTE: 残る経路は最後の集約だけ。reduce()でbestに何が残るか追おう。')
         } else if (!progress.clearedAreaIds.includes('javascript')) {
-          setMessage('BYTE: 根本原因はCode Coreで確定した。Deep Forest西口からCore手前へ直進できる。')
+          setMessage('BYTE: 根本原因はCode Coreで確定した。JavaScript深層の森の西口からCore手前へ直進できる。')
         } else {
           setMessage('BYTE: 西は落ち着いたね。東にはTypeScript地方が広がっている。')
         }
@@ -654,10 +654,10 @@ export function WorldPage() {
             ? !progress.clearedStageIds.includes(1)
               ? 'BYTEと最初の対象異常を実際に見て、何を読む必要があるか掴もう。'
               : !progress.clearedStageIds.includes(9)
-                ? 'Villageで最初の異常に必要なHP・name・find()を確認しよう。'
+                ? 'グリーンフィールド村で最初の異常に必要なHP・name・find()を確認しよう。'
                 : !progress.clearedStageIds.includes(2)
-                  ? 'Forestの影響範囲を追い、Deep Forest入口で二つ目の症状を確認しよう。'
-                  : 'Code Coreへ挑む前に、Deep Forestの経路を根本原因まで最後まで追おう。'
+                  ? 'JavaScriptの森の影響範囲を追い、JavaScript深層の森の入口で二つ目の症状を確認しよう。'
+                  : 'Code Coreへ挑む前に、JavaScript深層の森の経路を根本原因まで最後まで追おう。'
             : '東の奥へ進む前に、TypeScript地方の戦闘をもう少し確かめよう。',
         )
         return
@@ -669,20 +669,20 @@ export function WorldPage() {
     setMessage(
       isVillage
         ? nextTrainingBattleId === null
-          ? '必要な確認は終わった。南のEXITから草原へ出て、西のForestへ同じ経路を追おう。'
-          : '最初の異常で読めなかった部分を、中央のTRAINでMIOと一つずつ確認しよう。'
+          ? '必要な確認は終わった。南の出口から草原へ出て、西のJavaScriptの森へ同じ経路を追おう。'
+          : '最初の異常で読めなかった部分を、中央の訓練場でMIOと一つずつ確認しよう。'
         : isDeepForest
           ? progress.clearedStageIds.includes(22)
-            ? '根本原因はCode Core。Deep Forest西端のEXITからCore手前へ直進できる。'
+            ? '根本原因はCode Core。JavaScript深層の森の西端の出口からCore手前へ直進できる。'
             : !progress.clearedStageIds.includes(2)
-              ? 'Deep Forestへ入った。次の一歩で二つ目の実際の症状を確認する。'
-              : '本道を西へ進み、Woods / Deep Woodsで共有経路を追おう。ランダム戦闘はクリア済み内容だけだ。'
+              ? 'JavaScript深層の森へ入った。次の一歩で二つ目の実際の症状を確認する。'
+              : '本道を西へ進み、森 / 深い森で共有経路を追おう。ランダム戦闘はクリア済み内容だけだ。'
           : isForest
             ? progress.clearedStageIds.includes(14)
-              ? '影響範囲は西端のEXITからDeep Forestへ続いている。このまま先へ進もう。'
+              ? '影響範囲は西端の出口からJavaScript深層の森へ続いている。このまま先へ進もう。'
               : progress.clearedStageIds.includes(13)
-                ? '守り人の先で経路が複数の対象へ広がっている。西側のWoodsへ進もう。'
-                : '木々の間に異常の経路が続いている。Woodsと本道を西へ追おう。'
+                ? '守り人の先で経路が複数の対象へ広がっている。西側の森へ進もう。'
+                : '木々の間に異常の経路が続いている。森と本道を西へ追おう。'
             : '近くに調べられるものはない。',
     )
   }, [
@@ -712,18 +712,10 @@ export function WorldPage() {
               {isLocalMap ? 'ローカルマップ' : 'オープンワールド'} //{' '}
               {isLocalMap ? getWorldMapLabel(mapId) : regionLabels[region]}
             </div>
-            <h1>
-              {isVillage
-                ? 'GREENFIELD VILLAGE'
-                : isDeepForest
-                  ? 'JAVASCRIPT DEEP FOREST'
-                  : isForest
-                    ? 'JAVASCRIPT FOREST'
-                    : 'CODE WORLD'}
-            </h1>
+            <h1>{isLocalMap ? getWorldMapLabel(mapId) : 'CODE WORLD'}</h1>
             <p>
               {isVillage
-                ? '最初の対象異常で読めなかった部分だけをMIOと確認する村。HP・name・find()が読めたら、同じ経路をForestへ追う。'
+                ? '最初の対象異常で読めなかった部分だけをMIOと確認する村。HP・name・find()が読めたら、同じ経路をJavaScriptの森へ追う。'
                 : isDeepForest
                   ? '二つの対象異常が合流した深い森。データの変換・判定・優先順・集約を追い、最深部の西口からCode Coreへつながる。'
                   : isForest
@@ -746,12 +738,12 @@ export function WorldPage() {
           terrainLabels={terrainLabels}
           label={
             isVillage
-              ? 'Village map'
+              ? 'グリーンフィールド村のマップ'
               : isDeepForest
-                ? 'Deep Forest map'
+                ? 'JavaScript深層の森のマップ'
                 : isForest
-                  ? 'Forest map'
-                  : 'Open world map'
+                  ? 'JavaScriptの森のマップ'
+                  : 'ワールドマップ'
           }
           getTerrain={(cell) =>
             cell.terrain === 'midboss' && progress.clearedStageIds.includes(13)
@@ -767,31 +759,31 @@ export function WorldPage() {
             return (
               <>
                 {renderedTerrain === 'boss' && (
-                  <span className="world-object boss-object">BOSS</span>
+                  <span className="world-object boss-object">ボス</span>
                 )}
                 {renderedTerrain === 'midboss' && (
                   <span
                     className="world-object midboss-object"
-                    aria-label="JavaScript Forest Mid-Boss"
+                    aria-label="JavaScriptの森 中ボス"
                   >
-                    MID BOSS
+                    中ボス
                   </span>
                 )}
                 {renderedTerrain === 'shop' && (
-                  <span className="world-object shop-object">SHOP</span>
+                  <span className="world-object shop-object">ショップ</span>
                 )}
                 {renderedTerrain === 'village' && (
-                  <span className="world-object village-object">VILLAGE</span>
+                  <span className="world-object village-object">村</span>
                 )}
                 {renderedTerrain === 'exit' && (
-                  <span className="world-object exit-object">EXIT</span>
+                  <span className="world-object exit-object">出口</span>
                 )}
                 {renderedTerrain === 'training' && (
                   <span
                     className="world-object training-object"
-                    aria-label="JavaScript Training Ground"
+                    aria-label="JavaScript訓練場"
                   >
-                    TRAIN
+                    訓練
                   </span>
                 )}
                 {renderedTerrain === 'npc' && !byteJoined && (
@@ -800,16 +792,16 @@ export function WorldPage() {
                   </span>
                 )}
                 {renderedTerrain === 'recovery' && (
-                  <span className="world-object recovery-object" aria-label="Inn / Rest">
-                    INN
+                  <span className="world-object recovery-object" aria-label="宿">
+                    宿
                   </span>
                 )}
                 {treasure && (
                   <span
                     className={`world-object treasure-object ${treasureOpened ? 'opened' : ''}`}
-                    aria-label={`${treasure.id} treasure ${treasureOpened ? 'opened' : 'closed'}`}
+                    aria-label={`${treasure.name} ${treasureOpened ? '開封済み' : '未開封'}`}
                   >
-                    {treasureOpened ? 'OPEN' : 'CHEST'}
+                    {treasureOpened ? '開封済み' : '宝箱'}
                   </span>
                 )}
               </>
