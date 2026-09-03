@@ -195,7 +195,7 @@ test.describe('Open World RPG loop', () => {
     })
 
     await page.goto('/world')
-    await expect(page.getByLabel('宿')).toBeVisible()
+    await expect(page.getByLabel('宿', { exact: true })).toBeVisible()
     await page.getByRole('button', { name: '宿で休む' }).click()
 
     const inn = page.getByRole('dialog', { name: '宿' })
