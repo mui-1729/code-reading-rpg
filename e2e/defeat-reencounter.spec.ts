@@ -74,24 +74,25 @@ async function executeSkill(page: Page, name: string) {
   await card.click()
 }
 
-test('Random Encounter敗北後は開始地点へ戻り、直後に再encounterしないsafe windowを得る', async ({ page }) => {
+test('Random Encounter敗北後は安全なOverworld開始地点へ戻り、直後に再encounterしないsafe windowを得る', async ({ page }) => {
   await seedPostLessonEncounter(page)
 
   await page.getByRole('button', { name: '下へ移動' }).click()
   await expect(page).toHaveURL(/\/javascript\/battle\/\d+\?/)
   await expect(page.locator('.battle-console')).toBeVisible()
 
-  // Battle開始snapshotはencounterを発生させた移動後の座標 (10, 11)。
+  // Battle開始snapshotはencounterを発生させた移動後の座標 (10, 11) だが、
+  // SAFE RETURNは同じ危険tileではなくOverworldの安全な開始地点へ退避する。
   await executeSkill(page, 'TRACE')
   await expect(page.getByText('敗北', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: /チェックポイントへ戻る/ }).click()
 
   await expect(page).toHaveURL(/\/world$/)
   const viewport = page.getByLabel('ワールドマップ')
-  await expect(viewport).toHaveAttribute('data-world-x', '10')
-  await expect(viewport).toHaveAttribute('data-world-y', '11')
+  await expect(viewport).toHaveAttribute('data-world-x', '20')
+  await expect(viewport).toHaveAttribute('data-world-y', '14')
 
-  // checkpoint return resets the encounter counter, so one movement cannot
+  // safe return resets the encounter counter, so one movement cannot
   // immediately throw the player back into another Random Encounter.
   await page.getByRole('button', { name: '下へ移動' }).click()
   await expect(page).toHaveURL(/\/world$/)

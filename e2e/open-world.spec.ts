@@ -280,7 +280,7 @@ test.describe('Open World RPG loop', () => {
     await expect.poll(async () => (await storedProgress(page)).progress.inventory.patchKit).toBe(3)
   })
 
-  test('DefeatするとBattle開始checkpointへ残HPのまま戻る', async ({ page }) => {
+  test('Defeatすると安全なOverworld開始地点へ残HPのまま戻る', async ({ page }) => {
     await seedStorage(page, {
       rpg: createRpgState({
         worldPosition: { x: 10, y: 11 },
@@ -295,7 +295,7 @@ test.describe('Open World RPG loop', () => {
     await page.getByRole('button', { name: /チェックポイントへ戻る/ }).click()
 
     await expect(page).toHaveURL(/\/world$/)
-    await expect.poll(() => playerPosition(page)).toEqual({ x: 10, y: 11 })
+    await expect.poll(() => playerPosition(page)).toEqual({ x: 20, y: 14 })
     await expect.poll(async () => (await storedRpgState(page)).state.currentHp).toBe(1)
     await expect.poll(async () => (await storedRpgState(page)).state.stepsSinceEncounter).toBe(0)
   })
@@ -377,7 +377,6 @@ test.describe('Open World RPG loop', () => {
     await page.getByRole('button', { name: 'メニューを開く' }).click()
     const dialog = page.getByRole('dialog', { name: 'メニュー' })
     await dialog.getByRole('button', { name: '装備' }).click()
-
     const branchSaber = dialog.getByRole('button', { name: /Branch Saber/ })
     await expect(branchSaber).toBeVisible()
     await branchSaber.click()

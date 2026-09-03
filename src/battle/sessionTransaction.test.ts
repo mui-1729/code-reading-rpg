@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createInitialPlayerProgress } from '../progression/progression'
 import { createInitialRpgState } from '../rpg/state'
+import { OVERWORLD_MAP_ID, WORLD_MAP_STARTS } from '../world/worldMap'
 import {
   BATTLE_RETURN_ENCOUNTER_COOLDOWN,
   commitBattleSession,
@@ -52,14 +53,15 @@ describe('Battle attempt transaction', () => {
     },
   )
 
-  it('checkpoint restores Battle-start resources and position without free healing, then grants a safe encounter window', () => {
+  it('checkpoint restores Battle-start resources without free healing and returns to a safe hub', () => {
     const before = initial()
     const changed = useKit(startBattleSession(before, identity))
     const returned = rollbackBattleSession(changed, identity.id, 'checkpoint')
 
     expect(returned.progress.inventory.patchKit).toBe(2)
     expect(returned.rpgState.currentHp).toBe(40)
-    expect(returned.rpgState.worldPosition).toEqual({ x: 8, y: 8 })
+    expect(returned.rpgState.worldMapId).toBe(OVERWORLD_MAP_ID)
+    expect(returned.rpgState.worldPosition).toEqual(WORLD_MAP_STARTS[OVERWORLD_MAP_ID])
     expect(returned.rpgState.stepsSinceEncounter).toBe(BATTLE_RETURN_ENCOUNTER_COOLDOWN)
     expect(returned.battleSession).toBeUndefined()
   })

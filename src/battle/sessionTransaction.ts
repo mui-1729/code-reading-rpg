@@ -1,5 +1,6 @@
 import type { PlayerProgress } from '../progression/types'
 import type { RpgState } from '../rpg/state'
+import { getSafeBattleReturnState } from './safeReturn'
 
 export type BattleSessionIdentity = {
   id: string
@@ -36,7 +37,10 @@ export function rollbackBattleSession<T extends BattleTransactionState>(
 ): T {
   if (!state.battleSession || (id !== undefined && state.battleSession.identity.id !== id)) return state
   const rpgState = mode === 'checkpoint'
-    ? { ...state.battleSession.rpgState, stepsSinceEncounter: BATTLE_RETURN_ENCOUNTER_COOLDOWN }
+    ? {
+        ...getSafeBattleReturnState(state.battleSession.rpgState),
+        stepsSinceEncounter: BATTLE_RETURN_ENCOUNTER_COOLDOWN,
+      }
     : state.battleSession.rpgState
   return {
     ...state,
