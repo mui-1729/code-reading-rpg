@@ -1,7 +1,12 @@
-import { JAVASCRIPT_BATTLE_SEQUENCE, TYPESCRIPT_BATTLE_SEQUENCE } from '../progression/progressionGraph'
+import {
+  DATABASE_BATTLE_SEQUENCE,
+  JAVASCRIPT_BATTLE_SEQUENCE,
+  TYPESCRIPT_BATTLE_SEQUENCE,
+} from '../progression/progressionGraph'
 
 export const JAVASCRIPT_AREA_ID = 'javascript' as const
 export const TYPESCRIPT_AREA_ID = 'typescript' as const
+export const DATABASE_AREA_ID = 'database' as const
 
 export type AreaAvailability = 'available' | 'comingSoon'
 export type AreaRoutePath = `/${string}/field`
@@ -88,6 +93,23 @@ export const areas: readonly AreaDefinition[] = [
       getTypeScriptCharacterStoryEvent(battleId, phase) ??
       (phase === 'pre' ? getTypeScriptPreBattleEvent(battleId) : getTypeScriptPostBattleEvent(battleId)),
   },
+  {
+    id: DATABASE_AREA_ID,
+    label: 'WORLD 03',
+    title: 'Database Archive',
+    description: '保存されたrowとSQL queryを対応させ、結果に残るrecordを読み解くArchive。',
+    availability: 'available',
+    routes: {
+      field: null,
+      world: '/world',
+      battleBase: '/database/battle',
+    },
+    battleIds: DATABASE_BATTLE_SEQUENCE,
+    worldMapIds: ['overworld', 'database-archive'],
+    capabilities: sharedBattleCapabilities,
+    bossBattleId: 23,
+    storyEvent: getDatabaseBattleEvent,
+  },
 ]
 
 export type AreaId = (typeof areas)[number]['id']
@@ -149,6 +171,7 @@ import {
   getJavaScriptCharacterStoryEvent,
   getTypeScriptCharacterStoryEvent,
 } from '../story/characterStoryOverrides'
+import { getDatabaseBattleEvent } from '../story/databaseBattleEvents'
 import { getJavaScriptPostBattleEvent, getJavaScriptPreBattleEvent } from '../story/javascriptBattleEvents'
 import { getJavaScriptDeepForestStoryEvent } from '../story/javascriptDeepForestEvents'
 import { getJavaScriptFilterStoryEvent } from '../story/javascriptFilterEvents'
