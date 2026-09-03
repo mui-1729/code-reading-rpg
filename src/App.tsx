@@ -7,8 +7,8 @@ import { createBattleSession, type BattleReturnPath } from './battle/session'
 import { useBattleSession } from './battle/useBattleSession'
 import { SourceCode } from './battle/SourceCode'
 import { consumePatchKit } from './economy'
-import { BattleItemPanel } from './economy/BattleItemPanel'
-import { BattleEscapePanel } from './game/BattleEscapePanel'
+import { BattleItemBrowser } from './economy/BattleItemBrowser'
+import { BattleCommandBar, type BattleCommand } from './game/BattleCommandBar'
 import {
   areaById,
   getBattlePresentation,
@@ -96,6 +96,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
 
   const [phase, setPhase] = useState<Phase>('battle')
   const [enemies, setEnemies] = useState<Enemy[]>(cloneEnemies(battle.enemies))
+  const [battleCommand, setBattleCommand] = useState<BattleCommand>(null)
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null)
   const [explainedSkill, setExplainedSkill] = useState<SkillCard | null>(null)
   const [logs, setLogs] = useState<LogEntry[]>([])
@@ -302,6 +303,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
     setIsResolving(true)
     setSkillWindup(true)
     setSelectedSkillId(null)
+    setBattleCommand(null)
 
     const action = resolvePlayerAction({
       battle,
@@ -402,7 +404,13 @@ function App({ battleId, seed, returnTo }: AppProps) {
     }))
     setPatchKitUsed(true)
     setLastPatchKitHeal(result.healed)
+    setBattleCommand(null)
     addLog('system', `PATCH KIT → +${result.healed} HP`)
+  }
+
+  const selectBattleCommand = (command: Exclude<BattleCommand, null>) => {
+    setBattleCommand(command)
+    if (command === 'items') setSelectedSkillId(null)
   }
 
   const goNextBattle = () => {
@@ -645,52 +653,74 @@ function App({ battleId, seed, returnTo }: AppProps) {
             <small>{semanticFeedback.detail}</small>
           </div>
         )}
-        <section className="selected-skill-reading" aria-label="選択中Skillのコード">
-          {selectedSkill ? (
-            <>
-              <div className="selected-skill-reading-head">
-                <strong>{selectedSkill.name}</strong>
-                <span>威力 {getSkillDamage(selectedSkill.power, playerStats)}</span>
-              </div>
-              <SourceCode code={selectedSkill.code} scrollable />
-            </>
+        <section className="selected-skill-reading" aria-label="戦闘詳細">
+          {battleCommand === 'items' ? (
+            <BattleItemBrowser
+              progress={progress}
+              hp={playerHp}
+              maxHp={playerStats.maxHp}
+              patchKitUsed={patchKitUsed}
+              lastPatchKitHeal={lastPatchKitHeal}
+              actionLocked={actionLocked}
+              onUsePatchKit={handlePatchKit}
+            />
+          ) : battleCommand === 'fight' ? (
+            selectedSkill ? (
+              <>
+                <div className="selected-skill-reading-head">
+                  <strong>{selectedSkill.name}</strong>
+                  <span>威力 {getSkillDamage(selectedSkill.power, playerStats)}</span>
+                </div>
+                <SourceCode code={selectedSkill.code} scrollable />
+              </>
+            ) : (
+              <p>{isResolving ? '実行中…' : 'スキルを選んでコードを読む'}</p>
+            )
           ) : (
-            <p>{isResolving ? '実行中…' : 'スキルを選んでコードを読む'}</p>
+            <p>{isResolving ? '実行中…' : '戦う / アイテム / 逃げるから行動を選ぶ'}</p>
           )}
         </section>
         <div className="stage-ground" aria-hidden="true" />
       </section>
 
       <section className="battle-console pixel-window">
-        <div className="skill-grid" role="group" aria-label="スキル">
-          {availableSkills.map((skill) => {
-            const selected = selectedSkillId === skill.id
-            const skillPower = getSkillDamage(skill.power, playerStats)
-            return (
-              <button
-                type="button"
-                key={skill.id}
-                data-skill-id={skill.id}
-                className={`skill-card ${selected ? 'selected' : ''}`}
-                onClick={() => handleSkillClick(skill)}
-                disabled={actionLocked}
-                aria-pressed={selected}
-              >
-                <div className="skill-card-head">
-                  <span>{skill.name}</span>
-                  <strong>威力 {skillPower}</strong>
-                </div>
-                <pre><code>{skill.code}</code></pre>
-                {selected && <div className="skill-card-foot">▶ 実行</div>}
-              </button>
-            )
-          })}
-        </div>
+        <BattleCommandBar
+          command={battleCommand}
+          areaId={battle.areaId}
+          battleId={battle.id}
+          seed={String(seed)}
+          returnTo={returnTo}
+          actionLocked={actionLocked}
+          onCommandChange={selectBattleCommand}
+          onRun={() => rollback('abort')}
+        />
 
-        <div className="battle-secondary-actions">
-          <BattleItemPanel progress={progress} hp={playerHp} maxHp={playerStats.maxHp} usedThisBattle={patchKitUsed} lastHeal={lastPatchKitHeal} actionLocked={actionLocked} onUse={handlePatchKit} />
-          <BattleEscapePanel areaId={battle.areaId} battleId={battle.id} seed={String(seed)} returnTo={returnTo} actionLocked={actionLocked} onRun={() => rollback('abort')} />
-        </div>
+        {battleCommand === 'fight' && (
+          <div className="skill-grid" role="group" aria-label="スキル">
+            {availableSkills.map((skill) => {
+              const selected = selectedSkillId === skill.id
+              const skillPower = getSkillDamage(skill.power, playerStats)
+              return (
+                <button
+                  type="button"
+                  key={skill.id}
+                  data-skill-id={skill.id}
+                  className={`skill-card ${selected ? 'selected' : ''}`}
+                  onClick={() => handleSkillClick(skill)}
+                  disabled={actionLocked}
+                  aria-pressed={selected}
+                >
+                  <div className="skill-card-head">
+                    <span>{skill.name}</span>
+                    <strong>威力 {skillPower}</strong>
+                  </div>
+                  <pre><code>{skill.code}</code></pre>
+                  {selected && <div className="skill-card-foot">▶ 実行</div>}
+                </button>
+              )
+            })}
+          </div>
+        )}
 
         {logs.length > 0 && (
           <div className="log-panel pixel-inner-window">
@@ -717,14 +747,16 @@ function App({ battleId, seed, returnTo }: AppProps) {
               selectedEnemyKey={inspectedEnemyKey}
             />
           )}
-          <button
-            className="floating-help"
-            onClick={(event) => openCodeHelp(selectedSkill ?? availableSkills[0], event.currentTarget)}
-            aria-label="コード解説を開く"
-            disabled={actionLocked}
-          >
-            ?
-          </button>
+          {battleCommand === 'fight' && (
+            <button
+              className="floating-help"
+              onClick={(event) => openCodeHelp(selectedSkill ?? availableSkills[0], event.currentTarget)}
+              aria-label="コード解説を開く"
+              disabled={actionLocked}
+            >
+              ?
+            </button>
+          )}
         </div>
       )}
 
