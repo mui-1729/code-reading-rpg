@@ -82,27 +82,27 @@ test.describe('Boss GUARD', () => {
 
     const briefing = page.getByRole('dialog', { name: 'Code Coreへ' })
     await expect(briefing).toBeVisible()
-    await briefing.getByRole('button', { name: 'SKIP' }).click()
+    await briefing.getByRole('button', { name: 'スキップ', exact: true }).click()
 
     const boss = page.locator('.enemy-card.is-boss-enemy')
-    await expect(page.getByLabel('Boss Guard ACTIVE')).toBeVisible()
-    await expect(page.getByLabel('Boss Guard ACTIVE')).toContainText('JS GUARD // minion alive')
+    await expect(page.getByLabel('ボスガード 有効')).toBeVisible()
+    await expect(page.getByLabel('ボスガード 有効')).toContainText('JS GUARD // minion alive')
 
     const guardedHpBefore = await enemyHp(boss)
     await executeSkill(page, 'ALERT')
     await expect.poll(() => enemyHp(boss)).toBe(guardedHpBefore - 1)
-    await expect(page.getByText('BOSS GUARD → Skill damage to Boss capped at 1')).toBeVisible()
-    await expect(page.getByText('TURN 02')).toBeVisible()
+    await expect(page.getByText('ボスガード → ボスへのスキルダメージは1')).toBeVisible()
+    await expect(page.getByText('ターン 2')).toBeVisible()
 
     await executeSkill(page, 'MOON EDGE')
-    await expect(page.getByText('TURN 03')).toBeVisible()
+    await expect(page.getByText('ターン 3')).toBeVisible()
 
     await executeSkill(page, 'PULSE')
-    await expect(page.getByText('TURN 04')).toBeVisible()
+    await expect(page.getByText('ターン 4')).toBeVisible()
 
     await executeSkill(page, 'PULSE')
-    await expect(page.getByLabel('Boss Guard OPEN')).toBeVisible()
-    await expect(page.getByText('TURN 05')).toBeVisible()
+    await expect(page.getByLabel('ボスガード 解除')).toBeVisible()
+    await expect(page.getByText('ターン 5')).toBeVisible()
 
     const hpBeforeOpenHit = await enemyHp(boss)
     await executeSkill(page, 'ALERT')
@@ -116,12 +116,12 @@ test.describe('Boss GUARD', () => {
     const briefing = page.getByRole('dialog', { name: 'WARDENではなく、古い機構を止める' })
     await expect(briefing).toBeVisible()
     await expect(briefing).toContainText('Frontier Compilerは私ではない')
-    await briefing.getByRole('button', { name: 'SKIP' }).click()
+    await briefing.getByRole('button', { name: 'スキップ', exact: true }).click()
 
     const boss = page.locator('.enemy-card.is-boss-enemy')
     const goblin = page.locator('.enemy-card').filter({ hasText: 'Goblin' })
-    await expect(page.getByLabel('Boss Guard ACTIVE')).toBeVisible()
-    await expect(page.getByLabel('Boss Guard ACTIVE')).toContainText(
+    await expect(page.getByLabel('ボスガード 有効')).toBeVisible()
+    await expect(page.getByLabel('ボスガード 有効')).toContainText(
       'TS CONTRACT // NARROW JUDGE / KEY INDEX pierces',
     )
 
@@ -130,7 +130,7 @@ test.describe('Boss GUARD', () => {
     await executeSkill(page, 'TYPE GUARD')
     await expect.poll(() => enemyHp(boss)).toBe(sealedBossHp - 1)
     await expect.poll(() => enemyHp(goblin)).toBeLessThan(goblinHpBefore - 1)
-    await expect(page.getByText('TURN 02')).toBeVisible()
+    await expect(page.getByText('ターン 2')).toBeVisible()
 
     const bossHpBeforePierce = await enemyHp(boss)
     await executeSkill(page, 'NARROW JUDGE')
