@@ -63,7 +63,12 @@ export function WorldCharacterDecorations() {
 
     sync()
     const observer = new MutationObserver(sync)
-    observer.observe(document.body, { childList: true, subtree: true })
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-world-map', 'data-world-x', 'data-world-y'],
+    })
     return () => observer.disconnect()
   }, [])
 
