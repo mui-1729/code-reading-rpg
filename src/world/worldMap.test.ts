@@ -41,9 +41,9 @@ describe('open world map', () => {
     expect(getWorldMapDimensions(JS_FOREST_MAP_ID)).toEqual({ width: 31, height: 27 })
     expect(getWorldMapDimensions(JS_DEEP_FOREST_MAP_ID)).toEqual({ width: 31, height: 27 })
     expect(getWorldMapDimensions(TS_FRONTIER_MAP_ID)).toEqual({ width: 31, height: 21 })
-    expect(getWorldMapLabel(JS_VILLAGE_MAP_ID)).toBe('GREENFIELD VILLAGE')
-    expect(getWorldMapLabel(JS_FOREST_MAP_ID)).toBe('JAVASCRIPT FOREST')
-    expect(getWorldMapLabel(TS_FRONTIER_MAP_ID)).toBe('TYPESCRIPT FRONTIER')
+    expect(getWorldMapLabel(JS_VILLAGE_MAP_ID)).toBe('グリーンフィールド村')
+    expect(getWorldMapLabel(JS_FOREST_MAP_ID)).toBe('JavaScriptの森')
+    expect(getWorldMapLabel(TS_FRONTIER_MAP_ID)).toBe('TypeScript辺境')
     expect(isWorldPositionInBounds(JS_VILLAGE_MAP_ID, { x: 10, y: 12 })).toBe(true)
     expect(isWorldPositionInBounds(JS_VILLAGE_MAP_ID, { x: 21, y: 12 })).toBe(false)
     expect(isWorldPositionInBounds(JS_FOREST_MAP_ID, { x: 28, y: 24 })).toBe(true)
@@ -88,7 +88,7 @@ describe('open world map', () => {
       toMapId: OVERWORLD_MAP_ID,
       targetPosition: { x: 8, y: 6 },
       requiredClearedStageId: 22,
-      label: 'CODE CORE APPROACH',
+      label: 'Code Core前',
     })
 
     const typeScriptGate = getWorldPortalAtPosition(OVERWORLD_MAP_ID, TS_FRONTIER_GATE_POSITION)
