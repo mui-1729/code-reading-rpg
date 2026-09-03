@@ -40,6 +40,7 @@ import './battle-enemies.css'
 import './code-world-presentation.css'
 import './battle-reading.css'
 import './battle-command-hierarchy.css'
+import './battle-command-menu.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
