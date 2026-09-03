@@ -73,7 +73,7 @@ test('Villageの宿でGoldを払いHPを回復できる', async ({ page }) => {
 
   const stored = await readStoredGameState(page)
   expect(stored.rpg.state.currentHp).toBeGreaterThan(52)
-  expect(stored.progress.gold).toBeLessThan(200)
+  expect(stored.progress.progress.gold).toBeLessThan(200)
 })
 
 test('Villageの道具屋は消耗品だけを扱う', async ({ page }) => {
@@ -98,5 +98,5 @@ test('Villageの装備屋は装備だけを扱い既存purchase domainを使え�
   await shop.locator('[data-equipment-id="guard-edge"]').getByRole('button', { name: '▶ 購入' }).click()
   const stored = await readStoredGameState(page)
   expect(stored.rpg.state.ownedEquipmentIds).toContain('guard-edge')
-  expect(stored.progress.gold).toBeLessThan(200)
+  expect(stored.progress.progress.gold).toBeLessThan(200)
 })
