@@ -397,13 +397,21 @@ export function getTerrain(
   if (samePosition(position, RECOVERY_POSITION)) return 'recovery'
   if (getTreasureAtPosition(position, mapId)) return 'treasure'
 
-  if (
-    y === 14 ||
-    (x === 8 && y >= 3 && y <= 14) ||
-    (x === 14 && y >= 12 && y <= 14)
-  ) {
-    return 'road'
-  }
+  const isJavaScriptTrail =
+    y === WORLD_START.y && x >= JS_FOREST_POSITION.x + 1 && x < WORLD_START.x
+  const isVillageSpur =
+    x === JS_VILLAGE_POSITION.x &&
+    y > JS_VILLAGE_POSITION.y &&
+    y <= WORLD_START.y
+  const isCodeCoreApproach =
+    x === JS_BOSS_POSITION.x && y > JS_BOSS_POSITION.y && y <= 6
+  const isTypeScriptGateApproach =
+    y === TS_FRONTIER_GATE_POSITION.y &&
+    x > WORLD_START.x &&
+    x < TS_FRONTIER_GATE_POSITION.x
+
+  if (isTypeScriptGateApproach) return 'stone'
+  if (isJavaScriptTrail || isVillageSpur || isCodeCoreApproach) return 'road'
 
   if (x >= 18 && x <= 22 && y >= 10 && y <= 17) return 'town'
 
