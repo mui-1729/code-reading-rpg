@@ -1,0 +1,4 @@
+/* Village exit copy belongs to the React object label. Keep the terrain pseudo-element visual-only. */
+.world-viewport[data-world-map='js-village'] .terrain-exit::after {
+  content: none;
+}
