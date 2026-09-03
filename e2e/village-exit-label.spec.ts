@@ -4,7 +4,7 @@ const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
-test('@responsive GREENFIELD VILLAGEの出口labelはDOMの日本語表示1系統だけにする', async ({ page }) => {
+test('@responsive GREENFIELD VILLAGE出口はEXIT文字を重複させずportal visualで示す', async ({ page }) => {
   await page.goto('/')
   await page.evaluate(
     ({ progressKey, rpgKey, tutorialKey }) => {
@@ -56,13 +56,15 @@ test('@responsive GREENFIELD VILLAGEの出口labelはDOMの日本語表示1系�
 
   const village = page.locator('.world-viewport[data-world-map="js-village"]')
   const exitTile = village.locator('[data-world-x="10"][data-world-y="14"].terrain-exit')
+  const exitObject = exitTile.locator('.exit-object')
 
   await expect(village).toBeVisible()
   await expect(exitTile).toBeVisible()
-  await expect(exitTile.locator('.exit-object')).toHaveText('出口')
-  await expect(exitTile.locator('.exit-object')).toHaveCount(1)
+  await expect(exitObject).toHaveText('出口')
+  await expect(exitObject).toHaveCount(1)
+  await expect(exitObject).toHaveCSS('font-size', '0px')
   await expect(exitTile).not.toContainText('EXIT')
 
   const pseudoContent = await exitTile.evaluate((element) => getComputedStyle(element, '::after').content)
-  expect(pseudoContent).toBe('none')
+  expect(pseudoContent).not.toMatch(/出口|EXIT/)
 })
