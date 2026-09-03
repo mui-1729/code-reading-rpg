@@ -62,11 +62,11 @@ async function seedWorld(
   await page.goto('/world')
 }
 
-test('@responsive Forestでは固定Battle 11の前に分岐痕が見え、踏み込むとそのBattleが始まる', async ({ page }) => {
+test('@responsive Forestでは固定Battle 11の前に分岐痕が見え、調べに踏み込むとそのBattleが始まる', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedWorld(page, {
     mapId: 'js-forest',
-    position: { x: 18, y: 10 },
+    position: { x: 17, y: 10 },
     clearedStageIds: [1, 7, 8, 9, 10],
     unlockedStageIds: [1, 7, 8, 9, 10, 11],
   })
@@ -76,14 +76,14 @@ test('@responsive Forestでは固定Battle 11の前に分岐痕が見え、踏�
   await expect(landmark).toHaveText('分岐痕')
   await expect(landmark).toHaveAttribute('aria-label', '二手に割れた異変の痕跡')
 
-  await page.getByRole('button', { name: '左へ移動' }).click()
+  await page.getByRole('button', { name: '上へ移動' }).click()
   await expect(page).toHaveURL(/\/javascript\/battle\/11/)
 })
 
 test('Deep Forestでも次の固定Battle 16の場所を変換痕として先に読める', async ({ page }) => {
   await seedWorld(page, {
     mapId: 'js-deep-forest',
-    position: { x: 25, y: 10 },
+    position: { x: 24, y: 10 },
     clearedStageIds: [1, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15],
     unlockedStageIds: [1, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16],
   })
@@ -93,6 +93,6 @@ test('Deep Forestでも次の固定Battle 16の場所を変換痕として先に
   await expect(landmark).toHaveText('変換痕')
   await expect(landmark).toHaveAttribute('aria-label', '形の違う記録片が散る場所')
 
-  await page.getByRole('button', { name: '左へ移動' }).click()
+  await page.getByRole('button', { name: '下へ移動' }).click()
   await expect(page).toHaveURL(/\/javascript\/battle\/16/)
 })
