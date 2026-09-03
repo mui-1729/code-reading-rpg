@@ -11,6 +11,10 @@ function prefersReducedMotion() {
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
+function getWorldStepDelay() {
+  return prefersReducedMotion() ? 0 : WORLD_STEP_MS
+}
+
 export function useQueuedWorldMove(move: WorldMove, disabled = false) {
   const moveRef = useRef(move)
   const queueRef = useRef<QueuedStep[]>([])
@@ -42,7 +46,7 @@ export function useQueuedWorldMove(move: WorldMove, disabled = false) {
     if (!next) return
 
     moveRef.current(next.dx, next.dy)
-    timerRef.current = setTimeout(processNextStep, WORLD_STEP_MS)
+    timerRef.current = setTimeout(processNextStep, getWorldStepDelay())
   }, [])
 
   useEffect(() => () => {
@@ -53,14 +57,9 @@ export function useQueuedWorldMove(move: WorldMove, disabled = false) {
   return useCallback((dx: number, dy: number) => {
     if (disabledRef.current) return
 
-    if (prefersReducedMotion()) {
-      moveRef.current(dx, dy)
-      return
-    }
-
     if (timerRef.current === null && queueRef.current.length === 0) {
       moveRef.current(dx, dy)
-      timerRef.current = setTimeout(processNext, WORLD_STEP_MS)
+      timerRef.current = setTimeout(processNext, getWorldStepDelay())
       return
     }
 
