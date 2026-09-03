@@ -18,6 +18,13 @@ const preBattleEvents: Record<number, BattleStoryEvent> = {
         speaker: 'BYTE',
         role: 'DEBUGGER',
         layer: 'code-world',
+        text: 'この異変を確認するまでは現場を離れられない。逃げ道を探すより、まず症状を一度観察しよう。',
+      },
+      {
+        speakerId: 'byte',
+        speaker: 'BYTE',
+        role: 'DEBUGGER',
+        layer: 'code-world',
         text: 'まだ全部読めなくていい。EnemyのHPや名前と、Skillに表示されたcodeを見比べながら「codeは実際に誰を選ぶのか」を一度体験しよう。',
       },
       {
