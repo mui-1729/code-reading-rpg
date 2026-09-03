@@ -75,7 +75,7 @@ test('Village保存状態からBattleで敗北してもcheckpointへ開始HPの�
   })
   const story = page.locator('.battle-story-window')
   await expect(story).toBeVisible()
-  await story.getByRole('button', { name: 'SKIP' }).click()
+  await story.getByRole('button', { name: 'スキップ', exact: true }).click()
   await expect(story).toBeHidden()
 
   const trace = page.getByRole('button', { name: /^TRACE\b/ })
@@ -83,7 +83,7 @@ test('Village保存状態からBattleで敗北してもcheckpointへ開始HPの�
   await trace.click()
   await expect(trace).toHaveClass(/selected/)
   await trace.click()
-  await expect(page.getByText('DEFEAT', { exact: true })).toBeVisible()
+  await expect(page.getByText('敗北', { exact: true })).toBeVisible()
 
   // Defeat itself is not a commit point: the root still contains the tentative 0 HP
   // plus the immutable Battle-start snapshot until the player chooses a policy.
@@ -93,11 +93,11 @@ test('Village保存状態からBattleで敗北してもcheckpointへ開始HPの�
     },
   })
 
-  await page.getByRole('button', { name: /RETURN TO CHECKPOINT/ }).click()
+  await page.getByRole('button', { name: /チェックポイントへ戻る/ }).click()
   await expect(page).toHaveURL(/\/world$/)
-  await expect(page.getByLabel('Village map')).toHaveAttribute('data-world-map', 'js-village')
-  await expect(page.getByLabel('Village map')).toHaveAttribute('data-world-x', '10')
-  await expect(page.getByLabel('Village map')).toHaveAttribute('data-world-y', '12')
+  await expect(page.getByLabel('グリーンフィールド村のマップ')).toHaveAttribute('data-world-map', 'js-village')
+  await expect(page.getByLabel('グリーンフィールド村のマップ')).toHaveAttribute('data-world-x', '10')
+  await expect(page.getByLabel('グリーンフィールド村のマップ')).toHaveAttribute('data-world-y', '12')
   await expect.poll(async () => readStoredRpg(page)).toMatchObject({
     version: 5,
     state: {
