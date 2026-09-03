@@ -52,6 +52,51 @@ async function rapidClick(page: Page, labels: string[]) {
   }, labels)
 }
 
+async function currentVisualAlignment(page: Page) {
+  return page.evaluate(() => {
+    const overlays = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        '.world-player-sprite, .world-follower-sprite, .world-npc-sprite',
+      ),
+    )
+    let maxCenterError = 0
+    let compared = 0
+
+    for (const overlay of overlays) {
+      const x = overlay.dataset.worldX
+      const y = overlay.dataset.worldY
+      if (x === undefined || y === undefined) continue
+      const tile = document.querySelector<HTMLElement>(
+        `.world-tile[data-world-x="${x}"][data-world-y="${y}"]`,
+      )
+      if (!tile) continue
+      const spriteRect = overlay.getBoundingClientRect()
+      const tileRect = tile.getBoundingClientRect()
+      const spriteCenter = {
+        x: spriteRect.left + spriteRect.width / 2,
+        y: spriteRect.top + spriteRect.height / 2,
+      }
+      const tileCenter = {
+        x: tileRect.left + tileRect.width / 2,
+        y: tileRect.top + tileRect.height / 2,
+      }
+      maxCenterError = Math.max(
+        maxCenterError,
+        Math.hypot(spriteCenter.x - tileCenter.x, spriteCenter.y - tileCenter.y),
+      )
+      compared += 1
+    }
+
+    const tile = document.querySelector<HTMLElement>('.world-tile')
+    const tileRect = tile?.getBoundingClientRect()
+    return {
+      compared,
+      maxCenterError,
+      tolerance: Math.max(3, (tileRect?.width ?? 0) * 0.16),
+    }
+  })
+}
+
 test('@responsive 150ms未満の5連続入力を捨てず1stepずつcameraへ流す', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedVillageRoad(page)
@@ -85,6 +130,24 @@ test('@responsive 150ms未満の5連続入力を捨てず1stepずつcameraへ流
   expect(geometry.snapshotCount).toBe(0)
   expect(geometry.followerVisible).toBe(true)
   expect(geometry.documentOverflow).toBeLessThanOrEqual(1)
+})
+
+test('20ms級の連打中もterrain / Player / follower / NPCの相対位置を同じstepで保つ', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await seedVillageRoad(page)
+
+  await rapidClick(page, Array(8).fill('右へ移動'))
+
+  for (let frame = 0; frame < 42; frame += 1) {
+    const alignment = await currentVisualAlignment(page)
+    expect(alignment.compared).toBeGreaterThanOrEqual(2)
+    expect(alignment.maxCenterError).toBeLessThanOrEqual(alignment.tolerance)
+    await page.waitForTimeout(20)
+  }
+
+  await expect.poll(async () => Number(await page.locator('.world-player-sprite').getAttribute('data-world-x')), {
+    timeout: 2_000,
+  }).toBe(15)
 })
 
 test('rapid入力の途中で方向を変えても順序を保って最終座標へ収束する', async ({ page }) => {
