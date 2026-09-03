@@ -222,7 +222,7 @@ export function TypeScriptFrontierPage() {
                 {treasureDefinition && (
                   <span
                     className={`world-object treasure-object ${treasureOpened ? 'opened' : ''}`}
-                    aria-label={`${treasureDefinition.name} ${treasureOpened ? '開封済み' : '未開封'}`}
+                    aria-label={`TYPE CACHE ${treasureOpened ? '開封済み' : '未開封'}`}
                   >
                     {treasureOpened ? '開封済み' : 'TYPE CACHE'}
                   </span>
