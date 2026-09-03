@@ -82,10 +82,18 @@ async function dismissStory(page: Page) {
   await expect(story).toBeHidden()
 }
 
-async function openBattleItem(page: Page) {
-  const toggle = page.locator('.battle-item-toggle')
-  await expect(toggle).toBeVisible()
-  await toggle.click()
+async function openBattleItems(page: Page) {
+  await page.getByRole('button', { name: 'アイテム', exact: true }).click()
+  await expect(page.getByLabel('戦闘アイテム一覧')).toBeVisible()
+}
+
+async function openPatchKitDetail(page: Page) {
+  await openBattleItems(page)
+  const row = page.locator('.battle-item-browser-row[data-item-id="patch-kit"]')
+  await row.click()
+  const detail = page.locator('.battle-item-detail[data-item-id="patch-kit"]')
+  await expect(detail).toBeVisible()
+  return detail
 }
 
 async function storedState(page: Page) {
@@ -144,45 +152,48 @@ test.describe('Item / Inventory UX', () => {
     await seedItemState(page, { patchKit: 1, currentHp: 40 })
     await page.goto('/javascript/battle/1?seed=item-use-e2e&returnTo=%2Fworld')
     await dismissStory(page)
-    await openBattleItem(page)
+    await openBattleItems(page)
 
-    const item = page.locator('.battle-item-row[data-item-id="patch-kit"]')
-    await expect(item).toHaveAttribute('data-item-state', 'available')
-    await expect(item.locator('img')).toHaveAttribute('src', '/pixel-art/items/patch-kit.svg')
-    await expect(item.getByText('使用可能 · 戦闘専用', { exact: true })).toBeVisible()
+    let row = page.locator('.battle-item-browser-row[data-item-id="patch-kit"]')
+    await expect(row.locator('img')).toHaveAttribute('src', '/pixel-art/items/patch-kit.svg')
+    await expect(row).toContainText('PATCH KIT ×1')
+    await expect(row.locator('[data-item-availability="available"]')).toContainText('使用可能')
+    await row.click()
 
-    const useButton = item.getByRole('button', { name: /PATCH KIT ×1/ })
+    let detail = page.locator('.battle-item-detail[data-item-id="patch-kit"]')
+    const useButton = detail.getByRole('button', { name: /PATCH KIT ×1を使う/ })
     await expect(useButton).toBeEnabled()
     await useButton.click()
 
     await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
-    await expect(item).toHaveAttribute('data-item-state', 'already-used')
-    await expect(item.locator('.battle-item-toggle small')).toHaveText('PATCH KIT ×0')
-    await expect(item.getByText('+24 HP回復 · この戦闘では使用済み', { exact: true })).toBeVisible()
-
     const stored = await storedState(page)
     expect(stored.rpg.state.currentHp).toBe(64)
     expect(stored.progress.progress.inventory.patchKit).toBe(0)
+
+    detail = await openPatchKitDetail(page)
+    await expect(detail).toContainText('PATCH KIT ×0')
+    await expect(detail).toContainText('この戦闘では使用済み')
+    await expect(detail.locator('.patch-kit-action')).toBeDisabled()
   })
 
   test('未完了Stageを別seedで開くと回復と消費をrollbackして使用回数もresetする', async ({ page }) => {
     await seedItemState(page, { patchKit: 2, currentHp: 40 })
     await page.goto('/javascript/battle/1?seed=item-replay-a&returnTo=%2Fworld')
     await dismissStory(page)
-    await openBattleItem(page)
 
-    let item = page.locator('.battle-item-row[data-item-id="patch-kit"]')
-    await item.getByRole('button', { name: /PATCH KIT ×2/ }).click()
-    await expect(item).toHaveAttribute('data-item-state', 'already-used')
-    await expect(item.locator('.battle-item-toggle small')).toHaveText('PATCH KIT ×1')
+    let detail = await openPatchKitDetail(page)
+    await detail.getByRole('button', { name: /PATCH KIT ×2を使う/ }).click()
+    await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
 
     await page.goto('/javascript/battle/1?seed=item-replay-b&returnTo=%2Fworld')
     await dismissStory(page)
-    await openBattleItem(page)
-    item = page.locator('.battle-item-row[data-item-id="patch-kit"]')
-    await expect(item).toHaveAttribute('data-item-state', 'available')
-    await expect(item.getByText('使用可能 · 戦闘専用', { exact: true })).toBeVisible()
-    await expect(item.getByRole('button', { name: /PATCH KIT ×2/ })).toBeEnabled()
+    await openBattleItems(page)
+    const row = page.locator('.battle-item-browser-row[data-item-id="patch-kit"]')
+    await expect(row).toContainText('PATCH KIT ×2')
+    await expect(row.locator('[data-item-availability="available"]')).toContainText('使用可能')
+    await row.click()
+    detail = page.locator('.battle-item-detail[data-item-id="patch-kit"]')
+    await expect(detail.locator('.patch-kit-action')).toBeEnabled()
     await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('40/108')
   })
 
@@ -190,22 +201,16 @@ test.describe('Item / Inventory UX', () => {
     await seedItemState(page, { patchKit: 0, currentHp: 40 })
     await page.goto('/javascript/battle/1?seed=item-no-stock-e2e&returnTo=%2Fworld')
     await dismissStory(page)
-    await openBattleItem(page)
-
-    let item = page.locator('.battle-item-row[data-item-id="patch-kit"]')
-    await expect(item).toHaveAttribute('data-item-state', 'no-stock')
-    await expect(item.getByText('所持なし', { exact: true })).toBeVisible()
-    await expect(item.getByRole('button', { name: /PATCH KIT ×0/ })).toBeDisabled()
+    let detail = await openPatchKitDetail(page)
+    await expect(detail).toContainText('所持なし')
+    await expect(detail.getByRole('button', { name: /PATCH KIT ×0を使う/ })).toBeDisabled()
 
     await seedItemState(page, { patchKit: 1, currentHp: 108 })
     await page.goto('/javascript/battle/1?seed=item-hp-full-e2e&returnTo=%2Fworld')
     await dismissStory(page)
-    await openBattleItem(page)
-
-    item = page.locator('.battle-item-row[data-item-id="patch-kit"]')
-    await expect(item).toHaveAttribute('data-item-state', 'hp-full')
-    await expect(item.getByText('HP満タン', { exact: true })).toBeVisible()
-    await expect(item.getByRole('button', { name: /PATCH KIT ×1/ })).toBeDisabled()
+    detail = await openPatchKitDetail(page)
+    await expect(detail).toContainText('HP満タン')
+    await expect(detail.getByRole('button', { name: /PATCH KIT ×1を使う/ })).toBeDisabled()
   })
 
   test('TYPE CACHE取得時に同じPATCH KIT visualでItem rewardを表示する', async ({ page }) => {
