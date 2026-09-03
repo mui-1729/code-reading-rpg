@@ -39,7 +39,7 @@ export function BattleResultSequence({ items, paused, done, onComplete }: Battle
     <div className={`result-sequence-panel ${done ? 'is-summary' : `tone-${current.tone}`}`} aria-live="polite">
       {done ? (
         <>
-          <div className="result-sequence-kicker">RESULT</div>
+          <div className="result-sequence-kicker">結果</div>
           <div className="result-sequence-summary">
             {items.map((item) => {
               const equipment = item.equipmentId ? getEquipmentPresentation(item.equipmentId) : null
@@ -59,13 +59,13 @@ export function BattleResultSequence({ items, paused, done, onComplete }: Battle
           {currentEquipment?.visual && <img className="result-equipment-hero equipment-pixel-icon" src={currentEquipment.visual} alt="" aria-hidden="true" />}
           <strong>{current.title}</strong>
           {current.detail && <span>{current.detail}</span>}
-          <small>{reducedMotion ? 'Manual advance · NEXT / SKIP' : 'Tap / click to continue'}</small>
+          <small>{reducedMotion ? '手動で進める · 次へ / スキップ' : 'タップ / クリックで次へ'}</small>
         </div>
       )}
       {!done && (
         <div className="result-sequence-controls">
-          <button type="button" className="primary-button" onClick={advance} disabled={paused}>NEXT</button>
-          <button type="button" className="secondary-button" onClick={onComplete} disabled={paused}>SKIP</button>
+          <button type="button" className="primary-button" onClick={advance} disabled={paused}>次へ</button>
+          <button type="button" className="secondary-button" onClick={onComplete} disabled={paused}>スキップ</button>
         </div>
       )}
     </div>
