@@ -279,9 +279,16 @@ export function WorldMapTransitionGate() {
   useEffect(() => {
     if (!transition || transition.phase !== 'covering') return
     if (rpgState.worldMapId !== transition.toMapId) return
-    const next = { ...transition, phase: 'revealing' as const }
-    transitionRef.current = next
-    setTransition(next)
+
+    const timer = window.setTimeout(() => {
+      const current = transitionRef.current
+      if (!current || current.phase !== 'covering') return
+      if (rpgStateRef.current.worldMapId !== current.toMapId) return
+      const next: ActiveTransition = { ...current, phase: 'revealing' }
+      transitionRef.current = next
+      setTransition(next)
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [rpgState.worldMapId, transition])
 
   useEffect(() => {
