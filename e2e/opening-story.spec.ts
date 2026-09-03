@@ -47,7 +47,7 @@ test('最初の開始でteamを紹介しincident-driven CODE WORLD調査へ接�
 
   await page.getByRole('button', { name: '▶ CODE WORLDを探索する' }).click()
   await expect(page).toHaveURL(/\/world$/)
-  await expect(page.getByLabel('Open world map')).toBeVisible()
+  await expect(page.getByLabel('ワールドマップ')).toBeVisible()
   const objective = page.getByLabel('次の目的')
   await expect(objective).toContainText('BYTEと合流する')
   await expect(objective).toHaveAttribute('title', /Openingで見た対象異常/)
