@@ -69,8 +69,10 @@ test('STANDARD等の内部roleを本文に出さず、強敵badgeでもcard高�
     if (await skip.isVisible()) await skip.click()
   }
 
-  const standard = page.locator('.enemy-card[data-enemy-role="standard"]')
+  const standardCards = page.locator('.enemy-card[data-enemy-role="standard"]')
+  const standard = standardCards.first()
   const elite = page.locator('.enemy-card[data-enemy-role="elite"]')
+  await expect(standardCards).toHaveCount(2)
   await expect(standard).toBeVisible()
   await expect(elite).toBeVisible()
 
