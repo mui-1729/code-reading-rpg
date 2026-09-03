@@ -23,6 +23,7 @@ export function VillageFacilities() {
   const [targets, setTargets] = useState<FacilityTarget[]>([])
   const [active, setActive] = useState<VillageFacilityKind | null>(null)
   const [message, setMessage] = useState('')
+  const visibleActive = rpgState.worldMapId === JS_VILLAGE_MAP_ID ? active : null
 
   useEffect(() => {
     if (typeof document === 'undefined') return
@@ -49,11 +50,7 @@ export function VillageFacilities() {
   }, [])
 
   useEffect(() => {
-    if (rpgState.worldMapId !== JS_VILLAGE_MAP_ID) setActive(null)
-  }, [rpgState.worldMapId])
-
-  useEffect(() => {
-    if (!active) return
+    if (!visibleActive) return
     const stopWorldKeys = (event: KeyboardEvent) => {
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd', 'W', 'A', 'S', 'D'].includes(event.key)) {
         event.preventDefault()
@@ -62,7 +59,7 @@ export function VillageFacilities() {
     }
     window.addEventListener('keydown', stopWorldKeys, true)
     return () => window.removeEventListener('keydown', stopWorldKeys, true)
-  }, [active])
+  }, [visibleActive])
 
   const close = () => setActive(null)
   const position = rpgState.worldPosition
@@ -100,20 +97,20 @@ export function VillageFacilities() {
       })}
 
       <WorldInn
-        open={active === 'inn'}
+        open={visibleActive === 'inn'}
         onClose={close}
         onMessage={setMessage}
         locationLabel="グリーンフィールド村"
       />
       <VillageShop
         kind="items"
-        open={active === 'item-shop'}
+        open={visibleActive === 'item-shop'}
         onClose={close}
         onMessage={setMessage}
       />
       <VillageShop
         kind="equipment"
-        open={active === 'equipment-shop'}
+        open={visibleActive === 'equipment-shop'}
         onClose={close}
         onMessage={setMessage}
       />
