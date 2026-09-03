@@ -19,11 +19,11 @@ VICTORY
   └─ tentative HP / Item + rewardをcommit
 
 DEFEAT
-  ├─ RETRY BATTLE
+  ├─ RETRY
   │    └─ start snapshotへrollbackし、同じBattle / seedを再開
-  └─ RETURN TO CHECKPOINT
-       └─ start snapshotへrollback
-          + encounter cooldownだけreset
+  └─ SAFE RETURN
+       └─ start snapshotのHP / Itemへrollback
+          + World位置だけ直近の安全拠点へ移す
 
 RUN / browser back / route abort
   └─ start snapshotへrollback
@@ -38,6 +38,8 @@ Battle transactionのauthorityは次の層。
 
 - `src/battle/sessionTransaction.ts`
   - START / tentative update / commit / rollbackのpure domain rule
+- `src/battle/safeReturn.ts`
+  - Defeat後に戻る安全なWorld拠点のpolicy
 - `src/persistence/GameStateProvider.tsx`
   - Progress + RPGを同じrevisionでatomic persistence
   - session snapshotの保存 / rollback
@@ -89,7 +91,7 @@ transactionをclearした後はunmount cleanupやstale callbackが同じreward�
 
 DEFEAT表示が出た時点ではsessionをcommitしない。Playerが次のactionを選ぶまでSTART snapshotを保持する。
 
-### RETRY BATTLE
+### RETRY
 
 - START時点のHPへ戻す
 - START時点のPATCH KIT在庫へ戻す
@@ -98,15 +100,18 @@ DEFEAT表示が出た時点ではsessionをcommitしない。Playerが次のacti
 
 失敗attemptで使ったPATCH KITを永久消費しない一方、reload等で「Battle中1回」の制限だけをresetしてpersistent在庫を減らすような分断も作らない。
 
-### RETURN TO CHECKPOINT
+### SAFE RETURN
 
 - START時点のHPへ戻す
 - START時点のPATCH KIT在庫へ戻す
-- START時点のmap / local positionへ戻す
-- **全回復しない**
-- `stepsSinceEncounter`だけsafe window用にresetする
+- **全回復はしない**
+- World位置だけ安全な復帰地点へ移す
+- Forest / Deep ForestからはGREENFIELD VILLAGEへ戻す
+- TypeScript辺境からは中央Hubへ戻す
+- すでに安全なlocal mapではそのmapの開始地点へ戻す
+- `stepsSinceEncounter`をsafe window用にresetする
 
-そのためDefeatは無料Innにならず、同時に長距離歩き直しも主penaltyにならない。
+Defeat自体を無料Innにはしない。一方で危険tileへ同じ消耗状態のまま戻してsoft lockさせない。GREENFIELD VILLAGEには宿・道具屋・装備屋があり、Forest / Deep Forestにも無料の部分回復地点を置くため、PlayerはWorld側で立て直してから再挑戦できる。
 
 ## 6. RUN / browser back / reload
 
@@ -143,7 +148,28 @@ HPだけ減少済み、Itemだけ消費済みというpartial restoreを作ら�
 
 Battleが終了/abortした後のtimer・unmount cleanup・stale callbackは、既に別attemptへ移ったtransactionを変更しない。
 
-## 8. Reward presentation
+## 8. Recovery hub policy
+
+JavaScript地方は次の順で立て直し手段を配置する。
+
+```text
+GREENFIELD VILLAGE
+  ├─ 宿: Goldで全回復
+  ├─ 道具屋: 消耗品
+  └─ 装備屋: 武器 / 防具 / Accessory
+
+JavaScriptの森
+  └─ 野営地: 入口から約8tile、無料で最大HPの60%まで部分回復
+
+JavaScript深層の森
+  └─ 湧き水: 入口から約12tile、無料で最大HPの60%まで部分回復
+```
+
+序盤ほど安全地点を近くし、奥へ進むほど間隔を広げる。ただし回復地点を隠して難しくするのではなく、World上のscenery / labelとして見える状態にする。
+
+無料地点は0 Gold時のsoft lock回避用で、全回復やItem補充はしない。Goldを使う宿・道具・装備の価値を残す。
+
+## 9. Reward presentation
 
 Victory resultはdomain rewardからtyped eventを生成する。
 
@@ -158,7 +184,7 @@ Victory resultはdomain rewardからtyped eventを生成する。
 
 Level Upは「Lv1 → Lv2」だけでなく、実際に増えたstatを表示する。Stage unlockはinternal numeric Battle IDではなくplayer-facing `JS-xx` / `TS-xx` codeを表示する。
 
-## 9. Test contract
+## 10. Test contract
 
 最低限固定する。
 
@@ -166,7 +192,10 @@ Level Upは「Lv1 → Lv2」だけでなく、実際に増えたstatを表示す
 - browser back -> START World / HP / Itemへrollback
 - RUN -> tentative damage / Itemをcommitしない
 - RETRY -> 同じSTART resourceへ戻る
-- RETURN -> START location / HP / Item、no full heal、encounter safe window
+- SAFE RETURN -> START HP / Itemを保ちつつ安全拠点へ戻る、no full heal
+- Forest / Deep Forest敗北 -> GREENFIELD VILLAGEへ戻る
+- Village宿 / 道具屋 / 装備屋が利用できる
+- Forest / Deep Forestの部分回復地点は0 Goldでも利用できる
 - VICTORY -> current HP / used Item / rewardを1回だけcommit
 - Level Up stat deltaがvisible result sequenceへ出る
 - Replay reward policyがvisible result sequenceへ出る
