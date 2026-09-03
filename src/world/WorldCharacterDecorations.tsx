@@ -12,6 +12,19 @@ type LandmarkPortalTarget = {
   battleId: number
 }
 
+function sameLandmarkTargets(
+  left: readonly LandmarkPortalTarget[],
+  right: readonly LandmarkPortalTarget[],
+) {
+  return (
+    left.length === right.length &&
+    left.every(
+      (candidate, index) =>
+        candidate.key === right[index]?.key && candidate.target === right[index]?.target,
+    )
+  )
+}
+
 export function WorldCharacterDecorations() {
   const [trainingTarget, setTrainingTarget] = useState<Element | null>(null)
   const [landmarkTargets, setLandmarkTargets] = useState<LandmarkPortalTarget[]>([])
@@ -26,23 +39,25 @@ export function WorldCharacterDecorations() {
         ),
       )
 
-      setLandmarkTargets(
-        PROGRESSION_LANDMARKS.flatMap((landmark) => {
-          const target = document.querySelector(
-            `.world-viewport[data-world-map="${landmark.mapId}"] .world-tile[data-world-x="${landmark.position.x}"][data-world-y="${landmark.position.y}"]`,
-          )
-          if (!target) return []
-          return [
-            {
-              key: `${landmark.mapId}:${landmark.position.x}:${landmark.position.y}`,
-              target,
-              label: landmark.label,
-              shortLabel: landmark.shortLabel,
-              kind: landmark.kind,
-              battleId: landmark.battleId,
-            },
-          ]
-        }),
+      const nextLandmarkTargets = PROGRESSION_LANDMARKS.flatMap((landmark) => {
+        const target = document.querySelector(
+          `.world-viewport[data-world-map="${landmark.mapId}"] .world-tile[data-world-x="${landmark.position.x}"][data-world-y="${landmark.position.y}"]`,
+        )
+        if (!target) return []
+        return [
+          {
+            key: `${landmark.mapId}:${landmark.position.x}:${landmark.position.y}`,
+            target,
+            label: landmark.label,
+            shortLabel: landmark.shortLabel,
+            kind: landmark.kind,
+            battleId: landmark.battleId,
+          },
+        ]
+      })
+
+      setLandmarkTargets((current) =>
+        sameLandmarkTargets(current, nextLandmarkTargets) ? current : nextLandmarkTargets,
       )
     }
 
