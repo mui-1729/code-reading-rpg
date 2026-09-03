@@ -78,7 +78,13 @@
 
 /* Enemy roleはdomain/code dataとして保持するが、内部値をBattle cardの本文には出さない。 */
 .enemy-role {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  visibility: hidden;
 }
 
 .enemy-card[data-enemy-role="elite"] {
