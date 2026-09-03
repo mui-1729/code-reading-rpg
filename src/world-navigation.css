@@ -1,3 +1,7 @@
+.world-shell {
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
 .world-next-objective {
   padding: 9px 12px;
   gap: 4px;
@@ -63,7 +67,10 @@
 }
 
 @media (max-height: 560px) and (orientation: landscape) {
-  .world-shell { padding-top: 4px; padding-bottom: 58px; }
+  .world-shell {
+    padding-top: 4px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
   .world-next-objective { margin-bottom: 8px; }
   .world-message { margin-top: 7px; }
   .world-controls { margin-top: 7px; }
