@@ -94,8 +94,8 @@ test('進行リセットはOpeningを含め最初からに戻しSoundだけ保�
   await dialog.getByRole('button', { name: '本当に進行をリセットする', exact: true }).click()
 
   await expect(page).toHaveURL(/\/$/)
-  await expect(page.getByRole('button', { name: 'START' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'VIEW OPENING' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'はじめる' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'オープニングを見る' })).toHaveCount(0)
 
   await expect.poll(() => page.evaluate((key) => localStorage.getItem(key), OPENING_KEY)).toBeNull()
 
@@ -142,8 +142,8 @@ test('進行リセットはOpeningを含め最初からに戻しSoundだけ保�
     settings: { muted: true, seVolume: 0.65, bgmVolume: 0.35 },
   })
 
-  await page.getByRole('button', { name: 'START' }).click()
-  await expect(page.getByLabel('JavaScript opening story')).toBeVisible()
+  await page.getByRole('button', { name: 'はじめる' }).click()
+  await expect(page.getByLabel('JavaScript オープニングストーリー')).toBeVisible()
   await expect(page.locator('.opening-layer-badge')).toHaveText('REAL WORLD')
   await expect(page.locator('.opening-kicker')).toHaveText('DEVELOPMENT ROOM')
 })
