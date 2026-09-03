@@ -113,8 +113,9 @@ test.describe('World Shop', () => {
     await page.getByRole('button', { name: 'メニューを開く' }).click()
     const pause = page.getByRole('dialog', { name: 'メニュー' })
     await pause.getByRole('button', { name: '装備' }).click()
-    const reloadedGuardEdge = pause.locator('button[data-equipment-id="guard-edge"]')
-    await expect(reloadedGuardEdge).toHaveAttribute('data-equipment-state', 'equipped')
+    const weaponSlot = pause.locator('[data-equipment-slot="weapon"]')
+    await expect(weaponSlot.locator('header strong')).toHaveText('Guard Edge')
+    await expect(weaponSlot.getByRole('button', { name: /武器を選ぶ/ })).toContainText('Guard Edge')
 
     stored = await storedState(page)
     expect(stored.rpg.state.ownedEquipmentIds.filter((id: string) => id === 'guard-edge')).toHaveLength(1)

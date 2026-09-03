@@ -145,10 +145,9 @@ test('Battle Gold → Shop purchase/equip → Inn → reload → next canonical 
   const pause = page.getByRole('dialog', { name: 'メニュー' })
   await expect(pause.getByText('0 G', { exact: true })).toBeVisible()
   await pause.getByRole('button', { name: '装備' }).click()
-  await expect(pause.locator('button[data-equipment-id="life-charm"]')).toHaveAttribute(
-    'data-equipment-state',
-    'equipped',
-  )
+  const accessorySlot = pause.locator('[data-equipment-slot="accessory"]')
+  await expect(accessorySlot.locator('header strong')).toHaveText('Life Charm')
+  await expect(accessorySlot.getByRole('button', { name: /アクセサリを選ぶ/ })).toContainText('Life Charm')
   await page.keyboard.press('Escape')
 
   await page.goto('/javascript/battle/7?seed=economy-next&returnTo=%2Fworld')

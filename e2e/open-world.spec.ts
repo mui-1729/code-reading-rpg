@@ -248,7 +248,9 @@ test.describe('Open World RPG loop', () => {
     await page.getByRole('button', { name: 'メニューを開く' }).click()
     const dialog = page.getByRole('dialog', { name: 'メニュー' })
     await dialog.getByRole('button', { name: '装備' }).click()
-    await expect(dialog.getByText('Debug Charm', { exact: true }).first()).toBeVisible()
+    await dialog.getByRole('button', { name: /アクセサリを選ぶ/ }).click()
+    const picker = page.getByRole('dialog', { name: 'アクセサリを選ぶ' })
+    await expect(picker.getByRole('option', { name: 'Debug Charm を装備' })).toBeVisible()
   })
 
   test('TS TreasureはPATCH KITとGoldを一度だけ付与しreload後もOPENを維持する', async ({ page }) => {
@@ -338,7 +340,8 @@ test.describe('Open World RPG loop', () => {
     await expect(dialog.getByText('72 / 108', { exact: true })).toBeVisible()
 
     await dialog.getByRole('button', { name: '装備' }).click()
-    await expect(dialog.getByText('Branch Saber', { exact: true }).first()).toBeVisible()
+    await expect(dialog.locator('[data-equipment-slot="weapon"] header strong')).toHaveText('Branch Saber')
+    await expect(dialog.locator('[data-equipment-slot="accessory"] header strong')).toHaveText('Debug Charm')
 
     await dialog.getByRole('button', { name: '仲間' }).click()
     await expect(dialog.getByText(/BYTE · 斥候/)).toBeVisible()
@@ -377,9 +380,10 @@ test.describe('Open World RPG loop', () => {
     await page.getByRole('button', { name: 'メニューを開く' }).click()
     const dialog = page.getByRole('dialog', { name: 'メニュー' })
     await dialog.getByRole('button', { name: '装備' }).click()
-    const branchSaber = dialog.getByRole('button', { name: /Branch Saber/ })
-    await expect(branchSaber).toBeVisible()
-    await branchSaber.click()
+    await dialog.getByRole('button', { name: /武器を選ぶ/ }).click()
+    const picker = page.getByRole('dialog', { name: '武器を選ぶ' })
+    await picker.getByRole('option', { name: 'Branch Saber を装備' }).click()
+    await expect(dialog.locator('[data-equipment-slot="weapon"] header strong')).toHaveText('Branch Saber')
     await page.keyboard.press('Escape')
 
     await page.goto('/javascript/battle/1?seed=equipment-e2e&returnTo=%2Fworld')
