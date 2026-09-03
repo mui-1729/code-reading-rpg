@@ -188,7 +188,7 @@ export function PauseMenu() {
               ))}
             </nav>
 
-            <div className="pause-content" tabIndex={-1}>
+            <div key={tab} className="pause-content" tabIndex={-1}>
               {tab === 'status' && (
                 <section className="pause-section">
                   <div className="pause-stat-grid">
