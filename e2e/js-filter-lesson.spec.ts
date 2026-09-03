@@ -81,12 +81,12 @@ async function seedFilterLesson(page: Page, clearedMidboss: boolean) {
 test('Battle 13未clearでは西側Woodsへ入ってもfilter traceを先取りしない', async ({ page }) => {
   await seedFilterLesson(page, false)
 
-  await expect(page.getByLabel('Forest map')).toHaveAttribute('data-world-map', 'js-forest')
-  await page.getByRole('button', { name: 'Move up' }).click()
+  await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-map', 'js-forest')
+  await page.getByRole('button', { name: '上へ移動' }).click()
 
   await expect(page).toHaveURL(/\/world$/)
-  await expect(page.getByLabel('Forest map')).toHaveAttribute('data-world-x', '4')
-  await expect(page.getByLabel('Forest map')).toHaveAttribute('data-world-y', '9')
+  await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-x', '4')
+  await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-y', '9')
 })
 
 test('Battle 13 clear済みsaveは西側WoodsでBattle 14をimpact-range traceとして固定導入する', async ({ page }) => {
@@ -95,7 +95,7 @@ test('Battle 13 clear済みsaveは西側WoodsでBattle 14をimpact-range trace�
   await expect(page.getByLabel('次の目的')).toContainText('影響範囲')
   await expect(page.getByLabel('次の目的')).toContainText('複数の対象へ広がる影響')
 
-  await page.getByRole('button', { name: 'Move up' }).click()
+  await page.getByRole('button', { name: '上へ移動' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/14\?/)
   const story = page.getByRole('dialog', { name: '異常の影響を一体だけでなく全部追う' })
@@ -104,7 +104,7 @@ test('Battle 13 clear済みsaveは西側WoodsでBattle 14をimpact-range trace�
   await expect(story).toContainText('影響範囲')
   await expect(story).not.toContainText('正解')
 
-  await story.getByRole('button', { name: /NEXT/ }).click()
+  await story.getByRole('button', { name: /次へ/ }).click()
   await expect(story).toContainText('find()')
   await expect(story).toContainText('filter()')
   await expect(story).toContainText('全部集める')
