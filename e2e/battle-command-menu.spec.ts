@@ -57,6 +57,8 @@ test('Random Encounterは戦う / アイテム / 逃げるの3commandから選�
   await page.goto('/javascript/battle/1?seed=encounter:5:10:11&returnTo=%2Fworld')
 
   const commands = page.getByRole('group', { name: '戦闘コマンド' })
+  const commandGrid = page.locator('.battle-command-grid')
+  await expect(commandGrid).toHaveAttribute('data-active-command', 'command')
   await expect(commands.getByRole('button', { name: '戦う', exact: true })).toBeVisible()
   await expect(commands.getByRole('button', { name: 'アイテム', exact: true })).toBeVisible()
   await expect(commands.getByRole('button', { name: '逃げる', exact: true })).toBeVisible()
@@ -79,6 +81,7 @@ test('Random Encounterは戦う / アイテム / 逃げるの3commandから選�
   await page.getByRole('button', { name: /PATCH KIT ×1を使う/ }).click()
   await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
   await expect(commands.getByRole('button', { name: 'アイテム', exact: true })).toHaveAttribute('aria-pressed', 'false')
+  await expect(commandGrid).toHaveAttribute('data-active-command', 'command')
 })
 
 test('escape不可Battleでは逃げるcommandを表示しない', async ({ page }) => {
