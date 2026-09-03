@@ -4,7 +4,7 @@ const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
-test('ワールドマップは発見済みregionの接続関係をportal定義から表示する', async ({ page }) => {
+test('ワールドマップは接続cardを積み上げず各mapの出口pinで移動先を示す', async ({ page }) => {
   await page.goto('/')
   await page.evaluate(
     ({ progressKey, rpgKey, tutorialKey }) => {
@@ -46,11 +46,14 @@ test('ワールドマップは発見済みregionの接続関係をportal定義�
   await page.getByRole('button', { name: 'メニューを開く' }).click()
   await page.getByRole('button', { name: 'マップ', exact: true }).click()
 
-  const routes = page.getByRole('region', { name: '発見済みエリアのつながり' })
-  await expect(routes).toContainText('OVERWORLD')
-  await expect(routes).toContainText('GREENFIELD VILLAGE')
-  await expect(routes).toContainText('FOREST')
-  await expect(routes).toContainText('DEEP FOREST')
-  await expect(routes).toContainText('TS FRONTIER')
-  await expect(routes.getByText('接続済み', { exact: true })).toHaveCount(5)
+  const atlas = page.getByRole('region', { name: 'ワールドマップ' })
+  await expect(atlas.locator('.atlas-route-network')).toHaveCount(0)
+  await expect(atlas.getByText('エリアのつながり', { exact: true })).toHaveCount(0)
+  await expect(atlas.locator('[data-atlas-region]')).toHaveCount(5)
+  await expect(atlas.locator('[data-atlas-landmark="exit"]')).not.toHaveCount(0)
+  await expect(atlas.locator('.atlas-terrain-legend')).toContainText('↔出口')
+
+  await atlas.locator('[data-atlas-region="js-forest"]').click()
+  await expect(atlas.locator('[data-atlas-map="js-forest"]')).toBeVisible()
+  await expect(atlas.locator('[data-atlas-landmark="exit"]')).toHaveCount(2)
 })
