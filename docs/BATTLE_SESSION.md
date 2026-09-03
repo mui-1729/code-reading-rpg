@@ -106,12 +106,14 @@ DEFEAT表示が出た時点ではsessionをcommitしない。Playerが次のacti
 - START時点のPATCH KIT在庫へ戻す
 - **全回復はしない**
 - World位置だけ安全な復帰地点へ移す
-- Forest / Deep ForestからはGREENFIELD VILLAGEへ戻す
+- Forest序盤ではGREENFIELD VILLAGEへ戻す
+- Forestの野営地を通過した後は野営地の隣へ戻す
+- Deep Forest序盤ではForestの野営地へ戻し、湧き水を通過した後は湧き水の隣へ戻す
 - TypeScript辺境からは中央Hubへ戻す
 - すでに安全なlocal mapではそのmapの開始地点へ戻す
 - `stepsSinceEncounter`をsafe window用にresetする
 
-Defeat自体を無料Innにはしない。一方で危険tileへ同じ消耗状態のまま戻してsoft lockさせない。GREENFIELD VILLAGEには宿・道具屋・装備屋があり、Forest / Deep Forestにも無料の部分回復地点を置くため、PlayerはWorld側で立て直してから再挑戦できる。
+Defeat自体を無料Innにはしない。一方で危険tileへ同じ消耗状態のまま戻してsoft lockさせない。GREENFIELD VILLAGEには宿・道具屋・装備屋があり、Forest / Deep Forestにも無料の部分回復地点を置くため、Playerは直近の安全地点で立て直してから再挑戦できる。
 
 ## 6. RUN / browser back / reload
 
@@ -192,8 +194,9 @@ Level Upは「Lv1 → Lv2」だけでなく、実際に増えたstatを表示す
 - browser back -> START World / HP / Itemへrollback
 - RUN -> tentative damage / Itemをcommitしない
 - RETRY -> 同じSTART resourceへ戻る
-- SAFE RETURN -> START HP / Itemを保ちつつ安全拠点へ戻る、no full heal
-- Forest / Deep Forest敗北 -> GREENFIELD VILLAGEへ戻る
+- SAFE RETURN -> START HP / Itemを保ちつつ直近の安全拠点へ戻る、no full heal
+- Forest序盤 -> GREENFIELD VILLAGE、進行後 -> 野営地へ戻る
+- Deep Forest序盤 -> Forest野営地、進行後 -> 湧き水へ戻る
 - Village宿 / 道具屋 / 装備屋が利用できる
 - Forest / Deep Forestの部分回復地点は0 Goldでも利用できる
 - VICTORY -> current HP / used Item / rewardを1回だけcommit
