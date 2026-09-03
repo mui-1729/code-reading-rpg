@@ -55,6 +55,21 @@
   letter-spacing: .04em;
 }
 
+/* The scrollport is the Atlas viewport. Zoom may grow the inner canvas, but it
+   must never paint outside this frame or widen the Pause layout. */
+.world-atlas,
+.pause-section:has(.world-atlas),
+.atlas-scrollport {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.atlas-scrollport {
+  position: relative;
+  isolation: isolate;
+  contain: paint;
+}
+
 .atlas-detail-canvas {
   min-width: 0;
   max-width: none;
@@ -77,6 +92,7 @@
 .atlas-terrain-stage {
   position: relative;
   width: 100%;
+  overflow: hidden;
 }
 
 .atlas-terrain-grid {
@@ -167,6 +183,7 @@
 .atlas-landmark-layer {
   position: absolute;
   inset: 0;
+  overflow: hidden;
   pointer-events: none;
 }
 
