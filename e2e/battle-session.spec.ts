@@ -57,6 +57,11 @@ async function openFight(page: Page) {
   if ((await fight.getAttribute('aria-pressed')) !== 'true') await fight.click()
 }
 
+async function confirmEscape(page: Page) {
+  await page.getByRole('group', { name: '戦闘コマンド' }).getByRole('button', { name: '逃げる' }).click()
+  await page.getByRole('group', { name: '逃走確認' }).getByRole('button', { name: '逃げる' }).click()
+}
+
 test('reload resets the whole attempt, including enemies/turn/kit allowance, without accumulating healing', async ({ page }) => {
   await enterEncounter(page)
   const startingEnemies = await page.locator('.enemy-name-row span').allTextContents()
@@ -112,7 +117,7 @@ test('逃走はtentative HP / kit changesを破棄しrewardなしで開始snapsh
   await enterEncounter(page)
   const initial = await readStoredGameState(page)
   await useKit(page)
-  await page.getByRole('button', { name: '逃げる' }).click()
+  await confirmEscape(page)
   await expect(page).toHaveURL(/\/world$/)
   await expect.poll(() => readStoredGameState(page)).toMatchObject({
     battleSession: null,
