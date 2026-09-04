@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { readStoredGameState } from './storedGameState'
+import { selectPauseTab } from './pause-menu-helpers'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -64,7 +65,7 @@ test('未装備slotは通常時「なし」を表示し、pickerで比較して�
 
   await page.getByRole('button', { name: 'メニューを開く' }).click()
   const pause = page.getByRole('dialog', { name: 'メニュー' })
-  await pause.getByRole('button', { name: '装備' }).click()
+  await selectPauseTab(pause, '装備')
 
   const accessorySlot = pause.locator('[data-equipment-slot="accessory"]')
   const trigger = accessorySlot.getByRole('button', { name: /アクセサリを選ぶ/ })
