@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   JS_VILLAGE_MAP_ID,
   OVERWORLD_MAP_ID,
+  TS_FRONTIER_MAP_ID,
   WORLD_START,
 } from '../world/worldMap'
 import {
@@ -28,8 +29,30 @@ describe('RPG state storage', () => {
     }
 
     const raw = serializeRpgState(state)
-    expect(JSON.parse(raw).version).toBe(5)
+    expect(JSON.parse(raw).version).toBe(6)
     expect(restoreRpgState(raw)).toEqual(state)
+  })
+
+  it('v6は拡張Overworldのx>=23座標をTypeScript旧layoutと誤認しない', () => {
+    const initial = createInitialRpgState()
+    const raw = JSON.stringify({
+      version: 6,
+      state: { ...initial, worldMapId: OVERWORLD_MAP_ID, worldPosition: { x: 34, y: 33 } },
+    })
+    const restored = restoreRpgState(raw)
+    expect(restored.worldMapId).toBe(OVERWORLD_MAP_ID)
+    expect(restored.worldPosition).toEqual({ x: 34, y: 33 })
+  })
+
+  it('v5以前の旧Overworld TypeScript側だけはdedicated frontierへmigrationする', () => {
+    const initial = createInitialRpgState()
+    const raw = JSON.stringify({
+      version: 5,
+      state: { ...initial, worldMapId: OVERWORLD_MAP_ID, worldPosition: { x: 30, y: 14 } },
+    })
+    const restored = restoreRpgState(raw)
+    expect(restored.worldMapId).toBe(TS_FRONTIER_MAP_ID)
+    expect(restored.worldPosition).toEqual({ x: 9, y: 14 })
   })
 
   it('v1 saveは装備込みmax HPと未開封Treasureのoverworld stateへmigrationする', () => {
@@ -132,7 +155,7 @@ describe('RPG state storage', () => {
   it('Overworld範囲外の座標はHub開始位置へ戻す', () => {
     const state = createInitialRpgState()
     const raw = JSON.stringify({
-      version: 4,
+      version: 6,
       state: { ...state, worldPosition: { x: 999, y: -3 } },
     })
 
@@ -144,7 +167,7 @@ describe('RPG state storage', () => {
   it('未知map IDはOverworld開始位置へfallbackする', () => {
     const state = createInitialRpgState()
     const raw = JSON.stringify({
-      version: 4,
+      version: 6,
       state: {
         ...state,
         worldMapId: 'unknown-map',
@@ -160,7 +183,7 @@ describe('RPG state storage', () => {
   it('Village範囲外の座標はOverworld開始位置へ戻す', () => {
     const state = createInitialRpgState()
     const raw = JSON.stringify({
-      version: 4,
+      version: 6,
       state: {
         ...state,
         worldMapId: JS_VILLAGE_MAP_ID,
@@ -173,20 +196,20 @@ describe('RPG state storage', () => {
     expect(restored.worldPosition).toEqual(WORLD_START)
   })
 
-  it('World bounds内の端座標は保持する', () => {
+  it('新World bounds内の端座標は保持する', () => {
     const state = createInitialRpgState()
     const raw = JSON.stringify({
-      version: 4,
-      state: { ...state, worldPosition: { x: 39, y: 27 } },
+      version: 6,
+      state: { ...state, worldPosition: { x: 68, y: 48 } },
     })
 
-    expect(restoreRpgState(raw).worldPosition).toEqual({ x: 39, y: 27 })
+    expect(restoreRpgState(raw).worldPosition).toEqual({ x: 68, y: 48 })
   })
 
   it('未知Equipmentを除外しstarter所有を補完・重複排除する', () => {
     const state = createInitialRpgState()
     const raw = JSON.stringify({
-      version: 4,
+      version: 6,
       state: {
         ...state,
         ownedEquipmentIds: ['branch-saber', 'branch-saber', 'unknown-sword'],
@@ -220,7 +243,7 @@ describe('RPG state storage', () => {
   it('装備中IDはknown・owned・slot一致を満たさなければ外す', () => {
     const state = createInitialRpgState()
     const raw = JSON.stringify({
-      version: 4,
+      version: 6,
       state: {
         ...state,
         ownedEquipmentIds: ['training-blade', 'traveler-coat', 'debug-charm'],
@@ -239,7 +262,7 @@ describe('RPG state storage', () => {
     })
   })
 
-  it('v4から未知Partyを除外し未使用partyEquipmentをv5 modelから取り除く', () => {
+  it('v4から未知Partyを除外し未使用partyEquipmentをcurrent modelから取り除く', () => {
     const state = createInitialRpgState()
     const raw = JSON.stringify({
       version: 4,
@@ -262,7 +285,7 @@ describe('RPG state storage', () => {
   it('negative encounter countersは0へclampする', () => {
     const state = createInitialRpgState()
     const raw = JSON.stringify({
-      version: 4,
+      version: 6,
       state: { ...state, stepsSinceEncounter: -8, encounterCount: -3 },
     })
     const restored = restoreRpgState(raw)
