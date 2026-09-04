@@ -1,12 +1,18 @@
 # CODE//READ RPG Open World Design
 
-この文書は、**現在採用するWorld構造と拡張ルール**を扱う。project全体の現状は[`PROJECT_STATUS.md`](./PROJECT_STATUS.md)、世界観は[`WORLD_DIRECTION.md`](./WORLD_DIRECTION.md)、learning contentは[`CONTENT_GUIDE.md`](./CONTENT_GUIDE.md)、優先順位は[`ROADMAP.md`](./ROADMAP.md)を参照する。
+この文書は、**World runtime / progression / persistenceの設計ルール**を扱う。
+
+- JavaScript地方の地理構造・scale・safe hub: [`JAVASCRIPT_WORLD_TOPOLOGY.md`](./JAVASCRIPT_WORLD_TOPOLOGY.md)
+- 世界観 / Region visual: [`WORLD_DIRECTION.md`](./WORLD_DIRECTION.md)
+- current snapshot: [`PROJECT_STATUS.md`](./PROJECT_STATUS.md)
+- learning content: [`CONTENT_GUIDE.md`](./CONTENT_GUIDE.md)
+- 優先順位: [`ROADMAP.md`](./ROADMAP.md)
+
+JavaScript地方の個別map layoutは、この文書の旧座標や旧寸法ではなく`JAVASCRIPT_WORLD_TOPOLOGY.md`を上位authorityとして設計する。
 
 ## 1. 目的
 
 Stage Select / Area Selectを繰り返すのではなく、**Worldを歩き、incidentを追いながら必要なcodeを読むこと自体をRPGの進行にする**。
-
-JavaScript編では次を守る。
 
 ```text
 現象を先に体験
@@ -16,33 +22,64 @@ JavaScript編では次を守る。
 → root causeへ到達
 ```
 
-「教材を先に全部終えてからincidentへ戻る」構造にはしない。
+Open Worldを「1枚の巨大grid」とは定義しない。Overworld / Village / Forest / Settlement等を意味のあるscaleで分ける。
 
-Open Worldを「1枚の巨大grid」とは定義しない。意味のある地域ごとに独立mapを持たせる。
+## 2. Current implementation snapshot
 
-## 2. Current map model
-
-stable map:
+以下は**現時点のruntime snapshotであり、target topologyではない**。
 
 - `overworld` — 40 × 28
-- `js-village` — GREENFIELD VILLAGE 21 × 15
-- `js-forest` — JAVASCRIPT FOREST 31 × 27
-- `js-deep-forest` — JAVASCRIPT DEEP FOREST 31 × 27
-- `ts-frontier` — TYPESCRIPT FRONTIER 31 × 21
+- `js-village` — 21 × 15
+- `js-forest` — 31 × 27
+- `js-deep-forest` — 31 × 27
+- `ts-frontier` — 31 × 21
+- viewport — 11 × 9
 
 共通:
 
-- viewport 11 × 9
 - `worldMapId + local worldPosition`をRpgStateへ保存
 - `/world` route上でmap transition
-- Battle後は原則same map / positionへ戻る
-- Defeat時だけOverworld Hubへ戻す
 - VillageはRandom Encounterなし
 - fixed Story / learning BattleはRandom chance / cooldownより優先
 
-## 3. JavaScript incident-first route
+#377でJavaScript地方を再設計するため、31×27や「東→西main trail」を将来layoutの制約にしない。
 
-player-facing Story番号:
+## 3. JavaScript geography authority
+
+JavaScript地方は次の役割分担を採用する。
+
+```text
+Overworld / Field
+→ 地域間を旅する大きな地理
+
+Local Map
+→ Village / Settlement / Forest等を詳細に歩く空間
+```
+
+target topology:
+
+```text
+Arrival / Central Field
+├─ Riverside optional loop
+├─ GREENFIELD VILLAGE [SAFE HUB 1]
+└─ woods / bridge / road → Forest Gate
+        ↓
+JavaScript Forest
+        ↓
+Forest Settlement [SAFE HUB 2]
+        ↓
+JavaScript Deep Forest
+        ↓
+Final Approach
+        ↓
+JS Final Boss
+```
+
+Forest / Deep Forestのmain route自体で上下左右を使い、meaningful branchとrejoin loopを持たせる。詳細は`JAVASCRIPT_WORLD_TOPOLOGY.md`を参照する。
+
+## 4. JavaScript incident-first progression
+
+player-facing Story順:
 
 ```text
 Opening
@@ -55,6 +92,8 @@ JS-02 → JS-03 → JS-04
 JAVASCRIPT FOREST
 JS-05 → JS-06 → JS-07 → JS-08 MID BOSS → JS-09
 ↓
+FOREST SETTLEMENT
+↓
 JS-10 SECOND SYMPTOM
 ↓
 JAVASCRIPT DEEP FOREST
@@ -62,16 +101,14 @@ JS-11 → JS-12 → JS-13 → JS-14
 → JS-15 MID BOSS
 → JS-16 → JS-17 → JS-18
 ↓
-west EXIT
-↓
-CODE CORE APPROACH
+FINAL APPROACH
 ↓
 JS-19 ROOT CAUSE / Final Boss
 ↓
 REAL WORLD RETURN
 ```
 
-internal numeric `battleId`はsave / URL互換用であり、chapter番号ではない。
+internal numeric Battle IDはsave / URL互換用stable identifier。
 
 ```text
 JS-01 -> 1
@@ -97,208 +134,188 @@ JS-19 -> 3
 
 Story順のauthorityはsemantic progression key。numeric IDの大小を進行順に使わない。
 
-## 4. Portal / gate authority
+## 5. Portal / gate authority
 
-portal gateは`src/world/worldMap.ts`の`WORLD_PORTALS`をauthorityにする。`WorldPage`や`worldActions`へmap固有の同条件を重複実装しない。
+portal gateは`src/world/worldMap.ts`の`WORLD_PORTALS`をruntime authorityにする。`WorldPage`や`worldActions`へ同じ解放条件を重複実装しない。
 
-現在:
+現在の解放条件:
 
-```text
-Overworld → GREENFIELD VILLAGE
-requires: internal Battle 1 clear = JS-01 clear
+- Overworld → GREENFIELD: JS-01 clear
+- Forest方面: JS-04 clear
+- Deep Forest方面: JS-09 clear
+- Final Approach: JS-18 clear
+- TypeScript方面: JS-19 clear
 
-Overworld → JAVASCRIPT FOREST
-requires: internal Battle 9 clear = JS-04 clear
+#377実装でmap graphが増えても、解放条件をUI componentへ散らさない。
 
-JAVASCRIPT FOREST → DEEP FOREST
-requires: internal Battle 14 clear = JS-09 clear
+## 6. GREENFIELD / Forest Settlement
 
-DEEP FOREST west EXIT → CODE CORE APPROACH
-requires: internal Battle 22 clear = JS-18 clear
+### GREENFIELD VILLAGE
 
-Overworld → TYPESCRIPT FRONTIER
-requires: JavaScript Final internal Battle 3 clear = JS-19 clear
-```
-
-重要:
-
-- JS-01前にVillageへ入れてはいけない
-- JS-01だけ終えてTrainingを飛ばしてForestへ行けてはいけない
-- JS-04後はfirst incidentを再戦させずForestへ進む
-- JS-18後は来た道を戻らずCode Coreへ直接進む
-
-## 5. GREENFIELD VILLAGE
-
-役割はtutorial syllabusではなく、**JS-01でPlayerが読めなかった部分を切り出して確認する場所**。
+序盤safe hub。
 
 - Random Encounterなし
-- TRAINでJS-02 / 03 / 04
-- `hp` / comparison
-- `name` / `===`
-- `find()`
-- 南EXITからOverworldへ戻る
+- JS-02 / 03 / 04
+- 宿 / 道具 / 装備 / NPC / TRAIN
+- Forestへ出る前の準備
 
-JS-01のStoryで「全部理解してから来い」と要求しない。まず症状を見せ、MIOが必要な部分だけを小さく分解する。
+### Forest Settlement
 
-## 6. JAVASCRIPT FOREST
+Forest後半〜Deep Forest前に置く第二の有人safe hub。
 
-役割は**JS-01から伸びたtraceを追う地域**。
+- GREENFIELDのコピーにしない
+- 森の小規模集落として自然Region identityを維持
+- 宿 / 補給 / NPC / Story
+- Deep Forest前の準備
+- safe checkpoint更新
 
-- 東から西へmain trail
-- safe side branch / treasureあり
-- JS-05: `find() + &&`
-- JS-06: `find() + ||`
-- JS-07: combined conditions
-- JS-08: MID BOSS、new syntaxなし
-- JS-09: `find()` vs `filter()`でimpact range確認
-- clear済みLessonだけRandom reviewへ追加
-- MID BOSSをRandom poolへ入れない
+camp / springは部分回復地点であり、有人集落の代替ではない。
 
-新conceptはRandom抽選で初登場させない。
+## 7. Safe checkpointとautosave
 
-## 7. JAVASCRIPT DEEP FOREST
-
-役割は**二つの症状が合流したshared traceをroot causeまで追う地域**。
-
-入口付近:
-
-- JS-09後に進入可能
-- 最初のStory movementでJS-10 second symptomを固定発生
-- JS-10未clear中はJS-11以降を始めない
-
-東→西:
+役割を分ける。
 
 ```text
-JS-11 filter() repetition
-JS-12 map()
-JS-13 some()
-JS-14 every()
-JS-15 Root Guardian
-JS-16 sort() + [0]
-JS-17 nested data + ?. + ??
-JS-18 reduce()
+autosave
+→ current game stateを永続化
+
+safe checkpoint
+→ 敗北時に戻る村 / 集落の位置
 ```
 
-- Root Guardianはnew syntaxなし
-- Random reviewはclear済みLessonだけ
-- Story Battle / MID BOSSをRandom初登場に使わない
-- JS-18 clearでwest EXITを解放
-- west EXITのtargetはCode Core南側。草原へ戻して旧Battleを消化させない
+checkpointはRpgStateへ明示的に保存し、current mapやx座標から毎回推測しない。
 
-## 8. Fixed Story Battle policy
+- 初回入村時に自動登録
+- 宿利用時にも再登録可能
+- save / reload後も維持
+- legacy saveに無い場合は安全なfallbackを使う
+- RETRYは同Battle再挑戦
+- RETURNは保存されたsafe hubを基本にする
+- Defeatを無料full healの手段にはしない
 
-### JS-01 first live incident
+## 8. Fixed Story / learning Battle policy
 
-- Opening後、BYTE合流後のJavaScript側Overworld movementで固定発生
-- Random chanceへ依存しない
-- Playerはまだ全部のcodeを説明できなくてよい
-- current stateと「実際に何が起きたか」を観察させる
-- post StoryでVillageへ行く理由を作る
+fixed Battleは「座標当て」ではなく、Playerが認識できる場所 / eventへ対応させる。
 
-### JS-10 second symptom
+優先順位:
 
-- JS-09後、Deep Forest入口で固定発生
-- Forestで追ったimpact rangeが別機能にも広がっていることを確認
-- REAL WORLD側feedbackとCODE WORLD traceを再接続する
+```text
+地形そのもの
+→ 実物object / landmark
+→ NPC / Story guidance
+→ 必要な場合だけ短いlabel
+```
 
-固定Story Battleは「テスト」ではなく、Story上の現象そのもの。
+Battle数だけ文字札を並べない。hidden `x <= N` progressionへ戻さない。
+
+### JS-01
+
+Opening後の最初のlive incident。全部説明できなくてもよく、症状を体験してGREENFIELDへ向かう理由を作る。
+
+### JS-10
+
+JS-09後、第二集落からDeep Forestへ向かう旅の中でsecond symptomを固定体験する。
 
 ## 9. Random Encounter policy
 
-目的は既習conceptの反復。新知識の導入ではない。
+Random Encounterは既習conceptの反復用。新conceptの初登場に使わない。
 
-Forest:
+Worldが広くなってもBattle回数を歩数比例で増やさない。
 
-```text
-JS-04 clear / JS-05未clear → Fixed JS-05
-JS-05 clear              → JS-05をreview可能
-JS-06 clear              → JS-05 / 06
-JS-07 clear              → JS-05 / 06 / 07
-JS-08はRandomへ入れない
-JS-09 clear              → JS-09もreview可能
-```
+- safe route / 街道: 低密度
+- optional risky route: 必要なら高め
+- safe hub: なし
+- MID BOSS: Random poolへ入れない
 
-Deep Forest:
-
-```text
-JS-09 clear / JS-10未clear → Fixed JS-10
-JS-10 clear                → Fixed JS-11開始
-以後                       → clear済みLessonだけreview
-JS-15はRandomへ入れない
-```
-
-OverworldのJavaScript main story中はreplay Random Encounterを抑え、Story momentumを優先する。
+clear済みLessonだけreview poolへ追加する。
 
 ## 10. World domain boundary
 
 ### `worldMap.ts`
 
-- map ID / dimensions
-- region / terrain
-- walkable
+- map ID / dimensions / terrain / walkability
 - viewport
-- portal / progress gate metadata
+- portal / gate metadata
 - fixed object positions
-- Random Encounter pool helper
+- Encounter pool helper
 - adjacency
 
 ### `worldActions.ts`
 
 UI / Routerへ依存しないpure resolver。
 
-- movement / blocked
-- portal metadataに基づくtransition
-- fixed Story Battle trigger
-- fixed learning Battle trigger
-- steps / Encounter cooldown
-- deterministic Random Encounter intent
-- BYTE / Shop / Recovery / Treasure / Boss interaction
+- movement
+- facing targetに対するinteraction intent
+- portal transition intent
+- fixed Story / learning Battle
+- Encounter pacing
+- Treasure / Boss / facility interaction
 
 ### `RpgState`
 
-- current map ID
-- local position
+- current map / position
+- Player facing（interaction authorityとして必要な場合）
 - Encounter pacing
-- current HP
-- RPG persistent state
+- HP / equipment / party
+- persistent safe checkpoint
+- Atlas reveal等のpersistent World state
 
 ### `WorldPage.tsx`
 
-resolver結果をnavigation / audio / short feedback / visual renderingへ接続するadapter。
+resolver結果をnavigation / audio / visual feedbackへ接続するadapter。map固有game ruleを増やしすぎない。
 
-map固有game ruleを`WorldPage.tsx`へ増やしすぎない。
+## 11. Facing / Action rule
 
-## 11. Save compatibility
-
-旧saveを新しいStory順へ無理に巻き戻さない。
-
-- 旧Training以降へ進行済み → JS-01を論理的に通過済みとして補完
-- 旧Deep Forest以降へ進行済み → JS-10相当のsecond symptomも補完
-- JavaScript Boss clear済み → modern JS arc全体をcompletedとしてnormalize
-
-numeric `battleId`を維持する理由はこの互換性。今後chapter追加時にnumeric IDを振り直す理由には使わない。
-
-RpgState v5は未使用のpartyEquipmentを除き、旧v1〜v4の装備・仲間・HP・World状態を移行する。Progress v4とRPGはBattle開始snapshotを含むroot schema v2の単一revisionとして保存・復元する。旧root v1 / 旧分割saveから移行し、壊れたrootはvalid backupから復旧する。portal graphの解放条件を満たさないmapに位置だけが残る場合はOverworld開始地点へ正規化する。
-
-Battle開始HPは現在のHPを引き継ぐ。VICTORY / RUNでは現在HPとItem消費を確定し、DEFEATでは消費を確定したうえでOverworld Hubへfull HP・cooldown resetで戻す。browser back / route leave / 別Battle移動および未完了Battleのreloadは開始snapshotへ全体rollbackする。敵・turn・Item使用枠も初期化し、HPやItemだけが残るpartial restoreは行わない。
-
-Worldのviewport / character layer / keyboard / D-Padは共有componentとhookで描画・制御し、地域固有の地形・interaction intentは各domainから与える。別tabのWorld操作は、そのtabが所有しないBattleの未確定HP・Itemではなく開始snapshotを使う。
-
-## 12. Future region rule
-
-TypeScript / Database等も同じ設計原則を使う。
+World interactionは基本:
 
 ```text
-現象を先に体験
+方向入力
+→ facing更新
+
+Action
+→ facing先1tileのtargetをresolve
+→ interaction
+```
+
+non-walkable objectの方向へ入力しただけで冒険ログやinteractionを発火しない。NPC / Treasure / Inn / Shop / Training / Boss / Portalを同じ基本操作へ寄せる。
+
+## 12. Atlas / Fog of War
+
+Map単位の発見とcell-level revealを分ける。
+
+- 新Mapへ入っただけで全terrainを公開しない
+- 歩いた周辺を蓄積してreveal
+- regional map購入で通常地形 / public geographyを先に確認可能
+- Treasure / secretの正確な位置は自動公開しない
+
+Fog of Warは#377のbranch / loop構造を先に成立させてから導入する。
+
+## 13. Save compatibility
+
+旧saveをStory reorderだけで巻き戻さない。
+
+- numeric Battle IDは互換用として維持
+- semantic progressionをauthorityにする
+- 新checkpoint / reveal stateはmigrationで安全なdefaultを補う
+- atomic root save / valid backup復旧の既存policyを維持
+
+Battle開始snapshotは未完了Battleのtransaction authorityとして扱う。Victory / Run / Defeat / route leaveの既存session semanticsをWorld checkpoint追加で曖昧にしない。
+
+## 14. Future region rule
+
+TypeScript / Database等も:
+
+```text
+現象
 → region内で必要な概念を読む
-→ 同じproblemのtraceを追う
+→ traceを追う
 → root cause
 ```
 
-ただしvisual identityや学習内容はregionごとに変える。
+を使うが、visual identityを共有しすぎない。
 
-- JavaScript: natural / grass / forest
+- JavaScript: natural / grass / river / forest
 - TypeScript: stone / crystal / ruins
-- Database: underground / archive候補
+- Database: underground / archive / mine / library
 
-各regionは独立したplayer-facing番号系列を持つ。JSのlegacy numeric IDへ続き番号を要求しない。
+JavaScript地方を広げるために後続Regionの主要景観を消費しない。
