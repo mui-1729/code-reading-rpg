@@ -1,5 +1,6 @@
 import { readStoredProgress, readStoredRpg } from './storedGameState'
 import { expect, test } from '@playwright/test'
+import { selectPauseTab } from './pause-menu-helpers'
 
 const AUDIO_KEY = 'code-reading-rpg:audio-settings'
 const OPENING_KEY = 'code-read-rpg:javascript-opening:v1'
@@ -89,7 +90,7 @@ test('進行リセットはOpeningを含め最初からに戻しSoundだけ保�
 
   await page.getByRole('button', { name: 'メニューを開く' }).click()
   const dialog = page.getByRole('dialog', { name: 'メニュー' })
-  await dialog.getByRole('button', { name: '設定' }).click()
+  await selectPauseTab(dialog, '設定')
   await dialog.getByRole('button', { name: '進行をリセット', exact: true }).click()
   await dialog.getByRole('button', { name: '本当に進行をリセットする', exact: true }).click()
 
