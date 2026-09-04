@@ -60,7 +60,7 @@ async function seedVillage(page: Page, position: { x: number; y: number }, curre
 }
 
 test('Villageの宿でGoldを払いHPを回復できる', async ({ page }) => {
-  await seedVillage(page, { x: 4, y: 6 })
+  await seedVillage(page, { x: 5, y: 12 })
 
   const innButton = page.getByRole('button', { name: '宿で休む' })
   await expect(innButton).toBeVisible()
@@ -77,7 +77,7 @@ test('Villageの宿でGoldを払いHPを回復できる', async ({ page }) => {
 })
 
 test('Villageの道具屋は消耗品だけを扱う', async ({ page }) => {
-  await seedVillage(page, { x: 16, y: 6 }, 100)
+  await seedVillage(page, { x: 14, y: 12 }, 100)
 
   await page.getByRole('button', { name: '道具屋を見る' }).click()
   const shop = page.getByRole('dialog', { name: '道具屋' })
@@ -87,7 +87,7 @@ test('Villageの道具屋は消耗品だけを扱う', async ({ page }) => {
 })
 
 test('Villageの装備屋は装備だけを扱い既存purchase domainを使える', async ({ page }) => {
-  await seedVillage(page, { x: 5, y: 12 }, 100)
+  await seedVillage(page, { x: 15, y: 12 }, 100)
 
   await page.getByRole('button', { name: '装備屋を見る' }).click()
   const shop = page.getByRole('dialog', { name: '装備屋' })

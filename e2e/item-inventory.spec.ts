@@ -1,6 +1,7 @@
 import { readStoredGameState } from './storedGameState'
 import { expect, test, type Page } from '@playwright/test'
 import { JS_BATTLE_1_PREREQS, JS_COMPLETE } from './canonical-progress-fixtures'
+import { selectPauseTab } from './pause-menu-helpers'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -107,7 +108,7 @@ test.describe('Item / Inventory UX', () => {
 
     await page.getByRole('button', { name: 'メニューを開く' }).click()
     const pause = page.getByRole('dialog', { name: 'メニュー' })
-    await pause.getByRole('button', { name: 'アイテム' }).click()
+    await selectPauseTab(pause, 'アイテム')
 
     const item = pause.locator('[data-item-id="patch-kit"]')
     await expect(item).toHaveAttribute('data-item-count', '2')
@@ -142,7 +143,7 @@ test.describe('Item / Inventory UX', () => {
     await shop.getByRole('button', { name: 'ショップを閉じる' }).click()
     await page.getByRole('button', { name: 'メニューを開く' }).click()
     const pause = page.getByRole('dialog', { name: 'メニュー' })
-    await pause.getByRole('button', { name: 'アイテム' }).click()
+    await selectPauseTab(pause, 'アイテム')
     const inventoryItem = pause.locator('[data-item-id="patch-kit"]')
     await expect(inventoryItem).toHaveAttribute('data-item-count', '1')
     await expect(inventoryItem.locator('img')).toHaveAttribute('src', '/pixel-art/items/patch-kit.svg')

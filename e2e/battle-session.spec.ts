@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { selectPauseTab } from './pause-menu-helpers'
 import { readStoredGameState } from './storedGameState'
 
 async function enterEncounter(page: Page, beforeEncounter?: () => Promise<void>) {
@@ -149,7 +150,7 @@ test('a second World tab never combines tentative battle healing with rolled-bac
   await second.getByRole('button', { name: 'メニューを開く' }).click()
   const menu = second.getByRole('dialog', { name: 'メニュー' })
   await expect(menu.getByText('40 / 108', { exact: true })).toBeVisible()
-  await menu.getByRole('button', { name: 'アイテム', exact: true }).click()
+  await selectPauseTab(menu, 'アイテム')
   await expect(menu.locator('[data-item-id="patch-kit"]')).toHaveAttribute('data-item-count', '2')
   await second.keyboard.press('Escape')
   await second.getByRole('button', { name: '右へ移動' }).click()

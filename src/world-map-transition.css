@@ -1,0 +1,110 @@
+body[data-world-transitioning='true'] .pause-trigger {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.world-map-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 1900;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  pointer-events: auto;
+  background:
+    linear-gradient(90deg, rgba(177, 158, 96, .08) 50%, transparent 50%) 0 0 / 12px 12px,
+    linear-gradient(rgba(177, 158, 96, .06) 50%, transparent 50%) 0 0 / 12px 12px,
+    #07100c;
+}
+
+.world-map-transition[data-world-transition-phase='covering'] {
+  animation: world-map-cover 180ms steps(6, end) both;
+}
+
+.world-map-transition[data-world-transition-phase='revealing'] {
+  animation: world-map-reveal 220ms steps(7, end) both;
+}
+
+.world-map-transition-vortex {
+  width: min(62vmin, 420px);
+  aspect-ratio: 1;
+  border: 8px solid #b9a66d;
+  border-right-color: #4f743d;
+  border-bottom-color: #684b30;
+  box-shadow:
+    0 0 0 8px #162f20,
+    0 0 0 16px #5d4930,
+    0 0 0 24px #203f28,
+    inset 0 0 0 8px #203f28,
+    inset 0 0 0 16px #5d4930;
+  transform: rotate(0deg) scale(.18);
+}
+
+.world-map-transition[data-world-transition-phase='covering'] .world-map-transition-vortex {
+  animation: world-map-vortex-in 180ms steps(6, end) both;
+}
+
+.world-map-transition[data-world-transition-phase='revealing'] .world-map-transition-vortex {
+  animation: world-map-vortex-out 220ms steps(7, end) both;
+}
+
+@keyframes world-map-cover {
+  from {
+    clip-path: inset(49% 49% 49% 49%);
+    opacity: .7;
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
+}
+
+@keyframes world-map-reveal {
+  from {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
+  to {
+    clip-path: inset(49% 49% 49% 49%);
+    opacity: .35;
+  }
+}
+
+@keyframes world-map-vortex-in {
+  from { transform: rotate(0deg) scale(.18); }
+  to { transform: rotate(270deg) scale(1.18); }
+}
+
+@keyframes world-map-vortex-out {
+  from { transform: rotate(270deg) scale(1.18); }
+  to { transform: rotate(450deg) scale(.14); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .world-map-transition,
+  .world-map-transition-vortex {
+    animation-timing-function: linear !important;
+  }
+
+  .world-map-transition[data-world-transition-phase='covering'] {
+    animation: world-map-cover-reduced 24ms linear both;
+  }
+
+  .world-map-transition[data-world-transition-phase='revealing'] {
+    animation: world-map-reveal-reduced 70ms linear both;
+  }
+
+  .world-map-transition-vortex {
+    display: none;
+  }
+}
+
+@keyframes world-map-cover-reduced {
+  from { opacity: 0; clip-path: inset(0); }
+  to { opacity: 1; clip-path: inset(0); }
+}
+
+@keyframes world-map-reveal-reduced {
+  from { opacity: 1; clip-path: inset(0); }
+  to { opacity: 0; clip-path: inset(0); }
+}

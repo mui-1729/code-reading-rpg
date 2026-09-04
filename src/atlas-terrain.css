@@ -55,6 +55,21 @@
   letter-spacing: .04em;
 }
 
+/* The scrollport is the Atlas viewport. Zoom may grow the inner canvas, but it
+   must never paint outside this frame or widen the Pause layout. */
+.world-atlas,
+.pause-section:has(.world-atlas),
+.atlas-scrollport {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.atlas-scrollport {
+  position: relative;
+  isolation: isolate;
+  contain: paint;
+}
+
 .atlas-detail-canvas {
   min-width: 0;
   max-width: none;
@@ -77,6 +92,7 @@
 .atlas-terrain-stage {
   position: relative;
   width: 100%;
+  overflow: hidden;
 }
 
 .atlas-terrain-grid {
@@ -167,6 +183,7 @@
 .atlas-landmark-layer {
   position: absolute;
   inset: 0;
+  overflow: hidden;
   pointer-events: none;
 }
 
@@ -224,38 +241,29 @@
   align-items: center;
 }
 
-.atlas-zoom::after {
-  content: '全体';
-  min-width: 50px;
+.atlas-zoom-value {
+  min-width: 58px;
   height: 34px;
   display: grid;
   place-items: center;
-  padding: 0 7px;
+  padding: 0 8px;
   border: 2px solid #555579;
   background: #0d0d17;
   color: #f4f2ff;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 900;
   line-height: 1;
-  order: 2;
 }
-
-.world-atlas[data-atlas-zoom='75'] .atlas-zoom::after { content: '75%'; }
-.world-atlas[data-atlas-zoom='100'] .atlas-zoom::after { content: '100%'; }
-.world-atlas[data-atlas-zoom='125'] .atlas-zoom::after { content: '125%'; }
-.world-atlas[data-atlas-zoom='150'] .atlas-zoom::after { content: '150%'; }
 
 .atlas-zoom button {
   width: auto;
-  min-width: 42px;
-  padding: 0 8px;
-  font-size: 9px;
+  min-width: 34px;
+  padding: 0;
+  font-size: 16px;
 }
-.atlas-zoom button[aria-label] { min-width: 34px; padding: 0; font-size: 16px; }
-.atlas-zoom button.is-active { border-color: var(--gold); color: var(--gold); }
 
 @media (max-width: 900px), (max-height: 520px) and (max-width: 1100px) {
-  .world-atlas:not([data-atlas-zoom='fit']) .atlas-scrollport {
+  .world-atlas:not([data-atlas-zoom='100']) .atlas-scrollport {
     max-height: min(52dvh, 420px);
     overflow: auto;
     overscroll-behavior: contain;
@@ -275,8 +283,11 @@
   .atlas-terrain-field { padding: 7px; }
   .atlas-landmark-pin { width: 13px; height: 13px; font-size: 8px; }
   .atlas-terrain-cell.is-player { box-shadow: 0 0 0 1px #ff4f8b; }
-  .atlas-zoom { justify-content: flex-start; flex-wrap: wrap; }
-  .atlas-zoom::after { min-width: 46px; }
+  .atlas-zoom {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

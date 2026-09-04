@@ -5,6 +5,7 @@ import {
   JS_MIDBOSS_PREREQS,
   JS_SECOND_INCIDENT_PREREQS,
 } from './canonical-progress-fixtures'
+import { selectPauseTab } from './pause-menu-helpers'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -397,7 +398,8 @@ test('@responsive current Atlas card is in the scrollport immediately after open
   })
   await page.goto('/world')
   await page.getByRole('button', { name: 'メニューを開く' }).click()
-  await page.getByRole('button', { name: 'マップ', exact: true }).click()
+  const menu = page.getByRole('dialog', { name: 'メニュー' })
+  await selectPauseTab(menu, 'マップ')
 
   const visible = await page.locator('.atlas-scrollport').evaluate((scrollport) => {
     const current = scrollport.querySelector('.atlas-map.is-current')

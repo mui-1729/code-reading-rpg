@@ -83,6 +83,10 @@ async function seedDeepForestGate(page: Page, state: DeepForestState) {
   await page.goto('/world')
 }
 
+async function waitForMapTransition(page: Page) {
+  await expect(page.locator('.world-map-transition')).toHaveCount(0, { timeout: 1_000 })
+}
+
 test('Battle 14未clearではDeep Forest入口が閉じている', async ({ page }) => {
   await seedDeepForestGate(page, 'filter-locked')
 
@@ -102,8 +106,9 @@ test('Battle 14 clear後はDeep Forestへ入り、最初のmovementでsecond inc
 
   const deepForest = page.getByLabel('JavaScript深層の森のマップ')
   await expect(deepForest).toHaveAttribute('data-world-map', 'js-deep-forest')
-  await expect(page.getByRole('heading', { name: 'JavaScript深層の森' })).toBeVisible()
+  await expect(page.locator('.world-header')).toBeHidden()
   await expect(page.getByLabel('次の目的')).toContainText('二つ目の症状')
+  await waitForMapTransition(page)
 
   await page.getByRole('button', { name: '上へ移動' }).click()
 
@@ -124,6 +129,7 @@ test('second incident clear後はDeep ForestでBattle 15を固定導入し共有
   await page.getByRole('button', { name: '左へ移動' }).click()
   await expect(page.getByLabel('JavaScript深層の森のマップ')).toHaveAttribute('data-world-map', 'js-deep-forest')
   await expect(page.getByLabel('次の目的')).toContainText('共通経路 · FILTER')
+  await waitForMapTransition(page)
 
   await page.getByRole('button', { name: '上へ移動' }).click()
 

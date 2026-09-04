@@ -11,6 +11,8 @@
 }
 
 .world-shell .world-panel {
+  display: flex;
+  flex-direction: column;
   padding: 16px 16px 22px;
   background:
     linear-gradient(rgba(255, 255, 255, .018), rgba(0, 0, 0, .08)),
@@ -23,11 +25,26 @@
     7px 8px 0 rgba(0, 0, 0, .42);
 }
 
+/* Exploration is field-first. Location context remains available through
+   transition messages and Pause > Map instead of permanent chrome. */
 .world-shell .world-header {
-  width: min(100%, 880px);
-  margin: 0 auto 10px;
-  padding: 0 2px;
-  align-items: center;
+  display: none;
+}
+
+.world-shell .world-viewport {
+  order: 1;
+}
+
+.world-shell .world-next-objective {
+  order: 2;
+}
+
+.world-shell .world-message {
+  order: 3;
+}
+
+.world-shell .world-controls {
+  order: 4;
 }
 
 .world-shell .world-header .eyebrow {
@@ -59,7 +76,7 @@
 
 .world-shell .world-next-objective {
   width: min(100%, 880px);
-  margin: 0 auto 10px;
+  margin: 10px auto 0;
   padding: 9px 12px;
   grid-template-columns: auto 1fr;
   align-items: baseline;
@@ -193,13 +210,9 @@
     border-width: 3px;
   }
 
-  .world-shell .world-header {
-    padding: 0 6px;
-  }
-
   .world-shell .world-next-objective {
     grid-template-columns: 1fr;
-    margin-bottom: 7px;
+    margin-top: 7px;
     padding: 7px 9px;
   }
 
@@ -209,8 +222,7 @@
   }
 
   .world-shell .world-next-objective > p {
-    font-size: 9px;
-    line-height: 1.4;
+    display: none;
   }
 
   .world-shell .world-viewport {

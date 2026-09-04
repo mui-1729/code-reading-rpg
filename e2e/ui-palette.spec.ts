@@ -24,6 +24,6 @@ test('World chromeはgame-wide blue系semantic paletteを共有する', async ({
   expect(worldFrame).toBe('rgb(84, 84, 124)')
 
   await page.getByRole('button', { name: 'メニューを開く' }).click()
-  const pauseActiveBorder = await page.locator('.pause-tabs button.is-active').evaluate((element) => getComputedStyle(element).borderTopColor)
-  expect(pauseActiveBorder).toBe('rgb(79, 140, 255)')
+  const pauseSelectorBorder = await page.locator('.pause-tab-trigger').evaluate((element) => getComputedStyle(element).borderTopColor)
+  expect(pauseSelectorBorder).toBe('rgb(79, 140, 255)')
 })

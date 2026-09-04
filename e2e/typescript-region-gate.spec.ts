@@ -87,6 +87,10 @@ async function seedWorld(
 const overworld = (page: Page) => page.getByLabel('ワールドマップ')
 const frontier = (page: Page) => page.getByLabel('TypeScript辺境のマップ')
 
+async function waitForMapTransition(page: Page) {
+  await expect(page.locator('.world-map-transition')).toHaveCount(0, { timeout: 1_000 })
+}
+
 test('JavaScript未clearではTypeScriptの門へ進めず理由を表示する', async ({ page }) => {
   await seedWorld(page)
 
@@ -105,7 +109,7 @@ test('canonical JavaScript route完了後はOverworldから専用TypeScript辺�
   await expect(frontier(page)).toHaveAttribute('data-world-map', 'ts-frontier')
   await expect(frontier(page)).toHaveAttribute('data-world-x', '2')
   await expect(frontier(page)).toHaveAttribute('data-world-y', '10')
-  await expect(page.getByRole('heading', { name: 'TypeScript辺境' })).toBeVisible()
+  await expect(page.locator('.world-header')).toBeHidden()
   await expect(page.getByText('TypeScript辺境は未開通')).toHaveCount(0)
 })
 
@@ -121,6 +125,7 @@ test('TypeScript辺境の西の門からCentral Hubへ往復できる', async ({
   await expect(overworld(page)).toHaveAttribute('data-world-map', 'overworld')
   await expect(overworld(page)).toHaveAttribute('data-world-x', '22')
   await expect(overworld(page)).toHaveAttribute('data-world-y', '14')
+  await waitForMapTransition(page)
 
   await page.getByRole('button', { name: '右へ移動' }).click()
   await expect(frontier(page)).toHaveAttribute('data-world-map', 'ts-frontier')

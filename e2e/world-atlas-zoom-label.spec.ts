@@ -1,10 +1,11 @@
 import { expect, test } from '@playwright/test'
+import { selectPauseTab } from './pause-menu-helpers'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
-test('ワールドマップは実際のzoom stateを画面上の倍率表示へ反映する', async ({ page }) => {
+test('ワールドマップは100%を全体fit基準にして現在倍率だけを表示する', async ({ page }) => {
   await page.goto('/')
   await page.evaluate(
     ({ progressKey, rpgKey, tutorialKey }) => {
@@ -52,26 +53,41 @@ test('ワールドマップは実際のzoom stateを画面上の倍率表示へ�
   )
   await page.goto('/world')
   await page.getByRole('button', { name: 'メニューを開く' }).click()
-  await page.getByRole('button', { name: 'マップ', exact: true }).click()
+  const menu = page.getByRole('dialog', { name: 'メニュー' })
+  await selectPauseTab(menu, 'マップ')
 
   const atlas = page.getByRole('region', { name: 'ワールドマップ' })
-  const zoomControls = atlas.locator('.atlas-zoom')
-  const visibleZoom = () =>
-    zoomControls.evaluate((element) => getComputedStyle(element, '::after').content.replaceAll('"', ''))
+  const zoomValue = atlas.locator('.atlas-zoom-value')
+  const zoomOut = atlas.getByRole('button', { name: 'ワールドマップを縮小' })
+  const zoomIn = atlas.getByRole('button', { name: 'ワールドマップを拡大' })
 
-  await expect(atlas).toHaveAttribute('data-atlas-zoom', 'fit')
-  await expect.poll(visibleZoom).toBe('全体')
+  await expect(atlas).toHaveAttribute('data-atlas-zoom', '100')
+  await expect(zoomValue).toHaveText('100%')
+  await expect(zoomOut).toBeDisabled()
+  await expect(atlas.getByRole('button', { name: '全体', exact: true })).toHaveCount(0)
+  await expect(atlas.getByRole('button', { name: '100%', exact: true })).toHaveCount(0)
 
-  await atlas.getByRole('button', { name: 'ワールドマップを拡大' }).click()
+  const fitAt100 = await atlas.evaluate((element) => {
+    const scrollport = element.querySelector<HTMLElement>('.atlas-scrollport')
+    const canvas = element.querySelector<HTMLElement>('.atlas-detail-canvas')
+    if (!scrollport || !canvas) return false
+    return canvas.getBoundingClientRect().width <= scrollport.getBoundingClientRect().width + 1
+  })
+  expect(fitAt100).toBe(true)
+
+  await zoomIn.click()
   await expect(atlas).toHaveAttribute('data-atlas-zoom', '125')
-  await expect.poll(visibleZoom).toBe('125%')
+  await expect(zoomValue).toHaveText('125%')
+  await expect(zoomOut).toBeEnabled()
 
-  await atlas.getByRole('button', { name: 'ワールドマップを拡大' }).click()
-  await expect.poll(visibleZoom).toBe('150%')
+  await zoomIn.click()
+  await expect(atlas).toHaveAttribute('data-atlas-zoom', '150')
+  await expect(zoomValue).toHaveText('150%')
+  await expect(zoomIn).toBeDisabled()
 
-  await atlas.getByRole('button', { name: '100%', exact: true }).click()
-  await expect.poll(visibleZoom).toBe('100%')
-
-  await atlas.getByRole('button', { name: 'ワールドマップを縮小' }).click()
-  await expect.poll(visibleZoom).toBe('75%')
+  await zoomOut.click()
+  await expect(zoomValue).toHaveText('125%')
+  await zoomOut.click()
+  await expect(zoomValue).toHaveText('100%')
+  await expect(zoomOut).toBeDisabled()
 })

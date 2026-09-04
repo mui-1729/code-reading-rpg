@@ -1,6 +1,7 @@
 import { readStoredGameState, readStoredRpg } from './storedGameState'
 import { expect, test, type Page } from '@playwright/test'
 import { JS_FIRST_INCIDENT, JS_SECOND_INCIDENT_PREREQS } from './canonical-progress-fixtures'
+import { selectPauseTab } from './pause-menu-helpers'
 
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -62,7 +63,7 @@ async function seedReplayState(
 async function replayTutorial(page: Page) {
   await page.getByRole('button', { name: 'メニューを開く' }).click()
   const menu = page.getByRole('dialog', { name: 'メニュー' })
-  await menu.getByRole('button', { name: '設定' }).click()
+  await selectPauseTab(menu, '設定')
   await menu.getByRole('button', { name: 'チュートリアルをやり直す' }).click()
 }
 

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { selectPauseTab } from './pause-menu-helpers'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -59,7 +60,7 @@ test('装備slotは現在装備1件だけを表示し、pickerから変更と「
   await page.goto('/world')
   await page.getByRole('button', { name: 'メニューを開く' }).click()
   const pause = page.getByRole('dialog', { name: 'メニュー' })
-  await pause.getByRole('button', { name: '装備', exact: true }).click()
+  await selectPauseTab(pause, '装備')
 
   const weaponSlot = pause.locator('[data-equipment-slot="weapon"]')
   const weaponTrigger = weaponSlot.getByRole('button', { name: /武器を選ぶ/ })

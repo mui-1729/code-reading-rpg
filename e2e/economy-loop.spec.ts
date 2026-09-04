@@ -1,6 +1,7 @@
 import { readStoredGameState } from './storedGameState'
 import { expect, test, type Page } from '@playwright/test'
 import { JS_BATTLE_1_PREREQS } from './canonical-progress-fixtures'
+import { selectPauseTab } from './pause-menu-helpers'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -146,7 +147,7 @@ test('Battle Gold → Shop purchase/equip → Inn → reload → next canonical 
   await page.getByRole('button', { name: 'メニューを開く' }).click()
   const pause = page.getByRole('dialog', { name: 'メニュー' })
   await expect(pause.getByText('0 G', { exact: true })).toBeVisible()
-  await pause.getByRole('button', { name: '装備' }).click()
+  await selectPauseTab(pause, '装備')
   const accessorySlot = pause.locator('[data-equipment-slot="accessory"]')
   await expect(accessorySlot.locator('header strong')).toHaveText('Life Charm')
   await expect(accessorySlot.getByRole('button', { name: /アクセサリを選ぶ/ })).toContainText('Life Charm')

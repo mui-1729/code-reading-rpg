@@ -27,6 +27,7 @@ import {
   isWorldPositionVisible,
   type WorldPosition,
 } from './worldSceneGeometry'
+import { useQueuedWorldMove } from './useQueuedWorldMove'
 
 export type WorldObjective = {
   label: string
@@ -112,7 +113,12 @@ function useWorldCameraPan(
     cells,
   })
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const rapidUntilRef = useRef(0)
   const [pan, setPan] = useState<CameraPan | null>(null)
+
+  useEffect(() => () => {
+    if (timerRef.current !== null) clearTimeout(timerRef.current)
+  }, [])
 
   useLayoutEffect(() => {
     const currentPlayer = { x: playerX, y: playerY }
@@ -121,30 +127,38 @@ function useWorldCameraPan(
     const sameMap = previous.mapId === mapId
     const walked = sameMap && isAdjacentWorldStep(previous.playerPosition, currentPlayer)
     const cameraShifted = sameMap && isAdjacentWorldStep(previous.viewportStart, currentViewport)
+    const now = Date.now()
+    const interruptedActivePan = timerRef.current !== null
 
-    if (timerRef.current !== null) clearTimeout(timerRef.current)
+    if (timerRef.current !== null) {
+      clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
 
     if (walked && cameraShifted) {
-      setPan({
-        key: `${mapId}:${viewportX}:${viewportY}:${playerX}:${playerY}`,
-        facing: getWorldFacing(previous.playerPosition, currentPlayer),
-        cells: previous.cells,
-      })
-      timerRef.current = setTimeout(() => {
+      if (interruptedActivePan || now < rapidUntilRef.current) {
+        // Rapid input must never restart a one-tile keyframe from 100% offset.
+        // Keep every logical movement, but coalesce camera motion to the current
+        // authoritative viewport until input has been quiet for one step window.
+        rapidUntilRef.current = now + WORLD_STEP_MS
         setPan(null)
-        timerRef.current = null
-      }, WORLD_STEP_MS)
+      } else {
+        setPan({
+          key: `${mapId}:${viewportX}:${viewportY}:${playerX}:${playerY}`,
+          facing: getWorldFacing(previous.playerPosition, currentPlayer),
+          cells: previous.cells,
+        })
+        timerRef.current = setTimeout(() => {
+          setPan(null)
+          timerRef.current = null
+        }, WORLD_STEP_MS)
+      }
     } else {
       setPan(null)
+      if (!sameMap) rapidUntilRef.current = 0
     }
 
     previousRef.current = { mapId, playerPosition: currentPlayer, viewportStart: currentViewport, cells }
-    return () => {
-      if (timerRef.current !== null) {
-        clearTimeout(timerRef.current)
-        timerRef.current = null
-      }
-    }
   }, [cells, mapId, playerX, playerY, viewportX, viewportY])
 
   return pan
@@ -441,13 +455,9 @@ export function WorldControls(props: {
     conversation.origin.y === rpgState.worldPosition.y
       ? conversation
       : null
-  const moveRef = useRef(move)
   const delayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const repeatRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  useEffect(() => {
-    moveRef.current = move
-  }, [move])
+  const queuedMove = useQueuedWorldMove(move, activeConversation !== null)
 
   const stopHold = useCallback(() => {
     if (delayRef.current !== null) clearTimeout(delayRef.current)
@@ -461,11 +471,11 @@ export function WorldControls(props: {
   const startHold = useCallback((dx: number, dy: number) => {
     if (activeConversation) return
     stopHold()
-    moveRef.current(dx, dy)
+    queuedMove(dx, dy)
     delayRef.current = setTimeout(() => {
-      repeatRef.current = setInterval(() => moveRef.current(dx, dy), 120)
+      repeatRef.current = setInterval(() => queuedMove(dx, dy), 120)
     }, 280)
-  }, [activeConversation, stopHold])
+  }, [activeConversation, queuedMove, stopHold])
 
   const directionButton = (label: string, glyph: string, dx: number, dy: number) => (
     <button
@@ -482,7 +492,7 @@ export function WorldControls(props: {
       onClick={(event) => {
         if (activeConversation) return
         if (event.detail !== 0) return
-        moveRef.current(dx, dy)
+        queuedMove(dx, dy)
       }}
     >
       {glyph}

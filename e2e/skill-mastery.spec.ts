@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { JS_SECOND_INCIDENT_PREREQS } from './canonical-progress-fixtures'
+import { selectPauseTab } from './pause-menu-helpers'
 
 const OPENING_KEY = 'code-read-rpg:javascript-opening:v1'
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
@@ -42,7 +43,7 @@ test('CODEXはclear履歴から導出したMASTERED Skillを表示する', async
 
   await page.getByRole('button', { name: 'メニューを開く' }).click()
   const dialog = page.getByRole('dialog', { name: 'メニュー' })
-  await dialog.getByRole('button', { name: 'コード図鑑' }).click()
+  await selectPauseTab(dialog, 'コード図鑑')
 
   const codex = dialog.getByLabel('Code Codex')
   await expect(codex).toContainText('13 CONCEPTS · 9 MASTERED')

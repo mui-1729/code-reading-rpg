@@ -1,0 +1,213 @@
+/* Destination-specific portal scenes. Portal coordinates remain owned by worldMap.ts. */
+
+/* The React object keeps screen-reader text, but the field no longer depends on a word label. */
+.world-viewport .exit-object,
+.world-viewport .village-object {
+  width: 72%;
+  height: 72%;
+  padding: 0;
+  font-size: 0;
+  text-shadow: none;
+  pointer-events: none;
+}
+
+.world-viewport .exit-object::before,
+.world-viewport .village-object::before {
+  content: '';
+  position: absolute;
+  inset: 12%;
+  border: 2px solid rgba(242, 224, 184, .72);
+  border-bottom: 0;
+  clip-path: polygon(0 100%, 0 36%, 16% 36%, 16% 18%, 36% 18%, 36% 0, 64% 0, 64% 18%, 84% 18%, 84% 36%, 100% 36%, 100% 100%);
+}
+
+/* Overworld -> GREENFIELD VILLAGE: a timber gate and fenced village road. */
+.world-viewport[data-world-map='overworld'] .world-tile[data-world-x='14'][data-world-y='12'] {
+  --portal-scene-kind: village-gate;
+  background:
+    linear-gradient(90deg, transparent 0 39%, #aa8a56 40% 60%, transparent 61%),
+    #667544;
+  box-shadow: inset 0 -5px 0 rgba(77, 58, 34, .32);
+}
+
+.world-viewport[data-world-map='overworld'] .world-tile[data-world-x='14'][data-world-y='12']::before,
+.world-viewport[data-world-map='overworld'] .world-tile[data-world-x='14'][data-world-y='12']::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  bottom: 8%;
+  width: 18%;
+  height: 68%;
+  border: 2px solid #3a2a1e;
+  background: #8c633e;
+  box-shadow: inset 0 7px 0 #bb8956;
+}
+
+.world-viewport[data-world-map='overworld'] .world-tile[data-world-x='14'][data-world-y='12']::before { left: 8%; }
+.world-viewport[data-world-map='overworld'] .world-tile[data-world-x='14'][data-world-y='12']::after { right: 8%; }
+
+.world-viewport[data-world-map='overworld'] .world-tile[data-world-y='12']:is([data-world-x='13'], [data-world-x='15']) {
+  background:
+    linear-gradient(0deg, transparent 0 58%, #8c633e 59% 67%, transparent 68%),
+    linear-gradient(90deg, transparent 0 18%, #4e3928 19% 25%, transparent 26% 74%, #4e3928 75% 81%, transparent 82%),
+    #4b8744;
+}
+
+/* Overworld -> JavaScript Forest: the road narrows into a dark tree arch. */
+.world-viewport[data-world-map='overworld'] .world-tile[data-world-x='7'][data-world-y='14'] {
+  --portal-scene-kind: forest-arch;
+  overflow: visible;
+  background:
+    linear-gradient(90deg, #214f2d 0 22%, transparent 23% 77%, #214f2d 78% 100%),
+    linear-gradient(90deg, #876b46 35%, #a88753 36% 64%, #876b46 65%);
+  box-shadow: inset 0 7px 0 rgba(12, 35, 21, .35);
+}
+
+.world-viewport[data-world-map='overworld'] .world-tile[data-world-x='7'][data-world-y='14']::before {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  left: 5%;
+  right: 5%;
+  top: 3%;
+  height: 48%;
+  border: 6px solid #173d23;
+  border-bottom: 0;
+  border-radius: 50% 50% 0 0;
+  box-shadow: inset 0 5px 0 #2c6837, 0 -4px 0 #285e33;
+}
+
+.world-viewport[data-world-map='overworld'] .world-tile[data-world-x='7'][data-world-y='14']::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  left: 37%;
+  right: 37%;
+  top: 26%;
+  bottom: 0;
+  background: linear-gradient(#2a4230, #8e7149);
+  clip-path: polygon(20% 0, 80% 0, 100% 100%, 0 100%);
+}
+
+.world-viewport[data-world-map='overworld'] .world-tile:is(
+  [data-world-x='6'][data-world-y='13'],
+  [data-world-x='6'][data-world-y='14'],
+  [data-world-x='6'][data-world-y='15'],
+  [data-world-x='7'][data-world-y='13'],
+  [data-world-x='7'][data-world-y='15']
+) {
+  background-color: #23552f;
+  box-shadow: inset 0 0 0 3px rgba(22, 62, 34, .55);
+}
+
+/* Village -> grassland: timber fence opening, not a generic EXIT sign. */
+.world-viewport[data-world-map='js-village'] .world-tile[data-world-x='10'][data-world-y='14'] {
+  --portal-scene-kind: village-outgate;
+  background:
+    linear-gradient(90deg, #5c4a32 0 12%, transparent 13% 87%, #5c4a32 88% 100%),
+    linear-gradient(#a88753 0 54%, #4b8744 55% 100%);
+}
+
+.world-viewport[data-world-map='js-village'] .world-tile[data-world-x='10'][data-world-y='14']::before,
+.world-viewport[data-world-map='js-village'] .world-tile[data-world-x='10'][data-world-y='14']::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  bottom: 10%;
+  width: 13%;
+  height: 62%;
+  background: #7b5d3c;
+  box-shadow: inset 0 5px 0 #ad8454;
+}
+.world-viewport[data-world-map='js-village'] .world-tile[data-world-x='10'][data-world-y='14']::before { left: 13%; }
+.world-viewport[data-world-map='js-village'] .world-tile[data-world-x='10'][data-world-y='14']::after { right: 13%; }
+
+/* Forest east edge -> grassland: a bright break in the trees. */
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='30'][data-world-y='10'] {
+  --portal-scene-kind: forest-light-gap;
+  background:
+    radial-gradient(ellipse at 82% 50%, #93b96d 0 18%, #5b8b4b 19% 34%, transparent 35%),
+    linear-gradient(90deg, #24562f 0 28%, #8e7149 29% 100%);
+}
+
+/* Forest -> Deep Forest: thick roots close around the western trail. */
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='10'] {
+  --portal-scene-kind: deep-forest-root-arch;
+  overflow: visible;
+  background: linear-gradient(90deg, #173d24 0 28%, #5b4932 29% 71%, #173d24 72%);
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='10']::before {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  inset: 3% 5% 8%;
+  border: 8px solid #3b2d20;
+  border-bottom-width: 4px;
+  border-radius: 48% 48% 20% 20%;
+  box-shadow: inset 0 0 0 4px #1c4629, 0 -5px 0 #234f2d;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='10']::after {
+  content: '';
+  position: absolute;
+  z-index: 4;
+  left: 20%;
+  right: 20%;
+  bottom: 5%;
+  height: 22%;
+  background: repeating-linear-gradient(20deg, #6c5134 0 4px, #44301f 4px 7px);
+  clip-path: polygon(0 70%, 22% 25%, 43% 62%, 65% 0, 100% 70%, 100% 100%, 0 100%);
+}
+
+/* Deep Forest -> Forest: lighter foliage tells the player they are returning outward. */
+.world-viewport[data-world-map='js-deep-forest'] .world-tile[data-world-x='30'][data-world-y='10'] {
+  --portal-scene-kind: deep-forest-light-gap;
+  background:
+    radial-gradient(ellipse at 86% 50%, #6a9959 0 22%, #3d7040 23% 40%, transparent 41%),
+    linear-gradient(90deg, #163b24 0 32%, #6f5a3c 33% 100%);
+}
+
+/* Deep Forest -> Code Core: a giant living root tunnel, still natural JavaScript scenery. */
+.world-viewport[data-world-map='js-deep-forest'] .world-tile[data-world-x='1'][data-world-y='10'] {
+  --portal-scene-kind: giant-root-gate;
+  overflow: visible;
+  background: #142f20;
+}
+
+.world-viewport[data-world-map='js-deep-forest'] .world-tile[data-world-x='1'][data-world-y='10']::before {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  inset: -9% -10% 2%;
+  border: 10px solid #473520;
+  border-bottom: 4px solid #2e2419;
+  border-radius: 48% 48% 12% 12%;
+  box-shadow: inset 0 0 0 5px #0f2a1b, 0 -6px 0 #1c3b24;
+}
+
+.world-viewport[data-world-map='js-deep-forest'] .world-tile[data-world-x='1'][data-world-y='10']::after {
+  content: '';
+  position: absolute;
+  z-index: 4;
+  inset: 52% 10% 4%;
+  background: repeating-linear-gradient(165deg, #604629 0 5px, #352719 5px 8px);
+  clip-path: polygon(0 64%, 16% 22%, 34% 52%, 48% 0, 66% 48%, 82% 16%, 100% 62%, 100% 100%, 0 100%);
+}
+
+/* TypeScript keeps its own stone-gate identity rather than borrowing forest exits. */
+.world-viewport[data-world-map='overworld'] .world-tile[data-world-x='23'][data-world-y='14'],
+.world-viewport[data-world-map='ts-frontier'] .world-tile[data-world-x='1'][data-world-y='10'] {
+  --portal-scene-kind: typescript-stone-gate;
+  background:
+    linear-gradient(90deg, #4a5364 0 21%, transparent 22% 78%, #4a5364 79%),
+    repeating-linear-gradient(0deg, #657084 0 8px, #566173 8px 11px);
+}
+
+@media (max-width: 700px) {
+  .world-viewport .exit-object,
+  .world-viewport .village-object {
+    width: 82%;
+    height: 82%;
+  }
+}

@@ -72,7 +72,7 @@ test('JS-01後はVillage入口で止まりアクションで入ってreload後�
 
   await page.getByRole('button', { name: '上へ移動' }).click()
 
-  await expect(page.getByRole('heading', { name: 'CODE WORLD' })).toBeVisible()
+  await expect(page.locator('.world-header')).toBeHidden()
   await expect(viewport).toHaveAttribute('data-world-map', 'overworld')
   await expect(viewport).toHaveAttribute('data-world-x', '14')
   await expect(viewport).toHaveAttribute('data-world-y', '13')
@@ -80,7 +80,7 @@ test('JS-01後はVillage入口で止まりアクションで入ってreload後�
 
   await page.getByRole('button', { name: 'グリーンフィールド村へ入る' }).click()
 
-  await expect(page.getByRole('heading', { name: 'グリーンフィールド村' })).toBeVisible()
+  await expect(page.getByLabel('グリーンフィールド村のマップ')).toBeVisible()
   await expect(viewport).toHaveAttribute('data-world-map', 'js-village')
   await expect(viewport).toHaveAttribute('data-world-x', '10')
   await expect(viewport).toHaveAttribute('data-world-y', '12')
@@ -93,7 +93,7 @@ test('JS-01後はVillage入口で止まりアクションで入ってreload後�
   })
 
   await page.reload()
-  await expect(page.getByRole('heading', { name: 'グリーンフィールド村' })).toBeVisible()
+  await expect(page.getByLabel('グリーンフィールド村のマップ')).toBeVisible()
   await expect(viewport).toHaveAttribute('data-world-map', 'js-village')
   await expect(viewport).toHaveAttribute('data-world-x', '10')
   await expect(viewport).toHaveAttribute('data-world-y', '12')
@@ -102,7 +102,7 @@ test('JS-01後はVillage入口で止まりアクションで入ってreload後�
   await expect(viewport).toHaveAttribute('data-world-y', '13')
   await page.getByRole('button', { name: '下へ移動' }).click()
 
-  await expect(page.getByRole('heading', { name: 'CODE WORLD' })).toBeVisible()
+  await expect(page.locator('.world-header')).toBeHidden()
   await expect(viewport).toHaveAttribute('data-world-map', 'overworld')
   await expect(viewport).toHaveAttribute('data-world-x', '14')
   await expect(viewport).toHaveAttribute('data-world-y', '13')

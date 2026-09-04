@@ -4,6 +4,7 @@ import { GameStateProvider } from './persistence'
 import { router } from './router'
 import { TutorialProvider } from './tutorial'
 import { WorldCharacterDecorations } from './world/WorldCharacterDecorations'
+import { WorldMapTransitionGate } from './world/WorldMapTransitionGate'
 import { VillageFacilities } from './world/VillageFacilities'
 import { WorldRecoveryStops } from './world/WorldRecoveryStops'
 import { TypeScriptRegionGate } from './world/TypeScriptRegionGate'
@@ -14,6 +15,7 @@ export function AppRouter() {
       <TutorialProvider>
         <BattleRuntimeProvider>
           <RouterProvider router={router} />
+          <WorldMapTransitionGate />
           <WorldCharacterDecorations />
           <VillageFacilities />
           <WorldRecoveryStops />
