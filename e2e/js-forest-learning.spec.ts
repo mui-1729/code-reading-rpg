@@ -53,7 +53,7 @@ async function seedForestGate(page: Page, state: ForestGateState) {
               byte: { weapon: null, armor: null, accessory: null },
             },
             worldMapId: 'overworld',
-            worldPosition: { x: 8, y: 14 },
+            worldPosition: { x: 34, y: 33 },
             stepsSinceEncounter: 8,
             encounterCount: 0,
             currentHp: 100,
@@ -81,7 +81,7 @@ test('Training 9未clearではForest入口が閉じている', async ({ page }) 
   await seedForestGate(page, 'training-incomplete')
 
   await expect(page.getByLabel('ワールドマップ')).toHaveAttribute('data-world-map', 'overworld')
-  await page.getByRole('button', { name: '左へ移動' }).click()
+  await page.getByRole('button', { name: '下へ移動' }).click()
 
   await expect(page.getByLabel('ワールドマップ')).toHaveAttribute('data-world-map', 'overworld')
   await expect(page.getByLabel('次の目的')).toContainText('調査準備')
@@ -90,7 +90,7 @@ test('Training 9未clearではForest入口が閉じている', async ({ page }) 
 test('JS-01 clearだけではForestへ入れずVillage trainingを要求する', async ({ page }) => {
   await seedForestGate(page, 'incident-only')
 
-  await page.getByRole('button', { name: '左へ移動' }).click()
+  await page.getByRole('button', { name: '下へ移動' }).click()
 
   await expect(page.getByLabel('ワールドマップ')).toHaveAttribute('data-world-map', 'overworld')
   await expect(page.getByLabel('次の目的')).toContainText('調査準備')
@@ -99,7 +99,7 @@ test('JS-01 clearだけではForestへ入れずVillage trainingを要求する',
 test('Village training完了後はForestへ入りreload後もlocal mapを保持する', async ({ page }) => {
   await seedForestGate(page, 'training-complete')
 
-  await page.getByRole('button', { name: '左へ移動' }).click()
+  await page.getByRole('button', { name: '下へ移動' }).click()
   const forest = page.getByLabel('JavaScriptの森のマップ')
   await expect(forest).toHaveAttribute('data-world-map', 'js-forest')
   await expect(page.locator('.world-header')).toBeHidden()
@@ -114,7 +114,7 @@ test('Village training完了後はForestへ入りreload後もlocal mapを保持�
 test('Forest最初のWoodsはRandom抽選ではなくBattle 10の固定traceになる', async ({ page }) => {
   await seedForestGate(page, 'training-complete')
 
-  await page.getByRole('button', { name: '左へ移動' }).click()
+  await page.getByRole('button', { name: '下へ移動' }).click()
   await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-map', 'js-forest')
 
   await page.getByRole('button', { name: '左へ移動' }).click()

@@ -153,7 +153,7 @@ test.describe('Open World RPG loop', () => {
     await expect.poll(() => playerPosition(page)).toEqual({ x: 10, y: 11 })
 
     const stored = await storedRpgState(page)
-    expect(stored.version).toBe(5)
+    expect(stored.version).toBe(6)
     expect(stored.state.worldMapId).toBe('overworld')
     expect(stored.state.worldPosition).toEqual({ x: 10, y: 11 })
     expect(stored.state.encounterCount).toBe(5)
@@ -231,7 +231,7 @@ test.describe('Open World RPG loop', () => {
   test('JS TreasureはDebug CharmとGoldを一度だけ付与しreload後もOPENを維持する', async ({ page }) => {
     await seedStorage(page, {
       progress: createProgress({ gold: 5 }),
-      rpg: createRpgState({ worldPosition: { x: 10, y: 18 } }),
+      rpg: createRpgState({ worldPosition: { x: 8, y: 32 } }),
     })
 
     await page.goto('/world')

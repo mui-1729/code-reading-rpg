@@ -115,7 +115,7 @@ test('進行リセットはOpeningを含め最初からに戻しSoundだけ保�
   await expect.poll(async () =>
     readStoredRpg(page),
   ).toMatchObject({
-    version: 5,
+    version: 6,
     state: {
       equipment: {
         weapon: 'training-blade',

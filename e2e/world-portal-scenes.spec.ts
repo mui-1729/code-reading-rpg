@@ -28,7 +28,7 @@ async function seedWorld(
         },
       }))
       localStorage.setItem(rpgKey, JSON.stringify({
-        version: 5,
+        version: 6,
         state: {
           equipment: { weapon: 'training-blade', armor: 'traveler-coat', accessory: null },
           ownedEquipmentIds: ['training-blade', 'traveler-coat'],
@@ -57,9 +57,9 @@ async function portalSceneKind(page: Page, selector: string) {
 
 test('Overworldの森入口は文字札ではなく木のarchとして見え、踏み込むと森へ遷移する', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  await seedWorld(page, 'overworld', { x: 8, y: 14 }, [1, 7, 8, 9])
+  await seedWorld(page, 'overworld', { x: 34, y: 33 }, [1, 7, 8, 9])
 
-  const entrance = '.world-tile[data-world-x="7"][data-world-y="14"]'
+  const entrance = '.world-tile[data-world-x="34"][data-world-y="34"]'
   await expect(page.locator(entrance)).toBeVisible()
   expect(await portalSceneKind(page, entrance)).toBe('forest-arch')
   const arch = await page.locator(entrance).evaluate((element) => {
@@ -69,15 +69,15 @@ test('Overworldの森入口は文字札ではなく木のarchとして見え、�
   expect(arch.content).not.toBe('none')
   expect(arch.borderTopWidth).toBeGreaterThan(0)
 
-  await page.getByRole('button', { name: '左へ移動' }).click()
+  await page.getByRole('button', { name: '下へ移動' }).click()
   await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-map', 'js-forest')
 })
 
 test('村入口は木柵門、Village出口は草原へ抜ける門として別sceneになる', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  await seedWorld(page, 'overworld', { x: 14, y: 13 }, [1])
+  await seedWorld(page, 'overworld', { x: 10, y: 21 }, [1])
 
-  const villageGate = '.world-tile[data-world-x="14"][data-world-y="12"]'
+  const villageGate = '.world-tile[data-world-x="10"][data-world-y="22"]'
   expect(await portalSceneKind(page, villageGate)).toBe('village-gate')
   await expect(page.locator(`${villageGate} .village-object`)).toHaveCSS('font-size', '0px')
   await expect(page.getByRole('button', { name: 'グリーンフィールド村へ入る' })).toBeEnabled()
@@ -89,6 +89,8 @@ test('村入口は木柵門、Village出口は草原へ抜ける門として別s
 
   await page.getByRole('button', { name: '下へ移動' }).click()
   await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-map', 'overworld')
+  await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-x', '10')
+  await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-y', '21')
 })
 
 test('ForestからDeep Forestは太い根のarchになりgeneric出口表示へ依存しない', async ({ page }) => {

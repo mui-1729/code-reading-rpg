@@ -235,7 +235,7 @@ REST
 | State | Version | Economy関連責務 |
 | --- | ---: | --- |
 | `PlayerProgress` | v4 | EXP / Gold / `inventory.patchKit` / progression |
-| `RpgState` | v5 | current HP / Equipment ownership・loadout / Party / World / Treasure |
+| `RpgState` | v6 | current HP / Equipment ownership・loadout / Party / World / Treasure |
 
 Economy loop追加のためだけにschema versionは上げない。
 
@@ -243,7 +243,7 @@ Legacy migration:
 
 - PlayerProgress v1 / v2 / v3 → v4
 - Economy fieldが存在しないlegacy saveはGold 0 / PATCH KIT 0で開始
-- RpgState v1 / v2 / v3 / v4 → v5（未使用Party Equipmentを除去）
+- RpgState v1 / v2 / v3 / v4 / v5 → v6（未使用Party Equipmentを除去し、expanded Overworldを識別）
 - legacy current HP / known Equipmentは可能な範囲で保持
 
 LocalStorageのcommitは両stateとBattle開始snapshotを含むroot schema v2の単一revision。旧root v1はsessionなしとして移行する。直前backup復旧とstale tab上書き回避を行い、旧分割keyはmigration入力としてだけ読む。Area clear装備報酬はregistryに従ってProgress更新と同じsnapshotへ付与する。

@@ -26,14 +26,16 @@ Open Worldを「1枚の巨大grid」とは定義しない。Overworld / Village 
 
 ## 2. Current implementation snapshot
 
-以下は**現時点のruntime snapshotであり、target topologyではない**。
+以下は**現時点のruntime snapshotであり、target topologyの実装途中**。
 
-- `overworld` — 40 × 28
+- `overworld` — 70 × 50
 - `js-village` — 21 × 15
 - `js-forest` — 31 × 27
 - `js-deep-forest` — 31 × 27
 - `ts-frontier` — 31 × 21
 - viewport — 11 × 9
+
+Phase 2ではOverworldをField scaleへ移し、到着Hub周辺を維持しながらGREENFIELD / Forest / TypeScript境界を離した。GREENFIELD / Forest Settlement / Forest / Deep ForestのLocal Map再設計は後続Phaseで行う。
 
 共通:
 
@@ -41,6 +43,7 @@ Open Worldを「1枚の巨大grid」とは定義しない。Overworld / Village 
 - `/world` route上でmap transition
 - VillageはRandom Encounterなし
 - fixed Story / learning BattleはRandom chance / cooldownより優先
+- expanded Overworld layoutはRpgState schema v6で旧TypeScript-side save migrationと区別する
 
 #377でJavaScript地方を再設計するため、31×27や「東→西main trail」を将来layoutの制約にしない。
 
@@ -296,6 +299,7 @@ Fog of Warは#377のbranch / loop構造を先に成立させてから導入す�
 
 - numeric Battle IDは互換用として維持
 - semantic progressionをauthorityにする
+- expanded Overworld layoutはschema v6以降として旧40×28 layoutと区別する
 - 新checkpoint / reveal stateはmigrationで安全なdefaultを補う
 - atomic root save / valid backup復旧の既存policyを維持
 

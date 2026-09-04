@@ -23,6 +23,7 @@ import {
 import { WorldCharacterLayer, WorldControls, WorldObjectiveCard, WorldViewport } from './WorldScene'
 import { useWorldKeyboardControls } from './useWorldKeyboardControls'
 import type { WorldPosition } from './worldSceneGeometry'
+import { TYPESCRIPT_REGION_LOCKED_MESSAGE } from './regionAccess'
 
 const regionLabels = {
   javascript: 'JavaScript 西部',
@@ -458,7 +459,9 @@ export function WorldPage() {
       if (result.kind === 'blocked') {
         gameAudio.playSe('cancel')
         setMessage(
-          result.terrain === 'boss'
+          result.reason === 'typescript-locked'
+            ? TYPESCRIPT_REGION_LOCKED_MESSAGE
+            : result.terrain === 'boss'
             ? '強い魔物が道を塞いでいる。隣から挑もう。'
             : result.terrain === 'midboss'
               ? '森の守り人が道を塞いでいる。隣から挑もう。'

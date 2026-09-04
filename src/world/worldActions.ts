@@ -35,6 +35,7 @@ import {
   type WorldTreasureId,
 } from './worldMap'
 import { isWorldPortalRequirementSatisfied } from './worldPortalAccess'
+import { shouldBlockTypeScriptRegionMove } from './regionAccess'
 
 type BattleRegion = Exclude<WorldRegion, 'hub'>
 type JavaScriptTrainingBattleId = 7 | 8 | 9
@@ -58,6 +59,7 @@ export type WorldMoveResult =
       kind: 'blocked'
       nextState: RpgState
       terrain: Terrain
+      reason?: 'typescript-locked'
     }
   | {
       kind: 'moved'
@@ -248,6 +250,21 @@ export function resolveWorldMove({
     y: rpgState.worldPosition.y + dy,
   }
   const mapId = rpgState.worldMapId
+  if (
+    shouldBlockTypeScriptRegionMove(
+      mapId,
+      rpgState.worldPosition.x,
+      next.x,
+      progress,
+    )
+  ) {
+    return {
+      kind: 'blocked',
+      nextState: rpgState,
+      terrain: getTerrain(next.x, next.y, mapId),
+      reason: 'typescript-locked',
+    }
+  }
   const rawTerrain = getTerrain(next.x, next.y, mapId)
   const midbossCleared =
     mapId === JS_FOREST_MAP_ID &&

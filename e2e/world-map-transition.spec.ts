@@ -29,7 +29,7 @@ async function seedWorld(page: Page) {
       localStorage.setItem(
         rpgKey,
         JSON.stringify({
-          version: 3,
+          version: 6,
           state: {
             equipment: {
               weapon: 'training-blade',
@@ -39,7 +39,8 @@ async function seedWorld(page: Page) {
             ownedEquipmentIds: ['training-blade', 'traveler-coat'],
             partyMemberIds: ['byte'],
             partyEquipment: { byte: { weapon: null, armor: null, accessory: null } },
-            worldPosition: { x: 14, y: 13 },
+            worldMapId: 'overworld',
+            worldPosition: { x: 10, y: 21 },
             stepsSinceEncounter: 8,
             encounterCount: 0,
             currentHp: 108,
@@ -66,16 +67,16 @@ test('JS-01後はVillage入口で止まりアクションで入ってreload後�
 
   const viewport = page.locator('.world-viewport')
   await expect(viewport).toHaveAttribute('data-world-map', 'overworld')
-  await expect(viewport).toHaveAttribute('data-world-x', '14')
-  await expect(viewport).toHaveAttribute('data-world-y', '13')
+  await expect(viewport).toHaveAttribute('data-world-x', '10')
+  await expect(viewport).toHaveAttribute('data-world-y', '21')
   await expect(page.getByRole('button', { name: 'グリーンフィールド村へ入る' })).toBeEnabled()
 
-  await page.getByRole('button', { name: '上へ移動' }).click()
+  await page.getByRole('button', { name: '下へ移動' }).click()
 
   await expect(page.locator('.world-header')).toBeHidden()
   await expect(viewport).toHaveAttribute('data-world-map', 'overworld')
-  await expect(viewport).toHaveAttribute('data-world-x', '14')
-  await expect(viewport).toHaveAttribute('data-world-y', '13')
+  await expect(viewport).toHaveAttribute('data-world-x', '10')
+  await expect(viewport).toHaveAttribute('data-world-y', '21')
   await expect(page.getByText('グリーンフィールド村の入口だ。ここから入れる。')).toBeVisible()
 
   await page.getByRole('button', { name: 'グリーンフィールド村へ入る' }).click()
@@ -85,7 +86,7 @@ test('JS-01後はVillage入口で止まりアクションで入ってreload後�
   await expect(viewport).toHaveAttribute('data-world-x', '10')
   await expect(viewport).toHaveAttribute('data-world-y', '12')
 
-  await expect.poll(async () => (await storedRpgState(page)).version).toBe(5)
+  await expect.poll(async () => (await storedRpgState(page)).version).toBe(6)
   await expect.poll(async () => (await storedRpgState(page)).state.worldMapId).toBe('js-village')
   await expect.poll(async () => (await storedRpgState(page)).state.worldPosition).toEqual({
     x: 10,
@@ -104,7 +105,7 @@ test('JS-01後はVillage入口で止まりアクションで入ってreload後�
 
   await expect(page.locator('.world-header')).toBeHidden()
   await expect(viewport).toHaveAttribute('data-world-map', 'overworld')
-  await expect(viewport).toHaveAttribute('data-world-x', '14')
-  await expect(viewport).toHaveAttribute('data-world-y', '13')
+  await expect(viewport).toHaveAttribute('data-world-x', '10')
+  await expect(viewport).toHaveAttribute('data-world-y', '21')
   await expect.poll(async () => (await storedRpgState(page)).state.worldMapId).toBe('overworld')
 })

@@ -7,7 +7,6 @@ import { WorldCharacterDecorations } from './world/WorldCharacterDecorations'
 import { WorldMapTransitionGate } from './world/WorldMapTransitionGate'
 import { VillageFacilities } from './world/VillageFacilities'
 import { WorldRecoveryStops } from './world/WorldRecoveryStops'
-import { TypeScriptRegionGate } from './world/TypeScriptRegionGate'
 
 export function AppRouter() {
   return (
@@ -19,7 +18,6 @@ export function AppRouter() {
           <WorldCharacterDecorations />
           <VillageFacilities />
           <WorldRecoveryStops />
-          <TypeScriptRegionGate />
         </BattleRuntimeProvider>
       </TutorialProvider>
     </GameStateProvider>

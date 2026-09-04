@@ -100,7 +100,7 @@ test('Village保存状態からBattleで敗北してもcheckpointへ開始HPの�
   await expect(page.getByLabel('グリーンフィールド村のマップ')).toHaveAttribute('data-world-x', '10')
   await expect(page.getByLabel('グリーンフィールド村のマップ')).toHaveAttribute('data-world-y', '12')
   await expect.poll(async () => readStoredRpg(page)).toMatchObject({
-    version: 5,
+    version: 6,
     state: {
       worldMapId: 'js-village',
       worldPosition: { x: 10, y: 12 },

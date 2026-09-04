@@ -156,7 +156,7 @@ test('Battle 22前はJavaScript Final Boss 3へ挑戦できない', async ({ pag
   await seedWorld(page, {
     clearedStageIds: throughBattle21,
     mapId: 'overworld',
-    position: { x: 8, y: 4 },
+    position: { x: 40, y: 6 },
   })
 
   await page.getByRole('button', { name: 'ボスを調べる' }).click()
@@ -171,7 +171,7 @@ test('incident routeとBattle 22完了後にFinal Boss 3を開始できる', asy
   await seedWorld(page, {
     clearedStageIds: throughDeepForest,
     mapId: 'overworld',
-    position: { x: 8, y: 4 },
+    position: { x: 40, y: 6 },
   })
 
   await page.getByRole('button', { name: 'ボスに挑む' }).click()

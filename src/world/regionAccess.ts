@@ -1,7 +1,9 @@
 import type { PlayerProgress } from '../progression'
 import { OVERWORLD_MAP_ID, type WorldMapId } from './worldMap'
 
-export const TYPESCRIPT_REGION_MIN_X = 23
+export const TYPESCRIPT_REGION_MIN_X = 52
+export const TYPESCRIPT_REGION_LOCKED_MESSAGE =
+  'TypeScript辺境は未開通 // まずJavaScript地方のCode Coreを止めよう。Final Bossを倒すと東へ進める。'
 
 export function isTypeScriptRegionUnlocked(
   progress: Pick<PlayerProgress, 'clearedStageIds'>,

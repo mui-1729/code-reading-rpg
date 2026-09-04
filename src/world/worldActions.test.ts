@@ -7,10 +7,14 @@ import {
   resolveWorldMove,
 } from './worldActions'
 import {
+  JS_BOSS_POSITION,
   JS_FOREST_MAP_ID,
+  JS_FOREST_POSITION,
   JS_VILLAGE_MAP_ID,
+  JS_VILLAGE_POSITION,
   JS_VILLAGE_TRAINING_POSITION,
   OVERWORLD_MAP_ID,
+  TS_FRONTIER_MAP_ID,
 } from './worldMap'
 
 describe('World action resolver', () => {
@@ -34,10 +38,42 @@ describe('World action resolver', () => {
     expect(result.nextState.stepsSinceEncounter).toBe(3)
   })
 
+  it('未解放のTypeScript境界は入力手段に依存せずresolverで止める', () => {
+    const state = {
+      ...createInitialRpgState(),
+      worldPosition: { x: 51, y: 14 },
+    }
+
+    const blocked = resolveWorldMove({
+      rpgState: state,
+      progress: createInitialPlayerProgress(),
+      dx: 1,
+      dy: 0,
+    })
+
+    expect(blocked).toMatchObject({
+      kind: 'blocked',
+      reason: 'typescript-locked',
+      nextState: { worldPosition: { x: 51, y: 14 } },
+    })
+
+    const unlocked = resolveWorldMove({
+      rpgState: state,
+      progress: { ...createInitialPlayerProgress(), clearedStageIds: [3] },
+      dx: 1,
+      dy: 0,
+    })
+
+    expect(unlocked).toMatchObject({
+      kind: 'moved',
+      nextState: { worldPosition: { x: 52, y: 14 } },
+    })
+  })
+
   it('Boss tileへ直接moveせず隣からinteractionする', () => {
     const state = {
       ...createInitialRpgState(),
-      worldPosition: { x: 8, y: 4 },
+      worldPosition: { x: JS_BOSS_POSITION.x, y: JS_BOSS_POSITION.y + 1 },
     }
 
     const result = resolveWorldMove({
@@ -49,7 +85,7 @@ describe('World action resolver', () => {
 
     expect(result.kind).toBe('blocked')
     expect(result.terrain).toBe('boss')
-    expect(result.nextState.worldPosition).toEqual({ x: 8, y: 4 })
+    expect(result.nextState.worldPosition).toEqual({ x: 40, y: 6 })
   })
 
   it('Recovery Point tileへ直接moveせず隣からinteractionする', () => {
@@ -73,7 +109,7 @@ describe('World action resolver', () => {
   it('Treasure tileへ直接moveせず隣からinteractionする', () => {
     const state = {
       ...createInitialRpgState(),
-      worldPosition: { x: 10, y: 18 },
+      worldPosition: { x: 8, y: 32 },
     }
 
     const result = resolveWorldMove({
@@ -85,7 +121,7 @@ describe('World action resolver', () => {
 
     expect(result.kind).toBe('blocked')
     expect(result.terrain).toBe('treasure')
-    expect(result.nextState.worldPosition).toEqual({ x: 10, y: 18 })
+    expect(result.nextState.worldPosition).toEqual({ x: 8, y: 32 })
   })
 
   it('通常moveでpositionとstepsSinceEncounterを更新する', () => {
@@ -107,7 +143,7 @@ describe('World action resolver', () => {
   it('最初のincident前はVillage入口を通れない', () => {
     const state = {
       ...createInitialRpgState(),
-      worldPosition: { x: 14, y: 13 },
+      worldPosition: { x: JS_VILLAGE_POSITION.x, y: JS_VILLAGE_POSITION.y - 1 },
       stepsSinceEncounter: 8,
     }
 
@@ -115,7 +151,7 @@ describe('World action resolver', () => {
       rpgState: state,
       progress: createInitialPlayerProgress(),
       dx: 0,
-      dy: -1,
+      dy: 1,
     })
 
     expect(result.kind).toBe('blocked')
@@ -127,7 +163,7 @@ describe('World action resolver', () => {
   it('最初のincident clear後はVillage入口で止まりinteractionでVillage mapへ入る', () => {
     const state = {
       ...createInitialRpgState(),
-      worldPosition: { x: 14, y: 13 },
+      worldPosition: { x: JS_VILLAGE_POSITION.x, y: JS_VILLAGE_POSITION.y - 1 },
       stepsSinceEncounter: 8,
     }
     const progress = {
@@ -136,7 +172,7 @@ describe('World action resolver', () => {
       unlockedStageIds: [1, 7],
     }
 
-    const moveResult = resolveWorldMove({ rpgState: state, progress, dx: 0, dy: -1 })
+    const moveResult = resolveWorldMove({ rpgState: state, progress, dx: 0, dy: 1 })
     expect(moveResult.kind).toBe('blocked')
     expect(moveResult.terrain).toBe('village')
     expect(moveResult.nextState).toBe(state)
@@ -172,13 +208,13 @@ describe('World action resolver', () => {
     expect(result.fromMapId).toBe(JS_VILLAGE_MAP_ID)
     expect(result.toMapId).toBe(OVERWORLD_MAP_ID)
     expect(result.nextState.worldMapId).toBe(OVERWORLD_MAP_ID)
-    expect(result.nextState.worldPosition).toEqual({ x: 14, y: 13 })
+    expect(result.nextState.worldPosition).toEqual({ x: 10, y: 21 })
   })
 
   it('最初のincidentだけclearしてもTraining 9未clearならForest入口を通れない', () => {
     const state = {
       ...createInitialRpgState(),
-      worldPosition: { x: 8, y: 14 },
+      worldPosition: { x: JS_FOREST_POSITION.x, y: JS_FOREST_POSITION.y - 1 },
       stepsSinceEncounter: 8,
     }
     const progress = {
@@ -187,7 +223,7 @@ describe('World action resolver', () => {
       unlockedStageIds: [1, 7],
     }
 
-    const result = resolveWorldMove({ rpgState: state, progress, dx: -1, dy: 0 })
+    const result = resolveWorldMove({ rpgState: state, progress, dx: 0, dy: 1 })
 
     expect(result.kind).toBe('blocked')
     expect(result.terrain).toBe('woods')
@@ -203,11 +239,11 @@ describe('World action resolver', () => {
     }
     const state = {
       ...createInitialRpgState(),
-      worldPosition: { x: 8, y: 14 },
+      worldPosition: { x: JS_FOREST_POSITION.x, y: JS_FOREST_POSITION.y - 1 },
       stepsSinceEncounter: 8,
     }
 
-    const enter = resolveWorldMove({ rpgState: state, progress, dx: -1, dy: 0 })
+    const enter = resolveWorldMove({ rpgState: state, progress, dx: 0, dy: 1 })
     expect(enter.kind).toBe('transition')
     if (enter.kind !== 'transition') return
     expect(enter.toMapId).toBe(JS_FOREST_MAP_ID)
@@ -225,7 +261,7 @@ describe('World action resolver', () => {
     expect(exit.kind).toBe('transition')
     if (exit.kind !== 'transition') return
     expect(exit.toMapId).toBe(OVERWORLD_MAP_ID)
-    expect(exit.nextState.worldPosition).toEqual({ x: 8, y: 14 })
+    expect(exit.nextState.worldPosition).toEqual({ x: 34, y: 33 })
   })
 
   it('Village内はrollを強制してもRandom Encounterを開始しない', () => {
@@ -438,7 +474,7 @@ describe('World action resolver', () => {
 
     expect(
       resolveWorldInteraction(
-        { ...initialState, worldPosition: { x: 10, y: 18 } },
+        { ...initialState, worldPosition: { x: 8, y: 32 } },
         initialProgress,
       ),
     ).toEqual({ kind: 'treasure', treasureId: 'js-debug-cache', opened: false })
@@ -447,7 +483,7 @@ describe('World action resolver', () => {
       resolveWorldInteraction(
         {
           ...initialState,
-          worldPosition: { x: 10, y: 18 },
+          worldPosition: { x: 8, y: 32 },
           openedTreasureIds: ['js-debug-cache'],
         },
         initialProgress,
@@ -456,14 +492,22 @@ describe('World action resolver', () => {
 
     expect(
       resolveWorldInteraction(
-        { ...initialState, worldPosition: { x: 30, y: 18 } },
+        {
+          ...initialState,
+          worldMapId: TS_FRONTIER_MAP_ID,
+          worldPosition: { x: 20, y: 14 },
+        },
         initialProgress,
       ),
     ).toEqual({ kind: 'treasure', treasureId: 'ts-supply-cache', opened: false })
 
     expect(
       resolveWorldInteraction(
-        { ...initialState, worldPosition: { x: 8, y: 4 }, encounterCount: 3 },
+        {
+          ...initialState,
+          worldPosition: { x: JS_BOSS_POSITION.x, y: JS_BOSS_POSITION.y + 1 },
+          encounterCount: 3,
+        },
         initialProgress,
       ),
     ).toEqual({
@@ -476,7 +520,11 @@ describe('World action resolver', () => {
 
     expect(
       resolveWorldInteraction(
-        { ...initialState, worldPosition: { x: 8, y: 4 }, encounterCount: 3 },
+        {
+          ...initialState,
+          worldPosition: { x: JS_BOSS_POSITION.x, y: JS_BOSS_POSITION.y + 1 },
+          encounterCount: 3,
+        },
         {
           ...initialProgress,
           clearedStageIds: [1, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22],

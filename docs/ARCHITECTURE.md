@@ -299,7 +299,7 @@ Story eventがtarget rule / damage / generatorを変更してはいけない。
 
 LevelはEXPから導出する。
 
-### RpgState v5
+### RpgState v6
 
 担当:
 
@@ -319,11 +319,11 @@ restore時に次をnormalizeする。
 - non-negative Encounter counters
 - current HP upper bound
 
-v1 / v2 / v3 / v4からv5へmigrationし、未使用partyEquipmentを除去する。旧Overworld上のTypeScript座標は`ts-frontier`へ移す。
+v1 / v2 / v3 / v4 / v5からv6へmigrationする。未使用partyEquipmentを除去し、v5以前の旧Overworld上のTypeScript座標を`ts-frontier`へ移す。v6は70 × 50のexpanded Overworld座標を旧40 × 28 layoutと区別する。
 
 ### Logical save transaction
 
-`persistence/GameStateProvider` が両stateとBattle開始snapshotのReact ownershipをまとめる。Treasure / Shop / Inn / Itemの同期更新は同じcommitへbatchされ、`gameStateStorage`がroot schema v2のrevision snapshotを1keyへatomicに保存する。root v1はsessionなしとして移行し、Progress v4 / RPG v5は維持する。旧分割keyはmigration専用。直前backupからのrecovery、portal graphに基づくlocked map位置の正規化、storage event同期、stale revisionの上書き回避をこの境界で行う。Area clear装備報酬もregistryから同じnormalizationで補完し、World mount effectへ依存しない。
+`persistence/GameStateProvider` が両stateとBattle開始snapshotのReact ownershipをまとめる。Treasure / Shop / Inn / Itemの同期更新は同じcommitへbatchされ、`gameStateStorage`がroot schema v2のrevision snapshotを1keyへatomicに保存する。root v1はsessionなしとして移行し、Progress v4 / RPG v6は維持する。旧分割keyはmigration専用。直前backupからのrecovery、portal graphに基づくlocked map位置の正規化、storage event同期、stale revisionの上書き回避をこの境界で行う。Area clear装備報酬もregistryから同じnormalizationで補完し、World mount effectへ依存しない。
 
 ### TutorialState v1
 
