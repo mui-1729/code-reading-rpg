@@ -63,6 +63,8 @@ async function seedStorage(page: Page, clearedStageIds: number[]) {
 }
 
 async function executeSkill(page: Page, name: string) {
+  const fight = page.getByRole('button', { name: '戦う', exact: true })
+  if ((await fight.getAttribute('aria-pressed')) !== 'true') await fight.click()
   const card = page.getByRole('button', { name: new RegExp(`^${name}\\b`) })
   await expect(card).toBeEnabled()
   await card.click()

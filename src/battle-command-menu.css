@@ -1,0 +1,196 @@
+.battle-command-bar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.battle-command-button {
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 2px solid #3a3a50;
+  background: #10101a;
+  color: #ddd9eb;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.battle-command-button:hover:not(:disabled),
+.battle-command-button:focus-visible {
+  border-color: #77738d;
+  color: #fff;
+}
+
+.battle-command-button.is-active {
+  border-color: var(--blue);
+  box-shadow: inset 0 -3px 0 var(--blue);
+  color: #fff;
+}
+
+.battle-command-button:disabled {
+  cursor: default;
+  opacity: .45;
+}
+
+.battle-item-browser {
+  display: grid;
+  gap: 10px;
+  min-height: 0;
+}
+
+.battle-item-browser-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.battle-item-browser-head strong {
+  color: #fff;
+}
+
+.battle-item-browser-head span {
+  color: #9d99ad;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.battle-item-browser-list {
+  display: grid;
+  gap: 8px;
+  max-height: 190px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.battle-item-browser-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 9px;
+  border: 2px solid #303045;
+  background: #0a0a13;
+  color: #fff;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.battle-item-browser-row:hover,
+.battle-item-browser-row:focus-visible {
+  border-color: #66627b;
+}
+
+.battle-item-browser-row > span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.battle-item-browser-row strong {
+  font-size: 10px;
+}
+
+.battle-item-browser-row small {
+  color: #aaa6ba;
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.battle-item-browser-row em {
+  color: #aaa6ba;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.battle-item-browser-row em[data-item-availability='available'] {
+  color: var(--green);
+}
+
+.battle-item-back {
+  padding: 6px 8px;
+  border: 1px solid #46445a;
+  background: transparent;
+  color: #c6c2d2;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.battle-item-detail-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 2px solid #303045;
+  background: #0a0a13;
+}
+
+.item-battle-detail-icon {
+  width: 48px;
+  height: 48px;
+  padding: 5px;
+  border: 2px solid #343449;
+  background: #090912;
+}
+
+.battle-item-detail-card > div {
+  display: grid;
+  gap: 5px;
+}
+
+.battle-item-detail-card strong {
+  color: #fff;
+  font-size: 12px;
+}
+
+.battle-item-detail-card p {
+  margin: 0;
+  color: #aaa6ba;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.battle-item-detail-card span {
+  color: var(--green);
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.battle-item-detail-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+@media (max-width: 620px) {
+  .battle-command-bar {
+    gap: 5px;
+  }
+
+  .battle-command-button {
+    min-height: 40px;
+    padding: 8px 6px;
+    font-size: 9px;
+  }
+
+  .battle-item-browser-row {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .battle-item-browser-row em {
+    grid-column: 2;
+    white-space: normal;
+  }
+
+  .battle-item-detail-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

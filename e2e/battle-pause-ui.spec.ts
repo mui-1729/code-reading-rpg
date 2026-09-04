@@ -87,6 +87,12 @@ async function openBattle(page: Page, battleId: number, seed: string) {
   await expect(page.locator('.battle-console')).toBeVisible()
 }
 
+async function openFight(page: Page) {
+  const fight = page.getByRole('button', { name: '戦う', exact: true })
+  if ((await fight.getAttribute('aria-pressed')) !== 'true') await fight.click()
+  await expect(page.getByRole('group', { name: 'スキル' })).toBeVisible()
+}
+
 async function openPause(page: Page) {
   const trigger = page.getByRole('button', { name: 'メニューを開く' })
   await expect(trigger).toBeVisible()
@@ -99,6 +105,7 @@ async function openPause(page: Page) {
 test('@cross-browser Battle MENU is unavailable during an action and while CODE HELP/CODE DATA owns the modal stack', async ({ page }) => {
   await seedState(page, { clearedStageIds: BATTLE_2_REPLAY })
   await openBattle(page, 2, 'issue-259-menu-stack')
+  await openFight(page)
 
   const menuTrigger = page.getByRole('button', { name: 'メニューを開く' })
   await expect(menuTrigger).toBeVisible()
@@ -111,6 +118,7 @@ test('@cross-browser Battle MENU is unavailable during an action and while CODE 
   await expect(menuTrigger).toHaveCount(0)
 
   await page.clock.runFor(2_000)
+  await openFight(page)
   await expect(page.getByRole('button', { name: 'コード解説を開く' })).toBeEnabled()
   await page.getByRole('button', { name: 'コード解説を開く' }).click()
   await expect(page.getByRole('dialog', { name: 'コード解説' })).toBeVisible()
@@ -156,6 +164,7 @@ test('@cross-browser Battle equipment is read-only, while World equipment remain
 test('@cross-browser the second selected Skill keeps its exact source in CODE HELP and exposes selected state', async ({ page }) => {
   await seedState(page, { clearedStageIds: BATTLE_2_REPLAY })
   await openBattle(page, 2, 'issue-259-selected-help')
+  await openFight(page)
 
   const secondSkill = page.locator('[data-skill-id]').nth(1)
   await secondSkill.click()
@@ -235,6 +244,7 @@ test('@cross-browser reduced motion requires manual Victory result advancement',
   await page.clock.install()
 
   for (const name of ['TRACE', 'NOVA', 'TRACE']) {
+    await openFight(page)
     const skill = page.getByRole('button', { name: new RegExp(`^${name}\\b`) })
     await skill.click()
     await skill.click()
@@ -260,6 +270,7 @@ test('@cross-browser reduced motion requires manual Victory result advancement',
 test('@cross-browser Pause traps focus, blocks the background, and restores its opener', async ({ page }) => {
   await seedState(page, { clearedStageIds: BATTLE_2_REPLAY })
   await openBattle(page, 2, 'issue-259-pause-focus')
+  await openFight(page)
   const trigger = page.getByRole('button', { name: 'メニューを開く' })
   await trigger.click()
   const pause = page.getByRole('dialog', { name: 'メニュー' })
@@ -287,6 +298,7 @@ test('@cross-browser Story and Victory/Defeat overlays do not expose a second ME
   await expect(page.getByRole('button', { name: 'コードで使う実データを確認' })).toBeDisabled()
   await page.getByRole('button', { name: 'スキップ', exact: true }).click()
 
+  await openFight(page)
   await page.clock.install()
   await page.locator('[data-skill-id="trace"]').click()
   await page.locator('[data-skill-id="trace"]').click()
@@ -310,27 +322,29 @@ test('@cross-browser Story and Victory/Defeat overlays do not expose a second ME
   await expect.poll(() => readStoredGameState(page)).toMatchObject({ battleSession: null })
 })
 
-test('desktop Battle reference actions remain inline and do not overlap RUN or the Battle log', async ({ page }) => {
+test('desktop Battle reference actions remain inline and do not overlap command controls or the Battle log', async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 768 })
   await seedState(page, { clearedStageIds: BATTLE_2_REPLAY })
   await openBattle(page, 2, 'issue-259-desktop-reference-actions')
+  await openFight(page)
 
   await page.clock.install()
   const firstSkill = page.locator('[data-skill-id]').first()
   await firstSkill.click()
   await firstSkill.click()
   await page.clock.runFor(2_000)
+  await openFight(page)
 
   const geometry = await page.evaluate(() => {
     const references = document.querySelector<HTMLElement>('.battle-reference-actions')
     const referenceButtons = Array.from(document.querySelectorAll<HTMLElement>(
       '.battle-reference-actions > .floating-code-data, .battle-reference-actions > .floating-help',
     ))
-    const run = document.querySelector<HTMLElement>('.battle-escape-row')
+    const commands = document.querySelector<HTMLElement>('.battle-command-bar')
     const log = document.querySelector<HTMLElement>('.log-panel')
-    if (!references || !run || !log) return null
+    if (!references || !commands || !log) return null
     const referenceBounds = references.getBoundingClientRect()
-    const runBounds = run.getBoundingClientRect()
+    const commandBounds = commands.getBoundingClientRect()
     const logBounds = log.getBoundingClientRect()
     const overlaps = (first: DOMRect, second: DOMRect) =>
       first.left < second.right && first.right > second.left &&
@@ -344,7 +358,7 @@ test('desktop Battle reference actions remain inline and do not overlap RUN or t
         const bounds = button.getBoundingClientRect()
         return bounds.left >= 0 && bounds.right <= window.innerWidth
       }),
-      overlapsRun: referenceButtons.some((button) => overlaps(button.getBoundingClientRect(), runBounds)),
+      overlapsCommands: referenceButtons.some((button) => overlaps(button.getBoundingClientRect(), commandBounds)),
       overlapsLog: referenceButtons.some((button) => overlaps(button.getBoundingClientRect(), logBounds)),
     }
   })
@@ -355,7 +369,7 @@ test('desktop Battle reference actions remain inline and do not overlap RUN or t
     buttonsAreStatic: true,
     withinWidth: true,
     buttonsWithinWidth: true,
-    overlapsRun: false,
+    overlapsCommands: false,
     overlapsLog: false,
   })
 })
