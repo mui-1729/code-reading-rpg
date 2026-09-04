@@ -1,0 +1,99 @@
+/*
+ * Experimental Battle workspace v2.
+ *
+ * Keep the two places the player repeatedly looks at stable:
+ *   1. the reading/detail panel in the stage
+ *   2. the command/choice panel below the stage
+ *
+ * Normal command switching should replace content inside those regions instead
+ * of changing the page height. Long content scrolls locally.
+ */
+
+@media (max-width: 900px), (max-height: 520px) and (max-width: 1100px) {
+  .battle-screen .selected-skill-reading {
+    box-sizing: border-box;
+    height: clamp(156px, 22dvh, 184px);
+    min-height: 0;
+    overflow: hidden;
+    overflow-anchor: none;
+  }
+
+  .battle-screen .selected-skill-reading:has(.selected-skill-reading-head) {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .battle-screen .selected-skill-reading > p {
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    height: 100%;
+    min-height: 0;
+    text-align: center;
+  }
+
+  .battle-screen .selected-skill-reading .source-code {
+    box-sizing: border-box;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+
+  .battle-screen .selected-skill-reading > .battle-item-browser {
+    box-sizing: border-box;
+    height: 100%;
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+
+  .battle-screen .battle-console {
+    box-sizing: border-box;
+    height: clamp(210px, 29dvh, 248px);
+    min-height: 0;
+    overflow: auto;
+    overflow-anchor: none;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+
+  .battle-screen .skill-grid {
+    align-content: start;
+  }
+
+  /* The execute label must never resize a Skill card when it appears. */
+  .battle-screen .skill-card {
+    position: relative;
+    box-sizing: border-box;
+    padding-bottom: 24px;
+  }
+
+  .battle-screen .skill-card-foot {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    box-sizing: border-box;
+    min-height: 24px;
+  }
+
+  .battle-screen .log-panel {
+    max-height: 92px;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+}
+
+@media (max-width: 620px) {
+  .battle-screen .selected-skill-reading {
+    height: clamp(150px, 21dvh, 176px);
+  }
+
+  .battle-screen .battle-console {
+    height: clamp(206px, 28dvh, 238px);
+  }
+}
