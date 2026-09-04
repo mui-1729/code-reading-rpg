@@ -1,5 +1,6 @@
 import { readStoredProgress, readStoredRpg } from './storedGameState'
 import { expect, test } from '@playwright/test'
+import { selectPauseTab } from './pause-menu-helpers'
 
 const AUDIO_KEY = 'code-reading-rpg:audio-settings'
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
@@ -29,7 +30,7 @@ test('サウンド設定はメニューの設定だけにありreload後も保�
   await expect(page.locator('.audio-settings-toggle')).toHaveCount(0)
 
   let dialog = await openPauseMenu(page)
-  await dialog.getByRole('button', { name: '設定' }).click()
+  await selectPauseTab(dialog, '設定')
   const se = dialog.getByLabel('SE音量')
   const bgm = dialog.getByLabel('BGM音量')
 
@@ -46,7 +47,7 @@ test('サウンド設定はメニューの設定だけにありreload後も保�
 
   await page.reload()
   dialog = await openPauseMenu(page)
-  await dialog.getByRole('button', { name: '設定' }).click()
+  await selectPauseTab(dialog, '設定')
   await expect(dialog.getByRole('button', { name: 'サウンド OFF' })).toBeVisible()
   await expect(dialog.getByLabel('SE音量')).toHaveValue('65')
   await expect(dialog.getByLabel('BGM音量')).toHaveValue('35')
@@ -56,7 +57,7 @@ test('進行リセットはEconomy/RPG stateを初期化しサウンド設定は
   await prepareWorld(page)
 
   let dialog = await openPauseMenu(page)
-  await dialog.getByRole('button', { name: '設定' }).click()
+  await selectPauseTab(dialog, '設定')
   await dialog.getByLabel('SE音量').fill('65')
   await dialog.getByLabel('BGM音量').fill('35')
   await dialog.getByRole('button', { name: 'サウンド ON' }).click()
@@ -110,7 +111,7 @@ test('進行リセットはEconomy/RPG stateを初期化しサウンド設定は
 
   dialog = await openPauseMenu(page)
   await expect(dialog.getByText('77 G', { exact: true })).toBeVisible()
-  await dialog.getByRole('button', { name: '設定' }).click()
+  await selectPauseTab(dialog, '設定')
   await dialog.getByRole('button', { name: '進行をリセット', exact: true }).click()
   await dialog.getByRole('button', { name: '本当に進行をリセットする', exact: true }).click()
 
@@ -151,7 +152,7 @@ test('Codexは独立buttonを持たずメニューのコード図鑑から参照
   await expect(page.locator('.codex-toggle')).toHaveCount(0)
 
   const dialog = await openPauseMenu(page)
-  await dialog.getByRole('button', { name: 'コード図鑑' }).click()
+  await selectPauseTab(dialog, 'コード図鑑')
   const codex = dialog.getByLabel('Code Codex')
 
   await expect(codex.getByRole('tab', { name: 'JAVASCRIPT' })).toHaveAttribute('aria-selected', 'true')

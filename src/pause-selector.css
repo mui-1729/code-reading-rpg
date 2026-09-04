@@ -1,0 +1,139 @@
+.pause-tab-selector {
+  position: relative;
+  z-index: 6;
+  margin: 10px 0 12px;
+}
+
+.pause-tab-trigger {
+  width: min(330px, 100%);
+  min-height: 48px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 2px solid var(--blue);
+  background: #11111d;
+  color: #fff;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: inset 0 -3px 0 rgba(79, 140, 255, .35);
+}
+
+.pause-tab-trigger-main {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.pause-tab-trigger .pause-tab-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  opacity: 1;
+  outline-color: var(--blue);
+}
+
+.pause-tab-chevron {
+  color: #aaa7ba;
+  transition: transform 120ms ease;
+}
+
+.pause-tab-trigger[aria-expanded='true'] .pause-tab-chevron {
+  transform: rotate(180deg);
+}
+
+.pause-tab-picker {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: min(360px, 100%);
+  max-height: min(430px, 58dvh);
+  overflow: auto;
+  display: grid;
+  gap: 4px;
+  padding: 7px;
+  background: #090912;
+  box-shadow: 7px 7px 0 rgba(0, 0, 0, .55);
+}
+
+.pause-tab-picker button {
+  width: 100%;
+  min-height: 44px;
+  padding: 7px 9px;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  border: 2px solid #343449;
+  background: #10101a;
+  color: #c4c1d2;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.pause-tab-picker button.is-active,
+.pause-tab-picker button[aria-selected='true'] {
+  border-color: var(--blue);
+  color: #fff;
+  background: #151a2b;
+}
+
+.pause-tab-picker button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -4px;
+}
+
+.pause-tab-picker .pause-tab-icon {
+  width: 18px;
+  height: 18px;
+  opacity: .82;
+}
+
+.pause-tab-picker button.is-active .pause-tab-icon {
+  opacity: 1;
+  outline-color: var(--blue);
+}
+
+.pause-tab-picker button strong {
+  color: var(--blue);
+  text-align: center;
+}
+
+@media (max-width: 620px) {
+  .pause-tab-selector {
+    margin: 7px 0 9px;
+  }
+
+  .pause-tab-trigger {
+    width: 100%;
+    min-height: 42px;
+    padding: 6px 8px;
+  }
+
+  .pause-tab-trigger .pause-tab-icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .pause-tab-picker {
+    width: 100%;
+    max-height: min(390px, 52dvh);
+  }
+
+  .pause-tab-picker button {
+    min-height: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pause-tab-chevron {
+    transition: none;
+  }
+}

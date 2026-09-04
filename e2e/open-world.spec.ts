@@ -1,6 +1,7 @@
 import { readStoredProgress, readStoredRpg } from './storedGameState'
 import { expect, test, type Page } from '@playwright/test'
 import { JS_COMPLETE } from './canonical-progress-fixtures'
+import { selectPauseTab } from './pause-menu-helpers'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -247,7 +248,7 @@ test.describe('Open World RPG loop', () => {
 
     await page.getByRole('button', { name: 'メニューを開く' }).click()
     const dialog = page.getByRole('dialog', { name: 'メニュー' })
-    await dialog.getByRole('button', { name: '装備' }).click()
+    await selectPauseTab(dialog, '装備')
     await dialog.getByRole('button', { name: /アクセサリを選ぶ/ }).click()
     const picker = page.getByRole('dialog', { name: 'アクセサリを選ぶ' })
     await expect(picker.getByRole('option', { name: 'Debug Charm を装備' })).toBeVisible()
@@ -339,11 +340,11 @@ test.describe('Open World RPG loop', () => {
     await expect(dialog.getByText('77 G', { exact: true })).toBeVisible()
     await expect(dialog.getByText('72 / 108', { exact: true })).toBeVisible()
 
-    await dialog.getByRole('button', { name: '装備' }).click()
+    await selectPauseTab(dialog, '装備')
     await expect(dialog.locator('[data-equipment-slot="weapon"] header strong')).toHaveText('Branch Saber')
     await expect(dialog.locator('[data-equipment-slot="accessory"] header strong')).toHaveText('Debug Charm')
 
-    await dialog.getByRole('button', { name: '仲間' }).click()
+    await selectPauseTab(dialog, '仲間')
     await expect(dialog.getByText(/BYTE · 斥候/)).toBeVisible()
   })
 
@@ -358,7 +359,7 @@ test.describe('Open World RPG loop', () => {
 
     await page.getByRole('button', { name: 'メニューを開く' }).click()
     const dialog = page.getByRole('dialog', { name: 'メニュー' })
-    await dialog.getByRole('button', { name: '仲間' }).click()
+    await selectPauseTab(dialog, '仲間')
     await expect(dialog.getByText(/BYTE · 斥候/)).toBeVisible()
     await page.keyboard.press('Escape')
 
@@ -379,7 +380,7 @@ test.describe('Open World RPG loop', () => {
     await page.goto('/world')
     await page.getByRole('button', { name: 'メニューを開く' }).click()
     const dialog = page.getByRole('dialog', { name: 'メニュー' })
-    await dialog.getByRole('button', { name: '装備' }).click()
+    await selectPauseTab(dialog, '装備')
     await dialog.getByRole('button', { name: /武器を選ぶ/ }).click()
     const picker = page.getByRole('dialog', { name: '武器を選ぶ' })
     await picker.getByRole('option', { name: 'Branch Saber を装備' }).click()

@@ -1,5 +1,6 @@
 import { readStoredGameState } from './storedGameState'
 import { expect, test, type Page } from '@playwright/test'
+import { selectPauseTab } from './pause-menu-helpers'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -112,7 +113,7 @@ test.describe('World Shop', () => {
     await page.reload()
     await page.getByRole('button', { name: 'メニューを開く' }).click()
     const pause = page.getByRole('dialog', { name: 'メニュー' })
-    await pause.getByRole('button', { name: '装備' }).click()
+    await selectPauseTab(pause, '装備')
     const weaponSlot = pause.locator('[data-equipment-slot="weapon"]')
     await expect(weaponSlot.locator('header strong')).toHaveText('Guard Edge')
     await expect(weaponSlot.getByRole('button', { name: /武器を選ぶ/ })).toContainText('Guard Edge')

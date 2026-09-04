@@ -302,18 +302,17 @@ function AtlasTerrainMap({ map, progress, rpgState }: { map: AtlasMap; progress:
 export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
   const [selectedMapId, setSelectedMapId] = useState<WorldMapId>(rpgState.worldMapId)
   const [zoom, setZoom] = useState(100)
-  const [fit, setFit] = useState(true)
   const discoveredMaps = atlasMaps.filter((map) => isMapDiscovered(map.id, progress, rpgState))
   const hiddenMapCount = atlasMaps.length - discoveredMaps.length
   const selectedMap = discoveredMaps.find((map) => map.id === selectedMapId) ?? discoveredMaps[0] ?? atlasMaps[0]
-  const detailWidth = fit ? '100%' : `${ATLAS_BASE_WIDTH * (zoom / 100)}px`
+  const detailWidth = zoom === 100 ? '100%' : `${ATLAS_BASE_WIDTH * (zoom / 100)}px`
   const routes = useMemo(() => getDiscoveredRoutes(progress, rpgState), [progress, rpgState])
 
   return (
     <section
       className="world-atlas"
       aria-label="ワールドマップ"
-      data-atlas-zoom={fit ? 'fit' : zoom}
+      data-atlas-zoom={zoom}
       data-discovered-route-count={routes.length}
     >
       <header className="atlas-header">
@@ -323,19 +322,20 @@ export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
           <p>現在地 · {atlasMaps.find((map) => map.id === rpgState.worldMapId)?.label ?? '不明'}</p>
         </div>
         <div className="atlas-zoom" aria-label="ワールドマップ倍率">
-          <button type="button" className={fit ? 'is-active' : ''} onClick={() => setFit(true)}>全体</button>
-          <button type="button" onClick={() => { setFit(false); setZoom(100) }}>100%</button>
+          <output className="atlas-zoom-value" aria-live="polite" aria-label={`現在倍率 ${zoom}%`}>
+            {zoom}%
+          </output>
           <button
             type="button"
             aria-label="ワールドマップを縮小"
-            onClick={() => { setFit(false); setZoom((current) => Math.max(75, current - 25)) }}
-            disabled={!fit && zoom === 75}
+            onClick={() => setZoom((current) => Math.max(100, current - 25))}
+            disabled={zoom === 100}
           >−</button>
           <button
             type="button"
             aria-label="ワールドマップを拡大"
-            onClick={() => { setFit(false); setZoom((current) => Math.min(150, current + 25)) }}
-            disabled={!fit && zoom === 150}
+            onClick={() => setZoom((current) => Math.min(150, current + 25))}
+            disabled={zoom === 150}
           >+</button>
         </div>
       </header>
@@ -351,7 +351,10 @@ export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
               className={`${selected ? 'is-selected' : ''} ${current ? 'is-current' : ''}`}
               data-atlas-region={map.id}
               aria-pressed={selected}
-              onClick={() => setSelectedMapId(map.id)}
+              onClick={() => {
+                setSelectedMapId(map.id)
+                setZoom(100)
+              }}
             >
               <strong>{map.label}</strong>
               <span>{current ? '現在地' : map.subtitle}</span>

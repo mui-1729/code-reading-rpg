@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { JS_COMPLETE } from './canonical-progress-fixtures'
+import { selectPauseTab } from './pause-menu-helpers'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -59,7 +60,8 @@ async function seedAtlas(page: Page) {
   )
   await page.goto('/world')
   await page.getByRole('button', { name: 'メニューを開く' }).click()
-  await page.getByRole('button', { name: 'マップ', exact: true }).click()
+  const menu = page.getByRole('dialog', { name: 'メニュー' })
+  await selectPauseTab(menu, 'マップ')
   return page.getByRole('region', { name: 'ワールドマップ' })
 }
 
@@ -116,15 +118,12 @@ for (const viewport of [
     const atlas = await seedAtlas(page)
     const scrollport = atlas.locator('.atlas-scrollport')
 
-    const fit = await expectContained(page)
-    expect(fit.canvasWidth).toBeLessThanOrEqual(fit.clientWidth + 8)
-
-    await atlas.getByRole('button', { name: '100%', exact: true }).click()
     await expect(atlas).toHaveAttribute('data-atlas-zoom', '100')
-    await settleZoom(page)
     const at100 = await expectContained(page)
+    expect(at100.canvasWidth).toBeLessThanOrEqual(at100.clientWidth + 8)
 
     const zoomIn = atlas.getByRole('button', { name: 'ワールドマップを拡大' })
+    const zoomOut = atlas.getByRole('button', { name: 'ワールドマップを縮小' })
     await zoomIn.click()
     await expect(atlas).toHaveAttribute('data-atlas-zoom', '125')
     await settleZoom(page)
@@ -144,10 +143,12 @@ for (const viewport of [
     })
     await expectContained(page)
 
-    await atlas.getByRole('button', { name: '全体', exact: true }).click()
-    await expect(atlas).toHaveAttribute('data-atlas-zoom', 'fit')
+    await zoomOut.click()
+    await zoomOut.click()
+    await expect(atlas).toHaveAttribute('data-atlas-zoom', '100')
     await settleZoom(page)
     const restored = await expectContained(page)
     expect(restored.canvasWidth).toBeLessThanOrEqual(restored.clientWidth + 8)
+    await expect(zoomOut).toBeDisabled()
   })
 }
