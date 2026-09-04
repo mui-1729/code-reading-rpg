@@ -38,6 +38,38 @@ describe('World action resolver', () => {
     expect(result.nextState.stepsSinceEncounter).toBe(3)
   })
 
+  it('未解放のTypeScript境界は入力手段に依存せずresolverで止める', () => {
+    const state = {
+      ...createInitialRpgState(),
+      worldPosition: { x: 51, y: 14 },
+    }
+
+    const blocked = resolveWorldMove({
+      rpgState: state,
+      progress: createInitialPlayerProgress(),
+      dx: 1,
+      dy: 0,
+    })
+
+    expect(blocked).toMatchObject({
+      kind: 'blocked',
+      reason: 'typescript-locked',
+      nextState: { worldPosition: { x: 51, y: 14 } },
+    })
+
+    const unlocked = resolveWorldMove({
+      rpgState: state,
+      progress: { ...createInitialPlayerProgress(), clearedStageIds: [3] },
+      dx: 1,
+      dy: 0,
+    })
+
+    expect(unlocked).toMatchObject({
+      kind: 'moved',
+      nextState: { worldPosition: { x: 52, y: 14 } },
+    })
+  })
+
   it('Boss tileへ直接moveせず隣からinteractionする', () => {
     const state = {
       ...createInitialRpgState(),

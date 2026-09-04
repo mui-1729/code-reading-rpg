@@ -64,7 +64,7 @@ test('@responsive 初期Overworldは到着Hubを読めるが遠方のVillage / F
   await expect(world).toHaveAttribute('data-world-x', '20')
   await expect(world).toHaveAttribute('data-world-y', '14')
 
-  const landing = world.locator('[data-world-x="20"][data-world-y="14"]')
+  const landing = world.locator('.world-tile[data-world-x="20"][data-world-y="14"]')
   await expect(landing).toBeVisible()
   const landingMark = await landing.evaluate((element) => ({
     before: getComputedStyle(element, '::before').clipPath,

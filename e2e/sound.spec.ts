@@ -125,7 +125,7 @@ test('進行リセットはEconomy/RPG stateを初期化しサウンド設定は
     },
   })
   await expect.poll(async () => readStoredRpg(page)).toMatchObject({
-    version: 5,
+    version: 6,
     state: {
       equipment: {
         weapon: 'training-blade',

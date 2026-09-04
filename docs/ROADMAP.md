@@ -87,6 +87,8 @@ JS Final
 
 Overworldを細かい生活空間ではなく、地域間を旅する地理へ整理する。
 
+実装済み。70 × 50 Field、曲がる本道、川と橋、GREENFIELD南のrejoin loop、Forest入口、東端のTypeScript境界をcurrent runtimeへ反映した。Phase 3以降はこの地理を前提に進める。
+
 - 草原 / 林 / 川 / 橋 / 街道
 - GREENFIELDを地域として読める入口
 - Forestを地形として読める入口

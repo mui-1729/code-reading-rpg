@@ -36,7 +36,7 @@ async function seedWorldAtlas(
       localStorage.setItem(
         rpgKey,
         JSON.stringify({
-          version: 5,
+          version: 6,
           state: {
             equipment: { weapon: 'training-blade', armor: 'traveler-coat', accessory: null },
             ownedEquipmentIds: ['training-blade', 'traveler-coat'],
@@ -99,8 +99,9 @@ test('選択した1 regionだけをrenderしmap追加で全terrain cellを積み
 
   await atlas.locator('[data-atlas-region="overworld"]').click()
   await expect(atlas.locator('[data-atlas-map="overworld"]')).toBeVisible()
-  await expect(atlas.locator('.atlas-terrain-grid')).toHaveAttribute('data-terrain-width', '40')
-  await expect(atlas.locator('.atlas-terrain-cell')).toHaveCount(40 * 28)
+  await expect(atlas.locator('.atlas-terrain-grid')).toHaveAttribute('data-terrain-width', '70')
+  await expect(atlas.locator('.atlas-terrain-grid')).toHaveAttribute('data-terrain-height', '50')
+  await expect(atlas.locator('.atlas-terrain-cell')).toHaveCount(70 * 50)
   await expect(atlas.locator('[data-atlas-map]')).toHaveCount(1)
 })
 

@@ -63,7 +63,7 @@ test('@responsive Forest入口は長いFieldの先にあり周囲が森景観と
   await seedField(page, { x: 34, y: 33 })
 
   const world = page.locator('.world-viewport[data-world-map="overworld"]')
-  const entrance = world.locator('[data-world-x="34"][data-world-y="34"]')
+  const entrance = world.locator('.world-tile[data-world-x="34"][data-world-y="34"]')
   await expect(entrance).toBeVisible()
   await expect.poll(() => entrance.evaluate((element) => getComputedStyle(element).getPropertyValue('--portal-scene-kind').trim())).toBe('forest-arch')
   await expect(world.locator('[data-world-x="34"][data-world-y="33"].terrain-road')).toBeVisible()

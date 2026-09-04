@@ -47,7 +47,10 @@ describe('open world map', () => {
     expect(isWorldPositionInBounds(OVERWORLD_MAP_ID, { x: 68, y: 48 })).toBe(true)
     expect(isWorldPositionInBounds(OVERWORLD_MAP_ID, { x: 70, y: 48 })).toBe(false)
     expect(isWorldPositionInBounds(JS_VILLAGE_MAP_ID, { x: 10, y: 12 })).toBe(true)
+    expect(isWorldPositionInBounds(JS_VILLAGE_MAP_ID, { x: 21, y: 12 })).toBe(false)
     expect(isWorldPositionInBounds(JS_FOREST_MAP_ID, { x: 28, y: 24 })).toBe(true)
+    expect(isWorldPositionInBounds(JS_FOREST_MAP_ID, { x: 31, y: 10 })).toBe(false)
+    expect(isWorldPositionInBounds(TS_FRONTIER_MAP_ID, { x: 27, y: 4 })).toBe(true)
   })
 
   it('Village / Forest / Deep Forest / TypeScript Frontierの入口と出口をportalとして定義する', () => {
@@ -165,10 +168,18 @@ describe('open world map', () => {
 
   it('Forest / Deep Forest local mapはPhase 4 / 5までcurrent runtimeを維持する', () => {
     expect(getTerrain(28, 10, JS_FOREST_MAP_ID)).toBe('road')
+    expect(getTerrain(22, 6, JS_FOREST_MAP_ID)).toBe('road')
+    expect(getTerrain(18, 6, JS_FOREST_MAP_ID)).toBe('water')
+    expect(['woods', 'deep-woods', 'grass']).toContain(getTerrain(25, 8, JS_FOREST_MAP_ID))
     expect(getTerrain(24, 18, JS_FOREST_MAP_ID)).toBe('road')
+    expect(getTerrain(21, 20, JS_FOREST_MAP_ID)).toBe('road')
+    expect(isEncounterTerrain(getTerrain(24, 18, JS_FOREST_MAP_ID))).toBe(false)
     expect(getTerrain(30, 10, JS_FOREST_MAP_ID)).toBe('exit')
     expect(getTerrain(28, 10, JS_DEEP_FOREST_MAP_ID)).toBe('road')
     expect(getTerrain(10, 20, JS_DEEP_FOREST_MAP_ID)).toBe('road')
+    expect(getTerrain(13, 22, JS_DEEP_FOREST_MAP_ID)).toBe('road')
+    expect(isEncounterTerrain(getTerrain(10, 20, JS_DEEP_FOREST_MAP_ID))).toBe(false)
+    expect(['woods', 'deep-woods']).toContain(getTerrain(8, 20, JS_DEEP_FOREST_MAP_ID))
     expect(
       getTerrain(
         JS_DEEP_FOREST_CORE_EXIT_POSITION.x,
@@ -192,6 +203,8 @@ describe('open world map', () => {
       expect(getTerrain(treasure.position.x, treasure.position.y, treasure.mapId)).toBe('treasure')
       expect(getTreasureAtPosition(treasure.position, treasure.mapId)?.id).toBe(treasure.id)
     }
+    expect(getTerrain(21, 20, JS_FOREST_MAP_ID)).toBe('road')
+    expect(getTerrain(13, 22, JS_DEEP_FOREST_MAP_ID)).toBe('road')
     expect(isWalkableTerrain('treasure')).toBe(false)
   })
 
@@ -209,7 +222,11 @@ describe('open world map', () => {
     expect(getEncounterBattleId('javascript', [10], [7, 8], 0.9, JS_FOREST_MAP_ID)).toBeNull()
     expect(getEncounterBattleId('javascript', [10], [7, 8, 9, 1], 0.9, JS_FOREST_MAP_ID)).toBeNull()
     expect(getEncounterBattleId('javascript', [10, 11], [7, 8, 9, 1, 10], 0.2, JS_FOREST_MAP_ID)).toBe(10)
+    expect(getEncounterBattleId('javascript', [10, 11], [7, 8, 9, 1, 10], 0.9, JS_FOREST_MAP_ID)).toBe(10)
+    expect(getEncounterBattleId('javascript', [10, 11, 12], [7, 8, 9, 1, 10, 11], 0.2, JS_FOREST_MAP_ID)).toBe(10)
     expect(getEncounterBattleId('javascript', [10, 11, 12], [7, 8, 9, 1, 10, 11], 0.9, JS_FOREST_MAP_ID)).toBe(11)
+    expect(getEncounterBattleId('javascript', [10, 11, 12], [7, 8, 9, 1, 10, 11, 12], 0.1, JS_FOREST_MAP_ID)).toBe(10)
+    expect(getEncounterBattleId('javascript', [10, 11, 12], [7, 8, 9, 1, 10, 11, 12], 0.5, JS_FOREST_MAP_ID)).toBe(11)
     expect(getEncounterBattleId('javascript', [10, 11, 12], [7, 8, 9, 1, 10, 11, 12], 0.9, JS_FOREST_MAP_ID)).toBe(12)
   })
 })

@@ -57,7 +57,7 @@ RPG側の目的は、**コード読解を代替することではなく、次の
 | State | Version | 責務 |
 | --- | ---: | --- |
 | `PlayerProgress` | v4 | EXP / Gold / PATCH KIT / Stage・Area clear / unlock |
-| `RpgState` | v5 | current HP / Equipment ownership・loadout / Party / World position / Treasure |
+| `RpgState` | v6 | current HP / Equipment ownership・loadout / Party / World position / Treasure |
 
 重要:
 
@@ -390,7 +390,7 @@ Battle中、HPが減っている時だけ使用可能
 
 第1段階では既存`inventory.patchKit`を維持します。
 
-generic inventoryへmigrationするのは、**実際に2種類目以降のItemを追加する必要が出た時だけ**です。UI整理だけのためにschema v5へ上げません。
+generic inventoryへmigrationするのは、**実際に2種類目以降のItemを追加する必要が出た時だけ**です。UI整理だけのために現在のschemaを上げません。
 
 ---
 
@@ -607,9 +607,9 @@ ShopとInnをHubの「準備地点」として視覚的にセットで理解で�
 
 - `PlayerProgress v4.gold`
 - `PlayerProgress v4.inventory.patchKit`
-- `RpgState v5.currentHp`
-- `RpgState v5.equipment`
-- `RpgState v5.ownedEquipmentIds`
+- `RpgState v6.currentHp`
+- `RpgState v6.equipment`
+- `RpgState v6.ownedEquipmentIds`
 
 ### No schema bump for
 

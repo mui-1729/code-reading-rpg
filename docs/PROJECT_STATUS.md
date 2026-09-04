@@ -118,7 +118,7 @@ Story順のauthorityはsemantic progression key。numeric IDの大小をchapter�
 
 stable map:
 
-- `overworld` — 40 × 28
+- `overworld` — 70 × 50（地域間を旅するField scale）
 - `js-village` — GREENFIELD VILLAGE 21 × 15
 - `js-forest` — JAVASCRIPT FOREST 31 × 27
 - `js-deep-forest` — JAVASCRIPT DEEP FOREST 31 × 27
@@ -127,7 +127,10 @@ stable map:
 共通:
 
 - viewport 11 × 9
-- `worldMapId + local worldPosition`をRpgState v5で保存
+- `worldMapId + local worldPosition`をRpgState v6で保存
+- Hub → GREENFIELD → Forestの本道は複数回曲がり、川・橋・森の景観を通る
+- GREENFIELD南側に本道へ再合流する川辺loopとTreasureがある
+- TypeScript Frontier入口はField東端側にあり、Hubと同一viewportへ詰め込まない
 - `/world` route上でmap transition
 - local mapからBattleへ入り、Victory / RUN / checkpoint returnでpolicyに応じてsame map / positionへ戻る
 - Defeatは即Hub転送せず、RETRYかcheckpoint returnを選ぶ
@@ -232,8 +235,8 @@ TS-01 / TS-02 / TS-03でも新しいSkillはcurrent BattleではTRIAL、そのcl
 ## 8. Persistence / compatibility
 
 - `PlayerProgress` schema v4
-- `RpgState` schema v5（未使用Party Equipmentを除去）
-- RpgState v1〜v4 → v5 migration
+- `RpgState` schema v6（70 × 50 Overworldを旧40 × 28 layoutと区別）
+- RpgState v1〜v5 → v6 migration。v5以前の旧Overworld TypeScript座標は`ts-frontier`へ移す
 - Progress / RPGの単一revision snapshot、backup recovery、storage event同期、stale tab上書き回避
 - root schema v2にBattle開始snapshotを保持する
 - Battle中HP / Itemはtentative stateとして同じroot transaction内で扱う

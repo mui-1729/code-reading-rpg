@@ -39,7 +39,7 @@ async function seedWorld(
       localStorage.setItem(
         rpgKey,
         JSON.stringify({
-          version: 5,
+          version: 6,
           state: {
             equipment: {
               weapon: 'training-blade',
@@ -150,7 +150,7 @@ test('reduced-motionでは補間を完全に切るがfacing情報は残す', asy
 
 test('map transitionはAREA titleとregion field BGMを同じscene identityから切り替える', async ({ page }) => {
   await seedWorld(page, {
-    position: { x: 14, y: 13 },
+    position: { x: 10, y: 21 },
     clearedStageIds: [1],
   })
   await page.goto('/world')
@@ -160,7 +160,7 @@ test('map transitionはAREA titleとregion field BGMを同じscene identityか�
   await expect(viewport).toHaveAttribute('data-world-bgm-track', 'field')
   await expect.poll(() => page.evaluate(() => document.body.dataset.bgmTrack)).toBe('field')
 
-  await page.getByRole('button', { name: '上へ移動' }).click()
+  await page.getByRole('button', { name: '下へ移動' }).click()
   await expect(viewport).toHaveAttribute('data-world-map', 'overworld')
   await page.getByRole('button', { name: 'グリーンフィールド村へ入る' }).click()
 
@@ -173,13 +173,13 @@ test('map transitionはAREA titleとregion field BGMを同じscene identityか�
 
 test('@cross-browser @responsive World AREA transitionは各viewportで横overflowせずscene identityを維持する', async ({ page }) => {
   await seedWorld(page, {
-    position: { x: 14, y: 13 },
+    position: { x: 10, y: 21 },
     clearedStageIds: [1],
   })
   await page.goto('/world')
 
   const viewport = page.locator('.world-viewport')
-  await page.getByRole('button', { name: '上へ移動' }).click()
+  await page.getByRole('button', { name: '下へ移動' }).click()
   await expect(viewport).toHaveAttribute('data-world-map', 'overworld')
   await page.getByRole('button', { name: 'グリーンフィールド村へ入る' }).click()
   await expect(viewport).toHaveAttribute('data-world-map', 'js-village')

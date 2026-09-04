@@ -60,7 +60,7 @@ test('legacy split saveを単一revisionへ移行しlocked mapをnormalizeする
       version: 2,
       progress: { progress: { gold: 42, inventory: { patchKit: 1 } } },
       rpg: {
-        version: 5,
+        version: 6,
         state: { worldMapId: 'overworld', currentHp: 61, partyMemberIds: ['byte'] },
       },
     })

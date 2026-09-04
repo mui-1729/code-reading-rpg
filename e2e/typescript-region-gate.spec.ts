@@ -13,6 +13,7 @@ async function seedWorld(
     unlockedStageIds?: number[]
     worldMapId?: 'overworld' | 'ts-frontier'
     worldPosition?: { x: number; y: number }
+    rpgVersion?: 5 | 6
   } = {},
 ) {
   await page.goto('/')
@@ -25,6 +26,7 @@ async function seedWorld(
       unlockedStageIds,
       worldMapId,
       worldPosition,
+      rpgVersion,
     }) => {
       localStorage.clear()
       sessionStorage.clear()
@@ -47,7 +49,7 @@ async function seedWorld(
       localStorage.setItem(
         rpgKey,
         JSON.stringify({
-          version: 4,
+          version: rpgVersion,
           state: {
             equipment: {
               weapon: 'training-blade',
@@ -78,7 +80,8 @@ async function seedWorld(
       clearedStageIds: options.clearedStageIds ?? [],
       unlockedStageIds: options.unlockedStageIds ?? [7],
       worldMapId: options.worldMapId ?? 'overworld',
-      worldPosition: options.worldPosition ?? { x: 22, y: 14 },
+      worldPosition: options.worldPosition ?? { x: 61, y: 14 },
+      rpgVersion: options.rpgVersion ?? 6,
     },
   )
   await page.goto('/world')
@@ -92,13 +95,14 @@ async function waitForMapTransition(page: Page) {
 }
 
 test('JavaScript未clearではTypeScriptの門へ進めず理由を表示する', async ({ page }) => {
-  await seedWorld(page)
+  await seedWorld(page, { worldPosition: { x: 51, y: 14 } })
 
+  await expect(overworld(page)).toHaveAttribute('data-world-x', '51')
   await page.getByRole('button', { name: '右へ移動' }).click()
 
-  await expect(overworld(page)).toHaveAttribute('data-world-x', '22')
-  await expect(page.getByRole('status')).toContainText('TypeScript辺境は未開通')
-  await expect(page.getByRole('status')).toContainText('Final Boss')
+  await expect(overworld(page)).toHaveAttribute('data-world-x', '51')
+  await expect(page.locator('.world-message')).toContainText('TypeScript辺境は未開通')
+  await expect(page.locator('.world-message')).toContainText('Final Boss')
 })
 
 test('canonical JavaScript route完了後はOverworldから専用TypeScript辺境mapへ遷移する', async ({ page }) => {
@@ -123,7 +127,7 @@ test('TypeScript辺境の西の門からCentral Hubへ往復できる', async ({
   await page.getByRole('button', { name: '左へ移動' }).click()
 
   await expect(overworld(page)).toHaveAttribute('data-world-map', 'overworld')
-  await expect(overworld(page)).toHaveAttribute('data-world-x', '22')
+  await expect(overworld(page)).toHaveAttribute('data-world-x', '61')
   await expect(overworld(page)).toHaveAttribute('data-world-y', '14')
   await waitForMapTransition(page)
 
@@ -136,6 +140,7 @@ test('旧overworld TypeScript側saveは専用mapへmigrationしreload後も保�
     clearedStageIds: JS_COMPLETE,
     worldMapId: 'overworld',
     worldPosition: { x: 30, y: 14 },
+    rpgVersion: 5,
   })
 
   await expect(frontier(page)).toHaveAttribute('data-world-map', 'ts-frontier')
@@ -151,6 +156,7 @@ test('未解放TypeScript側の旧座標saveはOverworld開始地点へnormalize
   await seedWorld(page, {
     worldMapId: 'overworld',
     worldPosition: { x: 30, y: 14 },
+    rpgVersion: 5,
   })
 
   await expect(overworld(page)).toHaveAttribute('data-world-map', 'overworld')
