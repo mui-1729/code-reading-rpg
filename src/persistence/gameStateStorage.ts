@@ -12,6 +12,7 @@ import type { PlayerProgress } from '../progression/types'
 import {
   createInitialRpgState,
   restoreRpgState,
+  RPG_STATE_SCHEMA_VERSION,
   RPG_STORAGE_KEY,
   serializeRpgState,
   type RpgState,
@@ -45,7 +46,13 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
 function isCompleteStoredRpg(value: unknown): boolean {
-  if (!isRecord(value) || ![1, 2, 3, 4, 5].includes(value.version as number)) return false
+  if (
+    !isRecord(value) ||
+    !Number.isInteger(value.version) ||
+    (value.version as number) < 1 ||
+    (value.version as number) > RPG_STATE_SCHEMA_VERSION
+  )
+    return false
   const state = value.state
   if (!isRecord(state) || !isRecord(state.equipment) || !isRecord(state.worldPosition)) return false
   const isIdArray = (ids: unknown) =>
