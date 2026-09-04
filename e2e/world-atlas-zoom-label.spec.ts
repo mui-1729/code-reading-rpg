@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { selectPauseTab } from './pause-menu-helpers'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -52,7 +53,8 @@ test('ワールドマップは100%を全体fit基準にして現在倍率だけ�
   )
   await page.goto('/world')
   await page.getByRole('button', { name: 'メニューを開く' }).click()
-  await page.getByRole('button', { name: 'マップ', exact: true }).click()
+  const menu = page.getByRole('dialog', { name: 'メニュー' })
+  await selectPauseTab(menu, 'マップ')
 
   const atlas = page.getByRole('region', { name: 'ワールドマップ' })
   const zoomValue = atlas.locator('.atlas-zoom-value')
