@@ -23,7 +23,7 @@ async function seedField(page: Page, position: { x: number; y: number }) {
         },
       }))
       localStorage.setItem(rpgKey, JSON.stringify({
-        version: 5,
+        version: 6,
         state: {
           equipment: { weapon: 'training-blade', armor: 'traveler-coat', accessory: null },
           ownedEquipmentIds: ['training-blade', 'traveler-coat'],
@@ -65,7 +65,7 @@ test('@responsive Forest入口は長いFieldの先にあり周囲が森景観と
   const world = page.locator('.world-viewport[data-world-map="overworld"]')
   const entrance = world.locator('[data-world-x="34"][data-world-y="34"]')
   await expect(entrance).toBeVisible()
-  await expect(entrance).toHaveCSS('--portal-scene-kind', 'forest-arch')
+  await expect.poll(() => entrance.evaluate((element) => getComputedStyle(element).getPropertyValue('--portal-scene-kind').trim())).toBe('forest-arch')
   await expect(world.locator('[data-world-x="34"][data-world-y="33"].terrain-road')).toBeVisible()
   await expect(world.locator('.terrain-woods, .terrain-deep-woods')).not.toHaveCount(0)
 })
