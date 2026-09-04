@@ -3,6 +3,7 @@ import type { RpgState } from '../rpg'
 import { getWorldNpcAtPosition, type WorldNpcPlacement } from './worldCharacters'
 import { VILLAGE_FACILITIES, type VillageFacilityKind } from './villageFacilities'
 import {
+  BYTE_POSITION,
   getWorldPortalAtPosition,
   JS_BOSS_POSITION,
   JS_FOREST_MAP_ID,
@@ -137,6 +138,13 @@ export function resolveWorldTargetInteraction(
   }
 
   if (mapId === OVERWORLD_MAP_ID) {
+    if (samePosition(BYTE_POSITION, target)) {
+      return {
+        kind: 'party',
+        memberId: 'byte',
+        alreadyJoined: rpgState.partyMemberIds.includes('byte'),
+      }
+    }
     if (samePosition(SHOP_POSITION, target)) return { kind: 'shop' }
     if (samePosition(RECOVERY_POSITION, target)) return { kind: 'recovery' }
     if (samePosition(JS_BOSS_POSITION, target)) {
