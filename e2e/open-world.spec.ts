@@ -79,7 +79,13 @@ async function dismissStory(page: Page) {
   await expect(story).toBeHidden()
 }
 
+async function openFight(page: Page) {
+  const fight = page.getByRole('button', { name: '戦う', exact: true })
+  if ((await fight.getAttribute('aria-pressed')) !== 'true') await fight.click()
+}
+
 async function executeSkill(page: Page, name: string) {
+  await openFight(page)
   const card = page.getByRole('button', { name: new RegExp(`^${name}\\b`) })
   await expect(card).toBeEnabled()
   await card.click()
@@ -176,8 +182,9 @@ test.describe('Open World RPG loop', () => {
     await page.goto('/javascript/battle/1?seed=patch-hp-e2e&returnTo=%2Fworld')
     await dismissStory(page)
     await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('40/108')
-    await page.locator('.battle-item-toggle').click()
-    await page.getByRole('button', { name: /PATCH KIT ×1/ }).click()
+    await page.getByRole('button', { name: 'アイテム', exact: true }).click()
+    await page.locator('.battle-item-browser-row[data-item-id="patch-kit"]').click()
+    await page.locator('.battle-item-detail[data-item-id="patch-kit"] .patch-kit-action').click()
     await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
 
     await expect.poll(async () => (await storedRpgState(page)).state.currentHp).toBe(64)
@@ -387,6 +394,7 @@ test.describe('Open World RPG loop', () => {
     await page.keyboard.press('Escape')
 
     await page.goto('/javascript/battle/1?seed=equipment-e2e&returnTo=%2Fworld')
+    await openFight(page)
     const trace = page.getByRole('button', { name: /^TRACE\b/ })
     await expect(trace).toContainText('威力 40')
   })
