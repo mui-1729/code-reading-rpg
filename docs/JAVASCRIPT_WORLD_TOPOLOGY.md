@@ -63,41 +63,39 @@ Overworldの1tileとLocal Mapの1tileを同じ距離感として扱わない。
 
 ## 3. JavaScript地方の採用topology
 
-初期実装では第三集落を増やさず、GREENFIELDとForest Settlementの2拠点で旅の区切りを作る。
+初期実装では第三集落を先に義務化せず、GREENFIELDとForest Settlementの2拠点で旅の区切りを作る。
 
 ```text
-                         Riverside / optional loop
-                                 │
-Arrival ── Central Field ── GREENFIELD VILLAGE [SAFE HUB 1]
-              │                  │
-              └── meadow / woods / bridge / road
-                                  │
-                              Forest Gate
-                                  │
-                         JAVASCRIPT FOREST
-                          ╱       │       ╲
-                     riverside   main     grove
-                          ╲       │       ╱
-                           rejoin / clearing
-                                  │
-                           fallen-log zone
-                                  │
-                       FOREST SETTLEMENT [SAFE HUB 2]
-                                  │
-                           Deep Forest Gate
-                                  │
-                       JAVASCRIPT DEEP FOREST
-                         ╱        │        ╲
-                      spring    main      wetland
-                         ╲        │        ╱
-                       root loop / giant tree
-                                  │
-                           FINAL APPROACH
-                                  │
-                             JS FINAL BOSS
+                         【最深部 / Final】
+                               ↑
+                         Deep Forest
+                         ↙    ↑    ↘
+                    optional  main   泉
+                             │
+                       【第二集落】
+                             ↑
+                     Forest後半
+                   ↙         │        ↘
+                川辺       広場       林
+                   ↘         ↑       ↙
+                     Forest前半
+                         ↑
+                      森の入口
+                         ↑
+                    川・橋・林道
+                         ↑
+【GREENFIELD VILLAGE】 ← 草原・街道
+          ↑                   ↘
+      川辺 / 寄り道        【到着地点 / Hub】
 ```
 
-第三集落は、実際の移動距離を測った結果「Forest SettlementからFinalまで独立した旅区間が長すぎる」と確認した場合のみ追加を比較する。
+この図をそのままtileへ写す必要はないが、以下は固定する。
+
+- JavaScript地方全体を横一列へ並べない
+- 地域間移動でも方向が変わる
+- Forest / Deep Forest内部でも上下左右を使う
+- GREENFIELDと第二集落の間に「旅をした」と感じる区間を持たせる
+- 第二集落からDeep Forest / Finalへも独立した旅区間を持たせる
 
 ## 4. Learning / Storyと地理の対応
 
@@ -123,18 +121,19 @@ fixed Battleはhidden x thresholdではなく、Playerが認識できる地形 /
 
 寄り道だけ上下へ足すのでは不十分。main progressionにも複数回のdirection changeを持たせる。
 
-Forestの基準例:
+Forestの基準イメージ:
 
 ```text
-東側の入口
-→ 北西の川 / 橋
-→ 南の開けた草地
-→ 西の倒木地帯
-→ 北のForest Settlement
-→ 南西側のDeep Forest入口
+南東入口
+→ 北側の川辺
+→ 西側の広場
+→ 南西の倒木地帯
+→ 北西側の中Boss / major landmark
+→ 別方向へ回り込み
+→ Forest Settlement
 ```
 
-Deep Forestも同様に、1方向の長押しだけで主要eventを順番に踏める構造にはしない。
+Deep Forestも同様に、入口→最深部を一方向の直線にしない。
 
 ### Branchには理由を置く
 
@@ -183,7 +182,31 @@ x=17まで行く
 
 とWorld内の言葉で理解できること。
 
-## 7. Safe hub / checkpoint
+## 7. GREENFIELDを「施設一覧」ではなく村として作る
+
+GREENFIELDは序盤の主要拠点として、少し歩いて場所を覚えるLocal Mapにする。
+
+比較開始点は**約30×24前後**。数字を満たすために空白を足すのではなく、村内部にも上下左右の移動と生活空間を持たせる。
+
+構成イメージ:
+
+```text
+住宅地 ─ 広場 ─ 訓練場
+  │        │
+ 宿      道具屋
+  │        │
+川辺 ─ 装備屋 ─ 次地域方面の門
+```
+
+原則:
+
+- 入った瞬間に全施設が1viewportへ収まることを要件にしない
+- 道路 / 広場 / 建物の向きが自然
+- 宿・道具屋・装備屋・MIO・住民が空間上の場所として存在する
+- 村内部にも上下左右の移動を使う
+- Web UIの施設一覧のようにしない
+
+## 8. Safe hub / checkpoint
 
 ### SAFE HUB 1 — GREENFIELD VILLAGE
 
@@ -202,17 +225,24 @@ Forest後半〜Deep Forest前の**第二の有人集落**。GREENFIELDのコピ�
 visual方向:
 
 - 森の中の小規模な木造集落
-- 木橋 / 川辺 / 苔 /薪 / 小屋
+- 木橋 / 川辺 / 苔 / 薪 / 小屋
 - 自然Regionの範囲内でGREENFIELDより奥地の生活感
 
 役割:
 
+- Forestを抜けて「遠くまで来た」と感じる到達点
 - 宿 / 回復
 - 道具補給
 - 必要最小限の装備
 - NPC / Story
 - Deep Forestへ進む前の準備
 - safe checkpoint更新
+
+### 第三拠点
+
+最初から必須にしない。第二集落→Finalまでを通常playして、**大きな安全拠点なしで概ね10〜15分以上の探索が続く**と確認した場合のみ比較する。
+
+候補は小さな森の集落 / 森番の有人拠点 / 最深部手前の小規模safe area等。Deep Forestの「人里から離れた奥地」というidentityを壊さない。
 
 ### checkpoint semantics
 
@@ -223,20 +253,31 @@ visual方向:
 
 この2つを混同しない。
 
-Forest camp / Deep Forest springは部分回復地点として残せるが、有人safe hubの代わりにはしない。
+Forest camp / Deep Forest springは部分回復地点として残せるが、原則Village checkpointを上書きせず、有人safe hubの代わりにはしない。
 
-## 8. Map sizeの評価方法
+## 9. Map sizeの評価方法
 
 viewportは11×9。
 
-実装時の最初の比較対象として:
+#377の**比較開始点**:
 
-- Forest: おおむね4 viewport幅 × 4 viewport高以上
-- Deep Forest: Forestよりさらに縦横の探索距離を持つ
+```text
+JavaScript Overworld
+→ 約70×50前後
 
-を使うが、寸法だけでは完了判定しない。
+GREENFIELD VILLAGE
+→ 約30×24前後
 
-各Local Mapで確認する指標:
+JavaScript Forest
+→ 約55×45前後
+
+Deep Forest
+→ 約65×50前後
+```
+
+これらは固定値ではない。ただしcurrent mapを数マスだけ広げて完了扱いにはしない。
+
+各Mapで確認する指標:
 
 1. 実際に何viewport分歩くか
 2. 横・縦の両方に十分な移動距離があるか
@@ -249,7 +290,7 @@ viewportは11×9。
 
 空tileを足して数字だけ満たすのは禁止。
 
-## 9. Encounter density
+## 10. Encounter density
 
 World拡張をRandom Encounter回数の水増しに使わない。
 
@@ -260,7 +301,7 @@ World拡張をRandom Encounter回数の水増しに使わない。
 
 checkpoint間で必要なBattle量を基準に調整する。
 
-## 10. Fog of War / Atlas
+## 11. Fog of War / Atlas
 
 cell-level Fog of Warは、このbranch探索が成立してから導入する。
 
@@ -271,7 +312,7 @@ cell-level Fog of Warは、このbranch探索が成立してから導入する�
 
 横一本道のままFogを導入して「一本道を順に塗る」状態にはしない。
 
-## 11. 実装順
+## 12. 実装順
 
 ```text
 Phase 1  このtopologyをdocsで固定
@@ -284,7 +325,7 @@ Phase 6  Atlas / Fog of Warを統合
 
 #352のForest / Deep Forest拡張はPhase 4 / 5の下位作業として扱い、寸法拡張だけでcloseしない。
 
-## 12. 関連Issueとの責務
+## 13. 関連Issueとの責務
 
 - #330: GREENFIELD / settlementの宿・補給・economy
 - #352: Forest / Deep Forestの実layout
@@ -296,7 +337,7 @@ Phase 6  Atlas / Fog of Warを統合
 
 #361のmap transitionはmap境界演出として維持し、地理構造変更で壊さない。
 
-## 13. Visual identity guardrail
+## 14. Visual identity guardrail
 
 JavaScriptは自然Regionとして:
 
