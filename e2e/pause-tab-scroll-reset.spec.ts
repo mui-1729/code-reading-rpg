@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { selectPauseTab } from './pause-menu-helpers'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -61,7 +62,8 @@ test('@responsive long tabをscroll後にアイテムへ切り替えてもconten
   await page.setViewportSize({ width: 390, height: 844 })
   await seedWorld(page)
   await page.getByRole('button', { name: 'メニューを開く' }).click()
-  await page.getByRole('button', { name: 'マップ', exact: true }).click()
+  const menu = page.getByRole('dialog', { name: 'メニュー' })
+  await selectPauseTab(menu, 'マップ')
 
   const mapContent = page.locator('.pause-content')
   await mapContent.evaluate((element) => {
@@ -69,7 +71,7 @@ test('@responsive long tabをscroll後にアイテムへ切り替えてもconten
   })
   await expect.poll(() => mapContent.evaluate((element) => element.scrollTop)).toBeGreaterThan(0)
 
-  await page.getByRole('button', { name: 'アイテム', exact: true }).click()
+  await selectPauseTab(menu, 'アイテム')
 
   const itemContent = page.locator('.pause-content')
   await expect.poll(() => itemContent.evaluate((element) => element.scrollTop)).toBe(0)
