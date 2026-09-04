@@ -1,5 +1,5 @@
-export const WORLD_WIDTH = 40
-export const WORLD_HEIGHT = 28
+export const WORLD_WIDTH = 70
+export const WORLD_HEIGHT = 50
 export const VIEWPORT_WIDTH = 11
 export const VIEWPORT_HEIGHT = 9
 export const WORLD_START = { x: 20, y: 14 } as const
@@ -66,21 +66,21 @@ export type WorldCell = {
   region: WorldRegion
 }
 
-export const JS_BOSS_POSITION = { x: 8, y: 3 } as const
+export const JS_BOSS_POSITION = { x: 40, y: 5 } as const
 export const TS_BOSS_POSITION = { x: 27, y: 4 } as const
 export const SHOP_POSITION = { x: 20, y: 12 } as const
 export const BYTE_POSITION = { x: 19, y: 13 } as const
 export const RECOVERY_POSITION = { x: 21, y: 16 } as const
-export const JS_VILLAGE_POSITION = { x: 14, y: 12 } as const
+export const JS_VILLAGE_POSITION = { x: 10, y: 22 } as const
 export const JS_VILLAGE_EXIT_POSITION = { x: 10, y: 14 } as const
 export const JS_VILLAGE_TRAINING_POSITION = { x: 12, y: 7 } as const
-export const JS_FOREST_POSITION = { x: 7, y: 14 } as const
+export const JS_FOREST_POSITION = { x: 34, y: 34 } as const
 export const JS_FOREST_EXIT_POSITION = { x: 30, y: 10 } as const
 export const JS_FOREST_MIDBOSS_POSITION = { x: 5, y: 10 } as const
 export const JS_FOREST_DEEP_FOREST_POSITION = { x: 1, y: 10 } as const
 export const JS_DEEP_FOREST_EXIT_POSITION = { x: 30, y: 10 } as const
 export const JS_DEEP_FOREST_CORE_EXIT_POSITION = { x: 1, y: 10 } as const
-export const TS_FRONTIER_GATE_POSITION = { x: 23, y: 14 } as const
+export const TS_FRONTIER_GATE_POSITION = { x: 62, y: 14 } as const
 export const TS_FRONTIER_EXIT_POSITION = { x: 1, y: 10 } as const
 
 export const WORLD_TREASURES = [
@@ -88,7 +88,7 @@ export const WORLD_TREASURES = [
     id: 'js-debug-cache',
     name: 'DEBUG CACHE',
     mapId: OVERWORLD_MAP_ID,
-    position: { x: 10, y: 19 },
+    position: { x: 8, y: 33 },
     region: 'javascript',
   },
   {
@@ -138,7 +138,7 @@ export const WORLD_PORTALS: readonly WorldPortal[] = [
     fromMapId: JS_VILLAGE_MAP_ID,
     position: JS_VILLAGE_EXIT_POSITION,
     toMapId: OVERWORLD_MAP_ID,
-    targetPosition: { x: 14, y: 13 },
+    targetPosition: { x: 10, y: 21 },
     label: 'JavaScript草原',
   },
   {
@@ -153,7 +153,7 @@ export const WORLD_PORTALS: readonly WorldPortal[] = [
     fromMapId: JS_FOREST_MAP_ID,
     position: JS_FOREST_EXIT_POSITION,
     toMapId: OVERWORLD_MAP_ID,
-    targetPosition: { x: 8, y: 14 },
+    targetPosition: { x: 34, y: 33 },
     label: 'JavaScript草原',
   },
   {
@@ -175,7 +175,7 @@ export const WORLD_PORTALS: readonly WorldPortal[] = [
     fromMapId: JS_DEEP_FOREST_MAP_ID,
     position: JS_DEEP_FOREST_CORE_EXIT_POSITION,
     toMapId: OVERWORLD_MAP_ID,
-    targetPosition: { x: 8, y: 6 },
+    targetPosition: { x: 40, y: 8 },
     label: 'Code Core前',
     requiredClearedStageId: 22,
   },
@@ -191,7 +191,7 @@ export const WORLD_PORTALS: readonly WorldPortal[] = [
     fromMapId: TS_FRONTIER_MAP_ID,
     position: TS_FRONTIER_EXIT_POSITION,
     toMapId: OVERWORLD_MAP_ID,
-    targetPosition: { x: 22, y: 14 },
+    targetPosition: { x: 61, y: 14 },
     label: '中央Hub',
   },
 ]
@@ -259,9 +259,9 @@ export function getWorldRegion(
   ) {
     return 'javascript'
   }
-  if (x <= 17) return 'javascript'
-  if (x >= 23) return 'typescript'
-  return 'hub'
+  if (x >= 52) return 'typescript'
+  if (x >= 18 && x <= 24) return 'hub'
+  return 'javascript'
 }
 
 function getVillageTerrain(x: number, y: number): Terrain {
@@ -368,6 +368,59 @@ function getTypeScriptFrontierTerrain(x: number, y: number): Terrain {
   return (x * 5 + y * 7) % 5 <= 1 ? 'crystal' : 'ruins'
 }
 
+function isOverworldRoad(x: number, y: number) {
+  const arrivalToVillage =
+    (y === 14 && x >= 12 && x <= WORLD_START.x) ||
+    (x === 12 && y >= 14 && y <= 22) ||
+    (y === 22 && x >= JS_VILLAGE_POSITION.x && x <= 28)
+  const forestApproach =
+    (x === 28 && y >= 22 && y <= 31) ||
+    (y === 31 && x >= 28 && x <= JS_FOREST_POSITION.x) ||
+    (x === JS_FOREST_POSITION.x && y >= 31 && y <= JS_FOREST_POSITION.y)
+  const riversideLoop =
+    (x === 12 && y >= 22 && y <= 34) ||
+    (y === 34 && x >= 7 && x <= 12) ||
+    (x === 7 && y >= 26 && y <= 34) ||
+    (y === 26 && x >= 7 && x <= 12)
+  const codeCoreApproach = x === JS_BOSS_POSITION.x && y >= 6 && y <= 10
+  return arrivalToVillage || forestApproach || riversideLoop || codeCoreApproach
+}
+
+function getOverworldTerrain(x: number, y: number): Terrain {
+  const position = { x, y }
+  if (x <= 0 || y <= 0 || x >= WORLD_WIDTH - 1 || y >= WORLD_HEIGHT - 1) return 'mountain'
+  if (samePosition(position, JS_BOSS_POSITION)) return 'boss'
+  if (samePosition(position, SHOP_POSITION)) return 'shop'
+  if (samePosition(position, BYTE_POSITION)) return 'npc'
+  if (samePosition(position, RECOVERY_POSITION)) return 'recovery'
+  if (getTreasureAtPosition(position, OVERWORLD_MAP_ID)) return 'treasure'
+
+  if (y === TS_FRONTIER_GATE_POSITION.y && x > WORLD_START.x && x < TS_FRONTIER_GATE_POSITION.x) {
+    return x >= 52 ? 'stone' : 'road'
+  }
+  if (isOverworldRoad(x, y)) return 'road'
+
+  if (x >= 17 && x <= 23 && y >= 10 && y <= 17) return 'town'
+
+  // A north-south river separates the first grassland from the forest road.
+  // The road checks above create two visible bridges at y=22 / y=31.
+  if (x === 25 && y >= 18 && y <= 44) return 'water'
+  if (x >= 5 && x <= 9 && y >= 36 && y <= 39) return 'water'
+
+  // A ridge prevents the field from reading as one flat rectangle and funnels
+  // the main route toward the bridge without hiding the destination.
+  if (x >= 30 && x <= 32 && y >= 18 && y <= 27) return 'mountain'
+
+  if (x >= 29 && x <= 39 && y >= 27 && y <= 40) {
+    return (x + y) % 4 === 0 ? 'deep-woods' : 'woods'
+  }
+
+  const region = getWorldRegion(x, OVERWORLD_MAP_ID)
+  if (region === 'typescript') return 'town'
+  if (region === 'hub') return 'town'
+  return (x * 3 + y * 5) % 7 <= 2 ? 'tall-grass' : 'grass'
+}
+
 export function getTerrain(
   x: number,
   y: number,
@@ -393,43 +446,7 @@ export function getTerrain(
   if (mapId === JS_FOREST_MAP_ID) return getForestTerrain(x, y)
   if (mapId === JS_DEEP_FOREST_MAP_ID) return getDeepForestTerrain(x, y)
   if (mapId === TS_FRONTIER_MAP_ID) return getTypeScriptFrontierTerrain(x, y)
-
-  if (x <= 0 || y <= 0 || x >= WORLD_WIDTH - 1 || y >= WORLD_HEIGHT - 1) return 'mountain'
-  if (samePosition(position, JS_BOSS_POSITION)) return 'boss'
-  if (samePosition(position, SHOP_POSITION)) return 'shop'
-  if (samePosition(position, BYTE_POSITION)) return 'npc'
-  if (samePosition(position, RECOVERY_POSITION)) return 'recovery'
-  if (getTreasureAtPosition(position, mapId)) return 'treasure'
-
-  const isJavaScriptTrail =
-    y === WORLD_START.y && x >= JS_FOREST_POSITION.x + 1 && x < WORLD_START.x
-  const isVillageSpur =
-    x === JS_VILLAGE_POSITION.x &&
-    y > JS_VILLAGE_POSITION.y &&
-    y <= WORLD_START.y
-  const isCodeCoreApproach =
-    x === JS_BOSS_POSITION.x && y > JS_BOSS_POSITION.y && y <= 6
-  const isTypeScriptGateApproach =
-    y === TS_FRONTIER_GATE_POSITION.y &&
-    x > WORLD_START.x &&
-    x < TS_FRONTIER_GATE_POSITION.x
-
-  if (isTypeScriptGateApproach) return 'stone'
-  if (isJavaScriptTrail || isVillageSpur || isCodeCoreApproach) return 'road'
-
-  if (x >= 18 && x <= 22 && y >= 10 && y <= 17) return 'town'
-
-  if (x >= 4 && x <= 7 && y >= 20 && y <= 23) return 'water'
-  if (x === 14 && y >= 5 && y <= 9) return 'mountain'
-
-  const region = getWorldRegion(x, mapId)
-  if (region === 'javascript') {
-    if (x <= 4) return (x + y) % 4 === 0 ? 'deep-woods' : 'woods'
-    if (x <= 7) return (x + y) % 3 === 0 ? 'deep-woods' : 'woods'
-    return (x * 3 + y * 5) % 7 <= 2 ? 'tall-grass' : 'grass'
-  }
-  if (region === 'typescript') return 'town'
-  return 'town'
+  return getOverworldTerrain(x, y)
 }
 
 export function isWalkableTerrain(terrain: Terrain): boolean {
