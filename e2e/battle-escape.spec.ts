@@ -57,15 +57,30 @@ async function storedRpg(page: Page) {
   return readStoredRpg(page)
 }
 
-test('clear済みOverworld Random Encounterから逃走すると同じWorld位置/HPへ戻りrewardを得ない', async ({ page }) => {
+test('clear済みOverworld Random Encounterは確認後に逃走し同じWorld位置/HPへ戻りrewardを得ない', async ({ page }) => {
   const cleared = [...JS_FIRST_INCIDENT]
   await seed(page, cleared)
   await page.goto('/javascript/battle/1?seed=encounter%3A5%3A10%3A11&returnTo=%2Fworld')
 
-  const run = page.getByRole('button', { name: '逃げる' })
+  const commandBar = page.getByRole('group', { name: '戦闘コマンド' })
+  const run = commandBar.getByRole('button', { name: '逃げる' })
   await expect(run).toBeVisible()
   await expect(run).toBeEnabled()
+  const beforeHeight = await commandBar.evaluate((element) => element.getBoundingClientRect().height)
+
   await run.click()
+  const confirm = page.getByRole('group', { name: '逃走確認' })
+  await expect(confirm).toBeVisible()
+  await expect(page).toHaveURL(/\/javascript\/battle\/1/)
+  const confirmHeight = await confirm.evaluate((element) => element.getBoundingClientRect().height)
+  expect(Math.abs(confirmHeight - beforeHeight)).toBeLessThanOrEqual(1)
+
+  await confirm.getByRole('button', { name: 'やめる' }).click()
+  await expect(page.getByRole('group', { name: '逃走確認' })).toHaveCount(0)
+  await expect(page).toHaveURL(/\/javascript\/battle\/1/)
+
+  await page.getByRole('group', { name: '戦闘コマンド' }).getByRole('button', { name: '逃げる' }).click()
+  await page.getByRole('group', { name: '逃走確認' }).getByRole('button', { name: '逃げる' }).click()
 
   await expect(page).toHaveURL(/\/world$/)
   await expect(page.getByLabel('ワールドマップ')).toHaveAttribute('data-world-x', '10')
