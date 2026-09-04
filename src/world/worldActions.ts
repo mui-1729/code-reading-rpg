@@ -6,6 +6,7 @@ import {
 } from '../progression'
 import type { RpgState } from '../rpg'
 import { getWorldNpcAtPosition } from './worldCharacters'
+import { getProgressionLandmarkAtPosition } from './progressionLandmarks'
 import {
   BYTE_POSITION,
   getEncounterBattleId,
@@ -112,29 +113,18 @@ function getForestLearningBattleId(
   if (mapId !== JS_FOREST_MAP_ID) return null
 
   if (!clearedStageIds.includes(10) && isBattleAccessible(10, clearedStageIds)) return 10
-  if (
-    !clearedStageIds.includes(11) &&
-    position.x <= 17 &&
-    isBattleAccessible(11, clearedStageIds)
-  ) {
-    return 11
+
+  const landmark = getProgressionLandmarkAtPosition(mapId, position)
+  if (!landmark || clearedStageIds.includes(landmark.battleId)) return null
+
+  switch (landmark.battleId) {
+    case 11:
+    case 12:
+    case 14:
+      return isBattleAccessible(landmark.battleId, clearedStageIds) ? landmark.battleId : null
+    default:
+      return null
   }
-  if (
-    !clearedStageIds.includes(12) &&
-    position.x <= 8 &&
-    isBattleAccessible(12, clearedStageIds)
-  ) {
-    return 12
-  }
-  if (!clearedStageIds.includes(13)) return null
-  if (
-    !clearedStageIds.includes(14) &&
-    position.x <= 4 &&
-    isBattleAccessible(14, clearedStageIds)
-  ) {
-    return 14
-  }
-  return null
 }
 
 function getDeepForestLearningBattleId(
@@ -145,56 +135,22 @@ function getDeepForestLearningBattleId(
   if (mapId !== JS_DEEP_FOREST_MAP_ID) return null
 
   if (!clearedStageIds.includes(15) && isBattleAccessible(15, clearedStageIds)) return 15
-  if (
-    !clearedStageIds.includes(16) &&
-    position.x <= 24 &&
-    isBattleAccessible(16, clearedStageIds)
-  ) {
-    return 16
+
+  const landmark = getProgressionLandmarkAtPosition(mapId, position)
+  if (!landmark || clearedStageIds.includes(landmark.battleId)) return null
+
+  switch (landmark.battleId) {
+    case 16:
+    case 17:
+    case 18:
+    case 19:
+    case 20:
+    case 21:
+    case 22:
+      return isBattleAccessible(landmark.battleId, clearedStageIds) ? landmark.battleId : null
+    default:
+      return null
   }
-  if (
-    !clearedStageIds.includes(17) &&
-    position.x <= 19 &&
-    isBattleAccessible(17, clearedStageIds)
-  ) {
-    return 17
-  }
-  if (
-    !clearedStageIds.includes(18) &&
-    position.x <= 14 &&
-    isBattleAccessible(18, clearedStageIds)
-  ) {
-    return 18
-  }
-  if (
-    !clearedStageIds.includes(19) &&
-    position.x <= 10 &&
-    isBattleAccessible(19, clearedStageIds)
-  ) {
-    return 19
-  }
-  if (
-    !clearedStageIds.includes(20) &&
-    position.x <= 9 &&
-    isBattleAccessible(20, clearedStageIds)
-  ) {
-    return 20
-  }
-  if (
-    !clearedStageIds.includes(21) &&
-    position.x <= 7 &&
-    isBattleAccessible(21, clearedStageIds)
-  ) {
-    return 21
-  }
-  if (
-    !clearedStageIds.includes(22) &&
-    position.x <= 5 &&
-    isBattleAccessible(22, clearedStageIds)
-  ) {
-    return 22
-  }
-  return null
 }
 
 export function getDeepForestReviewBattleId(

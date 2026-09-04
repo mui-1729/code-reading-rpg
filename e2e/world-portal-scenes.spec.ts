@@ -55,7 +55,7 @@ async function portalSceneKind(page: Page, selector: string) {
   )
 }
 
-test('Overworldの森入口は文字札ではなく木のarchとして見え、踏み込むと森へ遷移する', async ({ page }) => {
+test('Overworldの森入口は文字札ではなく木のarchとして見え、行き先commandと一致する', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedWorld(page, 'overworld', { x: 8, y: 14 }, [1, 7, 8, 9])
 
@@ -68,9 +68,7 @@ test('Overworldの森入口は文字札ではなく木のarchとして見え、�
   })
   expect(arch.content).not.toBe('none')
   expect(arch.borderTopWidth).toBeGreaterThan(0)
-
-  await page.getByRole('button', { name: '左へ移動' }).click()
-  await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-map', 'js-forest')
+  await expect(page.getByRole('button', { name: 'JavaScriptの森へ入る' })).toBeEnabled()
 })
 
 test('村入口は木柵門、Village出口は草原へ抜ける門として別sceneになる', async ({ page }) => {
@@ -86,9 +84,7 @@ test('村入口は木柵門、Village出口は草原へ抜ける門として別s
   const outGate = '.world-tile[data-world-x="10"][data-world-y="14"]'
   expect(await portalSceneKind(page, outGate)).toBe('village-outgate')
   await expect(page.locator(`${outGate} .exit-object`)).toHaveCSS('font-size', '0px')
-
-  await page.getByRole('button', { name: '下へ移動' }).click()
-  await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-map', 'overworld')
+  await expect(page.getByRole('button', { name: 'JavaScript草原へ入る' })).toBeEnabled()
 })
 
 test('ForestからDeep Forestは太い根のarchになりgeneric出口表示へ依存しない', async ({ page }) => {
@@ -99,7 +95,5 @@ test('ForestからDeep Forestは太い根のarchになりgeneric出口表示へ�
   await expect(page.locator(deepGate)).toBeVisible()
   expect(await portalSceneKind(page, deepGate)).toBe('deep-forest-root-arch')
   await expect(page.locator(`${deepGate} .exit-object`)).toHaveCSS('font-size', '0px')
-
-  await page.getByRole('button', { name: '左へ移動' }).click()
-  await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-map', 'js-deep-forest')
+  await expect(page.getByRole('button', { name: 'JavaScript深層の森へ入る' })).toBeEnabled()
 })

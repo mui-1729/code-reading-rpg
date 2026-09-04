@@ -7,10 +7,12 @@ import {
   resolveWorldMove,
 } from './worldActions'
 import {
+  JS_FOREST_EXIT_POSITION,
   JS_FOREST_MAP_ID,
   JS_VILLAGE_MAP_ID,
   JS_VILLAGE_TRAINING_POSITION,
   OVERWORLD_MAP_ID,
+  WORLD_MAP_STARTS,
 } from './worldMap'
 
 describe('World action resolver', () => {
@@ -211,12 +213,15 @@ describe('World action resolver', () => {
     expect(enter.kind).toBe('transition')
     if (enter.kind !== 'transition') return
     expect(enter.toMapId).toBe(JS_FOREST_MAP_ID)
-    expect(enter.nextState.worldPosition).toEqual({ x: 28, y: 10 })
+    expect(enter.nextState.worldPosition).toEqual(WORLD_MAP_STARTS[JS_FOREST_MAP_ID])
 
     const exit = resolveWorldMove({
       rpgState: {
         ...enter.nextState,
-        worldPosition: { x: 29, y: 10 },
+        worldPosition: {
+          x: JS_FOREST_EXIT_POSITION.x - 1,
+          y: JS_FOREST_EXIT_POSITION.y,
+        },
       },
       progress,
       dx: 1,
@@ -261,7 +266,7 @@ describe('World action resolver', () => {
     const state = {
       ...createInitialRpgState(),
       worldMapId: JS_FOREST_MAP_ID,
-      worldPosition: { x: 25, y: 10 },
+      worldPosition: { x: 23, y: 10 },
       stepsSinceEncounter: 4,
       encounterCount: 2,
     }
@@ -281,7 +286,7 @@ describe('World action resolver', () => {
     expect(result.battle).toEqual({
       battleId: 10,
       region: 'javascript',
-      seed: 'encounter:js-forest:3:25:9',
+      seed: 'encounter:js-forest:3:23:9',
     })
   })
 

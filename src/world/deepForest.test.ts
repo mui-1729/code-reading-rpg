@@ -37,7 +37,7 @@ describe('JavaScript Deep Forest', () => {
     const rpgState = {
       ...createInitialRpgState(),
       worldMapId: JS_FOREST_MAP_ID,
-      worldPosition: { x: 2, y: 10 },
+      worldPosition: { x: JS_FOREST_DEEP_FOREST_POSITION.x + 1, y: JS_FOREST_DEEP_FOREST_POSITION.y },
     }
 
     const result = resolveWorldMove({
@@ -81,10 +81,11 @@ describe('JavaScript Deep Forest', () => {
     const rpgState = {
       ...createInitialRpgState(),
       worldMapId: JS_DEEP_FOREST_MAP_ID,
-      worldPosition: { ...WORLD_MAP_STARTS[JS_DEEP_FOREST_MAP_ID] },
+      worldPosition: { x: 40, y: 18 },
       stepsSinceEncounter: 0,
     }
 
+    expect(getTerrain(40, 17, JS_DEEP_FOREST_MAP_ID)).toMatch(/woods/)
     const result = resolveWorldMove({
       rpgState,
       progress: { ...progress, clearedStageIds: [...clearedThrough14, 2] },

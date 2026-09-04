@@ -7,7 +7,7 @@ describe('JavaScript forest RPG state', () => {
     const state = {
       ...createInitialRpgState(),
       worldMapId: JS_FOREST_MAP_ID,
-      worldPosition: { x: 24, y: 9 },
+      worldPosition: { x: 34, y: 11 },
       stepsSinceEncounter: 6,
       encounterCount: 3,
     }
@@ -23,7 +23,7 @@ describe('JavaScript forest RPG state', () => {
         state: {
           ...state,
           worldMapId: JS_FOREST_MAP_ID,
-          worldPosition: { x: 31, y: 21 },
+          worldPosition: { x: 43, y: 21 },
         },
       }),
     )

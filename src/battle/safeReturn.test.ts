@@ -15,7 +15,7 @@ describe('getSafeBattleReturnState', () => {
     const before = {
       ...createInitialRpgState(),
       worldMapId: JS_FOREST_MAP_ID,
-      worldPosition: { x: 24, y: 10 },
+      worldPosition: { x: 39, y: 16 },
       currentHp: 42,
       stepsSinceEncounter: 5,
     }
@@ -31,14 +31,14 @@ describe('getSafeBattleReturnState', () => {
     const before = {
       ...createInitialRpgState(),
       worldMapId: JS_FOREST_MAP_ID,
-      worldPosition: { x: 10, y: 10 },
+      worldPosition: { x: 20, y: 16 },
       currentHp: 31,
       stepsSinceEncounter: 7,
     }
     const returned = getSafeBattleReturnState(before)
 
     expect(returned.worldMapId).toBe(JS_FOREST_MAP_ID)
-    expect(returned.worldPosition).toEqual({ x: 20, y: 10 })
+    expect(returned.worldPosition).toEqual({ x: 34, y: 11 })
     expect(returned.currentHp).toBe(31)
     expect(returned.stepsSinceEncounter).toBe(0)
   })
@@ -48,21 +48,21 @@ describe('getSafeBattleReturnState', () => {
     const early = getSafeBattleReturnState({
       ...initial,
       worldMapId: JS_DEEP_FOREST_MAP_ID,
-      worldPosition: { x: 24, y: 10 },
+      worldPosition: { x: 42, y: 18 },
       currentHp: 38,
     })
     expect(early.worldMapId).toBe(JS_FOREST_MAP_ID)
-    expect(early.worldPosition).toEqual({ x: 20, y: 10 })
+    expect(early.worldPosition).toEqual({ x: 34, y: 11 })
     expect(early.currentHp).toBe(38)
 
     const deep = getSafeBattleReturnState({
       ...initial,
       worldMapId: JS_DEEP_FOREST_MAP_ID,
-      worldPosition: { x: 10, y: 10 },
+      worldPosition: { x: 20, y: 26 },
       currentHp: 27,
     })
     expect(deep.worldMapId).toBe(JS_DEEP_FOREST_MAP_ID)
-    expect(deep.worldPosition).toEqual({ x: 16, y: 10 })
+    expect(deep.worldPosition).toEqual({ x: 35, y: 10 })
     expect(deep.currentHp).toBe(27)
   })
 

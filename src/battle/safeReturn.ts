@@ -14,7 +14,9 @@ const FOREST_CAMP = WORLD_RECOVERY_STOPS.find((stop) => stop.id === 'forest-trav
 const DEEP_FOREST_SPRING = WORLD_RECOVERY_STOPS.find((stop) => stop.id === 'deep-forest-spring')!
 
 function safeRoadPosition(stop: { position: { x: number; y: number } }) {
-  return { x: stop.position.x, y: stop.position.y - 1 }
+  // Expanded Forest branches place both recovery objects directly north of a
+  // walkable authored road. Defeat RETURN must land beside, never on, the object.
+  return { x: stop.position.x, y: stop.position.y + 1 }
 }
 
 function returnAt(

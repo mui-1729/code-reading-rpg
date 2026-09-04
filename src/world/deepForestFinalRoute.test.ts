@@ -11,7 +11,9 @@ import {
   JS_DEEP_FOREST_CORE_EXIT_POSITION,
   JS_DEEP_FOREST_MAP_ID,
   OVERWORLD_MAP_ID,
+  WORLD_MAP_STARTS,
 } from './worldMap'
+import { PROGRESSION_LANDMARKS } from './progressionLandmarks'
 
 const throughFilter = [1, 7, 8, 9, 10, 11, 12, 13, 14]
 const through15 = [...throughFilter, 2, 15]
@@ -39,15 +41,23 @@ function deepForestMove(
   })
 }
 
-function expectFixedBattle(
-  clearedStageIds: number[],
-  from: { x: number; y: number },
-  expectedBattleId: number,
-) {
-  const result = deepForestMove(clearedStageIds, from, -1, 0)
+function expectFixedBattle(clearedStageIds: number[], expectedBattleId: number) {
+  const landmark = PROGRESSION_LANDMARKS.find(
+    (candidate) =>
+      candidate.mapId === JS_DEEP_FOREST_MAP_ID && candidate.battleId === expectedBattleId,
+  )
+  if (!landmark) throw new Error(`missing Deep Forest landmark for Battle ${expectedBattleId}`)
+
+  const result = deepForestMove(
+    clearedStageIds,
+    { x: landmark.position.x + 1, y: landmark.position.y },
+    -1,
+    0,
+  )
   expect(result.kind).toBe('encounter')
   if (result.kind !== 'encounter') return
   expect(result.battle.battleId).toBe(expectedBattleId)
+  expect(result.nextState.worldPosition).toEqual(landmark.position)
 }
 
 describe('JavaScript incident-driven final world route', () => {
@@ -90,26 +100,40 @@ describe('JavaScript incident-driven final world route', () => {
   })
 
   it('Forest filter trace後はDeep Forest最初の移動で二つ目の実incidentを固定再現する', () => {
-    const result = deepForestMove(throughFilter, { x: 28, y: 10 }, -1, 0)
+    const start = WORLD_MAP_STARTS[JS_DEEP_FOREST_MAP_ID]
+    const result = deepForestMove(throughFilter, start, -1, 0)
 
     expect(result.kind).toBe('encounter')
     if (result.kind !== 'encounter') return
     expect(result.battle.battleId).toBe(2)
   })
 
-  it('二つ目のincident後は東から西へ15 → 16 → 17 → 18を固定導入する', () => {
-    expectFixedBattle([...throughFilter, 2], { x: 27, y: 9 }, 15)
-    expectFixedBattle(through15, { x: 24, y: 8 }, 16)
-    expectFixedBattle([...through15, 16], { x: 20, y: 9 }, 17)
-    expectFixedBattle([...through15, 16, 17], { x: 15, y: 9 }, 18)
+  it('二つ目のincident後は最初の森地形で15、その後16 → 17 → 18を景観landmarkで固定導入する', () => {
+    const firstLandmark = PROGRESSION_LANDMARKS.find(
+      (candidate) => candidate.mapId === JS_DEEP_FOREST_MAP_ID && candidate.battleId === 16,
+    )
+    if (!firstLandmark) throw new Error('missing Battle 16 landmark')
+    const sharedTrace = deepForestMove(
+      [...throughFilter, 2],
+      { x: firstLandmark.position.x + 1, y: firstLandmark.position.y },
+      -1,
+      0,
+    )
+    expect(sharedTrace.kind).toBe('encounter')
+    if (sharedTrace.kind !== 'encounter') return
+    expect(sharedTrace.battle.battleId).toBe(15)
+
+    expectFixedBattle(through15, 16)
+    expectFixedBattle([...through15, 16], 17)
+    expectFixedBattle([...through15, 16, 17], 18)
   })
 
-  it('18後はRoot Guardian 19、その後20 → 21 → 22を最深部で順番に追う', () => {
+  it('18後はRoot Guardian 19、その後20 → 21 → 22を最深部landmarkで順番に追う', () => {
     const through18 = [...through15, 16, 17, 18]
-    expectFixedBattle(through18, { x: 11, y: 9 }, 19)
-    expectFixedBattle([...through18, 19], { x: 10, y: 9 }, 20)
-    expectFixedBattle([...through18, 19, 20], { x: 8, y: 9 }, 21)
-    expectFixedBattle([...through18, 19, 20, 21], { x: 6, y: 9 }, 22)
+    expectFixedBattle(through18, 19)
+    expectFixedBattle([...through18, 19], 20)
+    expectFixedBattle([...through18, 19, 20], 21)
+    expectFixedBattle([...through18, 19, 20, 21], 22)
   })
 
   it('Deep Forest Randomはclear済みLessonだけを返しstory Battle 2 / Guardian 19を混ぜない', () => {

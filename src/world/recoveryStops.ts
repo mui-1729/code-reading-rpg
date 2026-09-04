@@ -11,8 +11,8 @@ export type WorldRecoveryStop = {
 
 /**
  * Recovery spacing grows with the route:
- * - Forest: an early camp roughly eight tiles from the entrance.
- * - Deep Forest: a later spring roughly twelve tiles from the entrance.
+ * - Forest: an early camp sits one step off the first northern branch.
+ * - Deep Forest: the spring appears only after the first long bend inward.
  * These are visible safety valves, not full paid Inn replacements.
  */
 export const WORLD_RECOVERY_STOPS: readonly WorldRecoveryStop[] = [
@@ -21,7 +21,7 @@ export const WORLD_RECOVERY_STOPS: readonly WorldRecoveryStop[] = [
     mapId: JS_FOREST_MAP_ID,
     label: '野営地',
     actionLabel: '野営地で休む',
-    position: { x: 20, y: 11 },
+    position: { x: 34, y: 10 },
     recoveryRatio: 0.6,
   },
   {
@@ -29,7 +29,7 @@ export const WORLD_RECOVERY_STOPS: readonly WorldRecoveryStop[] = [
     mapId: JS_DEEP_FOREST_MAP_ID,
     label: '湧き水',
     actionLabel: '湧き水で休む',
-    position: { x: 16, y: 11 },
+    position: { x: 35, y: 9 },
     recoveryRatio: 0.6,
   },
 ] as const

@@ -19,16 +19,16 @@ export type WorldMapId =
 const WORLD_MAP_DIMENSIONS: Record<WorldMapId, { width: number; height: number }> = {
   [OVERWORLD_MAP_ID]: { width: WORLD_WIDTH, height: WORLD_HEIGHT },
   [JS_VILLAGE_MAP_ID]: { width: 21, height: 15 },
-  [JS_FOREST_MAP_ID]: { width: 31, height: 27 },
-  [JS_DEEP_FOREST_MAP_ID]: { width: 31, height: 27 },
+  [JS_FOREST_MAP_ID]: { width: 43, height: 33 },
+  [JS_DEEP_FOREST_MAP_ID]: { width: 49, height: 37 },
   [TS_FRONTIER_MAP_ID]: { width: 31, height: 21 },
 }
 
 export const WORLD_MAP_STARTS: Record<WorldMapId, { x: number; y: number }> = {
   [OVERWORLD_MAP_ID]: { ...WORLD_START },
   [JS_VILLAGE_MAP_ID]: { x: 10, y: 12 },
-  [JS_FOREST_MAP_ID]: { x: 28, y: 10 },
-  [JS_DEEP_FOREST_MAP_ID]: { x: 28, y: 10 },
+  [JS_FOREST_MAP_ID]: { x: 40, y: 16 },
+  [JS_DEEP_FOREST_MAP_ID]: { x: 46, y: 18 },
   [TS_FRONTIER_MAP_ID]: { x: 2, y: 10 },
 }
 
@@ -75,11 +75,11 @@ export const JS_VILLAGE_POSITION = { x: 14, y: 12 } as const
 export const JS_VILLAGE_EXIT_POSITION = { x: 10, y: 14 } as const
 export const JS_VILLAGE_TRAINING_POSITION = { x: 12, y: 7 } as const
 export const JS_FOREST_POSITION = { x: 7, y: 14 } as const
-export const JS_FOREST_EXIT_POSITION = { x: 30, y: 10 } as const
-export const JS_FOREST_MIDBOSS_POSITION = { x: 5, y: 10 } as const
-export const JS_FOREST_DEEP_FOREST_POSITION = { x: 1, y: 10 } as const
-export const JS_DEEP_FOREST_EXIT_POSITION = { x: 30, y: 10 } as const
-export const JS_DEEP_FOREST_CORE_EXIT_POSITION = { x: 1, y: 10 } as const
+export const JS_FOREST_EXIT_POSITION = { x: 42, y: 16 } as const
+export const JS_FOREST_MIDBOSS_POSITION = { x: 13, y: 16 } as const
+export const JS_FOREST_DEEP_FOREST_POSITION = { x: 1, y: 16 } as const
+export const JS_DEEP_FOREST_EXIT_POSITION = { x: 48, y: 18 } as const
+export const JS_DEEP_FOREST_CORE_EXIT_POSITION = { x: 1, y: 18 } as const
 export const TS_FRONTIER_GATE_POSITION = { x: 23, y: 14 } as const
 export const TS_FRONTIER_EXIT_POSITION = { x: 1, y: 10 } as const
 
@@ -95,14 +95,14 @@ export const WORLD_TREASURES = [
     id: 'js-forest-supply',
     name: 'FOREST SUPPLY',
     mapId: JS_FOREST_MAP_ID,
-    position: { x: 20, y: 20 },
+    position: { x: 30, y: 25 },
     region: 'javascript',
   },
   {
     id: 'js-deep-forest-cache',
     name: 'DEEP CACHE',
     mapId: JS_DEEP_FOREST_MAP_ID,
-    position: { x: 14, y: 22 },
+    position: { x: 14, y: 31 },
     region: 'javascript',
   },
   {
@@ -168,7 +168,7 @@ export const WORLD_PORTALS: readonly WorldPortal[] = [
     fromMapId: JS_DEEP_FOREST_MAP_ID,
     position: JS_DEEP_FOREST_EXIT_POSITION,
     toMapId: JS_FOREST_MAP_ID,
-    targetPosition: { x: 2, y: 10 },
+    targetPosition: { x: 2, y: 16 },
     label: 'JavaScriptの森',
   },
   {
@@ -286,61 +286,105 @@ function getVillageTerrain(x: number, y: number): Terrain {
 
 function getForestTerrain(x: number, y: number): Terrain {
   const position = { x, y }
-  if (x <= 0 || y <= 0 || x >= 30 || y >= 26) return 'mountain'
+  if (x <= 0 || y <= 0 || x >= 42 || y >= 32) return 'mountain'
   if (samePosition(position, JS_FOREST_MIDBOSS_POSITION)) return 'midboss'
   if (getTreasureAtPosition(position, JS_FOREST_MAP_ID)) return 'treasure'
 
-  if (
-    y === 10 ||
-    (x === 22 && y >= 4 && y <= 10) ||
-    (y === 4 && x >= 14 && x <= 22) ||
-    (x === 24 && y >= 10 && y <= 20) ||
-    (y === 20 && x >= 20 && x <= 24)
-  ) {
+  const mainTrail = y === 16 && x >= 1 && x <= 41
+  const northFork =
+    (x === 34 && y >= 11 && y <= 16) ||
+    (y === 11 && x >= 31 && x <= 34)
+  const meadowFork =
+    (x === 25 && y >= 7 && y <= 16) ||
+    (y === 7 && x >= 19 && x <= 25)
+  const supplyFork =
+    (x === 30 && y >= 16 && y <= 24) ||
+    (y === 24 && x >= 28 && x <= 30)
+  const fallenLogFork =
+    (x === 23 && y >= 16 && y <= 23) ||
+    (y === 23 && x >= 22 && x <= 23)
+  const westernFork =
+    (x === 9 && y >= 16 && y <= 24) ||
+    (y === 24 && x >= 8 && x <= 9)
+
+  if (mainTrail || northFork || meadowFork || supplyFork || fallenLogFork || westernFork) {
     return 'road'
   }
 
-  if (x === 18 && y <= 18) return 'water'
+  /* A long stream divides the forest; authored roads become visible bridges. */
+  if (x === 27 && y >= 2 && y <= 30) return 'water'
 
   if (
-    (x >= 21 && x <= 25 && y >= 7 && y <= 13) ||
-    (x >= 12 && x <= 16 && y >= 2 && y <= 6) ||
-    (x >= 3 && x <= 8 && y >= 7 && y <= 13) ||
-    (x >= 18 && x <= 26 && y >= 17 && y <= 23)
+    (x >= 31 && x <= 39 && y >= 6 && y <= 14) ||
+    (x >= 18 && x <= 25 && y >= 5 && y <= 12) ||
+    (x >= 19 && x <= 25 && y >= 20 && y <= 28) ||
+    (x >= 3 && x <= 12 && y >= 10 && y <= 26) ||
+    (x >= 28 && x <= 34 && y >= 22 && y <= 28)
   ) {
     return (x + y) % 3 === 0 ? 'grass' : 'woods'
   }
 
-  return (x * 5 + y * 3) % 5 <= 1 ? 'deep-woods' : 'woods'
+  return (x * 5 + y * 3) % 6 <= 1 ? 'deep-woods' : 'woods'
 }
 
 function getDeepForestTerrain(x: number, y: number): Terrain {
   const position = { x, y }
-  if (x <= 0 || y <= 0 || x >= 30 || y >= 26) return 'mountain'
+  if (x <= 0 || y <= 0 || x >= 48 || y >= 36) return 'mountain'
   if (getTreasureAtPosition(position, JS_DEEP_FOREST_MAP_ID)) return 'treasure'
 
+  const eastTrail = y === 18 && x >= 36 && x <= 47
+  const northTurn =
+    (x === 36 && y >= 10 && y <= 18) ||
+    (y === 10 && x >= 28 && x <= 36)
+  const firstClueFork = x === 39 && y >= 10 && y <= 18
+  const secondClueFork = y === 9 && x >= 28 && x <= 32
+  const riverTurn =
+    (x === 28 && y >= 10 && y <= 26) ||
+    (y === 26 && x >= 19 && x <= 28)
+  const rootTurn =
+    (x === 19 && y >= 16 && y <= 26) ||
+    (y === 16 && x >= 11 && x <= 19)
+  const wetlandFork = x === 13 && y >= 16 && y <= 24
+  const westTurn =
+    (x === 11 && y >= 16 && y <= 28) ||
+    (y === 28 && x >= 6 && x <= 11) ||
+    (x === 6 && y >= 18 && y <= 28) ||
+    (y === 18 && x >= 1 && x <= 6)
+  const cacheFork =
+    (y === 28 && x >= 11 && x <= 14) ||
+    (x === 14 && y >= 28 && y <= 30)
+
   if (
-    y === 10 ||
-    (x === 24 && y >= 5 && y <= 10) ||
-    (y === 5 && x >= 16 && x <= 24) ||
-    (x === 10 && y >= 10 && y <= 22) ||
-    (y === 22 && x >= 10 && x <= 14)
+    eastTrail ||
+    northTurn ||
+    firstClueFork ||
+    secondClueFork ||
+    riverTurn ||
+    rootTurn ||
+    wetlandFork ||
+    westTurn ||
+    cacheFork
   ) {
     return 'road'
   }
 
-  if (x === 17 && y <= 19) return 'water'
+  /* Deeper water and wetland bands make the route bend without becoming a maze. */
+  if (x === 33 && y >= 2 && y <= 34) return 'water'
+  if (x >= 21 && x <= 27 && y >= 29 && y <= 33) {
+    return (x + y) % 3 === 0 ? 'water' : 'deep-woods'
+  }
 
   if (
-    (x >= 22 && x <= 27 && y >= 7 && y <= 14) ||
-    (x >= 13 && x <= 16 && y >= 3 && y <= 8) ||
-    (x >= 4 && x <= 9 && y >= 7 && y <= 16) ||
-    (x >= 6 && x <= 16 && y >= 18 && y <= 24)
+    (x >= 37 && x <= 44 && y >= 7 && y <= 15) ||
+    (x >= 28 && x <= 35 && y >= 7 && y <= 14) ||
+    (x >= 20 && x <= 27 && y >= 21 && y <= 31) ||
+    (x >= 11 && x <= 18 && y >= 12 && y <= 26) ||
+    (x >= 4 && x <= 10 && y >= 15 && y <= 31)
   ) {
     return (x + y) % 4 === 0 ? 'woods' : 'deep-woods'
   }
 
-  return (x * 7 + y * 5) % 6 <= 1 ? 'woods' : 'deep-woods'
+  return (x * 7 + y * 5) % 7 <= 1 ? 'woods' : 'deep-woods'
 }
 
 function getTypeScriptFrontierTerrain(x: number, y: number): Terrain {

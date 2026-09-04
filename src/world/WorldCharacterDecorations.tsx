@@ -7,7 +7,6 @@ type LandmarkPortalTarget = {
   key: string
   target: Element
   label: string
-  shortLabel: string
   kind: string
   battleId: number
 }
@@ -49,7 +48,6 @@ export function WorldCharacterDecorations() {
             key: `${landmark.mapId}:${landmark.position.x}:${landmark.position.y}`,
             target,
             label: landmark.label,
-            shortLabel: landmark.shortLabel,
             kind: landmark.kind,
             battleId: landmark.battleId,
           },
@@ -93,9 +91,7 @@ export function WorldCharacterDecorations() {
             data-progression-battle={landmark.battleId}
             aria-label={landmark.label}
             title={landmark.label}
-          >
-            {landmark.shortLabel}
-          </span>,
+          />,
           landmark.target,
           landmark.key,
         ),
