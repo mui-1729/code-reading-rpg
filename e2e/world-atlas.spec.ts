@@ -157,20 +157,23 @@ test('terrainは色だけでなくpattern / glyphを持つ', async ({ page }) =>
   await expect(atlas.locator('.atlas-terrain-legend')).toContainText('♠森')
 })
 
-test('390pxでは全体表示からdetail zoomへ切替え地図を縦横にpanできる', async ({ page }) => {
+test('390pxでは100%で全体を収め、拡大後は地図を縦横にpanできる', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedWorldAtlas(page, JS_MIDBOSS_PREREQS)
   const atlas = await openAtlas(page)
   const canvas = atlas.locator('.atlas-detail-canvas')
   const scrollport = atlas.locator('.atlas-scrollport')
+  const zoomIn = atlas.getByRole('button', { name: 'ワールドマップを拡大' })
+  const zoomOut = atlas.getByRole('button', { name: 'ワールドマップを縮小' })
 
-  await expect(atlas).toHaveAttribute('data-atlas-zoom', 'fit')
+  await expect(atlas).toHaveAttribute('data-atlas-zoom', '100')
   expect(await canvas.evaluate((el) => el.getBoundingClientRect().width)).toBeLessThanOrEqual(
-    await scrollport.evaluate((el) => el.clientWidth),
+    await scrollport.evaluate((el) => el.clientWidth + 1),
   )
 
-  await atlas.getByRole('button', { name: '100%', exact: true }).click()
-  await expect(atlas).toHaveAttribute('data-atlas-zoom', '100')
+  await zoomIn.click()
+  await zoomIn.click()
+  await expect(atlas).toHaveAttribute('data-atlas-zoom', '150')
   const panRange = await scrollport.evaluate((el) => ({
     horizontal: el.scrollWidth - el.clientWidth,
     vertical: el.scrollHeight - el.clientHeight,
@@ -188,10 +191,11 @@ test('390pxでは全体表示からdetail zoomへ切替え地図を縦横にpan�
   })
   expect(moved.left).toBeGreaterThan(0)
   expect(moved.top).toBeGreaterThan(0)
-  await expect(atlas.getByRole('button', { name: 'ワールドマップを拡大' })).toBeVisible()
 
-  await atlas.getByRole('button', { name: '全体', exact: true }).click()
-  await expect(atlas).toHaveAttribute('data-atlas-zoom', 'fit')
+  await zoomOut.click()
+  await zoomOut.click()
+  await expect(atlas).toHaveAttribute('data-atlas-zoom', '100')
+  await expect(zoomOut).toBeDisabled()
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth),
   ).toBe(false)
@@ -227,18 +231,22 @@ test('mobile landscapeでも150%地図をpage overflowなしで縦横にpanで�
   ).toBe(false)
 })
 
-test('zoom controlsは全体表示から75〜150%のdetail zoomへ移れる', async ({ page }) => {
+test('zoom controlsは100〜150%だけを移動する', async ({ page }) => {
   await seedWorldAtlas(page, JS_MIDBOSS_PREREQS)
   const atlas = await openAtlas(page)
   const zoomIn = atlas.getByRole('button', { name: 'ワールドマップを拡大' })
   const zoomOut = atlas.getByRole('button', { name: 'ワールドマップを縮小' })
 
+  await expect(atlas).toHaveAttribute('data-atlas-zoom', '100')
+  await expect(zoomOut).toBeDisabled()
   await zoomIn.click()
   await expect(atlas).toHaveAttribute('data-atlas-zoom', '125')
   await zoomIn.click()
   await expect(atlas).toHaveAttribute('data-atlas-zoom', '150')
+  await expect(zoomIn).toBeDisabled()
   await zoomOut.click()
+  await expect(atlas).toHaveAttribute('data-atlas-zoom', '125')
   await zoomOut.click()
-  await zoomOut.click()
-  await expect(atlas).toHaveAttribute('data-atlas-zoom', '75')
+  await expect(atlas).toHaveAttribute('data-atlas-zoom', '100')
+  await expect(zoomOut).toBeDisabled()
 })
