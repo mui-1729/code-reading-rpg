@@ -52,6 +52,12 @@ async function seedBattle(page: Page) {
   )
 }
 
+async function settleBattleEntry(page: Page) {
+  // Battle entry presentation is 520ms. Visual captures should compare stable
+  // interaction states rather than two different frames of that animation.
+  await page.waitForTimeout(600)
+}
+
 async function battleGeometry(page: Page) {
   return page.evaluate(() => {
     const detail = document.querySelector<HTMLElement>('.selected-skill-reading')
@@ -71,6 +77,7 @@ test('@responsive Fight previews the first Skill without arming it and does not 
   await page.setViewportSize({ width: 390, height: 844 })
   await seedBattle(page)
   await page.goto('/javascript/battle/2?seed=issue-386-layout&returnTo=%2Fworld')
+  await settleBattleEntry(page)
 
   await page.getByRole('button', { name: '戦う', exact: true }).click()
   const firstSkill = page.locator('[data-skill-id]').first()
@@ -102,16 +109,23 @@ test('@responsive Escape confirmation keeps the command row height stable', asyn
   await page.setViewportSize({ width: 390, height: 844 })
   await seedBattle(page)
   await page.goto('/javascript/battle/2?seed=encounter%3Aoverworld%3A8%3A20%3A14&returnTo=%2Fworld')
+  await settleBattleEntry(page)
 
   const commandBar = page.getByRole('group', { name: '戦闘コマンド' })
   const escape = commandBar.getByRole('button', { name: '逃げる' })
   await expect(escape).toBeVisible()
-  const before = await commandBar.evaluate((element) => element.getBoundingClientRect())
+  const before = await commandBar.evaluate((element) => {
+    const box = element.getBoundingClientRect()
+    return { top: box.top, height: box.height }
+  })
 
   await escape.click()
   const confirm = page.getByRole('group', { name: '逃走確認' })
   await expect(confirm).toBeVisible()
-  const after = await confirm.evaluate((element) => element.getBoundingClientRect())
+  const after = await confirm.evaluate((element) => {
+    const box = element.getBoundingClientRect()
+    return { top: box.top, height: box.height }
+  })
   expect(Math.abs(after.height - before.height)).toBeLessThanOrEqual(1)
   expect(Math.abs(after.top - before.top)).toBeLessThanOrEqual(1)
   await page.screenshot({ path: testInfo.outputPath('escape-confirm.png'), fullPage: true })
