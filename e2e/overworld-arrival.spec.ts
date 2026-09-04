@@ -29,7 +29,7 @@ async function seedArrival(page: Page) {
       localStorage.setItem(
         rpgKey,
         JSON.stringify({
-          version: 5,
+          version: 6,
           state: {
             equipment: { weapon: 'training-blade', armor: 'traveler-coat', accessory: null },
             ownedEquipmentIds: ['training-blade', 'traveler-coat'],
@@ -53,7 +53,7 @@ async function seedArrival(page: Page) {
   )
 }
 
-test('@responsive 初期Overworldは到着地点・西の街道・東の封鎖門を同じviewportで読める', async ({ page }) => {
+test('@responsive 初期Overworldは到着Hubを読めるが遠方のVillage / Forest / TypeScript gateを同一viewportへ詰め込まない', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedArrival(page)
   await page.goto('/world')
@@ -63,7 +63,7 @@ test('@responsive 初期Overworldは到着地点・西の街道・東の封鎖�
   await expect(world).toHaveAttribute('data-world-x', '20')
   await expect(world).toHaveAttribute('data-world-y', '14')
 
-  const landing = world.locator('[data-world-x="20"][data-world-y="14"].terrain-town')
+  const landing = world.locator('[data-world-x="20"][data-world-y="14"]')
   await expect(landing).toBeVisible()
   const landingMark = await landing.evaluate((element) => ({
     before: getComputedStyle(element, '::before').clipPath,
@@ -76,29 +76,22 @@ test('@responsive 初期Overworldは到着地点・西の街道・東の封鎖�
   await expect(world.locator('[data-world-x="20"][data-world-y="12"].terrain-shop')).toBeVisible()
   await expect(world.locator('[data-world-x="19"][data-world-y="13"].terrain-npc')).toBeVisible()
   await expect(world.locator('[data-world-x="21"][data-world-y="16"].terrain-recovery')).toBeVisible()
-  await expect(world.locator('[data-world-x="21"][data-world-y="14"].terrain-stone')).toBeVisible()
-  await expect(world.locator('[data-world-x="22"][data-world-y="14"].terrain-stone')).toBeVisible()
-  await expect(world.locator('[data-world-x="23"][data-world-y="14"].terrain-gate')).toBeVisible()
-  await expect(world.locator('[data-world-x="24"][data-world-y="14"].terrain-road')).toHaveCount(0)
-
-  const gateBars = await world
-    .locator('[data-world-x="23"][data-world-y="14"].terrain-gate')
-    .evaluate((element) => getComputedStyle(element, '::before').backgroundImage)
-  expect(gateBars).not.toBe('none')
+  await expect(world.locator('.terrain-village')).toHaveCount(0)
+  await expect(world.locator('.terrain-gate')).toHaveCount(0)
 
   await page.keyboard.press('ArrowRight')
   await expect(world).toHaveAttribute('data-world-x', '21')
   await page.keyboard.press('ArrowRight')
   await expect(world).toHaveAttribute('data-world-x', '22')
   await page.keyboard.press('ArrowRight')
-  await expect(world).toHaveAttribute('data-world-x', '22')
+  await expect(world).toHaveAttribute('data-world-x', '23')
 
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth),
   ).toBe(false)
 })
 
-test('World Atlasも到着地点周辺の新しいroad / stone / gate構成を共有する', async ({ page }) => {
+test('World Atlasも70×50 Fieldの到着地点・Village・Forest・TypeScript gateを離れた実位置で共有する', async ({ page }) => {
   await seedArrival(page)
   await page.goto('/world')
 
@@ -107,13 +100,16 @@ test('World Atlasも到着地点周辺の新しいroad / stone / gate構成を�
 
   const atlas = page.getByRole('region', { name: 'ワールドマップ' })
   await expect(atlas).toBeVisible()
+  const grid = atlas.locator('[data-atlas-map="overworld"] .atlas-terrain-grid')
+  await expect(grid).toHaveAttribute('data-terrain-width', '70')
+  await expect(grid).toHaveAttribute('data-terrain-height', '50')
   const cells = atlas.locator('[data-atlas-map="overworld"] .atlas-terrain-cell')
-  const at = (x: number, y: number) => cells.nth(y * 40 + x)
+  const at = (x: number, y: number) => cells.nth(y * 70 + x)
 
   await expect(at(19, 14)).toHaveClass(/terrain-road/)
-  await expect(at(20, 14)).toHaveClass(/terrain-town/)
-  await expect(at(21, 14)).toHaveClass(/terrain-stone/)
-  await expect(at(22, 14)).toHaveClass(/terrain-stone/)
-  await expect(at(23, 14)).toHaveClass(/terrain-gate/)
-  await expect(at(24, 14)).not.toHaveClass(/terrain-road/)
+  await expect(at(20, 14)).toHaveClass(/terrain-road/)
+  await expect(at(10, 22)).toHaveClass(/terrain-village/)
+  await expect(at(34, 34)).toHaveClass(/terrain-woods/)
+  await expect(at(52, 14)).toHaveClass(/terrain-stone/)
+  await expect(at(62, 14)).toHaveClass(/terrain-gate/)
 })
