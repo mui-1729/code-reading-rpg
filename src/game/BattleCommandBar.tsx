@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { gameAudio } from '../audio/gameAudio'
 import { useProgress } from '../progression'
@@ -29,6 +30,7 @@ export function BattleCommandBar({
 }: BattleCommandBarProps) {
   const navigate = useNavigate()
   const { progress } = useProgress()
+  const [escapeConfirmOpen, setEscapeConfirmOpen] = useState(false)
   const escapeAllowed = getAreaCapability(areaId, 'escape') && isBattleEscapeAllowed({
     battleId,
     seed,
@@ -39,14 +41,60 @@ export function BattleCommandBar({
   const select = (next: Exclude<BattleCommand, null>) => {
     if (actionLocked) return
     gameAudio.playSe('confirm')
+    setEscapeConfirmOpen(false)
     onCommandChange(next)
   }
 
-  const escape = () => {
+  const requestEscape = () => {
+    if (actionLocked || !escapeAllowed) return
+    gameAudio.playSe('select')
+    setEscapeConfirmOpen(true)
+  }
+
+  const cancelEscape = () => {
+    gameAudio.playSe('cancel')
+    setEscapeConfirmOpen(false)
+  }
+
+  const confirmEscape = () => {
     if (actionLocked || !escapeAllowed) return
     gameAudio.playSe('confirm')
     onRun()
     navigate({ to: '/world' })
+  }
+
+  if (escapeConfirmOpen) {
+    return (
+      <div
+        className="battle-command-bar battle-escape-confirm"
+        role="group"
+        aria-label="逃走確認"
+        onKeyDown={(event) => {
+          if (event.key !== 'Escape') return
+          event.preventDefault()
+          cancelEscape()
+        }}
+      >
+        <span className="battle-escape-confirm-copy">逃げますか？</span>
+        <button
+          type="button"
+          className="battle-command-button"
+          disabled={actionLocked}
+          onClick={confirmEscape}
+        >
+          逃げる
+        </button>
+        <button
+          type="button"
+          className="battle-command-button"
+          disabled={actionLocked}
+          onClick={cancelEscape}
+          autoFocus
+        >
+          やめる
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -74,7 +122,7 @@ export function BattleCommandBar({
           type="button"
           className="battle-command-button"
           disabled={actionLocked}
-          onClick={escape}
+          onClick={requestEscape}
           aria-label="逃げる"
         >
           逃げる
