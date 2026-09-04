@@ -1,5 +1,6 @@
 import { readStoredRpg } from './storedGameState'
 import { expect, test } from '@playwright/test'
+import { selectPauseTab } from './pause-menu-helpers'
 
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -109,7 +110,7 @@ test('設定からTutorialを最初からやり直しても加入済みBYTEを�
   await expect(page.locator('.tutorial-prompt')).toHaveCount(0)
   await page.getByRole('button', { name: 'メニューを開く' }).click()
   const menu = page.getByRole('dialog', { name: 'メニュー' })
-  await menu.getByRole('button', { name: '設定' }).click()
+  await selectPauseTab(menu, '設定')
   await menu.getByRole('button', { name: 'チュートリアルをやり直す' }).click()
 
   await expect(page.locator('.tutorial-prompt-field')).toContainText('移動')
