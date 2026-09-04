@@ -98,6 +98,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
   const [enemies, setEnemies] = useState<Enemy[]>(cloneEnemies(battle.enemies))
   const [battleCommand, setBattleCommand] = useState<BattleCommand>(null)
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null)
+  const [armedSkillId, setArmedSkillId] = useState<string | null>(null)
   const [explainedSkill, setExplainedSkill] = useState<SkillCard | null>(null)
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [turn, setTurn] = useState(1)
@@ -303,6 +304,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
     setIsResolving(true)
     setSkillWindup(true)
     setSelectedSkillId(null)
+    setArmedSkillId(null)
     setBattleCommand(null)
 
     const action = resolvePlayerAction({
@@ -382,7 +384,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
   const handleSkillClick = (skill: SkillCard) => {
     if (actionLocked) return
 
-    if (selectedSkillId === skill.id) {
+    if (selectedSkillId === skill.id && armedSkillId === skill.id) {
       gameAudio.playSe('execute')
       activateSkill(skill)
       return
@@ -390,6 +392,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
 
     gameAudio.playSe('select')
     setSelectedSkillId(skill.id)
+    setArmedSkillId(skill.id)
   }
 
   const handlePatchKit = () => {
@@ -404,13 +407,24 @@ function App({ battleId, seed, returnTo }: AppProps) {
     }))
     setPatchKitUsed(true)
     setLastPatchKitHeal(result.healed)
+    setSelectedSkillId(null)
+    setArmedSkillId(null)
     setBattleCommand(null)
     addLog('system', `PATCH KIT → +${result.healed} HP`)
   }
 
   const selectBattleCommand = (command: Exclude<BattleCommand, null>) => {
     setBattleCommand(command)
-    if (command === 'items') setSelectedSkillId(null)
+    setArmedSkillId(null)
+    if (command === 'fight') {
+      setSelectedSkillId((current) => (
+        current && availableSkills.some((skill) => skill.id === current)
+          ? current
+          : availableSkills[0]?.id ?? null
+      ))
+      return
+    }
+    setSelectedSkillId(null)
   }
 
   const goNextBattle = () => {
@@ -698,24 +712,30 @@ function App({ battleId, seed, returnTo }: AppProps) {
         {battleCommand === 'fight' && (
           <div className="skill-grid" role="group" aria-label="スキル">
             {availableSkills.map((skill) => {
-              const selected = selectedSkillId === skill.id
+              const previewed = selectedSkillId === skill.id
+              const armed = armedSkillId === skill.id
               const skillPower = getSkillDamage(skill.power, playerStats)
               return (
                 <button
                   type="button"
                   key={skill.id}
                   data-skill-id={skill.id}
-                  className={`skill-card ${selected ? 'selected' : ''}`}
+                  data-skill-previewed={previewed || undefined}
+                  className={`skill-card ${previewed ? 'is-previewed' : ''} ${armed ? 'selected' : ''}`}
                   onClick={() => handleSkillClick(skill)}
                   disabled={actionLocked}
-                  aria-pressed={selected}
+                  aria-pressed={armed}
                 >
                   <div className="skill-card-head">
                     <span>{skill.name}</span>
                     <strong>威力 {skillPower}</strong>
                   </div>
                   <pre><code>{skill.code}</code></pre>
-                  {selected && <div className="skill-card-foot">▶ 実行</div>}
+                  {previewed && (
+                    <div className={`skill-card-foot ${armed ? '' : 'is-reserved'}`} aria-hidden={!armed}>
+                      {armed ? '▶ 実行' : '選択済み'}
+                    </div>
+                  )}
                 </button>
               )
             })}
