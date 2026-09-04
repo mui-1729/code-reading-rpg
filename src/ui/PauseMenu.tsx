@@ -51,6 +51,13 @@ const partyRoleLabels: Record<string, string> = {
 
 const toPercent = (value: number) => Math.round(value * 100)
 
+function focusPauseOption(current: HTMLElement, offset: number) {
+  const options = Array.from(document.querySelectorAll<HTMLElement>('[data-pause-option]'))
+  const index = options.indexOf(current)
+  if (index < 0 || options.length === 0) return
+  options[(index + offset + options.length) % options.length]?.focus()
+}
+
 export function PauseMenu() {
   const location = useLocation()
   const { snapshot: battleRuntime } = useBattleRuntime()
@@ -59,12 +66,14 @@ export function PauseMenu() {
   const { reset: resetTutorial } = useTutorial()
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<PauseTab>('status')
+  const [tabPickerOpen, setTabPickerOpen] = useState(false)
   const [activeEquipmentSlot, setActiveEquipmentSlot] = useState<EquipmentSlot | null>(null)
   const [resetArmed, setResetArmed] = useState(false)
   const [audioSettings, setAudioSettings] = useState<AudioSettings>(() => gameAudio.getSettings())
   const combatStats = getCombatStats(stats, rpgState)
   const nextLevelExp = getTotalExpForLevel(stats.level + 1)
   const worldObjectives = getWorldObjectives(progress)
+  const activeTab = tabs.find((entry) => entry.id === tab) ?? tabs[0]
   const isBattleRoute = location.pathname.includes('/battle/')
   const battleMenuAvailable = !isBattleRoute || Boolean(
     battleRuntime &&
@@ -76,6 +85,7 @@ export function PauseMenu() {
 
   const closeMenu = useCallback(() => {
     setOpen(false)
+    setTabPickerOpen(false)
     setActiveEquipmentSlot(null)
     setResetArmed(false)
   }, [])
@@ -85,8 +95,12 @@ export function PauseMenu() {
       setActiveEquipmentSlot(null)
       return
     }
+    if (tabPickerOpen) {
+      setTabPickerOpen(false)
+      return
+    }
     closeMenu()
-  }, [activeEquipmentSlot, closeMenu])
+  }, [activeEquipmentSlot, closeMenu, tabPickerOpen])
 
   const dialogRef = useModalFocus<HTMLElement>({
     open,
@@ -118,12 +132,26 @@ export function PauseMenu() {
     })
   }, [activeEquipmentSlot])
 
+  useEffect(() => {
+    if (!tabPickerOpen) return
+    requestAnimationFrame(() => {
+      document.querySelector<HTMLElement>(`[data-pause-option="${tab}"]`)?.focus()
+    })
+  }, [tab, tabPickerOpen])
+
   const ownedEquipment = useMemo(
     () => equipmentDefinitions.filter((item) => rpgState.ownedEquipmentIds.includes(item.id)),
     [rpgState.ownedEquipmentIds],
   )
 
   if (location.pathname === '/') return null
+
+  const selectPauseTab = (nextTab: PauseTab) => {
+    setTab(nextTab)
+    setTabPickerOpen(false)
+    setActiveEquipmentSlot(null)
+    setResetArmed(false)
+  }
 
   const selectEquipment = (equipmentId: string | null, slot: EquipmentSlot) => {
     if (equipmentLocked) return
@@ -187,30 +215,75 @@ export function PauseMenu() {
               </button>
             </header>
 
-            <nav className="pause-tabs" aria-label="メニュー項目">
-              {tabs.map((entry) => (
-                <button
-                  type="button"
-                  key={entry.id}
-                  data-pause-tab={entry.id}
-                  className={tab === entry.id ? 'is-active' : ''}
-                  aria-pressed={tab === entry.id}
-                  onClick={() => {
-                    setTab(entry.id)
-                    setActiveEquipmentSlot(null)
-                    setResetArmed(false)
-                  }}
-                >
+            <nav className="pause-tab-selector" aria-label="メニュー項目">
+              <button
+                type="button"
+                className="pause-tab-trigger"
+                data-pause-tab={tab}
+                aria-expanded={tabPickerOpen}
+                aria-haspopup="listbox"
+                aria-controls="pause-tab-picker"
+                onClick={() => setTabPickerOpen((current) => !current)}
+              >
+                <span className="pause-tab-trigger-main">
                   <img
                     className="pause-tab-icon"
-                    data-pause-tab-icon={entry.id}
-                    src={entry.icon}
+                    data-pause-tab-icon={tab}
+                    src={activeTab.icon}
                     alt=""
                     aria-hidden="true"
                   />
-                  <span>{entry.label}</span>
-                </button>
-              ))}
+                  <span>{activeTab.label}</span>
+                </span>
+                <span className="pause-tab-chevron" aria-hidden="true">▼</span>
+              </button>
+
+              {tabPickerOpen && (
+                <div
+                  id="pause-tab-picker"
+                  className="pause-tab-picker pixel-inner-window"
+                  role="listbox"
+                  aria-label="メニュー項目を選ぶ"
+                >
+                  {tabs.map((entry) => (
+                    <button
+                      type="button"
+                      role="option"
+                      key={entry.id}
+                      data-pause-option={entry.id}
+                      aria-selected={tab === entry.id}
+                      className={tab === entry.id ? 'is-active' : ''}
+                      onClick={() => selectPauseTab(entry.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'ArrowDown') {
+                          event.preventDefault()
+                          focusPauseOption(event.currentTarget, 1)
+                        } else if (event.key === 'ArrowUp') {
+                          event.preventDefault()
+                          focusPauseOption(event.currentTarget, -1)
+                        } else if (event.key === 'Home') {
+                          event.preventDefault()
+                          document.querySelector<HTMLElement>('[data-pause-option]')?.focus()
+                        } else if (event.key === 'End') {
+                          event.preventDefault()
+                          const options = document.querySelectorAll<HTMLElement>('[data-pause-option]')
+                          options.item(options.length - 1)?.focus()
+                        }
+                      }}
+                    >
+                      <img
+                        className="pause-tab-icon"
+                        data-pause-tab-icon={entry.id}
+                        src={entry.icon}
+                        alt=""
+                        aria-hidden="true"
+                      />
+                      <span>{entry.label}</span>
+                      {tab === entry.id && <strong aria-hidden="true">✓</strong>}
+                    </button>
+                  ))}
+                </div>
+              )}
             </nav>
 
             <div key={tab} className="pause-content" tabIndex={-1}>
