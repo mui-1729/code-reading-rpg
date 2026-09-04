@@ -5,6 +5,7 @@ import {
   TS_FRONTIER_MAP_ID,
   WORLD_START,
 } from '../world/worldMap'
+import { WORLD_CHECKPOINTS } from '../world/checkpoints'
 import {
   createInitialRpgState,
   restoreRpgState,
@@ -13,7 +14,7 @@ import {
 } from './state'
 
 describe('RPG state storage', () => {
-  it('validな装備・仲間・Map座標・Encounter状態・current HP・Treasure状態を保存して復元する', () => {
+  it('validな装備・仲間・Map座標・checkpoint・Encounter状態・current HP・Treasure状態を保存して復元する', () => {
     const initial = createInitialRpgState()
     const state: RpgState = {
       ...initial,
@@ -22,6 +23,7 @@ describe('RPG state storage', () => {
       equipment: { ...initial.equipment, accessory: 'debug-charm' },
       worldMapId: JS_VILLAGE_MAP_ID,
       worldPosition: { x: 10, y: 12 },
+      worldCheckpoint: WORLD_CHECKPOINTS.greenfield,
       stepsSinceEncounter: 3,
       encounterCount: 4,
       currentHp: 57,
@@ -29,19 +31,40 @@ describe('RPG state storage', () => {
     }
 
     const raw = serializeRpgState(state)
-    expect(JSON.parse(raw).version).toBe(6)
+    expect(JSON.parse(raw).version).toBe(7)
     expect(restoreRpgState(raw)).toEqual(state)
   })
 
-  it('v6は拡張Overworldのx>=23座標をTypeScript旧layoutと誤認しない', () => {
+  it('v6 expanded Field saveは座標を維持しcheckpointだけ安全fallbackで補う', () => {
     const initial = createInitialRpgState()
     const raw = JSON.stringify({
       version: 6,
-      state: { ...initial, worldMapId: OVERWORLD_MAP_ID, worldPosition: { x: 34, y: 33 } },
+      state: {
+        ...initial,
+        worldMapId: OVERWORLD_MAP_ID,
+        worldPosition: { x: 34, y: 33 },
+        worldCheckpoint: undefined,
+      },
     })
     const restored = restoreRpgState(raw)
     expect(restored.worldMapId).toBe(OVERWORLD_MAP_ID)
     expect(restored.worldPosition).toEqual({ x: 34, y: 33 })
+    expect(restored.worldCheckpoint).toEqual(WORLD_CHECKPOINTS.arrival)
+  })
+
+  it('v7の既知checkpointはreload後も維持し未知checkpointは安全fallbackへ戻す', () => {
+    const initial = createInitialRpgState()
+    const greenfield = restoreRpgState(JSON.stringify({
+      version: 7,
+      state: { ...initial, worldCheckpoint: WORLD_CHECKPOINTS.greenfield },
+    }))
+    expect(greenfield.worldCheckpoint).toEqual(WORLD_CHECKPOINTS.greenfield)
+
+    const unknown = restoreRpgState(JSON.stringify({
+      version: 7,
+      state: { ...initial, worldCheckpoint: { id: 'unknown-hub' } },
+    }))
+    expect(unknown.worldCheckpoint).toEqual(WORLD_CHECKPOINTS.arrival)
   })
 
   it('v5以前の旧Overworld TypeScript側だけはdedicated frontierへmigrationする', () => {
@@ -53,6 +76,7 @@ describe('RPG state storage', () => {
     const restored = restoreRpgState(raw)
     expect(restored.worldMapId).toBe(TS_FRONTIER_MAP_ID)
     expect(restored.worldPosition).toEqual({ x: 9, y: 14 })
+    expect(restored.worldCheckpoint).toEqual(WORLD_CHECKPOINTS.arrival)
   })
 
   it('v1 saveは装備込みmax HPと未開封Treasureのoverworld stateへmigrationする', () => {
@@ -72,6 +96,7 @@ describe('RPG state storage', () => {
     expect(restored.worldPosition).toEqual({ x: 12, y: 14 })
     expect(restored.currentHp).toBe(108)
     expect(restored.openedTreasureIds).toEqual([])
+    expect(restored.worldCheckpoint).toEqual(WORLD_CHECKPOINTS.arrival)
   })
 
   it('v2 saveはcurrent HPを維持しTreasureだけ未開封でoverworldへmigrationする', () => {
@@ -155,7 +180,7 @@ describe('RPG state storage', () => {
   it('Overworld範囲外の座標はHub開始位置へ戻す', () => {
     const state = createInitialRpgState()
     const raw = JSON.stringify({
-      version: 6,
+      version: 7,
       state: { ...state, worldPosition: { x: 999, y: -3 } },
     })
 
@@ -167,7 +192,7 @@ describe('RPG state storage', () => {
   it('未知map IDはOverworld開始位置へfallbackする', () => {
     const state = createInitialRpgState()
     const raw = JSON.stringify({
-      version: 6,
+      version: 7,
       state: {
         ...state,
         worldMapId: 'unknown-map',
@@ -183,7 +208,7 @@ describe('RPG state storage', () => {
   it('Village範囲外の座標はOverworld開始位置へ戻す', () => {
     const state = createInitialRpgState()
     const raw = JSON.stringify({
-      version: 6,
+      version: 7,
       state: {
         ...state,
         worldMapId: JS_VILLAGE_MAP_ID,
@@ -199,7 +224,7 @@ describe('RPG state storage', () => {
   it('新World bounds内の端座標は保持する', () => {
     const state = createInitialRpgState()
     const raw = JSON.stringify({
-      version: 6,
+      version: 7,
       state: { ...state, worldPosition: { x: 68, y: 48 } },
     })
 
@@ -209,7 +234,7 @@ describe('RPG state storage', () => {
   it('未知Equipmentを除外しstarter所有を補完・重複排除する', () => {
     const state = createInitialRpgState()
     const raw = JSON.stringify({
-      version: 6,
+      version: 7,
       state: {
         ...state,
         ownedEquipmentIds: ['branch-saber', 'branch-saber', 'unknown-sword'],
@@ -243,7 +268,7 @@ describe('RPG state storage', () => {
   it('装備中IDはknown・owned・slot一致を満たさなければ外す', () => {
     const state = createInitialRpgState()
     const raw = JSON.stringify({
-      version: 6,
+      version: 7,
       state: {
         ...state,
         ownedEquipmentIds: ['training-blade', 'traveler-coat', 'debug-charm'],
@@ -285,7 +310,7 @@ describe('RPG state storage', () => {
   it('negative encounter countersは0へclampする', () => {
     const state = createInitialRpgState()
     const raw = JSON.stringify({
-      version: 6,
+      version: 7,
       state: { ...state, stepsSinceEncounter: -8, encounterCount: -3 },
     })
     const restored = restoreRpgState(raw)
