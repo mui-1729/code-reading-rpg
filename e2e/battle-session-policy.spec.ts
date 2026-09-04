@@ -83,10 +83,14 @@ async function dismissStory(page: Page) {
   await expect(story).toBeHidden()
 }
 
-async function openBattleItem(page: Page) {
-  const toggle = page.locator('.battle-item-toggle')
-  await expect(toggle).toBeVisible()
-  await toggle.click()
+async function openPatchKit(page: Page) {
+  await page.getByRole('button', { name: 'アイテム', exact: true }).click()
+  const row = page.locator('.battle-item-browser-row[data-item-id="patch-kit"]')
+  await expect(row).toBeVisible()
+  await row.click()
+  const detail = page.locator('.battle-item-detail[data-item-id="patch-kit"]')
+  await expect(detail).toBeVisible()
+  return detail
 }
 
 async function completeStory(page: Page) {
@@ -117,6 +121,8 @@ async function expectAnimatedResult(page: Page, text: string) {
 }
 
 async function executeSkill(page: Page, name: string) {
+  const fight = page.getByRole('button', { name: '戦う', exact: true })
+  if ((await fight.getAttribute('aria-pressed')) !== 'true') await fight.click()
   const card = page.getByRole('button', { name: new RegExp(`^${name}\\b`) })
   await expect(card).toBeEnabled()
   await card.click()
@@ -129,17 +135,20 @@ test('reloadはBattle attemptをrollbackして開始HP / Itemへ戻す', async (
   await page.goto('/javascript/battle/1?seed=session-reload&returnTo=%2Fworld')
   await dismissStory(page)
 
-  await openBattleItem(page)
-  await page.getByRole('button', { name: /PATCH KIT ×1/ }).click()
+  let detail = await openPatchKit(page)
+  await detail.getByRole('button', { name: /PATCH KIT ×1を使う/ }).click()
   await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
-  await expect(page.locator('.battle-item-toggle small')).toHaveText('PATCH KIT ×0')
+
+  detail = await openPatchKit(page)
+  await expect(detail).toContainText('PATCH KIT ×0')
+  await expect(detail).toContainText('この戦闘では使用済み')
 
   await page.reload()
   await dismissStory(page)
-  await openBattleItem(page)
+  detail = await openPatchKit(page)
 
   await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('40/108')
-  await expect(page.getByRole('button', { name: /PATCH KIT ×1/ })).toBeEnabled()
+  await expect(detail.getByRole('button', { name: /PATCH KIT ×1を使う/ })).toBeEnabled()
   await expect.poll(async () => (await readStoredRpg(page))?.state.currentHp).toBe(40)
   await expect.poll(async () => (await readStoredProgress(page))?.progress.inventory.patchKit).toBe(1)
 })
@@ -151,8 +160,8 @@ test('browser backはBattle attemptをABORTしWorld snapshotを変更しない',
   await page.goto('/javascript/battle/1?seed=session-back&returnTo=%2Fworld')
   await dismissStory(page)
 
-  await openBattleItem(page)
-  await page.getByRole('button', { name: /PATCH KIT ×1/ }).click()
+  const detail = await openPatchKit(page)
+  await detail.getByRole('button', { name: /PATCH KIT ×1を使う/ }).click()
   await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
   await page.goBack()
 
@@ -169,8 +178,8 @@ test('Victoryだけattempt-local HP / Itemとrewardをpersistent stateへcommit�
   await page.goto(`/javascript/battle/1?seed=${BATTLE_1_WIN_SEED}&returnTo=%2Fworld`)
   await dismissStory(page)
 
-  await openBattleItem(page)
-  await page.getByRole('button', { name: /PATCH KIT ×1/ }).click()
+  const detail = await openPatchKit(page)
+  await detail.getByRole('button', { name: /PATCH KIT ×1を使う/ }).click()
   await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('94/108')
   await executeSkill(page, 'TRACE')
   await executeSkill(page, 'PULSE')

@@ -23,6 +23,17 @@
   margin-left: auto;
 }
 
+/* Desktop keeps the skill detail pane collapsed, but the item command reuses
+   that same pane and must remain visible on every viewport. */
+.battle-screen .selected-skill-reading:has(.battle-item-browser) {
+  display: block;
+  position: relative;
+  z-index: 2;
+  min-width: 0;
+  border: 2px solid #77718d;
+  background: #080812;
+}
+
 .battle-secondary-actions {
   position: relative;
   display: flex;

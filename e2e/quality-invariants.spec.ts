@@ -83,6 +83,12 @@ async function dismissStory(page: Page) {
   await expect(story).toBeHidden()
 }
 
+async function openFight(page: Page) {
+  const fight = page.getByRole('button', { name: '戦う', exact: true })
+  if ((await fight.getAttribute('aria-pressed')) !== 'true') await fight.click()
+  await expect(page.getByRole('group', { name: 'スキル' })).toBeVisible()
+}
+
 async function expectDialogFocusTrap(page: Page, dialog: Locator) {
   const buttons = dialog.getByRole('button')
   const first = buttons.first()
@@ -95,7 +101,7 @@ async function expectDialogFocusTrap(page: Page, dialog: Locator) {
   await expect(first).toBeFocused()
 
   // Programmatic or pointer focus on the page background must be redirected into the modal.
-  await page.locator('.skill-card').first().focus()
+  await page.locator('.battle-command-button').first().focus()
   await expect(first).toBeFocused()
 }
 
@@ -160,6 +166,7 @@ test('@responsive short/landscape viewport keeps multiline CODE HELP readable', 
   await seedState(page, { clearedStageIds: JS_COMPLETE })
   await page.goto('/javascript/battle/20?seed=quality-code-help&returnTo=%2Fworld')
   await dismissStory(page)
+  await openFight(page)
   const order = page.locator('[data-skill-id="order"]')
   await order.click()
   const source = (await order.locator('pre code').textContent()) ?? ''
@@ -190,6 +197,7 @@ test('@cross-browser CODE HELP, CODE DATA, and Story keep focus inside and resto
   await page.keyboard.press('Escape')
   await expect(story).toBeHidden()
 
+  await openFight(page)
   const helpTrigger = page.getByRole('button', { name: 'コード解説を開く' })
   await helpTrigger.focus()
   await helpTrigger.click()
@@ -219,6 +227,7 @@ test('@cross-browser Victory/Defeat result dialog traps focus and blocks Battle 
   await seedState(page, { clearedStageIds: JS_BATTLE_1_PREREQS, currentHp: 1 })
   await page.goto('/javascript/battle/1?seed=quality-result-focus&returnTo=%2Fworld')
   await dismissStory(page)
+  await openFight(page)
 
   const trace = page.getByRole('button', { name: /^TRACE\b/ })
   await trace.click()
@@ -240,6 +249,7 @@ test('@cross-browser post-Battle Story exclusively owns focus until the Victory 
   // First-clear Chapter 1 has a post-Battle Story; training Battle 7 does not.
   // Check the displayed comparison rather than relying on the card name alone.
   for (const name of ['TRACE', 'NOVA', 'TRACE']) {
+    await openFight(page)
     const card = page.getByRole('button', { name: new RegExp(`^${name}\\b`) })
     await expect(card).toBeEnabled()
     await expect(card.locator('pre code')).toContainText(name === 'NOVA' ? '> 60' : '< 45')
@@ -274,6 +284,7 @@ test('@responsive mobile keeps all three Enemy cards and selected code comparabl
   await seedState(page, { clearedStageIds: [...JS_SECOND_INCIDENT_PREREQS, 2] })
   await page.goto('/javascript/battle/2?seed=quality-code-data&returnTo=%2Fworld')
   await dismissStory(page)
+  await openFight(page)
 
   const trace = page.getByRole('button', { name: /^TRACE\b/ })
   await trace.click()
@@ -287,7 +298,7 @@ test('@responsive mobile keeps all three Enemy cards and selected code comparabl
     const referenceButtons = Array.from(document.querySelectorAll<HTMLElement>(
       '.battle-reference-actions > .floating-code-data, .battle-reference-actions > .floating-help',
     ))
-    const secondaryActions = document.querySelector<HTMLElement>('.battle-secondary-actions')
+    const commandBar = document.querySelector<HTMLElement>('.battle-command-bar')
     const withinWidth = (element: HTMLElement) => {
       const bounds = element.getBoundingClientRect()
       return bounds.left >= -1 && bounds.right <= viewportWidth + 1 && bounds.width > 0
@@ -336,8 +347,8 @@ test('@responsive mobile keeps all three Enemy cards and selected code comparabl
       referenceButtonCount: referenceButtons.length,
       referenceButtonsInline: referenceButtons.every((button) => getComputedStyle(button).position === 'static'),
       referenceButtonsWithinWidth: referenceButtons.every(withinWidth),
-      referenceButtonsOverlapActions: secondaryActions
-        ? referenceButtons.some((button) => overlaps(button.getBoundingClientRect(), secondaryActions.getBoundingClientRect()))
+      referenceButtonsOverlapCommands: commandBar
+        ? referenceButtons.some((button) => overlaps(button.getBoundingClientRect(), commandBar.getBoundingClientRect()))
         : true,
       horizontalOverflow: document.documentElement.scrollWidth - viewportWidth,
       readingUnionHeight: readingBottom - readingTop,
@@ -360,7 +371,7 @@ test('@responsive mobile keeps all three Enemy cards and selected code comparabl
     expect(geometry.referenceButtonCount).toBe(2)
     expect(geometry.referenceButtonsInline).toBe(true)
     expect(geometry.referenceButtonsWithinWidth).toBe(true)
-    expect(geometry.referenceButtonsOverlapActions).toBe(false)
+    expect(geometry.referenceButtonsOverlapCommands).toBe(false)
   } else {
     await expect(trace.locator('pre code')).toBeVisible()
   }
