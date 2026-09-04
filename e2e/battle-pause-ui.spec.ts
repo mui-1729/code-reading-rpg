@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import { JS_COMPLETE, JS_SECOND_INCIDENT_PREREQS } from './canonical-progress-fixtures'
 import { readStoredGameState } from './storedGameState'
+import { selectPauseTab } from './pause-menu-helpers'
 
 const BATTLE_2_REPLAY = [...JS_SECOND_INCIDENT_PREREQS, 2] as const
 
@@ -133,7 +134,7 @@ test('@cross-browser Battle equipment is read-only, while World equipment remain
   })
   await page.goto('/world')
   const worldPause = await openPause(page)
-  await worldPause.getByRole('button', { name: '装備', exact: true }).click()
+  await selectPauseTab(worldPause, '装備')
   const worldWeaponTrigger = worldPause.getByRole('button', { name: /武器を選ぶ/ })
   await expect(worldWeaponTrigger).toBeEnabled()
   await worldWeaponTrigger.click()
@@ -144,7 +145,7 @@ test('@cross-browser Battle equipment is read-only, while World equipment remain
 
   await openBattle(page, 2, 'issue-259-equipment-lock')
   const battlePause = await openPause(page)
-  await battlePause.getByRole('button', { name: '装備', exact: true }).click()
+  await selectPauseTab(battlePause, '装備')
   await expect(battlePause.getByRole('status')).toContainText('バトル中は装備を変更できません')
   await expect(battlePause.getByRole('button', { name: /武器を選ぶ/ })).toBeDisabled()
   await expect(battlePause.getByRole('button', { name: /防具を選ぶ/ })).toBeDisabled()
@@ -177,7 +178,7 @@ test('@responsive Pause navigation remains inside the viewport after reading a l
   await seedState(page, { clearedStageIds: JS_COMPLETE, worldMapId: 'ts-frontier', worldPosition: { x: 5, y: 5 } })
   await page.goto('/world')
   const pause = await openPause(page)
-  await pause.getByRole('button', { name: 'コード図鑑', exact: true }).click()
+  await selectPauseTab(pause, 'コード図鑑')
   await expect(pause.locator('.codex-entry').first()).toBeVisible()
 
   const scrollTop = await pause.locator('.pause-content').evaluate((content) => {
@@ -186,26 +187,29 @@ test('@responsive Pause navigation remains inside the viewport after reading a l
   })
   expect(scrollTop).toBeGreaterThan(0)
   const geometry = await pause.evaluate((dialog) => {
-    const tabs = dialog.querySelector<HTMLElement>('.pause-tabs')
+    const selector = dialog.querySelector<HTMLElement>('.pause-tab-selector')
     const dialogBox = dialog.getBoundingClientRect()
-    const tabsBox = tabs?.getBoundingClientRect()
+    const selectorBox = selector?.getBoundingClientRect()
     return {
       dialogTop: dialogBox.top,
       dialogBottom: dialogBox.bottom,
-      tabsTop: tabsBox?.top ?? -1,
-      tabsBottom: tabsBox?.bottom ?? Number.POSITIVE_INFINITY,
+      selectorTop: selectorBox?.top ?? -1,
+      selectorBottom: selectorBox?.bottom ?? Number.POSITIVE_INFINITY,
     }
   })
-  expect(geometry.tabsTop).toBeGreaterThanOrEqual(geometry.dialogTop)
-  expect(geometry.tabsBottom).toBeLessThanOrEqual(geometry.dialogBottom)
-  await expect(pause.getByRole('button', { name: 'ステータス', exact: true })).toBeVisible()
+  expect(geometry.selectorTop).toBeGreaterThanOrEqual(geometry.dialogTop)
+  expect(geometry.selectorBottom).toBeLessThanOrEqual(geometry.dialogBottom)
+  const trigger = pause.locator('.pause-tab-trigger')
+  await expect(trigger).toBeVisible()
+  await trigger.click()
+  await expect(pause.getByRole('option', { name: 'ステータス', exact: true })).toBeVisible()
 })
 
 test('@responsive TypeScript Frontier opens CODEX on TypeScript by default', async ({ page }) => {
   await seedState(page, { clearedStageIds: JS_COMPLETE, worldMapId: 'ts-frontier', worldPosition: { x: 5, y: 5 } })
   await page.goto('/world')
   const pause = await openPause(page)
-  await pause.getByRole('button', { name: 'コード図鑑', exact: true }).click()
+  await selectPauseTab(pause, 'コード図鑑')
   const codex = pause.getByRole('region', { name: 'Code Codex' })
   await expect(codex.getByRole('tab', { name: 'TYPESCRIPT' })).toHaveAttribute('aria-selected', 'true')
   await expect(codex.locator('.codex-summary')).toContainText('TYPESCRIPT')

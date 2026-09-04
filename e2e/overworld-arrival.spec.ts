@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { selectPauseTab } from './pause-menu-helpers'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -103,7 +104,8 @@ test('World Atlasも到着地点周辺の新しいroad / stone / gate構成を�
   await page.goto('/world')
 
   await page.getByRole('button', { name: 'メニューを開く' }).click()
-  await page.getByRole('button', { name: 'マップ', exact: true }).click()
+  const menu = page.getByRole('dialog', { name: 'メニュー' })
+  await selectPauseTab(menu, 'マップ')
 
   const atlas = page.getByRole('region', { name: 'ワールドマップ' })
   await expect(atlas).toBeVisible()

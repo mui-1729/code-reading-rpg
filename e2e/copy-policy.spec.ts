@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { selectPauseTab } from './pause-menu-helpers'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -55,8 +56,12 @@ test('プレイヤー向け主要UIは日本語を基本にしtechnical termを�
 
   await page.getByRole('button', { name: 'メニューを開く' }).click()
   const menu = page.getByRole('dialog', { name: 'メニュー' })
-  await expect(menu.getByRole('button', { name: 'ステータス' })).toBeVisible()
-  await expect(menu.getByRole('button', { name: 'コード図鑑' })).toBeVisible()
-  await menu.getByRole('button', { name: 'マップ' }).click()
+  const selector = menu.locator('.pause-tab-trigger')
+  await expect(selector).toContainText('ステータス')
+  await selector.click()
+  const picker = menu.getByRole('listbox', { name: 'メニュー項目を選ぶ' })
+  await expect(picker.getByRole('option', { name: 'コード図鑑', exact: true })).toBeVisible()
+  await selector.click()
+  await selectPauseTab(menu, 'マップ')
   await expect(menu.getByRole('region', { name: 'ワールドマップ' })).toBeVisible()
 })

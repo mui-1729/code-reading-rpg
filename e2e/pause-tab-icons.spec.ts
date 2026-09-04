@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { selectPauseTab } from './pause-menu-helpers'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -6,7 +7,7 @@ const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
 const tabLabels = ['ステータス', 'マップ', 'アイテム', '装備', '仲間', 'コード図鑑', '設定'] as const
 
-test('390pxのPause tabは7種類のpixel iconとlabelで操作できる', async ({ page }, testInfo) => {
+test('390pxのPause selectorは7種類のpixel iconとlabelから1件を選べる', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   await page.evaluate(
@@ -22,16 +23,19 @@ test('390pxのPause tabは7種類のpixel iconとlabelで操作できる', async
   await page.getByRole('button', { name: 'メニューを開く' }).click()
 
   const dialog = page.getByRole('dialog', { name: 'メニュー' })
-  const tabs = dialog.getByRole('navigation', { name: 'メニュー項目' })
+  const selector = dialog.getByRole('navigation', { name: 'メニュー項目' })
+  const trigger = selector.locator('.pause-tab-trigger')
   await expect(dialog).toBeVisible()
-  await expect(tabs).toBeVisible()
+  await expect(selector).toBeVisible()
+  await expect(trigger).toContainText('ステータス')
 
+  await trigger.click()
+  const picker = selector.getByRole('listbox', { name: 'メニュー項目を選ぶ' })
   const iconSources: string[] = []
   for (const label of tabLabels) {
-    const button = tabs.getByRole('button', { name: label, exact: true })
-    const icon = button.locator('img.pause-tab-icon')
-    await button.scrollIntoViewIfNeeded()
-    await expect(button).toBeVisible()
+    const option = picker.getByRole('option', { name: label, exact: true })
+    const icon = option.locator('img.pause-tab-icon')
+    await expect(option).toBeVisible()
     await expect(icon).toBeVisible()
     await expect(icon).toHaveAttribute('alt', '')
     await expect(icon).toHaveAttribute('aria-hidden', 'true')
@@ -41,22 +45,17 @@ test('390pxのPause tabは7種類のpixel iconとlabelで操作できる', async
     iconSources.push(source ?? '')
   }
   expect(new Set(iconSources).size).toBe(tabLabels.length)
+  await trigger.click()
 
-  const mapTab = tabs.getByRole('button', { name: 'マップ', exact: true })
-  await mapTab.click()
-  await expect(mapTab).toHaveClass(/is-active/)
-  const selectedIcon = mapTab.locator('img.pause-tab-icon')
-  const selectedStyle = await selectedIcon.evaluate((element) => {
-    const style = getComputedStyle(element)
-    return { width: style.outlineWidth, style: style.outlineStyle, transform: style.transform }
-  })
-  expect(selectedStyle.width).toBe('2px')
-  expect(selectedStyle.style).toBe('solid')
-  expect(selectedStyle.transform).not.toBe('none')
+  await selectPauseTab(dialog, 'マップ')
+  await expect(trigger).toContainText('マップ')
+  await expect(trigger).toHaveAttribute('data-pause-tab', 'map')
+  const selectedIcon = trigger.locator('img.pause-tab-icon')
+  await expect(selectedIcon).toHaveAttribute('data-pause-tab-icon', 'map')
 
   const pageOverflows = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)
   expect(pageOverflows).toBe(false)
 
-  const screenshot = await tabs.screenshot({ path: testInfo.outputPath('pause-tabs.png') })
+  const screenshot = await selector.screenshot({ path: testInfo.outputPath('pause-selector.png') })
   expect(screenshot.byteLength).toBeGreaterThan(1000)
 })

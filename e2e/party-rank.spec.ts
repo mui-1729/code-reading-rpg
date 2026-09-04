@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { selectPauseTab } from './pause-menu-helpers'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -44,7 +45,8 @@ test('メニューの仲間でBYTE自身のRank・追撃値・次の成長条件
 
   await page.goto('/world')
   await page.getByRole('button', { name: 'メニューを開く' }).click()
-  await page.getByRole('button', { name: '仲間', exact: true }).click()
+  const menu = page.getByRole('dialog', { name: 'メニュー' })
+  await selectPauseTab(menu, '仲間')
 
   const byte = page.getByText(/BYTE · 斥候 · ランク 3/).locator('..')
   await expect(byte).toContainText('追撃 11')

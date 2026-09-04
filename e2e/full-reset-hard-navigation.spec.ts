@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { selectPauseTab } from './pause-menu-helpers'
 
 const OPENING_KEY = 'code-read-rpg:javascript-opening:v1'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
@@ -24,7 +25,7 @@ test('進行リセットはWorld Tutorialを残さずdocumentごとTitleへ戻�
 
   await page.getByRole('button', { name: 'メニューを開く' }).click()
   const dialog = page.getByRole('dialog', { name: 'メニュー' })
-  await dialog.getByRole('button', { name: '設定' }).click()
+  await selectPauseTab(dialog, '設定')
   await dialog.getByRole('button', { name: '進行をリセット', exact: true }).click()
   await dialog.getByRole('button', { name: '本当に進行をリセットする', exact: true }).click()
 
