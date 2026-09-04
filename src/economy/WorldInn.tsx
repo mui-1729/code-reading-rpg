@@ -1,7 +1,9 @@
+import { useEffect } from 'react'
 import { gameAudio } from '../audio/gameAudio'
 import { useProgress } from '../progression'
 import { getCombatStats, useRpg } from '../rpg'
 import { useModalFocus } from '../ui/useModalFocus'
+import { getWorldCheckpointForMapEntry } from '../world/checkpoints'
 import { getInnRestQuote, resolveInnRest } from './inn'
 
 type WorldInnProps = {
@@ -18,6 +20,13 @@ export function WorldInn({ open, onClose, onMessage, locationLabel = '中央ハ�
   const quote = getInnRestQuote(progress, rpgState, combatStats.maxHp)
 
   const dialogRef = useModalFocus<HTMLElement>({ open, onEscape: onClose })
+
+  useEffect(() => {
+    if (!open) return
+    const checkpoint = getWorldCheckpointForMapEntry(rpgState.worldMapId)
+    if (!checkpoint || checkpoint.id === rpgState.worldCheckpoint.id) return
+    setRpgState((current) => ({ ...current, worldCheckpoint: checkpoint }))
+  }, [open, rpgState.worldCheckpoint.id, rpgState.worldMapId, setRpgState])
 
   if (!open) return null
 
