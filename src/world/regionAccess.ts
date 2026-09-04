@@ -1,7 +1,7 @@
 import type { PlayerProgress } from '../progression'
 import { OVERWORLD_MAP_ID, type WorldMapId } from './worldMap'
 
-export const TYPESCRIPT_REGION_MIN_X = 23
+export const TYPESCRIPT_REGION_MIN_X = 52
 
 export function isTypeScriptRegionUnlocked(
   progress: Pick<PlayerProgress, 'clearedStageIds'>,
