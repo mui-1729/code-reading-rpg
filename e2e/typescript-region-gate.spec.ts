@@ -172,9 +172,10 @@ test('TypeScript local encounterから逃走すると同じ辺境位置へ戻る
   })
 
   await page.goto('/typescript/battle/4?seed=encounter:ts-frontier:1:5:10&returnTo=%2Fworld')
-  const run = page.getByRole('button', { name: '逃げる' })
+  const run = page.getByRole('group', { name: '戦闘コマンド' }).getByRole('button', { name: '逃げる' })
   await expect(run).toBeEnabled()
   await run.click()
+  await page.getByRole('group', { name: '逃走確認' }).getByRole('button', { name: '逃げる' }).click()
 
   await expect(page).toHaveURL(/\/world$/)
   await expect(frontier(page)).toHaveAttribute('data-world-x', '5')
