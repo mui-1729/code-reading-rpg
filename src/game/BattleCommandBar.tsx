@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { gameAudio } from '../audio/gameAudio'
 import { useProgress } from '../progression'
@@ -31,12 +31,18 @@ export function BattleCommandBar({
   const navigate = useNavigate()
   const { progress } = useProgress()
   const [escapeConfirmOpen, setEscapeConfirmOpen] = useState(false)
+  const cancelEscapeRef = useRef<HTMLButtonElement>(null)
   const escapeAllowed = getAreaCapability(areaId, 'escape') && isBattleEscapeAllowed({
     battleId,
     seed,
     returnTo: returnTo ?? null,
     clearedStageIds: progress.clearedStageIds,
   })
+
+  useEffect(() => {
+    if (!escapeConfirmOpen) return
+    cancelEscapeRef.current?.focus({ preventScroll: true })
+  }, [escapeConfirmOpen])
 
   const select = (next: Exclude<BattleCommand, null>) => {
     if (actionLocked) return
@@ -85,11 +91,11 @@ export function BattleCommandBar({
           逃げる
         </button>
         <button
+          ref={cancelEscapeRef}
           type="button"
           className="battle-command-button"
           disabled={actionLocked}
           onClick={cancelEscape}
-          autoFocus
         >
           やめる
         </button>
