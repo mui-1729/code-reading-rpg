@@ -29,7 +29,7 @@ async function seedWorld(
         },
       }))
       localStorage.setItem(rpgKey, JSON.stringify({
-        version: 5,
+        version: 6,
         state: {
           equipment: { weapon: 'training-blade', armor: 'traveler-coat', accessory: null },
           ownedEquipmentIds: ['training-blade', 'traveler-coat'],
@@ -52,7 +52,7 @@ async function seedWorld(
 
 test('@responsive Village portalは旧mapを覆ってからstateを切り替え、新mapを開く', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  await seedWorld(page, 'overworld', { x: 14, y: 13 }, [1])
+  await seedWorld(page, 'overworld', { x: 10, y: 21 }, [1])
 
   const viewport = page.locator('.world-viewport')
   const transition = page.locator('.world-map-transition')
@@ -67,8 +67,7 @@ test('@responsive Village portalは旧mapを覆ってからstateを切り替え�
   await expect(page.locator('body')).toHaveAttribute('data-world-transitioning', 'true')
   await expect(page.getByRole('button', { name: 'メニューを開く' })).toBeHidden()
 
-  // Overlay中にforceされた操作も境界stateへ割り込ませない。
-  await page.getByRole('button', { name: '上へ移動' }).click({ force: true })
+  await page.getByRole('button', { name: '下へ移動' }).click({ force: true })
 
   await expect(transition).toHaveAttribute('data-world-transition-phase', 'revealing')
   await expect(viewport).toHaveAttribute('data-world-map', 'js-village')
@@ -106,12 +105,14 @@ test('TypeScript辺境から中央Hubへ戻る境界も共通transition sequence
   await expect(transition).toHaveAttribute('data-world-transition-to', 'overworld')
   await expect(transition).toHaveAttribute('data-world-transition-phase', 'revealing')
   await expect(viewport).toHaveAttribute('data-world-map', 'overworld')
+  await expect(viewport).toHaveAttribute('data-world-x', '61')
+  await expect(viewport).toHaveAttribute('data-world-y', '14')
   await expect(transition).toHaveCount(0, { timeout: 1_000 })
 })
 
 test('prefers-reduced-motionではvortexを省略して短いfadeへ落とす', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await seedWorld(page, 'overworld', { x: 14, y: 13 }, [1])
+  await seedWorld(page, 'overworld', { x: 10, y: 21 }, [1])
 
   const transition = page.locator('.world-map-transition')
   const enter = page.getByRole('button', { name: 'グリーンフィールド村へ入る' })
