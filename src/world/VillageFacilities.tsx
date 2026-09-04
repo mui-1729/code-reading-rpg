@@ -4,7 +4,7 @@ import { WorldInn } from '../economy/WorldInn'
 import { VillageShop } from '../economy/VillageShop'
 import { useRpg } from '../rpg'
 import { isAdjacent, JS_VILLAGE_MAP_ID } from './worldMap'
-import { VILLAGE_FACILITIES, type VillageFacility, type VillageFacilityKind } from './villageFacilities'
+import { VILLAGE_FACILITIES, type VillageFacility, type VillageFacilityKind } from './villageFacilityData'
 
 type FacilityTarget = {
   facility: VillageFacility
