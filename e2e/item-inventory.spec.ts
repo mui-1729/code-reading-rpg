@@ -1,11 +1,8 @@
+import { seedLegacyGameState } from './game-state-fixtures'
 import { readStoredGameState } from './storedGameState'
 import { expect, test, type Page } from '@playwright/test'
 import { JS_BATTLE_1_PREREQS, JS_COMPLETE } from './canonical-progress-fixtures'
 import { selectPauseTab } from './pause-menu-helpers'
-
-const PROGRESS_KEY = 'code-reading-rpg:player-progress'
-const RPG_KEY = 'code-reading-rpg:rpg-state'
-const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
 async function seedItemState(
   page: Page,
@@ -17,63 +14,18 @@ async function seedItemState(
     clearedStageIds?: readonly number[]
   } = {},
 ) {
-  await page.goto('/')
-  await page.evaluate(
-    ({ progressKey, rpgKey, tutorialKey, gold, patchKit, currentHp, worldPosition, clearedStageIds }) => {
-      localStorage.clear()
-      localStorage.setItem(
-        progressKey,
-        JSON.stringify({
-          version: 4,
-          progress: {
-            exp: 0,
-            gold,
-            inventory: { patchKit },
-            clearedStageIds,
-            clearedAreaIds: [],
-            completedSideQuestIds: [],
-            unlockedStageIds: [7],
-            unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
-          },
-        }),
-      )
-      localStorage.setItem(
-        rpgKey,
-        JSON.stringify({
-          version: 3,
-          state: {
-            equipment: {
-              weapon: 'training-blade',
-              armor: 'traveler-coat',
-              accessory: null,
-            },
-            ownedEquipmentIds: ['training-blade', 'traveler-coat'],
-            partyMemberIds: [],
-            partyEquipment: {},
-            worldPosition,
-            stepsSinceEncounter: 8,
-            encounterCount: 0,
-            currentHp,
-            openedTreasureIds: [],
-          },
-        }),
-      )
-      localStorage.setItem(
-        tutorialKey,
-        JSON.stringify({ version: 1, status: 'skipped', phase: 'battle' }),
-      )
-    },
-    {
-      progressKey: PROGRESS_KEY,
-      rpgKey: RPG_KEY,
-      tutorialKey: TUTORIAL_KEY,
+  await seedLegacyGameState(page, {
+    progress: {
       gold: options.gold ?? 0,
       patchKit: options.patchKit ?? 0,
+      clearedStageIds: options.clearedStageIds ?? JS_BATTLE_1_PREREQS,
+      unlockedStageIds: [7],
+    },
+    rpg: {
       currentHp: options.currentHp ?? 108,
       worldPosition: options.worldPosition ?? { x: 20, y: 14 },
-      clearedStageIds: options.clearedStageIds ?? [...JS_BATTLE_1_PREREQS],
     },
-  )
+  })
 }
 
 async function dismissStory(page: Page) {
@@ -97,10 +49,6 @@ async function openPatchKitDetail(page: Page) {
   const detail = page.locator('.battle-item-detail[data-item-id="patch-kit"]')
   await expect(detail).toBeVisible()
   return { detail, menu, row }
-}
-
-async function storedState(page: Page) {
-  return readStoredGameState(page)
 }
 
 test.describe('Item / Inventory UX', () => {
@@ -138,7 +86,7 @@ test.describe('Item / Inventory UX', () => {
     await expect(item.getByText('戦闘専用 · 1回', { exact: true })).toBeVisible()
     await item.getByRole('button', { name: '▶ 購入' }).click()
 
-    const stored = await storedState(page)
+    const stored = await readStoredGameState(page)
     expect(stored.progress.progress.gold).toBe(0)
     expect(stored.progress.progress.inventory.patchKit).toBe(1)
 
@@ -165,7 +113,7 @@ test.describe('Item / Inventory UX', () => {
     await useButton.click()
 
     await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
-    const stored = await storedState(page)
+    const stored = await readStoredGameState(page)
     expect(stored.rpg.state.currentHp).toBe(64)
     expect(stored.progress.progress.inventory.patchKit).toBe(0)
 
@@ -229,7 +177,7 @@ test.describe('Item / Inventory UX', () => {
     await expect(reward.getByText('アイテム獲得', { exact: true })).toBeVisible()
     await expect(reward.getByText('PATCH KIT ×1', { exact: true })).toBeVisible()
 
-    const stored = await storedState(page)
+    const stored = await readStoredGameState(page)
     expect(stored.progress.progress.gold).toBe(45)
     expect(stored.progress.progress.inventory.patchKit).toBe(3)
   })
