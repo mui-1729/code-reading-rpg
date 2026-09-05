@@ -73,6 +73,9 @@ async function executeSkill(page: Page, name: string) {
   await card.click()
   await expect(card).toHaveClass(/selected/)
   await card.click()
+  const body = page.locator('body')
+  await expect(body).toHaveAttribute('data-battle-resolving', 'true')
+  await expect(body).toHaveAttribute('data-battle-resolving', 'false', { timeout: 10_000 })
 }
 
 async function finishBattle(page: Page, skills: string[]) {
