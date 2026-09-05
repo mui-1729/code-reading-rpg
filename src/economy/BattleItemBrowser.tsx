@@ -34,6 +34,12 @@ export function BattleItemBrowser({
   const commandHost = typeof document === 'undefined'
     ? null
     : document.querySelector<HTMLElement>('.battle-screen .battle-console')
+  const orderedItems = [...itemDefinitions].sort((left, right) => {
+    const leftCount = getItemCount(progress, left.id)
+    const rightCount = getItemCount(progress, right.id)
+    const stockPriority = Number(rightCount > 0) - Number(leftCount > 0)
+    return stockPriority || rightCount - leftCount
+  })
 
   const selectedItemState = selectedItem
     ? getBattleItemUseState({
@@ -52,7 +58,7 @@ export function BattleItemBrowser({
   const itemMenu = (
     <div className="battle-item-submenu" role="group" aria-label="アイテム選択">
       <div className="battle-item-browser-list">
-        {itemDefinitions.map((item) => {
+        {orderedItems.map((item) => {
           const count = getItemCount(progress, item.id)
           const selected = selectedItemId === item.id
           return (
@@ -61,6 +67,7 @@ export function BattleItemBrowser({
               type="button"
               className={`battle-item-browser-row ${selected ? 'is-selected' : ''}`}
               data-item-id={item.id}
+              data-item-count={count}
               aria-pressed={selected}
               onClick={() => setSelectedItemId(item.id)}
             >
