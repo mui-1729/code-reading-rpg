@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { PlayerProgress } from '../progression'
 import {
@@ -30,12 +30,10 @@ export function BattleItemBrowser({
   onUsePatchKit,
 }: BattleItemBrowserProps) {
   const [selectedItemId, setSelectedItemId] = useState<ItemId | null>(null)
-  const [commandHost, setCommandHost] = useState<HTMLElement | null>(null)
   const selectedItem = itemDefinitions.find((item) => item.id === selectedItemId) ?? null
-
-  useEffect(() => {
-    setCommandHost(document.querySelector<HTMLElement>('.battle-screen .battle-console'))
-  }, [])
+  const commandHost = typeof document === 'undefined'
+    ? null
+    : document.querySelector<HTMLElement>('.battle-screen .battle-console')
 
   const selectedItemState = selectedItem
     ? getBattleItemUseState({
