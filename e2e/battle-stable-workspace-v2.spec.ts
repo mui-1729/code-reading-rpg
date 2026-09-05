@@ -81,60 +81,98 @@ function expectStable(actual: Awaited<ReturnType<typeof workspaceGeometry>>, bas
   }
 }
 
-test('@responsive Battle workspace keeps its page geometry through Fight, arm, and Items', async ({ page }, testInfo) => {
+async function expectViewportStable(page: Page, initialScroll: number) {
+  expect(Math.abs((await page.evaluate(() => window.scrollY)) - initialScroll)).toBeLessThanOrEqual(1)
+}
+
+test('@responsive Battle root, Fight and Items share one stable command workspace', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedBattle(page)
-  await page.goto('/javascript/battle/2?seed=stable-workspace-v2&returnTo=%2Fworld')
+  await page.goto('/javascript/battle/2?seed=stable-workspace-v3&returnTo=%2Fworld')
   await settleBattleEntry(page)
 
-  const commandBar = page.getByRole('group', { name: '戦闘コマンド' })
-  await commandBar.scrollIntoViewIfNeeded()
+  let root = page.getByRole('group', { name: '戦闘コマンド' })
+  await root.scrollIntoViewIfNeeded()
   const scrollBefore = await page.evaluate(() => window.scrollY)
   const initial = await workspaceGeometry(page)
-  await page.screenshot({ path: testInfo.outputPath('00-initial.png'), fullPage: true })
+  await page.screenshot({ path: testInfo.outputPath('00-root.png'), fullPage: true })
 
-  await commandBar.getByRole('button', { name: '戦う', exact: true }).dispatchEvent('click')
+  await root.getByRole('button', { name: '戦う', exact: true }).dispatchEvent('click')
+  await expect(root).toBeHidden()
+  const skills = page.getByRole('group', { name: 'スキル' })
+  const fightBack = page.getByRole('group', { name: '戦闘サブメニュー操作' }).getByRole('button', { name: '← 戻る' })
+  await expect(skills).toBeVisible()
+  await expect(fightBack).toBeVisible()
+
   const firstSkill = page.locator('[data-skill-id]').first()
   await expect(firstSkill).toHaveAttribute('data-skill-previewed', 'true')
   await expect(firstSkill).toHaveAttribute('aria-pressed', 'false')
   expectStable(await workspaceGeometry(page), initial)
-  expect(Math.abs((await page.evaluate(() => window.scrollY)) - scrollBefore)).toBeLessThanOrEqual(1)
-  await page.screenshot({ path: testInfo.outputPath('01-fight-preview.png'), fullPage: true })
+  await expectViewportStable(page, scrollBefore)
+  await page.screenshot({ path: testInfo.outputPath('01-fight.png'), fullPage: true })
 
   await firstSkill.dispatchEvent('click')
   await expect(firstSkill).toHaveAttribute('aria-pressed', 'true')
   expectStable(await workspaceGeometry(page), initial)
-  expect(Math.abs((await page.evaluate(() => window.scrollY)) - scrollBefore)).toBeLessThanOrEqual(1)
-  await page.screenshot({ path: testInfo.outputPath('02-skill-armed.png'), fullPage: true })
+  await fightBack.dispatchEvent('click')
 
-  await page.getByRole('group', { name: '戦闘コマンド' }).getByRole('button', { name: 'アイテム', exact: true }).dispatchEvent('click')
-  await expect(page.getByLabel('戦闘アイテム一覧')).toBeVisible()
+  root = page.getByRole('group', { name: '戦闘コマンド' })
+  await expect(root).toBeVisible()
+  await expect(skills).toBeHidden()
   expectStable(await workspaceGeometry(page), initial)
-  expect(Math.abs((await page.evaluate(() => window.scrollY)) - scrollBefore)).toBeLessThanOrEqual(1)
-  await page.screenshot({ path: testInfo.outputPath('03-items.png'), fullPage: true })
+
+  await root.getByRole('button', { name: 'アイテム', exact: true }).dispatchEvent('click')
+  await expect(root).toBeHidden()
+  const itemMenu = page.getByRole('group', { name: 'アイテム選択' })
+  const itemBack = page.getByRole('group', { name: '戦闘サブメニュー操作' }).getByRole('button', { name: '← 戻る' })
+  await expect(itemMenu).toBeVisible()
+  await expect(itemBack).toBeVisible()
+  await expect(page.getByLabel('戦闘アイテム詳細')).toContainText('下の一覧からアイテムを選ぶ')
+  expectStable(await workspaceGeometry(page), initial)
+  await page.screenshot({ path: testInfo.outputPath('02-items.png'), fullPage: true })
+
+  const firstItem = itemMenu.locator('[data-item-id]').first()
+  await firstItem.dispatchEvent('click')
+  await expect(firstItem).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.locator('.battle-item-detail')).toBeVisible()
+  await expect(itemMenu.getByRole('button', { name: /を使う/ })).toBeVisible()
+  expectStable(await workspaceGeometry(page), initial)
+  await expectViewportStable(page, scrollBefore)
+  await page.screenshot({ path: testInfo.outputPath('03-item-detail.png'), fullPage: true })
+
+  await itemBack.dispatchEvent('click')
+  await expect(page.getByRole('group', { name: '戦闘コマンド' })).toBeVisible()
+  await expect(itemMenu).toBeHidden()
+  expectStable(await workspaceGeometry(page), initial)
 })
 
-test('@responsive Escape confirmation does not move the workspace or viewport', async ({ page }, testInfo) => {
+test('@responsive Escape replaces the root with confirm plus shared Back without moving the workspace', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedBattle(page)
   await page.goto('/javascript/battle/2?seed=encounter%3Aoverworld%3A8%3A20%3A14&returnTo=%2Fworld')
   await settleBattleEntry(page)
 
-  const commandBar = page.getByRole('group', { name: '戦闘コマンド' })
-  await commandBar.scrollIntoViewIfNeeded()
+  let root = page.getByRole('group', { name: '戦闘コマンド' })
+  await root.scrollIntoViewIfNeeded()
   const scrollBefore = await page.evaluate(() => window.scrollY)
   const initial = await workspaceGeometry(page)
 
-  await commandBar.getByRole('button', { name: '逃げる' }).dispatchEvent('click')
+  await root.getByRole('button', { name: '逃げる' }).dispatchEvent('click')
+  await expect(root).toBeHidden()
   const confirm = page.getByRole('group', { name: '逃走確認' })
   await expect(confirm).toBeVisible()
-  await expect(confirm.getByRole('button', { name: 'やめる' })).toBeFocused()
+  await expect(confirm).toContainText('逃げますか？')
+  await expect(confirm.getByRole('button', { name: '逃げる' })).toBeVisible()
+  const back = confirm.getByRole('button', { name: '← 戻る' })
+  await expect(back).toBeFocused()
   expectStable(await workspaceGeometry(page), initial)
-  expect(Math.abs((await page.evaluate(() => window.scrollY)) - scrollBefore)).toBeLessThanOrEqual(1)
-  await page.screenshot({ path: testInfo.outputPath('04-escape-confirm.png'), fullPage: true })
+  await expectViewportStable(page, scrollBefore)
+  await page.screenshot({ path: testInfo.outputPath('04-escape.png'), fullPage: true })
 
-  await confirm.getByRole('button', { name: 'やめる' }).dispatchEvent('click')
-  await expect(page.getByRole('group', { name: '戦闘コマンド' })).toBeVisible()
+  await back.dispatchEvent('click')
+  root = page.getByRole('group', { name: '戦闘コマンド' })
+  await expect(root).toBeVisible()
+  await expect(confirm).toBeHidden()
   expectStable(await workspaceGeometry(page), initial)
 })
 
@@ -163,6 +201,5 @@ test('@responsive NEXT is hidden normally and only overlays during a Boss attack
   await expect(bossIntent).toBeVisible({ timeout: 5000 })
   expectStable(await workspaceGeometry(page), initial)
   await page.screenshot({ path: testInfo.outputPath('05-boss-attack-warning.png'), fullPage: true })
-
   await expect(bossIntent).toBeHidden({ timeout: 3000 })
 })
