@@ -185,7 +185,7 @@ function buildMapCells(mapId: WorldMapId, clearedStageIds: readonly number[]): A
         terrain,
         locked:
           portal?.requiredClearedStageId !== undefined &&
-          !isRequiredStageSatisfied(portal.requiredClearedStageId, clearedStageStageIds),
+          !isRequiredStageSatisfied(portal.requiredClearedStageId, clearedStageIds),
       })
     }
   }
