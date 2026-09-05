@@ -79,12 +79,19 @@ export async function seedLegacyGameState(page: Page, seed: LegacyGameStateSeed 
 
   await page.goto('/')
   await page.evaluate(
-    ({ progressSnapshot, rpgSnapshot, tutorialSnapshot }) => {
+    ({ progressKey, rpgKey, tutorialKey, progressSnapshot, rpgSnapshot, tutorialSnapshot }) => {
       localStorage.clear()
-      localStorage.setItem(PROGRESS_KEY, JSON.stringify(progressSnapshot))
-      localStorage.setItem(RPG_KEY, JSON.stringify(rpgSnapshot))
-      localStorage.setItem(TUTORIAL_KEY, JSON.stringify(tutorialSnapshot))
+      localStorage.setItem(progressKey, JSON.stringify(progressSnapshot))
+      localStorage.setItem(rpgKey, JSON.stringify(rpgSnapshot))
+      localStorage.setItem(tutorialKey, JSON.stringify(tutorialSnapshot))
     },
-    { progressSnapshot, rpgSnapshot, tutorialSnapshot },
+    {
+      progressKey: PROGRESS_KEY,
+      rpgKey: RPG_KEY,
+      tutorialKey: TUTORIAL_KEY,
+      progressSnapshot,
+      rpgSnapshot,
+      tutorialSnapshot,
+    },
   )
 }
