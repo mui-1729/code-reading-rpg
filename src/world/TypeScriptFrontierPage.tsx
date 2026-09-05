@@ -5,6 +5,7 @@ import { useBgm } from '../audio/useBgm'
 import { useProgress } from '../progression'
 import { useRpg } from '../rpg'
 import { openWorldTreasure } from './treasures'
+import { useEncounterCue } from './useEncounterCue'
 import { resolveWorldMove } from './worldActions'
 import {
   getTreasureAtPosition,
@@ -70,6 +71,7 @@ export function TypeScriptFrontierPage() {
     'ルーン石の道を進み、クリスタル地帯 / 古代遺跡でTypeScriptのルールを読もう。',
   )
   useBgm('field')
+  const { encounterCueActive, startEncounterCue } = useEncounterCue()
 
   const position = rpgState.worldPosition
   const [followerPosition, setFollowerPosition] = useState<WorldPosition>(() => ({
@@ -82,8 +84,8 @@ export function TypeScriptFrontierPage() {
   const objective = getObjective(progress.clearedStageIds)
 
   const enterBattle = useCallback(
-    (battleId: number, seed: string) => {
-      gameAudio.playSe('confirm')
+    (battleId: number, seed: string, playConfirm = true) => {
+      if (playConfirm) gameAudio.playSe('confirm')
       navigate({
         to: '/typescript/battle/$battleId',
         params: { battleId: String(battleId) },
@@ -95,7 +97,7 @@ export function TypeScriptFrontierPage() {
 
   const move = useCallback(
     (dx: number, dy: number) => {
-      if (document.body.dataset.rpgPaused === 'true') return
+      if (encounterCueActive || document.body.dataset.rpgPaused === 'true') return
 
       const result = resolveWorldMove({ rpgState, progress, dx, dy })
       if (result.kind === 'blocked') {
@@ -120,18 +122,19 @@ export function TypeScriptFrontierPage() {
       if (byteJoined) setFollowerPosition(position)
       setRpgState(result.nextState)
       if (result.kind === 'encounter') {
-        setMessage('TypeScript戦闘！')
-        enterBattle(result.battle.battleId, result.battle.seed)
+        startEncounterCue(() => {
+          enterBattle(result.battle.battleId, result.battle.seed, false)
+        })
         return
       }
 
       setMessage(terrainLabels[result.terrain] ?? result.terrain)
     },
-    [byteJoined, enterBattle, position, progress, rpgState, setRpgState],
+    [byteJoined, encounterCueActive, enterBattle, position, progress, rpgState, setRpgState, startEncounterCue],
   )
 
   const interact = useCallback(() => {
-    if (document.body.dataset.rpgPaused === 'true') return
+    if (encounterCueActive || document.body.dataset.rpgPaused === 'true') return
 
     const treasure = getTreasureAtPosition({ x: position.x, y: position.y }, TS_FRONTIER_MAP_ID)
     const adjacentTreasure = visibleCells
@@ -176,9 +179,9 @@ export function TypeScriptFrontierPage() {
         ? '北東のFRONTIER COMPILERへ向かおう。ボスの隣から挑める。'
         : '石畳を外れてクリスタル地帯 / 古代遺跡へ入るとTypeScript戦闘が起こる。',
     )
-  }, [enterBattle, position, progress, rpgState, setProgress, setRpgState, visibleCells])
+  }, [encounterCueActive, enterBattle, position, progress, rpgState, setProgress, setRpgState, visibleCells])
 
-  useWorldKeyboardControls({ interact, move })
+  useWorldKeyboardControls({ interact, move, disabled: encounterCueActive })
 
   return (
     <main className="app-shell world-shell title-screen">
