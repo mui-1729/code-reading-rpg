@@ -39,7 +39,7 @@ jobs:
       - run: npx playwright install --with-deps chromium webkit
       - name: Run focused Battle preview E2E
         if: github.head_ref == 'fix/battle-stable-workspace-v2'
-        run: npx playwright test e2e/battle-stable-workspace-v2.spec.ts
+        run: npx playwright test e2e/battle-stable-workspace-v2.spec.ts e2e/battle-item-stock-display.spec.ts
       - name: Run full E2E
         if: github.head_ref != 'fix/battle-stable-workspace-v2'
         run: npm run test:e2e
