@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feat/374-encounter-cue
   pull_request:
   workflow_dispatch:
 
