@@ -6,9 +6,9 @@ const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 const BATTLE_2_REPLAY = [...JS_SECOND_INCIDENT_PREREQS, 2] as const
 
-async function seedBattle(page: Page) {
+async function seedBattle(page: Page, clearedStageIds: readonly number[] = BATTLE_2_REPLAY) {
   await page.addInitScript(
-    ({ progressKey, rpgKey, tutorialKey, clearedStageIds }) => {
+    ({ progressKey, rpgKey, tutorialKey, clearedStageIds: seededClearedStageIds }) => {
       localStorage.clear()
       localStorage.setItem(progressKey, JSON.stringify({
         version: 4,
@@ -16,14 +16,14 @@ async function seedBattle(page: Page) {
           exp: 0,
           gold: 200,
           inventory: { patchKit: 2 },
-          clearedStageIds,
+          clearedStageIds: seededClearedStageIds,
           clearedAreaIds: [],
           completedSideQuestIds: [],
           unlockedStageIds: [7],
           unlockedSkillIds: [
             'trace', 'pulse', 'nova', 'viper', 'lock', 'alert', 'link', 'fork',
             'gather', 'echo', 'project', 'signal', 'sync', 'order', 'safe-path',
-            'reduce-focus',
+            'reduce-focus', 'moon-edge', 'sweep', 'judge',
           ],
         },
       }))
@@ -47,7 +47,7 @@ async function seedBattle(page: Page) {
       progressKey: PROGRESS_KEY,
       rpgKey: RPG_KEY,
       tutorialKey: TUTORIAL_KEY,
-      clearedStageIds: [...BATTLE_2_REPLAY],
+      clearedStageIds: [...clearedStageIds],
     },
   )
 }
@@ -136,4 +136,33 @@ test('@responsive Escape confirmation does not move the workspace or viewport', 
   await confirm.getByRole('button', { name: 'やめる' }).dispatchEvent('click')
   await expect(page.getByRole('group', { name: '戦闘コマンド' })).toBeVisible()
   expectStable(await workspaceGeometry(page), initial)
+})
+
+test('@responsive NEXT is hidden normally and only overlays during a Boss attack', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await seedBattle(page, [...BATTLE_2_REPLAY, 3])
+
+  await page.goto('/javascript/battle/2?seed=no-intent-hud&returnTo=%2Fworld')
+  await settleBattleEntry(page)
+  await expect(page.locator('.enemy-card .intent-box')).toHaveCount(3)
+  for (const intent of await page.locator('.enemy-card .intent-box').all()) {
+    await expect(intent).toBeHidden()
+  }
+
+  await page.goto('/javascript/battle/3?seed=boss-warning-only&returnTo=%2Fworld')
+  await settleBattleEntry(page)
+  const bossIntent = page.locator('.enemy-card.is-boss-enemy .intent-box')
+  await expect(bossIntent).toBeHidden()
+
+  const initial = await workspaceGeometry(page)
+  await page.getByRole('group', { name: '戦闘コマンド' }).getByRole('button', { name: '戦う', exact: true }).dispatchEvent('click')
+  const firstSkill = page.locator('[data-skill-id]').first()
+  await firstSkill.dispatchEvent('click')
+  await firstSkill.dispatchEvent('click')
+
+  await expect(bossIntent).toBeVisible({ timeout: 5000 })
+  expectStable(await workspaceGeometry(page), initial)
+  await page.screenshot({ path: testInfo.outputPath('05-boss-attack-warning.png'), fullPage: true })
+
+  await expect(bossIntent).toBeHidden({ timeout: 3000 })
 })
