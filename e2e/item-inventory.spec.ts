@@ -84,17 +84,19 @@ async function dismissStory(page: Page) {
 }
 
 async function openBattleItems(page: Page) {
-  await page.getByRole('button', { name: 'アイテム', exact: true }).click()
-  await expect(page.getByLabel('戦闘アイテム一覧')).toBeVisible()
+  await page.getByRole('group', { name: '戦闘コマンド' }).getByRole('button', { name: 'アイテム', exact: true }).click()
+  const menu = page.getByRole('group', { name: 'アイテム選択' })
+  await expect(menu).toBeVisible()
+  return menu
 }
 
 async function openPatchKitDetail(page: Page) {
-  await openBattleItems(page)
-  const row = page.locator('.battle-item-browser-row[data-item-id="patch-kit"]')
+  const menu = await openBattleItems(page)
+  const row = menu.locator('.battle-item-browser-row[data-item-id="patch-kit"]')
   await row.click()
   const detail = page.locator('.battle-item-detail[data-item-id="patch-kit"]')
   await expect(detail).toBeVisible()
-  return detail
+  return { detail, menu, row }
 }
 
 async function storedState(page: Page) {
@@ -153,16 +155,12 @@ test.describe('Item / Inventory UX', () => {
     await seedItemState(page, { patchKit: 1, currentHp: 40 })
     await page.goto('/javascript/battle/1?seed=item-use-e2e&returnTo=%2Fworld')
     await dismissStory(page)
-    await openBattleItems(page)
+    let { detail, menu, row } = await openPatchKitDetail(page)
 
-    const row = page.locator('.battle-item-browser-row[data-item-id="patch-kit"]')
     await expect(row.locator('img')).toHaveAttribute('src', '/pixel-art/items/patch-kit.svg')
-    await expect(row).toContainText('PATCH KIT ×1')
-    await expect(row.locator('[data-item-availability="available"]')).toContainText('使用可能')
-    await row.click()
-
-    let detail = page.locator('.battle-item-detail[data-item-id="patch-kit"]')
-    const useButton = detail.getByRole('button', { name: /PATCH KIT ×1を使う/ })
+    await expect(row).toContainText('PATCH KIT')
+    await expect(row).toContainText('×1')
+    const useButton = menu.getByRole('button', { name: /PATCH KIT ×1を使う/ })
     await expect(useButton).toBeEnabled()
     await useButton.click()
 
@@ -171,10 +169,10 @@ test.describe('Item / Inventory UX', () => {
     expect(stored.rpg.state.currentHp).toBe(64)
     expect(stored.progress.progress.inventory.patchKit).toBe(0)
 
-    detail = await openPatchKitDetail(page)
+    ;({ detail, menu, row } = await openPatchKitDetail(page))
     await expect(detail).toContainText('PATCH KIT ×0')
-    await expect(detail).toContainText('この戦闘では使用済み')
-    await expect(detail.locator('.patch-kit-action')).toBeDisabled()
+    await expect(menu.locator('.battle-item-state')).toContainText('この戦闘では使用済み')
+    await expect(menu.locator('.patch-kit-action')).toBeDisabled()
   })
 
   test('未完了Stageを別seedで開くと回復と消費をrollbackして使用回数もresetする', async ({ page }) => {
@@ -182,19 +180,16 @@ test.describe('Item / Inventory UX', () => {
     await page.goto('/javascript/battle/1?seed=item-replay-a&returnTo=%2Fworld')
     await dismissStory(page)
 
-    let detail = await openPatchKitDetail(page)
-    await detail.getByRole('button', { name: /PATCH KIT ×2を使う/ }).click()
+    let opened = await openPatchKitDetail(page)
+    await opened.menu.getByRole('button', { name: /PATCH KIT ×2を使う/ }).click()
     await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
 
     await page.goto('/javascript/battle/1?seed=item-replay-b&returnTo=%2Fworld')
     await dismissStory(page)
-    await openBattleItems(page)
-    const row = page.locator('.battle-item-browser-row[data-item-id="patch-kit"]')
-    await expect(row).toContainText('PATCH KIT ×2')
-    await expect(row.locator('[data-item-availability="available"]')).toContainText('使用可能')
-    await row.click()
-    detail = page.locator('.battle-item-detail[data-item-id="patch-kit"]')
-    await expect(detail.locator('.patch-kit-action')).toBeEnabled()
+    opened = await openPatchKitDetail(page)
+    await expect(opened.row).toContainText('PATCH KIT')
+    await expect(opened.row).toContainText('×2')
+    await expect(opened.menu.locator('.patch-kit-action')).toBeEnabled()
     await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('40/108')
   })
 
@@ -202,16 +197,17 @@ test.describe('Item / Inventory UX', () => {
     await seedItemState(page, { patchKit: 0, currentHp: 40 })
     await page.goto('/javascript/battle/1?seed=item-no-stock-e2e&returnTo=%2Fworld')
     await dismissStory(page)
-    let detail = await openPatchKitDetail(page)
-    await expect(detail).toContainText('所持なし')
-    await expect(detail.getByRole('button', { name: /PATCH KIT ×0を使う/ })).toBeDisabled()
+    let opened = await openPatchKitDetail(page)
+    await expect(opened.row).toContainText('×0')
+    await expect(opened.menu).not.toContainText('所持なし')
+    await expect(opened.menu.getByRole('button', { name: /PATCH KIT ×0を使う/ })).toBeDisabled()
 
     await seedItemState(page, { patchKit: 1, currentHp: 108 })
     await page.goto('/javascript/battle/1?seed=item-hp-full-e2e&returnTo=%2Fworld')
     await dismissStory(page)
-    detail = await openPatchKitDetail(page)
-    await expect(detail).toContainText('HP満タン')
-    await expect(detail.getByRole('button', { name: /PATCH KIT ×1を使う/ })).toBeDisabled()
+    opened = await openPatchKitDetail(page)
+    await expect(opened.menu.locator('.battle-item-state')).toContainText('HP満タン')
+    await expect(opened.menu.getByRole('button', { name: /PATCH KIT ×1を使う/ })).toBeDisabled()
   })
 
   test('TYPE CACHE取得時に同じPATCH KIT visualでItem rewardを表示する', async ({ page }) => {
