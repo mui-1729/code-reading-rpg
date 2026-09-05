@@ -38,3 +38,10 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run test:e2e
+      - name: Upload Battle workspace v2 screenshots
+        if: always() && github.head_ref == 'fix/battle-stable-workspace-v2'
+        uses: actions/upload-artifact@v4
+        with:
+          name: battle-stable-workspace-v2-screenshots
+          path: test-results/battle-stable-workspace-v2*/**/*.png
+          if-no-files-found: ignore
