@@ -1,65 +1,14 @@
+import { seedLegacyGameState } from './game-state-fixtures'
 import { readStoredGameState } from './storedGameState'
 import { expect, test, type Page } from '@playwright/test'
 import { selectPauseTab } from './pause-menu-helpers'
 
-const PROGRESS_KEY = 'code-reading-rpg:player-progress'
-const RPG_KEY = 'code-reading-rpg:rpg-state'
-const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
-
 async function seedShopState(page: Page, gold = 200) {
-  await page.goto('/')
-  await page.evaluate(
-    ({ progressKey, rpgKey, tutorialKey, initialGold }) => {
-      localStorage.clear()
-      localStorage.setItem(
-        progressKey,
-        JSON.stringify({
-          version: 4,
-          progress: {
-            exp: 0,
-            gold: initialGold,
-            inventory: { patchKit: 0 },
-            clearedStageIds: [],
-            clearedAreaIds: [],
-            completedSideQuestIds: [],
-            unlockedStageIds: [1, 4],
-            unlockedSkillIds: ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label'],
-          },
-        }),
-      )
-      localStorage.setItem(
-        rpgKey,
-        JSON.stringify({
-          version: 3,
-          state: {
-            equipment: {
-              weapon: 'training-blade',
-              armor: 'traveler-coat',
-              accessory: null,
-            },
-            ownedEquipmentIds: ['training-blade', 'traveler-coat'],
-            partyMemberIds: [],
-            partyEquipment: {},
-            worldPosition: { x: 21, y: 12 },
-            stepsSinceEncounter: 8,
-            encounterCount: 0,
-            currentHp: 108,
-            openedTreasureIds: [],
-          },
-        }),
-      )
-      localStorage.setItem(
-        tutorialKey,
-        JSON.stringify({ version: 1, status: 'skipped', phase: 'battle' }),
-      )
-    },
-    { progressKey: PROGRESS_KEY, rpgKey: RPG_KEY, tutorialKey: TUTORIAL_KEY, initialGold: gold },
-  )
+  await seedLegacyGameState(page, {
+    progress: { gold, unlockedStageIds: [1, 4] },
+    rpg: { worldPosition: { x: 21, y: 12 } },
+  })
   await page.goto('/world')
-}
-
-async function storedState(page: Page) {
-  return readStoredGameState(page)
 }
 
 test.describe('World Shop', () => {
@@ -96,7 +45,7 @@ test.describe('World Shop', () => {
     await expect(guardEdge.getByRole('button', { name: '▶ 装備する' })).toBeEnabled()
     await expect(shop.locator('.shop-wallet').getByText('145 G', { exact: true })).toBeVisible()
 
-    let stored = await storedState(page)
+    let stored = await readStoredGameState(page)
     expect(stored.progress.progress.gold).toBe(145)
     expect(stored.rpg.state.ownedEquipmentIds).toContain('guard-edge')
     expect(stored.rpg.state.equipment.weapon).toBe('training-blade')
@@ -105,7 +54,7 @@ test.describe('World Shop', () => {
     await expect(guardEdge).toHaveAttribute('data-equipment-state', 'equipped')
     await expect(guardEdge.getByRole('button', { name: '装備中' })).toBeDisabled()
 
-    stored = await storedState(page)
+    stored = await readStoredGameState(page)
     expect(stored.progress.progress.gold).toBe(145)
     expect(stored.rpg.state.equipment.weapon).toBe('guard-edge')
 
@@ -118,7 +67,7 @@ test.describe('World Shop', () => {
     await expect(weaponSlot.locator('header strong')).toHaveText('Guard Edge')
     await expect(weaponSlot.getByRole('button', { name: /武器を選ぶ/ })).toContainText('Guard Edge')
 
-    stored = await storedState(page)
+    stored = await readStoredGameState(page)
     expect(stored.rpg.state.ownedEquipmentIds.filter((id: string) => id === 'guard-edge')).toHaveLength(1)
     expect(stored.rpg.state.equipment.weapon).toBe('guard-edge')
   })
@@ -144,7 +93,7 @@ test.describe('World Shop', () => {
     await expect(quote.locator('em')).toHaveText('あと 50 G')
     await expect(vitalCoat.getByRole('button', { name: 'あと 50 G' })).toBeDisabled()
 
-    const stored = await storedState(page)
+    const stored = await readStoredGameState(page)
     expect(stored.progress.progress.gold).toBe(10)
     expect(stored.rpg.state.ownedEquipmentIds).not.toContain('vital-coat')
   })
