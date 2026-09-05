@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - fix/391-mobile-pause-close-layout
   pull_request:
   workflow_dispatch:
 
