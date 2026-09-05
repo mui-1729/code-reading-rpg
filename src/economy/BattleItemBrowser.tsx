@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { PlayerProgress } from '../progression'
 import {
   getBattleItemUseState,
@@ -30,89 +31,103 @@ export function BattleItemBrowser({
 }: BattleItemBrowserProps) {
   const [selectedItemId, setSelectedItemId] = useState<ItemId | null>(null)
   const selectedItem = itemDefinitions.find((item) => item.id === selectedItemId) ?? null
-
-  if (!selectedItem) {
-    return (
-      <div className="battle-item-browser" aria-label="戦闘アイテム一覧">
-        <div className="battle-item-browser-head">
-          <strong>アイテム</strong>
-          <span>使うアイテムを選ぶ</span>
-        </div>
-        <div className="battle-item-browser-list">
-          {itemDefinitions.map((item) => {
-            const count = getItemCount(progress, item.id)
-            const itemState = getBattleItemUseState({
-              progress,
-              itemId: item.id,
-              hp,
-              maxHp,
-              usedThisBattle: item.id === 'patch-kit' ? patchKitUsed : false,
-              actionLocked,
-            })
-            return (
-              <button
-                key={item.id}
-                type="button"
-                className="battle-item-browser-row"
-                data-item-id={item.id}
-                onClick={() => setSelectedItemId(item.id)}
-              >
-                <img className="item-pixel-icon item-battle-icon" src={item.visual} alt="" aria-hidden="true" />
-                <span>
-                  <strong>{item.name} ×{count}</strong>
-                  <small>{getItemEffectSummary(item)} · {getItemUsageSummary(item)}</small>
-                </span>
-                <em data-item-availability={itemState.reason}>{itemState.reasonLabel}</em>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-    )
-  }
-
-  const count = getItemCount(progress, selectedItem.id)
-  const itemState = getBattleItemUseState({
-    progress,
-    itemId: selectedItem.id,
-    hp,
-    maxHp,
-    usedThisBattle: selectedItem.id === 'patch-kit' ? patchKitUsed : false,
-    actionLocked,
+  const commandHost = typeof document === 'undefined'
+    ? null
+    : document.querySelector<HTMLElement>('.battle-screen .battle-console')
+  const orderedItems = [...itemDefinitions].sort((left, right) => {
+    const leftCount = getItemCount(progress, left.id)
+    const rightCount = getItemCount(progress, right.id)
+    const stockPriority = Number(rightCount > 0) - Number(leftCount > 0)
+    return stockPriority || rightCount - leftCount
   })
 
-  return (
-    <div className="battle-item-browser battle-item-detail" data-item-id={selectedItem.id}>
-      <div className="battle-item-browser-head">
-        <button type="button" className="battle-item-back" onClick={() => setSelectedItemId(null)}>
-          ← 一覧へ
-        </button>
-        <span>{selectedItem.categoryLabel}</span>
+  const selectedItemState = selectedItem
+    ? getBattleItemUseState({
+        progress,
+        itemId: selectedItem.id,
+        hp,
+        maxHp,
+        usedThisBattle: selectedItem.id === 'patch-kit' ? patchKitUsed : false,
+        actionLocked,
+      })
+    : null
+  const selectedStateLabel = selectedItemState?.reason === 'no-stock'
+    ? ''
+    : selectedItemState?.reasonLabel ?? ''
+
+  const itemMenu = (
+    <div className="battle-item-submenu" role="group" aria-label="アイテム選択">
+      <div className="battle-item-browser-list">
+        {orderedItems.map((item) => {
+          const count = getItemCount(progress, item.id)
+          const selected = selectedItemId === item.id
+          return (
+            <button
+              key={item.id}
+              type="button"
+              className={`battle-item-browser-row ${selected ? 'is-selected' : ''}`}
+              data-item-id={item.id}
+              data-item-count={count}
+              aria-pressed={selected}
+              onClick={() => setSelectedItemId(item.id)}
+            >
+              <img className="item-pixel-icon item-battle-icon" src={item.visual} alt="" aria-hidden="true" />
+              <span className="battle-item-browser-copy">
+                <strong>{item.name}</strong>
+                <small>{getItemEffectSummary(item)} · {getItemUsageSummary(item)}</small>
+              </span>
+              <span className="battle-item-count" aria-label={`${count}個所持`}>×{count}</span>
+            </button>
+          )
+        })}
       </div>
-      <div className="battle-item-detail-card">
-        <img className="item-pixel-icon item-battle-detail-icon" src={selectedItem.visual} alt="" aria-hidden="true" />
-        <div>
-          <strong>{selectedItem.name} ×{count}</strong>
-          <p>{selectedItem.description}</p>
-          <span>{getItemEffectSummary(selectedItem)} · {getItemUsageSummary(selectedItem)}</span>
-        </div>
-      </div>
-      <div className="battle-item-detail-actions">
+      <div className="battle-item-submenu-actions">
         <span className="battle-item-state" aria-live="polite">
-          {lastPatchKitHeal !== null && patchKitUsed && selectedItem.id === 'patch-kit'
-            ? `+${lastPatchKitHeal} HP回復 · ${itemState.reasonLabel}`
-            : itemState.reasonLabel}
+          {selectedItem
+            ? lastPatchKitHeal !== null && patchKitUsed && selectedItem.id === 'patch-kit'
+              ? `+${lastPatchKitHeal} HP回復${selectedStateLabel ? ` · ${selectedStateLabel}` : ''}`
+              : selectedStateLabel
+            : 'アイテムを選択してください'}
         </span>
         <button
           type="button"
           className="secondary-button patch-kit-action"
-          disabled={!itemState.canUse}
-          onClick={selectedItem.id === 'patch-kit' ? onUsePatchKit : undefined}
-          aria-label={`${selectedItem.name} ×${count}を使う · ${getItemEffectSummary(selectedItem)}`}
+          disabled={!selectedItem || selectedItem.id !== 'patch-kit' || !selectedItemState?.canUse}
+          onClick={selectedItem?.id === 'patch-kit' ? onUsePatchKit : undefined}
+          aria-label={selectedItem
+            ? `${selectedItem.name} ×${getItemCount(progress, selectedItem.id)}を使う · ${getItemEffectSummary(selectedItem)}`
+            : 'アイテムを使う'}
         >
           ▶ 使う
         </button>
       </div>
     </div>
+  )
+
+  return (
+    <>
+      {selectedItem ? (
+        <div className="battle-item-browser battle-item-detail" data-item-id={selectedItem.id} aria-label="戦闘アイテム詳細">
+          <div className="battle-item-browser-head">
+            <strong>{selectedItem.name}</strong>
+            <span>{selectedItem.categoryLabel}</span>
+          </div>
+          <div className="battle-item-detail-card">
+            <img className="item-pixel-icon item-battle-detail-icon" src={selectedItem.visual} alt="" aria-hidden="true" />
+            <div>
+              <strong>{selectedItem.name} ×{getItemCount(progress, selectedItem.id)}</strong>
+              <p>{selectedItem.description}</p>
+              <span>{getItemEffectSummary(selectedItem)} · {getItemUsageSummary(selectedItem)}</span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="battle-item-browser battle-item-detail-empty" aria-label="戦闘アイテム詳細">
+          <strong>アイテム</strong>
+          <p>下の一覧からアイテムを選ぶと、ここに詳細が表示されます。</p>
+        </div>
+      )}
+      {commandHost ? createPortal(itemMenu, commandHost) : null}
+    </>
   )
 }

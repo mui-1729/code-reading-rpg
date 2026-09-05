@@ -1,0 +1,350 @@
+/*
+ * Experimental Battle workspace v2.
+ *
+ * Keep the two places the player repeatedly looks at stable:
+ *   1. the reading/detail panel in the stage
+ *   2. the command/choice panel below the stage
+ *
+ * A root command opens one submenu. The root buttons then disappear and the
+ * submenu owns the same command workspace until the shared Back action returns
+ * to the root level.
+ */
+
+.battle-screen .battle-console {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.battle-screen .battle-command-root {
+  order: 1;
+}
+
+.battle-screen .skill-grid,
+.battle-screen .battle-item-submenu,
+.battle-screen .battle-escape-submenu {
+  order: 1;
+}
+
+.battle-screen .battle-submenu-nav {
+  order: 2;
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: auto;
+}
+
+/* Battle log belongs only to an actionable three-choice root state. Submenus,
+ * fixed battles with no escape choice, and locked enemy/resolution turns keep
+ * the command workspace clear. */
+.battle-screen .log-panel {
+  order: 3;
+  display: none;
+}
+
+.battle-screen .battle-console:has(.battle-command-root[data-action-locked='false'][data-choice-count='3']) .log-panel {
+  display: grid;
+}
+
+.battle-screen .battle-submenu-back {
+  width: 100%;
+  border-color: #4a485c;
+  background: #0b0b13;
+  color: #c9c5d5;
+}
+
+.battle-screen .battle-item-submenu {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 8px;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.battle-screen .battle-item-submenu .battle-item-browser-list {
+  max-height: none;
+  min-height: 0;
+}
+
+.battle-screen .battle-item-browser-row {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.battle-screen .battle-item-browser-row.is-selected {
+  border-color: var(--blue);
+  box-shadow: inset 0 0 0 1px rgba(86, 148, 255, .35);
+}
+
+.battle-screen .battle-item-browser-copy {
+  min-width: 0;
+}
+
+.battle-screen .battle-item-count {
+  display: block;
+  align-self: center;
+  min-width: 2.6em;
+  color: var(--gold);
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1;
+  text-align: right;
+  white-space: nowrap;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.battle-screen .battle-item-submenu-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.battle-screen .battle-item-submenu-actions .battle-item-state {
+  min-width: 0;
+  color: #aaa6ba;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.battle-screen .battle-item-detail-empty {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  height: 100%;
+  text-align: center;
+}
+
+.battle-screen .battle-item-detail-empty strong {
+  color: #fff;
+}
+
+.battle-screen .battle-item-detail-empty p {
+  margin: 0;
+  color: #aaa6ba;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.battle-screen .battle-escape-submenu {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  align-content: start;
+  min-height: 0;
+}
+
+.battle-screen .battle-escape-confirm-copy {
+  grid-column: 1 / -1;
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  min-height: 72px;
+}
+
+.battle-screen .battle-escape-confirm-copy strong {
+  color: #fff;
+  font-size: 12px;
+}
+
+.battle-screen .battle-escape-confirm-copy span {
+  color: #aaa6ba;
+  font-size: 9px;
+}
+
+.battle-screen .battle-escape-action {
+  border-color: #76504d;
+}
+
+/* Permanent NEXT / damage previews are removed from the visible UI. Keep the
+ * box absolutely positioned and visibility-hidden so it never reserves layout
+ * space, while geometry/invariant checks can still verify it stays inside its
+ * enemy card. A boss attack temporarily reveals that same overlay. */
+.battle-screen .enemy-card .intent-box {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  left: 6px;
+  display: grid;
+  margin: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.battle-screen .enemy-card.is-boss-enemy.enemy-attacking .intent-box {
+  z-index: 6;
+  visibility: visible;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 3px;
+  padding: 7px 8px;
+  border: 2px solid var(--gold);
+  background: rgba(22, 8, 10, .96);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, .55);
+}
+
+.battle-screen .enemy-card.is-boss-enemy.enemy-attacking .intent-box > span {
+  font-size: 0;
+}
+
+.battle-screen .enemy-card.is-boss-enemy.enemy-attacking .intent-box > span::after {
+  content: '⚠ ボスが大技を放とうとしている！';
+  color: #fff2a8;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1.4;
+}
+
+.battle-screen .enemy-card.is-boss-enemy.enemy-attacking .intent-box > strong {
+  color: #fff;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.battle-screen .enemy-card.is-boss-enemy.enemy-attacking .intent-box > em {
+  display: none;
+}
+
+@media (max-width: 900px), (max-height: 520px) and (max-width: 1100px) {
+  .battle-screen .selected-skill-reading {
+    box-sizing: border-box;
+    height: clamp(156px, 22dvh, 184px);
+    min-height: 0;
+    overflow: hidden;
+    overflow-anchor: none;
+  }
+
+  .battle-screen .selected-skill-reading:has(.selected-skill-reading-head),
+  .battle-screen .selected-skill-reading:has(.battle-item-detail) {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .battle-screen .selected-skill-reading > p {
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    height: 100%;
+    min-height: 0;
+    text-align: center;
+  }
+
+  .battle-screen .selected-skill-reading .source-code {
+    box-sizing: border-box;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+
+  .battle-screen .selected-skill-reading > .battle-item-browser,
+  .battle-screen .selected-skill-reading > :is(.battle-item-browser) {
+    box-sizing: border-box;
+    height: 100%;
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+
+  .battle-screen .battle-console {
+    box-sizing: border-box;
+    height: clamp(210px, 29dvh, 248px);
+    min-height: 0;
+    overflow: auto;
+    overflow-anchor: none;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+
+  .battle-screen .skill-grid {
+    align-content: start;
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* Execute is a real row in the card, not an absolute overlay. The reserved
+   * preview footer therefore keeps the card stable while its divider can never
+   * cross the name/power area. */
+  .battle-screen .skill-card {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    min-height: 82px;
+    padding-bottom: 0;
+  }
+
+  .battle-screen .skill-card-head {
+    flex: 1 0 auto;
+    box-sizing: border-box;
+    padding-bottom: 8px;
+  }
+
+  .battle-screen .skill-card-foot {
+    position: static;
+    flex: 0 0 28px;
+    box-sizing: border-box;
+    width: 100%;
+    height: 28px;
+    min-height: 28px;
+    margin-top: auto;
+    padding: 5px 8px;
+  }
+
+  .battle-screen .log-panel {
+    max-height: 92px;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+}
+
+@media (max-width: 620px) {
+  .battle-screen .selected-skill-reading {
+    height: clamp(150px, 21dvh, 176px);
+  }
+
+  .battle-screen .battle-console {
+    height: clamp(206px, 28dvh, 238px);
+  }
+
+  .battle-screen .battle-item-browser-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .battle-screen .battle-item-browser-row .battle-item-count {
+    grid-column: auto;
+    font-size: 18px;
+  }
+
+  .battle-screen .battle-item-submenu-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .battle-screen .battle-item-submenu-actions .patch-kit-action {
+    width: 100%;
+  }
+
+  .battle-screen .battle-escape-submenu {
+    grid-template-columns: 1fr;
+  }
+
+  .battle-screen .battle-escape-confirm-copy {
+    grid-column: auto;
+    min-height: 60px;
+  }
+
+  .battle-screen .enemy-card .intent-box {
+    right: 4px;
+    bottom: 4px;
+    left: 4px;
+  }
+
+  .battle-screen .enemy-card.is-boss-enemy.enemy-attacking .intent-box {
+    padding: 6px;
+  }
+
+  .battle-screen .enemy-card.is-boss-enemy.enemy-attacking .intent-box > span::after,
+  .battle-screen .enemy-card.is-boss-enemy.enemy-attacking .intent-box > strong {
+    font-size: 9px;
+  }
+}

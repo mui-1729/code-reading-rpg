@@ -60,11 +60,10 @@ async function openFight(page: Page) {
   if ((await fight.getAttribute('aria-pressed')) !== 'true') await fight.click()
 }
 
-async function incomingDamage(card: ReturnType<Page['locator']>) {
-  const text = await card.locator('.intent-box em').innerText()
-  const match = text.match(/(\d+) ダメージ/)
-  if (!match) throw new Error(`Could not read incoming damage: ${text}`)
-  return Number(match[1])
+async function visibleDamage(playerDamage: ReturnType<Page['locator']>) {
+  await expect(playerDamage).toHaveText(/^-\d+$/)
+  const text = await playerDamage.innerText()
+  return Number(text.slice(1))
 }
 
 test('Skillは選択時にtarget previewせず、実行後だけfirst-match traceを見せる', async ({ page }) => {
@@ -96,7 +95,7 @@ test('Skillは選択時にtarget previewせず、実行後だけfirst-match trac
   await expect(resolvedTarget).toHaveAttribute('data-semantic-traced', 'true')
 })
 
-test('敵のターンは生存している攻撃者ごとに次のdamageを対応させて順番に表示する', async ({ page }) => {
+test('敵のターンは生存している攻撃者ごとに実際のdamage feedbackを対応させて順番に表示する', async ({ page }) => {
   await seedReplay(page)
   // このseedではPULSEがGoblinを選び、Slime/Goblinの両方が生存してEnemy Turnへ入る。
   await page.goto('/javascript/battle/1?seed=feedback-reduced&returnTo=%2Fworld')
@@ -106,18 +105,20 @@ test('敵のターンは生存している攻撃者ごとに次のdamageを対�
   const slime = page.locator('.enemy-card').filter({ hasText: 'Slime' })
   const goblin = page.locator('.enemy-card').filter({ hasText: 'Goblin' })
   const playerDamage = page.locator('.player-damage-number')
-  const slimeDamage = await incomingDamage(slime)
-  const goblinDamage = await incomingDamage(goblin)
+
+  // NEXT / exact next-damage is intentionally not exposed before the attack.
+  await expect(slime.locator('.intent-box')).toBeHidden()
+  await expect(goblin.locator('.intent-box')).toBeHidden()
 
   await pulse.click()
   await pulse.click()
 
   await expect(slime).toHaveAttribute('data-enemy-attacking', 'true')
-  await expect(playerDamage).toHaveText(`-${slimeDamage}`)
+  const slimeDamage = await visibleDamage(playerDamage)
   await expect(goblin).not.toHaveAttribute('data-enemy-attacking', 'true')
 
   await expect(goblin).toHaveAttribute('data-enemy-attacking', 'true')
-  await expect(playerDamage).toHaveText(`-${goblinDamage}`)
+  const goblinDamage = await visibleDamage(playerDamage)
 
   await expect(page.getByText('ターン 2')).toBeVisible()
   await expect(page.locator('.log-enemy')).toContainText([

@@ -93,7 +93,6 @@ test.describe('Boss GUARD', () => {
     const guardedHpBefore = await enemyHp(boss)
     await executeSkill(page, 'ALERT')
     await expect.poll(() => enemyHp(boss)).toBe(guardedHpBefore - 1)
-    await expect(page.getByText('ボスガード → ボスへのスキルダメージは1')).toBeVisible()
     await expect(page.getByText('ターン 2')).toBeVisible()
 
     await executeSkill(page, 'MOON EDGE')

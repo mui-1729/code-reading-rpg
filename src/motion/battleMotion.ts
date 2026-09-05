@@ -1,6 +1,8 @@
 export const BATTLE_MOTION = {
   skillWindupMs: 140,
-  semanticFeedbackMs: 420,
+  // This is learning feedback, not a hit effect. Keep it on screen long enough
+  // to read the label and the resolved trace before the enemy turn begins.
+  semanticFeedbackMs: 1800,
   hitMs: 360,
   defeatMs: 420,
   enemyWindupMs: 180,

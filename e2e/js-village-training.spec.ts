@@ -73,6 +73,9 @@ async function executeSkill(page: Page, name: string) {
   await card.click()
   await expect(card).toHaveClass(/selected/)
   await card.click()
+  const body = page.locator('body')
+  await expect(body).toHaveAttribute('data-battle-resolving', 'true')
+  await expect(body).toHaveAttribute('data-battle-resolving', 'false', { timeout: 10_000 })
 }
 
 async function finishBattle(page: Page, skills: string[]) {
@@ -93,6 +96,11 @@ async function storedProgress(page: Page) {
 }
 
 test('first incident後にVillageで必要な読み方をBattle 7→8→9で確認しForest traceへ接続する', async ({ page }) => {
+  // This single route intentionally completes three full training battles.
+  // Battle motion is part of the product behavior, so give the end-to-end route
+  // enough time instead of shortening/skipping the animations under test.
+  test.setTimeout(90_000)
+
   await seedVillageTraining(page)
 
   const viewport = page.getByLabel('グリーンフィールド村のマップ')
