@@ -1,3 +1,16 @@
 .pause-header-actions {
   justify-content: flex-end;
 }
+
+.pause-menu .pause-header-actions {
+  min-height: 44px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.pause-menu .pause-header-actions .close-button {
+  position: static;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+}
