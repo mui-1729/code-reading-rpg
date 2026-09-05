@@ -192,6 +192,7 @@ test('390pxでは100%で全体を収め、拡大後は実際のdragで地図を�
   await zoomIn.click()
   await zoomIn.click()
   await expect(atlas).toHaveAttribute('data-atlas-zoom', '150')
+  await expect(canvas).toHaveCSS('width', '975px')
   await expect.poll(async () => scrollport.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeGreaterThan(0)
   await expect.poll(async () => scrollport.evaluate((el) => el.scrollHeight - el.clientHeight)).toBeGreaterThan(0)
   expect(await scrollport.evaluate((el) => getComputedStyle(el).touchAction)).toBe('none')
@@ -219,6 +220,7 @@ test('mobile landscapeでも150%地図をpage overflowなしで実際にdragで�
   await page.setViewportSize({ width: 844, height: 390 })
   await seedWorldAtlas(page, JS_MIDBOSS_PREREQS)
   const atlas = await openAtlas(page)
+  const canvas = atlas.locator('.atlas-detail-canvas')
   const scrollport = atlas.locator('.atlas-scrollport')
   const pauseContent = page.locator('.pause-content')
   const zoomIn = atlas.getByRole('button', { name: 'ワールドマップを拡大' })
@@ -226,6 +228,7 @@ test('mobile landscapeでも150%地図をpage overflowなしで実際にdragで�
   await zoomIn.click()
   await zoomIn.click()
   await expect(atlas).toHaveAttribute('data-atlas-zoom', '150')
+  await expect(canvas).toHaveCSS('width', '975px')
   await expect.poll(async () => scrollport.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeGreaterThan(0)
   await expect.poll(async () => scrollport.evaluate((el) => el.scrollHeight - el.clientHeight)).toBeGreaterThan(0)
 
