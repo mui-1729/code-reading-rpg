@@ -32,14 +32,15 @@
   margin-top: auto;
 }
 
-/* Battle log belongs to the root three-choice state only. Submenus should use
- * the full command workspace without the log competing for room. */
+/* Battle log belongs only to an actionable three-choice root state. Submenus,
+ * fixed battles with no escape choice, and locked enemy/resolution turns keep
+ * the command workspace clear. */
 .battle-screen .log-panel {
   order: 3;
   display: none;
 }
 
-.battle-screen .battle-console:has(.battle-command-root > .battle-command-button:nth-child(3)) .log-panel {
+.battle-screen .battle-console:has(.battle-command-root[data-action-locked='false'][data-choice-count='3']) .log-panel {
   display: grid;
 }
 
