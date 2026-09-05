@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import type { PlayerProgress } from '../progression'
 import { areBattlePrerequisitesMet, getBattleDisplayCode } from '../progression/progressionGraph'
 import type { RpgState } from '../rpg'
@@ -49,6 +49,19 @@ type AtlasRoute = {
   to: AtlasMap
   locked: boolean
   requirement: string | null
+}
+
+type AtlasPanState = {
+  pointerId: number
+  startX: number
+  startY: number
+  scrollLeft: number
+  scrollTop: number
+}
+
+type AtlasZoomAnchor = {
+  x: number
+  y: number
 }
 
 const ATLAS_BASE_WIDTH = 650
@@ -302,11 +315,83 @@ function AtlasTerrainMap({ map, progress, rpgState }: { map: AtlasMap; progress:
 export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
   const [selectedMapId, setSelectedMapId] = useState<WorldMapId>(rpgState.worldMapId)
   const [zoom, setZoom] = useState(100)
+  const scrollportRef = useRef<HTMLDivElement>(null)
+  const panRef = useRef<AtlasPanState | null>(null)
+  const zoomAnchorRef = useRef<AtlasZoomAnchor | null>(null)
   const discoveredMaps = atlasMaps.filter((map) => isMapDiscovered(map.id, progress, rpgState))
   const hiddenMapCount = atlasMaps.length - discoveredMaps.length
   const selectedMap = discoveredMaps.find((map) => map.id === selectedMapId) ?? discoveredMaps[0] ?? atlasMaps[0]
   const detailWidth = zoom === 100 ? '100%' : `${ATLAS_BASE_WIDTH * (zoom / 100)}px`
   const routes = useMemo(() => getDiscoveredRoutes(progress, rpgState), [progress, rpgState])
+
+  useLayoutEffect(() => {
+    const scrollport = scrollportRef.current
+    if (!scrollport) return
+
+    const frame = window.requestAnimationFrame(() => {
+      if (zoom === 100) {
+        scrollport.scrollLeft = 0
+        scrollport.scrollTop = 0
+        zoomAnchorRef.current = null
+        return
+      }
+
+      const anchor = zoomAnchorRef.current ?? { x: 0.5, y: 0.5 }
+      scrollport.scrollLeft = Math.max(0, anchor.x * scrollport.scrollWidth - scrollport.clientWidth / 2)
+      scrollport.scrollTop = Math.max(0, anchor.y * scrollport.scrollHeight - scrollport.clientHeight / 2)
+      zoomAnchorRef.current = null
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [selectedMap.id, zoom])
+
+  const changeZoom = (delta: number) => {
+    const scrollport = scrollportRef.current
+    if (scrollport && scrollport.scrollWidth > 0 && scrollport.scrollHeight > 0) {
+      zoomAnchorRef.current = {
+        x: (scrollport.scrollLeft + scrollport.clientWidth / 2) / scrollport.scrollWidth,
+        y: (scrollport.scrollTop + scrollport.clientHeight / 2) / scrollport.scrollHeight,
+      }
+    }
+    setZoom((current) => Math.min(150, Math.max(100, current + delta)))
+  }
+
+  const startPan = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (zoom === 100) return
+    if (event.pointerType === 'mouse' && event.button !== 0) return
+
+    const scrollport = event.currentTarget
+    panRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      scrollLeft: scrollport.scrollLeft,
+      scrollTop: scrollport.scrollTop,
+    }
+    scrollport.dataset.panning = 'true'
+    scrollport.setPointerCapture(event.pointerId)
+    event.preventDefault()
+  }
+
+  const movePan = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const pan = panRef.current
+    if (!pan || pan.pointerId !== event.pointerId) return
+
+    event.currentTarget.scrollLeft = pan.scrollLeft - (event.clientX - pan.startX)
+    event.currentTarget.scrollTop = pan.scrollTop - (event.clientY - pan.startY)
+    event.preventDefault()
+  }
+
+  const stopPan = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const pan = panRef.current
+    if (!pan || pan.pointerId !== event.pointerId) return
+
+    panRef.current = null
+    delete event.currentTarget.dataset.panning
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+  }
 
   return (
     <section
@@ -328,13 +413,13 @@ export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
           <button
             type="button"
             aria-label="ワールドマップを縮小"
-            onClick={() => setZoom((current) => Math.max(100, current - 25))}
+            onClick={() => changeZoom(-25)}
             disabled={zoom === 100}
           >−</button>
           <button
             type="button"
             aria-label="ワールドマップを拡大"
-            onClick={() => setZoom((current) => Math.min(150, current + 25))}
+            onClick={() => changeZoom(25)}
             disabled={zoom === 150}
           >+</button>
         </div>
@@ -364,7 +449,17 @@ export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
       </nav>
       {hiddenMapCount > 0 && <p className="atlas-undiscovered-summary">未発見エリアあり</p>}
 
-      <div className="atlas-scrollport" aria-label="拡大地図の移動領域">
+      <div
+        ref={scrollportRef}
+        className="atlas-scrollport"
+        aria-label="拡大地図の移動領域"
+        data-pannable={zoom > 100 || undefined}
+        onPointerDown={startPan}
+        onPointerMove={movePan}
+        onPointerUp={stopPan}
+        onPointerCancel={stopPan}
+        onLostPointerCapture={stopPan}
+      >
         <div className="atlas-detail-canvas" style={{ width: detailWidth }}>
           <AtlasTerrainMap map={selectedMap} progress={progress} rpgState={rpgState} />
         </div>
