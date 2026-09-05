@@ -39,13 +39,14 @@ async function enterEncounter(page: Page, beforeEncounter?: () => Promise<void>)
 }
 
 async function useKit(page: Page) {
-  await page.getByRole('button', { name: 'アイテム', exact: true }).click()
-  const row = page.locator('.battle-item-browser-row[data-item-id="patch-kit"]')
+  await page.getByRole('group', { name: '戦闘コマンド' }).getByRole('button', { name: 'アイテム', exact: true }).click()
+  const menu = page.getByRole('group', { name: 'アイテム選択' })
+  const row = menu.locator('.battle-item-browser-row[data-item-id="patch-kit"]')
   await expect(row).toBeVisible()
   await row.click()
-  const detail = page.locator('.battle-item-detail[data-item-id="patch-kit"]')
-  await detail.locator('.patch-kit-action').click()
+  await menu.getByRole('button', { name: /PATCH KIT ×2を使う/ }).click()
   await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
+  await expect(page.getByRole('group', { name: '戦闘コマンド' })).toBeVisible()
   await expect.poll(() => readStoredGameState(page)).toMatchObject({
     progress: { progress: { inventory: { patchKit: 1 } } },
     rpg: { state: { currentHp: 64 } },
@@ -53,8 +54,10 @@ async function useKit(page: Page) {
 }
 
 async function openFight(page: Page) {
-  const fight = page.getByRole('button', { name: '戦う', exact: true })
-  if ((await fight.getAttribute('aria-pressed')) !== 'true') await fight.click()
+  const skills = page.getByRole('group', { name: 'スキル' })
+  if (await skills.isVisible()) return
+  await page.getByRole('group', { name: '戦闘コマンド' }).getByRole('button', { name: '戦う', exact: true }).click()
+  await expect(skills).toBeVisible()
 }
 
 async function confirmEscape(page: Page) {
@@ -79,9 +82,12 @@ test('reload resets the whole attempt, including enemies/turn/kit allowance, wit
   await expect(page.locator('.turn-pill')).toHaveText('ターン 1')
   await expect(page.locator('.enemy-name-row span')).toHaveText(startingEnemies)
   await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('40/108')
-  await page.getByRole('button', { name: 'アイテム', exact: true }).click()
-  await expect(page.locator('.battle-item-browser-row[data-item-id="patch-kit"] [data-item-availability="available"]')).toBeVisible()
+  await page.getByRole('group', { name: '戦闘コマンド' }).getByRole('button', { name: 'アイテム', exact: true }).click()
+  const itemMenu = page.getByRole('group', { name: 'アイテム選択' })
+  const patchKitRow = itemMenu.locator('.battle-item-browser-row[data-item-id="patch-kit"]')
+  await expect(patchKitRow).toHaveAttribute('data-item-count', '2')
   await expect.poll(() => readStoredGameState(page)).toMatchObject({ progress: initial.progress, rpg: initial.rpg })
+  await page.getByRole('group', { name: '戦闘サブメニュー操作' }).getByRole('button', { name: '← 戻る' }).click()
   await useKit(page)
   await page.reload()
   await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('40/108')
