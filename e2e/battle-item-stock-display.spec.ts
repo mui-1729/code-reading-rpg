@@ -7,7 +7,7 @@ const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
 async function seedBattle(page: Page, patchKitCount: number) {
   await page.addInitScript(
-    ({ progressKey, rpgKey, tutorialKey, patchKitCount: seededPatchKitCount }) => {
+    ({ progressKey, rpgKey, tutorialKey, patchKitCount: seededPatchKitCount, clearedStageIds }) => {
       localStorage.clear()
       localStorage.setItem(progressKey, JSON.stringify({
         version: 4,
@@ -15,7 +15,7 @@ async function seedBattle(page: Page, patchKitCount: number) {
           exp: 0,
           gold: 200,
           inventory: { patchKit: seededPatchKitCount },
-          clearedStageIds: [...JS_SECOND_INCIDENT_PREREQS, 2],
+          clearedStageIds,
           clearedAreaIds: [],
           completedSideQuestIds: [],
           unlockedStageIds: [7],
@@ -43,6 +43,7 @@ async function seedBattle(page: Page, patchKitCount: number) {
       rpgKey: RPG_KEY,
       tutorialKey: TUTORIAL_KEY,
       patchKitCount,
+      clearedStageIds: [...JS_SECOND_INCIDENT_PREREQS, 2],
     },
   )
 }
