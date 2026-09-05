@@ -260,26 +260,31 @@
     overscroll-behavior: contain;
   }
 
-  /* Reserve a real footer lane for Execute. The divider must sit below the
-   * skill name/power instead of crossing the power label. */
+  /* Execute is a real row in the card, not an absolute overlay. The reserved
+   * preview footer therefore keeps the card stable while its divider can never
+   * cross the name/power area. */
   .battle-screen .skill-card {
-    position: relative;
+    display: flex;
+    flex-direction: column;
     box-sizing: border-box;
-    padding-bottom: 32px;
+    min-height: 82px;
+    padding-bottom: 0;
   }
 
   .battle-screen .skill-card-head {
-    padding-bottom: 10px;
+    flex: 1 0 auto;
+    box-sizing: border-box;
+    padding-bottom: 8px;
   }
 
   .battle-screen .skill-card-foot {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    left: 0;
+    position: static;
+    flex: 0 0 28px;
     box-sizing: border-box;
+    width: 100%;
     height: 28px;
     min-height: 28px;
+    margin-top: auto;
     padding: 5px 8px;
   }
 
