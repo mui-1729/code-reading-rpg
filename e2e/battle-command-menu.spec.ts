@@ -92,8 +92,7 @@ test('Random Encounterはrootから戦う / アイテム / 逃げるを選び各
   await expect(itemMenu.getByRole('button', { name: /PATCH KIT ×1を使う/ })).toBeEnabled()
   await itemMenu.getByRole('button', { name: /PATCH KIT ×1を使う/ }).click()
   await expect(page.locator('.player-panel .status-label-row strong')).toHaveText('64/108')
-
-  await itemBack.click()
+  await expect(itemMenu).toBeHidden()
   await expect(page.getByRole('group', { name: '戦闘コマンド' })).toBeVisible()
 })
 
