@@ -113,7 +113,13 @@ test('@responsive Battle root, Fight and Items share one stable command workspac
 
   await firstSkill.dispatchEvent('click')
   await expect(firstSkill).toHaveAttribute('aria-pressed', 'true')
+  const skillHeadBox = await firstSkill.locator('.skill-card-head').boundingBox()
+  const skillFootBox = await firstSkill.locator('.skill-card-foot').boundingBox()
+  expect(skillHeadBox).not.toBeNull()
+  expect(skillFootBox).not.toBeNull()
+  expect((skillHeadBox?.y ?? 0) + (skillHeadBox?.height ?? 0)).toBeLessThanOrEqual(skillFootBox?.y ?? 0)
   expectStable(await workspaceGeometry(page), initial)
+  await page.screenshot({ path: testInfo.outputPath('01b-fight-armed.png'), fullPage: true })
   await fightBack.dispatchEvent('click')
 
   root = page.getByRole('group', { name: '戦闘コマンド' })
