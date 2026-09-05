@@ -127,7 +127,13 @@ export function BattleCommandBar({
   }
 
   return (
-    <div className="battle-command-bar battle-command-root" role="group" aria-label="戦闘コマンド">
+    <div
+      className="battle-command-bar battle-command-root"
+      role="group"
+      aria-label="戦闘コマンド"
+      data-action-locked={actionLocked}
+      data-choice-count={escapeAllowed ? 3 : 2}
+    >
       <button
         type="button"
         className="battle-command-button"
