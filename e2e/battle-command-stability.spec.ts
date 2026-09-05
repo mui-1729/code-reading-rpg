@@ -69,8 +69,15 @@ async function battleGeometry(page: Page) {
       detailHeight: detailBox.height,
       detailBottom: detailBox.bottom,
       consoleTop: consoleBox.top,
+      consoleHeight: consoleBox.height,
     }
   })
+}
+
+function expectStable(actual: Awaited<ReturnType<typeof battleGeometry>>, baseline: Awaited<ReturnType<typeof battleGeometry>>) {
+  for (const key of Object.keys(baseline) as Array<keyof typeof baseline>) {
+    expect(Math.abs(actual[key] - baseline[key]), `${key} should stay stable`).toBeLessThanOrEqual(1)
+  }
 }
 
 test('@responsive Fight previews the first Skill without arming it and does not shift after the first press', async ({ page }, testInfo) => {
@@ -79,16 +86,22 @@ test('@responsive Fight previews the first Skill without arming it and does not 
   await page.goto('/javascript/battle/2?seed=issue-386-layout&returnTo=%2Fworld')
   await settleBattleEntry(page)
 
-  await page.getByRole('button', { name: '戦う', exact: true }).click()
+  const before = await battleGeometry(page)
+  const root = page.getByRole('group', { name: '戦闘コマンド' })
+  await root.getByRole('button', { name: '戦う', exact: true }).click()
+  await expect(root).toBeHidden()
+
   const firstSkill = page.locator('[data-skill-id]').first()
   await expect(firstSkill).toHaveAttribute('data-skill-previewed', 'true')
   await expect(firstSkill).toHaveAttribute('aria-pressed', 'false')
+  await expect(page.getByRole('group', { name: '戦闘サブメニュー操作' }).getByRole('button', { name: '← 戻る' })).toBeVisible()
 
   const cardCode = (await firstSkill.locator('pre code').textContent()) ?? ''
   const detailCode = (await page.locator('.selected-skill-reading .source-code-line pre code').allTextContents()).join('\n')
   expect(detailCode).toBe(cardCode)
 
   const afterFight = await battleGeometry(page)
+  expectStable(afterFight, before)
   await page.screenshot({ path: testInfo.outputPath('fight-preview.png'), fullPage: true })
 
   await firstSkill.click()
@@ -96,40 +109,39 @@ test('@responsive Fight previews the first Skill without arming it and does not 
   await expect(page.locator('body')).toHaveAttribute('data-battle-resolving', 'false')
 
   const afterFirstPress = await battleGeometry(page)
-  expect(Math.abs(afterFirstPress.detailHeight - afterFight.detailHeight)).toBeLessThanOrEqual(1)
-  expect(Math.abs(afterFirstPress.detailBottom - afterFight.detailBottom)).toBeLessThanOrEqual(1)
-  expect(Math.abs(afterFirstPress.consoleTop - afterFight.consoleTop)).toBeLessThanOrEqual(1)
+  expectStable(afterFirstPress, before)
   await page.screenshot({ path: testInfo.outputPath('skill-armed.png'), fullPage: true })
 
   await firstSkill.click()
   await expect(page.locator('body')).toHaveAttribute('data-battle-resolving', 'true')
 })
 
-test('@responsive Escape confirmation keeps the command row height stable', async ({ page }, testInfo) => {
+test('@responsive Escape confirmation replaces root without moving the battle workspace', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedBattle(page)
   await page.goto('/javascript/battle/2?seed=encounter%3Aoverworld%3A8%3A20%3A14&returnTo=%2Fworld')
   await settleBattleEntry(page)
 
-  const commandBar = page.getByRole('group', { name: '戦闘コマンド' })
-  const escape = commandBar.getByRole('button', { name: '逃げる' })
+  let root = page.getByRole('group', { name: '戦闘コマンド' })
+  const before = await battleGeometry(page)
+  const escape = root.getByRole('button', { name: '逃げる' })
   await expect(escape).toBeVisible()
-  const before = await commandBar.evaluate((element) => {
-    const box = element.getBoundingClientRect()
-    return { top: box.top, height: box.height }
-  })
 
   await escape.click()
+  await expect(root).toBeHidden()
   const confirm = page.getByRole('group', { name: '逃走確認' })
   await expect(confirm).toBeVisible()
-  const after = await confirm.evaluate((element) => {
-    const box = element.getBoundingClientRect()
-    return { top: box.top, height: box.height }
-  })
-  expect(Math.abs(after.height - before.height)).toBeLessThanOrEqual(1)
-  expect(Math.abs(after.top - before.top)).toBeLessThanOrEqual(1)
+  await expect(confirm).toContainText('逃げますか？')
+  await expect(confirm.getByRole('button', { name: '逃げる' })).toBeVisible()
+  const back = confirm.getByRole('button', { name: '← 戻る' })
+  await expect(back).toBeVisible()
+  await expect(back).toBeFocused()
+  expectStable(await battleGeometry(page), before)
   await page.screenshot({ path: testInfo.outputPath('escape-confirm.png'), fullPage: true })
 
-  await confirm.getByRole('button', { name: 'やめる' }).click()
-  await expect(page.getByRole('group', { name: '戦闘コマンド' })).toBeVisible()
+  await back.click()
+  root = page.getByRole('group', { name: '戦闘コマンド' })
+  await expect(root).toBeVisible()
+  await expect(confirm).toBeHidden()
+  expectStable(await battleGeometry(page), before)
 })
