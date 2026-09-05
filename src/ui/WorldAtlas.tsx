@@ -185,7 +185,7 @@ function buildMapCells(mapId: WorldMapId, clearedStageIds: readonly number[]): A
         terrain,
         locked:
           portal?.requiredClearedStageId !== undefined &&
-          !isRequiredStageSatisfied(portal.requiredClearedStageId, clearedStageIds),
+          !isRequiredStageSatisfied(portal.requiredClearedStageId, clearedStageStageIds),
       })
     }
   }
@@ -318,6 +318,7 @@ export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
   const scrollportRef = useRef<HTMLDivElement>(null)
   const panRef = useRef<AtlasPanState | null>(null)
   const zoomAnchorRef = useRef<AtlasZoomAnchor | null>(null)
+  const zoomFrameRef = useRef<number | null>(null)
   const discoveredMaps = atlasMaps.filter((map) => isMapDiscovered(map.id, progress, rpgState))
   const hiddenMapCount = atlasMaps.length - discoveredMaps.length
   const selectedMap = discoveredMaps.find((map) => map.id === selectedMapId) ?? discoveredMaps[0] ?? atlasMaps[0]
@@ -328,7 +329,11 @@ export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
     const scrollport = scrollportRef.current
     if (!scrollport) return
 
-    const frame = window.requestAnimationFrame(() => {
+    if (zoomFrameRef.current !== null) {
+      window.cancelAnimationFrame(zoomFrameRef.current)
+    }
+    zoomFrameRef.current = window.requestAnimationFrame(() => {
+      zoomFrameRef.current = null
       if (zoom === 100) {
         scrollport.scrollLeft = 0
         scrollport.scrollTop = 0
@@ -342,7 +347,12 @@ export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
       zoomAnchorRef.current = null
     })
 
-    return () => window.cancelAnimationFrame(frame)
+    return () => {
+      if (zoomFrameRef.current !== null) {
+        window.cancelAnimationFrame(zoomFrameRef.current)
+        zoomFrameRef.current = null
+      }
+    }
   }, [selectedMap.id, zoom])
 
   const changeZoom = (delta: number) => {
@@ -359,6 +369,12 @@ export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
   const startPan = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (zoom === 100) return
     if (event.pointerType === 'mouse' && event.button !== 0) return
+
+    if (zoomFrameRef.current !== null) {
+      window.cancelAnimationFrame(zoomFrameRef.current)
+      zoomFrameRef.current = null
+    }
+    zoomAnchorRef.current = null
 
     const scrollport = event.currentTarget
     panRef.current = {
