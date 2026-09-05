@@ -154,27 +154,30 @@
   border-color: #76504d;
 }
 
-/* Permanent NEXT / damage previews are removed. A boss warning appears only
- * during the boss attack sequence and overlays the card without resizing it. */
+/* Permanent NEXT / damage previews are removed from the visible UI. Keep the
+ * box absolutely positioned and visibility-hidden so it never reserves layout
+ * space, while geometry/invariant checks can still verify it stays inside its
+ * enemy card. A boss attack temporarily reveals that same overlay. */
 .battle-screen .enemy-card .intent-box {
-  display: none;
-}
-
-.battle-screen .enemy-card.is-boss-enemy.enemy-attacking .intent-box {
   position: absolute;
   right: 6px;
   bottom: 6px;
   left: 6px;
-  z-index: 6;
   display: grid;
+  margin: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.battle-screen .enemy-card.is-boss-enemy.enemy-attacking .intent-box {
+  z-index: 6;
+  visibility: visible;
   grid-template-columns: minmax(0, 1fr);
   gap: 3px;
-  margin: 0;
   padding: 7px 8px;
   border: 2px solid var(--gold);
   background: rgba(22, 8, 10, .96);
   box-shadow: 0 0 0 2px rgba(0, 0, 0, .55);
-  pointer-events: none;
 }
 
 .battle-screen .enemy-card.is-boss-enemy.enemy-attacking .intent-box > span {
@@ -330,10 +333,13 @@
     min-height: 60px;
   }
 
-  .battle-screen .enemy-card.is-boss-enemy.enemy-attacking .intent-box {
+  .battle-screen .enemy-card .intent-box {
     right: 4px;
     bottom: 4px;
     left: 4px;
+  }
+
+  .battle-screen .enemy-card.is-boss-enemy.enemy-attacking .intent-box {
     padding: 6px;
   }
 
