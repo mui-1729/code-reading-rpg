@@ -32,8 +32,15 @@
   margin-top: auto;
 }
 
+/* Battle log belongs to the root three-choice state only. Submenus should use
+ * the full command workspace without the log competing for room. */
 .battle-screen .log-panel {
   order: 3;
+  display: none;
+}
+
+.battle-screen .battle-console:has(.battle-command-root > .battle-command-button:nth-child(3)) .log-panel {
+  display: grid;
 }
 
 .battle-screen .battle-submenu-back {
@@ -56,9 +63,30 @@
   min-height: 0;
 }
 
+.battle-screen .battle-item-browser-row {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
 .battle-screen .battle-item-browser-row.is-selected {
   border-color: var(--blue);
   box-shadow: inset 0 0 0 1px rgba(86, 148, 255, .35);
+}
+
+.battle-screen .battle-item-browser-copy {
+  min-width: 0;
+}
+
+.battle-screen .battle-item-count {
+  display: block;
+  align-self: center;
+  min-width: 2.6em;
+  color: var(--gold);
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1;
+  text-align: right;
+  white-space: nowrap;
+  text-shadow: 2px 2px 0 #000;
 }
 
 .battle-screen .battle-item-submenu-actions {
@@ -231,10 +259,16 @@
     overscroll-behavior: contain;
   }
 
+  /* Reserve a real footer lane for Execute. The divider must sit below the
+   * skill name/power instead of crossing the power label. */
   .battle-screen .skill-card {
     position: relative;
     box-sizing: border-box;
-    padding-bottom: 24px;
+    padding-bottom: 32px;
+  }
+
+  .battle-screen .skill-card-head {
+    padding-bottom: 10px;
   }
 
   .battle-screen .skill-card-foot {
@@ -243,7 +277,9 @@
     bottom: 0;
     left: 0;
     box-sizing: border-box;
-    min-height: 24px;
+    height: 28px;
+    min-height: 28px;
+    padding: 5px 8px;
   }
 
   .battle-screen .log-panel {
@@ -260,6 +296,15 @@
 
   .battle-screen .battle-console {
     height: clamp(206px, 28dvh, 238px);
+  }
+
+  .battle-screen .battle-item-browser-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .battle-screen .battle-item-browser-row .battle-item-count {
+    grid-column: auto;
+    font-size: 18px;
   }
 
   .battle-screen .battle-item-submenu-actions {
