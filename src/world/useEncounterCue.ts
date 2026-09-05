@@ -7,12 +7,17 @@ export function useEncounterCue() {
   const [encounterCueActive, setEncounterCueActive] = useState(false)
   const activeRef = useRef(false)
   const timerRef = useRef<number | null>(null)
+  const pauseTriggerRef = useRef<HTMLButtonElement | null>(null)
 
   const clearCue = useCallback(() => {
     activeRef.current = false
     setEncounterCueActive(false)
     if (typeof document !== 'undefined') {
       delete document.body.dataset.worldEncounterCue
+    }
+    if (pauseTriggerRef.current) {
+      pauseTriggerRef.current.disabled = false
+      pauseTriggerRef.current = null
     }
   }, [])
 
@@ -26,6 +31,10 @@ export function useEncounterCue() {
       if (typeof document !== 'undefined') {
         delete document.body.dataset.worldEncounterCue
       }
+      if (pauseTriggerRef.current) {
+        pauseTriggerRef.current.disabled = false
+        pauseTriggerRef.current = null
+      }
     }
   }, [])
 
@@ -35,8 +44,11 @@ export function useEncounterCue() {
 
       activeRef.current = true
       setEncounterCueActive(true)
-      if (typeof document !== 'undefined') {
-        document.body.dataset.worldEncounterCue = 'true'
+      document.body.dataset.worldEncounterCue = 'true'
+      const pauseTrigger = document.querySelector<HTMLButtonElement>('.pause-trigger')
+      if (pauseTrigger) {
+        pauseTrigger.disabled = true
+        pauseTriggerRef.current = pauseTrigger
       }
       gameAudio.playSe('encounter')
 
