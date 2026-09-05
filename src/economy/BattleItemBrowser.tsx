@@ -45,20 +45,15 @@ export function BattleItemBrowser({
         actionLocked,
       })
     : null
+  const selectedStateLabel = selectedItemState?.reason === 'no-stock'
+    ? ''
+    : selectedItemState?.reasonLabel ?? ''
 
   const itemMenu = (
     <div className="battle-item-submenu" role="group" aria-label="アイテム選択">
       <div className="battle-item-browser-list">
         {itemDefinitions.map((item) => {
           const count = getItemCount(progress, item.id)
-          const itemState = getBattleItemUseState({
-            progress,
-            itemId: item.id,
-            hp,
-            maxHp,
-            usedThisBattle: item.id === 'patch-kit' ? patchKitUsed : false,
-            actionLocked,
-          })
           const selected = selectedItemId === item.id
           return (
             <button
@@ -70,11 +65,11 @@ export function BattleItemBrowser({
               onClick={() => setSelectedItemId(item.id)}
             >
               <img className="item-pixel-icon item-battle-icon" src={item.visual} alt="" aria-hidden="true" />
-              <span>
-                <strong>{item.name} ×{count}</strong>
+              <span className="battle-item-browser-copy">
+                <strong>{item.name}</strong>
                 <small>{getItemEffectSummary(item)} · {getItemUsageSummary(item)}</small>
               </span>
-              <em data-item-availability={itemState.reason}>{itemState.reasonLabel}</em>
+              <span className="battle-item-count" aria-label={`${count}個所持`}>×{count}</span>
             </button>
           )
         })}
@@ -83,8 +78,8 @@ export function BattleItemBrowser({
         <span className="battle-item-state" aria-live="polite">
           {selectedItem
             ? lastPatchKitHeal !== null && patchKitUsed && selectedItem.id === 'patch-kit'
-              ? `+${lastPatchKitHeal} HP回復 · ${selectedItemState?.reasonLabel ?? ''}`
-              : selectedItemState?.reasonLabel
+              ? `+${lastPatchKitHeal} HP回復${selectedStateLabel ? ` · ${selectedStateLabel}` : ''}`
+              : selectedStateLabel
             : 'アイテムを選択してください'}
         </span>
         <button
