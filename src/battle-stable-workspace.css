@@ -9,6 +9,55 @@
  * of changing the page height. Long content scrolls locally.
  */
 
+/*
+ * Enemy intent is not useful as permanent HUD information. Normal enemies do
+ * not expose NEXT / damage previews. A boss warning appears only while the boss
+ * is actually in its attack windup/hit sequence, and is overlaid so it cannot
+ * resize the enemy card or push the Battle workspace around.
+ */
+.battle-screen .enemy-card .intent-box {
+  display: none;
+}
+
+.battle-screen .enemy-card.is-boss-enemy.enemy-attacking .intent-box {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  left: 6px;
+  z-index: 6;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 3px;
+  margin: 0;
+  padding: 7px 8px;
+  border: 2px solid var(--gold);
+  background: rgba(22, 8, 10, .96);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, .55);
+  pointer-events: none;
+}
+
+.battle-screen .enemy-card.is-boss-enemy.enemy-attacking .intent-box > span {
+  font-size: 0;
+}
+
+.battle-screen .enemy-card.is-boss-enemy.enemy-attacking .intent-box > span::after {
+  content: '⚠ ボスが大技を放とうとしている！';
+  color: #fff2a8;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1.4;
+}
+
+.battle-screen .enemy-card.is-boss-enemy.enemy-attacking .intent-box > strong {
+  color: #fff;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.battle-screen .enemy-card.is-boss-enemy.enemy-attacking .intent-box > em {
+  display: none;
+}
+
 @media (max-width: 900px), (max-height: 520px) and (max-width: 1100px) {
   .battle-screen .selected-skill-reading {
     box-sizing: border-box;
@@ -95,5 +144,17 @@
 
   .battle-screen .battle-console {
     height: clamp(206px, 28dvh, 238px);
+  }
+
+  .battle-screen .enemy-card.is-boss-enemy.enemy-attacking .intent-box {
+    right: 4px;
+    bottom: 4px;
+    left: 4px;
+    padding: 6px;
+  }
+
+  .battle-screen .enemy-card.is-boss-enemy.enemy-attacking .intent-box > span::after,
+  .battle-screen .enemy-card.is-boss-enemy.enemy-attacking .intent-box > strong {
+    font-size: 9px;
   }
 }
