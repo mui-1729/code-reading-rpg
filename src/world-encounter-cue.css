@@ -1,4 +1,4 @@
-body[data-world-encounter-cue='true'] .world-player-sprite::before {
+body[data-world-encounter-cue='alert'] .world-player-sprite::before {
   content: '!';
   position: absolute;
   left: 50%;
@@ -19,21 +19,39 @@ body[data-world-encounter-cue='true'] .world-player-sprite::before {
     0 2px 0 #11111b,
     0 -2px 0 #11111b,
     3px 3px 0 #d24a3f;
-  animation: world-encounter-pop 420ms steps(3, end) both;
+  animation: world-encounter-pop 260ms steps(3, end) both;
 }
 
-body[data-world-encounter-cue='true'] .world-viewport::after {
+body[data-world-encounter-cue='alert'] .world-viewport::after,
+body[data-world-encounter-cue='transition'] .world-viewport::after {
   content: '';
   position: absolute;
   inset: 0;
   z-index: 9;
   pointer-events: none;
-  box-shadow: inset 0 0 0 4px rgba(255, 246, 168, .72);
-  animation: world-encounter-pulse 420ms steps(2, end) both;
 }
 
-body[data-world-encounter-cue='true'] .world-controls,
-body[data-world-encounter-cue='true'] .pause-trigger {
+body[data-world-encounter-cue='alert'] .world-viewport::after {
+  box-shadow: inset 0 0 0 4px rgba(255, 246, 168, .72);
+  animation: world-encounter-pulse 260ms steps(2, end) both;
+}
+
+body[data-world-encounter-cue='transition'] .world-viewport::after {
+  inset: -28%;
+  background:
+    repeating-conic-gradient(
+      from 0deg,
+      rgba(17, 17, 27, .96) 0 14deg,
+      rgba(210, 74, 63, .92) 14deg 28deg,
+      rgba(255, 246, 168, .9) 28deg 42deg,
+      rgba(17, 17, 27, .96) 42deg 56deg
+    );
+  transform-origin: 50% 50%;
+  animation: world-encounter-swirl 180ms steps(6, end) both;
+}
+
+body[data-world-encounter-cue] .world-controls,
+body[data-world-encounter-cue] .pause-trigger {
   pointer-events: none;
 }
 
@@ -49,13 +67,30 @@ body[data-world-encounter-cue='true'] .pause-trigger {
   24%, 56% { opacity: 1; }
 }
 
+@keyframes world-encounter-swirl {
+  0% { transform: scale(.18) rotate(0deg); opacity: .08; }
+  50% { transform: scale(.92) rotate(170deg); opacity: .88; }
+  100% { transform: scale(2.1) rotate(330deg); opacity: 1; }
+}
+
+@keyframes world-encounter-reduced-fade {
+  0% { opacity: .18; }
+  100% { opacity: .9; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  body[data-world-encounter-cue='true'] .world-player-sprite::before,
-  body[data-world-encounter-cue='true'] .world-viewport::after {
+  body[data-world-encounter-cue='alert'] .world-player-sprite::before,
+  body[data-world-encounter-cue='alert'] .world-viewport::after {
     animation: none;
   }
 
-  body[data-world-encounter-cue='true'] .world-viewport::after {
+  body[data-world-encounter-cue='alert'] .world-viewport::after {
     opacity: .55;
+  }
+
+  body[data-world-encounter-cue='transition'] .world-viewport::after {
+    inset: 0;
+    background: rgba(17, 17, 27, .88);
+    animation: world-encounter-reduced-fade 180ms steps(2, end) both;
   }
 }
