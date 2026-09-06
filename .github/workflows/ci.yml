@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feat/375-ts-frontier-outpost
   pull_request:
   workflow_dispatch:
 
