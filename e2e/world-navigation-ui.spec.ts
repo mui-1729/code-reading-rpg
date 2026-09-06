@@ -80,14 +80,39 @@ test('World常設objectiveは一行に絞りdetailはmapを隠さない', async 
   await expect(objective.locator('p')).toHaveCount(0)
 })
 
-test('アクションは対象がない時disabledで近くの対象を具体名で示す', async ({ page }) => {
+test('対象へ向くだけではログを変えずActionを正面対象へ切り替える', async ({ page }) => {
   await seedWorld(page, { position: { x: 20, y: 14 }, partyMemberIds: ['byte'] })
   await expect(page.getByRole('button', { name: 'アクション', exact: true })).toBeDisabled()
 
   await seedWorld(page, { position: { x: 20, y: 13 }, partyMemberIds: [] })
+  const log = page.locator('.world-message p')
+  const before = await log.textContent()
+
+  await expect(page.getByRole('button', { name: 'アクション', exact: true })).toBeDisabled()
+  await page.getByRole('button', { name: '左へ移動' }).click()
+
+  await expect(page.locator('.world-player-sprite')).toHaveAttribute('data-facing', 'left')
+  await expect(log).toHaveText(before ?? '')
   const byteInteract = page.getByRole('button', { name: 'BYTEと話す', exact: true })
   await expect(byteInteract).toBeEnabled()
   await expect(byteInteract).toHaveText('BYTEと話す')
+})
+
+test('複数の隣接対象があっても向いている1マスだけをAction対象にする', async ({ page }) => {
+  await seedWorld(page, { position: { x: 19, y: 12 }, partyMemberIds: [] })
+
+  await expect(page.getByRole('button', { name: 'BYTEと話す', exact: true })).toBeEnabled()
+  const log = page.locator('.world-message p')
+  const before = await log.textContent()
+
+  await page.getByRole('button', { name: '右へ移動' }).click()
+  await expect(page.locator('.world-player-sprite')).toHaveAttribute('data-facing', 'right')
+  await expect(log).toHaveText(before ?? '')
+  await expect(page.getByRole('button', { name: 'ショップを見る', exact: true })).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'BYTEと話す', exact: true })).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'ショップを見る', exact: true }).click()
+  await expect(page.getByRole('dialog', { name: 'ショップ' })).toBeVisible()
 })
 
 test('通常歩行のterrain echoは冒険ログを占有せずaria-liveもしない', async ({ page }) => {
@@ -147,6 +172,7 @@ test('mobile landscapeでもmap・D-Pad・context interactionが同じviewport�
   await page.setViewportSize({ width: 844, height: 390 })
   await seedWorld(page, { position: { x: 20, y: 13 }, partyMemberIds: [] })
 
+  await page.getByRole('button', { name: '左へ移動' }).click()
   await expect(page.getByLabel('ワールドマップ')).toBeVisible()
   await expect(page.getByRole('button', { name: '左へ移動' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'BYTEと話す', exact: true })).toBeVisible()
