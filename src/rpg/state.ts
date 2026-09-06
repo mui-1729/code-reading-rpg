@@ -11,6 +11,12 @@ import {
   type WorldTreasureId,
 } from '../world/worldMap'
 import {
+  createWorldCheckpoint,
+  inferLegacyWorldCheckpoint,
+  normalizeWorldCheckpoint,
+  type WorldCheckpoint,
+} from '../world/worldCheckpoints'
+import {
   equipmentById,
   getEquipmentBonuses,
   starterEquipmentIds,
@@ -27,6 +33,7 @@ export type RpgState = {
   partyMemberIds: string[]
   worldMapId: WorldMapId
   worldPosition: WorldPosition
+  safeCheckpoint: WorldCheckpoint
   stepsSinceEncounter: number
   encounterCount: number
   currentHp: number
@@ -34,37 +41,44 @@ export type RpgState = {
 }
 
 export type StoredRpgState = {
-  version: 6
+  version: 7
   state: RpgState
+}
+
+type RpgStateWithoutCheckpoint = Omit<RpgState, 'safeCheckpoint'>
+
+type LegacyStoredRpgStateV6 = {
+  version: 6
+  state: RpgStateWithoutCheckpoint
 }
 
 type LegacyStoredRpgStateV5 = {
   version: 5
-  state: RpgState
+  state: RpgStateWithoutCheckpoint
 }
 
 type LegacyStoredRpgStateV4 = {
   version: 4
-  state: RpgState & { partyEquipment?: Record<string, EquipmentLoadout> }
+  state: RpgStateWithoutCheckpoint & { partyEquipment?: Record<string, EquipmentLoadout> }
 }
 
 type LegacyStoredRpgStateV3 = {
   version: 3
-  state: Omit<RpgState, 'worldMapId'>
+  state: Omit<RpgStateWithoutCheckpoint, 'worldMapId'>
 }
 
 type LegacyStoredRpgStateV2 = {
   version: 2
-  state: Omit<RpgState, 'worldMapId' | 'openedTreasureIds'>
+  state: Omit<RpgStateWithoutCheckpoint, 'worldMapId' | 'openedTreasureIds'>
 }
 
 type LegacyStoredRpgStateV1 = {
   version: 1
-  state: Omit<RpgState, 'worldMapId' | 'currentHp' | 'openedTreasureIds'>
+  state: Omit<RpgStateWithoutCheckpoint, 'worldMapId' | 'currentHp' | 'openedTreasureIds'>
 }
 
 export const RPG_STORAGE_KEY = 'code-reading-rpg:rpg-state'
-export const RPG_STATE_SCHEMA_VERSION = 6
+export const RPG_STATE_SCHEMA_VERSION = 7
 
 const equipmentSlots: EquipmentSlot[] = ['weapon', 'armor', 'accessory']
 
@@ -88,6 +102,7 @@ export function createInitialRpgState(baseMaxHp = BASE_PLAYER_HP): RpgState {
     partyMemberIds: [],
     worldMapId: OVERWORLD_MAP_ID,
     worldPosition: { ...WORLD_MAP_STARTS[OVERWORLD_MAP_ID] },
+    safeCheckpoint: createWorldCheckpoint('central-hub'),
     stepsSinceEncounter: 8,
     encounterCount: 0,
     currentHp,
@@ -241,6 +256,7 @@ export function restoreRpgState(raw: string | null, baseMaxHp = BASE_PLAYER_HP):
   try {
     const parsed = JSON.parse(raw) as Partial<
       | StoredRpgState
+      | LegacyStoredRpgStateV6
       | LegacyStoredRpgStateV5
       | LegacyStoredRpgStateV4
       | LegacyStoredRpgStateV3
@@ -253,6 +269,7 @@ export function restoreRpgState(raw: string | null, baseMaxHp = BASE_PLAYER_HP):
         parsed.version !== 3 &&
         parsed.version !== 4 &&
         parsed.version !== 5 &&
+        parsed.version !== 6 &&
         parsed.version !== RPG_STATE_SCHEMA_VERSION) ||
       !parsed.state
     ) {
@@ -264,12 +281,16 @@ export function restoreRpgState(raw: string | null, baseMaxHp = BASE_PLAYER_HP):
     const partyMemberIds = uniqueKnownPartyIds(state.partyMemberIds)
     const equipment = normalizeLoadout(state.equipment, ownedEquipmentIds)
     const maxHp = getMaxHpForRpgState(baseMaxHp, { equipment })
-    const hasStableMapId = parsed.version === 4 || parsed.version === 5 || parsed.version === 6
+    const hasStableMapId =
+      parsed.version === 4 || parsed.version === 5 || parsed.version === 6 || parsed.version === 7
     const worldLocation = normalizeWorldLocation(
       hasStableMapId ? state.worldMapId : OVERWORLD_MAP_ID,
       state.worldPosition,
-      parsed.version !== 6,
+      parsed.version !== 6 && parsed.version !== 7,
     )
+    const safeCheckpoint = parsed.version === RPG_STATE_SCHEMA_VERSION
+      ? normalizeWorldCheckpoint(state.safeCheckpoint)
+      : inferLegacyWorldCheckpoint(worldLocation.mapId)
 
     return {
       equipment,
@@ -277,6 +298,7 @@ export function restoreRpgState(raw: string | null, baseMaxHp = BASE_PLAYER_HP):
       partyMemberIds,
       worldMapId: worldLocation.mapId,
       worldPosition: worldLocation.position,
+      safeCheckpoint,
       stepsSinceEncounter:
         typeof state.stepsSinceEncounter === 'number' && Number.isInteger(state.stepsSinceEncounter)
           ? Math.max(0, state.stepsSinceEncounter)
@@ -288,7 +310,11 @@ export function restoreRpgState(raw: string | null, baseMaxHp = BASE_PLAYER_HP):
       currentHp:
         parsed.version === 1 ? maxHp : normalizeCurrentHp(state.currentHp, maxHp),
       openedTreasureIds:
-        parsed.version === 3 || parsed.version === 4 || parsed.version === 5 || parsed.version === 6
+        parsed.version === 3 ||
+        parsed.version === 4 ||
+        parsed.version === 5 ||
+        parsed.version === 6 ||
+        parsed.version === 7
           ? uniqueKnownTreasureIds(state.openedTreasureIds)
           : [],
     }
