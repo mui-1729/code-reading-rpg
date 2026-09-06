@@ -9,7 +9,7 @@ describe('static NPC collision', () => {
     const state = {
       ...createInitialRpgState(),
       worldMapId: JS_VILLAGE_MAP_ID,
-      worldPosition: { x: 8, y: 9 },
+      worldPosition: { x: 8, y: 19 },
       stepsSinceEncounter: 4,
       encounterCount: 2,
     }
@@ -23,7 +23,7 @@ describe('static NPC collision', () => {
 
     expect(result.kind).toBe('blocked')
     expect(result.nextState).toBe(state)
-    expect(result.nextState.worldPosition).toEqual({ x: 8, y: 9 })
+    expect(result.nextState.worldPosition).toEqual({ x: 8, y: 19 })
     expect(result.nextState.stepsSinceEncounter).toBe(4)
     expect(result.nextState.encounterCount).toBe(2)
   })
