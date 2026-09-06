@@ -72,8 +72,8 @@ async function faceUpWithoutChangingLog(page: Page) {
   await expect(log).toHaveText(before ?? '')
 }
 
-test('Villageの宿は向いてActionした時だけ開きGoldを払いHPを回復しsafe hubを更新できる', async ({ page }) => {
-  await seedVillage(page, { x: 5, y: 12 })
+test('Village南西の宿は向いてActionした時だけ開きGoldを払いHPを回復しsafe hubを更新できる', async ({ page }) => {
+  await seedVillage(page, { x: 5, y: 21 })
 
   await expect(page.getByRole('button', { name: '宿で休む' })).toHaveCount(0)
   await faceUpWithoutChangingLog(page)
@@ -93,12 +93,12 @@ test('Villageの宿は向いてActionした時だけ開きGoldを払いHPを回�
   expect(stored.rpg.state.safeCheckpoint).toEqual({
     id: 'greenfield-village',
     mapId: 'js-village',
-    position: { x: 10, y: 12 },
+    position: { x: 10, y: 21 },
   })
 })
 
-test('Villageの道具屋は向いてActionすると消耗品だけを扱う', async ({ page }) => {
-  await seedVillage(page, { x: 14, y: 12 }, 100)
+test('Village中央の道具屋は向いてActionすると消耗品だけを扱う', async ({ page }) => {
+  await seedVillage(page, { x: 15, y: 12 }, 100)
   await faceUpWithoutChangingLog(page)
 
   await page.getByRole('button', { name: '道具屋を見る' }).click()
@@ -108,8 +108,8 @@ test('Villageの道具屋は向いてActionすると消耗品だけを扱う', a
   await expect(shop.locator('[data-equipment-id]')).toHaveCount(0)
 })
 
-test('Villageの装備屋は向いてActionすると装備だけを扱い既存purchase domainを使える', async ({ page }) => {
-  await seedVillage(page, { x: 15, y: 12 }, 100)
+test('川を渡った東側の装備屋は向いてActionすると装備だけを扱い既存purchase domainを使える', async ({ page }) => {
+  await seedVillage(page, { x: 25, y: 7 }, 100)
   await faceUpWithoutChangingLog(page)
 
   await page.getByRole('button', { name: '装備屋を見る' }).click()
