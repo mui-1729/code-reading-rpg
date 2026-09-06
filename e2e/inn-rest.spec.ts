@@ -10,9 +10,16 @@ async function seedInnState(page: Page, options: { gold: number; currentHp: numb
   await page.goto('/world')
 }
 
+async function faceInn(page: Page) {
+  await page.getByRole('button', { name: '右へ移動' }).click()
+  await expect(page.locator('.world-player-sprite')).toHaveAttribute('data-facing', 'right')
+  await expect(page.getByRole('button', { name: '宿で休む' })).toBeEnabled()
+}
+
 test.describe('宿', () => {
   test('HP満タンでは20Gを消費せず休めないことを明示する', async ({ page }) => {
     await seedInnState(page, { gold: 50, currentHp: 108 })
+    await faceInn(page)
 
     await page.getByRole('button', { name: '宿で休む' }).click()
     const inn = page.getByRole('dialog', { name: '宿' })
@@ -29,6 +36,7 @@ test.describe('宿', () => {
 
   test('ゴールド不足では不足額を表示しHP / Goldを変更しない', async ({ page }) => {
     await seedInnState(page, { gold: 7, currentHp: 40 })
+    await faceInn(page)
 
     await page.getByRole('button', { name: '宿で休む' }).click()
     const inn = page.getByRole('dialog', { name: '宿' })
