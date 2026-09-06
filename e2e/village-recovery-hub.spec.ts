@@ -59,8 +59,19 @@ async function seedVillage(page: Page, position: { x: number; y: number }, curre
   await page.goto('/world')
 }
 
-test('Villageの宿でGoldを払いHPを回復できる', async ({ page }) => {
+async function faceUpWithoutChangingLog(page: Page) {
+  const log = page.locator('.world-message p')
+  const before = await log.textContent()
+  await page.getByRole('button', { name: '上へ移動' }).click()
+  await expect(page.locator('.world-player-sprite')).toHaveAttribute('data-facing', 'up')
+  await expect(log).toHaveText(before ?? '')
+}
+
+test('Villageの宿は向いてActionした時だけ開きGoldを払いHPを回復できる', async ({ page }) => {
   await seedVillage(page, { x: 5, y: 12 })
+
+  await expect(page.getByRole('button', { name: '宿で休む' })).toHaveCount(0)
+  await faceUpWithoutChangingLog(page)
 
   const innButton = page.getByRole('button', { name: '宿で休む' })
   await expect(innButton).toBeVisible()
@@ -76,8 +87,9 @@ test('Villageの宿でGoldを払いHPを回復できる', async ({ page }) => {
   expect(stored.progress.progress.gold).toBeLessThan(200)
 })
 
-test('Villageの道具屋は消耗品だけを扱う', async ({ page }) => {
+test('Villageの道具屋は向いてActionすると消耗品だけを扱う', async ({ page }) => {
   await seedVillage(page, { x: 14, y: 12 }, 100)
+  await faceUpWithoutChangingLog(page)
 
   await page.getByRole('button', { name: '道具屋を見る' }).click()
   const shop = page.getByRole('dialog', { name: '道具屋' })
@@ -86,8 +98,9 @@ test('Villageの道具屋は消耗品だけを扱う', async ({ page }) => {
   await expect(shop.locator('[data-equipment-id]')).toHaveCount(0)
 })
 
-test('Villageの装備屋は装備だけを扱い既存purchase domainを使える', async ({ page }) => {
+test('Villageの装備屋は向いてActionすると装備だけを扱い既存purchase domainを使える', async ({ page }) => {
   await seedVillage(page, { x: 15, y: 12 }, 100)
+  await faceUpWithoutChangingLog(page)
 
   await page.getByRole('button', { name: '装備屋を見る' }).click()
   const shop = page.getByRole('dialog', { name: '装備屋' })
