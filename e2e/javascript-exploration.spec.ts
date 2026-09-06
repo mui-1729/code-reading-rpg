@@ -79,6 +79,7 @@ test('Forestの南branchには寄り道Treasureがあり取得後もreloadでOPE
   await expect(map).toHaveAttribute('data-world-y', '20')
   await expect(page.getByLabel('FOREST SUPPLY 未開封')).toBeVisible()
 
+  await page.getByRole('button', { name: '左へ移動' }).click()
   await page.getByRole('button', { name: '宝箱を開ける' }).click()
   await expect(page.getByText(/FOREST SUPPLY 開封/)).toBeVisible()
   await expect(page.getByLabel('FOREST SUPPLY 開封済み')).toBeVisible()
