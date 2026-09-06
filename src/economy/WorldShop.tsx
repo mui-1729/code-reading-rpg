@@ -25,6 +25,7 @@ type WorldShopProps = {
   open: boolean
   onClose: () => void
   onMessage: (message: string) => void
+  locationLabel?: string
 }
 
 const equipmentSlotLabels = {
@@ -40,7 +41,12 @@ const equipmentStateLabels = {
   equipped: '装備中',
 } as const
 
-export function WorldShop({ open, onClose, onMessage }: WorldShopProps) {
+export function WorldShop({
+  open,
+  onClose,
+  onMessage,
+  locationLabel = 'CENTRAL HUB',
+}: WorldShopProps) {
   const { progress, setProgress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
 
@@ -245,7 +251,7 @@ export function WorldShop({ open, onClose, onMessage }: WorldShopProps) {
         <button type="button" className="close-button" onClick={onClose} aria-label="ショップを閉じる">
           ×
         </button>
-        <div className="eyebrow">CENTRAL HUB // ショップ</div>
+        <div className="eyebrow">{locationLabel} // ショップ</div>
         <h2>アイテム・装備</h2>
 
         <div className="shop-wallet pixel-inner-window">
