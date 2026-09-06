@@ -54,6 +54,7 @@ test('未装備slotは通常時「なし」を表示し、pickerで比較して�
   )
 
   await page.goto('/world')
+  await page.getByRole('button', { name: '左へ移動' }).click()
 
   await page.getByRole('button', { name: 'ショップを見る' }).click()
   const shop = page.getByRole('dialog', { name: 'ショップ' })
