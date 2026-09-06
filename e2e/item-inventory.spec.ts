@@ -77,6 +77,7 @@ test.describe('Item / Inventory UX', () => {
     })
     await page.goto('/world')
 
+    await page.getByRole('button', { name: '左へ移動' }).click()
     await page.getByRole('button', { name: 'ショップを見る' }).click()
     const shop = page.getByRole('dialog', { name: 'ショップ' })
     const item = shop.locator('[data-item-id="patch-kit"]')
@@ -167,6 +168,7 @@ test.describe('Item / Inventory UX', () => {
     })
     await page.goto('/world')
 
+    await page.getByRole('button', { name: '右へ移動' }).click()
     await page.getByRole('button', { name: '宝箱を開ける' }).click()
     await expect(page.getByText(/TYPE CACHE 開封/)).toBeVisible()
 
