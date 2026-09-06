@@ -105,19 +105,22 @@ test('JavaScript未clearではTypeScriptの門へ進めず理由を表示する'
   await expect(page.locator('.world-message')).toContainText('Final Boss')
 })
 
-test('canonical JavaScript route完了後はOverworldから専用TypeScript辺境mapへ遷移する', async ({ page }) => {
+test('canonical JavaScript route完了後はOverworldから専用TypeScript辺境mapへActionで遷移する', async ({ page }) => {
   await seedWorld(page, { clearedStageIds: JS_COMPLETE })
 
   await page.getByRole('button', { name: '右へ移動' }).click()
+  await expect(overworld(page)).toHaveAttribute('data-world-map', 'overworld')
+  await page.getByRole('button', { name: 'TypeScript辺境へ入る' }).click()
 
   await expect(frontier(page)).toHaveAttribute('data-world-map', 'ts-frontier')
   await expect(frontier(page)).toHaveAttribute('data-world-x', '2')
   await expect(frontier(page)).toHaveAttribute('data-world-y', '10')
+  await waitForMapTransition(page)
   await expect(page.locator('.world-header')).toBeHidden()
   await expect(page.getByText('TypeScript辺境は未開通')).toHaveCount(0)
 })
 
-test('TypeScript辺境の西の門からCentral Hubへ往復できる', async ({ page }) => {
+test('TypeScript辺境の西の門からCentral HubへActionで往復できる', async ({ page }) => {
   await seedWorld(page, {
     clearedStageIds: JS_COMPLETE,
     worldMapId: 'ts-frontier',
@@ -125,6 +128,8 @@ test('TypeScript辺境の西の門からCentral Hubへ往復できる', async ({
   })
 
   await page.getByRole('button', { name: '左へ移動' }).click()
+  await expect(frontier(page)).toHaveAttribute('data-world-map', 'ts-frontier')
+  await page.getByRole('button', { name: '中央Hubへ入る' }).click()
 
   await expect(overworld(page)).toHaveAttribute('data-world-map', 'overworld')
   await expect(overworld(page)).toHaveAttribute('data-world-x', '61')
@@ -132,7 +137,10 @@ test('TypeScript辺境の西の門からCentral Hubへ往復できる', async ({
   await waitForMapTransition(page)
 
   await page.getByRole('button', { name: '右へ移動' }).click()
+  await expect(overworld(page)).toHaveAttribute('data-world-map', 'overworld')
+  await page.getByRole('button', { name: 'TypeScript辺境へ入る' }).click()
   await expect(frontier(page)).toHaveAttribute('data-world-map', 'ts-frontier')
+  await waitForMapTransition(page)
 })
 
 test('旧overworld TypeScript側saveは専用mapへmigrationしreload後も保持する', async ({ page }) => {
