@@ -1,7 +1,7 @@
 import { isBattleAccessible, type PlayerProgress } from '../progression'
 import type { RpgState } from '../rpg'
 import { getWorldNpcAtPosition, type WorldNpcPlacement } from './worldCharacters'
-import { VILLAGE_FACILITIES, type VillageFacilityKind } from './villageFacilities'
+import { VILLAGE_FACILITIES, type VillageFacilityKind } from './villageFacilityData'
 import {
   BYTE_POSITION,
   getWorldPortalAtPosition,
@@ -55,6 +55,11 @@ type BaseTargetIntent =
       toMapId: WorldMapId
       label: string
     }
+  | {
+      kind: 'locked-portal'
+      toMapId: WorldMapId
+      label: string
+    }
 
 export type WorldTargetInteractionIntent = BaseTargetIntent
 
@@ -70,7 +75,7 @@ function resolvePortal(
   const portal = getWorldPortalAtPosition(rpgState.worldMapId, target)
   if (!portal) return null
   if (!isWorldPortalRequirementSatisfied(portal.requiredClearedStageId, progress.clearedStageIds)) {
-    return { kind: 'none' }
+    return { kind: 'locked-portal', toMapId: portal.toMapId, label: portal.label }
   }
 
   return {
