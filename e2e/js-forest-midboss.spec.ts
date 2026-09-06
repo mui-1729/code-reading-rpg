@@ -82,11 +82,17 @@ async function seedMidboss(page: Page, state: MidbossProgress) {
   await page.goto('/world')
 }
 
+async function faceMidboss(page: Page) {
+  await page.getByRole('button', { name: '左へ移動' }).click()
+  await expect(page.locator('.world-player-sprite')).toHaveAttribute('data-facing', 'left')
+}
+
 test('Battle 12未clearではForest MID BOSSを開始できない', async ({ page }) => {
   await seedMidboss(page, 'locked')
 
   await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-map', 'js-forest')
   await expect(page.getByLabel('JavaScriptの森 中ボス')).toBeVisible()
+  await faceMidboss(page)
   await page.getByRole('button', { name: '中ボスを調べる' }).click()
 
   await expect(page).toHaveURL(/\/world$/)
@@ -100,6 +106,7 @@ test('Battle 12 clear済みsaveはtrace-blocked objectiveからBattle 13へ進�
   await expect(page.getByLabel('次の目的')).toContainText('経路を塞ぐ守り人を突破する')
   await expect(page.getByLabel('JavaScriptの森 中ボス')).toBeVisible()
 
+  await faceMidboss(page)
   await page.getByRole('button', { name: '中ボスに挑む' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/13\?/)
