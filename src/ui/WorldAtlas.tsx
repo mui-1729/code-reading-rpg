@@ -2,6 +2,7 @@ import { useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactP
 import type { PlayerProgress } from '../progression'
 import { areBattlePrerequisitesMet, getBattleDisplayCode } from '../progression/progressionGraph'
 import type { RpgState } from '../rpg'
+import { WORLD_RECOVERY_STOPS } from '../world/recoveryStops'
 import {
   getTerrain,
   getWorldMapDimensions,
@@ -217,6 +218,18 @@ function buildLandmarks(
     }
     landmarks.push({ id: `${mapId}:${cell.terrain}:${cell.x}:${cell.y}`, x: cell.x, y: cell.y, ...definition })
   }
+
+  for (const stop of WORLD_RECOVERY_STOPS) {
+    if (stop.mapId !== mapId) continue
+    landmarks.push({
+      id: stop.id,
+      x: stop.position.x,
+      y: stop.position.y,
+      kind: 'inn',
+      label: stop.label,
+    })
+  }
+
   return landmarks
 }
 
@@ -489,6 +502,7 @@ export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
         <span><b>↔</b>出口</span>
         <span><b>★</b>ボス</span>
         <span><b>◆</b>宝箱</span>
+        <span><b>✚</b>回復地点</span>
         <span><b>●</b>現在地</span>
       </div>
       <p className="atlas-legend">発見済みエリアだけを表示します。エリアを選ぶと出口や目印を確認できます。</p>
