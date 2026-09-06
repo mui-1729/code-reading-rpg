@@ -1,0 +1,88 @@
+.recovery-stop-object {
+  position: absolute;
+  inset: 8%;
+  z-index: 5;
+  display: block;
+  padding: 0;
+  pointer-events: none;
+  text-shadow: none;
+}
+
+.recovery-stop-detail {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+/* Forest: a compact traveler camp, read as tent + fire rather than a text tile. */
+.recovery-stop-object[data-recovery-stop='forest-traveler-camp']::before {
+  content: '';
+  position: absolute;
+  left: 9%;
+  bottom: 8%;
+  width: 58%;
+  height: 60%;
+  background: #b9854f;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  box-shadow: inset 0 -7px 0 #765131;
+}
+
+.recovery-stop-object[data-recovery-stop='forest-traveler-camp']::after {
+  content: '';
+  position: absolute;
+  right: 7%;
+  bottom: 11%;
+  width: 28%;
+  height: 28%;
+  background: #ffb53f;
+  clip-path: polygon(50% 0, 100% 65%, 78% 100%, 22% 100%, 0 65%);
+  box-shadow: 0 4px 0 #8a4b28;
+}
+
+.recovery-stop-object[data-recovery-stop='forest-traveler-camp'] .recovery-stop-detail::before {
+  content: '';
+  position: absolute;
+  left: 31%;
+  bottom: 8%;
+  width: 15%;
+  height: 25%;
+  background: #3f2d25;
+}
+
+/* Deep Forest: a small spring ringed by mossy stones. */
+.recovery-stop-object[data-recovery-stop='deep-forest-spring']::before {
+  content: '';
+  position: absolute;
+  left: 10%;
+  top: 18%;
+  width: 80%;
+  height: 66%;
+  border-radius: 48%;
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, .16) 0 3px, transparent 3px 7px),
+    #3b91a1;
+  box-shadow:
+    0 0 0 5px #73865a,
+    0 0 0 8px #46573f,
+    inset 0 -6px 0 #286675;
+}
+
+.recovery-stop-object[data-recovery-stop='deep-forest-spring']::after {
+  content: '';
+  position: absolute;
+  left: 24%;
+  top: 10%;
+  width: 18%;
+  height: 14%;
+  border-radius: 50%;
+  background: #9ba17a;
+  box-shadow:
+    28px 4px 0 #788865,
+    12px 40px 0 #647754;
+}
+
+@media (max-width: 700px) {
+  .recovery-stop-object {
+    inset: 6%;
+  }
+}
