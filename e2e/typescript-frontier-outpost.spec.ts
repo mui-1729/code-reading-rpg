@@ -23,7 +23,17 @@ async function seedFrontier(
 ) {
   await page.goto('/')
   await page.evaluate(
-    ({ progressKey, rpgKey, tutorialKey, skills, worldPosition, currentHp, gold, safeCheckpoint }) => {
+    ({
+      progressKey,
+      rpgKey,
+      tutorialKey,
+      skills,
+      clearedStageIds,
+      worldPosition,
+      currentHp,
+      gold,
+      safeCheckpoint,
+    }) => {
       localStorage.clear()
       sessionStorage.clear()
       localStorage.setItem(
@@ -34,7 +44,7 @@ async function seedFrontier(
             exp: 0,
             gold,
             inventory: { patchKit: 0 },
-            clearedStageIds: [...JS_COMPLETE],
+            clearedStageIds,
             clearedAreaIds: ['javascript'],
             completedSideQuestIds: [],
             unlockedStageIds: [1, 4, 7],
@@ -75,6 +85,7 @@ async function seedFrontier(
       rpgKey: RPG_KEY,
       tutorialKey: TUTORIAL_KEY,
       skills: initialSkills,
+      clearedStageIds: [...JS_COMPLETE],
       worldPosition: options.worldPosition ?? { x: 5, y: 10 },
       currentHp: options.currentHp ?? 40,
       gold: options.gold ?? 50,
