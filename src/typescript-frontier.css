@@ -140,3 +140,16 @@
   font-size: clamp(4px, .8vw, 7px);
   text-align: center;
 }
+
+.typescript-frontier-viewport .ts-outpost-object {
+  max-width: 100%;
+  padding: 2px 3px;
+  border: 1px solid rgba(174, 233, 255, .55);
+  background: rgba(29, 34, 56, .88);
+  color: #d8f5ff;
+  font-size: clamp(4px, .78vw, 7px);
+  line-height: 1.1;
+  text-align: center;
+  text-shadow: 1px 1px 0 #000;
+  box-shadow: 0 0 6px rgba(93, 213, 255, .28);
+}
