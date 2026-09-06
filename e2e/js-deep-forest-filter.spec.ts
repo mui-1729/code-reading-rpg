@@ -85,6 +85,7 @@ async function seedDeepForestGate(page: Page, state: DeepForestState) {
 
 async function waitForMapTransition(page: Page) {
   await expect(page.locator('.world-map-transition')).toHaveCount(0, { timeout: 1_000 })
+  await expect(page.locator('body')).not.toHaveAttribute('data-world-transitioning', 'true', { timeout: 1_000 })
 }
 
 test('Battle 14未clearではDeep Forest入口が閉じている', async ({ page }) => {
