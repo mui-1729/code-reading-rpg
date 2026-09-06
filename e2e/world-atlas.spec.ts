@@ -76,7 +76,6 @@ async function openAtlas(page: Page) {
 }
 
 async function dragScrollport(page: Page, scrollport: ReturnType<Page['locator']>) {
-  await scrollport.scrollIntoViewIfNeeded()
   const box = await scrollport.boundingBox()
   if (!box) throw new Error('atlas scrollport geometry is unavailable')
 
@@ -215,9 +214,10 @@ test('390pxでは100%で全体を収め、拡大後は実際のdragで地図を�
   await expect.poll(async () => scrollport.evaluate((el) => el.scrollHeight - el.clientHeight)).toBeGreaterThan(0)
   expect(await scrollport.evaluate((el) => getComputedStyle(el).touchAction)).toBe('none')
 
+  await scrollport.scrollIntoViewIfNeeded()
   const before = await scrollport.evaluate((el) => ({ left: el.scrollLeft, top: el.scrollTop }))
-  await dragScrollport(page, scrollport)
   const outerBefore = await pauseContent.evaluate((el) => el.scrollTop)
+  await dragScrollport(page, scrollport)
   const after = await scrollport.evaluate((el) => ({ left: el.scrollLeft, top: el.scrollTop }))
   const outerAfter = await pauseContent.evaluate((el) => el.scrollTop)
 
@@ -250,9 +250,10 @@ test('mobile landscapeでも150%地図をpage overflowなしで実際にdragで�
   await expect.poll(async () => scrollport.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeGreaterThan(0)
   await expect.poll(async () => scrollport.evaluate((el) => el.scrollHeight - el.clientHeight)).toBeGreaterThan(0)
 
+  await scrollport.scrollIntoViewIfNeeded()
   const before = await scrollport.evaluate((el) => ({ left: el.scrollLeft, top: el.scrollTop }))
-  await dragScrollport(page, scrollport)
   const outerBefore = await pauseContent.evaluate((el) => el.scrollTop)
+  await dragScrollport(page, scrollport)
   const after = await scrollport.evaluate((el) => ({ left: el.scrollLeft, top: el.scrollTop }))
   const outerAfter = await pauseContent.evaluate((el) => el.scrollTop)
 
