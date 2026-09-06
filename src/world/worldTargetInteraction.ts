@@ -1,6 +1,7 @@
 import { isBattleAccessible, type PlayerProgress } from '../progression'
 import type { RpgState } from '../rpg'
 import { getWorldNpcAtPosition, type WorldNpcPlacement } from './worldCharacters'
+import { registerCheckpointForMapEntry } from './worldCheckpoints'
 import { VILLAGE_FACILITIES, type VillageFacilityKind } from './villageFacilityData'
 import {
   BYTE_POSITION,
@@ -78,16 +79,18 @@ function resolvePortal(
     return { kind: 'locked-portal', toMapId: portal.toMapId, label: portal.label }
   }
 
+  const nextState = registerCheckpointForMapEntry({
+    ...rpgState,
+    worldMapId: portal.toMapId,
+    worldPosition: { ...portal.targetPosition },
+    stepsSinceEncounter: rpgState.stepsSinceEncounter + 1,
+  })
+
   return {
     kind: 'map-transition',
     toMapId: portal.toMapId,
     label: portal.label,
-    nextState: {
-      ...rpgState,
-      worldMapId: portal.toMapId,
-      worldPosition: { ...portal.targetPosition },
-      stepsSinceEncounter: rpgState.stepsSinceEncounter + 1,
-    },
+    nextState,
   }
 }
 
