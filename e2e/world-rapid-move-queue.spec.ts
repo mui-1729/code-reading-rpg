@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { WORLD_STEP_MS } from '../src/world/worldPresentation'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
@@ -125,6 +126,7 @@ async function currentRapidFrame(page: Page) {
 
     const tile = document.querySelector<HTMLElement>('.world-tile')
     return {
+      sampledAt: performance.now(),
       tileWidth: tile?.getBoundingClientRect().width ?? 0,
       player: centerOf(document.querySelector<HTMLElement>('.world-player-sprite')),
       follower: centerOf(document.querySelector<HTMLElement>('.world-follower-sprite')),
@@ -177,6 +179,7 @@ test('20ms級の連打中もterrain / Player / follower / NPCを同じvisual tra
   const npcBaselines = new Map<string, { x: number; y: number }>()
   let previousPlayer: { x: number; y: number } | null = null
   let previousFollower: { x: number; y: number } | null = null
+  let previousSampledAt: number | null = null
   let comparedNpcFrames = 0
 
   for (let frameIndex = 0; frameIndex < 42; frameIndex += 1) {
@@ -195,19 +198,24 @@ test('20ms級の連打中もterrain / Player / follower / NPCを同じvisual tra
       }
     }
 
-    // logical座標はstep開始時に確定するため、animation中のPlayerを新tile中心へ即一致させるのではなく、
-    // 20ms sampling間で1tile分のsnapが起きていないことを検証する。
-    const continuityTolerance = frame.tileWidth * 0.55
-    if (previousPlayer && frame.player) {
-      expect(Math.hypot(frame.player.x - previousPlayer.x, frame.player.y - previousPlayer.y))
-        .toBeLessThanOrEqual(continuityTolerance)
-    }
-    if (previousFollower && frame.follower) {
-      expect(Math.hypot(frame.follower.x - previousFollower.x, frame.follower.y - previousFollower.y))
-        .toBeLessThanOrEqual(continuityTolerance)
+    // Playwright側の20ms待機はCI負荷で遅延し得る。固定pixel量ではなく実際の経過時間と
+    // 150ms linear transitionから許容移動量を決め、短時間の1tile snapだけを検出する。
+    if (previousSampledAt !== null) {
+      const elapsedMs = Math.max(0, frame.sampledAt - previousSampledAt)
+      const continuityTolerance =
+        frame.tileWidth * Math.max(0.55, elapsedMs / WORLD_STEP_MS + 0.12)
+      if (previousPlayer && frame.player) {
+        expect(Math.hypot(frame.player.x - previousPlayer.x, frame.player.y - previousPlayer.y))
+          .toBeLessThanOrEqual(continuityTolerance)
+      }
+      if (previousFollower && frame.follower) {
+        expect(Math.hypot(frame.follower.x - previousFollower.x, frame.follower.y - previousFollower.y))
+          .toBeLessThanOrEqual(continuityTolerance)
+      }
     }
     previousPlayer = frame.player
     previousFollower = frame.follower
+    previousSampledAt = frame.sampledAt
     await page.waitForTimeout(20)
   }
 
