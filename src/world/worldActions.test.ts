@@ -183,7 +183,7 @@ describe('World action resolver', () => {
     expect(intent.toMapId).toBe(JS_VILLAGE_MAP_ID)
     expect(intent.label).toBe('グリーンフィールド村')
     expect(intent.nextState.worldMapId).toBe(JS_VILLAGE_MAP_ID)
-    expect(intent.nextState.worldPosition).toEqual({ x: 10, y: 12 })
+    expect(intent.nextState.worldPosition).toEqual({ x: 10, y: 21 })
     expect(intent.nextState.stepsSinceEncounter).toBe(9)
   })
 
@@ -191,7 +191,7 @@ describe('World action resolver', () => {
     const state = {
       ...createInitialRpgState(),
       worldMapId: JS_VILLAGE_MAP_ID,
-      worldPosition: { x: 10, y: 13 },
+      worldPosition: { x: 10, y: 23 },
       stepsSinceEncounter: 9,
     }
 
