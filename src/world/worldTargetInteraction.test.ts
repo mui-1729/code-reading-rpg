@@ -61,4 +61,17 @@ describe('facing-based world interaction', () => {
       resolveWorldTargetInteraction(rpgState, progress, JS_VILLAGE_TRAINING_POSITION),
     ).toMatchObject({ kind: 'training', battleId: 7 })
   })
+
+  it('resolves MIO as an NPC after all training battles are complete', () => {
+    const progress = { ...createInitialPlayerProgress(), clearedStageIds: [1, 7, 8, 9] }
+    const rpgState = {
+      ...createInitialRpgState(),
+      worldMapId: JS_VILLAGE_MAP_ID,
+      worldPosition: { x: JS_VILLAGE_TRAINING_POSITION.x, y: JS_VILLAGE_TRAINING_POSITION.y + 1 },
+    }
+
+    expect(
+      resolveWorldTargetInteraction(rpgState, progress, JS_VILLAGE_TRAINING_POSITION),
+    ).toMatchObject({ kind: 'npc', placement: { npcId: 'trainer-mio' } })
+  })
 })
