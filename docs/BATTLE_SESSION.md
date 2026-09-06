@@ -126,15 +126,21 @@ GREENFIELD VILLAGEへ入場
 GREENFIELDの宿で休む
 → GREENFIELDを再登録
 
+TypeScript辺境の境界監視所へ到達
+→ 境界監視所を登録
+
+境界監視所の宿で休む
+→ 境界監視所を再登録
+
 将来の主要有人集落へ到達
 → そのsafe hubへ更新
 ```
 
 checkpointはsemantic IDをauthorityにし、保存された古い座標をそのまま信用しない。map layout変更後はregistryのcanonical位置へ復元する。Progress上まだ到達不能なcheckpointが保存されていた場合は中央Hubへ安全にfallbackする。
 
-legacy RpgState v1〜v6にはcheckpoint fieldが無いため、restore時に安全なfallbackを付与する。JavaScript local map内のlegacy saveはGREENFIELD、その他は中央Hubを基本fallbackとする。
+legacy RpgState v1〜v6にはcheckpoint fieldが無いため、restore時に安全なfallbackを付与する。JavaScript local map内のlegacy saveはGREENFIELD、その他は中央Hubを基本fallbackとする。旧TypeScript saveから未訪問の境界監視所を訪問済みとは推測しない。
 
-Defeat自体を無料Innにはしない。一方で危険tileへ同じ消耗状態のまま戻してsoft lockさせない。GREENFIELD VILLAGEには宿・道具屋・装備屋があり、Forest / Deep Forestのcamp・springは道中の部分回復地点として残す。
+Defeat自体を無料Innにはしない。一方で危険tileへ同じ消耗状態のまま戻してsoft lockさせない。GREENFIELD VILLAGEとTypeScript境界監視所には宿・補給手段があり、Forest / Deep Forestのcamp・springは道中の部分回復地点として残す。
 
 ## 6. RUN / browser back / reload
 
@@ -174,13 +180,20 @@ Battleが終了/abortした後のtimer・unmount cleanup・stale callbackは、�
 
 ## 8. Recovery hub / checkpoint policy
 
-JavaScript地方は、**有人safe hub**と**道中の部分回復**を分ける。
+current Worldは、**有人safe hub**と**道中の部分回復**を分ける。
 
 ```text
 GREENFIELD VILLAGE [SAFE HUB]
   ├─ 宿: Goldで全回復 + checkpoint再登録
   ├─ 道具屋: 消耗品
-  └─ 装備屋: 武器 / 防具 / Accessory
+  ├─ 装備屋: 武器 / 防具 / Accessory
+  └─ NPC / TRAIN
+
+TypeScript 境界監視所 [SAFE HUB]
+  ├─ 宿: Goldで全回復 + checkpoint再登録
+  ├─ 補給所: Item / Equipment
+  ├─ TYPE WARDENほか常駐NPC
+  └─ crystal / ruins側へ進む前の準備
 
 JavaScriptの森
   └─ 野営地: 無料の部分回復
@@ -189,7 +202,7 @@ JavaScript深層の森
   └─ 湧き水: 無料の部分回復
 ```
 
-camp / springは長い攻略区間の救済として残すが、主要checkpointの代替にはしない。#377のWorld topologyではGREENFIELD以外にForest Settlementを第二の有人safe hubとして追加し、到達後はcheckpointを更新する。
+camp / springは長い攻略区間の救済として残すが、主要checkpointの代替にはしない。Forest Settlementは#377側のtarget topologyとして残すが、current second human safe hubはTypeScript境界監視所とする。
 
 序盤ほど立て直し手段を近くし、奥へ進むほど間隔を広げる。ただし回復地点を隠して難しくするのではなく、World上のscenery / NPC / settlementとして理解できる状態にする。
 
@@ -221,9 +234,11 @@ Level Upは「Lv1 → Lv2」だけでなく、実際に増えたstatを表示す
 - SAFE RETURN -> START HP / Itemを保ちつつ保存safe checkpointへ戻る、no full heal
 - Battle開始tileとcheckpoint位置が違ってもRETURNはcheckpoint位置を使う
 - GREENFIELD入場 / 宿利用でGREENFIELD checkpointを登録できる
+- TypeScript境界監視所到達 / 宿利用でoutpost checkpointを登録できる
+- TypeScript東側で敗北しても保存済み境界監視所へ戻る
 - legacy saveにcheckpointが無くても安全なfallbackを得る
 - Progress上lockedなcheckpointを保存しても中央Hubへ正規化する
-- Village宿 / 道具屋 / 装備屋が利用できる
+- Village / outpostの宿・補給が利用できる
 - Forest / Deep Forestの部分回復地点は0 Goldでも利用できる
 - VICTORY -> current HP / used Item / rewardを1回だけcommit
 - Level Up stat deltaがvisible result sequenceへ出る
