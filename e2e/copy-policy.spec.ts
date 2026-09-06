@@ -44,6 +44,7 @@ test('プレイヤー向け主要UIは日本語を基本にしtechnical termを�
   )
   await page.goto('/world')
 
+  await page.getByRole('button', { name: '左へ移動' }).click()
   await expect(page.getByLabel('ワールドマップ')).toBeVisible()
   await expect(page.getByLabel('次の目的')).toBeVisible()
   await expect(page.getByRole('button', { name: 'ショップを見る' })).toBeVisible()
