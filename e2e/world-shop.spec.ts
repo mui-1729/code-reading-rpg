@@ -11,9 +11,16 @@ async function seedShopState(page: Page, gold = 200) {
   await page.goto('/world')
 }
 
+async function faceShop(page: Page) {
+  await page.getByRole('button', { name: '左へ移動' }).click()
+  await expect(page.locator('.world-player-sprite')).toHaveAttribute('data-facing', 'left')
+  await expect(page.getByRole('button', { name: 'ショップを見る' })).toBeEnabled()
+}
+
 test.describe('World Shop', () => {
   test('所持金→価格→購入後を確認してEquipment購入し装備、reload後も維持する', async ({ page }) => {
     await seedShopState(page)
+    await faceShop(page)
 
     await page.getByRole('button', { name: 'ショップを見る' }).click()
     const shop = page.getByRole('dialog', { name: 'ショップ' })
@@ -74,6 +81,7 @@ test.describe('World Shop', () => {
 
   test('Gold不足のEquipmentはvisualと比較を残し不足額を明示する', async ({ page }) => {
     await seedShopState(page, 10)
+    await faceShop(page)
 
     await page.getByRole('button', { name: 'ショップを見る' }).click()
     const shop = page.getByRole('dialog', { name: 'ショップ' })
