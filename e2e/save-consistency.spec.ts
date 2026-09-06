@@ -60,8 +60,17 @@ test('legacy split saveを単一revisionへ移行しlocked mapをnormalizeする
       version: 2,
       progress: { progress: { gold: 42, inventory: { patchKit: 1 } } },
       rpg: {
-        version: 6,
-        state: { worldMapId: 'overworld', currentHp: 61, partyMemberIds: ['byte'] },
+        version: 7,
+        state: {
+          worldMapId: 'overworld',
+          currentHp: 61,
+          partyMemberIds: ['byte'],
+          safeCheckpoint: {
+            id: 'central-hub',
+            mapId: 'overworld',
+            position: { x: 20, y: 14 },
+          },
+        },
       },
     })
   await expect

@@ -89,7 +89,7 @@ test('JS-01後はVillage入口で向くだけでは止まりActionで入りreloa
   await expect(viewport).toHaveAttribute('data-world-x', '10')
   await expect(viewport).toHaveAttribute('data-world-y', '12')
 
-  await expect.poll(async () => (await storedRpgState(page)).version).toBe(6)
+  await expect.poll(async () => (await storedRpgState(page)).version).toBe(7)
   await expect.poll(async () => (await storedRpgState(page)).state.worldMapId).toBe('js-village')
   await expect.poll(async () => (await storedRpgState(page)).state.worldPosition).toEqual({
     x: 10,

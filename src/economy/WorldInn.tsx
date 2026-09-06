@@ -2,6 +2,7 @@ import { gameAudio } from '../audio/gameAudio'
 import { useProgress } from '../progression'
 import { getCombatStats, useRpg } from '../rpg'
 import { useModalFocus } from '../ui/useModalFocus'
+import { registerWorldCheckpoint, type WorldCheckpointId } from '../world/worldCheckpoints'
 import { getInnRestQuote, resolveInnRest } from './inn'
 
 type WorldInnProps = {
@@ -9,9 +10,16 @@ type WorldInnProps = {
   onClose: () => void
   onMessage: (message: string) => void
   locationLabel?: string
+  checkpointId?: WorldCheckpointId
 }
 
-export function WorldInn({ open, onClose, onMessage, locationLabel = '中央ハブ' }: WorldInnProps) {
+export function WorldInn({
+  open,
+  onClose,
+  onMessage,
+  locationLabel = '中央ハブ',
+  checkpointId,
+}: WorldInnProps) {
   const { progress, stats, setProgress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
   const combatStats = getCombatStats(stats, rpgState)
@@ -34,7 +42,11 @@ export function WorldInn({ open, onClose, onMessage, locationLabel = '中央ハ�
     }
 
     setProgress(result.progress)
-    setRpgState(result.rpgState)
+    setRpgState(
+      checkpointId
+        ? registerWorldCheckpoint(result.rpgState, checkpointId)
+        : result.rpgState,
+    )
     gameAudio.playSe('levelUp')
     onMessage(
       `宿: -${result.quote.price} G · HP ${result.quote.maxHp} / ${result.quote.maxHp} · 全回復`,

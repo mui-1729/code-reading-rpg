@@ -101,6 +101,7 @@ export function VillageFacilities() {
         onClose={close}
         onMessage={setMessage}
         locationLabel="グリーンフィールド村"
+        checkpointId="greenfield-village"
       />
       <VillageShop
         kind="items"

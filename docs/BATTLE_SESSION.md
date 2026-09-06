@@ -23,7 +23,7 @@ DEFEAT
   │    └─ start snapshotへrollbackし、同じBattle / seedを再開
   └─ SAFE RETURN
        └─ start snapshotのHP / Itemへrollback
-          + World位置だけ直近の安全拠点へ移す
+          + World位置だけ保存済みsafe checkpointへ移す
 
 RUN / browser back / route abort
   └─ start snapshotへrollback
@@ -39,7 +39,11 @@ Battle transactionのauthorityは次の層。
 - `src/battle/sessionTransaction.ts`
   - START / tentative update / commit / rollbackのpure domain rule
 - `src/battle/safeReturn.ts`
-  - Defeat後に戻る安全なWorld拠点のpolicy
+  - Defeat RETURNで保存済みcheckpointへWorld位置を移すpure rule
+- `src/world/worldCheckpoints.ts`
+  - safe hubのsemantic ID / canonical位置 / 登録policy
+- `src/rpg/state.ts`
+  - RpgState v7の`safeCheckpoint` persistence / legacy migration
 - `src/persistence/GameStateProvider.tsx`
   - Progress + RPGを同じrevisionでatomic persistence
   - session snapshotの保存 / rollback
@@ -48,7 +52,7 @@ Battle transactionのauthorityは次の層。
 - `src/App.tsx`
   - Playerが選ぶRETRY / RETURNのUX policy
 
-旧split LocalStorage keyやBattle component内だけのstateをpersistent authorityにしない。
+旧split LocalStorage key、Battle component内だけのstate、current map / x座標からの復帰先推測をpersistent authorityにしない。
 
 ## 3. START snapshot
 
@@ -62,6 +66,7 @@ START時点で最低限以下を同じsnapshotとして保持する。
   - current HP
   - Equipment / Party
   - current map / local position
+  - safe checkpoint
   - encounter counters
   - Treasure等のpersistent state
 - Battle identity
@@ -95,7 +100,7 @@ DEFEAT表示が出た時点ではsessionをcommitしない。Playerが次のacti
 
 - START時点のHPへ戻す
 - START時点のPATCH KIT在庫へ戻す
-- Gold / progress / World locationもSTARTへ戻す
+- Gold / progress / World location / safe checkpointもSTARTへ戻す
 - 同じBattle / seedを再利用する
 
 失敗attemptで使ったPATCH KITを永久消費しない一方、reload等で「Battle中1回」の制限だけをresetしてpersistent在庫を減らすような分断も作らない。
@@ -105,15 +110,31 @@ DEFEAT表示が出た時点ではsessionをcommitしない。Playerが次のacti
 - START時点のHPへ戻す
 - START時点のPATCH KIT在庫へ戻す
 - **全回復はしない**
-- World位置だけ安全な復帰地点へ移す
-- Forest序盤ではGREENFIELD VILLAGEへ戻す
-- Forestの野営地を通過した後は野営地の隣へ戻す
-- Deep Forest序盤ではForestの野営地へ戻し、湧き水を通過した後は湧き水の隣へ戻す
-- TypeScript辺境からは中央Hubへ戻す
-- すでに安全なlocal mapではそのmapの開始地点へ戻す
+- World位置だけSTART snapshotに保存されていたsafe checkpointへ移す
+- current map / x座標 / camp通過位置から復帰先を推測しない
 - `stepsSinceEncounter`をsafe window用にresetする
 
-Defeat自体を無料Innにはしない。一方で危険tileへ同じ消耗状態のまま戻してsoft lockさせない。GREENFIELD VILLAGEには宿・道具屋・装備屋があり、Forest / Deep Forestにも無料の部分回復地点を置くため、Playerは直近の安全地点で立て直してから再挑戦できる。
+current checkpointは`RpgState.safeCheckpoint`へ明示的に保存する。
+
+```text
+初期状態
+→ 中央Hub
+
+GREENFIELD VILLAGEへ入場
+→ GREENFIELDを登録
+
+GREENFIELDの宿で休む
+→ GREENFIELDを再登録
+
+将来の主要有人集落へ到達
+→ そのsafe hubへ更新
+```
+
+checkpointはsemantic IDをauthorityにし、保存された古い座標をそのまま信用しない。map layout変更後はregistryのcanonical位置へ復元する。Progress上まだ到達不能なcheckpointが保存されていた場合は中央Hubへ安全にfallbackする。
+
+legacy RpgState v1〜v6にはcheckpoint fieldが無いため、restore時に安全なfallbackを付与する。JavaScript local map内のlegacy saveはGREENFIELD、その他は中央Hubを基本fallbackとする。
+
+Defeat自体を無料Innにはしない。一方で危険tileへ同じ消耗状態のまま戻してsoft lockさせない。GREENFIELD VILLAGEには宿・道具屋・装備屋があり、Forest / Deep Forestのcamp・springは道中の部分回復地点として残す。
 
 ## 6. RUN / browser back / reload
 
@@ -137,6 +158,7 @@ root saveにunfinished `battleSession`が残っていた場合、起動時にSTA
 ```text
 Enemy / Turn       -> new runtime
 Player HP / Item   -> Battle START snapshot
+Safe checkpoint    -> Battle START snapshot
 Battle 1回制限     -> new attempt
 ```
 
@@ -150,24 +172,26 @@ HPだけ減少済み、Itemだけ消費済みというpartial restoreを作ら�
 
 Battleが終了/abortした後のtimer・unmount cleanup・stale callbackは、既に別attemptへ移ったtransactionを変更しない。
 
-## 8. Recovery hub policy
+## 8. Recovery hub / checkpoint policy
 
-JavaScript地方は次の順で立て直し手段を配置する。
+JavaScript地方は、**有人safe hub**と**道中の部分回復**を分ける。
 
 ```text
-GREENFIELD VILLAGE
-  ├─ 宿: Goldで全回復
+GREENFIELD VILLAGE [SAFE HUB]
+  ├─ 宿: Goldで全回復 + checkpoint再登録
   ├─ 道具屋: 消耗品
   └─ 装備屋: 武器 / 防具 / Accessory
 
 JavaScriptの森
-  └─ 野営地: 入口から約8tile、無料で最大HPの60%まで部分回復
+  └─ 野営地: 無料の部分回復
 
 JavaScript深層の森
-  └─ 湧き水: 入口から約12tile、無料で最大HPの60%まで部分回復
+  └─ 湧き水: 無料の部分回復
 ```
 
-序盤ほど安全地点を近くし、奥へ進むほど間隔を広げる。ただし回復地点を隠して難しくするのではなく、World上のscenery / labelとして見える状態にする。
+camp / springは長い攻略区間の救済として残すが、主要checkpointの代替にはしない。#377のWorld topologyではGREENFIELD以外にForest Settlementを第二の有人safe hubとして追加し、到達後はcheckpointを更新する。
+
+序盤ほど立て直し手段を近くし、奥へ進むほど間隔を広げる。ただし回復地点を隠して難しくするのではなく、World上のscenery / NPC / settlementとして理解できる状態にする。
 
 無料地点は0 Gold時のsoft lock回避用で、全回復やItem補充はしない。Goldを使う宿・道具・装備の価値を残す。
 
@@ -190,13 +214,15 @@ Level Upは「Lv1 → Lv2」だけでなく、実際に増えたstatを表示す
 
 最低限固定する。
 
-- reload -> START HP / Itemへrollback
+- reload -> START HP / Item / checkpointへrollback
 - browser back -> START World / HP / Itemへrollback
 - RUN -> tentative damage / Itemをcommitしない
 - RETRY -> 同じSTART resourceへ戻る
-- SAFE RETURN -> START HP / Itemを保ちつつ直近の安全拠点へ戻る、no full heal
-- Forest序盤 -> GREENFIELD VILLAGE、進行後 -> 野営地へ戻る
-- Deep Forest序盤 -> Forest野営地、進行後 -> 湧き水へ戻る
+- SAFE RETURN -> START HP / Itemを保ちつつ保存safe checkpointへ戻る、no full heal
+- Battle開始tileとcheckpoint位置が違ってもRETURNはcheckpoint位置を使う
+- GREENFIELD入場 / 宿利用でGREENFIELD checkpointを登録できる
+- legacy saveにcheckpointが無くても安全なfallbackを得る
+- Progress上lockedなcheckpointを保存しても中央Hubへ正規化する
 - Village宿 / 道具屋 / 装備屋が利用できる
 - Forest / Deep Forestの部分回復地点は0 Goldでも利用できる
 - VICTORY -> current HP / used Item / rewardを1回だけcommit

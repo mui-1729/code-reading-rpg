@@ -8,7 +8,7 @@ const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
 const initialSkills = ['trace', 'pulse', 'nova', 'ts-scan', 'ts-guard', 'ts-label']
 
-test('Village保存状態からBattleで敗北してもcheckpointへ開始HPのまま戻る', async ({ page }) => {
+test('Village保存状態からBattleで敗北すると開始tileではなく保存safe hubへ開始HPのまま戻る', async ({ page }) => {
   await page.goto('/')
   await page.evaluate(
     ({ progressKey, rpgKey, tutorialKey, skills, clearedStageIds }) => {
@@ -43,7 +43,7 @@ test('Village保存状態からBattleで敗北してもcheckpointへ開始HPの�
             partyMemberIds: [],
             partyEquipment: {},
             worldMapId: 'js-village',
-            worldPosition: { x: 10, y: 12 },
+            worldPosition: { x: 8, y: 10 },
             stepsSinceEncounter: 8,
             encounterCount: 0,
             currentHp: 1,
@@ -70,7 +70,13 @@ test('Village保存状態からBattleで敗北してもcheckpointへ開始HPの�
     version: 2,
     battleSession: {
       identity: { battleId: 7 },
-      rpg: { state: { worldMapId: 'js-village', worldPosition: { x: 10, y: 12 } } },
+      rpg: {
+        state: {
+          worldMapId: 'js-village',
+          worldPosition: { x: 8, y: 10 },
+          safeCheckpoint: { id: 'greenfield-village' },
+        },
+      },
     },
   })
   const story = page.locator('.battle-story-window')
@@ -90,7 +96,14 @@ test('Village保存状態からBattleで敗北してもcheckpointへ開始HPの�
   // plus the immutable Battle-start snapshot until the player chooses a policy.
   await expect.poll(() => readStoredGameState(page)).toMatchObject({
     battleSession: {
-      rpg: { state: { currentHp: 1, worldMapId: 'js-village', worldPosition: { x: 10, y: 12 } } },
+      rpg: {
+        state: {
+          currentHp: 1,
+          worldMapId: 'js-village',
+          worldPosition: { x: 8, y: 10 },
+          safeCheckpoint: { id: 'greenfield-village' },
+        },
+      },
     },
   })
 
@@ -100,10 +113,15 @@ test('Village保存状態からBattleで敗北してもcheckpointへ開始HPの�
   await expect(page.getByLabel('グリーンフィールド村のマップ')).toHaveAttribute('data-world-x', '10')
   await expect(page.getByLabel('グリーンフィールド村のマップ')).toHaveAttribute('data-world-y', '12')
   await expect.poll(async () => readStoredRpg(page)).toMatchObject({
-    version: 6,
+    version: 7,
     state: {
       worldMapId: 'js-village',
       worldPosition: { x: 10, y: 12 },
+      safeCheckpoint: {
+        id: 'greenfield-village',
+        mapId: 'js-village',
+        position: { x: 10, y: 12 },
+      },
       currentHp: 1,
       stepsSinceEncounter: 0,
     },

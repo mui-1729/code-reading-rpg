@@ -7,6 +7,7 @@ import {
   JS_VILLAGE_MAP_ID,
   JS_VILLAGE_TRAINING_POSITION,
   OVERWORLD_MAP_ID,
+  WORLD_PORTALS,
 } from './worldMap'
 import { resolveWorldTargetInteraction } from './worldTargetInteraction'
 
@@ -46,6 +47,25 @@ describe('facing-based world interaction', () => {
     })
     expect(resolveWorldTargetInteraction(rpgState, progress, { x: 6, y: 10 })).toEqual({
       kind: 'none',
+    })
+  })
+
+  it('registers GREENFIELD as the safe checkpoint when its portal is entered', () => {
+    const progress = { ...createInitialPlayerProgress(), clearedStageIds: [1] }
+    const rpgState = createInitialRpgState()
+    const portal = WORLD_PORTALS.find(
+      (candidate) =>
+        candidate.fromMapId === OVERWORLD_MAP_ID && candidate.toMapId === JS_VILLAGE_MAP_ID,
+    )!
+
+    const intent = resolveWorldTargetInteraction(rpgState, progress, portal.position)
+    expect(intent.kind).toBe('map-transition')
+    if (intent.kind !== 'map-transition') throw new Error('expected GREENFIELD map transition')
+
+    expect(intent.nextState.worldMapId).toBe(JS_VILLAGE_MAP_ID)
+    expect(intent.nextState.safeCheckpoint).toMatchObject({
+      id: 'greenfield-village',
+      mapId: JS_VILLAGE_MAP_ID,
     })
   })
 

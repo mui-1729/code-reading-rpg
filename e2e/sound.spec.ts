@@ -125,7 +125,7 @@ test('進行リセットはEconomy/RPG stateを初期化しサウンド設定は
     },
   })
   await expect.poll(async () => readStoredRpg(page)).toMatchObject({
-    version: 6,
+    version: 7,
     state: {
       equipment: {
         weapon: 'training-blade',
@@ -135,6 +135,11 @@ test('進行リセットはEconomy/RPG stateを初期化しサウンド設定は
       ownedEquipmentIds: ['training-blade', 'traveler-coat'],
       worldMapId: 'overworld',
       worldPosition: { x: 20, y: 14 },
+      safeCheckpoint: {
+        id: 'central-hub',
+        mapId: 'overworld',
+        position: { x: 20, y: 14 },
+      },
       currentHp: 108,
     },
   })

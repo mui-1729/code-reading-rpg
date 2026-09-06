@@ -17,6 +17,7 @@ import {
   serializeRpgState,
   type RpgState,
 } from '../rpg/state'
+import { createWorldCheckpoint } from '../world/worldCheckpoints'
 import { OVERWORLD_MAP_ID, WORLD_MAP_STARTS, WORLD_PORTALS } from '../world/worldMap'
 import { isWorldPortalRequirementSatisfied } from '../world/worldPortalAccess'
 
@@ -78,12 +79,18 @@ function isCompleteStoredRpg(value: unknown): boolean {
     return false
   if (version >= 3 && !isIdArray(state.openedTreasureIds)) return false
   if (version >= 4 && typeof state.worldMapId !== 'string') return false
+  if (
+    version >= 7 &&
+    (!isRecord(state.safeCheckpoint) || typeof state.safeCheckpoint.id !== 'string')
+  )
+    return false
   return true
 }
 
 /**
- * World position is physical state, but access is progression state. Restore them
- * together so a legacy/partial save cannot strand the player inside a locked map.
+ * World position and safe checkpoint are physical state, but access is progression state.
+ * Restore them together so a legacy/partial save cannot strand the player, or its
+ * defeat RETURN destination, behind a locked portal.
  */
 export function normalizeRpgStateForProgress(
   progress: PlayerProgress,
@@ -106,15 +113,22 @@ export function normalizeRpgStateForProgress(
     }
   }
 
+  const safeCheckpoint = reachable.has(rpgState.safeCheckpoint.mapId)
+    ? rpgState.safeCheckpoint
+    : createWorldCheckpoint('central-hub')
+
   if (!reachable.has(rpgState.worldMapId)) {
     return {
       ...rpgState,
+      safeCheckpoint,
       worldMapId: OVERWORLD_MAP_ID,
       worldPosition: { ...WORLD_MAP_STARTS[OVERWORLD_MAP_ID] },
     }
   }
 
-  return rpgState
+  return safeCheckpoint === rpgState.safeCheckpoint
+    ? rpgState
+    : { ...rpgState, safeCheckpoint }
 }
 
 function storedEnvelope(raw: string): unknown {
