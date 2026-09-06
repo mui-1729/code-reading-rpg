@@ -27,14 +27,14 @@ export const WORLD_NPC_PLACEMENTS: readonly WorldNpcPlacement[] = [
   {
     npcId: 'village-child',
     mapId: JS_VILLAGE_MAP_ID,
-    position: { x: 8, y: 8 },
+    position: { x: 8, y: 18 },
     optional: true,
     storyThread: 'greenfield-life',
   },
   {
     npcId: 'forest-traveler',
     mapId: JS_VILLAGE_MAP_ID,
-    position: { x: 14, y: 8 },
+    position: { x: 24, y: 13 },
     optional: true,
     storyThread: 'forest-road',
   },
