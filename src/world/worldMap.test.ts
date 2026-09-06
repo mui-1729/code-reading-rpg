@@ -37,7 +37,7 @@ describe('open world map', () => {
 
   it('OverworldをField scaleへ広げ、local mapとは別の縮尺で管理する', () => {
     expect(getWorldMapDimensions(OVERWORLD_MAP_ID)).toEqual({ width: 70, height: 50 })
-    expect(getWorldMapDimensions(JS_VILLAGE_MAP_ID)).toEqual({ width: 21, height: 15 })
+    expect(getWorldMapDimensions(JS_VILLAGE_MAP_ID)).toEqual({ width: 31, height: 25 })
     expect(getWorldMapDimensions(JS_FOREST_MAP_ID)).toEqual({ width: 31, height: 27 })
     expect(getWorldMapDimensions(JS_DEEP_FOREST_MAP_ID)).toEqual({ width: 31, height: 27 })
     expect(getWorldMapDimensions(TS_FRONTIER_MAP_ID)).toEqual({ width: 31, height: 21 })
@@ -47,7 +47,8 @@ describe('open world map', () => {
     expect(isWorldPositionInBounds(OVERWORLD_MAP_ID, { x: 68, y: 48 })).toBe(true)
     expect(isWorldPositionInBounds(OVERWORLD_MAP_ID, { x: 70, y: 48 })).toBe(false)
     expect(isWorldPositionInBounds(JS_VILLAGE_MAP_ID, { x: 10, y: 12 })).toBe(true)
-    expect(isWorldPositionInBounds(JS_VILLAGE_MAP_ID, { x: 21, y: 12 })).toBe(false)
+    expect(isWorldPositionInBounds(JS_VILLAGE_MAP_ID, { x: 21, y: 12 })).toBe(true)
+    expect(isWorldPositionInBounds(JS_VILLAGE_MAP_ID, { x: 31, y: 12 })).toBe(false)
     expect(isWorldPositionInBounds(JS_FOREST_MAP_ID, { x: 28, y: 24 })).toBe(true)
     expect(isWorldPositionInBounds(JS_FOREST_MAP_ID, { x: 31, y: 10 })).toBe(false)
     expect(isWorldPositionInBounds(TS_FRONTIER_MAP_ID, { x: 27, y: 4 })).toBe(true)
@@ -57,10 +58,10 @@ describe('open world map', () => {
     expect(getWorldPortalAtPosition(OVERWORLD_MAP_ID, JS_VILLAGE_POSITION)).toMatchObject({
       fromMapId: OVERWORLD_MAP_ID,
       toMapId: JS_VILLAGE_MAP_ID,
-      targetPosition: { x: 10, y: 12 },
+      targetPosition: { x: 10, y: 21 },
       requiredClearedStageId: 1,
     })
-    expect(getWorldPortalAtPosition(JS_VILLAGE_MAP_ID, { x: 10, y: 14 })).toMatchObject({
+    expect(getWorldPortalAtPosition(JS_VILLAGE_MAP_ID, { x: 10, y: 24 })).toMatchObject({
       toMapId: OVERWORLD_MAP_ID,
       targetPosition: { x: 10, y: 21 },
     })
@@ -159,7 +160,7 @@ describe('open world map', () => {
         JS_VILLAGE_MAP_ID,
       ),
     ).toBe('training')
-    expect(getTerrain(10, 14, JS_VILLAGE_MAP_ID)).toBe('exit')
+    expect(getTerrain(10, 24, JS_VILLAGE_MAP_ID)).toBe('exit')
     expect(isWalkableTerrain('house')).toBe(false)
     expect(isWalkableTerrain('training')).toBe(false)
     expect(isWalkableTerrain('road')).toBe(true)
