@@ -1,20 +1,23 @@
 import { describe, expect, it } from 'vitest'
 import {
+  JS_DEEP_FOREST_MAP_ID,
   JS_VILLAGE_MAP_ID,
   OVERWORLD_MAP_ID,
   TS_FRONTIER_MAP_ID,
   WORLD_START,
 } from '../world/worldMap'
+import { registerWorldCheckpoint } from '../world/worldCheckpoints'
 import {
   createInitialRpgState,
   restoreRpgState,
+  RPG_STATE_SCHEMA_VERSION,
   serializeRpgState,
   type RpgState,
 } from './state'
 
 describe('RPG state storage', () => {
-  it('validな装備・仲間・Map座標・Encounter状態・current HP・Treasure状態を保存して復元する', () => {
-    const initial = createInitialRpgState()
+  it('validな装備・仲間・Map座標・safe checkpoint・Encounter状態・current HP・Treasure状態を保存して復元する', () => {
+    const initial = registerWorldCheckpoint(createInitialRpgState(), 'greenfield-village')
     const state: RpgState = {
       ...initial,
       ownedEquipmentIds: [...initial.ownedEquipmentIds, 'debug-charm'],
@@ -29,19 +32,59 @@ describe('RPG state storage', () => {
     }
 
     const raw = serializeRpgState(state)
-    expect(JSON.parse(raw).version).toBe(6)
+    expect(JSON.parse(raw).version).toBe(RPG_STATE_SCHEMA_VERSION)
+    expect(JSON.parse(raw).version).toBe(7)
     expect(restoreRpgState(raw)).toEqual(state)
   })
 
   it('v6は拡張Overworldのx>=23座標をTypeScript旧layoutと誤認しない', () => {
     const initial = createInitialRpgState()
+    const { safeCheckpoint: _safeCheckpoint, ...legacyState } = initial
     const raw = JSON.stringify({
       version: 6,
-      state: { ...initial, worldMapId: OVERWORLD_MAP_ID, worldPosition: { x: 34, y: 33 } },
+      state: { ...legacyState, worldMapId: OVERWORLD_MAP_ID, worldPosition: { x: 34, y: 33 } },
     })
     const restored = restoreRpgState(raw)
     expect(restored.worldMapId).toBe(OVERWORLD_MAP_ID)
     expect(restored.worldPosition).toEqual({ x: 34, y: 33 })
+    expect(restored.safeCheckpoint.id).toBe('central-hub')
+  })
+
+  it('v6でJavaScript local mapにいたlegacy saveはGREENFIELD checkpointへmigrationする', () => {
+    const initial = createInitialRpgState()
+    const { safeCheckpoint: _safeCheckpoint, ...legacyState } = initial
+    const raw = JSON.stringify({
+      version: 6,
+      state: {
+        ...legacyState,
+        worldMapId: JS_DEEP_FOREST_MAP_ID,
+        worldPosition: { x: 10, y: 10 },
+      },
+    })
+
+    const restored = restoreRpgState(raw)
+    expect(restored.worldMapId).toBe(JS_DEEP_FOREST_MAP_ID)
+    expect(restored.safeCheckpoint.id).toBe('greenfield-village')
+    expect(restored.safeCheckpoint.mapId).toBe(JS_VILLAGE_MAP_ID)
+  })
+
+  it('v7 checkpointはstale座標をsemantic idのcanonical位置へnormalizeする', () => {
+    const initial = createInitialRpgState()
+    const raw = JSON.stringify({
+      version: 7,
+      state: {
+        ...initial,
+        safeCheckpoint: {
+          id: 'greenfield-village',
+          mapId: OVERWORLD_MAP_ID,
+          position: { x: 999, y: 999 },
+        },
+      },
+    })
+
+    const restored = restoreRpgState(raw)
+    expect(restored.safeCheckpoint.id).toBe('greenfield-village')
+    expect(restored.safeCheckpoint.mapId).toBe(JS_VILLAGE_MAP_ID)
   })
 
   it('v5以前の旧Overworld TypeScript側だけはdedicated frontierへmigrationする', () => {
@@ -70,6 +113,7 @@ describe('RPG state storage', () => {
 
     expect(restored.worldMapId).toBe(OVERWORLD_MAP_ID)
     expect(restored.worldPosition).toEqual({ x: 12, y: 14 })
+    expect(restored.safeCheckpoint.id).toBe('central-hub')
     expect(restored.currentHp).toBe(108)
     expect(restored.openedTreasureIds).toEqual([])
   })
