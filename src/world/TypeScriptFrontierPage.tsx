@@ -2,11 +2,13 @@ import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { gameAudio } from '../audio/gameAudio'
 import { useBgm } from '../audio/useBgm'
+import { WorldInn, WorldShop } from '../economy'
 import { useProgress } from '../progression'
 import { useRpg } from '../rpg'
 import { openWorldTreasure } from './treasures'
 import { useEncounterCue } from './useEncounterCue'
 import { resolveWorldMove } from './worldActions'
+import { registerCheckpointForWorldPosition } from './worldCheckpoints'
 import {
   getTreasureAtPosition,
   getVisibleWorldCells,
@@ -18,6 +20,10 @@ import { WorldCharacterLayer, WorldControls, WorldObjectiveCard, WorldViewport }
 import { useWorldKeyboardControls } from './useWorldKeyboardControls'
 import type { WorldPosition } from './worldSceneGeometry'
 import { resolveWorldTargetInteraction } from './worldTargetInteraction'
+import {
+  TS_FRONTIER_OUTPOST_CHECKPOINT_POSITION,
+  TS_FRONTIER_OUTPOST_LABEL,
+} from './typescriptFrontierOutpost'
 
 const terrainLabels: Record<string, string> = {
   mountain: '崩れた境界',
@@ -36,7 +42,7 @@ function getObjective(clearedStageIds: readonly number[]) {
     return {
       label: 'TypeScript · 1 / 3',
       title: '型ラベルが対象ルールへどう影響するか読む',
-      detail: '門から東のクリスタル地帯 / 古代遺跡へ進もう。最初の戦闘はBattle 4。',
+      detail: '境界監視所で準備したら東のクリスタル地帯 / 古代遺跡へ進もう。最初の戦闘はBattle 4。',
       clear: false,
     }
   }
@@ -52,14 +58,14 @@ function getObjective(clearedStageIds: readonly number[]) {
     return {
       label: 'TypeScript · 3 / 3 · ボス',
       title: '北東のFRONTIER COMPILERへ向かう',
-      detail: '二つのTypeScript戦闘を読み終えた。北東のボスの隣で挑み、Battle 6へ進もう。',
+      detail: '二つのTypeScript戦闘を読み終えた。必要なら境界監視所で準備し、北東のボスへ挑もう。',
       clear: false,
     }
   }
   return {
     label: 'TypeScript クリア',
     title: 'TypeScript辺境の異変を止めた',
-    detail: '西の門から中央ハブへ戻れる。',
+    detail: '境界監視所で旅支度を整えるか、西の門から中央ハブへ戻れる。',
     clear: true,
   }
 }
@@ -69,8 +75,10 @@ export function TypeScriptFrontierPage() {
   const { progress, setProgress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
   const [message, setMessage] = useState(
-    'ルーン石の道を進み、クリスタル地帯 / 古代遺跡でTypeScriptのルールを読もう。',
+    '西の境界監視所で準備し、ルーン石の道を東へ進もう。',
   )
+  const [shopOpen, setShopOpen] = useState(false)
+  const [innOpen, setInnOpen] = useState(false)
   useBgm('field')
   const { encounterCueActive, startEncounterCue } = useEncounterCue()
 
@@ -107,7 +115,12 @@ export function TypeScriptFrontierPage() {
 
   const move = useCallback(
     (dx: number, dy: number) => {
-      if (encounterCueActive || document.body.dataset.rpgPaused === 'true') return
+      if (
+        encounterCueActive ||
+        shopOpen ||
+        innOpen ||
+        document.body.dataset.rpgPaused === 'true'
+      ) return
 
       setPlayerFacing((current) => getWorldFacingFromMove(dx, dy, current))
       const result = resolveWorldMove({ rpgState, progress, dx, dy })
@@ -121,7 +134,11 @@ export function TypeScriptFrontierPage() {
       }
 
       if (byteJoined) setFollowerPosition(position)
-      setRpgState(result.nextState)
+      const nextState = registerCheckpointForWorldPosition(result.nextState)
+      const reachedOutpost =
+        rpgState.safeCheckpoint.id !== 'typescript-frontier-outpost' &&
+        nextState.safeCheckpoint.id === 'typescript-frontier-outpost'
+      setRpgState(nextState)
       if (result.kind === 'encounter') {
         startEncounterCue(() => {
           enterBattle(result.battle.battleId, result.battle.seed, false)
@@ -129,13 +146,33 @@ export function TypeScriptFrontierPage() {
         return
       }
 
+      if (reachedOutpost) {
+        setMessage('境界監視所に着いた。宿・補給所・TYPE WARDENがいる。ここを足場に東を調べよう。')
+        return
+      }
       setMessage(terrainLabels[result.terrain] ?? result.terrain)
     },
-    [byteJoined, encounterCueActive, enterBattle, position, progress, rpgState, setRpgState, startEncounterCue],
+    [
+      byteJoined,
+      encounterCueActive,
+      enterBattle,
+      innOpen,
+      position,
+      progress,
+      rpgState,
+      setRpgState,
+      shopOpen,
+      startEncounterCue,
+    ],
   )
 
   const interact = useCallback(() => {
-    if (encounterCueActive || document.body.dataset.rpgPaused === 'true') return
+    if (
+      encounterCueActive ||
+      shopOpen ||
+      innOpen ||
+      document.body.dataset.rpgPaused === 'true'
+    ) return
 
     const intent = interactionIntent
 
@@ -149,6 +186,20 @@ export function TypeScriptFrontierPage() {
     if (intent.kind === 'locked-portal') {
       gameAudio.playSe('cancel')
       setMessage(`${intent.label}への道はまだ開いていない。`)
+      return
+    }
+
+    if (intent.kind === 'shop') {
+      gameAudio.playSe('confirm')
+      setShopOpen(true)
+      setMessage('境界監視所の補給所: 東へ進む前に道具と装備を整えられる。')
+      return
+    }
+
+    if (intent.kind === 'recovery') {
+      gameAudio.playSe('confirm')
+      setInnOpen(true)
+      setMessage('境界監視所の宿: ゴールドを払ってHPを全回復できる。')
       return
     }
 
@@ -181,9 +232,23 @@ export function TypeScriptFrontierPage() {
       }
       enterBattle(intent.battleId, intent.seed)
     }
-  }, [encounterCueActive, enterBattle, interactionIntent, progress, rpgState, setProgress, setRpgState])
+  }, [
+    encounterCueActive,
+    enterBattle,
+    innOpen,
+    interactionIntent,
+    progress,
+    rpgState,
+    setProgress,
+    setRpgState,
+    shopOpen,
+  ])
 
-  useWorldKeyboardControls({ interact, move, disabled: encounterCueActive })
+  useWorldKeyboardControls({
+    interact,
+    move,
+    disabled: encounterCueActive || shopOpen || innOpen,
+  })
 
   return (
     <main className="app-shell world-shell title-screen">
@@ -193,7 +258,7 @@ export function TypeScriptFrontierPage() {
             <div className="eyebrow">ローカルマップ // TypeScript辺境</div>
             <h1>TypeScript辺境</h1>
             <p>
-              JavaScriptの草原とは別の地方。ルーン石の道を軸に、クリスタル地帯と古代遺跡で型のルールを読む。
+              石造の境界監視所を足場に、ルーン石の道・クリスタル地帯・古代遺跡を東へ進む地方。
             </p>
           </div>
         </header>
@@ -215,11 +280,19 @@ export function TypeScriptFrontierPage() {
             const treasureOpened = treasureDefinition
               ? rpgState.openedTreasureIds.includes(treasureDefinition.id)
               : false
+            const isOutpostCenter =
+              cell.x === TS_FRONTIER_OUTPOST_CHECKPOINT_POSITION.x &&
+              cell.y === TS_FRONTIER_OUTPOST_CHECKPOINT_POSITION.y
 
             return (
               <>
                 {cell.terrain === 'gate' && (
                   <span className="world-object ts-gate-object">門</span>
+                )}
+                {isOutpostCenter && (
+                  <span className="world-object ts-outpost-object" aria-label={TS_FRONTIER_OUTPOST_LABEL}>
+                    監視所
+                  </span>
                 )}
                 {cell.terrain === 'boss' && (
                   <span className="world-object boss-object">FRONTIER COMPILER</span>
@@ -253,6 +326,20 @@ export function TypeScriptFrontierPage() {
 
         <WorldControls move={move} interact={interact} interactionIntent={interactionIntent} />
       </section>
+
+      <WorldShop
+        open={shopOpen}
+        onClose={() => setShopOpen(false)}
+        onMessage={setMessage}
+        locationLabel={TS_FRONTIER_OUTPOST_LABEL}
+      />
+      <WorldInn
+        open={innOpen}
+        onClose={() => setInnOpen(false)}
+        onMessage={setMessage}
+        locationLabel={TS_FRONTIER_OUTPOST_LABEL}
+        checkpointId="typescript-frontier-outpost"
+      />
     </main>
   )
 }
