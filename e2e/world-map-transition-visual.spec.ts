@@ -78,12 +78,14 @@ test('@responsive Village portalは旧mapを覆ってからstateを切り替え�
   await expect(page.getByRole('button', { name: 'メニューを開く' })).toBeVisible()
 })
 
-test('歩いて跨ぐForest portalも同じtransition sequenceを使う', async ({ page }) => {
+test('Forest portalも向いてActionした時に同じtransition sequenceを使う', async ({ page }) => {
   await seedWorld(page, 'js-forest', { x: 2, y: 10 }, [1, 7, 8, 9, 10, 11, 12, 13, 14])
 
   const viewport = page.locator('.world-viewport')
   const transition = page.locator('.world-map-transition')
   await page.getByRole('button', { name: '左へ移動' }).click()
+  await expect(viewport).toHaveAttribute('data-world-map', 'js-forest')
+  await page.getByRole('button', { name: 'JavaScript深層の森へ入る' }).click()
 
   await expect(transition).toHaveAttribute('data-world-transition-phase', 'covering')
   await expect(viewport).toHaveAttribute('data-world-map', 'js-forest')
@@ -92,13 +94,15 @@ test('歩いて跨ぐForest portalも同じtransition sequenceを使う', async 
   await expect(transition).toHaveCount(0, { timeout: 1_000 })
 })
 
-test('TypeScript辺境から中央Hubへ戻る境界も共通transition sequenceを使う', async ({ page }) => {
+test('TypeScript辺境から中央Hubへ戻る境界も向いてActionする共通transitionを使う', async ({ page }) => {
   await seedWorld(page, 'ts-frontier', { x: 2, y: 10 }, [1, 3, 4, 5])
 
   const viewport = page.locator('.world-viewport')
   const transition = page.locator('.world-map-transition')
   await expect(viewport).toHaveAttribute('data-world-map', 'ts-frontier')
   await page.getByRole('button', { name: '左へ移動' }).click()
+  await expect(viewport).toHaveAttribute('data-world-map', 'ts-frontier')
+  await page.getByRole('button', { name: '中央Hubへ入る' }).click()
 
   await expect(transition).toHaveAttribute('data-world-transition-phase', 'covering')
   await expect(transition).toHaveAttribute('data-world-transition-from', 'ts-frontier')
