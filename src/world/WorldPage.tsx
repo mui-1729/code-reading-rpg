@@ -6,6 +6,7 @@ import { WorldInn, WorldShop } from '../economy'
 import { useProgress } from '../progression'
 import { characterVisuals, equipmentById, useRpg } from '../rpg'
 import { openWorldTreasure } from './treasures'
+import { useEncounterCue } from './useEncounterCue'
 import {
   getNextJavaScriptTrainingBattleId,
   resolveWorldInteraction,
@@ -63,6 +64,7 @@ export function WorldPage() {
   const [shopOpen, setShopOpen] = useState(false)
   const [innOpen, setInnOpen] = useState(false)
   useBgm('field')
+  const { encounterCueActive, startEncounterCue } = useEncounterCue()
 
   const mapId = rpgState.worldMapId
   const position = rpgState.worldPosition
@@ -264,7 +266,7 @@ export function WorldPage() {
     return {
       label: 'TRACE READY',
       title: '最初の異常の続きをJavaScriptの森へ追う',
-      detail: '必要な読み方は揃った。同じ戦闘をやり直すのではなく、南の出口から草原へ出て西のJavaScriptの森へ進み、選択処理の経路を追おう。',
+      detail: '必要な読み方は揃った。同じ戦闘をやり直すのではなく、南の出口から草原へ出て、西のJavaScriptの森へ進み、選択処理の経路を追おう。',
       clear: true,
     }
   }, [nextTrainingBattleId])
@@ -432,8 +434,8 @@ export function WorldPage() {
         : javascriptNextObjective
 
   const enterBattle = useCallback(
-    (battleId: number, battleRegion: 'javascript' | 'typescript', seed: string) => {
-      gameAudio.playSe('confirm')
+    (battleId: number, battleRegion: 'javascript' | 'typescript', seed: string, playConfirm = true) => {
+      if (playConfirm) gameAudio.playSe('confirm')
       if (battleRegion === 'javascript') {
         navigate({
           to: '/javascript/battle/$battleId',
@@ -453,7 +455,12 @@ export function WorldPage() {
 
   const move = useCallback(
     (dx: number, dy: number) => {
-      if (shopOpen || innOpen || document.body.dataset.rpgPaused === 'true') return
+      if (
+        encounterCueActive ||
+        shopOpen ||
+        innOpen ||
+        document.body.dataset.rpgPaused === 'true'
+      ) return
 
       const result = resolveWorldMove({ rpgState, progress, dx, dy })
       if (result.kind === 'blocked') {
@@ -516,18 +523,35 @@ export function WorldPage() {
       if (byteJoined) setFollowerPosition(position)
       setRpgState(result.nextState)
       if (result.kind === 'encounter') {
-        setMessage('敵と遭遇！')
-        enterBattle(result.battle.battleId, result.battle.region, result.battle.seed)
+        startEncounterCue(() => {
+          enterBattle(result.battle.battleId, result.battle.region, result.battle.seed, false)
+        })
         return
       }
 
       setMessage(terrainLabels[result.terrain] ?? result.terrain)
     },
-    [byteJoined, enterBattle, innOpen, position, progress, rpgState, setRpgState, shopOpen],
+    [
+      byteJoined,
+      encounterCueActive,
+      enterBattle,
+      innOpen,
+      position,
+      progress,
+      rpgState,
+      setRpgState,
+      shopOpen,
+      startEncounterCue,
+    ],
   )
 
   const interact = useCallback(() => {
-    if (shopOpen || innOpen || document.body.dataset.rpgPaused === 'true') return
+    if (
+      encounterCueActive ||
+      shopOpen ||
+      innOpen ||
+      document.body.dataset.rpgPaused === 'true'
+    ) return
 
     const intent = resolveWorldInteraction(rpgState, progress)
 
@@ -690,6 +714,7 @@ export function WorldPage() {
     )
   }, [
     byteJoined,
+    encounterCueActive,
     enterBattle,
     innOpen,
     isDeepForest,
@@ -704,7 +729,7 @@ export function WorldPage() {
     shopOpen,
   ])
 
-  useWorldKeyboardControls({ interact, move, disabled: shopOpen || innOpen })
+  useWorldKeyboardControls({ interact, move, disabled: shopOpen || innOpen || encounterCueActive })
 
   return (
     <main className="app-shell world-shell title-screen">

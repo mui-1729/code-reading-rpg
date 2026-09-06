@@ -11,7 +11,12 @@ export function useWorldKeyboardControls(options: {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (disabled || event.defaultPrevented || document.body.dataset.rpgPaused === 'true') return
+      if (
+        disabled ||
+        event.defaultPrevented ||
+        document.body.dataset.rpgPaused === 'true' ||
+        Boolean(document.body.dataset.worldEncounterCue)
+      ) return
       // Native controls own Enter/Space; do not also interact with the map behind them.
       const target = event.target
       if (target instanceof Element) {

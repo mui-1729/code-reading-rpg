@@ -1,6 +1,7 @@
 export type SoundEffect =
   | 'select'
   | 'confirm'
+  | 'encounter'
   | 'cancel'
   | 'execute'
   | 'enemyHit'
@@ -327,6 +328,10 @@ class GameAudioEngine {
       case 'confirm':
         this.tone(this.seGain, 520, 70, { volume: 0.06 })
         this.tone(this.seGain, 780, 85, { delayMs: 55, volume: 0.055 })
+        break
+      case 'encounter':
+        this.tone(this.seGain, 880, 80, { type: 'square', volume: 0.07 })
+        this.tone(this.seGain, 1174.66, 120, { delayMs: 58, type: 'square', volume: 0.065 })
         break
       case 'cancel':
         this.tone(this.seGain, 360, 80, { endFrequency: 220, type: 'triangle', volume: 0.07 })

@@ -85,6 +85,7 @@ async function seedDeepForestGate(page: Page, state: DeepForestState) {
 
 async function waitForMapTransition(page: Page) {
   await expect(page.locator('.world-map-transition')).toHaveCount(0, { timeout: 1_000 })
+  await expect(page.locator('body')).not.toHaveAttribute('data-world-transitioning', 'true', { timeout: 1_000 })
 }
 
 test('Battle 14未clearではDeep Forest入口が閉じている', async ({ page }) => {
@@ -98,7 +99,7 @@ test('Battle 14未clearではDeep Forest入口が閉じている', async ({ page
   await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-x', '2')
 })
 
-test('Battle 14 clear後はDeep Forestへ入り、最初のmovementでsecond incident Battle 2を固定再現する', async ({ page }) => {
+test('Battle 14 clear後はDeep Forestへ入り、! → swirlを挟んでsecond incident Battle 2を固定再現する', async ({ page }) => {
   await seedDeepForestGate(page, 'incident-pending')
 
   await expect(page.getByLabel('次の目的')).toContainText('二つ目の症状')
@@ -112,7 +113,36 @@ test('Battle 14 clear後はDeep Forestへ入り、最初のmovementでsecond inc
 
   await page.getByRole('button', { name: '上へ移動' }).click()
 
-  await expect(page).toHaveURL(/\/javascript\/battle\/2\?/)
+  await expect(page.locator('body')).toHaveAttribute('data-world-encounter-cue', 'alert')
+  await expect(page).toHaveURL(/\/world$/)
+  const cueVisual = await page.locator('.world-player-sprite').evaluate((player) => {
+    const style = getComputedStyle(player, '::before')
+    return { content: style.content, fontSize: Number.parseFloat(style.fontSize) }
+  })
+  expect(cueVisual.content).toBe('"!"')
+  expect(cueVisual.fontSize).toBeGreaterThanOrEqual(22)
+  await expect(page.getByRole('button', { name: 'メニューを開く' })).toBeDisabled()
+  await expect(page.locator('.world-message')).not.toContainText('敵と遭遇！')
+
+  const cuePosition = await deepForest.evaluate((element) => ({
+    x: element.getAttribute('data-world-x'),
+    y: element.getAttribute('data-world-y'),
+  }))
+  await page.keyboard.press('ArrowRight')
+  await expect(deepForest).toHaveAttribute('data-world-x', cuePosition.x ?? '')
+  await expect(deepForest).toHaveAttribute('data-world-y', cuePosition.y ?? '')
+
+  await expect(page.locator('body')).toHaveAttribute('data-world-encounter-cue', 'transition')
+  await expect(page).toHaveURL(/\/world$/)
+  const transitionVisual = await deepForest.evaluate((viewport) => {
+    const style = getComputedStyle(viewport, '::after')
+    return { animationName: style.animationName, backgroundImage: style.backgroundImage }
+  })
+  expect(transitionVisual.animationName).toBe('world-encounter-swirl')
+  expect(transitionVisual.backgroundImage).toContain('conic-gradient')
+  await expect(page.getByRole('button', { name: 'メニューを開く' })).toBeDisabled()
+
+  await expect(page).toHaveURL(/\/javascript\/battle\/2\?/, { timeout: 2_000 })
   const story = page.getByRole('dialog', { name: '異常が複数targetへ広がっている' })
   await expect(story).toBeVisible()
   await expect(story).toContainText('複数')
@@ -122,6 +152,34 @@ test('Battle 14 clear後はDeep Forestへ入り、最初のmovementでsecond inc
   await expect(story).toContainText('filter()')
   await expect(story).toContainText('&&')
   await expect(story).toContainText('||')
+})
+
+test('reduced-motionでも! cueの意味を残し、回転せず短いfadeからBattle 2へ進む', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await seedDeepForestGate(page, 'incident-pending')
+  await page.getByRole('button', { name: '左へ移動' }).click()
+  const deepForest = page.getByLabel('JavaScript深層の森のマップ')
+  await expect(deepForest).toHaveAttribute('data-world-map', 'js-deep-forest')
+  await waitForMapTransition(page)
+
+  await page.keyboard.press('ArrowUp')
+
+  await expect(page.locator('body')).toHaveAttribute('data-world-encounter-cue', 'alert')
+  const cueVisual = await page.locator('.world-player-sprite').evaluate((player) => {
+    const style = getComputedStyle(player, '::before')
+    return { content: style.content, animationName: style.animationName }
+  })
+  expect(cueVisual.content).toBe('"!"')
+  expect(cueVisual.animationName).toBe('none')
+
+  await expect(page.locator('body')).toHaveAttribute('data-world-encounter-cue', 'transition')
+  const transitionVisual = await deepForest.evaluate((viewport) => {
+    const style = getComputedStyle(viewport, '::after')
+    return { animationName: style.animationName, backgroundImage: style.backgroundImage }
+  })
+  expect(transitionVisual.animationName).toBe('world-encounter-reduced-fade')
+  expect(transitionVisual.backgroundImage).toBe('none')
+  await expect(page).toHaveURL(/\/javascript\/battle\/2\?/, { timeout: 2_000 })
 })
 
 test('second incident clear後はDeep ForestでBattle 15を固定導入し共有traceを追う', async ({ page }) => {
