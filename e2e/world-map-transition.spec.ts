@@ -87,26 +87,28 @@ test('JS-01後はVillage入口で向くだけでは止まりActionで入りreloa
   await expect(page.getByLabel('グリーンフィールド村のマップ')).toBeVisible()
   await expect(viewport).toHaveAttribute('data-world-map', 'js-village')
   await expect(viewport).toHaveAttribute('data-world-x', '10')
-  await expect(viewport).toHaveAttribute('data-world-y', '12')
+  await expect(viewport).toHaveAttribute('data-world-y', '21')
 
   await expect.poll(async () => (await storedRpgState(page)).version).toBe(7)
   await expect.poll(async () => (await storedRpgState(page)).state.worldMapId).toBe('js-village')
   await expect.poll(async () => (await storedRpgState(page)).state.worldPosition).toEqual({
     x: 10,
-    y: 12,
+    y: 21,
   })
 
   await page.reload()
   await expect(page.getByLabel('グリーンフィールド村のマップ')).toBeVisible()
   await expect(viewport).toHaveAttribute('data-world-map', 'js-village')
   await expect(viewport).toHaveAttribute('data-world-x', '10')
-  await expect(viewport).toHaveAttribute('data-world-y', '12')
+  await expect(viewport).toHaveAttribute('data-world-y', '21')
 
   await page.getByRole('button', { name: '下へ移動' }).click()
-  await expect(viewport).toHaveAttribute('data-world-y', '13')
+  await expect(viewport).toHaveAttribute('data-world-y', '22')
+  await page.getByRole('button', { name: '下へ移動' }).click()
+  await expect(viewport).toHaveAttribute('data-world-y', '23')
   await page.getByRole('button', { name: '下へ移動' }).click()
   await expect(viewport).toHaveAttribute('data-world-map', 'js-village')
-  await expect(viewport).toHaveAttribute('data-world-y', '13')
+  await expect(viewport).toHaveAttribute('data-world-y', '23')
   await page.getByRole('button', { name: 'JavaScript草原へ入る' }).click()
 
   await expect(page.locator('.world-header')).toBeHidden()
