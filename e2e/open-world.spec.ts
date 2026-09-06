@@ -207,6 +207,7 @@ test.describe('Open World RPG loop', () => {
 
     await page.goto('/world')
     await expect(page.getByLabel('宿', { exact: true })).toBeVisible()
+    await page.getByRole('button', { name: '右へ移動' }).click()
     await page.getByRole('button', { name: '宿で休む' }).click()
 
     const inn = page.getByRole('dialog', { name: '宿' })
@@ -276,6 +277,7 @@ test.describe('Open World RPG loop', () => {
 
     await page.goto('/world')
     await expect(page.getByLabel('TYPE CACHE 未開封')).toBeVisible()
+    await page.getByRole('button', { name: '右へ移動' }).click()
     await page.getByRole('button', { name: '宝箱を開ける' }).click()
     await expect(page.getByText(/TYPE CACHE 開封/)).toBeVisible()
 
@@ -287,6 +289,7 @@ test.describe('Open World RPG loop', () => {
 
     await page.reload()
     await expect(page.getByLabel('TYPE CACHE 開封済み')).toBeVisible()
+    await page.getByRole('button', { name: '右へ移動' }).click()
     await page.getByRole('button', { name: '宝箱を調べる' }).click()
     await expect(page.getByText(/すでに空だ/)).toBeVisible()
     await expect.poll(async () => (await storedProgress(page)).progress.gold).toBe(45)
@@ -364,6 +367,7 @@ test.describe('Open World RPG loop', () => {
     })
 
     await page.goto('/world')
+    await page.getByRole('button', { name: '左へ移動' }).click()
     await page.getByRole('button', { name: 'BYTEと話す' }).click()
     await expect(page.locator('.world-message')).toContainText('BYTEが仲間になった！')
 
