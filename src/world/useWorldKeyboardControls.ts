@@ -15,7 +15,7 @@ export function useWorldKeyboardControls(options: {
         disabled ||
         event.defaultPrevented ||
         document.body.dataset.rpgPaused === 'true' ||
-        document.body.dataset.worldEncounterCue === 'true'
+        Boolean(document.body.dataset.worldEncounterCue)
       ) return
       // Native controls own Enter/Space; do not also interact with the map behind them.
       const target = event.target
