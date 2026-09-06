@@ -61,29 +61,53 @@ async function seedMap(
   await page.goto('/world')
 }
 
-test('Forest中盤の野営地は0 Goldでも部分回復できる', async ({ page }) => {
-  await seedMap(page, 'js-forest', { x: 20, y: 10 }, [...JS_TRAINING_COMPLETE])
+async function expectFacedRecoveryAction(
+  page: Page,
+  stopId: string,
+  actionLabel: string,
+  startPosition: { x: number; y: number },
+) {
+  const viewport = page.locator('.world-viewport')
+  const player = page.locator('.world-player-sprite')
+  const log = page.locator('.world-message p')
+  const scenery = page.locator(`[data-recovery-stop="${stopId}"]`)
 
-  const camp = page.getByRole('button', { name: '野営地で休む' })
-  await expect(camp).toBeVisible()
-  await expect(camp).toBeEnabled()
-  await expect(camp).toHaveAttribute('title', /無料でHPを60%まで回復/)
-  await camp.click()
+  await expect(scenery).toBeVisible()
+  await expect(scenery).toHaveJSProperty('tagName', 'SPAN')
+  await expect(page.locator(`button[data-recovery-stop="${stopId}"]`)).toHaveCount(0)
 
-  await expect(page.getByRole('status')).toContainText('野営地: HPを')
+  const before = await log.textContent()
+  await page.getByRole('button', { name: '上へ移動' }).click()
+
+  await expect(viewport).toHaveAttribute('data-world-x', String(startPosition.x))
+  await expect(viewport).toHaveAttribute('data-world-y', String(startPosition.y))
+  await expect(player).toHaveAttribute('data-facing', 'up')
+  await expect(log).toHaveText(before ?? '')
+
+  const action = page.getByRole('button', { name: actionLabel })
+  await expect(action).toBeVisible()
+  await expect(action).toBeEnabled()
+  await action.click()
+}
+
+test('Forest中盤の野営地はsceneryへ向いて共通Actionから0 Goldで部分回復できる', async ({ page }) => {
+  const start = { x: 20, y: 12 }
+  await seedMap(page, 'js-forest', start, [...JS_TRAINING_COMPLETE])
+
+  await expectFacedRecoveryAction(page, 'forest-traveler-camp', '野営地で休む', start)
+
+  await expect(page.locator('.world-message')).toContainText('野営地: HPを')
   const stored = await readStoredRpg(page)
   expect(stored.state.currentHp).toBeGreaterThan(20)
 })
 
-test('Deep ForestはForestより奥に回復地点を置き同じsoft-lock回避を提供する', async ({ page }) => {
-  await seedMap(page, 'js-deep-forest', { x: 16, y: 10 }, [...JS_SECOND_INCIDENT_PREREQS])
+test('Deep Forestの湧き水も文字buttonではなくsceneryへ向いてActionする', async ({ page }) => {
+  const start = { x: 16, y: 12 }
+  await seedMap(page, 'js-deep-forest', start, [...JS_SECOND_INCIDENT_PREREQS])
 
-  const spring = page.getByRole('button', { name: '湧き水で休む' })
-  await expect(spring).toBeVisible()
-  await expect(spring).toBeEnabled()
-  await spring.click()
+  await expectFacedRecoveryAction(page, 'deep-forest-spring', '湧き水で休む', start)
 
-  await expect(page.getByRole('status')).toContainText('湧き水: HPを')
+  await expect(page.locator('.world-message')).toContainText('湧き水: HPを')
   const stored = await readStoredRpg(page)
   expect(stored.state.currentHp).toBeGreaterThan(20)
 })
