@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { JS_SECOND_INCIDENT_PREREQS, JS_TRAINING_COMPLETE } from './canonical-progress-fixtures'
+import { selectPauseTab } from './pause-menu-helpers'
 import { readStoredRpg } from './storedGameState'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
@@ -90,6 +91,14 @@ async function expectFacedRecoveryAction(
   await action.click()
 }
 
+async function expectCurrentAtlasLandmark(page: Page, label: string) {
+  await page.getByRole('button', { name: 'メニューを開く' }).click()
+  const menu = page.getByRole('dialog', { name: 'メニュー' })
+  await selectPauseTab(menu, 'マップ')
+  const atlas = page.getByRole('region', { name: 'ワールドマップ' })
+  await expect(atlas.getByLabel(label, { exact: true })).toBeVisible()
+}
+
 test('Forest中盤の野営地はsceneryへ向いて共通Actionから0 Goldで部分回復できる', async ({ page }) => {
   const start = { x: 20, y: 12 }
   await seedMap(page, 'js-forest', start, [...JS_TRAINING_COMPLETE])
@@ -99,6 +108,7 @@ test('Forest中盤の野営地はsceneryへ向いて共通Actionから0 Goldで�
   await expect(page.locator('.world-message')).toContainText('野営地: HPを')
   const stored = await readStoredRpg(page)
   expect(stored.state.currentHp).toBeGreaterThan(20)
+  await expectCurrentAtlasLandmark(page, '野営地')
 })
 
 test('Deep Forestの湧き水も文字buttonではなくsceneryへ向いてActionする', async ({ page }) => {
@@ -110,4 +120,5 @@ test('Deep Forestの湧き水も文字buttonではなくsceneryへ向いてActio
   await expect(page.locator('.world-message')).toContainText('湧き水: HPを')
   const stored = await readStoredRpg(page)
   expect(stored.state.currentHp).toBeGreaterThan(20)
+  await expectCurrentAtlasLandmark(page, '湧き水')
 })
