@@ -75,7 +75,7 @@ test('Overworldの森入口は文字札ではなく木のarchとして見え、�
   await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-map', 'js-forest')
 })
 
-test('村入口は木柵門、Village出口は草原へ抜ける門として別sceneになる', async ({ page }) => {
+test('村入口は木柵門、Village出口は草原へ抜ける南門として別sceneになる', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedWorld(page, 'overworld', { x: 10, y: 21 }, [1])
 
@@ -84,8 +84,8 @@ test('村入口は木柵門、Village出口は草原へ抜ける門として別s
   await expect(page.locator(`${villageGate} .village-object`)).toHaveCSS('font-size', '0px')
   await expect(page.getByRole('button', { name: 'グリーンフィールド村へ入る' })).toBeEnabled()
 
-  await seedWorld(page, 'js-village', { x: 10, y: 13 }, [1])
-  const outGate = '.world-tile[data-world-x="10"][data-world-y="14"]'
+  await seedWorld(page, 'js-village', { x: 10, y: 23 }, [1])
+  const outGate = '.world-tile[data-world-x="10"][data-world-y="24"]'
   expect(await portalSceneKind(page, outGate)).toBe('village-outgate')
   await expect(page.locator(`${outGate} .exit-object`)).toHaveCSS('font-size', '0px')
 
