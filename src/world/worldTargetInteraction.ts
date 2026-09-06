@@ -114,10 +114,8 @@ export function resolveWorldTargetInteraction(
     if (facility) return { kind: 'village-facility', facility: facility.kind }
 
     if (samePosition(JS_VILLAGE_TRAINING_POSITION, target)) {
-      return {
-        kind: 'training',
-        battleId: getNextJavaScriptTrainingBattleId(progress.clearedStageIds),
-      }
+      const battleId = getNextJavaScriptTrainingBattleId(progress.clearedStageIds)
+      if (battleId !== null) return { kind: 'training', battleId }
     }
   }
 
