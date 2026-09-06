@@ -24,6 +24,10 @@ import {
 import { isWorldPortalRequirementSatisfied } from './worldPortalAccess'
 import { getNextJavaScriptTrainingBattleId } from './worldActions'
 import type { WorldPosition } from './worldSceneGeometry'
+import {
+  TS_FRONTIER_OUTPOST_INN_POSITION,
+  TS_FRONTIER_OUTPOST_SHOP_POSITION,
+} from './typescriptFrontierOutpost'
 
 type BattleRegion = Exclude<WorldRegion, 'hub'>
 
@@ -133,13 +137,17 @@ export function resolveWorldTargetInteraction(
     }
   }
 
-  if (mapId === TS_FRONTIER_MAP_ID && samePosition(TS_BOSS_POSITION, target)) {
-    return {
-      kind: 'boss',
-      battleId: 6,
-      region: 'typescript',
-      unlocked: isBattleAccessible(6, progress.clearedStageIds),
-      seed: `boss:ts:${rpgState.encounterCount}`,
+  if (mapId === TS_FRONTIER_MAP_ID) {
+    if (samePosition(TS_FRONTIER_OUTPOST_SHOP_POSITION, target)) return { kind: 'shop' }
+    if (samePosition(TS_FRONTIER_OUTPOST_INN_POSITION, target)) return { kind: 'recovery' }
+    if (samePosition(TS_BOSS_POSITION, target)) {
+      return {
+        kind: 'boss',
+        battleId: 6,
+        region: 'typescript',
+        unlocked: isBattleAccessible(6, progress.clearedStageIds),
+        seed: `boss:ts:${rpgState.encounterCount}`,
+      }
     }
   }
 
