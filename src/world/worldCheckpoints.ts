@@ -3,11 +3,19 @@ import {
   JS_FOREST_MAP_ID,
   JS_VILLAGE_MAP_ID,
   OVERWORLD_MAP_ID,
+  TS_FRONTIER_MAP_ID,
   WORLD_MAP_STARTS,
   type WorldMapId,
 } from './worldMap'
+import {
+  isTypeScriptFrontierOutpostRoad,
+  TS_FRONTIER_OUTPOST_CHECKPOINT_POSITION,
+} from './typescriptFrontierOutpost'
 
-export type WorldCheckpointId = 'central-hub' | 'greenfield-village'
+export type WorldCheckpointId =
+  | 'central-hub'
+  | 'greenfield-village'
+  | 'typescript-frontier-outpost'
 
 export type WorldCheckpoint = {
   id: WorldCheckpointId
@@ -32,6 +40,12 @@ const WORLD_CHECKPOINTS: Record<WorldCheckpointId, WorldCheckpointDefinition> = 
     mapId: JS_VILLAGE_MAP_ID,
     position: { ...WORLD_MAP_STARTS[JS_VILLAGE_MAP_ID] },
   },
+  'typescript-frontier-outpost': {
+    id: 'typescript-frontier-outpost',
+    label: '境界監視所',
+    mapId: TS_FRONTIER_MAP_ID,
+    position: { ...TS_FRONTIER_OUTPOST_CHECKPOINT_POSITION },
+  },
 }
 
 export const DEFAULT_WORLD_CHECKPOINT_ID: WorldCheckpointId = 'central-hub'
@@ -50,7 +64,11 @@ export function createWorldCheckpoint(id: WorldCheckpointId): WorldCheckpoint {
 }
 
 export function isWorldCheckpointId(value: unknown): value is WorldCheckpointId {
-  return value === 'central-hub' || value === 'greenfield-village'
+  return (
+    value === 'central-hub' ||
+    value === 'greenfield-village' ||
+    value === 'typescript-frontier-outpost'
+  )
 }
 
 export function normalizeWorldCheckpoint(value: unknown): WorldCheckpoint {
@@ -98,4 +116,20 @@ export function registerCheckpointForMapEntry<
 >(state: T): T {
   const checkpointId = getCheckpointIdForMapEntry(state.worldMapId)
   return checkpointId ? registerWorldCheckpoint(state, checkpointId) : state
+}
+
+export function registerCheckpointForWorldPosition<
+  T extends {
+    worldMapId: WorldMapId
+    worldPosition: { x: number; y: number }
+    safeCheckpoint: WorldCheckpoint
+  },
+>(state: T): T {
+  if (
+    state.worldMapId === TS_FRONTIER_MAP_ID &&
+    isTypeScriptFrontierOutpostRoad(state.worldPosition)
+  ) {
+    return registerWorldCheckpoint(state, 'typescript-frontier-outpost')
+  }
+  return state
 }
