@@ -2,10 +2,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNo
 import { useProgress } from '../progression'
 import { useRpg } from '../rpg'
 import { characterVisuals } from '../rpg/visualAssets'
-import { resolveWorldInteraction, type WorldInteractionIntent } from './worldActions'
 import { WorldLogPolicy } from './WorldLogPolicy'
 import {
-  getAdjacentWorldNpc,
   getWorldNpcDefinition,
   getWorldNpcDialogue,
   getWorldNpcPlacementsForMap,
@@ -27,6 +25,7 @@ import {
   isWorldPositionVisible,
   type WorldPosition,
 } from './worldSceneGeometry'
+import type { WorldTargetInteractionIntent } from './worldTargetInteraction'
 import { useQueuedWorldMove } from './useQueuedWorldMove'
 
 export type WorldObjective = {
@@ -137,9 +136,6 @@ function useWorldCameraPan(
 
     if (walked && cameraShifted) {
       if (interruptedActivePan || now < rapidUntilRef.current) {
-        // Rapid input must never restart a one-tile keyframe from 100% offset.
-        // Keep every logical movement, but coalesce camera motion to the current
-        // authoritative viewport until input has been quiet for one step window.
         rapidUntilRef.current = now + WORLD_STEP_MS
         setPan(null)
       } else {
@@ -194,14 +190,26 @@ function getNpcFieldVisual(npcId: string): string | null {
   return null
 }
 
-function getInteractionPresentation(intent: WorldInteractionIntent): { label: string; disabled: boolean } {
+function getInteractionPresentation(intent: WorldTargetInteractionIntent): { label: string; disabled: boolean } {
   switch (intent.kind) {
+    case 'npc':
+      return { label: `${getWorldNpcDefinition(intent.placement).name}と話す`, disabled: false }
     case 'party':
       return { label: 'BYTEと話す', disabled: false }
     case 'shop':
       return { label: 'ショップを見る', disabled: false }
     case 'recovery':
       return { label: '宿で休む', disabled: false }
+    case 'village-facility':
+      return {
+        label:
+          intent.facility === 'inn'
+            ? '宿で休む'
+            : intent.facility === 'item-shop'
+              ? '道具屋を見る'
+              : '装備屋を見る',
+        disabled: false,
+      }
     case 'treasure':
       return { label: intent.opened ? '宝箱を調べる' : '宝箱を開ける', disabled: false }
     case 'training':
@@ -218,6 +226,8 @@ function getInteractionPresentation(intent: WorldInteractionIntent): { label: st
       return { label: intent.unlocked ? 'ボスに挑む' : 'ボスを調べる', disabled: false }
     case 'map-transition':
       return { label: `${intent.label}へ入る`, disabled: false }
+    case 'locked-portal':
+      return { label: `${intent.label}を調べる`, disabled: false }
     case 'none':
       return { label: 'アクション', disabled: true }
   }
@@ -353,13 +363,15 @@ export function WorldViewport(props: {
 export function WorldCharacterLayer(props: {
   mapId: WorldMapId
   playerPosition: WorldPosition
+  playerFacing?: WorldFacing
   viewportStart: WorldPosition
   followerPosition: WorldPosition
   followerJoined: boolean
 }) {
-  const { followerJoined, followerPosition, mapId, playerPosition, viewportStart } = props
+  const { followerJoined, followerPosition, mapId, playerFacing, playerPosition, viewportStart } = props
   const playerMotion = useWorldSpriteMotion(mapId, playerPosition)
   const followerMotion = useWorldSpriteMotion(mapId, followerPosition)
+  const renderedPlayerFacing = playerFacing ?? playerMotion.facing
   const worldNpcs = getWorldNpcPlacementsForMap(mapId)
 
   return (
@@ -418,11 +430,11 @@ export function WorldCharacterLayer(props: {
         data-world-map={mapId}
         data-world-x={playerPosition.x}
         data-world-y={playerPosition.y}
-        data-facing={playerMotion.facing}
+        data-facing={renderedPlayerFacing}
         data-walking={playerMotion.walking || undefined}
         data-step-frame={playerMotion.stepFrame}
       >
-        <img className="world-player-pixel" src={getPlayerFieldSprite(playerMotion.facing)} alt="" />
+        <img className="world-player-pixel" src={getPlayerFieldSprite(renderedPlayerFacing)} alt="" />
       </span>
     </div>
   )
@@ -431,21 +443,15 @@ export function WorldCharacterLayer(props: {
 export function WorldControls(props: {
   move: (dx: number, dy: number) => void
   interact: () => void
+  interactionIntent: WorldTargetInteractionIntent
   interactLabel?: string
   interactDisabled?: boolean
 }) {
   const { progress } = useProgress()
   const { rpgState } = useRpg()
-  const baseIntent = resolveWorldInteraction(rpgState, progress)
-  const adjacentNpc = getAdjacentWorldNpc(rpgState.worldMapId, rpgState.worldPosition)
-  const trainingStillActive =
-    adjacentNpc?.npcId === 'trainer-mio' &&
-    baseIntent.kind === 'training' &&
-    baseIntent.battleId !== null
-  const conversationalNpc = adjacentNpc && !trainingStillActive ? adjacentNpc : undefined
-  const inferred = conversationalNpc
-    ? { label: `${getWorldNpcDefinition(conversationalNpc).name}と話す`, disabled: false }
-    : getInteractionPresentation(baseIntent)
+  const conversationalNpc =
+    props.interactionIntent.kind === 'npc' ? props.interactionIntent.placement : undefined
+  const inferred = getInteractionPresentation(props.interactionIntent)
   const { interact, interactLabel = inferred.label, interactDisabled = inferred.disabled, move } = props
   const [conversation, setConversation] = useState<ActiveConversation | null>(null)
   const activeConversation =
