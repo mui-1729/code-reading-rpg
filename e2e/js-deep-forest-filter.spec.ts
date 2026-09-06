@@ -88,6 +88,11 @@ async function waitForMapTransition(page: Page) {
   await expect(page.locator('body')).not.toHaveAttribute('data-world-transitioning', 'true', { timeout: 1_000 })
 }
 
+async function enterDeepForest(page: Page) {
+  await page.getByRole('button', { name: '左へ移動' }).click()
+  await page.getByRole('button', { name: 'JavaScript深層の森へ入る' }).click()
+}
+
 test('Battle 14未clearではDeep Forest入口が閉じている', async ({ page }) => {
   await seedDeepForestGate(page, 'filter-locked')
 
@@ -103,7 +108,7 @@ test('Battle 14 clear後はDeep Forestへ入り、! → swirlを挟んでsecond 
   await seedDeepForestGate(page, 'incident-pending')
 
   await expect(page.getByLabel('次の目的')).toContainText('二つ目の症状')
-  await page.getByRole('button', { name: '左へ移動' }).click()
+  await enterDeepForest(page)
 
   const deepForest = page.getByLabel('JavaScript深層の森のマップ')
   await expect(deepForest).toHaveAttribute('data-world-map', 'js-deep-forest')
@@ -157,7 +162,7 @@ test('Battle 14 clear後はDeep Forestへ入り、! → swirlを挟んでsecond 
 test('reduced-motionでも! cueの意味を残し、回転せず短いfadeからBattle 2へ進む', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await seedDeepForestGate(page, 'incident-pending')
-  await page.getByRole('button', { name: '左へ移動' }).click()
+  await enterDeepForest(page)
   const deepForest = page.getByLabel('JavaScript深層の森のマップ')
   await expect(deepForest).toHaveAttribute('data-world-map', 'js-deep-forest')
   await waitForMapTransition(page)
@@ -184,7 +189,7 @@ test('reduced-motionでも! cueの意味を残し、回転せず短いfadeから
 
 test('second incident clear後はDeep ForestでBattle 15を固定導入し共有traceを追う', async ({ page }) => {
   await seedDeepForestGate(page, 'incident-cleared')
-  await page.getByRole('button', { name: '左へ移動' }).click()
+  await enterDeepForest(page)
   await expect(page.getByLabel('JavaScript深層の森のマップ')).toHaveAttribute('data-world-map', 'js-deep-forest')
   await expect(page.getByLabel('次の目的')).toContainText('共通経路 · FILTER')
   await waitForMapTransition(page)

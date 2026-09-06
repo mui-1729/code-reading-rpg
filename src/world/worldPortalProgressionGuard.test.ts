@@ -10,7 +10,9 @@ import {
   JS_FOREST_POSITION,
   OVERWORLD_MAP_ID,
   TS_FRONTIER_GATE_POSITION,
+  type WorldMapId,
 } from './worldMap'
+import { resolveWorldTargetInteraction } from './worldTargetInteraction'
 
 const throughTraining = [1, 7, 8, 9]
 const throughForest = [...throughTraining, 10, 11, 12, 13, 14]
@@ -21,122 +23,103 @@ function progressWith(clearedStageIds: number[]) {
   return { ...createInitialPlayerProgress(), clearedStageIds }
 }
 
-describe('world portal progression guard', () => {
-  it('単一のforged clear bitだけではForest / Deep Forest / Code Core / TypeScriptへ入れない', () => {
-    const forest = resolveWorldMove({
-      rpgState: {
-        ...createInitialRpgState(),
-        worldMapId: OVERWORLD_MAP_ID,
-        worldPosition: { x: JS_FOREST_POSITION.x + 1, y: JS_FOREST_POSITION.y },
-      },
-      progress: progressWith([9]),
-      dx: -1,
-      dy: 0,
-    })
-    expect(forest.kind).toBe('blocked')
+function portalState(mapId: WorldMapId, position: { x: number; y: number }) {
+  return { ...createInitialRpgState(), worldMapId: mapId, worldPosition: position }
+}
 
-    const deepForest = resolveWorldMove({
-      rpgState: {
-        ...createInitialRpgState(),
-        worldMapId: JS_FOREST_MAP_ID,
-        worldPosition: {
+describe('world portal progression guard', () => {
+  it('単一のforged clear bitでは向くだけで止まりActionもlockedになる', () => {
+    const cases = [
+      {
+        state: portalState(OVERWORLD_MAP_ID, { x: JS_FOREST_POSITION.x + 1, y: JS_FOREST_POSITION.y }),
+        target: JS_FOREST_POSITION,
+        progress: progressWith([9]),
+        dx: -1,
+        dy: 0,
+      },
+      {
+        state: portalState(JS_FOREST_MAP_ID, {
           x: JS_FOREST_DEEP_FOREST_POSITION.x + 1,
           y: JS_FOREST_DEEP_FOREST_POSITION.y,
-        },
+        }),
+        target: JS_FOREST_DEEP_FOREST_POSITION,
+        progress: progressWith([14]),
+        dx: -1,
+        dy: 0,
       },
-      progress: progressWith([14]),
-      dx: -1,
-      dy: 0,
-    })
-    expect(deepForest.kind).toBe('blocked')
-
-    const codeCore = resolveWorldMove({
-      rpgState: {
-        ...createInitialRpgState(),
-        worldMapId: JS_DEEP_FOREST_MAP_ID,
-        worldPosition: {
+      {
+        state: portalState(JS_DEEP_FOREST_MAP_ID, {
           x: JS_DEEP_FOREST_CORE_EXIT_POSITION.x + 1,
           y: JS_DEEP_FOREST_CORE_EXIT_POSITION.y,
-        },
+        }),
+        target: JS_DEEP_FOREST_CORE_EXIT_POSITION,
+        progress: progressWith([22]),
+        dx: -1,
+        dy: 0,
       },
-      progress: progressWith([22]),
-      dx: -1,
-      dy: 0,
-    })
-    expect(codeCore.kind).toBe('blocked')
-
-    const typeScript = resolveWorldMove({
-      rpgState: {
-        ...createInitialRpgState(),
-        worldMapId: OVERWORLD_MAP_ID,
-        worldPosition: {
+      {
+        state: portalState(OVERWORLD_MAP_ID, {
           x: TS_FRONTIER_GATE_POSITION.x - 1,
           y: TS_FRONTIER_GATE_POSITION.y,
-        },
+        }),
+        target: TS_FRONTIER_GATE_POSITION,
+        progress: progressWith([3]),
+        dx: 1,
+        dy: 0,
       },
-      progress: progressWith([3]),
-      dx: 1,
-      dy: 0,
-    })
-    expect(typeScript.kind).toBe('blocked')
+    ] as const
+
+    for (const entry of cases) {
+      expect(resolveWorldMove({ rpgState: entry.state, progress: entry.progress, dx: entry.dx, dy: entry.dy }).kind).toBe('blocked')
+      expect(resolveWorldTargetInteraction(entry.state, entry.progress, entry.target).kind).toBe('locked-portal')
+    }
   })
 
-  it('semantic ancestryを満たしたcanonical progressなら各portalを通れる', () => {
-    const forest = resolveWorldMove({
-      rpgState: {
-        ...createInitialRpgState(),
-        worldMapId: OVERWORLD_MAP_ID,
-        worldPosition: { x: JS_FOREST_POSITION.x + 1, y: JS_FOREST_POSITION.y },
+  it('canonical progressでも方向入力では止まり、正面Actionでportalを通れる', () => {
+    const cases = [
+      {
+        state: portalState(OVERWORLD_MAP_ID, { x: JS_FOREST_POSITION.x + 1, y: JS_FOREST_POSITION.y }),
+        target: JS_FOREST_POSITION,
+        progress: progressWith(throughTraining),
+        dx: -1,
+        dy: 0,
       },
-      progress: progressWith(throughTraining),
-      dx: -1,
-      dy: 0,
-    })
-    expect(forest.kind).toBe('transition')
-
-    const deepForest = resolveWorldMove({
-      rpgState: {
-        ...createInitialRpgState(),
-        worldMapId: JS_FOREST_MAP_ID,
-        worldPosition: {
+      {
+        state: portalState(JS_FOREST_MAP_ID, {
           x: JS_FOREST_DEEP_FOREST_POSITION.x + 1,
           y: JS_FOREST_DEEP_FOREST_POSITION.y,
-        },
+        }),
+        target: JS_FOREST_DEEP_FOREST_POSITION,
+        progress: progressWith(throughForest),
+        dx: -1,
+        dy: 0,
       },
-      progress: progressWith(throughForest),
-      dx: -1,
-      dy: 0,
-    })
-    expect(deepForest.kind).toBe('transition')
-
-    const codeCore = resolveWorldMove({
-      rpgState: {
-        ...createInitialRpgState(),
-        worldMapId: JS_DEEP_FOREST_MAP_ID,
-        worldPosition: {
+      {
+        state: portalState(JS_DEEP_FOREST_MAP_ID, {
           x: JS_DEEP_FOREST_CORE_EXIT_POSITION.x + 1,
           y: JS_DEEP_FOREST_CORE_EXIT_POSITION.y,
-        },
+        }),
+        target: JS_DEEP_FOREST_CORE_EXIT_POSITION,
+        progress: progressWith(throughDeepForest),
+        dx: -1,
+        dy: 0,
       },
-      progress: progressWith(throughDeepForest),
-      dx: -1,
-      dy: 0,
-    })
-    expect(codeCore.kind).toBe('transition')
-
-    const typeScript = resolveWorldMove({
-      rpgState: {
-        ...createInitialRpgState(),
-        worldMapId: OVERWORLD_MAP_ID,
-        worldPosition: {
+      {
+        state: portalState(OVERWORLD_MAP_ID, {
           x: TS_FRONTIER_GATE_POSITION.x - 1,
           y: TS_FRONTIER_GATE_POSITION.y,
-        },
+        }),
+        target: TS_FRONTIER_GATE_POSITION,
+        progress: progressWith(javascriptComplete),
+        dx: 1,
+        dy: 0,
       },
-      progress: progressWith(javascriptComplete),
-      dx: 1,
-      dy: 0,
-    })
-    expect(typeScript.kind).toBe('transition')
+    ] as const
+
+    for (const entry of cases) {
+      expect(resolveWorldMove({ rpgState: entry.state, progress: entry.progress, dx: entry.dx, dy: entry.dy }).kind).toBe('blocked')
+      const intent = resolveWorldTargetInteraction(entry.state, entry.progress, entry.target)
+      expect(intent.kind).toBe('map-transition')
+    }
   })
 })

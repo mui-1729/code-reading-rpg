@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useProgress } from '../progression'
 import { useRpg } from '../rpg'
-import { resolveWorldInteraction, resolveWorldMove } from './worldActions'
+import { resolveWorldMove } from './worldActions'
+import { getWorldInteractionTarget } from './worldInteractionTarget'
+import type { WorldFacing } from './worldPresentation'
 import type { WorldMapId } from './worldMap'
+import { resolveWorldTargetInteraction } from './worldTargetInteraction'
 
 type TransitionPhase = 'covering' | 'revealing'
 
@@ -56,10 +59,17 @@ function isWorldInteractButton(target: EventTarget | null) {
     : null
 }
 
+function getRenderedWorldFacing(): WorldFacing | null {
+  const facing = document.querySelector<HTMLElement>('.world-player-sprite')?.dataset.facing
+  return facing === 'up' || facing === 'down' || facing === 'left' || facing === 'right'
+    ? facing
+    : null
+}
+
 /**
- * Portal authority stays in worldActions. This component only gates the native
- * control event when that resolver says the next action crosses a map boundary:
- * cover the old map -> replay the original control -> reveal the new map.
+ * Portal authority stays in the exact-target interaction resolver. This
+ * component only gates the native Action event when the faced tile crosses a
+ * map boundary: cover the old map -> replay Action -> reveal the new map.
  */
 export function WorldMapTransitionGate() {
   const { progress } = useProgress()
@@ -124,7 +134,10 @@ export function WorldMapTransitionGate() {
   }, [beginTransition])
 
   const tryInteractTransition = useCallback((replay: () => void) => {
-    const intent = resolveWorldInteraction(rpgStateRef.current, progressRef.current)
+    const facing = getRenderedWorldFacing()
+    if (!facing) return false
+    const target = getWorldInteractionTarget(rpgStateRef.current.worldPosition, facing)
+    const intent = resolveWorldTargetInteraction(rpgStateRef.current, progressRef.current, target)
     if (intent.kind !== 'map-transition') return false
     return beginTransition(intent.toMapId, intent.label, replay)
   }, [beginTransition])

@@ -19,6 +19,12 @@ const storedTutorial = (page: Parameters<typeof test>[0]['page']) =>
 const storedRpg = (page: Parameters<typeof test>[0]['page']) =>
   readStoredRpg(page)
 
+async function faceByte(page: Parameters<typeof test>[0]['page']) {
+  await page.getByRole('button', { name: '上へ移動' }).click()
+  await expect(page.locator('.world-player-sprite')).toHaveAttribute('data-facing', 'up')
+  await expect(page.getByRole('button', { name: 'BYTEと話す' })).toBeEnabled()
+}
+
 test('mobile TutorialがD-Pad移動後にBYTEへのアクションへ進む', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedTutorial(page, 'field-move')
@@ -35,13 +41,15 @@ test('mobile TutorialがD-Pad移動後にBYTEへのアクションへ進む', as
   await expect.poll(async () => (await storedTutorial(page))?.phase).toBe('field-interact')
 })
 
-test('mobile TutorialでBYTEを実際に加入させ、追従と役割を確認してからBattleへ進む', async ({ page }) => {
+test('mobile TutorialでBYTEの方を向いて加入させ、追従と役割を確認してからBattleへ進む', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedTutorial(page, 'field-interact')
   await page.goto('/world')
 
   await expect(page.locator('.tutorial-prompt-field')).toContainText('BYTEの隣まで歩こう')
   await page.getByRole('button', { name: '左へ移動' }).click()
+  await expect(page.locator('.tutorial-prompt-field')).toContainText(/BYTEの方を向こう/)
+  await faceByte(page)
   await expect(page.locator('.tutorial-prompt-field')).toContainText(/BYTEに話しかける/)
 
   await page.getByRole('button', { name: 'BYTEと話す' }).click()
@@ -60,12 +68,14 @@ test('mobile TutorialでBYTEを実際に加入させ、追従と役割を確認�
   expect((await storedTutorial(page))?.status).toBe('active')
 })
 
-test('desktop TutorialでもKeyboardでBYTE加入まで操作できる', async ({ page }) => {
+test('desktop TutorialでもKeyboardでBYTEの方を向いて加入まで操作できる', async ({ page }) => {
   await seedTutorial(page, 'field-interact')
   await page.goto('/world')
 
   await page.keyboard.press('ArrowLeft')
-  await expect(page.locator('.tutorial-prompt-field')).toContainText(/BYTEに話しかける/)
+  await expect(page.locator('.tutorial-prompt-field')).toContainText(/BYTEの方を向こう/)
+  await page.keyboard.press('ArrowUp')
+  await expect(page.getByRole('button', { name: 'BYTEと話す' })).toBeEnabled()
   await page.keyboard.press('Enter')
 
   await expect.poll(async () => (await storedRpg(page))?.state?.partyMemberIds).toContain('byte')
@@ -76,6 +86,7 @@ test('party-joinはreload後もBYTE加入状態を保ち重複加入しない', 
   await seedTutorial(page, 'field-interact')
   await page.goto('/world')
   await page.getByRole('button', { name: '左へ移動' }).click()
+  await faceByte(page)
   await page.getByRole('button', { name: 'BYTEと話す' }).click()
   await expect.poll(async () => (await storedTutorial(page))?.phase).toBe('party-join')
 
@@ -117,6 +128,7 @@ test('設定からTutorialを最初からやり直しても加入済みBYTEを�
   await page.getByRole('button', { name: '左へ移動' }).click()
   await expect.poll(async () => (await storedTutorial(page))?.phase).toBe('field-interact')
   await expect(page.locator('.tutorial-prompt-field')).toContainText('アクション')
+  await faceByte(page)
   await page.getByRole('button', { name: 'BYTEと話す' }).click()
   await expect.poll(async () => (await storedTutorial(page))?.phase).toBe('party-join')
   expect((await storedRpg(page))?.state?.partyMemberIds).toEqual(['byte'])

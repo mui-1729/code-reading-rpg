@@ -276,36 +276,14 @@ export function resolveWorldMove({
     return { kind: 'blocked', nextState: rpgState, terrain }
   }
 
-  const nextSteps = rpgState.stepsSinceEncounter + 1
-  const portal = getWorldPortalAtPosition(mapId, next)
-  if (portal) {
-    if (!isWorldPortalRequirementSatisfied(portal.requiredClearedStageId, progress.clearedStageIds)) {
-      return { kind: 'blocked', nextState: rpgState, terrain }
-    }
-
-    // GREENFIELD VILLAGE is a deliberate RPG interaction: walking into the
-    // entrance stops at the threshold, then INTERACT performs the transition.
-    if (mapId === OVERWORLD_MAP_ID && portal.toMapId === JS_VILLAGE_MAP_ID) {
-      return { kind: 'blocked', nextState: rpgState, terrain }
-    }
-
-    const region = getWorldRegion(portal.targetPosition.x, portal.toMapId)
-    return {
-      kind: 'transition',
-      terrain,
-      region,
-      fromMapId: mapId,
-      toMapId: portal.toMapId,
-      label: portal.label,
-      nextState: {
-        ...rpgState,
-        worldMapId: portal.toMapId,
-        worldPosition: { ...portal.targetPosition },
-        stepsSinceEncounter: nextSteps,
-      },
-    }
+  // A portal is an interaction target, not a walk-on trigger. Direction input
+  // only faces the entrance; the explicit Action resolves locked/unlocked state
+  // and performs the map transition.
+  if (getWorldPortalAtPosition(mapId, next)) {
+    return { kind: 'blocked', nextState: rpgState, terrain }
   }
 
+  const nextSteps = rpgState.stepsSinceEncounter + 1
   const region = getWorldRegion(next.x, mapId)
   const movedState: RpgState = {
     ...rpgState,

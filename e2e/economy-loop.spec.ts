@@ -60,6 +60,7 @@ test('Battle Gold → Shop purchase/equip → Inn → reload → next canonical 
   expect(stored.progress.progress.unlockedStageIds).not.toContain(10)
   expect(stored.rpg.state.currentHp).toBeGreaterThan(0)
 
+  await page.getByRole('button', { name: '左へ移動' }).click()
   await page.getByRole('button', { name: 'ショップを見る' }).click()
   const shop = page.getByRole('dialog', { name: 'ショップ' })
   const lifeCharm = shop.locator('[data-equipment-id="life-charm"]')

@@ -92,6 +92,7 @@ test('Training完了後もVillageでMIOへ戻って会話できる', async ({ pa
     position: { x: 12, y: 8 },
   })
 
+  await page.getByRole('button', { name: '上へ移動' }).click()
   const talk = page.getByRole('button', { name: 'TRAINER MIOと話す' })
   await expect(talk).toBeEnabled()
   await talk.click()
@@ -109,6 +110,7 @@ test('Villageのordinary residentはmain progression外で生活の会話を持�
     position: { x: 8, y: 9 },
   })
 
+  await page.getByRole('button', { name: '上へ移動' }).click()
   const talk = page.getByRole('button', { name: 'VILLAGE CHILDと話す' })
   await expect(talk).toBeEnabled()
   await talk.click()
@@ -127,6 +129,7 @@ test('TypeScriptではWARDEN NPCとBattle 6のFrontier Compilerを別objectと�
     position: { x: 29, y: 6 },
   })
 
+  await page.getByRole('button', { name: '右へ移動' }).click()
   const talk = page.getByRole('button', { name: 'TYPE WARDENと話す' })
   await expect(talk).toBeEnabled()
   await talk.click()
@@ -144,6 +147,7 @@ test('TypeScriptではWARDEN NPCとBattle 6のFrontier Compilerを別objectと�
   }, GAME_STATE_KEY)
   await page.reload()
 
+  await page.getByRole('button', { name: '上へ移動' }).click()
   await expect(page.getByLabel('FRONTIER COMPILER ボス')).toBeVisible()
   await expect(
     page.getByRole('button', { name: 'FRONTIER COMPILERに挑む' }),

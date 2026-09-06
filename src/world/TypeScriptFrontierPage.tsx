@@ -10,13 +10,14 @@ import { resolveWorldMove } from './worldActions'
 import {
   getTreasureAtPosition,
   getVisibleWorldCells,
-  isAdjacent,
-  TS_BOSS_POSITION,
   TS_FRONTIER_MAP_ID,
 } from './worldMap'
+import { getWorldFacingFromMove, getWorldInteractionTarget } from './worldInteractionTarget'
+import type { WorldFacing } from './worldPresentation'
 import { WorldCharacterLayer, WorldControls, WorldObjectiveCard, WorldViewport } from './WorldScene'
 import { useWorldKeyboardControls } from './useWorldKeyboardControls'
 import type { WorldPosition } from './worldSceneGeometry'
+import { resolveWorldTargetInteraction } from './worldTargetInteraction'
 
 const terrainLabels: Record<string, string> = {
   mountain: '崩れた境界',
@@ -74,6 +75,7 @@ export function TypeScriptFrontierPage() {
   const { encounterCueActive, startEncounterCue } = useEncounterCue()
 
   const position = rpgState.worldPosition
+  const [playerFacing, setPlayerFacing] = useState<WorldFacing>('down')
   const [followerPosition, setFollowerPosition] = useState<WorldPosition>(() => ({
     x: position.x,
     y: position.y + 1,
@@ -82,6 +84,14 @@ export function TypeScriptFrontierPage() {
   const viewportStart = visibleCells[0] ?? position
   const byteJoined = rpgState.partyMemberIds.includes('byte')
   const objective = getObjective(progress.clearedStageIds)
+  const interactionTarget = useMemo(
+    () => getWorldInteractionTarget(position, playerFacing),
+    [playerFacing, position],
+  )
+  const interactionIntent = useMemo(
+    () => resolveWorldTargetInteraction(rpgState, progress, interactionTarget),
+    [interactionTarget, progress, rpgState],
+  )
 
   const enterBattle = useCallback(
     (battleId: number, seed: string, playConfirm = true) => {
@@ -99,18 +109,9 @@ export function TypeScriptFrontierPage() {
     (dx: number, dy: number) => {
       if (encounterCueActive || document.body.dataset.rpgPaused === 'true') return
 
+      setPlayerFacing((current) => getWorldFacingFromMove(dx, dy, current))
       const result = resolveWorldMove({ rpgState, progress, dx, dy })
-      if (result.kind === 'blocked') {
-        gameAudio.playSe('cancel')
-        setMessage(
-          result.terrain === 'boss'
-            ? 'FRONTIER COMPILERが道を塞いでいる。隣から挑もう。'
-            : result.terrain === 'treasure'
-              ? 'TYPE CACHEだ。隣から調べよう。'
-              : '崩れた境界の先へは進めない。',
-        )
-        return
-      }
+      if (result.kind === 'blocked') return
 
       if (result.kind === 'transition') {
         setRpgState(result.nextState)
@@ -136,15 +137,23 @@ export function TypeScriptFrontierPage() {
   const interact = useCallback(() => {
     if (encounterCueActive || document.body.dataset.rpgPaused === 'true') return
 
-    const treasure = getTreasureAtPosition({ x: position.x, y: position.y }, TS_FRONTIER_MAP_ID)
-    const adjacentTreasure = visibleCells
-      .map((cell) => getTreasureAtPosition(cell, TS_FRONTIER_MAP_ID))
-      .find((candidate) => candidate && isAdjacent(position, candidate.position))
+    const intent = interactionIntent
 
-    if (treasure || adjacentTreasure) {
-      const target = treasure ?? adjacentTreasure
-      if (!target) return
-      const result = openWorldTreasure(progress, rpgState, target.id)
+    if (intent.kind === 'map-transition') {
+      setRpgState(intent.nextState)
+      gameAudio.playSe('confirm')
+      setMessage(`${intent.label}へ戻った。JavaScript地方とTypeScript地方は門で分かれている。`)
+      return
+    }
+
+    if (intent.kind === 'locked-portal') {
+      gameAudio.playSe('cancel')
+      setMessage(`${intent.label}への道はまだ開いていない。`)
+      return
+    }
+
+    if (intent.kind === 'treasure') {
+      const result = openWorldTreasure(progress, rpgState, intent.treasureId)
       if (!result.opened) {
         gameAudio.playSe('cancel')
         setMessage(`${result.definition.name}: すでに空だ。`)
@@ -162,24 +171,17 @@ export function TypeScriptFrontierPage() {
       return
     }
 
-    if (isAdjacent(position, TS_BOSS_POSITION)) {
-      if (!progress.unlockedStageIds.includes(6) && !progress.clearedStageIds.includes(5)) {
+    if (intent.kind === 'boss') {
+      if (!intent.unlocked) {
         gameAudio.playSe('cancel')
         setMessage(
           'BYTE: まずTypeScript辺境のBattle 4 / 5を終わらせよう。二つの型ルールが揃えばFRONTIER COMPILERへ挑める。',
         )
         return
       }
-      enterBattle(6, `boss:ts:${rpgState.encounterCount}`)
-      return
+      enterBattle(intent.battleId, intent.seed)
     }
-
-    setMessage(
-      progress.clearedStageIds.includes(5)
-        ? '北東のFRONTIER COMPILERへ向かおう。ボスの隣から挑める。'
-        : '石畳を外れてクリスタル地帯 / 古代遺跡へ入るとTypeScript戦闘が起こる。',
-    )
-  }, [encounterCueActive, enterBattle, position, progress, rpgState, setProgress, setRpgState, visibleCells])
+  }, [encounterCueActive, enterBattle, interactionIntent, progress, rpgState, setProgress, setRpgState])
 
   useWorldKeyboardControls({ interact, move, disabled: encounterCueActive })
 
@@ -237,6 +239,7 @@ export function TypeScriptFrontierPage() {
           <WorldCharacterLayer
             mapId={TS_FRONTIER_MAP_ID}
             playerPosition={position}
+            playerFacing={playerFacing}
             viewportStart={viewportStart}
             followerPosition={followerPosition}
             followerJoined={byteJoined}
@@ -248,7 +251,7 @@ export function TypeScriptFrontierPage() {
           <p>{message}</p>
         </section>
 
-        <WorldControls move={move} interact={interact} />
+        <WorldControls move={move} interact={interact} interactionIntent={interactionIntent} />
       </section>
     </main>
   )

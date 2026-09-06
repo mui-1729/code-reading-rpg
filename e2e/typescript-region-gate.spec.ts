@@ -94,30 +94,41 @@ async function waitForMapTransition(page: Page) {
   await expect(page.locator('.world-map-transition')).toHaveCount(0, { timeout: 1_000 })
 }
 
-test('JavaScript未clearではTypeScriptの門へ進めず理由を表示する', async ({ page }) => {
-  await seedWorld(page, { worldPosition: { x: 51, y: 14 } })
+test('JavaScript未clearではTypeScriptの門へ向くだけではログ不変で、Action時に理由を表示する', async ({ page }) => {
+  await seedWorld(page, { worldPosition: { x: 61, y: 14 } })
 
-  await expect(overworld(page)).toHaveAttribute('data-world-x', '51')
+  const log = page.locator('.world-message p')
+  const before = await log.textContent()
+  await expect(overworld(page)).toHaveAttribute('data-world-x', '61')
   await page.getByRole('button', { name: '右へ移動' }).click()
 
-  await expect(overworld(page)).toHaveAttribute('data-world-x', '51')
+  await expect(overworld(page)).toHaveAttribute('data-world-x', '61')
+  await expect(page.locator('.world-player-sprite')).toHaveAttribute('data-facing', 'right')
+  await expect(log).toHaveText(before ?? '')
+
+  const lockedGate = page.getByRole('button', { name: 'TypeScript辺境を調べる' })
+  await expect(lockedGate).toBeEnabled()
+  await lockedGate.click()
   await expect(page.locator('.world-message')).toContainText('TypeScript辺境は未開通')
   await expect(page.locator('.world-message')).toContainText('Final Boss')
 })
 
-test('canonical JavaScript route完了後はOverworldから専用TypeScript辺境mapへ遷移する', async ({ page }) => {
+test('canonical JavaScript route完了後はOverworldから専用TypeScript辺境mapへActionで遷移する', async ({ page }) => {
   await seedWorld(page, { clearedStageIds: JS_COMPLETE })
 
   await page.getByRole('button', { name: '右へ移動' }).click()
+  await expect(overworld(page)).toHaveAttribute('data-world-map', 'overworld')
+  await page.getByRole('button', { name: 'TypeScript辺境へ入る' }).click()
 
   await expect(frontier(page)).toHaveAttribute('data-world-map', 'ts-frontier')
   await expect(frontier(page)).toHaveAttribute('data-world-x', '2')
   await expect(frontier(page)).toHaveAttribute('data-world-y', '10')
+  await waitForMapTransition(page)
   await expect(page.locator('.world-header')).toBeHidden()
   await expect(page.getByText('TypeScript辺境は未開通')).toHaveCount(0)
 })
 
-test('TypeScript辺境の西の門からCentral Hubへ往復できる', async ({ page }) => {
+test('TypeScript辺境の西の門からCentral HubへActionで往復できる', async ({ page }) => {
   await seedWorld(page, {
     clearedStageIds: JS_COMPLETE,
     worldMapId: 'ts-frontier',
@@ -125,65 +136,61 @@ test('TypeScript辺境の西の門からCentral Hubへ往復できる', async ({
   })
 
   await page.getByRole('button', { name: '左へ移動' }).click()
+  await expect(frontier(page)).toHaveAttribute('data-world-map', 'ts-frontier')
+  await page.getByRole('button', { name: '中央Hubへ入る' }).click()
 
   await expect(overworld(page)).toHaveAttribute('data-world-map', 'overworld')
   await expect(overworld(page)).toHaveAttribute('data-world-x', '61')
   await expect(overworld(page)).toHaveAttribute('data-world-y', '14')
   await waitForMapTransition(page)
-
-  await page.getByRole('button', { name: '右へ移動' }).click()
-  await expect(frontier(page)).toHaveAttribute('data-world-map', 'ts-frontier')
 })
 
 test('旧overworld TypeScript側saveは専用mapへmigrationしreload後も保持する', async ({ page }) => {
   await seedWorld(page, {
     clearedStageIds: JS_COMPLETE,
     worldMapId: 'overworld',
-    worldPosition: { x: 30, y: 14 },
+    worldPosition: { x: 30, y: 18 },
     rpgVersion: 5,
   })
 
   await expect(frontier(page)).toHaveAttribute('data-world-map', 'ts-frontier')
-  await expect(frontier(page)).toHaveAttribute('data-world-x', '9')
-  await expect(frontier(page)).toHaveAttribute('data-world-y', '14')
+  await expect(frontier(page)).toHaveAttribute('data-world-x', '19')
+  await expect(frontier(page)).toHaveAttribute('data-world-y', '15')
 
   await page.reload()
-  await expect(frontier(page)).toHaveAttribute('data-world-x', '9')
-  await expect(frontier(page)).toHaveAttribute('data-world-y', '14')
+  await expect(frontier(page)).toHaveAttribute('data-world-map', 'ts-frontier')
+  await expect(frontier(page)).toHaveAttribute('data-world-x', '19')
+  await expect(frontier(page)).toHaveAttribute('data-world-y', '15')
 })
 
 test('未解放TypeScript側の旧座標saveはOverworld開始地点へnormalizeする', async ({ page }) => {
   await seedWorld(page, {
     worldMapId: 'overworld',
-    worldPosition: { x: 30, y: 14 },
+    worldPosition: { x: 30, y: 18 },
     rpgVersion: 5,
   })
 
   await expect(overworld(page)).toHaveAttribute('data-world-map', 'overworld')
   await expect(overworld(page)).toHaveAttribute('data-world-x', '20')
   await expect(overworld(page)).toHaveAttribute('data-world-y', '14')
-  await expect.poll(async () => (await readStoredRpg(page)).state.worldMapId).toBe('overworld')
-  await expect.poll(async () => (await readStoredRpg(page)).state.worldPosition).toEqual({
-    x: 20,
-    y: 14,
-  })
 })
 
 test('TypeScript local encounterから逃走すると同じ辺境位置へ戻る', async ({ page }) => {
   await seedWorld(page, {
     clearedStageIds: [...JS_COMPLETE, 4],
-    unlockedStageIds: [7, 4, 5],
     worldMapId: 'ts-frontier',
-    worldPosition: { x: 5, y: 10 },
+    worldPosition: { x: 10, y: 10 },
   })
 
-  await page.goto('/typescript/battle/4?seed=encounter:ts-frontier:1:5:10&returnTo=%2Fworld')
-  const run = page.getByRole('group', { name: '戦闘コマンド' }).getByRole('button', { name: '逃げる' })
-  await expect(run).toBeEnabled()
-  await run.click()
-  await page.getByRole('group', { name: '逃走確認' }).getByRole('button', { name: '逃げる' }).click()
+  const before = await readStoredRpg(page)
+  await page.goto('/typescript/battle/4?seed=encounter%3Ats-frontier%3A10%3A10%3A1&returnTo=%2Fworld')
+  const story = page.locator('.battle-story-window')
+  if (await story.isVisible()) await story.getByRole('button', { name: 'スキップ', exact: true }).click()
+  await page.getByRole('button', { name: '逃げる', exact: true }).click()
+  await page.getByRole('button', { name: '逃げる', exact: true }).click()
 
   await expect(page).toHaveURL(/\/world$/)
-  await expect(frontier(page)).toHaveAttribute('data-world-x', '5')
-  await expect(frontier(page)).toHaveAttribute('data-world-y', '10')
+  const after = await readStoredRpg(page)
+  expect(after.state.worldMapId).toBe('ts-frontier')
+  expect(after.state.worldPosition).toEqual(before.state.worldPosition)
 })

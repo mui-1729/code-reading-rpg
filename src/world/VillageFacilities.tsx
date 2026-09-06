@@ -3,8 +3,9 @@ import { createPortal } from 'react-dom'
 import { WorldInn } from '../economy/WorldInn'
 import { VillageShop } from '../economy/VillageShop'
 import { useRpg } from '../rpg'
-import { isAdjacent, JS_VILLAGE_MAP_ID } from './worldMap'
+import { VILLAGE_FACILITY_OPEN_EVENT } from './villageFacilityEvents'
 import { VILLAGE_FACILITIES, type VillageFacility, type VillageFacilityKind } from './villageFacilityData'
+import { JS_VILLAGE_MAP_ID } from './worldMap'
 
 type FacilityTarget = {
   facility: VillageFacility
@@ -50,9 +51,24 @@ export function VillageFacilities() {
   }, [])
 
   useEffect(() => {
+    const openFacility = (event: Event) => {
+      const facility = (event as CustomEvent<VillageFacilityKind>).detail
+      if (!VILLAGE_FACILITIES.some((candidate) => candidate.kind === facility)) return
+      setMessage('')
+      setActive(facility)
+    }
+    window.addEventListener(VILLAGE_FACILITY_OPEN_EVENT, openFacility)
+    return () => window.removeEventListener(VILLAGE_FACILITY_OPEN_EVENT, openFacility)
+  }, [])
+
+  useEffect(() => {
     if (!visibleActive) return
     const stopWorldKeys = (event: KeyboardEvent) => {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd', 'W', 'A', 'S', 'D'].includes(event.key)) {
+      if (
+        ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd', 'W', 'A', 'S', 'D', 'Enter', ' '].includes(
+          event.key,
+        )
+      ) {
         event.preventDefault()
         event.stopPropagation()
       }
@@ -62,39 +78,23 @@ export function VillageFacilities() {
   }, [visibleActive])
 
   const close = () => setActive(null)
-  const position = rpgState.worldPosition
 
   return (
     <>
-      {targets.map(({ facility, target }) => {
-        const available =
-          rpgState.worldMapId === JS_VILLAGE_MAP_ID &&
-          isAdjacent(position, facility.position)
-        return createPortal(
-          <button
-            type="button"
+      {targets.map(({ facility, target }) =>
+        createPortal(
+          <span
             className="world-object facility-object"
             data-village-facility={facility.kind}
-            aria-label={facility.actionLabel}
-            disabled={!available}
-            onClick={() => {
-              setMessage('')
-              setActive(facility.kind)
-            }}
-            style={{
-              border: '1px solid currentColor',
-              padding: '2px 4px',
-              cursor: available ? 'pointer' : 'default',
-              opacity: available ? 1 : 0.82,
-              font: 'inherit',
-            }}
+            aria-hidden="true"
+            style={{ cursor: 'default', outline: 'none', outlineOffset: 0 }}
           >
             {facility.label}
-          </button>,
+          </span>,
           target,
           facility.kind,
-        )
-      })}
+        ),
+      )}
 
       <WorldInn
         open={visibleActive === 'inn'}

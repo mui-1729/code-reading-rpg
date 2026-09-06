@@ -123,6 +123,15 @@ function hasByteNearby() {
   })
 }
 
+function hasByteActionReady() {
+  const action = document.querySelector<HTMLButtonElement>('.world-interact')
+  return Boolean(
+    action &&
+    !action.disabled &&
+    action.getAttribute('aria-label') === 'BYTEと話す'
+  )
+}
+
 function clearHighlights() {
   document
     .querySelectorAll('.tutorial-highlight, .tutorial-highlight-soft')
@@ -146,9 +155,10 @@ export function TutorialPrompt() {
   const routeKind = getRouteKind(pathname)
   const worldRoute = pathname === '/world'
   const byteJoined = rpgState.partyMemberIds.includes('byte')
+  const byteNearby = worldRoute && hasByteNearby()
   const interactionReady =
     routeKind === 'field' &&
-    (worldRoute ? byteJoined || hasByteNearby() : hasInteractionNearby())
+    (worldRoute ? hasByteActionReady() : hasInteractionNearby())
   const selectedSkillId = routeKind === 'battle' ? battleRuntime?.selectedSkillId : null
   const battleReady =
     routeKind === 'battle' &&
@@ -172,7 +182,7 @@ export function TutorialPrompt() {
       characterData: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ['data-world-x', 'data-world-y'],
+      attributeFilter: ['data-world-x', 'data-world-y', 'data-facing', 'disabled', 'aria-label'],
     })
     return () => {
       observer.disconnect()
@@ -316,8 +326,14 @@ export function TutorialPrompt() {
         }
       : {
           label: 'アクション',
-          title: worldRoute ? 'BYTEの隣まで歩こう' : '調べられるものの前まで歩こう',
-          detail: '対象の隣まで来るとアクションできる',
+          title: worldRoute
+            ? byteNearby
+              ? 'BYTEの方を向こう'
+              : 'BYTEの隣まで歩こう'
+            : '調べられるものの前まで歩こう',
+          detail: worldRoute && byteNearby
+            ? '方向入力でBYTEの方を向いてからアクションする'
+            : '対象の隣まで歩き、対象の方を向いてからアクションする',
           className: 'tutorial-prompt-field',
         }
   } else if (state.phase === 'party-join' && routeKind === 'field') {
@@ -326,7 +342,7 @@ export function TutorialPrompt() {
       title: byteJoined ? 'BYTEが仲間になった！' : 'BYTEを仲間へ加入させよう',
       detail: byteJoined
         ? 'Worldでは後ろから追従する。メニューの「仲間」で確認でき、戦闘ではあなたが読んだ同じ対象へ追撃する。'
-        : 'BYTEの隣でアクションして仲間へ加入させる',
+        : 'BYTEの隣でBYTEの方を向き、アクションして仲間へ加入させる',
       className: 'tutorial-prompt-field',
     }
   } else if (state.phase === 'battle' && routeKind === 'battle' && battleReady) {

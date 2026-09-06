@@ -88,6 +88,11 @@ async function seedWorld(
   await page.goto('/world')
 }
 
+async function faceFinalBoss(page: Page) {
+  await page.getByRole('button', { name: '上へ移動' }).click()
+  await expect(page.locator('.world-player-sprite')).toHaveAttribute('data-facing', 'up')
+}
+
 test('Battle 15後のDeep ForestでBattle 16 map()をtrace変換として固定導入する', async ({ page }) => {
   await seedWorld(page, {
     clearedStageIds: throughDeepFilter,
@@ -159,6 +164,7 @@ test('Battle 22前はJavaScript Final Boss 3へ挑戦できない', async ({ pag
     position: { x: 40, y: 6 },
   })
 
+  await faceFinalBoss(page)
   await page.getByRole('button', { name: 'ボスを調べる' }).click()
 
   await expect(page).toHaveURL(/\/world$/)
@@ -174,6 +180,7 @@ test('incident routeとBattle 22完了後にFinal Boss 3を開始できる', asy
     position: { x: 40, y: 6 },
   })
 
+  await faceFinalBoss(page)
   await page.getByRole('button', { name: 'ボスに挑む' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/3\?/)

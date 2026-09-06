@@ -65,6 +65,12 @@ async function seedVillageTraining(page: Page) {
   await page.goto('/world')
 }
 
+async function faceTraining(page: Page) {
+  await page.getByRole('button', { name: '右へ移動' }).click()
+  await expect(page.locator('.world-player-sprite')).toHaveAttribute('data-facing', 'right')
+  await expect(page.getByRole('button', { name: 'MIOと訓練する' })).toBeEnabled()
+}
+
 async function executeSkill(page: Page, name: string) {
   const fight = page.getByRole('button', { name: '戦う', exact: true })
   if ((await fight.getAttribute('aria-pressed')) !== 'true') await fight.click()
@@ -110,6 +116,7 @@ test('first incident後にVillageで必要な読み方をBattle 7→8→9で確�
   await expect(objective).toContainText('HP条件')
   await expect(page.getByText('訓練', { exact: true })).toBeVisible()
 
+  await faceTraining(page)
   await page.getByRole('button', { name: 'MIOと訓練する' }).click()
   await expect(page).toHaveURL(/\/javascript\/battle\/7\?/)
   const comparisonStory = page.getByRole('dialog', { name: 'まず、ログの数字を一つ読む' })
@@ -123,6 +130,7 @@ test('first incident後にVillageで必要な読み方をBattle 7→8→9で確�
   expect((await storedProgress(page)).progress.clearedStageIds).toEqual([1, 7])
   expect((await storedProgress(page)).progress.unlockedStageIds).toContain(8)
 
+  await faceTraining(page)
   await page.getByRole('button', { name: 'MIOと訓練する' }).click()
   await expect(page).toHaveURL(/\/javascript\/battle\/8\?/)
   const equalityStory = page.getByRole('dialog', { name: 'ログにある名前の条件も読む' })
@@ -136,6 +144,7 @@ test('first incident後にVillageで必要な読み方をBattle 7→8→9で確�
   expect((await storedProgress(page)).progress.clearedStageIds).toEqual([1, 7, 8])
   expect((await storedProgress(page)).progress.unlockedStageIds).toContain(9)
 
+  await faceTraining(page)
   await page.getByRole('button', { name: 'MIOと訓練する' }).click()
   await expect(page).toHaveURL(/\/javascript\/battle\/9\?/)
   const findStory = page.getByRole('dialog', { name: '実際のselectorがどこで止まるか追う' })

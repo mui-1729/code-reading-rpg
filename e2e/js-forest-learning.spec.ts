@@ -100,6 +100,7 @@ test('Village training完了後はForestへ入りreload後もlocal mapを保持�
   await seedForestGate(page, 'training-complete')
 
   await page.getByRole('button', { name: '下へ移動' }).click()
+  await page.getByRole('button', { name: 'JavaScriptの森へ入る' }).click()
   const forest = page.getByLabel('JavaScriptの森のマップ')
   await expect(forest).toHaveAttribute('data-world-map', 'js-forest')
   await expect(page.locator('.world-header')).toBeHidden()
@@ -115,6 +116,7 @@ test('Forest最初のWoodsはRandom抽選ではなくBattle 10の固定traceに�
   await seedForestGate(page, 'training-complete')
 
   await page.getByRole('button', { name: '下へ移動' }).click()
+  await page.getByRole('button', { name: 'JavaScriptの森へ入る' }).click()
   await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-map', 'js-forest')
 
   await page.getByRole('button', { name: '左へ移動' }).click()

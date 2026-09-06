@@ -9,6 +9,7 @@ import {
   JS_FOREST_MAP_ID,
   WORLD_MAP_STARTS,
 } from './worldMap'
+import { resolveWorldTargetInteraction } from './worldTargetInteraction'
 
 const clearedThrough14 = [7, 8, 9, 1, 10, 11, 12, 13, 14]
 
@@ -32,26 +33,21 @@ describe('JavaScript Deep Forest', () => {
     expect(result.kind).toBe('blocked')
   })
 
-  it('filter trace clear後はForestからDeep Forestへtransitionする', () => {
-    const progress = createInitialPlayerProgress()
+  it('filter trace clear後も入口では止まり、正面ActionでDeep Forestへtransitionする', () => {
+    const progress = { ...createInitialPlayerProgress(), clearedStageIds: clearedThrough14 }
     const rpgState = {
       ...createInitialRpgState(),
       worldMapId: JS_FOREST_MAP_ID,
       worldPosition: { x: 2, y: 10 },
     }
 
-    const result = resolveWorldMove({
-      rpgState,
-      progress: { ...progress, clearedStageIds: clearedThrough14 },
-      dx: -1,
-      dy: 0,
-    })
-
-    expect(result.kind).toBe('transition')
-    if (result.kind !== 'transition') return
-    expect(result.toMapId).toBe(JS_DEEP_FOREST_MAP_ID)
-    expect(result.nextState.worldMapId).toBe(JS_DEEP_FOREST_MAP_ID)
-    expect(result.nextState.worldPosition).toEqual(WORLD_MAP_STARTS[JS_DEEP_FOREST_MAP_ID])
+    expect(resolveWorldMove({ rpgState, progress, dx: -1, dy: 0 }).kind).toBe('blocked')
+    const intent = resolveWorldTargetInteraction(rpgState, progress, JS_FOREST_DEEP_FOREST_POSITION)
+    expect(intent.kind).toBe('map-transition')
+    if (intent.kind !== 'map-transition') return
+    expect(intent.toMapId).toBe(JS_DEEP_FOREST_MAP_ID)
+    expect(intent.nextState.worldMapId).toBe(JS_DEEP_FOREST_MAP_ID)
+    expect(intent.nextState.worldPosition).toEqual(WORLD_MAP_STARTS[JS_DEEP_FOREST_MAP_ID])
   })
 
   it('Deep Forest最初の移動では二つ目の実incidentを固定再現する', () => {
