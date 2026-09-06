@@ -200,6 +200,8 @@ function getInteractionPresentation(intent: WorldTargetInteractionIntent): { lab
       return { label: 'ショップを見る', disabled: false }
     case 'recovery':
       return { label: '宿で休む', disabled: false }
+    case 'recovery-stop':
+      return { label: intent.stop.actionLabel, disabled: false }
     case 'village-facility':
       return {
         label:
