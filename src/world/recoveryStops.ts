@@ -33,3 +33,15 @@ export const WORLD_RECOVERY_STOPS: readonly WorldRecoveryStop[] = [
     recoveryRatio: 0.6,
   },
 ] as const
+
+export function getWorldRecoveryStopAtPosition(
+  mapId: WorldMapId,
+  position: { x: number; y: number },
+): WorldRecoveryStop | undefined {
+  return WORLD_RECOVERY_STOPS.find(
+    (stop) =>
+      stop.mapId === mapId &&
+      stop.position.x === position.x &&
+      stop.position.y === position.y,
+  )
+}
