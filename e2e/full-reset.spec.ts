@@ -115,7 +115,7 @@ test('進行リセットはOpeningを含め最初からに戻しSoundだけ保�
   await expect.poll(async () =>
     readStoredRpg(page),
   ).toMatchObject({
-    version: 6,
+    version: 7,
     state: {
       equipment: {
         weapon: 'training-blade',
@@ -126,6 +126,11 @@ test('進行リセットはOpeningを含め最初からに戻しSoundだけ保�
       partyMemberIds: [],
       worldMapId: 'overworld',
       worldPosition: { x: 20, y: 14 },
+      safeCheckpoint: {
+        id: 'central-hub',
+        mapId: 'overworld',
+        position: { x: 20, y: 14 },
+      },
       currentHp: 108,
     },
   })
