@@ -40,10 +40,16 @@ Phase 2ではOverworldをField scaleへ移し、到着Hub周辺を維持しな�
 共通:
 
 - `worldMapId + local worldPosition`をRpgStateへ保存
+- `safeCheckpoint`をRpgState v7へ保存し、Defeat RETURNのauthorityにする
 - `/world` route上でmap transition
-- VillageはRandom Encounterなし
+- Village / major safe hubはRandom Encounterなし
 - fixed Story / learning BattleはRandom chance / cooldownより優先
-- expanded Overworld layoutはRpgState schema v6で旧TypeScript-side save migrationと区別する
+- expanded Overworld layoutはRpgState schema v6で旧TypeScript-side save migrationと区別し、schema v7でsemantic safe checkpointを追加した
+
+current major safe hub:
+
+- GREENFIELD VILLAGE — JavaScript地方の自然の村
+- 境界監視所 — TypeScript辺境の石造frontier outpost
 
 #377でJavaScript地方を再設計するため、31×27や「東→西main trail」を将来layoutの制約にしない。
 
@@ -151,20 +157,32 @@ portal gateは`src/world/worldMap.ts`の`WORLD_PORTALS`をruntime authorityに�
 
 #377実装でmap graphが増えても、解放条件をUI componentへ散らさない。
 
-## 6. GREENFIELD / Forest Settlement
+## 6. Major settlement / safe hub
 
 ### GREENFIELD VILLAGE
 
-序盤safe hub。
+JavaScript序盤safe hub。
 
 - Random Encounterなし
 - JS-02 / 03 / 04
 - 宿 / 道具 / 装備 / NPC / TRAIN
 - Forestへ出る前の準備
+- Village入場 / 宿利用で`greenfield-village` checkpointを登録
 
-### Forest Settlement
+### TypeScript 境界監視所
 
-Forest後半〜Deep Forest前に置く第二の有人safe hub。
+TypeScript辺境西側の石造frontier outpost。GREENFIELDの色違いVillageにはしない。
+
+- rune stone road上の安全区間
+- 宿 / 補給所 / TYPE WARDENほか常駐NPC
+- crystal / ruins側へ進む前の準備とworldbuilding
+- 監視所の安全区間へ到達すると`typescript-frontier-outpost` checkpointを登録
+- 宿利用時にも同checkpointを再登録
+- Defeat RETURNのcanonical位置は監視所中央 `(8, 10)`
+
+### Forest Settlement（target topology）
+
+Forest後半〜Deep Forest前に置く第二のJavaScript有人safe hub。
 
 - GREENFIELDのコピーにしない
 - 森の小規模集落として自然Region identityを維持
@@ -183,18 +201,22 @@ autosave
 → current game stateを永続化
 
 safe checkpoint
-→ 敗北時に戻る村 / 集落の位置
+→ 敗北時に戻る村 / 集落 / 有人拠点の位置
 ```
 
 checkpointはRpgStateへ明示的に保存し、current mapやx座標から毎回推測しない。
 
-- 初回入村時に自動登録
+- major settlement到達時にsemantic checkpoint IDを登録
 - 宿利用時にも再登録可能
+- checkpoint IDをauthorityとし、map / positionはregistryからcanonicalに復元
 - save / reload後も維持
 - legacy saveに無い場合は安全なfallbackを使う
+- Progress上未到達のcheckpointはatomic restore時に安全なHubへnormalizeする
 - RETRYは同Battle再挑戦
 - RETURNは保存されたsafe hubを基本にする
 - Defeatを無料full healの手段にはしない
+
+Player-facingでは内部語`checkpoint`を前面に出さず、「最後の拠点へ戻る」「村へ戻る」等のWorld内表現を優先する。
 
 ## 8. Fixed Story / learning Battle policy
 
@@ -254,6 +276,15 @@ UI / Routerへ依存しないpure resolver。
 - Encounter pacing
 - Treasure / Boss / facility interaction
 
+### checkpoint registry
+
+- semantic safe hub ID
+- canonical map / return position
+- major settlement到達時の登録条件
+- legacy / invalid checkpoint normalization
+
+mapが増えるたび`safeReturn.ts`へ座標ifを追加しない。
+
 ### `RpgState`
 
 - current map / position
@@ -263,7 +294,7 @@ UI / Routerへ依存しないpure resolver。
 - persistent safe checkpoint
 - Atlas reveal等のpersistent World state
 
-### `WorldPage.tsx`
+### `WorldPage.tsx` / region page
 
 resolver結果をnavigation / audio / visual feedbackへ接続するadapter。map固有game ruleを増やしすぎない。
 
@@ -300,6 +331,7 @@ Fog of Warは#377のbranch / loop構造を先に成立させてから導入す�
 - numeric Battle IDは互換用として維持
 - semantic progressionをauthorityにする
 - expanded Overworld layoutはschema v6以降として旧40×28 layoutと区別する
+- schema v7のsafe checkpointが無いlegacy saveは現在地から安全な既存Hubへmigrationするが、未訪問の新拠点を訪問済みとは推測しない
 - 新checkpoint / reveal stateはmigrationで安全なdefaultを補う
 - atomic root save / valid backup復旧の既存policyを維持
 
@@ -321,5 +353,7 @@ TypeScript / Database等も:
 - JavaScript: natural / grass / river / forest
 - TypeScript: stone / crystal / ruins
 - Database: underground / archive / mine / library
+
+新regionを設計するときは危険地形 / Battleだけでなく、**その地方で人が暮らす場所・旅支度をするsafe hubが必要か**を必ず設計対象にする。置く場合は宿 / Shop / NPC / Story / 次区間への準備のうち複数の意味を持たせ、既存Villageのskin swapにはしない。
 
 JavaScript地方を広げるために後続Regionの主要景観を消費しない。
