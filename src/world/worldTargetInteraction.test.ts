@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createInitialPlayerProgress } from '../progression'
 import { createInitialRpgState } from '../rpg'
-import { VILLAGE_FACILITIES } from './villageFacilities'
+import { VILLAGE_FACILITIES } from './villageFacilityData'
 import {
   BYTE_POSITION,
   JS_VILLAGE_MAP_ID,
