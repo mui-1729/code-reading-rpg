@@ -1,0 +1,174 @@
+/* #377 GREENFIELD scale pass: 31x25 village with districts, stream and a south gate. */
+
+/* The former 21x15 south gate is now an ordinary market-road tile. */
+.world-viewport[data-world-map='js-village'] .world-tile[data-world-x='10'][data-world-y='14'] {
+  --portal-scene-kind: none;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .05) 0 12px, transparent 12px 16px),
+    #a88753;
+  box-shadow: none;
+}
+
+.world-viewport[data-world-map='js-village'] .world-tile[data-world-x='10'][data-world-y='14']::before,
+.world-viewport[data-world-map='js-village'] .world-tile[data-world-x='10'][data-world-y='14']::after {
+  content: none;
+}
+
+/* South gate: the village now has a real approach before the older central district. */
+.world-viewport[data-world-map='js-village'] .world-tile[data-world-x='10'][data-world-y='24'] {
+  --portal-scene-kind: village-outgate;
+  overflow: visible;
+  background:
+    linear-gradient(90deg, #5c4a32 0 12%, transparent 13% 87%, #5c4a32 88% 100%),
+    linear-gradient(#a88753 0 54%, #4b8744 55% 100%);
+}
+
+.world-viewport[data-world-map='js-village'] .world-tile[data-world-x='10'][data-world-y='24']::before,
+.world-viewport[data-world-map='js-village'] .world-tile[data-world-x='10'][data-world-y='24']::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  bottom: 10%;
+  width: 13%;
+  height: 62%;
+  background: #7b5d3c;
+  box-shadow: inset 0 5px 0 #ad8454;
+}
+
+.world-viewport[data-world-map='js-village'] .world-tile[data-world-x='10'][data-world-y='24']::before { left: 13%; }
+.world-viewport[data-world-map='js-village'] .world-tile[data-world-x='10'][data-world-y='24']::after { right: 13%; }
+
+/* Arrival lane: broad enough to read as the road from the grassland, not a menu-like spawn point. */
+.world-viewport[data-world-map='js-village'] .world-tile[data-world-y='21']:is(
+  [data-world-x='5'], [data-world-x='6'], [data-world-x='7'], [data-world-x='8'],
+  [data-world-x='9'], [data-world-x='10'], [data-world-x='11'], [data-world-x='12'],
+  [data-world-x='13'], [data-world-x='14'], [data-world-x='15']
+) {
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 13px, transparent 13px 18px),
+    #98764d;
+  box-shadow: inset 0 3px 0 rgba(239, 216, 159, .12), inset 0 -3px 0 rgba(78, 55, 35, .18);
+}
+
+/* East stream gives the village a landmark. Two road rows cross it as timber bridges. */
+.world-viewport[data-world-map='js-village'] .world-tile[data-world-x='21'].terrain-water {
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.10) 0 8%, transparent 9% 45%, rgba(255,255,255,.08) 46% 55%, transparent 56%),
+    #376e78;
+  box-shadow: inset 4px 0 0 rgba(27, 77, 73, .35), inset -4px 0 0 rgba(27, 77, 73, .35);
+}
+
+.world-viewport[data-world-map='js-village'] .world-tile[data-world-y='7']:is(
+  [data-world-x='20'], [data-world-x='21'], [data-world-x='22']
+),
+.world-viewport[data-world-map='js-village'] .world-tile[data-world-y='14']:is(
+  [data-world-x='20'], [data-world-x='21'], [data-world-x='22']
+) {
+  background:
+    repeating-linear-gradient(90deg, #a87c4d 0 8px, #805a38 8px 10px),
+    #936a42;
+  box-shadow: inset 0 4px 0 #5b4029, inset 0 -4px 0 #5b4029;
+}
+
+/* New south-west inn building. */
+.world-viewport[data-world-map='js-village'] .terrain-house:is(
+  [data-world-x='3'], [data-world-x='4'], [data-world-x='5'], [data-world-x='6']
+):is([data-world-y='17'], [data-world-y='18'], [data-world-y='19'], [data-world-y='20']) {
+  --house-roof: #6e7654;
+  --house-roof-dark: #465038;
+  --house-wall: #cfb483;
+  --house-wall-dark: #917957;
+  --house-window: #9ed6cf;
+}
+
+.world-viewport[data-world-map='js-village'] .terrain-house:is(
+  [data-world-x='3'], [data-world-x='4'], [data-world-x='5'], [data-world-x='6']
+):is([data-world-y='17'], [data-world-y='18']) {
+  background: repeating-linear-gradient(0deg, transparent 0 7px, rgba(255,255,255,.07) 7px 9px), var(--house-roof);
+  box-shadow: inset 0 -5px 0 var(--house-roof-dark);
+}
+
+/* East-bank equipment workshop. */
+.world-viewport[data-world-map='js-village'] .terrain-house:is(
+  [data-world-x='23'], [data-world-x='24'], [data-world-x='25'], [data-world-x='26'], [data-world-x='27']
+):is([data-world-y='3'], [data-world-y='4'], [data-world-y='5'], [data-world-y='6']) {
+  --house-roof: #536b55;
+  --house-roof-dark: #34473a;
+  --house-wall: #c6aa78;
+  --house-wall-dark: #8d734f;
+  --house-window: #91c9cf;
+}
+
+.world-viewport[data-world-map='js-village'] .terrain-house:is(
+  [data-world-x='23'], [data-world-x='24'], [data-world-x='25'], [data-world-x='26'], [data-world-x='27']
+):is([data-world-y='3'], [data-world-y='4']) {
+  background: repeating-linear-gradient(90deg, transparent 0 11px, rgba(255,255,255,.05) 11px 13px), var(--house-roof);
+  box-shadow: inset 0 -5px 0 var(--house-roof-dark);
+}
+
+/* East-bank homes make crossing the stream lead somewhere, rather than to empty tiles. */
+.world-viewport[data-world-map='js-village'] .terrain-house:is(
+  [data-world-x='23'], [data-world-x='24'], [data-world-x='25'], [data-world-x='26'], [data-world-x='27']
+):is([data-world-y='16'], [data-world-y='17'], [data-world-y='18'], [data-world-y='19']) {
+  --house-roof: #8e6045;
+  --house-roof-dark: #5e3c2d;
+  --house-wall: #c99f78;
+  --house-wall-dark: #906c51;
+}
+
+.world-viewport[data-world-map='js-village'] .terrain-house:is(
+  [data-world-x='23'], [data-world-x='24'], [data-world-x='25'], [data-world-x='26'], [data-world-x='27']
+):is([data-world-y='16'], [data-world-y='17']) {
+  background: repeating-linear-gradient(0deg, transparent 0 7px, rgba(255,255,255,.06) 7px 9px), var(--house-roof);
+  box-shadow: inset 0 -5px 0 var(--house-roof-dark);
+}
+
+/* Facility doors are placed on the facade cells that own the Action target. */
+.world-viewport[data-world-map='js-village'] .terrain-house:is(
+  [data-world-x='5'][data-world-y='20'],
+  [data-world-x='25'][data-world-y='6']
+)::before {
+  content: none;
+}
+
+.world-viewport[data-world-map='js-village'] .terrain-house:is(
+  [data-world-x='5'][data-world-y='20'],
+  [data-world-x='25'][data-world-y='6']
+)::after {
+  content: '';
+  position: absolute;
+  left: 29%;
+  bottom: 0;
+  width: 42%;
+  height: 76%;
+  border: 3px solid var(--house-trim);
+  border-bottom: 0;
+  background:
+    radial-gradient(circle at 76% 53%, #dfc36e 0 5%, transparent 6%),
+    #70472f;
+  box-shadow: inset 0 7px 0 rgba(0,0,0,.12);
+}
+
+/* Quiet district hints: flower patch near the entrance and a riverside marker. */
+.world-viewport[data-world-map='js-village'] .world-tile[data-world-x='14'][data-world-y='22']::after {
+  content: '✿';
+  position: absolute;
+  inset: 20%;
+  display: grid;
+  place-items: center;
+  color: #f2d18a;
+  font-size: 12px;
+  text-shadow: 1px 1px 0 #4f5434;
+}
+
+.world-viewport[data-world-map='js-village'] .world-tile[data-world-x='23'][data-world-y='14']::after {
+  content: '';
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: 20%;
+  height: 22%;
+  border-block: 3px solid #35281f;
+  background: #9b7047;
+  box-shadow: 4px 4px 0 #3c2c22;
+}
