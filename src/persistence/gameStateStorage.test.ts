@@ -9,9 +9,11 @@ import {
 import {
   JS_DEEP_FOREST_MAP_ID,
   JS_FOREST_MAP_ID,
+  JS_VILLAGE_MAP_ID,
   TS_FRONTIER_MAP_ID,
   WORLD_MAP_STARTS,
 } from '../world/worldMap'
+import { registerWorldCheckpoint } from '../world/worldCheckpoints'
 import {
   GAME_STATE_BACKUP_STORAGE_KEY,
   GAME_STATE_STORAGE_KEY,
@@ -35,7 +37,7 @@ describe('logical game-state storage', () => {
       version: 2,
       revision: 12,
       progress: { version: 4 },
-      rpg: { version: 6 },
+      rpg: { version: 7 },
     })
   })
 
@@ -206,6 +208,31 @@ describe('logical game-state storage', () => {
       expect(restored?.rpgState.worldMapId).toBe('overworld')
     },
   )
+
+  it('locked checkpointもProgressと同時restoreして中央Hubへ正規化する', () => {
+    const progress = createInitialPlayerProgress()
+    const rpgState = registerWorldCheckpoint(createInitialRpgState(), 'greenfield-village')
+    const restored = parseGameStateSnapshot(
+      serializeGameStateSnapshot({ revision: 2, progress, rpgState }),
+    )
+
+    expect(restored?.rpgState.worldMapId).toBe('overworld')
+    expect(restored?.rpgState.safeCheckpoint).toMatchObject({
+      id: 'central-hub',
+      mapId: 'overworld',
+    })
+  })
+
+  it('GREENFIELDがunlock済みなら保存checkpointを維持する', () => {
+    const progress = { ...createInitialPlayerProgress(), clearedStageIds: [1] }
+    const rpgState = registerWorldCheckpoint(createInitialRpgState(), 'greenfield-village')
+    const normalized = normalizeRpgStateForProgress(progress, rpgState)
+
+    expect(normalized.safeCheckpoint).toMatchObject({
+      id: 'greenfield-village',
+      mapId: JS_VILLAGE_MAP_ID,
+    })
+  })
 
   it('in-memory partial clear bits cannot preserve a position behind a transitive portal gate', () => {
     const rpgState = {
