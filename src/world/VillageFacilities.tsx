@@ -72,7 +72,11 @@ export function VillageFacilities() {
   useEffect(() => {
     if (!visibleActive) return
     const stopWorldKeys = (event: KeyboardEvent) => {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd', 'W', 'A', 'S', 'D'].includes(event.key)) {
+      if (
+        ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd', 'W', 'A', 'S', 'D', 'Enter', ' '].includes(
+          event.key,
+        )
+      ) {
         event.preventDefault()
         event.stopPropagation()
       }
@@ -91,6 +95,7 @@ export function VillageFacilities() {
             className="world-object facility-object"
             data-village-facility={facility.kind}
             aria-hidden="true"
+            style={{ cursor: 'default', outline: 'none', outlineOffset: 0 }}
           >
             {facility.label}
           </span>,
