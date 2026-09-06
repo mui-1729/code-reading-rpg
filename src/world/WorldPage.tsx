@@ -8,7 +8,7 @@ import { characterVisuals, equipmentById, useRpg } from '../rpg'
 import { TYPESCRIPT_REGION_LOCKED_MESSAGE } from './regionAccess'
 import { openWorldTreasure } from './treasures'
 import { useEncounterCue } from './useEncounterCue'
-import { activateVillageFacility } from './VillageFacilities'
+import { activateVillageFacility } from './villageFacilityEvents'
 import { getNextJavaScriptTrainingBattleId, resolveWorldMove } from './worldActions'
 import {
   getTreasureAtPosition,
