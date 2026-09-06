@@ -36,7 +36,7 @@ test('@responsive GREENFIELD VILLAGE出口はEXIT文字を重複させずportal 
             partyMemberIds: ['byte'],
             partyEquipment: {},
             worldMapId: 'js-village',
-            worldPosition: { x: 10, y: 13 },
+            worldPosition: { x: 10, y: 23 },
             stepsSinceEncounter: 0,
             encounterCount: 0,
             currentHp: 100,
@@ -55,7 +55,7 @@ test('@responsive GREENFIELD VILLAGE出口はEXIT文字を重複させずportal 
   await page.goto('/world')
 
   const village = page.locator('.world-viewport[data-world-map="js-village"]')
-  const exitTile = village.locator('[data-world-x="10"][data-world-y="14"].terrain-exit')
+  const exitTile = village.locator('[data-world-x="10"][data-world-y="24"].terrain-exit')
   const exitObject = exitTile.locator('.exit-object')
 
   await expect(village).toBeVisible()
