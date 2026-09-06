@@ -38,7 +38,9 @@ export function useWorldKeyboardControls(options: {
         queuedMove(1, 0)
       } else if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault()
-        interact()
+        const actionButton = document.querySelector<HTMLButtonElement>('.world-interact:not(:disabled)')
+        if (actionButton) actionButton.click()
+        else interact()
       }
     }
 
