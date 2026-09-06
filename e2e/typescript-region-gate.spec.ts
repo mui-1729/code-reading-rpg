@@ -94,13 +94,21 @@ async function waitForMapTransition(page: Page) {
   await expect(page.locator('.world-map-transition')).toHaveCount(0, { timeout: 1_000 })
 }
 
-test('JavaScript未clearではTypeScriptの門へ進めず理由を表示する', async ({ page }) => {
+test('JavaScript未clearではTypeScriptの門へ向くだけではログ不変で、Action時に理由を表示する', async ({ page }) => {
   await seedWorld(page, { worldPosition: { x: 51, y: 14 } })
 
+  const log = page.locator('.world-message p')
+  const before = await log.textContent()
   await expect(overworld(page)).toHaveAttribute('data-world-x', '51')
   await page.getByRole('button', { name: '右へ移動' }).click()
 
   await expect(overworld(page)).toHaveAttribute('data-world-x', '51')
+  await expect(page.locator('.world-player-sprite')).toHaveAttribute('data-facing', 'right')
+  await expect(log).toHaveText(before ?? '')
+
+  const lockedGate = page.getByRole('button', { name: 'TypeScript辺境を調べる' })
+  await expect(lockedGate).toBeEnabled()
+  await lockedGate.click()
   await expect(page.locator('.world-message')).toContainText('TypeScript辺境は未開通')
   await expect(page.locator('.world-message')).toContainText('Final Boss')
 })
