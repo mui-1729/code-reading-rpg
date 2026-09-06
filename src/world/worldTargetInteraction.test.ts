@@ -7,8 +7,13 @@ import {
   JS_VILLAGE_MAP_ID,
   JS_VILLAGE_TRAINING_POSITION,
   OVERWORLD_MAP_ID,
+  TS_FRONTIER_MAP_ID,
   WORLD_PORTALS,
 } from './worldMap'
+import {
+  TS_FRONTIER_OUTPOST_INN_POSITION,
+  TS_FRONTIER_OUTPOST_SHOP_POSITION,
+} from './typescriptFrontierOutpost'
 import { resolveWorldTargetInteraction } from './worldTargetInteraction'
 
 describe('facing-based world interaction', () => {
@@ -47,6 +52,22 @@ describe('facing-based world interaction', () => {
     })
     expect(resolveWorldTargetInteraction(rpgState, progress, { x: 6, y: 10 })).toEqual({
       kind: 'none',
+    })
+  })
+
+  it('resolves TypeScript frontier outpost shop and inn from their exact residents', () => {
+    const progress = { ...createInitialPlayerProgress(), clearedStageIds: [3] }
+    const rpgState = {
+      ...createInitialRpgState(),
+      worldMapId: TS_FRONTIER_MAP_ID,
+      worldPosition: { x: 7, y: 10 },
+    }
+
+    expect(resolveWorldTargetInteraction(rpgState, progress, TS_FRONTIER_OUTPOST_SHOP_POSITION)).toEqual({
+      kind: 'shop',
+    })
+    expect(resolveWorldTargetInteraction(rpgState, progress, TS_FRONTIER_OUTPOST_INN_POSITION)).toEqual({
+      kind: 'recovery',
     })
   })
 
