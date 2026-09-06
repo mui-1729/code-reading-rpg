@@ -162,7 +162,7 @@ test('reduced-motionでも! cueの意味を残し、回転せず短いfadeから
   await expect(deepForest).toHaveAttribute('data-world-map', 'js-deep-forest')
   await waitForMapTransition(page)
 
-  await page.getByRole('button', { name: '上へ移動' }).click()
+  await page.keyboard.press('ArrowUp')
 
   await expect(page.locator('body')).toHaveAttribute('data-world-encounter-cue', 'alert')
   const cueVisual = await page.locator('.world-player-sprite').evaluate((player) => {
