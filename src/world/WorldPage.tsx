@@ -5,13 +5,11 @@ import { useBgm } from '../audio/useBgm'
 import { WorldInn, WorldShop } from '../economy'
 import { useProgress } from '../progression'
 import { characterVisuals, equipmentById, useRpg } from '../rpg'
+import { TYPESCRIPT_REGION_LOCKED_MESSAGE } from './regionAccess'
 import { openWorldTreasure } from './treasures'
 import { useEncounterCue } from './useEncounterCue'
-import {
-  getNextJavaScriptTrainingBattleId,
-  resolveWorldInteraction,
-  resolveWorldMove,
-} from './worldActions'
+import { activateVillageFacility } from './VillageFacilities'
+import { getNextJavaScriptTrainingBattleId, resolveWorldMove } from './worldActions'
 import {
   getTreasureAtPosition,
   getVisibleWorldCells,
@@ -20,11 +18,14 @@ import {
   JS_DEEP_FOREST_MAP_ID,
   JS_FOREST_MAP_ID,
   JS_VILLAGE_MAP_ID,
+  TS_FRONTIER_MAP_ID,
 } from './worldMap'
+import { getWorldFacingFromMove, getWorldInteractionTarget } from './worldInteractionTarget'
+import type { WorldFacing } from './worldPresentation'
 import { WorldCharacterLayer, WorldControls, WorldObjectiveCard, WorldViewport } from './WorldScene'
 import { useWorldKeyboardControls } from './useWorldKeyboardControls'
 import type { WorldPosition } from './worldSceneGeometry'
-import { TYPESCRIPT_REGION_LOCKED_MESSAGE } from './regionAccess'
+import { resolveWorldTargetInteraction } from './worldTargetInteraction'
 
 const regionLabels = {
   javascript: 'JavaScript 西部',
@@ -68,6 +69,7 @@ export function WorldPage() {
 
   const mapId = rpgState.worldMapId
   const position = rpgState.worldPosition
+  const [playerFacing, setPlayerFacing] = useState<WorldFacing>('down')
   const [followerPosition, setFollowerPosition] = useState<WorldPosition>(() => ({
     x: position.x,
     y: position.y + 1,
@@ -81,6 +83,14 @@ export function WorldPage() {
   const isDeepForest = mapId === JS_DEEP_FOREST_MAP_ID
   const isLocalMap = isVillage || isForest || isDeepForest
   const nextTrainingBattleId = getNextJavaScriptTrainingBattleId(progress.clearedStageIds)
+  const interactionTarget = useMemo(
+    () => getWorldInteractionTarget(position, playerFacing),
+    [playerFacing, position],
+  )
+  const interactionIntent = useMemo(
+    () => resolveWorldTargetInteraction(rpgState, progress, interactionTarget),
+    [interactionTarget, progress, rpgState],
+  )
 
   const javascriptStoryBrief = useMemo(() => {
     if (progress.clearedAreaIds.includes('javascript') || progress.clearedStageIds.includes(3)) {
@@ -462,38 +472,9 @@ export function WorldPage() {
         document.body.dataset.rpgPaused === 'true'
       ) return
 
+      setPlayerFacing((current) => getWorldFacingFromMove(dx, dy, current))
       const result = resolveWorldMove({ rpgState, progress, dx, dy })
-      if (result.kind === 'blocked') {
-        gameAudio.playSe('cancel')
-        setMessage(
-          result.reason === 'typescript-locked'
-            ? TYPESCRIPT_REGION_LOCKED_MESSAGE
-            : result.terrain === 'boss'
-            ? '強い魔物が道を塞いでいる。隣から挑もう。'
-            : result.terrain === 'midboss'
-              ? '森の守り人が道を塞いでいる。隣から挑もう。'
-              : result.terrain === 'recovery'
-                ? '宿だ。隣から休める。'
-                : result.terrain === 'treasure'
-                  ? '宝箱だ。隣から調べよう。'
-                  : result.terrain === 'house'
-                    ? '家がある。今は中へは入れない。'
-                    : result.terrain === 'training'
-                      ? '訓練場だ。隣からMIOと異常調査に必要な基礎を確認できる。'
-                      : result.terrain === 'village'
-                        ? !progress.clearedStageIds.includes(1)
-                          ? 'グリーンフィールド村へ行く前に、BYTEと草原の最初の対象異常を実際に見よう。'
-                          : 'グリーンフィールド村の入口だ。ここから入れる。'
-                        : result.terrain === 'woods'
-                          ? !progress.clearedStageIds.includes(1)
-                            ? 'JavaScriptの森へ進む前に、BYTEと草原で最初の対象異常を実際に見よう。'
-                            : !progress.clearedStageIds.includes(9)
-                              ? 'JavaScriptの森へ進む前に、グリーンフィールド村で最初の異常に必要なHP・name・find()を確認しよう。'
-                              : 'その先へ進むための経路がまだ開いていない。'
-                          : 'そこへは進めない。',
-        )
-        return
-      }
+      if (result.kind === 'blocked') return
 
       if (result.kind === 'transition') {
         if (byteJoined) {
@@ -553,7 +534,25 @@ export function WorldPage() {
       document.body.dataset.rpgPaused === 'true'
     ) return
 
-    const intent = resolveWorldInteraction(rpgState, progress)
+    const intent = interactionIntent
+
+    if (intent.kind === 'locked-portal') {
+      gameAudio.playSe('cancel')
+      if (intent.toMapId === TS_FRONTIER_MAP_ID) {
+        setMessage(TYPESCRIPT_REGION_LOCKED_MESSAGE)
+      } else if (intent.toMapId === JS_VILLAGE_MAP_ID) {
+        setMessage('グリーンフィールド村へ行く前に、BYTEと草原の最初の対象異常を実際に見よう。')
+      } else if (intent.toMapId === JS_FOREST_MAP_ID) {
+        setMessage(
+          !progress.clearedStageIds.includes(1)
+            ? 'JavaScriptの森へ進む前に、BYTEと草原で最初の対象異常を実際に見よう。'
+            : 'JavaScriptの森へ進む前に、グリーンフィールド村で最初の異常に必要なHP・name・find()を確認しよう。',
+        )
+      } else {
+        setMessage('その先へ進むための経路がまだ開いていない。')
+      }
+      return
+    }
 
     if (intent.kind === 'map-transition') {
       if (byteJoined) {
@@ -564,7 +563,32 @@ export function WorldPage() {
       }
       setRpgState(intent.nextState)
       gameAudio.playSe('confirm')
-      setMessage(`${intent.label}へ入った。さっきの異常で読めなかった部分だけMIOと確認しよう。`)
+      setMessage(
+        intent.label === 'Code Core前'
+          ? 'JavaScript深層の森の経路を抜けてCode Core手前へ出た。北へ進めば最終ボスだ。'
+          : intent.toMapId === JS_VILLAGE_MAP_ID
+            ? `${intent.label}へ入った。さっきの異常で読めなかった部分だけMIOと確認しよう。`
+            : intent.toMapId === JS_DEEP_FOREST_MAP_ID
+              ? progress.clearedStageIds.includes(2)
+                ? `${intent.label}へ入った。共有経路はさらに西へ続いている。`
+                : `${intent.label}へ入った。最初の移動で二つ目の実際の症状を確認する。`
+              : intent.toMapId === JS_FOREST_MAP_ID
+                ? `${intent.label}へ入った。最初の異常で見た選択処理の経路を西へ追おう。`
+                : `${intent.label}へ移動した。`,
+      )
+      return
+    }
+
+    if (intent.kind === 'village-facility') {
+      gameAudio.playSe('confirm')
+      activateVillageFacility(intent.facility)
+      setMessage(
+        intent.facility === 'inn'
+          ? '宿: ゴールドを払ってHPを全回復できる。'
+          : intent.facility === 'item-shop'
+            ? '道具屋: 冒険に必要な道具を購入できる。'
+            : '装備屋: 武器や防具を購入できる。',
+      )
       return
     }
 
@@ -692,34 +716,12 @@ export function WorldPage() {
       enterBattle(intent.battleId, intent.region, intent.seed)
       return
     }
-
-    setMessage(
-      isVillage
-        ? nextTrainingBattleId === null
-          ? '必要な確認は終わった。南の出口から草原へ出て、西のJavaScriptの森へ同じ経路を追おう。'
-          : '最初の異常で読めなかった部分を、中央の訓練場でMIOと一つずつ確認しよう。'
-        : isDeepForest
-          ? progress.clearedStageIds.includes(22)
-            ? '根本原因はCode Core。JavaScript深層の森の西端の出口からCore手前へ直進できる。'
-            : !progress.clearedStageIds.includes(2)
-              ? 'JavaScript深層の森へ入った。次の一歩で二つ目の実際の症状を確認する。'
-              : '本道を西へ進み、森 / 深い森で共有経路を追おう。ランダム戦闘はクリア済み内容だけだ。'
-          : isForest
-            ? progress.clearedStageIds.includes(14)
-              ? '影響範囲は西端の出口からJavaScript深層の森へ続いている。このまま先へ進もう。'
-              : progress.clearedStageIds.includes(13)
-                ? '守り人の先で経路が複数の対象へ広がっている。西側の森へ進もう。'
-                : '木々の間に異常の経路が続いている。森と本道を西へ追おう。'
-            : '近くに調べられるものはない。',
-    )
   }, [
     byteJoined,
     encounterCueActive,
     enterBattle,
     innOpen,
-    isDeepForest,
-    isForest,
-    isVillage,
+    interactionIntent,
     nextTrainingBattleId,
     position,
     progress,
@@ -839,6 +841,7 @@ export function WorldPage() {
           <WorldCharacterLayer
             mapId={mapId}
             playerPosition={position}
+            playerFacing={playerFacing}
             viewportStart={viewportStart}
             followerPosition={followerPosition}
             followerJoined={byteJoined}
@@ -850,7 +853,7 @@ export function WorldPage() {
           <p>{message}</p>
         </section>
 
-        <WorldControls move={move} interact={interact} />
+        <WorldControls move={move} interact={interact} interactionIntent={interactionIntent} />
       </section>
 
       <WorldShop open={shopOpen} onClose={() => setShopOpen(false)} onMessage={setMessage} />
