@@ -62,22 +62,25 @@ async function storedRpgState(page: Page) {
   return readStoredRpg(page)
 }
 
-test('JS-01後はVillage入口で止まりアクションで入ってreload後もround tripを保存する', async ({ page }) => {
+test('JS-01後はVillage入口で向くだけでは止まりActionで入りreload後もround tripを保存する', async ({ page }) => {
   await seedWorld(page)
 
   const viewport = page.locator('.world-viewport')
+  const log = page.locator('.world-message p')
   await expect(viewport).toHaveAttribute('data-world-map', 'overworld')
   await expect(viewport).toHaveAttribute('data-world-x', '10')
   await expect(viewport).toHaveAttribute('data-world-y', '21')
   await expect(page.getByRole('button', { name: 'グリーンフィールド村へ入る' })).toBeEnabled()
 
+  const before = await log.textContent()
   await page.getByRole('button', { name: '下へ移動' }).click()
 
   await expect(page.locator('.world-header')).toBeHidden()
   await expect(viewport).toHaveAttribute('data-world-map', 'overworld')
   await expect(viewport).toHaveAttribute('data-world-x', '10')
   await expect(viewport).toHaveAttribute('data-world-y', '21')
-  await expect(page.getByText('グリーンフィールド村の入口だ。ここから入れる。')).toBeVisible()
+  await expect(page.locator('.world-player-sprite')).toHaveAttribute('data-facing', 'down')
+  await expect(log).toHaveText(before ?? '')
 
   await page.getByRole('button', { name: 'グリーンフィールド村へ入る' }).click()
 
@@ -102,6 +105,9 @@ test('JS-01後はVillage入口で止まりアクションで入ってreload後�
   await page.getByRole('button', { name: '下へ移動' }).click()
   await expect(viewport).toHaveAttribute('data-world-y', '13')
   await page.getByRole('button', { name: '下へ移動' }).click()
+  await expect(viewport).toHaveAttribute('data-world-map', 'js-village')
+  await expect(viewport).toHaveAttribute('data-world-y', '13')
+  await page.getByRole('button', { name: 'JavaScript草原へ入る' }).click()
 
   await expect(page.locator('.world-header')).toBeHidden()
   await expect(viewport).toHaveAttribute('data-world-map', 'overworld')
