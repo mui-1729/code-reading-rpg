@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { gameAudio } from '../audio/gameAudio'
 
-export const ENCOUNTER_CUE_DURATION_MS = 420
+export const ENCOUNTER_ALERT_DURATION_MS = 260
+export const ENCOUNTER_TRANSITION_DURATION_MS = 180
+export const ENCOUNTER_CUE_DURATION_MS =
+  ENCOUNTER_ALERT_DURATION_MS + ENCOUNTER_TRANSITION_DURATION_MS
 
 export function useEncounterCue() {
   const [encounterCueActive, setEncounterCueActive] = useState(false)
@@ -44,7 +47,7 @@ export function useEncounterCue() {
 
       activeRef.current = true
       setEncounterCueActive(true)
-      document.body.dataset.worldEncounterCue = 'true'
+      document.body.dataset.worldEncounterCue = 'alert'
       const pauseTrigger = document.querySelector<HTMLButtonElement>('.pause-trigger')
       if (pauseTrigger) {
         pauseTrigger.disabled = true
@@ -53,10 +56,13 @@ export function useEncounterCue() {
       gameAudio.playSe('encounter')
 
       timerRef.current = window.setTimeout(() => {
-        timerRef.current = null
-        clearCue()
-        onComplete()
-      }, ENCOUNTER_CUE_DURATION_MS)
+        document.body.dataset.worldEncounterCue = 'transition'
+        timerRef.current = window.setTimeout(() => {
+          timerRef.current = null
+          clearCue()
+          onComplete()
+        }, ENCOUNTER_TRANSITION_DURATION_MS)
+      }, ENCOUNTER_ALERT_DURATION_MS)
       return true
     },
     [clearCue],
