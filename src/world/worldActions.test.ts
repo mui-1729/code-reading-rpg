@@ -187,7 +187,7 @@ describe('World action resolver', () => {
     expect(intent.nextState.stepsSinceEncounter).toBe(9)
   })
 
-  it('Village南口へ進むとOverworldへtransitionして入口前へ戻る', () => {
+  it('Village南口へ進んでもexitの手前で止まり、moveだけではmapを跨がない', () => {
     const state = {
       ...createInitialRpgState(),
       worldMapId: JS_VILLAGE_MAP_ID,
@@ -202,13 +202,9 @@ describe('World action resolver', () => {
       dy: 1,
     })
 
-    expect(result.kind).toBe('transition')
-    if (result.kind !== 'transition') return
+    expect(result.kind).toBe('blocked')
     expect(result.terrain).toBe('exit')
-    expect(result.fromMapId).toBe(JS_VILLAGE_MAP_ID)
-    expect(result.toMapId).toBe(OVERWORLD_MAP_ID)
-    expect(result.nextState.worldMapId).toBe(OVERWORLD_MAP_ID)
-    expect(result.nextState.worldPosition).toEqual({ x: 10, y: 21 })
+    expect(result.nextState).toBe(state)
   })
 
   it('最初のincidentだけclearしてもTraining 9未clearならForest入口を通れない', () => {
@@ -230,38 +226,37 @@ describe('World action resolver', () => {
     expect(result.nextState).toBe(state)
   })
 
-  it('incident観察とTraining完了後はOverworldからForestへ入り、東口から戻れる', () => {
+  it('incident観察とTraining完了後もForest portalはmoveで跨がず入口前で止まる', () => {
     const initialProgress = createInitialPlayerProgress()
     const progress = {
       ...initialProgress,
       clearedStageIds: [1, 7, 8, 9],
       unlockedStageIds: [1, 7, 8, 9, 10],
     }
-    const state = {
+    const enterState = {
       ...createInitialRpgState(),
       worldPosition: { x: JS_FOREST_POSITION.x, y: JS_FOREST_POSITION.y - 1 },
       stepsSinceEncounter: 8,
     }
 
-    const enter = resolveWorldMove({ rpgState: state, progress, dx: 0, dy: 1 })
-    expect(enter.kind).toBe('transition')
-    if (enter.kind !== 'transition') return
-    expect(enter.toMapId).toBe(JS_FOREST_MAP_ID)
-    expect(enter.nextState.worldPosition).toEqual({ x: 28, y: 10 })
+    const enter = resolveWorldMove({ rpgState: enterState, progress, dx: 0, dy: 1 })
+    expect(enter.kind).toBe('blocked')
+    expect(enter.nextState).toBe(enterState)
 
+    const exitState = {
+      ...createInitialRpgState(),
+      worldMapId: JS_FOREST_MAP_ID,
+      worldPosition: { x: 29, y: 10 },
+      stepsSinceEncounter: 9,
+    }
     const exit = resolveWorldMove({
-      rpgState: {
-        ...enter.nextState,
-        worldPosition: { x: 29, y: 10 },
-      },
+      rpgState: exitState,
       progress,
       dx: 1,
       dy: 0,
     })
-    expect(exit.kind).toBe('transition')
-    if (exit.kind !== 'transition') return
-    expect(exit.toMapId).toBe(OVERWORLD_MAP_ID)
-    expect(exit.nextState.worldPosition).toEqual({ x: 34, y: 33 })
+    expect(exit.kind).toBe('blocked')
+    expect(exit.nextState).toBe(exitState)
   })
 
   it('Village内はrollを強制してもRandom Encounterを開始しない', () => {
