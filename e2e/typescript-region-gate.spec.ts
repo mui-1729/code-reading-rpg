@@ -177,7 +177,7 @@ test('未解放TypeScript側の旧座標saveはOverworld開始地点へnormalize
 
 test('TypeScript local encounterから逃走すると同じ辺境位置へ戻る', async ({ page }) => {
   await seedWorld(page, {
-    clearedStageIds: JS_COMPLETE,
+    clearedStageIds: [...JS_COMPLETE, 4],
     worldMapId: 'ts-frontier',
     worldPosition: { x: 10, y: 10 },
   })
