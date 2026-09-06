@@ -8,6 +8,11 @@ import {
   TS_FRONTIER_MAP_ID,
   type WorldMapId,
 } from './worldMap'
+import {
+  TS_FRONTIER_OUTPOST_INN_POSITION,
+  TS_FRONTIER_OUTPOST_SHOP_POSITION,
+  TS_FRONTIER_OUTPOST_WARDEN_POSITION,
+} from './typescriptFrontierOutpost'
 
 export type WorldNpcPlacement = {
   npcId: string
@@ -48,9 +53,23 @@ export const WORLD_NPC_PLACEMENTS: readonly WorldNpcPlacement[] = [
   {
     npcId: 'type-warden',
     mapId: TS_FRONTIER_MAP_ID,
-    position: { x: 30, y: 6 },
-    optional: true,
+    position: TS_FRONTIER_OUTPOST_WARDEN_POSITION,
+    optional: false,
     storyThread: 'frontier-warden',
+  },
+  {
+    npcId: 'compiler-scout',
+    mapId: TS_FRONTIER_MAP_ID,
+    position: TS_FRONTIER_OUTPOST_SHOP_POSITION,
+    optional: false,
+    storyThread: 'frontier-outpost',
+  },
+  {
+    npcId: 'narrowing-scholar',
+    mapId: TS_FRONTIER_MAP_ID,
+    position: TS_FRONTIER_OUTPOST_INN_POSITION,
+    optional: false,
+    storyThread: 'frontier-outpost',
   },
 ] as const
 
