@@ -1,17 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { createInitialPlayerProgress } from '../progression'
 import { createInitialRpgState } from '../rpg'
-import {
-  getDeepForestReviewBattleId,
-  resolveWorldInteraction,
-  resolveWorldMove,
-} from './worldActions'
+import { getDeepForestReviewBattleId, resolveWorldMove } from './worldActions'
 import {
   JS_BOSS_POSITION,
   JS_DEEP_FOREST_CORE_EXIT_POSITION,
   JS_DEEP_FOREST_MAP_ID,
   OVERWORLD_MAP_ID,
 } from './worldMap'
+import { resolveWorldTargetInteraction } from './worldTargetInteraction'
 
 const throughFilter = [1, 7, 8, 9, 10, 11, 12, 13, 14]
 const through15 = [...throughFilter, 2, 15]
@@ -127,7 +124,7 @@ describe('JavaScript incident-driven final world route', () => {
     expect(seen.has(20)).toBe(false)
   })
 
-  it('Battle 22後はDeep Forest西口からCode Core手前へ直接抜ける', () => {
+  it('Battle 22後はDeep Forest西口で止まり、ActionでCode Core手前へ直接抜ける', () => {
     const through22 = [...through15, 16, 17, 18, 19, 20, 21, 22]
     const rpgState = {
       ...createInitialRpgState(),
@@ -139,14 +136,15 @@ describe('JavaScript incident-driven final world route', () => {
       clearedStageIds: through22,
     }
 
-    const result = resolveWorldMove({ rpgState, progress, dx: -1, dy: 0 })
+    expect(resolveWorldMove({ rpgState, progress, dx: -1, dy: 0 }).kind).toBe('blocked')
+    const intent = resolveWorldTargetInteraction(rpgState, progress, JS_DEEP_FOREST_CORE_EXIT_POSITION)
 
-    expect(result.kind).toBe('transition')
-    if (result.kind !== 'transition') return
-    expect(result.toMapId).toBe(OVERWORLD_MAP_ID)
-    expect(result.label).toBe('Code Core前')
-    expect(result.nextState.worldPosition.x).toBe(JS_BOSS_POSITION.x)
-    expect(result.nextState.worldPosition.y).toBeGreaterThan(JS_BOSS_POSITION.y)
+    expect(intent.kind).toBe('map-transition')
+    if (intent.kind !== 'map-transition') return
+    expect(intent.toMapId).toBe(OVERWORLD_MAP_ID)
+    expect(intent.label).toBe('Code Core前')
+    expect(intent.nextState.worldPosition.x).toBe(JS_BOSS_POSITION.x)
+    expect(intent.nextState.worldPosition.y).toBeGreaterThan(JS_BOSS_POSITION.y)
   })
 
   it('Final Bossは最初のincident・二つ目のincident・最終traceを含む全route完了後だけunlockする', () => {
@@ -158,22 +156,22 @@ describe('JavaScript incident-driven final world route', () => {
     }
     const through22 = [...through15, 16, 17, 18, 19, 20, 21, 22]
 
-    const missingSecond = resolveWorldInteraction(rpgState, {
+    const missingSecond = resolveWorldTargetInteraction(rpgState, {
       ...progress,
       clearedStageIds: through22.filter((id) => id !== 2),
-    })
+    }, JS_BOSS_POSITION)
     expect(missingSecond.kind === 'boss' && missingSecond.unlocked).toBe(false)
 
-    const missingTrace = resolveWorldInteraction(rpgState, {
+    const missingTrace = resolveWorldTargetInteraction(rpgState, {
       ...progress,
       clearedStageIds: through22.filter((id) => id !== 22),
-    })
+    }, JS_BOSS_POSITION)
     expect(missingTrace.kind === 'boss' && missingTrace.unlocked).toBe(false)
 
-    const ready = resolveWorldInteraction(rpgState, {
+    const ready = resolveWorldTargetInteraction(rpgState, {
       ...progress,
       clearedStageIds: through22,
-    })
+    }, JS_BOSS_POSITION)
     expect(ready.kind).toBe('boss')
     if (ready.kind !== 'boss') return
     expect(ready.battleId).toBe(3)
