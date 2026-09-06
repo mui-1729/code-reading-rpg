@@ -15,6 +15,12 @@ import {
   type RpgState,
 } from './state'
 
+function withoutSafeCheckpoint(state: RpgState) {
+  const legacyState: Partial<RpgState> = { ...state }
+  delete legacyState.safeCheckpoint
+  return legacyState
+}
+
 describe('RPG state storage', () => {
   it('validな装備・仲間・Map座標・safe checkpoint・Encounter状態・current HP・Treasure状態を保存して復元する', () => {
     const initial = registerWorldCheckpoint(createInitialRpgState(), 'greenfield-village')
@@ -38,8 +44,7 @@ describe('RPG state storage', () => {
   })
 
   it('v6は拡張Overworldのx>=23座標をTypeScript旧layoutと誤認しない', () => {
-    const initial = createInitialRpgState()
-    const { safeCheckpoint: _safeCheckpoint, ...legacyState } = initial
+    const legacyState = withoutSafeCheckpoint(createInitialRpgState())
     const raw = JSON.stringify({
       version: 6,
       state: { ...legacyState, worldMapId: OVERWORLD_MAP_ID, worldPosition: { x: 34, y: 33 } },
@@ -51,8 +56,7 @@ describe('RPG state storage', () => {
   })
 
   it('v6でJavaScript local mapにいたlegacy saveはGREENFIELD checkpointへmigrationする', () => {
-    const initial = createInitialRpgState()
-    const { safeCheckpoint: _safeCheckpoint, ...legacyState } = initial
+    const legacyState = withoutSafeCheckpoint(createInitialRpgState())
     const raw = JSON.stringify({
       version: 6,
       state: {
