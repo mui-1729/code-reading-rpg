@@ -50,7 +50,7 @@ async function seedWorld(
   await page.goto('/world')
 }
 
-test('@responsive Village portalは旧mapを覆ってからstateを切り替え、新mapを開く', async ({ page }) => {
+test('@responsive Village portalは旧mapを覆ってからstateを切り替え、新しい南側到着地点を開く', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedWorld(page, 'overworld', { x: 10, y: 21 }, [1])
 
@@ -72,7 +72,7 @@ test('@responsive Village portalは旧mapを覆ってからstateを切り替え�
   await expect(transition).toHaveAttribute('data-world-transition-phase', 'revealing')
   await expect(viewport).toHaveAttribute('data-world-map', 'js-village')
   await expect(viewport).toHaveAttribute('data-world-x', '10')
-  await expect(viewport).toHaveAttribute('data-world-y', '12')
+  await expect(viewport).toHaveAttribute('data-world-y', '21')
   await expect(transition).toHaveCount(0, { timeout: 1_000 })
   await expect(page.locator('body')).not.toHaveAttribute('data-world-transitioning', 'true')
   await expect(page.getByRole('button', { name: 'メニューを開く' })).toBeVisible()
@@ -127,5 +127,6 @@ test('prefers-reduced-motionではvortexを省略して短いfadeへ落とす', 
 
   await expect(transition.locator('.world-map-transition-vortex')).toHaveCSS('display', 'none')
   await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-map', 'js-village', { timeout: 500 })
+  await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-y', '21', { timeout: 500 })
   await expect(transition).toHaveCount(0, { timeout: 500 })
 })
