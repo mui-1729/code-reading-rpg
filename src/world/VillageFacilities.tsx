@@ -3,21 +3,13 @@ import { createPortal } from 'react-dom'
 import { WorldInn } from '../economy/WorldInn'
 import { VillageShop } from '../economy/VillageShop'
 import { useRpg } from '../rpg'
-import { JS_VILLAGE_MAP_ID } from './worldMap'
+import { VILLAGE_FACILITY_OPEN_EVENT } from './villageFacilityEvents'
 import { VILLAGE_FACILITIES, type VillageFacility, type VillageFacilityKind } from './villageFacilityData'
-
-const VILLAGE_FACILITY_OPEN_EVENT = 'code-reading-rpg:village-facility-open'
+import { JS_VILLAGE_MAP_ID } from './worldMap'
 
 type FacilityTarget = {
   facility: VillageFacility
   target: Element
-}
-
-export function activateVillageFacility(kind: VillageFacilityKind) {
-  if (typeof window === 'undefined') return
-  window.dispatchEvent(
-    new CustomEvent<VillageFacilityKind>(VILLAGE_FACILITY_OPEN_EVENT, { detail: kind }),
-  )
 }
 
 function sameTargets(left: readonly FacilityTarget[], right: readonly FacilityTarget[]) {
