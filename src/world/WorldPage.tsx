@@ -4,7 +4,7 @@ import { gameAudio } from '../audio/gameAudio'
 import { useBgm } from '../audio/useBgm'
 import { WorldInn, WorldShop } from '../economy'
 import { useProgress } from '../progression'
-import { characterVisuals, equipmentById, useRpg } from '../rpg'
+import { characterVisuals, equipmentById, getCombatStats, useRpg } from '../rpg'
 import { TYPESCRIPT_REGION_LOCKED_MESSAGE } from './regionAccess'
 import { openWorldTreasure } from './treasures'
 import { useEncounterCue } from './useEncounterCue'
@@ -57,7 +57,7 @@ const terrainLabels: Record<string, string> = {
 
 export function WorldPage() {
   const navigate = useNavigate()
-  const { progress, setProgress } = useProgress()
+  const { progress, stats, setProgress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
   const [message, setMessage] = useState(
     '西の草原ではJavaScript、東側ではTypeScriptの戦闘が起こる。',
@@ -592,6 +592,24 @@ export function WorldPage() {
       return
     }
 
+    if (intent.kind === 'recovery-stop') {
+      const recoveryTarget = Math.ceil(
+        getCombatStats(stats, rpgState).maxHp * intent.stop.recoveryRatio,
+      )
+      if (rpgState.currentHp >= recoveryTarget) {
+        gameAudio.playSe('cancel')
+        setMessage(`${intent.stop.label}: 今は十分に休めている。`)
+        return
+      }
+      setRpgState((current) => ({
+        ...current,
+        currentHp: Math.max(current.currentHp, recoveryTarget),
+      }))
+      gameAudio.playSe('confirm')
+      setMessage(`${intent.stop.label}: HPを${recoveryTarget}まで回復した。`)
+      return
+    }
+
     if (intent.kind === 'training') {
       if (intent.battleId === null) {
         gameAudio.playSe('confirm')
@@ -729,6 +747,7 @@ export function WorldPage() {
     setProgress,
     setRpgState,
     shopOpen,
+    stats,
   ])
 
   useWorldKeyboardControls({ interact, move, disabled: shopOpen || innOpen || encounterCueActive })
