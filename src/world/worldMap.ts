@@ -18,7 +18,7 @@ export type WorldMapId =
 
 const WORLD_MAP_DIMENSIONS: Record<WorldMapId, { width: number; height: number }> = {
   [OVERWORLD_MAP_ID]: { width: WORLD_WIDTH, height: WORLD_HEIGHT },
-  [JS_VILLAGE_MAP_ID]: { width: 21, height: 15 },
+  [JS_VILLAGE_MAP_ID]: { width: 31, height: 25 },
   [JS_FOREST_MAP_ID]: { width: 31, height: 27 },
   [JS_DEEP_FOREST_MAP_ID]: { width: 31, height: 27 },
   [TS_FRONTIER_MAP_ID]: { width: 31, height: 21 },
@@ -26,7 +26,7 @@ const WORLD_MAP_DIMENSIONS: Record<WorldMapId, { width: number; height: number }
 
 export const WORLD_MAP_STARTS: Record<WorldMapId, { x: number; y: number }> = {
   [OVERWORLD_MAP_ID]: { ...WORLD_START },
-  [JS_VILLAGE_MAP_ID]: { x: 10, y: 12 },
+  [JS_VILLAGE_MAP_ID]: { x: 10, y: 21 },
   [JS_FOREST_MAP_ID]: { x: 28, y: 10 },
   [JS_DEEP_FOREST_MAP_ID]: { x: 28, y: 10 },
   [TS_FRONTIER_MAP_ID]: { x: 2, y: 10 },
@@ -72,7 +72,7 @@ export const SHOP_POSITION = { x: 20, y: 12 } as const
 export const BYTE_POSITION = { x: 19, y: 13 } as const
 export const RECOVERY_POSITION = { x: 21, y: 16 } as const
 export const JS_VILLAGE_POSITION = { x: 10, y: 22 } as const
-export const JS_VILLAGE_EXIT_POSITION = { x: 10, y: 14 } as const
+export const JS_VILLAGE_EXIT_POSITION = { x: 10, y: 24 } as const
 export const JS_VILLAGE_TRAINING_POSITION = { x: 12, y: 7 } as const
 export const JS_FOREST_POSITION = { x: 34, y: 34 } as const
 export const JS_FOREST_EXIT_POSITION = { x: 30, y: 10 } as const
@@ -268,19 +268,43 @@ function getVillageTerrain(x: number, y: number): Terrain {
   const position = { x, y }
   if (samePosition(position, JS_VILLAGE_EXIT_POSITION)) return 'exit'
   if (samePosition(position, JS_VILLAGE_TRAINING_POSITION)) return 'training'
-  if (x <= 0 || y <= 0 || x >= 20 || y >= 14) return 'house'
+  if (x <= 0 || y <= 0 || x >= 30 || y >= 24) return 'house'
+
+  // The east-side stream is outside the legacy 21x15 footprint, so old saves
+  // remain on walkable ground while the expanded village gains a real landmark.
+  if (x === 21 && y >= 1 && y <= 23 && y !== 7 && y !== 14) return 'water'
 
   if (
     (x >= 2 && x <= 5 && y >= 2 && y <= 5) ||
     (x >= 15 && x <= 18 && y >= 2 && y <= 5) ||
     (x >= 3 && x <= 6 && y >= 9 && y <= 11) ||
-    (x >= 14 && x <= 17 && y >= 9 && y <= 11)
+    (x >= 14 && x <= 17 && y >= 9 && y <= 11) ||
+    (x >= 3 && x <= 6 && y >= 17 && y <= 20) ||
+    (x >= 23 && x <= 27 && y >= 3 && y <= 6) ||
+    (x >= 23 && x <= 27 && y >= 16 && y <= 19)
   ) {
     return 'house'
   }
 
-  if ((x >= 9 && x <= 11) || y === 7) return 'road'
-  if ((x + y) % 7 === 0) return 'grass'
+  const centralRoad = x >= 9 && x <= 11
+  const trainingLane = y === 7 && x >= 5 && x <= 25
+  const marketLane = y === 12 && x >= 5 && x <= 20
+  const riverBridgeLane = y === 14 && x >= 3 && x <= 27
+  const arrivalLane = y === 21 && x >= 5 && x <= 15
+  const eastBankLane = x === 25 && y >= 7 && y <= 16
+
+  if (
+    centralRoad ||
+    trainingLane ||
+    marketLane ||
+    riverBridgeLane ||
+    arrivalLane ||
+    eastBankLane
+  ) {
+    return 'road'
+  }
+
+  if ((x + y) % 7 === 0 || (x >= 18 && y >= 15)) return 'grass'
   return 'town'
 }
 
