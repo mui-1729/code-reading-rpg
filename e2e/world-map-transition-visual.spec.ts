@@ -78,19 +78,21 @@ test('@responsive Village portalは旧mapを覆ってからstateを切り替え�
   await expect(page.getByRole('button', { name: 'メニューを開く' })).toBeVisible()
 })
 
-test('Forest portalも向いてActionした時に同じtransition sequenceを使う', async ({ page }) => {
+test('Forest portalも第二集落へのActionで同じtransition sequenceを使う', async ({ page }) => {
   await seedWorld(page, 'js-forest', { x: 2, y: 10 }, [1, 7, 8, 9, 10, 11, 12, 13, 14])
 
   const viewport = page.locator('.world-viewport')
   const transition = page.locator('.world-map-transition')
   await page.getByRole('button', { name: '左へ移動' }).click()
   await expect(viewport).toHaveAttribute('data-world-map', 'js-forest')
-  await page.getByRole('button', { name: 'JavaScript深層の森へ入る' }).click()
+  await page.getByRole('button', { name: '森番の集落へ入る' }).click()
 
   await expect(transition).toHaveAttribute('data-world-transition-phase', 'covering')
+  await expect(transition).toHaveAttribute('data-world-transition-from', 'js-forest')
+  await expect(transition).toHaveAttribute('data-world-transition-to', 'js-forest-settlement')
   await expect(viewport).toHaveAttribute('data-world-map', 'js-forest')
   await expect(transition).toHaveAttribute('data-world-transition-phase', 'revealing')
-  await expect(viewport).toHaveAttribute('data-world-map', 'js-deep-forest')
+  await expect(viewport).toHaveAttribute('data-world-map', 'js-forest-settlement')
   await expect(transition).toHaveCount(0, { timeout: 1_000 })
 })
 
