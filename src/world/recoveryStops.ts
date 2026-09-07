@@ -11,8 +11,8 @@ export type WorldRecoveryStop = {
 
 /**
  * Recovery stops are optional safety valves, not paid Inn replacements.
- * Forest Phase 4 moves the camp off the main route onto a rejoining southern
- * loop so exploration has a practical reward without making the story path mandatory.
+ * Forest Phase 4 places the camp in a distinct southern clearing so exploration
+ * has a practical reward without turning the clearing into a mandatory road.
  */
 export const WORLD_RECOVERY_STOPS: readonly WorldRecoveryStop[] = [
   {
@@ -20,7 +20,7 @@ export const WORLD_RECOVERY_STOPS: readonly WorldRecoveryStop[] = [
     mapId: JS_FOREST_MAP_ID,
     label: '野営地',
     actionLabel: '野営地で休む',
-    position: { x: 19, y: 26 },
+    position: { x: 22, y: 32 },
     recoveryRatio: 0.6,
   },
   {
