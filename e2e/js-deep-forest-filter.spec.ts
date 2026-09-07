@@ -61,7 +61,7 @@ async function seedDeepForestGate(page: Page, state: DeepForestState) {
               byte: { weapon: null, armor: null, accessory: null },
             },
             worldMapId: atSettlement ? 'js-forest-settlement' : 'js-forest',
-            worldPosition: atSettlement ? { x: 11, y: 2 } : { x: 2, y: 10 },
+            worldPosition: atSettlement ? { x: 11, y: 2 } : { x: 2, y: 18 },
             safeCheckpoint: atSettlement
               ? { id: 'forest-settlement', mapId: 'js-forest-settlement', position: { x: 11, y: 11 } }
               : { id: 'greenfield-village', mapId: 'js-village', position: { x: 10, y: 12 } },
