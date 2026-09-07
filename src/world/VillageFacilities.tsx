@@ -1,11 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { WorldInn } from '../economy/WorldInn'
 import { VillageShop } from '../economy/VillageShop'
 import { useRpg } from '../rpg'
 import { VILLAGE_FACILITY_OPEN_EVENT } from './villageFacilityEvents'
 import { VILLAGE_FACILITIES, type VillageFacility, type VillageFacilityKind } from './villageFacilityData'
-import { JS_VILLAGE_MAP_ID } from './worldMap'
 
 type FacilityTarget = {
   facility: VillageFacility
@@ -15,7 +14,11 @@ type FacilityTarget = {
 function sameTargets(left: readonly FacilityTarget[], right: readonly FacilityTarget[]) {
   return left.length === right.length && left.every((entry, index) => {
     const candidate = right[index]
-    return candidate?.facility.kind === entry.facility.kind && candidate.target === entry.target
+    return (
+      candidate?.facility.kind === entry.facility.kind &&
+      candidate.facility.mapId === entry.facility.mapId &&
+      candidate.target === entry.target
+    )
   })
 }
 
@@ -24,7 +27,15 @@ export function VillageFacilities() {
   const [targets, setTargets] = useState<FacilityTarget[]>([])
   const [active, setActive] = useState<VillageFacilityKind | null>(null)
   const [message, setMessage] = useState('')
-  const visibleActive = rpgState.worldMapId === JS_VILLAGE_MAP_ID ? active : null
+  const visibleFacility = useMemo(
+    () =>
+      active
+        ? VILLAGE_FACILITIES.find(
+            (facility) => facility.mapId === rpgState.worldMapId && facility.kind === active,
+          ) ?? null
+        : null,
+    [active, rpgState.worldMapId],
+  )
 
   useEffect(() => {
     if (typeof document === 'undefined') return
@@ -32,7 +43,7 @@ export function VillageFacilities() {
     const sync = () => {
       const next = VILLAGE_FACILITIES.flatMap((facility) => {
         const target = document.querySelector(
-          `.world-viewport[data-world-map="${JS_VILLAGE_MAP_ID}"] .world-tile[data-world-x="${facility.position.x}"][data-world-y="${facility.position.y}"]`,
+          `.world-viewport[data-world-map="${facility.mapId}"] .world-tile[data-world-x="${facility.position.x}"][data-world-y="${facility.position.y}"]`,
         )
         return target ? [{ facility, target }] : []
       })
@@ -52,17 +63,20 @@ export function VillageFacilities() {
 
   useEffect(() => {
     const openFacility = (event: Event) => {
-      const facility = (event as CustomEvent<VillageFacilityKind>).detail
-      if (!VILLAGE_FACILITIES.some((candidate) => candidate.kind === facility)) return
+      const facilityKind = (event as CustomEvent<VillageFacilityKind>).detail
+      const facility = VILLAGE_FACILITIES.find(
+        (candidate) => candidate.mapId === rpgState.worldMapId && candidate.kind === facilityKind,
+      )
+      if (!facility) return
       setMessage('')
-      setActive(facility)
+      setActive(facilityKind)
     }
     window.addEventListener(VILLAGE_FACILITY_OPEN_EVENT, openFacility)
     return () => window.removeEventListener(VILLAGE_FACILITY_OPEN_EVENT, openFacility)
-  }, [])
+  }, [rpgState.worldMapId])
 
   useEffect(() => {
-    if (!visibleActive) return
+    if (!visibleFacility) return
     const stopWorldKeys = (event: KeyboardEvent) => {
       if (
         ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd', 'W', 'A', 'S', 'D', 'Enter', ' '].includes(
@@ -75,7 +89,7 @@ export function VillageFacilities() {
     }
     window.addEventListener('keydown', stopWorldKeys, true)
     return () => window.removeEventListener('keydown', stopWorldKeys, true)
-  }, [visibleActive])
+  }, [visibleFacility])
 
   const close = () => setActive(null)
 
@@ -92,26 +106,26 @@ export function VillageFacilities() {
             {facility.label}
           </span>,
           target,
-          facility.kind,
+          `${facility.mapId}:${facility.kind}`,
         ),
       )}
 
       <WorldInn
-        open={visibleActive === 'inn'}
+        open={visibleFacility?.kind === 'inn'}
         onClose={close}
         onMessage={setMessage}
-        locationLabel="グリーンフィールド村"
-        checkpointId="greenfield-village"
+        locationLabel={visibleFacility?.locationLabel}
+        checkpointId={visibleFacility?.checkpointId}
       />
       <VillageShop
         kind="items"
-        open={visibleActive === 'item-shop'}
+        open={visibleFacility?.kind === 'item-shop'}
         onClose={close}
         onMessage={setMessage}
       />
       <VillageShop
         kind="equipment"
-        open={visibleActive === 'equipment-shop'}
+        open={visibleFacility?.kind === 'equipment-shop'}
         onClose={close}
         onMessage={setMessage}
       />
