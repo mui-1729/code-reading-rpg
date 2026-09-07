@@ -62,21 +62,21 @@ async function seedWorld(
   await page.goto('/world')
 }
 
-test('@responsive Forestでは固定Battle 11の前に分岐痕が見え、調べに踏み込むとそのBattleが始まる', async ({ page }) => {
+test('@responsive Forestでは固定Battle 11の前に分かれ道が見え、踏み込むとそのBattleが始まる', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedWorld(page, {
     mapId: 'js-forest',
-    position: { x: 17, y: 10 },
+    position: { x: 32, y: 8 },
     clearedStageIds: [1, 7, 8, 9, 10],
     unlockedStageIds: [1, 7, 8, 9, 10, 11],
   })
 
   const landmark = page.locator('[data-progression-battle="11"]')
   await expect(landmark).toBeVisible()
-  await expect(landmark).toHaveText('分岐痕')
-  await expect(landmark).toHaveAttribute('aria-label', '二手に割れた異変の痕跡')
+  await expect(landmark).toHaveText('分かれ道')
+  await expect(landmark).toHaveAttribute('aria-label', '二手に分かれた獣道の痕跡')
 
-  await page.getByRole('button', { name: '上へ移動' }).click()
+  await page.getByRole('button', { name: '左へ移動' }).click()
   await expect(page).toHaveURL(/\/javascript\/battle\/11/)
 })
 
