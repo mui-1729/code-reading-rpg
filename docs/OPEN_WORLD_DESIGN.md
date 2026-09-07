@@ -31,17 +31,19 @@ Open Worldを「1枚の巨大grid」とは定義しない。Overworld / Village 
 - `overworld` — 70 × 50
 - `js-village` — 21 × 15
 - `js-forest` — 31 × 27
+- `js-forest-settlement` — 23 × 17
 - `js-deep-forest` — 31 × 27
 - `ts-frontier` — 31 × 21
 - viewport — 11 × 9
 
-Phase 2ではOverworldをField scaleへ移し、到着Hub周辺を維持しながらGREENFIELD / Forest / TypeScript境界を離した。GREENFIELD / Forest Settlement / Forest / Deep ForestのLocal Map再設計は後続Phaseで行う。
+Phase 2ではOverworldをField scaleへ移した。Phase 3ではpersistent safe checkpoint authorityと、Forest / Deep Forest間の第二有人拠点`js-forest-settlement`を追加した。GREENFIELD / Forest / Deep Forestの詳細layout再設計は後続Phaseで行う。
 
 共通:
 
 - `worldMapId + local worldPosition`をRpgStateへ保存
+- safe checkpointをRpgState v7へsemantic IDとして保存
 - `/world` route上でmap transition
-- VillageはRandom Encounterなし
+- Village / SettlementはRandom Encounterなし
 - fixed Story / learning BattleはRandom chance / cooldownより優先
 - expanded Overworld layoutはRpgState schema v6で旧TypeScript-side save migrationと区別する
 
@@ -144,8 +146,9 @@ portal gateは`src/world/worldMap.ts`の`WORLD_PORTALS`をruntime authorityに�
 現在の解放条件:
 
 - Overworld → GREENFIELD: JS-01 clear
-- Forest方面: JS-04 clear
-- Deep Forest方面: JS-09 clear
+- Overworld → Forest: JS-04 clear
+- Forest → Forest Settlement: JS-09 clear
+- Forest Settlement → Deep Forest: JS-09 clear
 - Final Approach: JS-18 clear
 - TypeScript方面: JS-19 clear
 
@@ -164,13 +167,17 @@ portal gateは`src/world/worldMap.ts`の`WORLD_PORTALS`をruntime authorityに�
 
 ### Forest Settlement
 
-Forest後半〜Deep Forest前に置く第二の有人safe hub。
+Forest後半〜Deep Forest前の第二の有人safe hubとしてruntimeへ実装済み。
 
-- GREENFIELDのコピーにしない
-- 森の小規模集落として自然Region identityを維持
-- 宿 / 補給 / NPC / Story
-- Deep Forest前の準備
-- safe checkpoint更新
+- `js-forest-settlement`としてForestとDeep Forestの間に独立Local Mapを持つ
+- GREENFIELDのコピーにせず、森の小規模集落として自然Region identityを維持する
+- 宿 / 道具補給 / NPCを持つ
+- 初回入場時に`forest-settlement` safe checkpointへ更新する
+- 宿利用時にも同checkpointを再登録できる
+- Deep Forestから戻る場合もこの集落へ戻る
+- Deep Forest内で敗北した場合、保存済みcheckpointがここならこの集落へRETURNする
+
+現行23×17 layoutはPhase 3の基礎実装。Forest / Deep ForestのPhase 4 / 5再設計と通しplayを見て、生活空間・施設位置・拠点間距離は必要に応じて調整する。
 
 camp / springは部分回復地点であり、有人集落の代替ではない。
 
@@ -188,13 +195,23 @@ safe checkpoint
 
 checkpointはRpgStateへ明示的に保存し、current mapやx座標から毎回推測しない。
 
-- 初回入村時に自動登録
+- 初回入村 / 入集落時に自動登録
 - 宿利用時にも再登録可能
 - save / reload後も維持
 - legacy saveに無い場合は安全なfallbackを使う
 - RETRYは同Battle再挑戦
 - RETURNは保存されたsafe hubを基本にする
 - Defeatを無料full healの手段にはしない
+
+現在の有人checkpoint:
+
+```text
+中央Hub
+→ GREENFIELD VILLAGE
+→ Forest Settlement
+```
+
+Forest camp / Deep Forest springは部分回復地点であり、checkpoint authorityを上書きしない。
 
 ## 8. Fixed Story / learning Battle policy
 
@@ -217,7 +234,7 @@ Opening後の最初のlive incident。全部説明できなくてもよく、症
 
 ### JS-10
 
-JS-09後、第二集落からDeep Forestへ向かう旅の中でsecond symptomを固定体験する。
+JS-09後、Forest Settlementで休息・補給してからDeep Forestへ進み、その入口側の最初の移動でsecond symptomを固定体験する。
 
 ## 9. Random Encounter policy
 
@@ -291,7 +308,7 @@ Map単位の発見とcell-level revealを分ける。
 - regional map購入で通常地形 / public geographyを先に確認可能
 - Treasure / secretの正確な位置は自動公開しない
 
-Fog of Warは#377のbranch / loop構造を先に成立させてから導入する。
+Forest Settlementを含む新topologyのAtlas統合は#373 / Phase 6で行う。Fog of Warは#377のbranch / loop構造を先に成立させてから導入する。
 
 ## 13. Save compatibility
 
@@ -300,6 +317,7 @@ Fog of Warは#377のbranch / loop構造を先に成立させてから導入す�
 - numeric Battle IDは互換用として維持
 - semantic progressionをauthorityにする
 - expanded Overworld layoutはschema v6以降として旧40×28 layoutと区別する
+- safe checkpointはRpgState v7でsemantic IDとして保存する
 - 新checkpoint / reveal stateはmigrationで安全なdefaultを補う
 - atomic root save / valid backup復旧の既存policyを維持
 
