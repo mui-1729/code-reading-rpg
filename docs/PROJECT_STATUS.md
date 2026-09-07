@@ -137,11 +137,12 @@ stable map:
 - viewport 11 × 9
 - `worldMapId + local worldPosition`をRpgStateへ保存
 - safe checkpointをRpgState v7へsemantic IDとして保存
-- Hub → GREENFIELD → Forestの本道は複数回曲がり、川・橋・森の景観を通る
+- Hub → GREENFIELD → ForestのOverworld本道は複数回曲がり、川・橋・森の景観を通る
 - GREENFIELD南側に本道へ再合流する川辺loopとTreasureがある
-- Forestは45×35のLocal Mapとして、main route自体が上下左右へ曲がる
-- Forest中央の川を橋で越え、北側にTreasureへ向かうrejoin loop、南側に野営地へ向かうrejoin loopを持つ
-- ForestのJS-05 / 06 / 07 / 09は単純なx座標閾値ではなく、折れ枝・分かれ道・川の合流・散る足跡という明示的な地理地点で固定導入する
+- Forestは45×35のLocal Mapだが、内部には`road` terrainを置かない
+- Forestは森 / 深い森 / 局所的な空き地 / 川 / 池 / 湿地で構成し、東西を分ける川は倒木で横断する
+- Forestの空き地は入口・川辺・Treasure・野営地・中ボス・第二集落付近に限定し、空き地同士を一本道で接続しない
+- ForestのJS-05 / 06 / 07 / 09は単純なx座標閾値ではなく、折れ枝・分かれ跡・川の合流・散る足跡という明示的な地理地点で固定導入する
 - Forest → Forest Settlement → Deep Forestの順に進み、Forest SettlementはRandom Encounterのない第二有人safe hub
 - Forest Settlementへ初回入場すると敗北時の復帰先が同集落へ更新される
 - Forest Settlementには宿・道具屋・NPCがあり、Deep Forest前に立て直せる
@@ -295,7 +296,8 @@ numeric IDを維持するのは互換性のためであり、将来のchapter追
 - JS-02 → JS-03 → JS-04
 - JS-04前はForestへ入れない
 - JS-04後にForestへ進める
-- Forestは45×35でmain routeが複数回曲がり、川・橋・north treasure loop・south camp loopを持つ
+- Forestは45×35で`road` terrainを持たず、森・空き地・川・池・湿地で探索できる
+- Forestの川横断点は人工roadではなく倒木として視認できる
 - Forest JS-05〜09のfixed Battleは地理的landmarkで導入し、hidden x-thresholdへ戻さない
 - current Lessonの新SkillはTRIALとして使える
 - clear後のSkillは後続BattleでMASTEREDとして利用できる
