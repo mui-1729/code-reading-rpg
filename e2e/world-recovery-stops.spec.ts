@@ -61,17 +61,15 @@ async function seedMap(
   await page.goto('/world')
 }
 
-test('Forest南側の野営地は通り抜けられない物体で、隣からテントを調べると0 Goldで部分回復できる', async ({ page }) => {
+test('Forest南側の野営地は通り抜けられず、共通アクションから0 Goldで部分回復できる', async ({ page }) => {
   await seedMap(page, 'js-forest', { x: 22, y: 33 }, [...JS_TRAINING_COMPLETE])
 
   const map = page.getByLabel('JavaScriptの森のマップ')
-  const camp = page.getByRole('button', { name: '野営地で休む' })
-  await expect(camp).toBeVisible()
-  await expect(camp).toBeEnabled()
-  await expect(camp).toHaveAttribute('title', /無料でHPを60%まで回復/)
-  await expect(camp.locator('.recovery-stop-label')).toBeHidden()
+  const campObject = page.locator('[data-recovery-stop="forest-traveler-camp"]')
+  await expect(campObject).toBeVisible()
+  await expect(campObject).not.toHaveAttribute('role', 'button')
 
-  const campVisual = await camp.evaluate((element) => {
+  const campVisual = await campObject.evaluate((element) => {
     const tent = getComputedStyle(element, '::before')
     const fire = getComputedStyle(element, '::after')
     return {
@@ -86,34 +84,38 @@ test('Forest南側の野営地は通り抜けられない物体で、隣から�
   expect(campVisual.fireContent).not.toBe('none')
   expect(campVisual.fireWidth).toBeGreaterThan(0)
 
+  const action = page.getByRole('button', { name: '野営地で休む' })
+  await expect(action).toBeVisible()
+  await expect(action).toBeEnabled()
+
   // The tent/fire occupies its tile. Walking north faces it but must not put the
   // player on top of the camp.
   await page.getByRole('button', { name: '上へ移動' }).click()
   await expect(map).toHaveAttribute('data-world-x', '22')
   await expect(map).toHaveAttribute('data-world-y', '33')
-  await expect(camp).toBeEnabled()
+  await expect(action).toBeEnabled()
 
-  await camp.click()
+  await action.click()
 
   await expect(page.getByRole('status')).toContainText('野営地: HPを')
   const stored = await readStoredRpg(page)
   expect(stored.state.currentHp).toBeGreaterThan(20)
 })
 
-test('Deep Forestの湧き水も通り抜けず隣から利用できるsoft-lock回避地点にする', async ({ page }) => {
+test('Deep Forestの湧き水も通り抜けず、共通アクションから利用できる', async ({ page }) => {
   await seedMap(page, 'js-deep-forest', { x: 16, y: 10 }, [...JS_SECOND_INCIDENT_PREREQS])
 
   const map = page.getByLabel('JavaScript深層の森のマップ')
-  const spring = page.getByRole('button', { name: '湧き水で休む' })
-  await expect(spring).toBeVisible()
-  await expect(spring).toBeEnabled()
+  const action = page.getByRole('button', { name: '湧き水で休む' })
+  await expect(action).toBeVisible()
+  await expect(action).toBeEnabled()
 
   await page.getByRole('button', { name: '下へ移動' }).click()
   await expect(map).toHaveAttribute('data-world-x', '16')
   await expect(map).toHaveAttribute('data-world-y', '10')
-  await expect(spring).toBeEnabled()
+  await expect(action).toBeEnabled()
 
-  await spring.click()
+  await action.click()
 
   await expect(page.getByRole('status')).toContainText('湧き水: HPを')
   const stored = await readStoredRpg(page)
