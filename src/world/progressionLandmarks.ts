@@ -17,14 +17,14 @@ export type ProgressionLandmark = {
 /**
  * Fixed-story Battle thresholds must have a player-visible place in the world.
  * Forest Phase 4 spreads a small number of landmarks across real geographic
- * transitions instead of lining labels along one horizontal corridor.
+ * transitions instead of lining labels along one horizontal corridor or road.
  */
 export const PROGRESSION_LANDMARKS: readonly ProgressionLandmark[] = [
   {
     mapId: JS_FOREST_MAP_ID,
     position: JS_FOREST_LEARNING_POSITIONS[10],
     battleId: 10,
-    label: '不自然に折れた枝が続く林道',
+    label: '不自然に折れた枝が疎林の奥へ続く場所',
     shortLabel: '折れ枝',
     kind: 'trace',
   },
@@ -32,8 +32,8 @@ export const PROGRESSION_LANDMARKS: readonly ProgressionLandmark[] = [
     mapId: JS_FOREST_MAP_ID,
     position: JS_FOREST_LEARNING_POSITIONS[11],
     battleId: 11,
-    label: '二手に分かれた獣道の痕跡',
-    shortLabel: '分かれ道',
+    label: '足跡が二方向へ分かれて残る川辺',
+    shortLabel: '分かれ跡',
     kind: 'trace',
   },
   {
