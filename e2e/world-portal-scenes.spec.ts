@@ -97,6 +97,28 @@ test('村入口は木柵門、Village出口は草原へ抜ける門として別s
   await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-y', '21')
 })
 
+test('Forestの川は青い水面と流れのhighlightを持ち、森タイルの色違いには見えない', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await seedWorld(page, 'js-forest', { x: 35, y: 13 }, [1, 7, 8, 9, 10])
+
+  const water = page.locator('.world-tile[data-world-x="32"][data-world-y="13"].terrain-water')
+  await expect(water).toBeVisible()
+  const visual = await water.evaluate((element) => {
+    const style = getComputedStyle(element)
+    const highlight = getComputedStyle(element, '::before')
+    return {
+      backgroundImage: style.backgroundImage,
+      backgroundColor: style.backgroundColor,
+      highlightContent: highlight.content,
+      highlightWidth: Number.parseFloat(highlight.width),
+    }
+  })
+  expect(visual.backgroundImage).toContain('linear-gradient')
+  expect(visual.backgroundImage).toContain('rgb(82, 184, 223)')
+  expect(visual.highlightContent).not.toBe('none')
+  expect(visual.highlightWidth).toBeGreaterThan(0)
+})
+
 test('Forestの川横断はroadではなく倒木として見える', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedWorld(page, 'js-forest', { x: 34, y: 12 }, [1, 7, 8, 9, 10])
