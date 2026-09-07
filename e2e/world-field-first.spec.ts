@@ -86,7 +86,7 @@ test('Overworld / local mapは常設headerよりfieldを先に見せる', async 
   await expectFieldFirst(page)
   await expect(page.getByLabel('ワールドマップ')).toBeVisible()
 
-  await seedWorld(page, 'js-forest', { x: 28, y: 10 })
+  await seedWorld(page, 'js-forest', { x: 42, y: 16 })
   await expectFieldFirst(page)
   await expect(page.getByLabel('JavaScriptの森のマップ')).toBeVisible()
 })
