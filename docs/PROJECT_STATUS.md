@@ -1,6 +1,6 @@
 # CODE//READ RPG — Project Status
 
-最終更新: 2026-09-01
+最終更新: 2026-09-07
 
 この文書は、**このゲームが何を目指していて、今どこまで実装され、次に何を作るべきか**を短く把握するためのcurrent snapshotです。
 
@@ -34,9 +34,13 @@ CODE WORLD
 ↓
 最初の異変を実際に体験
 ↓
-Villageで読めなかった部分を確認
+GREENFIELD VILLAGEで読めなかった部分を確認
 ↓
-Forest / Deep Forestへ同じtraceを追う
+JavaScript Forestで同じtraceを追う
+↓
+Forest Settlementで休息・補給
+↓
+Deep Forestで共有traceを根本原因まで追う
 ↓
 Code Core root cause
 ↓
@@ -62,6 +66,8 @@ JS-07  combined conditions
 JS-08  Forest MID BOSS
 JS-09  find() vs filter()
 ↓
+FOREST SETTLEMENT
+↓
 JS-10  SECOND SYMPTOM
 ↓
 JS-11  filter() repetition
@@ -82,6 +88,7 @@ JS-19  Code Core ROOT CAUSE
 - まず「何かおかしい」をstateと結果から観察する
 - JS-02〜04はJS-01で読めなかった部分を小さく分解する
 - Forest以降はsyntax syllabusではなく、同じincidentのtraceを追うために必要な読み方を導入する
+- JS-09後は森を抜けた到達点としてForest Settlementで休息・補給し、第二safe checkpointを得る
 - JS-10でREAL WORLD側にも影響が広がっていることを再確認する
 - JS-18後はDeep Forest西口からCode Coreへ直接前進する
 - 終盤に草原へ戻って古いBattleを消化するbacktrackは行わない
@@ -121,30 +128,36 @@ stable map:
 - `overworld` — 70 × 50（地域間を旅するField scale）
 - `js-village` — GREENFIELD VILLAGE 21 × 15
 - `js-forest` — JAVASCRIPT FOREST 31 × 27
+- `js-forest-settlement` — FOREST SETTLEMENT 23 × 17
 - `js-deep-forest` — JAVASCRIPT DEEP FOREST 31 × 27
 - `ts-frontier` — TYPESCRIPT FRONTIER 31 × 21
 
 共通:
 
 - viewport 11 × 9
-- `worldMapId + local worldPosition`をRpgState v6で保存
+- `worldMapId + local worldPosition`をRpgStateへ保存
+- safe checkpointをRpgState v7へsemantic IDとして保存
 - Hub → GREENFIELD → Forestの本道は複数回曲がり、川・橋・森の景観を通る
 - GREENFIELD南側に本道へ再合流する川辺loopとTreasureがある
+- Forest → Forest Settlement → Deep Forestの順に進み、Forest SettlementはRandom Encounterのない第二有人safe hub
+- Forest Settlementへ初回入場すると敗北時の復帰先が同集落へ更新される
+- Forest Settlementには宿・道具屋・NPCがあり、Deep Forest前に立て直せる
 - TypeScript Frontier入口はField東端側にあり、Hubと同一viewportへ詰め込まない
 - `/world` route上でmap transition
-- local mapからBattleへ入り、Victory / RUN / checkpoint returnでpolicyに応じてsame map / positionへ戻る
-- Defeatは即Hub転送せず、RETRYかcheckpoint returnを選ぶ
+- local mapからBattleへ入り、Victory / RUN / checkpoint returnで既定policyに従う
+- Defeatは即Hub転送せず、RETRYか保存済みsafe checkpointへのRETURNを選ぶ
 
 ### Portal gate authority
 
 `src/world/worldMap.ts`のportal metadataをgateのauthorityにする。
 
 ```text
-Village entrance      -> JS-01 clear required
-Forest entrance       -> JS-04 clear required
-Deep Forest entrance  -> JS-09 clear required
-Code Core west exit   -> JS-18 clear required
-TypeScript Frontier   -> JS-19 clear required
+Village entrance                 -> JS-01 clear required
+Forest entrance                  -> JS-04 clear required
+Forest Settlement entrance       -> JS-09 clear required
+Settlement -> Deep Forest        -> JS-09 clear required
+Code Core west exit              -> JS-18 clear required
+TypeScript Frontier              -> JS-19 clear required
 ```
 
 同じgate条件を`WorldPage` / `worldActions`へ特例として二重実装しない。
@@ -189,6 +202,10 @@ MobileではEnemyの現在値と選択中codeを近接表示する。CODE HELP�
 - Skill mastery / trial
 - CODEXのMASTERED Skill表示
 - Defeat RETRY / RETURN TO CHECKPOINT
+- GREENFIELD VILLAGEの宿 / 道具屋 / 装備屋
+- Forest Settlementの宿 / 道具屋
+- Forest camp / Deep Forest springの部分回復
+- GREENFIELD / Forest Settlementのpersistent safe checkpoint
 
 BYTEはPlayerがcodeから選んだ**同じtarget**へ追撃し、correct targetを自動決定しない。
 
@@ -230,19 +247,24 @@ internal compatibility IDは4 / 5 / 6。
 
 TS-01 / TS-02 / TS-03でも新しいSkillはcurrent BattleではTRIAL、そのclear後にMASTEREDとして後続へ引き継ぐ。
 
+JavaScript編をRPGとして完成形に近づけ、World topology / safe hub / Forest / Deep Forest / Atlas探索loopの基準を固めてからTypeScriptの本格的なcontent・World拡張へ進む。JavaScript変更によるregressionや進行不能などのbug fixは先に行ってよい。
+
 今後のbeginner Story passでもJavaScriptと同様に、technical termから始めず**現象 → 普通の言葉 → 型情報**の順にする。
 
 ## 8. Persistence / compatibility
 
 - `PlayerProgress` schema v4
-- `RpgState` schema v6（70 × 50 Overworldを旧40 × 28 layoutと区別）
-- RpgState v1〜v5 → v6 migration。v5以前の旧Overworld TypeScript座標は`ts-frontier`へ移す
+- `RpgState` schema v7
+  - v6: 70 × 50 Overworldを旧40 × 28 layoutと区別
+  - v7: persistent `safeCheckpoint`を追加
+- RpgState v1〜v6からcurrent schemaへmigrationし、安全なcheckpoint fallbackを補う
 - Progress / RPGの単一revision snapshot、backup recovery、storage event同期、stale tab上書き回避
 - root schema v2にBattle開始snapshotを保持する
 - Battle中HP / Itemはtentative stateとして同じroot transaction内で扱う
 - VICTORYだけがBattle success commit point
-- RETRY / RETURN TO CHECKPOINT / RUN / browser back / reload / ABORTはSTART snapshotへrollbackする
-- checkpoint returnは全回復せず、開始HP / Item / map / local positionを戻してencounter cooldownだけresetする
+- RETRY / RETURN TO CHECKPOINT / RUN / browser back / reload / ABORTはSTART snapshotをtransaction authorityにする
+- checkpoint returnは全回復せず、Battle開始時のHP / Itemを保ったまま保存済みsafe checkpointへWorld位置だけ移す
+- current map / x座標から敗北復帰先を推測しない
 - current `worldMapId + local worldPosition`を保存
 - unknown map / bounds外locationはHubへfallback
 - portal graph上でlocked mapにある位置もHubへnormalize
@@ -275,7 +297,12 @@ numeric IDを維持するのは互換性のためであり、将来のchapter追
 - clear後のSkillは後続BattleでMASTEREDとして利用できる
 - 未MASTERED / 非TRIAL SkillはBattleへ出ない
 - generatorも同じSkill availabilityでsolvabilityを判定する
+- JS-09前はForest Settlementへ入れない
+- JS-09後にForest Settlementへ到達し、safe checkpointが更新される
+- Forest Settlementに宿 / 道具補給 / NPCがある
+- Forest SettlementからDeep Forestへ進める
 - JS-09後にDeep ForestでJS-10 fixed second symptom
+- Deep Forestで敗北した時、最後のsafe checkpointがForest SettlementならそこへRETURNする
 - JS-10後にDeep Forest JS-11〜18
 - MID BOSSをRandom poolへ入れない
 - new conceptをRandomで初登場させない
@@ -287,7 +314,7 @@ numeric IDを維持するのは互換性のためであり、将来のchapter追
 - Level Up resultにMAX HP / POWER deltaが出る
 - reload / browser back / RUNはBattle START snapshotへrollbackする
 - RETRYは同じ開始HP / Itemへ戻る
-- checkpoint returnはno full healで開始地点へ戻り、直後の再encounterを防ぐ
+- checkpoint returnはno full healで保存safe hubへ戻り、直後の再encounterを防ぐ
 - VICTORYだけがBattle中HP / Item / rewardをcommitする
 - old save normalization
 - Economy invariant
@@ -306,13 +333,14 @@ npm run test:e2e
 
 ## 10. 次の優先順位
 
-#266 Priority S / Aを固定した後:
+JavaScript編を完成形の基準にする。
 
-1. #265 — RPG-first visual / audio / game feel
-2. #260 — World Atlas / exploration UI
-3. #262 — Character relationship / continuity
-4. #259 — Battle / Pause Mobile / accessibility
-5. #246 — Database prototype
+1. #377 / #330 / #375 — JavaScript Worldの拠点・旅loopを完成させる
+2. #352 — Forest / Deep Forestを探索型layoutへ再設計する
+3. #373 — cell-level Fog of War / 地域地図をJavaScript topologyへ統合する
+4. JavaScript編を通しplayし、拠点間隔・Encounter・Economy・Story pacingを調整する
+5. その基準を使ってTypeScriptを本格拡張する
+6. #246 — Database prototype
 
 新region追加時も、
 
