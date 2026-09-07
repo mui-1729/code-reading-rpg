@@ -56,7 +56,7 @@ describe('JavaScript Forest learning route', () => {
     expect(result.battle.battleId).toBe(10)
   })
 
-  it('分かれ道へ進むとBattle 11を固定導入し、その後のRandomは10 / 11だけになる', () => {
+  it('川辺の足跡へ進むとBattle 11を固定導入し、その後のRandomは10 / 11だけになる', () => {
     const lesson = enterTarget(11, [7, 8, 9, 1, 10])
 
     expect(lesson.kind).toBe('encounter')
@@ -70,7 +70,7 @@ describe('JavaScript Forest learning route', () => {
     expect(replay.battle.battleId).toBe(11)
   })
 
-  it('川の合流へ進むとBattle 12を固定導入し、clear後に10 / 11 / 12を反復する', () => {
+  it('踏み荒らされた草の足跡へ進むとBattle 12を固定導入し、clear後に10 / 11 / 12を反復する', () => {
     const lesson = enterTarget(12, [7, 8, 9, 1, 10, 11])
 
     expect(lesson.kind).toBe('encounter')
