@@ -79,7 +79,7 @@ test('@responsive Village portalは旧mapを覆ってからstateを切り替え�
 })
 
 test('Forest portalも第二集落へのActionで同じtransition sequenceを使う', async ({ page }) => {
-  await seedWorld(page, 'js-forest', { x: 2, y: 10 }, [1, 7, 8, 9, 10, 11, 12, 13, 14])
+  await seedWorld(page, 'js-forest', { x: 2, y: 18 }, [1, 7, 8, 9, 10, 11, 12, 13, 14])
 
   const viewport = page.locator('.world-viewport')
   const transition = page.locator('.world-map-transition')
