@@ -9,10 +9,10 @@ describe('progression landmarks', () => {
         (landmark) => [landmark.battleId, landmark.position.x, landmark.position.y],
       ),
     ).toEqual([
-      [10, 38, 16],
-      [11, 31, 8],
-      [12, 20, 20],
-      [14, 10, 12],
+      [10, 47, 20],
+      [11, 35, 12],
+      [12, 22, 25],
+      [14, 9, 20],
     ])
   })
 
@@ -39,10 +39,10 @@ describe('progression landmarks', () => {
   })
 
   it('座標からPlayer-facing landmarkを取得できる', () => {
-    expect(getProgressionLandmarkAtPosition(JS_FOREST_MAP_ID, { x: 31, y: 8 })).toMatchObject({
+    expect(getProgressionLandmarkAtPosition(JS_FOREST_MAP_ID, { x: 35, y: 12 })).toMatchObject({
       battleId: 11,
       shortLabel: '分かれ跡',
     })
-    expect(getProgressionLandmarkAtPosition(JS_FOREST_MAP_ID, { x: 31, y: 9 })).toBeUndefined()
+    expect(getProgressionLandmarkAtPosition(JS_FOREST_MAP_ID, { x: 35, y: 13 })).toBeUndefined()
   })
 })
