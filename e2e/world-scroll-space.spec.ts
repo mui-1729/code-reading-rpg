@@ -82,7 +82,7 @@ test('World各mapはcontentがviewport内に収まる時に旧bottom spacer由�
   const maps = [
     ['overworld', { x: 20, y: 14 }],
     ['js-village', { x: 10, y: 12 }],
-    ['js-forest', { x: 28, y: 10 }],
+    ['js-forest', { x: 42, y: 16 }],
     ['js-deep-forest', { x: 28, y: 10 }],
     ['ts-frontier', { x: 2, y: 10 }],
   ] as const
@@ -97,7 +97,7 @@ test('World各mapはcontentがviewport内に収まる時に旧bottom spacer由�
 
 test('low landscapeでは必要なcontent scrollだけを維持しdocument末尾に追加spacerを残さない', async ({ page }) => {
   await page.setViewportSize({ width: 844, height: 390 })
-  await seedMap(page, 'js-forest', { x: 28, y: 10 })
+  await seedMap(page, 'js-forest', { x: 42, y: 16 })
 
   const metrics = await layoutMetrics(page)
   expect(metrics.paddingBottom).toBeLessThanOrEqual(16)
