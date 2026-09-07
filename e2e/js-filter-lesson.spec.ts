@@ -54,7 +54,7 @@ async function seedFilterLesson(page: Page, clearedMidboss: boolean) {
               byte: { weapon: null, armor: null, accessory: null },
             },
             worldMapId: 'js-forest',
-            worldPosition: { x: 4, y: 10 },
+            worldPosition: { x: 10, y: 13 },
             stepsSinceEncounter: 0,
             encounterCount: 5,
             currentHp: 100,
@@ -85,8 +85,8 @@ test('Battle 13未clearでは西側Woodsへ入ってもfilter traceを先取り�
   await page.getByRole('button', { name: '上へ移動' }).click()
 
   await expect(page).toHaveURL(/\/world$/)
-  await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-x', '4')
-  await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-y', '9')
+  await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-x', '10')
+  await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-y', '12')
 })
 
 test('Battle 13 clear済みsaveは西側WoodsでBattle 14をimpact-range traceとして固定導入する', async ({ page }) => {
