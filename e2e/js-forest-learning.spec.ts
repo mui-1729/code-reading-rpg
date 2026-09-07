@@ -121,6 +121,7 @@ test('Forest最初の地理的trace地点はRandom抽選ではなくBattle 10の
   await expect(forest).toHaveAttribute('data-world-map', 'js-forest')
   await expect(forest).toHaveAttribute('data-world-x', '42')
   await expect(forest).toHaveAttribute('data-world-y', '16')
+  await expect(page.locator('.world-map-transition')).toHaveCount(0, { timeout: 1_000 })
 
   await page.getByRole('button', { name: '左へ移動' }).click()
   await expect(forest).toHaveAttribute('data-world-x', '41')
