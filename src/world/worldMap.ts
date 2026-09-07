@@ -321,34 +321,28 @@ function isForestLearningPosition(position: { x: number; y: number }): boolean {
   return Object.values(JS_FOREST_LEARNING_POSITIONS).some((candidate) => samePosition(position, candidate))
 }
 
-function isForestMainRoad(x: number, y: number): boolean {
-  return (
-    (y === 16 && x >= 34 && x <= 43) ||
-    (x === 34 && y >= 8 && y <= 16) ||
-    (y === 8 && x >= 24 && x <= 34) ||
-    (x === 24 && y >= 8 && y <= 20) ||
-    (y === 20 && x >= 14 && x <= 24) ||
-    (x === 14 && y >= 12 && y <= 20) ||
-    (y === 12 && x >= 6 && x <= 14) ||
-    (x === 6 && y >= 12 && y <= 18) ||
-    (y === 18 && x >= 2 && x <= 6)
-  )
+function isForestEntryClearing(x: number, y: number): boolean {
+  return x >= 39 && x <= 43 && y >= 14 && y <= 18
 }
 
-function isForestNorthLoop(x: number, y: number): boolean {
-  return (
-    (x === 38 && y >= 5 && y <= 16) ||
-    (y === 5 && x >= 30 && x <= 38) ||
-    (x === 30 && y >= 5 && y <= 8)
-  )
+function isForestRiverbankClearing(x: number, y: number): boolean {
+  return x >= 29 && x <= 34 && y >= 6 && y <= 10
 }
 
-function isForestCampLoop(x: number, y: number): boolean {
-  return (
-    (x === 22 && y >= 20 && y <= 27) ||
-    (y === 27 && x >= 17 && x <= 22) ||
-    (x === 17 && y >= 20 && y <= 27)
-  )
+function isForestTreasureClearing(x: number, y: number): boolean {
+  return x >= 30 && x <= 37 && y >= 3 && y <= 7
+}
+
+function isForestCampClearing(x: number, y: number): boolean {
+  return x >= 16 && x <= 23 && y >= 24 && y <= 30
+}
+
+function isForestMidbossClearing(x: number, y: number): boolean {
+  return x >= 11 && x <= 15 && y >= 10 && y <= 14
+}
+
+function isForestSettlementClearing(x: number, y: number): boolean {
+  return x >= 2 && x <= 8 && y >= 16 && y <= 20
 }
 
 function getForestTerrain(x: number, y: number): Terrain {
@@ -357,33 +351,38 @@ function getForestTerrain(x: number, y: number): Terrain {
   if (samePosition(position, JS_FOREST_MIDBOSS_POSITION)) return 'midboss'
   if (getTreasureAtPosition(position, JS_FOREST_MAP_ID)) return 'treasure'
 
-  // Fixed learning beats sit on recognizable woodland breaks on the route,
-  // not on invisible x-thresholds. They stay encounter terrain so the shared
-  // fixed-Battle resolver can trigger when the player reaches the place.
+  // Fixed learning beats are places discovered from traces in the woodland,
+  // not milestones laid out on a road. They stay encounter terrain so the
+  // shared fixed-Battle resolver can trigger when the player reaches them.
   if (isForestLearningPosition(position)) return 'woods'
 
-  if (isForestMainRoad(x, y) || isForestNorthLoop(x, y) || isForestCampLoop(x, y)) {
-    return 'road'
+  // The Forest intentionally has no road terrain. The eastern and western
+  // halves are divided by a stream; one fallen-tree crossing at y=8 is the
+  // geographic cue for moving deeper into the woods.
+  if (x === 28 && y >= 2 && y <= 30) return y === 8 ? 'grass' : 'water'
+
+  // Small ponds and wet ground break the rectangle into natural pockets without
+  // drawing a corridor for the player to follow.
+  if (x >= 35 && x <= 39 && y >= 21 && y <= 23) {
+    return (x + y) % 2 === 0 ? 'water' : 'deep-woods'
   }
-
-  // A long stream splits the eastern and central forest. The main path crosses
-  // it once at y=8, making the bridge a real geographic transition rather than
-  // another text label.
-  if (x === 28 && y >= 2 && y <= 30) return 'water'
-
-  // Wet ground in the south-west keeps the last approach from reading as a
-  // featureless rectangle and leaves one clear dry route toward the settlement.
+  if (x >= 17 && x <= 20 && y >= 14 && y <= 16) {
+    return (x + y) % 3 === 0 ? 'water' : 'woods'
+  }
   if (y >= 25 && y <= 29 && x >= 4 && x <= 13) {
     return (x + y) % 4 === 0 ? 'water' : 'deep-woods'
   }
 
-  // Northern overlook: open grass around the optional treasure loop.
-  if (x >= 30 && x <= 40 && y >= 3 && y <= 7) {
-    return (x + y) % 3 === 0 ? 'grass' : 'woods'
-  }
-
-  // Camp grove: a quieter open pocket reached from a loop off the main route.
-  if (x >= 16 && x <= 23 && y >= 24 && y <= 30) {
+  // Open ground is deliberately local rather than connected. These clearings
+  // help the player remember places while the space between them remains forest.
+  if (
+    isForestEntryClearing(x, y) ||
+    isForestRiverbankClearing(x, y) ||
+    isForestTreasureClearing(x, y) ||
+    isForestCampClearing(x, y) ||
+    isForestMidbossClearing(x, y) ||
+    isForestSettlementClearing(x, y)
+  ) {
     return (x + y) % 3 === 0 ? 'woods' : 'grass'
   }
 
