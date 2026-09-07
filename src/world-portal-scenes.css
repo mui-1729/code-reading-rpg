@@ -130,14 +130,57 @@
     linear-gradient(90deg, #24562f 0 28%, #8e7149 29% 100%);
 }
 
-/* Forest -> Deep Forest: temporary runtime connection until #377 Phase 3/4 inserts Forest Settlement. */
+/* Forest -> Forest Settlement: roots open into a timber-marked inhabited path. */
 .world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='10'] {
-  --portal-scene-kind: deep-forest-root-arch;
+  --portal-scene-kind: forest-settlement-gate;
   overflow: visible;
-  background: linear-gradient(90deg, #173d24 0 28%, #5b4932 29% 71%, #173d24 72%);
+  background:
+    linear-gradient(90deg, #173d24 0 24%, transparent 25% 75%, #173d24 76%),
+    linear-gradient(#5a4931 0 58%, #856b45 59% 100%);
 }
 
 .world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='10']::before {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  left: 8%;
+  right: 8%;
+  top: 8%;
+  height: 45%;
+  border: 6px solid #493522;
+  border-bottom: 0;
+  border-radius: 48% 48% 0 0;
+  box-shadow: inset 0 4px 0 #6e5131, 0 -4px 0 #21482a;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='10']::after {
+  content: '';
+  position: absolute;
+  z-index: 4;
+  left: 19%;
+  right: 19%;
+  bottom: 10%;
+  height: 17%;
+  background: repeating-linear-gradient(90deg, #9a7448 0 6px, #5d432a 6px 9px);
+  box-shadow: 0 -7px 0 -4px #3b2b1f;
+}
+
+/* Forest Settlement -> Forest: return through the inhabited timber gate. */
+.world-viewport[data-world-map='js-forest-settlement'] .world-tile[data-world-x='22'][data-world-y='8'] {
+  --portal-scene-kind: settlement-forest-gate;
+  background:
+    linear-gradient(90deg, #695037 0 18%, transparent 19% 81%, #695037 82%),
+    linear-gradient(#7d6847 0 50%, #3d6c3c 51% 100%);
+}
+
+/* Forest Settlement -> Deep Forest: the village road disappears under a giant root arch. */
+.world-viewport[data-world-map='js-forest-settlement'] .world-tile[data-world-x='11'][data-world-y='1'] {
+  --portal-scene-kind: deep-forest-root-arch;
+  overflow: visible;
+  background: linear-gradient(90deg, #274b2d 0 28%, #4f402d 29% 71%, #274b2d 72%);
+}
+
+.world-viewport[data-world-map='js-forest-settlement'] .world-tile[data-world-x='11'][data-world-y='1']::before {
   content: '';
   position: absolute;
   z-index: 3;
@@ -148,7 +191,7 @@
   box-shadow: inset 0 0 0 4px #1c4629, 0 -5px 0 #234f2d;
 }
 
-.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='10']::after {
+.world-viewport[data-world-map='js-forest-settlement'] .world-tile[data-world-x='11'][data-world-y='1']::after {
   content: '';
   position: absolute;
   z-index: 4;
@@ -160,11 +203,12 @@
   clip-path: polygon(0 70%, 22% 25%, 43% 62%, 65% 0, 100% 70%, 100% 100%, 0 100%);
 }
 
+/* Deep Forest east edge now returns to the inhabited settlement, not directly to Forest. */
 .world-viewport[data-world-map='js-deep-forest'] .world-tile[data-world-x='30'][data-world-y='10'] {
-  --portal-scene-kind: deep-forest-light-gap;
+  --portal-scene-kind: settlement-light-gap;
   background:
-    radial-gradient(ellipse at 86% 50%, #6a9959 0 22%, #3d7040 23% 40%, transparent 41%),
-    linear-gradient(90deg, #163b24 0 32%, #6f5a3c 33% 100%);
+    radial-gradient(ellipse at 86% 50%, #779b61 0 22%, #466d43 23% 40%, transparent 41%),
+    linear-gradient(90deg, #163b24 0 32%, #7d6745 33% 100%);
 }
 
 .world-viewport[data-world-map='js-deep-forest'] .world-tile[data-world-x='1'][data-world-y='10'] {
