@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useProgress } from '../progression'
 import { getCombatStats, useRpg } from '../rpg'
 import { isAdjacent } from './worldMap'
 import { WORLD_RECOVERY_STOPS, type WorldRecoveryStop } from './recoveryStops'
+import './world-recovery-stops.css'
 
 type RecoveryTarget = {
   stop: WorldRecoveryStop
@@ -22,6 +23,7 @@ export function WorldRecoveryStops() {
   const { rpgState, setRpgState } = useRpg()
   const combatStats = getCombatStats(stats, rpgState)
   const [targets, setTargets] = useState<RecoveryTarget[]>([])
+  const [controlsTarget, setControlsTarget] = useState<Element | null>(null)
   const [message, setMessage] = useState('')
 
   useEffect(() => {
@@ -34,6 +36,7 @@ export function WorldRecoveryStops() {
         return target ? [{ stop, target }] : []
       })
       setTargets((current) => (sameTargets(current, next) ? current : next))
+      setControlsTarget(document.querySelector('.world-controls'))
     }
 
     sync()
@@ -47,46 +50,71 @@ export function WorldRecoveryStops() {
     return () => observer.disconnect()
   }, [])
 
+  const activeStop = useMemo(
+    () =>
+      targets.find(
+        ({ stop }) =>
+          rpgState.worldMapId === stop.mapId &&
+          isAdjacent(rpgState.worldPosition, stop.position),
+      )?.stop,
+    [rpgState.worldMapId, rpgState.worldPosition, targets],
+  )
+
+  useEffect(() => {
+    if (!controlsTarget) return
+    if (activeStop) {
+      controlsTarget.setAttribute('data-recovery-stop-active', activeStop.id)
+    } else {
+      controlsTarget.removeAttribute('data-recovery-stop-active')
+    }
+    return () => controlsTarget.removeAttribute('data-recovery-stop-active')
+  }, [activeStop, controlsTarget])
+
+  const recover = (stop: WorldRecoveryStop) => {
+    const recoveryTarget = Math.ceil(combatStats.maxHp * stop.recoveryRatio)
+    if (rpgState.currentHp >= recoveryTarget) {
+      setMessage(`${stop.label}: 今は十分に休めている。`)
+      return
+    }
+    setRpgState((current) => ({
+      ...current,
+      currentHp: Math.max(current.currentHp, recoveryTarget),
+    }))
+    setMessage(`${stop.label}: HPを${recoveryTarget}まで回復した。`)
+  }
+
   return (
     <>
-      {targets.map(({ stop, target }) => {
-        const available =
-          rpgState.worldMapId === stop.mapId &&
-          isAdjacent(rpgState.worldPosition, stop.position)
-        const recoveryTarget = Math.ceil(combatStats.maxHp * stop.recoveryRatio)
-        const canRecover = rpgState.currentHp < recoveryTarget
-
-        return createPortal(
-          <button
-            type="button"
+      {targets.map(({ stop, target }) =>
+        createPortal(
+          <span
             className="world-object recovery-stop-object"
             data-recovery-stop={stop.id}
-            aria-label={stop.actionLabel}
-            disabled={!available}
-            onClick={() => {
-              if (!available) return
-              if (!canRecover) {
-                setMessage(`${stop.label}: 今は十分に休めている。`)
-                return
-              }
-              setRpgState((current) => ({
-                ...current,
-                currentHp: Math.max(current.currentHp, recoveryTarget),
-              }))
-              setMessage(`${stop.label}: HPを${recoveryTarget}まで回復した。`)
-            }}
-            title={`${stop.label} · 無料でHPを60%まで回復`}
-            style={{
-              cursor: available ? 'pointer' : 'default',
-              opacity: available ? 1 : 0.82,
-            }}
+            aria-hidden="true"
+            title={stop.label}
           >
             <span className="recovery-stop-label">{stop.label}</span>
-          </button>,
+          </span>,
           target,
           stop.id,
-        )
-      })}
+        ),
+      )}
+
+      {activeStop && controlsTarget &&
+        createPortal(
+          <button
+            type="button"
+            className="primary-button world-interact recovery-stop-action"
+            data-recovery-stop-action={activeStop.id}
+            aria-label={activeStop.actionLabel}
+            onClick={() => recover(activeStop)}
+          >
+            {activeStop.actionLabel}
+          </button>,
+          controlsTarget,
+          `action:${activeStop.id}`,
+        )}
+
       {message && (
         <div className="sr-only" role="status" aria-live="polite">
           {message}
