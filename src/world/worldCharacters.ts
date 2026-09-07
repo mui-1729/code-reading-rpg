@@ -3,6 +3,7 @@ import { npcById } from '../dialogue/npcs'
 import type { DialogueEntry, NpcDefinition } from '../dialogue/types'
 import {
   isAdjacent,
+  JS_FOREST_SETTLEMENT_MAP_ID,
   JS_VILLAGE_MAP_ID,
   JS_VILLAGE_TRAINING_POSITION,
   TS_FRONTIER_MAP_ID,
@@ -44,6 +45,13 @@ export const WORLD_NPC_PLACEMENTS: readonly WorldNpcPlacement[] = [
     position: { x: 7, y: 10 },
     optional: true,
     storyThread: 'forest-road',
+  },
+  {
+    npcId: 'lambda-sage',
+    mapId: JS_FOREST_SETTLEMENT_MAP_ID,
+    position: { x: 11, y: 6 },
+    optional: true,
+    storyThread: 'forest-settlement-life',
   },
   {
     npcId: 'type-warden',
