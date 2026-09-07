@@ -97,6 +97,27 @@ test('村入口は木柵門、Village出口は草原へ抜ける門として別s
   await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-y', '21')
 })
 
+test('Forestの川横断はroadではなく倒木として見える', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await seedWorld(page, 'js-forest', { x: 29, y: 8 }, [1, 7, 8, 9, 10])
+
+  const crossing = page.locator('.world-tile[data-world-x="28"][data-world-y="8"]')
+  await expect(crossing).toBeVisible()
+  await expect(crossing).toHaveClass(/terrain-grass/)
+  await expect(crossing).not.toHaveClass(/terrain-road/)
+  expect(
+    await crossing.evaluate((element) =>
+      getComputedStyle(element).getPropertyValue('--forest-landmark-kind').trim(),
+    ),
+  ).toBe('fallen-log-crossing')
+  const log = await crossing.evaluate((element) => {
+    const style = getComputedStyle(element, '::before')
+    return { content: style.content, height: Number.parseFloat(style.height) }
+  })
+  expect(log.content).not.toBe('none')
+  expect(log.height).toBeGreaterThan(0)
+})
+
 test('Forestから第二集落を経由し、集落北口だけがDeep Forestのroot archになる', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   const clearedThroughForest = [1, 7, 8, 9, 10, 11, 12, 13, 14]
