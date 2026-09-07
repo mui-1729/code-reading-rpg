@@ -5,9 +5,11 @@ import { resolveWorldMove } from './worldActions'
 import {
   JS_DEEP_FOREST_CORE_EXIT_POSITION,
   JS_DEEP_FOREST_MAP_ID,
-  JS_FOREST_DEEP_FOREST_POSITION,
   JS_FOREST_MAP_ID,
   JS_FOREST_POSITION,
+  JS_FOREST_SETTLEMENT_DEEP_FOREST_POSITION,
+  JS_FOREST_SETTLEMENT_MAP_ID,
+  JS_FOREST_SETTLEMENT_POSITION,
   OVERWORLD_MAP_ID,
   TS_FRONTIER_GATE_POSITION,
   type WorldMapId,
@@ -39,13 +41,23 @@ describe('world portal progression guard', () => {
       },
       {
         state: portalState(JS_FOREST_MAP_ID, {
-          x: JS_FOREST_DEEP_FOREST_POSITION.x + 1,
-          y: JS_FOREST_DEEP_FOREST_POSITION.y,
+          x: JS_FOREST_SETTLEMENT_POSITION.x + 1,
+          y: JS_FOREST_SETTLEMENT_POSITION.y,
         }),
-        target: JS_FOREST_DEEP_FOREST_POSITION,
+        target: JS_FOREST_SETTLEMENT_POSITION,
         progress: progressWith([14]),
         dx: -1,
         dy: 0,
+      },
+      {
+        state: portalState(JS_FOREST_SETTLEMENT_MAP_ID, {
+          x: JS_FOREST_SETTLEMENT_DEEP_FOREST_POSITION.x,
+          y: JS_FOREST_SETTLEMENT_DEEP_FOREST_POSITION.y + 1,
+        }),
+        target: JS_FOREST_SETTLEMENT_DEEP_FOREST_POSITION,
+        progress: progressWith([14]),
+        dx: 0,
+        dy: -1,
       },
       {
         state: portalState(JS_DEEP_FOREST_MAP_ID, {
@@ -86,13 +98,23 @@ describe('world portal progression guard', () => {
       },
       {
         state: portalState(JS_FOREST_MAP_ID, {
-          x: JS_FOREST_DEEP_FOREST_POSITION.x + 1,
-          y: JS_FOREST_DEEP_FOREST_POSITION.y,
+          x: JS_FOREST_SETTLEMENT_POSITION.x + 1,
+          y: JS_FOREST_SETTLEMENT_POSITION.y,
         }),
-        target: JS_FOREST_DEEP_FOREST_POSITION,
+        target: JS_FOREST_SETTLEMENT_POSITION,
         progress: progressWith(throughForest),
         dx: -1,
         dy: 0,
+      },
+      {
+        state: portalState(JS_FOREST_SETTLEMENT_MAP_ID, {
+          x: JS_FOREST_SETTLEMENT_DEEP_FOREST_POSITION.x,
+          y: JS_FOREST_SETTLEMENT_DEEP_FOREST_POSITION.y + 1,
+        }),
+        target: JS_FOREST_SETTLEMENT_DEEP_FOREST_POSITION,
+        progress: progressWith(throughForest),
+        dx: 0,
+        dy: -1,
       },
       {
         state: portalState(JS_DEEP_FOREST_MAP_ID, {

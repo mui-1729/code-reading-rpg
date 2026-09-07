@@ -2,7 +2,7 @@ import { isBattleAccessible, type PlayerProgress } from '../progression'
 import type { RpgState } from '../rpg'
 import { getWorldNpcAtPosition, type WorldNpcPlacement } from './worldCharacters'
 import { registerCheckpointForMapEntry } from './worldCheckpoints'
-import { VILLAGE_FACILITIES, type VillageFacilityKind } from './villageFacilityData'
+import { getVillageFacilityAtPosition, type VillageFacilityKind } from './villageFacilityData'
 import {
   BYTE_POSITION,
   getWorldPortalAtPosition,
@@ -112,14 +112,12 @@ export function resolveWorldTargetInteraction(
     }
   }
 
-  if (mapId === JS_VILLAGE_MAP_ID) {
-    const facility = VILLAGE_FACILITIES.find((candidate) => samePosition(candidate.position, target))
-    if (facility) return { kind: 'village-facility', facility: facility.kind }
+  const facility = getVillageFacilityAtPosition(mapId, target)
+  if (facility) return { kind: 'village-facility', facility: facility.kind }
 
-    if (samePosition(JS_VILLAGE_TRAINING_POSITION, target)) {
-      const battleId = getNextJavaScriptTrainingBattleId(progress.clearedStageIds)
-      if (battleId !== null) return { kind: 'training', battleId }
-    }
+  if (mapId === JS_VILLAGE_MAP_ID && samePosition(JS_VILLAGE_TRAINING_POSITION, target)) {
+    const battleId = getNextJavaScriptTrainingBattleId(progress.clearedStageIds)
+    if (battleId !== null) return { kind: 'training', battleId }
   }
 
   if (mapId === JS_FOREST_MAP_ID && samePosition(JS_FOREST_MIDBOSS_POSITION, target)) {

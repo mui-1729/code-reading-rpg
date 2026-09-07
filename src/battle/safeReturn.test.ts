@@ -3,11 +3,12 @@ import { createInitialRpgState } from '../rpg'
 import {
   JS_DEEP_FOREST_MAP_ID,
   JS_FOREST_MAP_ID,
+  JS_FOREST_SETTLEMENT_MAP_ID,
   JS_VILLAGE_MAP_ID,
   OVERWORLD_MAP_ID,
   WORLD_MAP_STARTS,
 } from '../world/worldMap'
-import { registerWorldCheckpoint } from '../world/worldCheckpoints'
+import { createWorldCheckpoint, registerWorldCheckpoint } from '../world/worldCheckpoints'
 import { getSafeBattleReturnState } from './safeReturn'
 
 describe('getSafeBattleReturnState', () => {
@@ -30,6 +31,23 @@ describe('getSafeBattleReturnState', () => {
       expect(returned.currentHp).toBe(42)
       expect(returned.stepsSinceEncounter).toBe(0)
     }
+  })
+
+  it('第二集落到達後はDeep Forestで敗北しても森番の集落へ戻す', () => {
+    const before = {
+      ...registerWorldCheckpoint(createInitialRpgState(), 'forest-settlement'),
+      worldMapId: JS_DEEP_FOREST_MAP_ID,
+      worldPosition: { x: 18, y: 10 },
+      currentHp: 31,
+      stepsSinceEncounter: 7,
+    }
+    const returned = getSafeBattleReturnState(before)
+
+    expect(returned.worldMapId).toBe(JS_FOREST_SETTLEMENT_MAP_ID)
+    expect(returned.worldPosition).toEqual(createWorldCheckpoint('forest-settlement').position)
+    expect(returned.safeCheckpoint.id).toBe('forest-settlement')
+    expect(returned.currentHp).toBe(31)
+    expect(returned.stepsSinceEncounter).toBe(0)
   })
 
   it('Deep Forestでもcamp / spring位置を推測せず最後の有人safe hubへ戻す', () => {

@@ -124,6 +124,9 @@ describe('area definitions', () => {
       JAVASCRIPT_AREA_ID,
       TYPESCRIPT_AREA_ID,
     ])
+    expect(getAreasForWorldMap('js-forest-settlement').map((area) => area.id)).toEqual([
+      JAVASCRIPT_AREA_ID,
+    ])
     expect(getAreasForWorldMap('ts-frontier').map((area) => area.id)).toEqual([
       TYPESCRIPT_AREA_ID,
     ])

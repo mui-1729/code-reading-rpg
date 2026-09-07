@@ -6,7 +6,7 @@ const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
 async function seedWorld(
   page: Page,
-  mapId: 'overworld' | 'js-village' | 'js-forest' | 'js-deep-forest',
+  mapId: 'overworld' | 'js-village' | 'js-forest' | 'js-forest-settlement' | 'js-deep-forest',
   position: { x: number; y: number },
   clearedStageIds: number[],
 ) {
@@ -97,17 +97,29 @@ test('村入口は木柵門、Village出口は草原へ抜ける門として別s
   await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-y', '21')
 })
 
-test('ForestからDeep Forestは太い根のarchになりgeneric出口表示へ依存しない', async ({ page }) => {
+test('Forestから第二集落を経由し、集落北口だけがDeep Forestのroot archになる', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  await seedWorld(page, 'js-forest', { x: 2, y: 10 }, [1, 7, 8, 9, 10, 11, 12, 13, 14])
+  const clearedThroughForest = [1, 7, 8, 9, 10, 11, 12, 13, 14]
+  await seedWorld(page, 'js-forest', { x: 2, y: 10 }, clearedThroughForest)
 
-  const deepGate = '.world-tile[data-world-x="1"][data-world-y="10"]'
+  const settlementGate = '.world-tile[data-world-x="1"][data-world-y="10"]'
+  await expect(page.locator(settlementGate)).toBeVisible()
+  expect(await portalSceneKind(page, settlementGate)).toBe('forest-settlement-gate')
+  await expect(page.locator(`${settlementGate} .exit-object`)).toHaveCSS('font-size', '0px')
+
+  await page.getByRole('button', { name: '左へ移動' }).click()
+  await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-map', 'js-forest')
+  await page.getByRole('button', { name: '森番の集落へ入る' }).click()
+  await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-map', 'js-forest-settlement')
+
+  await seedWorld(page, 'js-forest-settlement', { x: 11, y: 2 }, clearedThroughForest)
+  const deepGate = '.world-tile[data-world-x="11"][data-world-y="1"]'
   await expect(page.locator(deepGate)).toBeVisible()
   expect(await portalSceneKind(page, deepGate)).toBe('deep-forest-root-arch')
   await expect(page.locator(`${deepGate} .exit-object`)).toHaveCSS('font-size', '0px')
 
-  await page.getByRole('button', { name: '左へ移動' }).click()
-  await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-map', 'js-forest')
+  await page.getByRole('button', { name: '上へ移動' }).click()
+  await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-map', 'js-forest-settlement')
   await page.getByRole('button', { name: 'JavaScript深層の森へ入る' }).click()
   await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-map', 'js-deep-forest')
 })

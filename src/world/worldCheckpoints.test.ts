@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   JS_DEEP_FOREST_MAP_ID,
+  JS_FOREST_SETTLEMENT_MAP_ID,
   JS_VILLAGE_MAP_ID,
   OVERWORLD_MAP_ID,
   WORLD_MAP_STARTS,
@@ -32,6 +33,12 @@ describe('world checkpoints', () => {
       mapId: JS_VILLAGE_MAP_ID,
       position: WORLD_MAP_STARTS[JS_VILLAGE_MAP_ID],
     })
+
+    expect(createWorldCheckpoint('forest-settlement')).toEqual({
+      id: 'forest-settlement',
+      mapId: JS_FOREST_SETTLEMENT_MAP_ID,
+      position: { x: 11, y: 11 },
+    })
   })
 
   it('GREENFIELDへ入ると現在のsafe checkpointを更新する', () => {
@@ -43,10 +50,20 @@ describe('world checkpoints', () => {
     expect(registerCheckpointForMapEntry(state).safeCheckpoint.id).toBe('greenfield-village')
   })
 
+  it('森番の集落へ入るとGREENFIELDより先のsafe checkpointへ更新する', () => {
+    const state = {
+      worldMapId: JS_FOREST_SETTLEMENT_MAP_ID,
+      safeCheckpoint: createWorldCheckpoint('greenfield-village'),
+    }
+
+    const registered = registerCheckpointForMapEntry(state)
+    expect(registered.safeCheckpoint).toEqual(createWorldCheckpoint('forest-settlement'))
+  })
+
   it('checkpoint対象外mapへの移動は最後のsafe hubを上書きしない', () => {
     const state = {
       worldMapId: JS_DEEP_FOREST_MAP_ID,
-      safeCheckpoint: createWorldCheckpoint('greenfield-village'),
+      safeCheckpoint: createWorldCheckpoint('forest-settlement'),
     }
 
     expect(registerCheckpointForMapEntry(state)).toBe(state)
@@ -57,7 +74,8 @@ describe('world checkpoints', () => {
     expect(registerWorldCheckpoint(state, 'greenfield-village')).toBe(state)
   })
 
-  it('legacy saveはJavaScript local mapならGREENFIELD、それ以外は中央Hubへfallbackする', () => {
+  it('legacy saveはJavaScript local mapなら安全な有人拠点へfallbackする', () => {
+    expect(inferLegacyWorldCheckpoint(JS_FOREST_SETTLEMENT_MAP_ID).id).toBe('forest-settlement')
     expect(inferLegacyWorldCheckpoint(JS_DEEP_FOREST_MAP_ID).id).toBe('greenfield-village')
     expect(inferLegacyWorldCheckpoint(OVERWORLD_MAP_ID).id).toBe('central-hub')
   })

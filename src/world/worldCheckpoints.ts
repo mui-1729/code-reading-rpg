@@ -1,13 +1,14 @@
 import {
   JS_DEEP_FOREST_MAP_ID,
   JS_FOREST_MAP_ID,
+  JS_FOREST_SETTLEMENT_MAP_ID,
   JS_VILLAGE_MAP_ID,
   OVERWORLD_MAP_ID,
   WORLD_MAP_STARTS,
   type WorldMapId,
 } from './worldMap'
 
-export type WorldCheckpointId = 'central-hub' | 'greenfield-village'
+export type WorldCheckpointId = 'central-hub' | 'greenfield-village' | 'forest-settlement'
 
 export type WorldCheckpoint = {
   id: WorldCheckpointId
@@ -32,6 +33,12 @@ const WORLD_CHECKPOINTS: Record<WorldCheckpointId, WorldCheckpointDefinition> = 
     mapId: JS_VILLAGE_MAP_ID,
     position: { ...WORLD_MAP_STARTS[JS_VILLAGE_MAP_ID] },
   },
+  'forest-settlement': {
+    id: 'forest-settlement',
+    label: '森番の集落',
+    mapId: JS_FOREST_SETTLEMENT_MAP_ID,
+    position: { x: 11, y: 11 },
+  },
 }
 
 export const DEFAULT_WORLD_CHECKPOINT_ID: WorldCheckpointId = 'central-hub'
@@ -50,7 +57,7 @@ export function createWorldCheckpoint(id: WorldCheckpointId): WorldCheckpoint {
 }
 
 export function isWorldCheckpointId(value: unknown): value is WorldCheckpointId {
-  return value === 'central-hub' || value === 'greenfield-village'
+  return value === 'central-hub' || value === 'greenfield-village' || value === 'forest-settlement'
 }
 
 export function normalizeWorldCheckpoint(value: unknown): WorldCheckpoint {
@@ -64,6 +71,7 @@ export function normalizeWorldCheckpoint(value: unknown): WorldCheckpoint {
 }
 
 export function inferLegacyWorldCheckpoint(mapId: WorldMapId): WorldCheckpoint {
+  if (mapId === JS_FOREST_SETTLEMENT_MAP_ID) return createWorldCheckpoint('forest-settlement')
   if (
     mapId === JS_VILLAGE_MAP_ID ||
     mapId === JS_FOREST_MAP_ID ||
@@ -75,7 +83,9 @@ export function inferLegacyWorldCheckpoint(mapId: WorldMapId): WorldCheckpoint {
 }
 
 export function getCheckpointIdForMapEntry(mapId: WorldMapId): WorldCheckpointId | null {
-  return mapId === JS_VILLAGE_MAP_ID ? 'greenfield-village' : null
+  if (mapId === JS_VILLAGE_MAP_ID) return 'greenfield-village'
+  if (mapId === JS_FOREST_SETTLEMENT_MAP_ID) return 'forest-settlement'
+  return null
 }
 
 export function registerWorldCheckpoint<

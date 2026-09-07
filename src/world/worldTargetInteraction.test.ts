@@ -4,6 +4,7 @@ import { createInitialRpgState } from '../rpg'
 import { VILLAGE_FACILITIES } from './villageFacilityData'
 import {
   BYTE_POSITION,
+  JS_FOREST_SETTLEMENT_MAP_ID,
   JS_VILLAGE_MAP_ID,
   JS_VILLAGE_TRAINING_POSITION,
   OVERWORLD_MAP_ID,
@@ -39,7 +40,9 @@ describe('facing-based world interaction', () => {
       worldMapId: JS_VILLAGE_MAP_ID,
       worldPosition: { x: 6, y: 11 },
     }
-    const inn = VILLAGE_FACILITIES.find((facility) => facility.kind === 'inn')!
+    const inn = VILLAGE_FACILITIES.find(
+      (facility) => facility.mapId === JS_VILLAGE_MAP_ID && facility.kind === 'inn',
+    )!
 
     expect(resolveWorldTargetInteraction(rpgState, progress, inn.position)).toEqual({
       kind: 'village-facility',
@@ -47,6 +50,30 @@ describe('facing-based world interaction', () => {
     })
     expect(resolveWorldTargetInteraction(rpgState, progress, { x: 6, y: 10 })).toEqual({
       kind: 'none',
+    })
+  })
+
+  it('resolves Forest Settlement facilities with the same facing Action rule', () => {
+    const progress = createInitialPlayerProgress()
+    const rpgState = {
+      ...createInitialRpgState(),
+      worldMapId: JS_FOREST_SETTLEMENT_MAP_ID,
+      worldPosition: { x: 8, y: 11 },
+    }
+    const inn = VILLAGE_FACILITIES.find(
+      (facility) => facility.mapId === JS_FOREST_SETTLEMENT_MAP_ID && facility.kind === 'inn',
+    )!
+    const itemShop = VILLAGE_FACILITIES.find(
+      (facility) => facility.mapId === JS_FOREST_SETTLEMENT_MAP_ID && facility.kind === 'item-shop',
+    )!
+
+    expect(resolveWorldTargetInteraction(rpgState, progress, inn.position)).toEqual({
+      kind: 'village-facility',
+      facility: 'inn',
+    })
+    expect(resolveWorldTargetInteraction(rpgState, progress, itemShop.position)).toEqual({
+      kind: 'village-facility',
+      facility: 'item-shop',
     })
   })
 

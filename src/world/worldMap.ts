@@ -7,12 +7,14 @@ export const WORLD_START = { x: 20, y: 14 } as const
 export const OVERWORLD_MAP_ID = 'overworld' as const
 export const JS_VILLAGE_MAP_ID = 'js-village' as const
 export const JS_FOREST_MAP_ID = 'js-forest' as const
+export const JS_FOREST_SETTLEMENT_MAP_ID = 'js-forest-settlement' as const
 export const JS_DEEP_FOREST_MAP_ID = 'js-deep-forest' as const
 export const TS_FRONTIER_MAP_ID = 'ts-frontier' as const
 export type WorldMapId =
   | typeof OVERWORLD_MAP_ID
   | typeof JS_VILLAGE_MAP_ID
   | typeof JS_FOREST_MAP_ID
+  | typeof JS_FOREST_SETTLEMENT_MAP_ID
   | typeof JS_DEEP_FOREST_MAP_ID
   | typeof TS_FRONTIER_MAP_ID
 
@@ -20,6 +22,7 @@ const WORLD_MAP_DIMENSIONS: Record<WorldMapId, { width: number; height: number }
   [OVERWORLD_MAP_ID]: { width: WORLD_WIDTH, height: WORLD_HEIGHT },
   [JS_VILLAGE_MAP_ID]: { width: 21, height: 15 },
   [JS_FOREST_MAP_ID]: { width: 31, height: 27 },
+  [JS_FOREST_SETTLEMENT_MAP_ID]: { width: 23, height: 17 },
   [JS_DEEP_FOREST_MAP_ID]: { width: 31, height: 27 },
   [TS_FRONTIER_MAP_ID]: { width: 31, height: 21 },
 }
@@ -28,6 +31,7 @@ export const WORLD_MAP_STARTS: Record<WorldMapId, { x: number; y: number }> = {
   [OVERWORLD_MAP_ID]: { ...WORLD_START },
   [JS_VILLAGE_MAP_ID]: { x: 10, y: 12 },
   [JS_FOREST_MAP_ID]: { x: 28, y: 10 },
+  [JS_FOREST_SETTLEMENT_MAP_ID]: { x: 20, y: 8 },
   [JS_DEEP_FOREST_MAP_ID]: { x: 28, y: 10 },
   [TS_FRONTIER_MAP_ID]: { x: 2, y: 10 },
 }
@@ -77,7 +81,11 @@ export const JS_VILLAGE_TRAINING_POSITION = { x: 12, y: 7 } as const
 export const JS_FOREST_POSITION = { x: 34, y: 34 } as const
 export const JS_FOREST_EXIT_POSITION = { x: 30, y: 10 } as const
 export const JS_FOREST_MIDBOSS_POSITION = { x: 5, y: 10 } as const
-export const JS_FOREST_DEEP_FOREST_POSITION = { x: 1, y: 10 } as const
+export const JS_FOREST_SETTLEMENT_POSITION = { x: 1, y: 10 } as const
+// Compatibility alias while callers move from the old Forest -> Deep Forest direct topology.
+export const JS_FOREST_DEEP_FOREST_POSITION = JS_FOREST_SETTLEMENT_POSITION
+export const JS_FOREST_SETTLEMENT_FOREST_EXIT_POSITION = { x: 22, y: 8 } as const
+export const JS_FOREST_SETTLEMENT_DEEP_FOREST_POSITION = { x: 11, y: 1 } as const
 export const JS_DEEP_FOREST_EXIT_POSITION = { x: 30, y: 10 } as const
 export const JS_DEEP_FOREST_CORE_EXIT_POSITION = { x: 1, y: 10 } as const
 export const TS_FRONTIER_GATE_POSITION = { x: 62, y: 14 } as const
@@ -158,7 +166,22 @@ export const WORLD_PORTALS: readonly WorldPortal[] = [
   },
   {
     fromMapId: JS_FOREST_MAP_ID,
-    position: JS_FOREST_DEEP_FOREST_POSITION,
+    position: JS_FOREST_SETTLEMENT_POSITION,
+    toMapId: JS_FOREST_SETTLEMENT_MAP_ID,
+    targetPosition: WORLD_MAP_STARTS[JS_FOREST_SETTLEMENT_MAP_ID],
+    label: '森番の集落',
+    requiredClearedStageId: 14,
+  },
+  {
+    fromMapId: JS_FOREST_SETTLEMENT_MAP_ID,
+    position: JS_FOREST_SETTLEMENT_FOREST_EXIT_POSITION,
+    toMapId: JS_FOREST_MAP_ID,
+    targetPosition: { x: 2, y: 10 },
+    label: 'JavaScriptの森',
+  },
+  {
+    fromMapId: JS_FOREST_SETTLEMENT_MAP_ID,
+    position: JS_FOREST_SETTLEMENT_DEEP_FOREST_POSITION,
     toMapId: JS_DEEP_FOREST_MAP_ID,
     targetPosition: WORLD_MAP_STARTS[JS_DEEP_FOREST_MAP_ID],
     label: 'JavaScript深層の森',
@@ -167,9 +190,9 @@ export const WORLD_PORTALS: readonly WorldPortal[] = [
   {
     fromMapId: JS_DEEP_FOREST_MAP_ID,
     position: JS_DEEP_FOREST_EXIT_POSITION,
-    toMapId: JS_FOREST_MAP_ID,
-    targetPosition: { x: 2, y: 10 },
-    label: 'JavaScriptの森',
+    toMapId: JS_FOREST_SETTLEMENT_MAP_ID,
+    targetPosition: { x: 11, y: 2 },
+    label: '森番の集落',
   },
   {
     fromMapId: JS_DEEP_FOREST_MAP_ID,
@@ -204,6 +227,7 @@ export function isWorldMapId(value: unknown): value is WorldMapId {
     value === OVERWORLD_MAP_ID ||
     value === JS_VILLAGE_MAP_ID ||
     value === JS_FOREST_MAP_ID ||
+    value === JS_FOREST_SETTLEMENT_MAP_ID ||
     value === JS_DEEP_FOREST_MAP_ID ||
     value === TS_FRONTIER_MAP_ID
   )
@@ -216,6 +240,7 @@ export function getWorldMapDimensions(mapId: WorldMapId) {
 export function getWorldMapLabel(mapId: WorldMapId) {
   if (mapId === JS_VILLAGE_MAP_ID) return 'グリーンフィールド村'
   if (mapId === JS_FOREST_MAP_ID) return 'JavaScriptの森'
+  if (mapId === JS_FOREST_SETTLEMENT_MAP_ID) return '森番の集落'
   if (mapId === JS_DEEP_FOREST_MAP_ID) return 'JavaScript深層の森'
   if (mapId === TS_FRONTIER_MAP_ID) return 'TypeScript辺境'
   return 'JavaScript草原'
@@ -255,6 +280,7 @@ export function getWorldRegion(
   if (
     mapId === JS_VILLAGE_MAP_ID ||
     mapId === JS_FOREST_MAP_ID ||
+    mapId === JS_FOREST_SETTLEMENT_MAP_ID ||
     mapId === JS_DEEP_FOREST_MAP_ID
   ) {
     return 'javascript'
@@ -312,6 +338,26 @@ function getForestTerrain(x: number, y: number): Terrain {
   }
 
   return (x * 5 + y * 3) % 5 <= 1 ? 'deep-woods' : 'woods'
+}
+
+function getForestSettlementTerrain(x: number, y: number): Terrain {
+  if (x <= 0 || y <= 0 || x >= 22 || y >= 16) return 'mountain'
+
+  if (
+    (x >= 4 && x <= 7 && y >= 3 && y <= 6) ||
+    (x >= 15 && x <= 18 && y >= 3 && y <= 6) ||
+    (x >= 4 && x <= 7 && y >= 10 && y <= 13) ||
+    (x >= 15 && x <= 18 && y >= 10 && y <= 13)
+  ) {
+    return 'house'
+  }
+
+  if (x === 3 && y >= 2 && y <= 14) return 'water'
+  if ((x >= 4 && x <= 21 && y === 8) || (x === 11 && y >= 1 && y <= 14)) return 'road'
+  if (x >= 9 && x <= 13 && y >= 6 && y <= 11) return 'town'
+  // Keep the whole inhabited settlement encounter-free. Woodland identity is scenery,
+  // not Encounter terrain; the dangerous woods begin again after the north portal.
+  return 'grass'
 }
 
 function getDeepForestTerrain(x: number, y: number): Terrain {
@@ -433,6 +479,7 @@ export function getTerrain(
     if (
       mapId === JS_VILLAGE_MAP_ID ||
       mapId === JS_FOREST_MAP_ID ||
+      mapId === JS_FOREST_SETTLEMENT_MAP_ID ||
       mapId === JS_DEEP_FOREST_MAP_ID
     ) {
       return 'exit'
@@ -444,6 +491,7 @@ export function getTerrain(
 
   if (mapId === JS_VILLAGE_MAP_ID) return getVillageTerrain(x, y)
   if (mapId === JS_FOREST_MAP_ID) return getForestTerrain(x, y)
+  if (mapId === JS_FOREST_SETTLEMENT_MAP_ID) return getForestSettlementTerrain(x, y)
   if (mapId === JS_DEEP_FOREST_MAP_ID) return getDeepForestTerrain(x, y)
   if (mapId === TS_FRONTIER_MAP_ID) return getTypeScriptFrontierTerrain(x, y)
   return getOverworldTerrain(x, y)
