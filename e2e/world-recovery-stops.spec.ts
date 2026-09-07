@@ -62,7 +62,7 @@ async function seedMap(
 }
 
 test('Forest南側の寄り道野営地は0 Goldでも部分回復できる', async ({ page }) => {
-  await seedMap(page, 'js-forest', { x: 19, y: 27 }, [...JS_TRAINING_COMPLETE])
+  await seedMap(page, 'js-forest', { x: 22, y: 33 }, [...JS_TRAINING_COMPLETE])
 
   const camp = page.getByRole('button', { name: '野営地で休む' })
   await expect(camp).toBeVisible()
