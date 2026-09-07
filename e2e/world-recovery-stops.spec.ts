@@ -61,7 +61,7 @@ async function seedMap(
   await page.goto('/world')
 }
 
-test('Forest南側の野営地は通り抜けられず、共通アクションから0 Goldで部分回復できる', async ({ page }) => {
+test('Forest南側の野営地は通り抜けられず、正面を向いて共通アクションから部分回復できる', async ({ page }) => {
   await seedMap(page, 'js-forest', { x: 22, y: 33 }, [...JS_TRAINING_COMPLETE])
 
   const map = page.getByLabel('JavaScriptの森のマップ')
@@ -84,17 +84,17 @@ test('Forest南側の野営地は通り抜けられず、共通アクション�
   expect(campVisual.fireContent).not.toBe('none')
   expect(campVisual.fireWidth).toBeGreaterThan(0)
 
-  const action = page.getByRole('button', { name: '野営地で休む' })
-  await expect(action).toBeVisible()
-  await expect(action).toBeEnabled()
+  // Initial facing is down, so the camp behind the player is not actionable yet.
+  await expect(page.getByRole('button', { name: '野営地で休む' })).toHaveCount(0)
 
-  // The tent/fire occupies its tile. Walking north faces it but must not put the
-  // player on top of the camp.
+  // Walking into the camp only turns the player toward it; the camp tile stays blocked.
   await page.getByRole('button', { name: '上へ移動' }).click()
   await expect(map).toHaveAttribute('data-world-x', '22')
   await expect(map).toHaveAttribute('data-world-y', '33')
-  await expect(action).toBeEnabled()
 
+  const action = page.getByRole('button', { name: '野営地で休む' })
+  await expect(action).toBeVisible()
+  await expect(action).toBeEnabled()
   await action.click()
 
   await expect(page.getByRole('status')).toContainText('野営地: HPを')
@@ -102,7 +102,7 @@ test('Forest南側の野営地は通り抜けられず、共通アクション�
   expect(stored.state.currentHp).toBeGreaterThan(20)
 })
 
-test('Deep Forestの湧き水も通り抜けず、共通アクションから利用できる', async ({ page }) => {
+test('Deep Forestの湧き水も通り抜けず、正面の共通アクションから利用できる', async ({ page }) => {
   await seedMap(page, 'js-deep-forest', { x: 16, y: 10 }, [...JS_SECOND_INCIDENT_PREREQS])
 
   const map = page.getByLabel('JavaScript深層の森のマップ')
