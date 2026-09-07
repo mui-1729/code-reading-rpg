@@ -30,13 +30,13 @@ Open Worldを「1枚の巨大grid」とは定義しない。Overworld / Village 
 
 - `overworld` — 70 × 50
 - `js-village` — 21 × 15
-- `js-forest` — 31 × 27
+- `js-forest` — 45 × 35
 - `js-forest-settlement` — 23 × 17
 - `js-deep-forest` — 31 × 27
 - `ts-frontier` — 31 × 21
 - viewport — 11 × 9
 
-Phase 2ではOverworldをField scaleへ移した。Phase 3ではpersistent safe checkpoint authorityと、Forest / Deep Forest間の第二有人拠点`js-forest-settlement`を追加した。GREENFIELD / Forest / Deep Forestの詳細layout再設計は後続Phaseで行う。
+Phase 2ではOverworldをField scaleへ移した。Phase 3ではpersistent safe checkpoint authorityと、Forest / Deep Forest間の第二有人拠点`js-forest-settlement`を追加した。Phase 4ではForestを45×35へ拡張し、曲がるmain route・川と橋・北のTreasure loop・南のcamp loop・地理landmarkに紐づくfixed Lessonへ再設計した。Deep Forestの詳細layout再設計はPhase 5で行う。
 
 共通:
 
@@ -47,7 +47,7 @@ Phase 2ではOverworldをField scaleへ移した。Phase 3ではpersistent safe 
 - fixed Story / learning BattleはRandom chance / cooldownより優先
 - expanded Overworld layoutはRpgState schema v6で旧TypeScript-side save migrationと区別する
 
-#377でJavaScript地方を再設計するため、31×27や「東→西main trail」を将来layoutの制約にしない。
+Forestの45×35は現行runtime authority。Deep Forestの31×27や旧「東→西main trail」はPhase 5の将来layout制約にしない。
 
 ## 3. JavaScript geography authority
 
@@ -80,7 +80,7 @@ Final Approach
 JS Final Boss
 ```
 
-Forest / Deep Forestのmain route自体で上下左右を使い、meaningful branchとrejoin loopを持たせる。詳細は`JAVASCRIPT_WORLD_TOPOLOGY.md`を参照する。
+Forestはmain route自体で上下左右を使い、川・橋・meaningful branch・rejoin loopを持つ探索型Local Mapとして実装済み。Deep ForestもPhase 5で同じ原則を使いながら、Forestより長く・濃く・危険な探索空間へ再設計する。詳細は`JAVASCRIPT_WORLD_TOPOLOGY.md`を参照する。
 
 ## 4. JavaScript incident-first progression
 
@@ -177,7 +177,7 @@ Forest後半〜Deep Forest前の第二の有人safe hubとしてruntimeへ実装
 - Deep Forestから戻る場合もこの集落へ戻る
 - Deep Forest内で敗北した場合、保存済みcheckpointがここならこの集落へRETURNする
 
-現行23×17 layoutはPhase 3の基礎実装。Forest / Deep ForestのPhase 4 / 5再設計と通しplayを見て、生活空間・施設位置・拠点間距離は必要に応じて調整する。
+現行23×17 layoutは第二safe hubとして成立している。Forest Phase 4後の通しplayとDeep Forest Phase 5を見て、生活空間・施設位置・拠点間距離は必要に応じて調整する。
 
 camp / springは部分回復地点であり、有人集落の代替ではない。
 
@@ -227,6 +227,8 @@ fixed Battleは「座標当て」ではなく、Playerが認識できる場所 /
 ```
 
 Battle数だけ文字札を並べない。hidden `x <= N` progressionへ戻さない。
+
+Forest Phase 4ではJS-05 / JS-06 / JS-07 / JS-09を、それぞれ折れ枝・分かれ道・川の合流・散る足跡という地理landmarkへ固定した。Random Encounterはclear済みconceptの復習だけを担当する。
 
 ### JS-01
 
@@ -308,7 +310,7 @@ Map単位の発見とcell-level revealを分ける。
 - regional map購入で通常地形 / public geographyを先に確認可能
 - Treasure / secretの正確な位置は自動公開しない
 
-Forest Settlementを含む新topologyのAtlas統合は#373 / Phase 6で行う。Fog of Warは#377のbranch / loop構造を先に成立させてから導入する。
+Forest 45×35とForest Settlementを含む現行topologyのAtlas統合は#373 / Phase 6で行う。Fog of WarはDeep Forest Phase 5までbranch / loop構造を成立させてから導入する。
 
 ## 13. Save compatibility
 
