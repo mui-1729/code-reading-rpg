@@ -123,9 +123,9 @@ test('選択した1 regionだけをrenderしmap追加で全terrain cellを積み
   const atlas = await openAtlas(page)
 
   const forestGrid = atlas.locator('.atlas-terrain-grid')
-  await expect(forestGrid).toHaveAttribute('data-terrain-width', '31')
-  await expect(forestGrid).toHaveAttribute('data-terrain-height', '27')
-  await expect(atlas.locator('.atlas-terrain-cell')).toHaveCount(31 * 27)
+  await expect(forestGrid).toHaveAttribute('data-terrain-width', '45')
+  await expect(forestGrid).toHaveAttribute('data-terrain-height', '35')
+  await expect(atlas.locator('.atlas-terrain-cell')).toHaveCount(45 * 35)
   await expect(atlas.locator('[data-atlas-map]')).toHaveCount(1)
 
   await atlas.locator('[data-atlas-region="overworld"]').click()
