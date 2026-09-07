@@ -122,12 +122,14 @@ export function VillageFacilities() {
         open={visibleFacility?.kind === 'item-shop'}
         onClose={close}
         onMessage={setMessage}
+        locationLabel={visibleFacility?.locationLabel}
       />
       <VillageShop
         kind="equipment"
         open={visibleFacility?.kind === 'equipment-shop'}
         onClose={close}
         onMessage={setMessage}
+        locationLabel={visibleFacility?.locationLabel}
       />
       {message && (
         <div className="sr-only" role="status" aria-live="polite">
