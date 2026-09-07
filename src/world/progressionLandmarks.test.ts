@@ -41,7 +41,7 @@ describe('progression landmarks', () => {
   it('座標からPlayer-facing landmarkを取得できる', () => {
     expect(getProgressionLandmarkAtPosition(JS_FOREST_MAP_ID, { x: 31, y: 8 })).toMatchObject({
       battleId: 11,
-      shortLabel: '分かれ道',
+      shortLabel: '分かれ跡',
     })
     expect(getProgressionLandmarkAtPosition(JS_FOREST_MAP_ID, { x: 31, y: 9 })).toBeUndefined()
   })
