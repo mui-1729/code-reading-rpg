@@ -77,14 +77,11 @@ export function WorldRecoveryStops() {
             }}
             title={`${stop.label} · 無料でHPを60%まで回復`}
             style={{
-              border: '1px solid currentColor',
-              padding: '2px 4px',
               cursor: available ? 'pointer' : 'default',
               opacity: available ? 1 : 0.82,
-              font: 'inherit',
             }}
           >
-            {stop.label}
+            <span className="recovery-stop-label">{stop.label}</span>
           </button>,
           target,
           stop.id,
