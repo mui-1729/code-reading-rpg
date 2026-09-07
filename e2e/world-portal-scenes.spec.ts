@@ -100,9 +100,9 @@ test('村入口は木柵門、Village出口は草原へ抜ける門として別s
 test('Forestから第二集落を経由し、集落北口だけがDeep Forestのroot archになる', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   const clearedThroughForest = [1, 7, 8, 9, 10, 11, 12, 13, 14]
-  await seedWorld(page, 'js-forest', { x: 2, y: 10 }, clearedThroughForest)
+  await seedWorld(page, 'js-forest', { x: 2, y: 18 }, clearedThroughForest)
 
-  const settlementGate = '.world-tile[data-world-x="1"][data-world-y="10"]'
+  const settlementGate = '.world-tile[data-world-x="1"][data-world-y="18"]'
   await expect(page.locator(settlementGate)).toBeVisible()
   expect(await portalSceneKind(page, settlementGate)).toBe('forest-settlement-gate')
   await expect(page.locator(`${settlementGate} .exit-object`)).toHaveCSS('font-size', '0px')
