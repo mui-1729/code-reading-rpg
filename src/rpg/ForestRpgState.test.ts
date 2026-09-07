@@ -15,7 +15,7 @@ describe('JavaScript forest RPG state', () => {
     expect(restoreRpgState(serializeRpgState(state))).toEqual(state)
   })
 
-  it('Forest範囲外の座標はOverworld開始位置へfallbackする', () => {
+  it('拡張後のForest範囲外座標はOverworld開始位置へfallbackする', () => {
     const state = createInitialRpgState()
     const restored = restoreRpgState(
       JSON.stringify({
@@ -23,7 +23,7 @@ describe('JavaScript forest RPG state', () => {
         state: {
           ...state,
           worldMapId: JS_FOREST_MAP_ID,
-          worldPosition: { x: 31, y: 21 },
+          worldPosition: { x: 45, y: 21 },
         },
       }),
     )
