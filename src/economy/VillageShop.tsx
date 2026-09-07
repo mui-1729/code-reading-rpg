@@ -17,9 +17,16 @@ type VillageShopProps = {
   open: boolean
   onClose: () => void
   onMessage: (message: string) => void
+  locationLabel?: string
 }
 
-export function VillageShop({ kind, open, onClose, onMessage }: VillageShopProps) {
+export function VillageShop({
+  kind,
+  open,
+  onClose,
+  onMessage,
+  locationLabel = 'グリーンフィールド村',
+}: VillageShopProps) {
   const { progress, setProgress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
   const dialogRef = useModalFocus<HTMLElement>({ open, onEscape: onClose })
@@ -79,7 +86,7 @@ export function VillageShop({ kind, open, onClose, onMessage }: VillageShopProps
         >
           ×
         </button>
-        <div className="eyebrow">グリーンフィールド村 // {kind === 'items' ? '道具屋' : '装備屋'}</div>
+        <div className="eyebrow">{locationLabel} // {kind === 'items' ? '道具屋' : '装備屋'}</div>
         <h2>{kind === 'items' ? '道具を補充する' : '装備を整える'}</h2>
         <div className="shop-wallet pixel-inner-window">
           <span>所持ゴールド</span>
