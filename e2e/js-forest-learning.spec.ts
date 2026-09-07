@@ -117,11 +117,17 @@ test('Forest最初の地理的trace地点はRandom抽選ではなくBattle 10の
 
   await page.getByRole('button', { name: '下へ移動' }).click()
   await page.getByRole('button', { name: 'JavaScriptの森へ入る' }).click()
-  await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-map', 'js-forest')
+  const forest = page.getByLabel('JavaScriptの森のマップ')
+  await expect(forest).toHaveAttribute('data-world-map', 'js-forest')
+  await expect(forest).toHaveAttribute('data-world-x', '42')
+  await expect(forest).toHaveAttribute('data-world-y', '16')
 
   await page.getByRole('button', { name: '左へ移動' }).click()
+  await expect(forest).toHaveAttribute('data-world-x', '41')
   await page.getByRole('button', { name: '左へ移動' }).click()
+  await expect(forest).toHaveAttribute('data-world-x', '40')
   await page.getByRole('button', { name: '左へ移動' }).click()
+  await expect(forest).toHaveAttribute('data-world-x', '39')
   await page.getByRole('button', { name: '左へ移動' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/10\?/)
