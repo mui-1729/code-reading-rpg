@@ -10,10 +10,9 @@ export type WorldRecoveryStop = {
 }
 
 /**
- * Recovery spacing grows with the route:
- * - Forest: an early camp roughly eight tiles from the entrance.
- * - Deep Forest: a later spring roughly twelve tiles from the entrance.
- * These are visible safety valves, not full paid Inn replacements.
+ * Recovery stops are optional safety valves, not paid Inn replacements.
+ * Forest Phase 4 moves the camp off the main route onto a rejoining southern
+ * loop so exploration has a practical reward without making the story path mandatory.
  */
 export const WORLD_RECOVERY_STOPS: readonly WorldRecoveryStop[] = [
   {
@@ -21,7 +20,7 @@ export const WORLD_RECOVERY_STOPS: readonly WorldRecoveryStop[] = [
     mapId: JS_FOREST_MAP_ID,
     label: '野営地',
     actionLabel: '野営地で休む',
-    position: { x: 20, y: 11 },
+    position: { x: 19, y: 26 },
     recoveryRatio: 0.6,
   },
   {
