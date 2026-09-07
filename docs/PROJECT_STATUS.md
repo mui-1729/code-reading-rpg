@@ -127,7 +127,7 @@ stable map:
 
 - `overworld` — 70 × 50（地域間を旅するField scale）
 - `js-village` — GREENFIELD VILLAGE 21 × 15
-- `js-forest` — JAVASCRIPT FOREST 31 × 27
+- `js-forest` — JAVASCRIPT FOREST 45 × 35
 - `js-forest-settlement` — FOREST SETTLEMENT 23 × 17
 - `js-deep-forest` — JAVASCRIPT DEEP FOREST 31 × 27
 - `ts-frontier` — TYPESCRIPT FRONTIER 31 × 21
@@ -139,6 +139,9 @@ stable map:
 - safe checkpointをRpgState v7へsemantic IDとして保存
 - Hub → GREENFIELD → Forestの本道は複数回曲がり、川・橋・森の景観を通る
 - GREENFIELD南側に本道へ再合流する川辺loopとTreasureがある
+- Forestは45×35のLocal Mapとして、main route自体が上下左右へ曲がる
+- Forest中央の川を橋で越え、北側にTreasureへ向かうrejoin loop、南側に野営地へ向かうrejoin loopを持つ
+- ForestのJS-05 / 06 / 07 / 09は単純なx座標閾値ではなく、折れ枝・分かれ道・川の合流・散る足跡という明示的な地理地点で固定導入する
 - Forest → Forest Settlement → Deep Forestの順に進み、Forest SettlementはRandom Encounterのない第二有人safe hub
 - Forest Settlementへ初回入場すると敗北時の復帰先が同集落へ更新される
 - Forest Settlementには宿・道具屋・NPCがあり、Deep Forest前に立て直せる
@@ -292,7 +295,8 @@ numeric IDを維持するのは互換性のためであり、将来のchapter追
 - JS-02 → JS-03 → JS-04
 - JS-04前はForestへ入れない
 - JS-04後にForestへ進める
-- Forest JS-05〜09
+- Forestは45×35でmain routeが複数回曲がり、川・橋・north treasure loop・south camp loopを持つ
+- Forest JS-05〜09のfixed Battleは地理的landmarkで導入し、hidden x-thresholdへ戻さない
 - current Lessonの新SkillはTRIALとして使える
 - clear後のSkillは後続BattleでMASTEREDとして利用できる
 - 未MASTERED / 非TRIAL SkillはBattleへ出ない
@@ -335,12 +339,11 @@ npm run test:e2e
 
 JavaScript編を完成形の基準にする。
 
-1. #377 / #330 / #375 — JavaScript Worldの拠点・旅loopを完成させる
-2. #352 — Forest / Deep Forestを探索型layoutへ再設計する
-3. #373 — cell-level Fog of War / 地域地図をJavaScript topologyへ統合する
-4. JavaScript編を通しplayし、拠点間隔・Encounter・Economy・Story pacingを調整する
-5. その基準を使ってTypeScriptを本格拡張する
-6. #246 — Database prototype
+1. #352 Phase 5 — Deep ForestをForestより長く・濃く、探索型layoutへ再設計する
+2. #373 — cell-level Fog of War / 地域地図をJavaScript topologyへ統合する
+3. JavaScript編を通しplayし、拠点間隔・Encounter・Economy・Story pacingを調整する
+4. その基準を使ってTypeScriptを本格拡張する
+5. #246 — Database prototype
 
 新region追加時も、
 
