@@ -123,7 +123,7 @@
 .world-viewport[data-world-map='js-village'] .world-tile[data-world-x='10'][data-world-y='14']::after { right: 13%; }
 
 /* Expanded Forest east edge -> grassland: a bright break in the trees. */
-.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='44'][data-world-y='16'] {
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='54'][data-world-y='20'] {
   --portal-scene-kind: forest-light-gap;
   background:
     radial-gradient(ellipse at 82% 50%, #93b96d 0 18%, #5b8b4b 19% 34%, transparent 35%),
@@ -153,29 +153,39 @@
   background: #285f33;
 }
 
-/* The only east/west river crossing is a fallen trunk, not a constructed road. */
-.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='28'][data-world-y='8'] {
+/* The handcrafted stream has two natural east/west crossings. Each crossing is
+   read as a fallen trunk spanning the two river cells, never as a road tile. */
+.world-viewport[data-world-map='js-forest'] .world-tile:is(
+  [data-world-x='32'][data-world-y='12'],
+  [data-world-x='30'][data-world-y='29']
+) {
   --forest-landmark-kind: fallen-log-crossing;
   overflow: visible;
   background:
     linear-gradient(90deg, rgba(36, 88, 48, .9) 0 20%, transparent 21% 79%, rgba(36, 88, 48, .9) 80%),
     #3a7441;
 }
-.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='28'][data-world-y='8']::before {
+.world-viewport[data-world-map='js-forest'] .world-tile:is(
+  [data-world-x='32'][data-world-y='12'],
+  [data-world-x='30'][data-world-y='29']
+)::before {
   content: '';
   position: absolute;
   z-index: 4;
   left: -12%;
-  right: -12%;
+  right: -112%;
   top: 42%;
   height: 18%;
   border: 2px solid #3d2b1c;
   border-radius: 45%;
   background: repeating-linear-gradient(90deg, #705034 0 9px, #5b3d28 9px 12px);
   box-shadow: 0 3px 0 rgba(22, 36, 23, .45);
-  transform: rotate(-5deg);
+  transform: rotate(-3deg);
 }
-.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='28'][data-world-y='8']::after {
+.world-viewport[data-world-map='js-forest'] .world-tile:is(
+  [data-world-x='32'][data-world-y='12'],
+  [data-world-x='30'][data-world-y='29']
+)::after {
   content: '';
   position: absolute;
   z-index: 5;
@@ -189,7 +199,7 @@
 }
 
 /* Forest -> Forest Settlement: roots open into a timber-marked inhabited opening. */
-.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='18'] {
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='23'] {
   --portal-scene-kind: forest-settlement-gate;
   overflow: visible;
   background:
@@ -197,7 +207,7 @@
     linear-gradient(#5a4931 0 58%, #856b45 59% 100%);
 }
 
-.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='18']::before {
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='23']::before {
   content: '';
   position: absolute;
   z-index: 3;
@@ -211,7 +221,7 @@
   box-shadow: inset 0 4px 0 #6e5131, 0 -4px 0 #21482a;
 }
 
-.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='18']::after {
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='23']::after {
   content: '';
   position: absolute;
   z-index: 4;
