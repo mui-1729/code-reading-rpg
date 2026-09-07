@@ -174,23 +174,45 @@ describe('open world map', () => {
     expect(isWalkableTerrain('exit')).toBe(true)
   })
 
-  it('Forest Phase 4は水平一本道ではなく曲がるmain route・川・分岐loopを持つ', () => {
-    expect(getTerrain(42, 16, JS_FOREST_MAP_ID)).toBe('road')
-    expect(getTerrain(34, 12, JS_FOREST_MAP_ID)).toBe('road')
-    expect(getTerrain(28, 8, JS_FOREST_MAP_ID)).toBe('road')
-    expect(getTerrain(28, 9, JS_FOREST_MAP_ID)).toBe('water')
-    expect(getTerrain(24, 15, JS_FOREST_MAP_ID)).toBe('road')
-    expect(getTerrain(21, 20, JS_FOREST_MAP_ID)).toBe('road')
-    expect(getTerrain(14, 18, JS_FOREST_MAP_ID)).toBe('road')
-    expect(getTerrain(JS_FOREST_MIDBOSS_POSITION.x, JS_FOREST_MIDBOSS_POSITION.y, JS_FOREST_MAP_ID)).toBe('midboss')
-    expect(getTerrain(6, 16, JS_FOREST_MAP_ID)).toBe('road')
-    expect(getTerrain(JS_FOREST_SETTLEMENT_POSITION.x, JS_FOREST_SETTLEMENT_POSITION.y, JS_FOREST_MAP_ID)).toBe('exit')
+  it('Forest Phase 4はroadを持たず、森・空き地・川・湿地の地理で探索させる', () => {
+    const { width, height } = getWorldMapDimensions(JS_FOREST_MAP_ID)
+    const terrains = new Set<string>()
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        terrains.add(getTerrain(x, y, JS_FOREST_MAP_ID))
+      }
+    }
 
-    expect(getTerrain(38, 10, JS_FOREST_MAP_ID)).toBe('road')
-    expect(getTerrain(33, 5, JS_FOREST_MAP_ID)).toBe('road')
+    expect(terrains.has('road')).toBe(false)
+    expect(terrains.has('woods')).toBe(true)
+    expect(terrains.has('deep-woods')).toBe(true)
+    expect(terrains.has('grass')).toBe(true)
+    expect(terrains.has('water')).toBe(true)
+
+    expect(getTerrain(42, 16, JS_FOREST_MAP_ID)).toBe('grass')
+    expect(getTerrain(34, 12, JS_FOREST_MAP_ID)).toBe('woods')
+    expect(getTerrain(28, 8, JS_FOREST_MAP_ID)).toBe('grass')
+    expect(getTerrain(28, 9, JS_FOREST_MAP_ID)).toBe('water')
+    expect(getTerrain(24, 15, JS_FOREST_MAP_ID)).toBe('woods')
+    expect(getTerrain(21, 20, JS_FOREST_MAP_ID)).toBe('woods')
+    expect(getTerrain(14, 18, JS_FOREST_MAP_ID)).toBe('woods')
+    expect(
+      getTerrain(
+        JS_FOREST_MIDBOSS_POSITION.x,
+        JS_FOREST_MIDBOSS_POSITION.y,
+        JS_FOREST_MAP_ID,
+      ),
+    ).toBe('midboss')
+    expect(getTerrain(6, 16, JS_FOREST_MAP_ID)).toBe('grass')
+    expect(
+      getTerrain(
+        JS_FOREST_SETTLEMENT_POSITION.x,
+        JS_FOREST_SETTLEMENT_POSITION.y,
+        JS_FOREST_MAP_ID,
+      ),
+    ).toBe('exit')
     expect(getTerrain(33, 4, JS_FOREST_MAP_ID)).toBe('treasure')
-    expect(getTerrain(22, 25, JS_FOREST_MAP_ID)).toBe('road')
-    expect(getTerrain(19, 27, JS_FOREST_MAP_ID)).toBe('road')
+    expect(['grass', 'woods']).toContain(getTerrain(19, 26, JS_FOREST_MAP_ID))
   })
 
   it('Forest固定Lessonは広いmap上の意味ある場所へ分散し、文字札だけの横並びにしない', () => {
@@ -235,7 +257,7 @@ describe('open world map', () => {
       expect(getTerrain(treasure.position.x, treasure.position.y, treasure.mapId)).toBe('treasure')
       expect(getTreasureAtPosition(treasure.position, treasure.mapId)?.id).toBe(treasure.id)
     }
-    expect(getTerrain(21, 20, JS_FOREST_MAP_ID)).toBe('road')
+    expect(getTerrain(21, 20, JS_FOREST_MAP_ID)).toBe('woods')
     expect(getTerrain(13, 22, JS_DEEP_FOREST_MAP_ID)).toBe('road')
     expect(isWalkableTerrain('treasure')).toBe(false)
   })
