@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createInitialPlayerProgress } from '../progression'
 import { createInitialRpgState } from '../rpg'
 import { resolveWorldMove } from './worldActions'
-import { JS_FOREST_MAP_ID } from './worldMap'
+import { JS_FOREST_LEARNING_POSITIONS, JS_FOREST_MAP_ID } from './worldMap'
 
 function forestProgress(clearedStageIds: number[]) {
   const initial = createInitialPlayerProgress()
@@ -13,93 +13,72 @@ function forestProgress(clearedStageIds: number[]) {
   }
 }
 
-function forestState(x: number) {
+function beforeTarget(target: { x: number; y: number }) {
   return {
     ...createInitialRpgState(),
     worldMapId: JS_FOREST_MAP_ID,
-    worldPosition: { x, y: 10 },
+    worldPosition: { x: target.x + 1, y: target.y },
     stepsSinceEncounter: 8,
     encounterCount: 0,
   }
 }
 
+function enterTarget(
+  battleId: keyof typeof JS_FOREST_LEARNING_POSITIONS,
+  clearedStageIds: number[],
+  encounterRolls = { trigger: 0.99, battle: 0.99 },
+) {
+  const target = JS_FOREST_LEARNING_POSITIONS[battleId]
+  return resolveWorldMove({
+    rpgState: beforeTarget(target),
+    progress: forestProgress(clearedStageIds),
+    dx: -1,
+    dy: 0,
+    encounterRolls,
+  })
+}
+
 describe('JavaScript Forest learning route', () => {
-  it('最初のincident後、Forestで最初にWoodsへ入るとBattle 10を固定導入する', () => {
-    const result = resolveWorldMove({
-      rpgState: forestState(23),
-      progress: forestProgress([7, 8, 9, 1]),
-      dx: 0,
-      dy: -1,
-      encounterRolls: { trigger: 0.99, battle: 0.99 },
-    })
+  it('最初のincident後、折れ枝のtrace地点でBattle 10を固定導入する', () => {
+    const result = enterTarget(10, [7, 8, 9, 1])
 
     expect(result.kind).toBe('encounter')
     if (result.kind !== 'encounter') return
     expect(result.battle.battleId).toBe(10)
-    expect(result.nextState.worldPosition).toEqual({ x: 23, y: 9 })
+    expect(result.nextState.worldPosition).toEqual(JS_FOREST_LEARNING_POSITIONS[10])
   })
 
-  it('Battle 10 clear後、Forest東側のRandom Encounterは10だけを反復する', () => {
-    const result = resolveWorldMove({
-      rpgState: forestState(23),
-      progress: forestProgress([7, 8, 9, 1, 10]),
-      dx: 0,
-      dy: -1,
-      encounterRolls: { trigger: 0, battle: 0.99 },
-    })
+  it('Battle 10 clear後、同じForestのEncounter terrainでは10だけを反復する', () => {
+    const result = enterTarget(10, [7, 8, 9, 1, 10], { trigger: 0, battle: 0.99 })
 
     expect(result.kind).toBe('encounter')
     if (result.kind !== 'encounter') return
     expect(result.battle.battleId).toBe(10)
   })
 
-  it('Forest中盤へ進むとBattle 11を固定導入し、その後のRandomは10 / 11だけになる', () => {
-    const lesson = resolveWorldMove({
-      rpgState: forestState(17),
-      progress: forestProgress([7, 8, 9, 1, 10]),
-      dx: 0,
-      dy: -1,
-      encounterRolls: { trigger: 0.99, battle: 0.99 },
-    })
+  it('分かれ道へ進むとBattle 11を固定導入し、その後のRandomは10 / 11だけになる', () => {
+    const lesson = enterTarget(11, [7, 8, 9, 1, 10])
 
     expect(lesson.kind).toBe('encounter')
     if (lesson.kind !== 'encounter') return
     expect(lesson.battle.battleId).toBe(11)
+    expect(lesson.nextState.worldPosition).toEqual(JS_FOREST_LEARNING_POSITIONS[11])
 
-    const replay = resolveWorldMove({
-      rpgState: forestState(12),
-      progress: forestProgress([7, 8, 9, 1, 10, 11]),
-      dx: 0,
-      dy: -1,
-      encounterRolls: { trigger: 0, battle: 0.99 },
-    })
-
+    const replay = enterTarget(11, [7, 8, 9, 1, 10, 11], { trigger: 0, battle: 0.99 })
     expect(replay.kind).toBe('encounter')
     if (replay.kind !== 'encounter') return
     expect(replay.battle.battleId).toBe(11)
   })
 
-  it('Forest最深側へ進むとBattle 12を固定導入し、clear後に10 / 11 / 12を反復する', () => {
-    const lesson = resolveWorldMove({
-      rpgState: forestState(8),
-      progress: forestProgress([7, 8, 9, 1, 10, 11]),
-      dx: 0,
-      dy: -1,
-      encounterRolls: { trigger: 0.99, battle: 0.99 },
-    })
+  it('川の合流へ進むとBattle 12を固定導入し、clear後に10 / 11 / 12を反復する', () => {
+    const lesson = enterTarget(12, [7, 8, 9, 1, 10, 11])
 
     expect(lesson.kind).toBe('encounter')
     if (lesson.kind !== 'encounter') return
     expect(lesson.battle.battleId).toBe(12)
+    expect(lesson.nextState.worldPosition).toEqual(JS_FOREST_LEARNING_POSITIONS[12])
 
-    const replay = resolveWorldMove({
-      rpgState: forestState(12),
-      progress: forestProgress([7, 8, 9, 1, 10, 11, 12]),
-      dx: 0,
-      dy: -1,
-      encounterRolls: { trigger: 0, battle: 0.99 },
-    })
-
+    const replay = enterTarget(12, [7, 8, 9, 1, 10, 11, 12], { trigger: 0, battle: 0.99 })
     expect(replay.kind).toBe('encounter')
     if (replay.kind !== 'encounter') return
     expect(replay.battle.battleId).toBe(12)
