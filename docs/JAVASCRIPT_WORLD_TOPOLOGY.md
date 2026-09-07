@@ -57,7 +57,7 @@ Battle / Story / 寄り道 / Treasureを経る
 - JavaScript Deep Forest
 - Final Approach
 
-では、建物 / NPC / 店 / 小道 / 川辺 / 分岐 / Battle地点を詳細に配置する。
+では、建物 / NPC / 店 / 川辺 / 地形landmark / 分岐 / Battle地点を詳細に配置する。
 
 Overworldの1tileとLocal Mapの1tileを同じ距離感として扱わない。
 
@@ -115,25 +115,47 @@ Learning順そのものは維持するが、Battle番号を地図の目次とし
 
 fixed Battleはhidden x thresholdではなく、Playerが認識できる地形 / object / Story eventへ結びつける。Battle数だけ文字札を並べない。
 
-## 5. Route design rule
+## 5. Forest navigation rule
 
-### Main route自体を曲げる
+### Forestにroad networkを置かない
 
-寄り道だけ上下へ足すのでは不十分。main progressionにも複数回のdirection changeを持たせる。
+Forestは「道を辿れば正解」のLocal Mapにしない。明示的な`road` terrainはOverworldや有人拠点で使えても、JavaScript Forest内部のnavigation authorityにはしない。
+
+Forestでは次を手掛かりに進む。
+
+- 川と川辺
+- 倒木などの横断点
+- 木が疎になった空き地
+- 足跡 / 折れ枝等のtrace
+- 湿地 / 池による自然な通行制約
+- 野営地
+- 遠くにある有人集落の気配
+
+空き地を連続させて実質的な一本道にしない。入口、Treasure、川辺、野営地、中Boss、集落前など**場所として意味のある点だけ**開き、その間は森の中を探索させる。
 
 Forestの基準イメージ:
 
 ```text
 南東入口
-→ 北側の川辺
-→ 西側の広場
-→ 南西の倒木地帯
-→ 北西側の中Boss / major landmark
-→ 別方向へ回り込み
-→ Forest Settlement
+   │
+疎林 ── 北側のTreasure
+   ↘
+    川辺
+     ║
+   倒木で横断
+   ║
+林 / 池 / 足跡を探索
+ ↙          ↘
+野営地      trace
+  ↘        ↙
+   中Boss周辺の空き地
+          ↓
+   西側の深い林
+          ↓
+   Forest Settlement
 ```
 
-Deep Forestも同様に、入口→最深部を一方向の直線にしない。
+Deep ForestもPhase 5で同じ問いを改めて比較し、既存の横一本道をそのまま拡大しない。
 
 ### Branchには理由を置く
 
@@ -148,9 +170,17 @@ meaningful branchには少なくとも1つ置く。
 
 空のbranchを面積稼ぎのために増やさない。
 
-### Loop / rejoinを使う
+### 「複数方向へ歩ける」と「迷路」は分ける
 
-少なくとも主要Local Mapごとに、分岐した道が別方向から再合流する構造を持たせる。迷路化は目的ではなく、「行く場所は分かるが道順は1本ではない」状態を目指す。
+一本道を消す目的は迷わせることではない。
+
+- 地理landmarkを見れば大まかな方角を判断できる
+- main progression以外にも歩ける場所がある
+- optional contentへ自分で寄れる
+- 行き止まりだけを大量に作らない
+- 同じ景色だけが連続しない
+
+を目指す。
 
 ## 6. Landmarkで場所を覚える
 
@@ -281,12 +311,13 @@ Deep Forest
 
 1. 実際に何viewport分歩くか
 2. 横・縦の両方に十分な移動距離があるか
-3. main routeが何回方向転換するか
+3. 地理landmarkを複数使って現在地を判断できるか
 4. meaningful branchが何本あるか
-5. loop / rejoinがあるか
+5. optional areaへ複数方向から近づけるか
 6. 景観landmarkを複数覚えられるか
-7. optional routeに歩く理由があるか
+7. optional areaに歩く理由があるか
 8. 入口から出口 / Final地点まで一目で見通せないか
+9. Forestではroadを描かなくても進行方向を読めるか
 
 空tileを足して数字だけ満たすのは禁止。
 
@@ -300,6 +331,8 @@ World拡張をRandom Encounter回数の水増しに使わない。
 - fixed learning Battle: 実際の場所 / Story eventと対応
 
 checkpoint間で必要なBattle量を基準に調整する。
+
+Forestではroadを消したことを理由に全tileを高Encounter化しない。空き地・地形・progression pacingを含めて調整する。
 
 ## 11. Fog of War / Atlas
 
