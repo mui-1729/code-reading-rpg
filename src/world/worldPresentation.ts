@@ -2,6 +2,7 @@ import type { BgmTrack } from '../audio/gameAudio'
 import {
   JS_DEEP_FOREST_MAP_ID,
   JS_FOREST_MAP_ID,
+  JS_FOREST_SETTLEMENT_MAP_ID,
   JS_VILLAGE_MAP_ID,
   OVERWORLD_MAP_ID,
   TS_FRONTIER_MAP_ID,
@@ -42,6 +43,11 @@ const WORLD_SCENES: Record<
     sceneId: 'javascript-forest',
     title: 'JavaScriptの森',
     bgmTrack: 'fieldForest',
+  },
+  [JS_FOREST_SETTLEMENT_MAP_ID]: {
+    sceneId: 'forest-settlement',
+    title: '森番の集落',
+    bgmTrack: 'fieldVillage',
   },
   [JS_DEEP_FOREST_MAP_ID]: {
     sceneId: 'javascript-deep-forest',
