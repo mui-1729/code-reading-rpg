@@ -10,7 +10,7 @@ async function seedWorldAtlas(
   page: Page,
   clearedStageIds: readonly number[] = [],
   worldMapId = 'js-forest',
-  worldPosition = { x: 20, y: 20 },
+  worldPosition = { x: 24, y: 25 },
 ) {
   await page.goto('/')
   await page.evaluate(
@@ -123,9 +123,9 @@ test('選択した1 regionだけをrenderしmap追加で全terrain cellを積み
   const atlas = await openAtlas(page)
 
   const forestGrid = atlas.locator('.atlas-terrain-grid')
-  await expect(forestGrid).toHaveAttribute('data-terrain-width', '45')
-  await expect(forestGrid).toHaveAttribute('data-terrain-height', '35')
-  await expect(atlas.locator('.atlas-terrain-cell')).toHaveCount(45 * 35)
+  await expect(forestGrid).toHaveAttribute('data-terrain-width', '55')
+  await expect(forestGrid).toHaveAttribute('data-terrain-height', '41')
+  await expect(atlas.locator('.atlas-terrain-cell')).toHaveCount(55 * 41)
   await expect(atlas.locator('[data-atlas-map]')).toHaveCount(1)
 
   await atlas.locator('[data-atlas-region="overworld"]').click()
