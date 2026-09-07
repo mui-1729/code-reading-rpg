@@ -62,7 +62,7 @@ async function seedWorld(
   await page.goto('/world')
 }
 
-test('@responsive Forestでは固定Battle 11の前に分かれ跡が見え、踏み込むとそのBattleが始まる', async ({ page }) => {
+test('@responsive Forestでは固定Battle 11の前に文字札ではなく川辺の足跡が見え、踏み込むとそのBattleが始まる', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedWorld(page, {
     mapId: 'js-forest',
@@ -73,8 +73,19 @@ test('@responsive Forestでは固定Battle 11の前に分かれ跡が見え、�
 
   const landmark = page.locator('[data-progression-battle="11"]')
   await expect(landmark).toBeVisible()
-  await expect(landmark).toHaveText('分かれ跡')
-  await expect(landmark).toHaveAttribute('aria-label', '足跡が二方向へ分かれて残る川辺')
+  await expect(landmark).toHaveAttribute('aria-label', '川辺の泥に足跡が残っている')
+  await expect(landmark).toHaveCSS('font-size', '0px')
+  const footprint = await landmark.evaluate((element) => {
+    const style = getComputedStyle(element, '::before')
+    return {
+      content: style.content,
+      width: Number.parseFloat(style.width),
+      backgroundColor: style.backgroundColor,
+    }
+  })
+  expect(footprint.content).not.toBe('none')
+  expect(footprint.width).toBeGreaterThan(0)
+  expect(footprint.backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
 
   await page.getByRole('button', { name: '左へ移動' }).click()
   await expect(page).toHaveURL(/\/javascript\/battle\/11/)
