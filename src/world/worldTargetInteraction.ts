@@ -3,7 +3,6 @@ import type { RpgState } from '../rpg'
 import { getWorldNpcAtPosition, type WorldNpcPlacement } from './worldCharacters'
 import { registerCheckpointForMapEntry } from './worldCheckpoints'
 import { getVillageFacilityAtPosition, type VillageFacilityKind } from './villageFacilityData'
-import { getWorldRecoveryStopAtPosition, type WorldRecoveryStop } from './recoveryStops'
 import {
   BYTE_POSITION,
   getWorldPortalAtPosition,
@@ -34,7 +33,6 @@ type BaseTargetIntent =
   | { kind: 'party'; memberId: 'byte'; alreadyJoined: boolean }
   | { kind: 'shop' }
   | { kind: 'recovery' }
-  | { kind: 'recovery-stop'; stop: WorldRecoveryStop }
   | { kind: 'village-facility'; facility: VillageFacilityKind }
   | { kind: 'treasure'; treasureId: WorldTreasureId; opened: boolean }
   | { kind: 'training'; battleId: 7 | 8 | 9 | null }
@@ -113,9 +111,6 @@ export function resolveWorldTargetInteraction(
       opened: rpgState.openedTreasureIds.includes(treasure.id),
     }
   }
-
-  const recoveryStop = getWorldRecoveryStopAtPosition(mapId, target)
-  if (recoveryStop) return { kind: 'recovery-stop', stop: recoveryStop }
 
   const facility = getVillageFacilityAtPosition(mapId, target)
   if (facility) return { kind: 'village-facility', facility: facility.kind }
