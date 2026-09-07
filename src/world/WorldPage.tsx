@@ -17,6 +17,7 @@ import {
   getWorldRegion,
   JS_DEEP_FOREST_MAP_ID,
   JS_FOREST_MAP_ID,
+  JS_FOREST_SETTLEMENT_MAP_ID,
   JS_VILLAGE_MAP_ID,
   TS_FRONTIER_MAP_ID,
 } from './worldMap'
@@ -80,8 +81,9 @@ export function WorldPage() {
   const viewportStart = visibleCells[0] ?? position
   const isVillage = mapId === JS_VILLAGE_MAP_ID
   const isForest = mapId === JS_FOREST_MAP_ID
+  const isSettlement = mapId === JS_FOREST_SETTLEMENT_MAP_ID
   const isDeepForest = mapId === JS_DEEP_FOREST_MAP_ID
-  const isLocalMap = isVillage || isForest || isDeepForest
+  const isLocalMap = isVillage || isForest || isSettlement || isDeepForest
   const nextTrainingBattleId = getNextJavaScriptTrainingBattleId(progress.clearedStageIds)
   const interactionTarget = useMemo(
     () => getWorldInteractionTarget(position, playerFacing),
@@ -124,7 +126,7 @@ export function WorldPage() {
       return 'BYTE // 二つ目の症状も同じ呼び出し経路へ入った。JavaScript深層の森を西へ進み、根本原因まで追おう。'
     }
     if (progress.clearedStageIds.includes(14)) {
-      return 'BYTE // 複数の対象へ広がる影響範囲がJavaScript深層の森へ続いている。入口で二つ目の症状を確認しよう。'
+      return 'BYTE // 複数対象へ広がる影響を追えた。森を抜けた先の森番の集落で立て直し、北のJavaScript深層の森へ向かおう。'
     }
     if (progress.clearedStageIds.includes(13)) {
       return 'BYTE // 守り人の先で経路が複数の対象へ枝分かれした。影響範囲を全部追う必要がある。'
@@ -205,9 +207,9 @@ export function WorldPage() {
     }
     if (!progress.clearedStageIds.includes(2)) {
       return {
-        label: 'SECOND SYMPTOM',
-        title: 'JavaScript深層の森の入口で二つ目の異常を確認する',
-        detail: 'JavaScriptの森の西端の出口からJavaScript深層の森へ入ろう。最初の移動で、複数の対象へ広がった実際の異常が再現される。',
+        label: 'FOREST SETTLEMENT',
+        title: '森番の集落を足場にJavaScript深層の森へ進む',
+        detail: 'JavaScriptの森を抜けると森番の集落へ着く。宿と道具屋で準備を整え、北の出口からJavaScript深層の森へ向かおう。',
         clear: false,
       }
     }
@@ -340,9 +342,9 @@ export function WorldPage() {
     }
     if (!progress.clearedStageIds.includes(2)) {
       return {
-        label: 'SECOND SYMPTOM AHEAD',
-        title: '西端からJavaScript深層の森へ進む',
-        detail: '影響範囲の経路がJavaScript深層の森へ続いている。出口を抜けると、二つ目の実際の症状を確認できる。',
+        label: 'SAFE HUB AHEAD',
+        title: '西端から森番の集落へ向かう',
+        detail: '影響範囲の経路はさらに奥へ続く。森を抜けて森番の集落へ着いたら、宿と道具屋で立て直して北のDeep Forestへ進もう。',
         clear: false,
       }
     }
@@ -350,6 +352,23 @@ export function WorldPage() {
       label: 'FOREST TRACE COMPLETE',
       title: '二つの症状は同じJavaScript深層の森へ続いた',
       detail: '調査は後戻りせず西へ続く。JavaScript深層の森で共有経路を根本原因まで追おう。',
+      clear: true,
+    }
+  }, [progress.clearedStageIds])
+
+  const settlementObjective = useMemo(() => {
+    if (!progress.clearedStageIds.includes(2)) {
+      return {
+        label: 'SAFE HUB · 2',
+        title: '森番の集落で休息し、北のDeep Forestへ進む',
+        detail: 'ここが新しい安全拠点になった。宿で回復し、道具屋で補給できる。準備できたら北の出口からJavaScript深層の森へ向かおう。',
+        clear: false,
+      }
+    }
+    return {
+      label: 'SAFE HUB · 2',
+      title: '必要なら立て直してDeep Forestへ戻る',
+      detail: 'この集落は敗北時の戻り先になる。宿と道具屋で準備を整えたら、北の出口から共有経路の調査へ戻ろう。',
       clear: true,
     }
   }, [progress.clearedStageIds])
@@ -437,11 +456,13 @@ export function WorldPage() {
 
   const currentObjective = isVillage
     ? villageObjective
-    : isDeepForest
-      ? deepForestObjective
-      : isForest
-        ? forestObjective
-        : javascriptNextObjective
+    : isSettlement
+      ? settlementObjective
+      : isDeepForest
+        ? deepForestObjective
+        : isForest
+          ? forestObjective
+          : javascriptNextObjective
 
   const enterBattle = useCallback(
     (battleId: number, battleRegion: 'javascript' | 'typescript', seed: string, playConfirm = true) => {
@@ -490,13 +511,15 @@ export function WorldPage() {
             ? 'JavaScript深層の森の経路を抜けてCode Core手前へ出た。北へ進めば最終ボスだ。'
             : result.toMapId === JS_VILLAGE_MAP_ID
               ? `${result.label}へ入った。さっきの異常で読めなかった部分だけMIOと確認しよう。`
-              : result.toMapId === JS_DEEP_FOREST_MAP_ID
-                ? progress.clearedStageIds.includes(2)
-                  ? `${result.label}へ入った。共有経路はさらに西へ続いている。`
-                  : `${result.label}へ入った。最初の移動で二つ目の実際の症状を確認する。`
-                : result.toMapId === JS_FOREST_MAP_ID
-                  ? `${result.label}へ入った。最初の異常で見た選択処理の経路を西へ追おう。`
-                  : `${result.label}へ移動した。`,
+              : result.toMapId === JS_FOREST_SETTLEMENT_MAP_ID
+                ? `${result.label}へ着いた。ここが新しい安全拠点だ。宿と道具屋で準備して、北のDeep Forestへ進もう。`
+                : result.toMapId === JS_DEEP_FOREST_MAP_ID
+                  ? progress.clearedStageIds.includes(2)
+                    ? `${result.label}へ入った。共有経路はさらに西へ続いている。`
+                    : `${result.label}へ入った。最初の移動で二つ目の実際の症状を確認する。`
+                  : result.toMapId === JS_FOREST_MAP_ID
+                    ? `${result.label}へ入った。最初の異常で見た選択処理の経路を西へ追おう。`
+                    : `${result.label}へ移動した。`,
         )
         return
       }
@@ -548,6 +571,10 @@ export function WorldPage() {
             ? 'JavaScriptの森へ進む前に、BYTEと草原で最初の対象異常を実際に見よう。'
             : 'JavaScriptの森へ進む前に、グリーンフィールド村で最初の異常に必要なHP・name・find()を確認しよう。',
         )
+      } else if (intent.toMapId === JS_FOREST_SETTLEMENT_MAP_ID) {
+        setMessage('森番の集落へ進む前に、JavaScriptの森で複数対象へ広がる影響を最後まで追おう。')
+      } else if (intent.toMapId === JS_DEEP_FOREST_MAP_ID) {
+        setMessage('Deep Forestへ進む前に、JavaScriptの森のfilter() traceを最後まで追おう。')
       } else {
         setMessage('その先へ進むための経路がまだ開いていない。')
       }
@@ -568,13 +595,15 @@ export function WorldPage() {
           ? 'JavaScript深層の森の経路を抜けてCode Core手前へ出た。北へ進めば最終ボスだ。'
           : intent.toMapId === JS_VILLAGE_MAP_ID
             ? `${intent.label}へ入った。さっきの異常で読めなかった部分だけMIOと確認しよう。`
-            : intent.toMapId === JS_DEEP_FOREST_MAP_ID
-              ? progress.clearedStageIds.includes(2)
-                ? `${intent.label}へ入った。共有経路はさらに西へ続いている。`
-                : `${intent.label}へ入った。最初の移動で二つ目の実際の症状を確認する。`
-              : intent.toMapId === JS_FOREST_MAP_ID
-                ? `${intent.label}へ入った。最初の異常で見た選択処理の経路を西へ追おう。`
-                : `${intent.label}へ移動した。`,
+            : intent.toMapId === JS_FOREST_SETTLEMENT_MAP_ID
+              ? `${intent.label}へ着いた。ここが新しい安全拠点だ。宿と道具屋で準備して、北のDeep Forestへ進もう。`
+              : intent.toMapId === JS_DEEP_FOREST_MAP_ID
+                ? progress.clearedStageIds.includes(2)
+                  ? `${intent.label}へ入った。共有経路はさらに西へ続いている。`
+                  : `${intent.label}へ入った。最初の移動で二つ目の実際の症状を確認する。`
+                : intent.toMapId === JS_FOREST_MAP_ID
+                  ? `${intent.label}へ入った。最初の異常で見た選択処理の経路を西へ追おう。`
+                  : `${intent.label}へ移動した。`,
       )
       return
     }
@@ -625,7 +654,7 @@ export function WorldPage() {
         } else if (!progress.clearedStageIds.includes(14)) {
           setMessage('BYTE: 守り人の先で影響が複数の対象へ広がってる。filter()で全部の経路を追おう。')
         } else if (!progress.clearedStageIds.includes(2)) {
-          setMessage('BYTE: 影響範囲はJavaScript深層の森へ続いてる。西端の出口から入り、二つ目の実際の症状を確認しよう。')
+          setMessage('BYTE: 森の西端を抜けると森番の集落だ。そこで立て直して、北のDeep Forestで二つ目の症状を確認しよう。')
         } else if (!progress.clearedStageIds.includes(15)) {
           setMessage('BYTE: 二つの症状は同じ経路へ入った。JavaScript深層の森を西へ進み、条件が変わっても経路を追おう。')
         } else if (!progress.clearedStageIds.includes(16)) {
@@ -707,7 +736,7 @@ export function WorldPage() {
               : !progress.clearedStageIds.includes(9)
                 ? 'グリーンフィールド村で最初の異常に必要なHP・name・find()を確認しよう。'
                 : !progress.clearedStageIds.includes(2)
-                  ? 'JavaScriptの森の影響範囲を追い、JavaScript深層の森の入口で二つ目の症状を確認しよう。'
+                  ? 'JavaScriptの森の影響範囲を追い、森番の集落で準備してからJavaScript深層の森で二つ目の症状を確認しよう。'
                   : 'Code Coreへ挑む前に、JavaScript深層の森の経路を根本原因まで最後まで追おう。'
             : '東の奥へ進む前に、TypeScript地方の戦闘をもう少し確かめよう。',
         )
@@ -746,15 +775,17 @@ export function WorldPage() {
             <p>
               {isVillage
                 ? '最初の対象異常で読めなかった部分だけをMIOと確認する村。HP・name・find()が読めたら、同じ経路をJavaScriptの森へ追う。'
-                : isDeepForest
-                  ? '二つの対象異常が合流した深い森。データの変換・判定・優先順・集約を追い、最深部の西口からCode Coreへつながる。'
-                  : isForest
-                    ? '最初の対象異常から伸びる経路を追う森。条件の分岐から複数の対象への影響拡大までを調べる。'
-                    : region === 'javascript'
-                      ? javascriptStoryBrief
-                      : region === 'typescript'
-                        ? '東側はTypeScript地方。西とは違うルールを読みながら進む。'
-                        : '中央の拠点から、西のJavaScript地方と東のTypeScript地方へ進める。'}
+                : isSettlement
+                  ? 'JavaScriptの森を抜けた先にある小さな森番の集落。宿と道具屋で立て直し、北のDeep Forestへ向かう第二の安全拠点。'
+                  : isDeepForest
+                    ? '二つの対象異常が合流した深い森。データの変換・判定・優先順・集約を追い、最深部の西口からCode Coreへつながる。'
+                    : isForest
+                      ? '最初の対象異常から伸びる経路を追う森。条件の分岐から複数の対象への影響拡大までを調べる。'
+                      : region === 'javascript'
+                        ? javascriptStoryBrief
+                        : region === 'typescript'
+                          ? '東側はTypeScript地方。西とは違うルールを読みながら進む。'
+                          : '中央の拠点から、西のJavaScript地方と東のTypeScript地方へ進める。'}
             </p>
           </div>
         </header>
@@ -769,11 +800,13 @@ export function WorldPage() {
           label={
             isVillage
               ? 'グリーンフィールド村のマップ'
-              : isDeepForest
-                ? 'JavaScript深層の森のマップ'
-                : isForest
-                  ? 'JavaScriptの森のマップ'
-                  : 'ワールドマップ'
+              : isSettlement
+                ? '森番の集落のマップ'
+                : isDeepForest
+                  ? 'JavaScript深層の森のマップ'
+                  : isForest
+                    ? 'JavaScriptの森のマップ'
+                    : 'ワールドマップ'
           }
           getTerrain={(cell) =>
             cell.terrain === 'midboss' && progress.clearedStageIds.includes(13)
