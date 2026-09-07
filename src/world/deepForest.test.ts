@@ -5,8 +5,10 @@ import { getDeepForestReviewBattleId, resolveWorldMove } from './worldActions'
 import {
   getTerrain,
   JS_DEEP_FOREST_MAP_ID,
-  JS_FOREST_DEEP_FOREST_POSITION,
   JS_FOREST_MAP_ID,
+  JS_FOREST_SETTLEMENT_DEEP_FOREST_POSITION,
+  JS_FOREST_SETTLEMENT_MAP_ID,
+  JS_FOREST_SETTLEMENT_POSITION,
   WORLD_MAP_STARTS,
 } from './worldMap'
 import { resolveWorldTargetInteraction } from './worldTargetInteraction'
@@ -14,12 +16,12 @@ import { resolveWorldTargetInteraction } from './worldTargetInteraction'
 const clearedThrough14 = [7, 8, 9, 1, 10, 11, 12, 13, 14]
 
 describe('JavaScript Deep Forest', () => {
-  it('filter trace clear前はForest西端のDeep Forest入口を通れない', () => {
+  it('filter trace clear前はForest西端の第二集落入口を通れない', () => {
     const progress = createInitialPlayerProgress()
     const rpgState = {
       ...createInitialRpgState(),
       worldMapId: JS_FOREST_MAP_ID,
-      worldPosition: { x: JS_FOREST_DEEP_FOREST_POSITION.x + 1, y: JS_FOREST_DEEP_FOREST_POSITION.y },
+      worldPosition: { x: JS_FOREST_SETTLEMENT_POSITION.x + 1, y: JS_FOREST_SETTLEMENT_POSITION.y },
     }
 
     const result = resolveWorldMove({
@@ -29,25 +31,49 @@ describe('JavaScript Deep Forest', () => {
       dy: 0,
     })
 
-    expect(getTerrain(JS_FOREST_DEEP_FOREST_POSITION.x, JS_FOREST_DEEP_FOREST_POSITION.y, JS_FOREST_MAP_ID)).toBe('exit')
+    expect(getTerrain(JS_FOREST_SETTLEMENT_POSITION.x, JS_FOREST_SETTLEMENT_POSITION.y, JS_FOREST_MAP_ID)).toBe('exit')
     expect(result.kind).toBe('blocked')
+    expect(resolveWorldTargetInteraction(rpgState, progress, JS_FOREST_SETTLEMENT_POSITION).kind).toBe('locked-portal')
   })
 
-  it('filter trace clear後も入口では止まり、正面ActionでDeep Forestへtransitionする', () => {
+  it('filter trace clear後はForestから第二集落へ到達し、そこを経由してDeep Forestへ進む', () => {
     const progress = { ...createInitialPlayerProgress(), clearedStageIds: clearedThrough14 }
-    const rpgState = {
+    const forestState = {
       ...createInitialRpgState(),
       worldMapId: JS_FOREST_MAP_ID,
       worldPosition: { x: 2, y: 10 },
     }
 
-    expect(resolveWorldMove({ rpgState, progress, dx: -1, dy: 0 }).kind).toBe('blocked')
-    const intent = resolveWorldTargetInteraction(rpgState, progress, JS_FOREST_DEEP_FOREST_POSITION)
-    expect(intent.kind).toBe('map-transition')
-    if (intent.kind !== 'map-transition') return
-    expect(intent.toMapId).toBe(JS_DEEP_FOREST_MAP_ID)
-    expect(intent.nextState.worldMapId).toBe(JS_DEEP_FOREST_MAP_ID)
-    expect(intent.nextState.worldPosition).toEqual(WORLD_MAP_STARTS[JS_DEEP_FOREST_MAP_ID])
+    expect(resolveWorldMove({ rpgState: forestState, progress, dx: -1, dy: 0 }).kind).toBe('blocked')
+    const settlementIntent = resolveWorldTargetInteraction(
+      forestState,
+      progress,
+      JS_FOREST_SETTLEMENT_POSITION,
+    )
+    expect(settlementIntent.kind).toBe('map-transition')
+    if (settlementIntent.kind !== 'map-transition') return
+    expect(settlementIntent.toMapId).toBe(JS_FOREST_SETTLEMENT_MAP_ID)
+    expect(settlementIntent.nextState.worldMapId).toBe(JS_FOREST_SETTLEMENT_MAP_ID)
+    expect(settlementIntent.nextState.safeCheckpoint.id).toBe('forest-settlement')
+
+    const settlementState = {
+      ...settlementIntent.nextState,
+      worldPosition: {
+        x: JS_FOREST_SETTLEMENT_DEEP_FOREST_POSITION.x,
+        y: JS_FOREST_SETTLEMENT_DEEP_FOREST_POSITION.y + 1,
+      },
+    }
+    const deepForestIntent = resolveWorldTargetInteraction(
+      settlementState,
+      progress,
+      JS_FOREST_SETTLEMENT_DEEP_FOREST_POSITION,
+    )
+    expect(deepForestIntent.kind).toBe('map-transition')
+    if (deepForestIntent.kind !== 'map-transition') return
+    expect(deepForestIntent.toMapId).toBe(JS_DEEP_FOREST_MAP_ID)
+    expect(deepForestIntent.nextState.worldMapId).toBe(JS_DEEP_FOREST_MAP_ID)
+    expect(deepForestIntent.nextState.worldPosition).toEqual(WORLD_MAP_STARTS[JS_DEEP_FOREST_MAP_ID])
+    expect(deepForestIntent.nextState.safeCheckpoint.id).toBe('forest-settlement')
   })
 
   it('Deep Forest最初の移動では二つ目の実incidentを固定再現する', () => {
