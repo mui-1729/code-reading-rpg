@@ -97,7 +97,7 @@ test('村入口は木柵門、Village出口は草原へ抜ける門として別s
   await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-y', '21')
 })
 
-test('Forestの川は青い水面と流れのhighlightを持ち、森タイルの色違いには見えない', async ({ page }) => {
+test('Forestの川は一続きの青い水面として見え、water tileごとの境界線を持たない', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedWorld(page, 'js-forest', { x: 35, y: 13 }, [1, 7, 8, 9, 10])
 
@@ -109,12 +109,18 @@ test('Forestの川は青い水面と流れのhighlightを持ち、森タイル�
     return {
       backgroundImage: style.backgroundImage,
       backgroundColor: style.backgroundColor,
+      boxShadow: style.boxShadow,
+      borderTopWidth: style.borderTopWidth,
+      borderRightWidth: style.borderRightWidth,
       highlightContent: highlight.content,
       highlightWidth: Number.parseFloat(highlight.width),
     }
   })
   expect(visual.backgroundImage).toContain('linear-gradient')
-  expect(visual.backgroundImage).toContain('rgb(82, 184, 223)')
+  expect(visual.backgroundColor).toBe('rgb(82, 184, 223)')
+  expect(visual.boxShadow).toBe('none')
+  expect(visual.borderTopWidth).toBe('0px')
+  expect(visual.borderRightWidth).toBe('0px')
   expect(visual.highlightContent).not.toBe('none')
   expect(visual.highlightWidth).toBeGreaterThan(0)
 })
