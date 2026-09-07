@@ -193,6 +193,40 @@
 .terrain-water {
   background: repeating-linear-gradient(0deg, #2c6994 0 5px, #3a79a4 5px 7px, #276087 7px 11px);
 }
+
+/* Forest water needs to read as an actual river at a glance, not a dark terrain stripe. */
+.world-viewport[data-world-map='js-forest'] .terrain-water {
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(23, 76, 111, .32), transparent 16%, transparent 84%, rgba(23, 76, 111, .32)),
+    repeating-linear-gradient(180deg, #52b8df 0 7px, #72c9e7 7px 9px, #3da1d2 9px 16px);
+  box-shadow:
+    inset 2px 0 0 rgba(196, 231, 182, .18),
+    inset -2px 0 0 rgba(196, 231, 182, .18);
+}
+.world-viewport[data-world-map='js-forest'] .terrain-water::before,
+.world-viewport[data-world-map='js-forest'] .terrain-water::after {
+  content: '';
+  position: absolute;
+  left: 12%;
+  width: 58%;
+  height: 2px;
+  background: rgba(235, 251, 255, .72);
+  border-radius: 999px;
+  transform: skewX(-18deg);
+  pointer-events: none;
+}
+.world-viewport[data-world-map='js-forest'] .terrain-water::before {
+  top: 27%;
+  box-shadow: 13px 11px 0 rgba(210, 243, 251, .48);
+}
+.world-viewport[data-world-map='js-forest'] .terrain-water::after {
+  left: 30%;
+  bottom: 22%;
+  width: 43%;
+  opacity: .68;
+}
+
 .terrain-boss { background: #51263c; }
 .terrain-shop { background: #765d31; }
 .terrain-npc { background: #355a70; }
@@ -225,6 +259,61 @@
 .recovery-object { color: #a8ffe9; font-size: clamp(6px, 1vw, 9px); letter-spacing: .04em; }
 .treasure-object { color: #ffe07b; font-size: clamp(6px, 1vw, 9px); letter-spacing: .03em; }
 .treasure-object.opened { color: #aaa27f; opacity: .7; }
+
+.recovery-stop-object {
+  border: 1px solid currentColor;
+  padding: 2px 4px;
+  background: rgba(12, 20, 17, .72);
+  color: #dff8df;
+  font: inherit;
+}
+
+/* Forest camp is a physical place: tent + fire, never a floating "野営地" label. */
+.recovery-stop-object[data-recovery-stop='forest-traveler-camp'] {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  box-shadow: none;
+  text-shadow: none;
+  overflow: visible;
+}
+.recovery-stop-object[data-recovery-stop='forest-traveler-camp'] .recovery-stop-label {
+  display: none;
+}
+.recovery-stop-object[data-recovery-stop='forest-traveler-camp']::before {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  left: 5%;
+  bottom: 13%;
+  width: 56%;
+  height: 57%;
+  background:
+    linear-gradient(90deg, transparent 0 46%, #6b4b31 47% 53%, transparent 54%),
+    #d8ba72;
+  border: 2px solid #4b3827;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  box-shadow: inset -8px -9px 0 rgba(112, 77, 43, .32);
+}
+.recovery-stop-object[data-recovery-stop='forest-traveler-camp']::after {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  right: 8%;
+  bottom: 14%;
+  width: 20%;
+  height: 25%;
+  border-radius: 46% 54% 50% 50%;
+  background: linear-gradient(#ffe38a 0 28%, #ff9b32 29% 65%, #d34e24 66% 100%);
+  box-shadow:
+    -8px 10px 0 -5px #5a3a26,
+    8px 10px 0 -5px #5a3a26,
+    0 7px 0 -3px #7b4b2c;
+  clip-path: polygon(50% 0, 78% 31%, 70% 47%, 100% 72%, 72% 100%, 28% 100%, 0 72%, 30% 47%, 22% 31%);
+}
 
 .world-character-layer {
   position: absolute;
