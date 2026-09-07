@@ -66,7 +66,7 @@ test('@responsive Forestでは固定Battle 11の前に分かれ跡が見え、�
   await page.setViewportSize({ width: 390, height: 844 })
   await seedWorld(page, {
     mapId: 'js-forest',
-    position: { x: 32, y: 8 },
+    position: { x: 36, y: 12 },
     clearedStageIds: [1, 7, 8, 9, 10],
     unlockedStageIds: [1, 7, 8, 9, 10, 11],
   })
