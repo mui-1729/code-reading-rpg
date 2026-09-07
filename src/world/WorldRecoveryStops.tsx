@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useProgress } from '../progression'
 import { getCombatStats, useRpg } from '../rpg'
-import { isAdjacent } from './worldMap'
 import { WORLD_RECOVERY_STOPS, type WorldRecoveryStop } from './recoveryStops'
 import './world-recovery-stops.css'
 
@@ -11,11 +10,20 @@ type RecoveryTarget = {
   target: Element
 }
 
+type Facing = 'up' | 'down' | 'left' | 'right'
+
 function sameTargets(left: readonly RecoveryTarget[], right: readonly RecoveryTarget[]) {
   return left.length === right.length && left.every((entry, index) => {
     const candidate = right[index]
     return candidate?.stop.id === entry.stop.id && candidate.target === entry.target
   })
+}
+
+function getFacingTarget(position: { x: number; y: number }, facing: Facing) {
+  if (facing === 'up') return { x: position.x, y: position.y - 1 }
+  if (facing === 'down') return { x: position.x, y: position.y + 1 }
+  if (facing === 'left') return { x: position.x - 1, y: position.y }
+  return { x: position.x + 1, y: position.y }
 }
 
 export function WorldRecoveryStops() {
@@ -24,6 +32,7 @@ export function WorldRecoveryStops() {
   const combatStats = getCombatStats(stats, rpgState)
   const [targets, setTargets] = useState<RecoveryTarget[]>([])
   const [controlsTarget, setControlsTarget] = useState<Element | null>(null)
+  const [facing, setFacing] = useState<Facing>('down')
   const [message, setMessage] = useState('')
 
   useEffect(() => {
@@ -37,6 +46,12 @@ export function WorldRecoveryStops() {
       })
       setTargets((current) => (sameTargets(current, next) ? current : next))
       setControlsTarget(document.querySelector('.world-controls'))
+
+      const player = document.querySelector('.world-player-sprite')
+      const nextFacing = player?.getAttribute('data-facing')
+      if (nextFacing === 'up' || nextFacing === 'down' || nextFacing === 'left' || nextFacing === 'right') {
+        setFacing(nextFacing)
+      }
     }
 
     sync()
@@ -45,20 +60,20 @@ export function WorldRecoveryStops() {
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ['data-world-x', 'data-world-y', 'data-world-map'],
+      attributeFilter: ['data-world-x', 'data-world-y', 'data-world-map', 'data-facing'],
     })
     return () => observer.disconnect()
   }, [])
 
-  const activeStop = useMemo(
-    () =>
-      targets.find(
-        ({ stop }) =>
-          rpgState.worldMapId === stop.mapId &&
-          isAdjacent(rpgState.worldPosition, stop.position),
-      )?.stop,
-    [rpgState.worldMapId, rpgState.worldPosition, targets],
-  )
+  const activeStop = useMemo(() => {
+    const target = getFacingTarget(rpgState.worldPosition, facing)
+    return targets.find(
+      ({ stop }) =>
+        rpgState.worldMapId === stop.mapId &&
+        stop.position.x === target.x &&
+        stop.position.y === target.y,
+    )?.stop
+  }, [facing, rpgState.worldMapId, rpgState.worldPosition, targets])
 
   useEffect(() => {
     if (!controlsTarget) return
