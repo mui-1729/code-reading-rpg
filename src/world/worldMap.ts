@@ -21,7 +21,7 @@ export type WorldMapId =
 const WORLD_MAP_DIMENSIONS: Record<WorldMapId, { width: number; height: number }> = {
   [OVERWORLD_MAP_ID]: { width: WORLD_WIDTH, height: WORLD_HEIGHT },
   [JS_VILLAGE_MAP_ID]: { width: 21, height: 15 },
-  [JS_FOREST_MAP_ID]: { width: 31, height: 27 },
+  [JS_FOREST_MAP_ID]: { width: 45, height: 35 },
   [JS_FOREST_SETTLEMENT_MAP_ID]: { width: 23, height: 17 },
   [JS_DEEP_FOREST_MAP_ID]: { width: 31, height: 27 },
   [TS_FRONTIER_MAP_ID]: { width: 31, height: 21 },
@@ -30,7 +30,7 @@ const WORLD_MAP_DIMENSIONS: Record<WorldMapId, { width: number; height: number }
 export const WORLD_MAP_STARTS: Record<WorldMapId, { x: number; y: number }> = {
   [OVERWORLD_MAP_ID]: { ...WORLD_START },
   [JS_VILLAGE_MAP_ID]: { x: 10, y: 12 },
-  [JS_FOREST_MAP_ID]: { x: 28, y: 10 },
+  [JS_FOREST_MAP_ID]: { x: 42, y: 16 },
   [JS_FOREST_SETTLEMENT_MAP_ID]: { x: 20, y: 8 },
   [JS_DEEP_FOREST_MAP_ID]: { x: 28, y: 10 },
   [TS_FRONTIER_MAP_ID]: { x: 2, y: 10 },
@@ -79,9 +79,9 @@ export const JS_VILLAGE_POSITION = { x: 10, y: 22 } as const
 export const JS_VILLAGE_EXIT_POSITION = { x: 10, y: 14 } as const
 export const JS_VILLAGE_TRAINING_POSITION = { x: 12, y: 7 } as const
 export const JS_FOREST_POSITION = { x: 34, y: 34 } as const
-export const JS_FOREST_EXIT_POSITION = { x: 30, y: 10 } as const
-export const JS_FOREST_MIDBOSS_POSITION = { x: 5, y: 10 } as const
-export const JS_FOREST_SETTLEMENT_POSITION = { x: 1, y: 10 } as const
+export const JS_FOREST_EXIT_POSITION = { x: 44, y: 16 } as const
+export const JS_FOREST_MIDBOSS_POSITION = { x: 13, y: 12 } as const
+export const JS_FOREST_SETTLEMENT_POSITION = { x: 1, y: 18 } as const
 // Compatibility alias while callers move from the old Forest -> Deep Forest direct topology.
 export const JS_FOREST_DEEP_FOREST_POSITION = JS_FOREST_SETTLEMENT_POSITION
 export const JS_FOREST_SETTLEMENT_FOREST_EXIT_POSITION = { x: 22, y: 8 } as const
@@ -90,6 +90,13 @@ export const JS_DEEP_FOREST_EXIT_POSITION = { x: 30, y: 10 } as const
 export const JS_DEEP_FOREST_CORE_EXIT_POSITION = { x: 1, y: 10 } as const
 export const TS_FRONTIER_GATE_POSITION = { x: 62, y: 14 } as const
 export const TS_FRONTIER_EXIT_POSITION = { x: 1, y: 10 } as const
+
+export const JS_FOREST_LEARNING_POSITIONS = {
+  10: { x: 38, y: 16 },
+  11: { x: 31, y: 8 },
+  12: { x: 20, y: 20 },
+  14: { x: 10, y: 12 },
+} as const
 
 export const WORLD_TREASURES = [
   {
@@ -103,7 +110,7 @@ export const WORLD_TREASURES = [
     id: 'js-forest-supply',
     name: 'FOREST SUPPLY',
     mapId: JS_FOREST_MAP_ID,
-    position: { x: 20, y: 20 },
+    position: { x: 33, y: 4 },
     region: 'javascript',
   },
   {
@@ -176,7 +183,7 @@ export const WORLD_PORTALS: readonly WorldPortal[] = [
     fromMapId: JS_FOREST_SETTLEMENT_MAP_ID,
     position: JS_FOREST_SETTLEMENT_FOREST_EXIT_POSITION,
     toMapId: JS_FOREST_MAP_ID,
-    targetPosition: { x: 2, y: 10 },
+    targetPosition: { x: 2, y: 18 },
     label: 'JavaScriptの森',
   },
   {
@@ -310,34 +317,80 @@ function getVillageTerrain(x: number, y: number): Terrain {
   return 'town'
 }
 
+function isForestLearningPosition(position: { x: number; y: number }): boolean {
+  return Object.values(JS_FOREST_LEARNING_POSITIONS).some((candidate) => samePosition(position, candidate))
+}
+
+function isForestMainRoad(x: number, y: number): boolean {
+  return (
+    (y === 16 && x >= 34 && x <= 43) ||
+    (x === 34 && y >= 8 && y <= 16) ||
+    (y === 8 && x >= 24 && x <= 34) ||
+    (x === 24 && y >= 8 && y <= 20) ||
+    (y === 20 && x >= 14 && x <= 24) ||
+    (x === 14 && y >= 12 && y <= 20) ||
+    (y === 12 && x >= 6 && x <= 14) ||
+    (x === 6 && y >= 12 && y <= 18) ||
+    (y === 18 && x >= 2 && x <= 6)
+  )
+}
+
+function isForestNorthLoop(x: number, y: number): boolean {
+  return (
+    (x === 38 && y >= 5 && y <= 16) ||
+    (y === 5 && x >= 30 && x <= 38) ||
+    (x === 30 && y >= 5 && y <= 8)
+  )
+}
+
+function isForestCampLoop(x: number, y: number): boolean {
+  return (
+    (x === 22 && y >= 20 && y <= 27) ||
+    (y === 27 && x >= 17 && x <= 22) ||
+    (x === 17 && y >= 20 && y <= 27)
+  )
+}
+
 function getForestTerrain(x: number, y: number): Terrain {
   const position = { x, y }
-  if (x <= 0 || y <= 0 || x >= 30 || y >= 26) return 'mountain'
+  if (x <= 0 || y <= 0 || x >= 44 || y >= 34) return 'mountain'
   if (samePosition(position, JS_FOREST_MIDBOSS_POSITION)) return 'midboss'
   if (getTreasureAtPosition(position, JS_FOREST_MAP_ID)) return 'treasure'
 
-  if (
-    y === 10 ||
-    (x === 22 && y >= 4 && y <= 10) ||
-    (y === 4 && x >= 14 && x <= 22) ||
-    (x === 24 && y >= 10 && y <= 20) ||
-    (y === 20 && x >= 20 && x <= 24)
-  ) {
+  // Fixed learning beats sit on recognizable woodland breaks on the route,
+  // not on invisible x-thresholds. They stay encounter terrain so the shared
+  // fixed-Battle resolver can trigger when the player reaches the place.
+  if (isForestLearningPosition(position)) return 'woods'
+
+  if (isForestMainRoad(x, y) || isForestNorthLoop(x, y) || isForestCampLoop(x, y)) {
     return 'road'
   }
 
-  if (x === 18 && y <= 18) return 'water'
+  // A long stream splits the eastern and central forest. The main path crosses
+  // it once at y=8, making the bridge a real geographic transition rather than
+  // another text label.
+  if (x === 28 && y >= 2 && y <= 30) return 'water'
 
-  if (
-    (x >= 21 && x <= 25 && y >= 7 && y <= 13) ||
-    (x >= 12 && x <= 16 && y >= 2 && y <= 6) ||
-    (x >= 3 && x <= 8 && y >= 7 && y <= 13) ||
-    (x >= 18 && x <= 26 && y >= 17 && y <= 23)
-  ) {
+  // Wet ground in the south-west keeps the last approach from reading as a
+  // featureless rectangle and leaves one clear dry route toward the settlement.
+  if (y >= 25 && y <= 29 && x >= 4 && x <= 13) {
+    return (x + y) % 4 === 0 ? 'water' : 'deep-woods'
+  }
+
+  // Northern overlook: open grass around the optional treasure loop.
+  if (x >= 30 && x <= 40 && y >= 3 && y <= 7) {
     return (x + y) % 3 === 0 ? 'grass' : 'woods'
   }
 
-  return (x * 5 + y * 3) % 5 <= 1 ? 'deep-woods' : 'woods'
+  // Camp grove: a quieter open pocket reached from a loop off the main route.
+  if (x >= 16 && x <= 23 && y >= 24 && y <= 30) {
+    return (x + y) % 3 === 0 ? 'woods' : 'grass'
+  }
+
+  // The western half becomes denser after the midboss but remains a Forest,
+  // reserving the overwhelmingly dark terrain for Deep Forest.
+  if (x <= 15) return (x * 5 + y * 3) % 5 === 0 ? 'deep-woods' : 'woods'
+  return (x * 5 + y * 3) % 6 <= 1 ? 'grass' : 'woods'
 }
 
 function getForestSettlementTerrain(x: number, y: number): Terrain {
