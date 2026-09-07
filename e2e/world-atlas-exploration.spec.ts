@@ -32,7 +32,7 @@ async function openForestAtlas(page: Page, openedTreasureIds: string[]) {
           partyMemberIds: ['byte'],
           partyEquipment: { byte: { weapon: null, armor: null, accessory: null } },
           worldMapId: 'js-forest',
-          worldPosition: { x: 42, y: 16 },
+          worldPosition: { x: 52, y: 20 },
           stepsSinceEncounter: 0,
           encounterCount: 0,
           currentHp: 108,
@@ -56,13 +56,13 @@ async function openForestAtlas(page: Page, openedTreasureIds: string[]) {
   return page.locator('[data-atlas-map="js-forest"]')
 }
 
-test('拡張したForest Atlasは45×35を描画し未開封宝箱の正確な位置を隠す', async ({ page }) => {
+test('拡張したForest Atlasは55×41を描画し未開封宝箱の正確な位置を隠す', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   const forest = await openForestAtlas(page, [])
 
   const terrain = forest.locator('.atlas-terrain-grid')
-  await expect(terrain).toHaveAttribute('data-terrain-width', '45')
-  await expect(terrain).toHaveAttribute('data-terrain-height', '35')
+  await expect(terrain).toHaveAttribute('data-terrain-width', '55')
+  await expect(terrain).toHaveAttribute('data-terrain-height', '41')
 
   const unopenedTreasure = forest.locator('.atlas-landmark-pin.is-treasure:not(.is-opened)')
   await expect(unopenedTreasure).toHaveCount(1)
