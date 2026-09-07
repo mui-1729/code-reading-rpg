@@ -38,10 +38,16 @@ describe('progression landmarks', () => {
     }
   })
 
-  it('座標からPlayer-facing landmarkを取得できる', () => {
+  it('Forestの痕跡は進行都合の地名ではなく現場で見える物として記述する', () => {
     expect(getProgressionLandmarkAtPosition(JS_FOREST_MAP_ID, { x: 35, y: 12 })).toMatchObject({
       battleId: 11,
-      shortLabel: '分かれ跡',
+      shortLabel: '足跡',
+      label: '川辺の泥に足跡が残っている',
+    })
+    expect(getProgressionLandmarkAtPosition(JS_FOREST_MAP_ID, { x: 22, y: 25 })).toMatchObject({
+      battleId: 12,
+      shortLabel: '足跡',
+      label: '踏み荒らされた草に足跡が重なっている',
     })
     expect(getProgressionLandmarkAtPosition(JS_FOREST_MAP_ID, { x: 35, y: 13 })).toBeUndefined()
   })
