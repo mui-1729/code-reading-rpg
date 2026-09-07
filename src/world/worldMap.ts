@@ -355,7 +355,9 @@ function getForestSettlementTerrain(x: number, y: number): Terrain {
   if (x === 3 && y >= 2 && y <= 14) return 'water'
   if ((x >= 4 && x <= 21 && y === 8) || (x === 11 && y >= 1 && y <= 14)) return 'road'
   if (x >= 9 && x <= 13 && y >= 6 && y <= 11) return 'town'
-  return (x + y) % 5 === 0 ? 'woods' : 'grass'
+  // Keep the whole inhabited settlement encounter-free. Woodland identity is scenery,
+  // not Encounter terrain; the dangerous woods begin again after the north portal.
+  return 'grass'
 }
 
 function getDeepForestTerrain(x: number, y: number): Terrain {
