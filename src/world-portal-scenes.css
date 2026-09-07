@@ -122,8 +122,8 @@
 .world-viewport[data-world-map='js-village'] .world-tile[data-world-x='10'][data-world-y='14']::before { left: 13%; }
 .world-viewport[data-world-map='js-village'] .world-tile[data-world-x='10'][data-world-y='14']::after { right: 13%; }
 
-/* Forest east edge -> grassland: a bright break in the trees. */
-.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='30'][data-world-y='10'] {
+/* Expanded Forest east edge -> grassland: a bright break in the trees. */
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='44'][data-world-y='16'] {
   --portal-scene-kind: forest-light-gap;
   background:
     radial-gradient(ellipse at 82% 50%, #93b96d 0 18%, #5b8b4b 19% 34%, transparent 35%),
@@ -131,7 +131,7 @@
 }
 
 /* Forest -> Forest Settlement: roots open into a timber-marked inhabited path. */
-.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='10'] {
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='18'] {
   --portal-scene-kind: forest-settlement-gate;
   overflow: visible;
   background:
@@ -139,7 +139,7 @@
     linear-gradient(#5a4931 0 58%, #856b45 59% 100%);
 }
 
-.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='10']::before {
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='18']::before {
   content: '';
   position: absolute;
   z-index: 3;
@@ -153,7 +153,7 @@
   box-shadow: inset 0 4px 0 #6e5131, 0 -4px 0 #21482a;
 }
 
-.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='10']::after {
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='18']::after {
   content: '';
   position: absolute;
   z-index: 4;
