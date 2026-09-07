@@ -42,7 +42,7 @@ describe('open world map', () => {
   it('OverworldをField scaleへ広げ、local mapとは別の縮尺で管理する', () => {
     expect(getWorldMapDimensions(OVERWORLD_MAP_ID)).toEqual({ width: 70, height: 50 })
     expect(getWorldMapDimensions(JS_VILLAGE_MAP_ID)).toEqual({ width: 21, height: 15 })
-    expect(getWorldMapDimensions(JS_FOREST_MAP_ID)).toEqual({ width: 45, height: 35 })
+    expect(getWorldMapDimensions(JS_FOREST_MAP_ID)).toEqual({ width: 55, height: 41 })
     expect(getWorldMapDimensions(JS_DEEP_FOREST_MAP_ID)).toEqual({ width: 31, height: 27 })
     expect(getWorldMapDimensions(TS_FRONTIER_MAP_ID)).toEqual({ width: 31, height: 21 })
     expect(getWorldMapLabel(JS_VILLAGE_MAP_ID)).toBe('グリーンフィールド村')
@@ -52,8 +52,8 @@ describe('open world map', () => {
     expect(isWorldPositionInBounds(OVERWORLD_MAP_ID, { x: 70, y: 48 })).toBe(false)
     expect(isWorldPositionInBounds(JS_VILLAGE_MAP_ID, { x: 10, y: 12 })).toBe(true)
     expect(isWorldPositionInBounds(JS_VILLAGE_MAP_ID, { x: 21, y: 12 })).toBe(false)
-    expect(isWorldPositionInBounds(JS_FOREST_MAP_ID, { x: 43, y: 33 })).toBe(true)
-    expect(isWorldPositionInBounds(JS_FOREST_MAP_ID, { x: 45, y: 16 })).toBe(false)
+    expect(isWorldPositionInBounds(JS_FOREST_MAP_ID, { x: 53, y: 39 })).toBe(true)
+    expect(isWorldPositionInBounds(JS_FOREST_MAP_ID, { x: 55, y: 20 })).toBe(false)
     expect(isWorldPositionInBounds(TS_FRONTIER_MAP_ID, { x: 27, y: 4 })).toBe(true)
   })
 
@@ -70,7 +70,7 @@ describe('open world map', () => {
     })
     expect(getWorldPortalAtPosition(OVERWORLD_MAP_ID, JS_FOREST_POSITION)).toMatchObject({
       toMapId: JS_FOREST_MAP_ID,
-      targetPosition: { x: 42, y: 16 },
+      targetPosition: { x: 52, y: 20 },
       requiredClearedStageId: 9,
     })
     expect(getWorldPortalAtPosition(JS_FOREST_MAP_ID, JS_FOREST_EXIT_POSITION)).toMatchObject({
@@ -107,7 +107,7 @@ describe('open world map', () => {
     expect(getWorldRegion(52)).toBe('typescript')
     expect(getWorldRegion(62)).toBe('typescript')
     expect(getWorldRegion(10, JS_VILLAGE_MAP_ID)).toBe('javascript')
-    expect(getWorldRegion(40, JS_FOREST_MAP_ID)).toBe('javascript')
+    expect(getWorldRegion(50, JS_FOREST_MAP_ID)).toBe('javascript')
     expect(getWorldRegion(2, TS_FRONTIER_MAP_ID)).toBe('typescript')
   })
 
@@ -174,7 +174,7 @@ describe('open world map', () => {
     expect(isWalkableTerrain('exit')).toBe(true)
   })
 
-  it('Forest Phase 4はroadを持たず、森・空き地・川・湿地の地理で探索させる', () => {
+  it('Forest Phase 4は55×41の手作り地形で、roadや座標ノイズに頼らない', () => {
     const { width, height } = getWorldMapDimensions(JS_FOREST_MAP_ID)
     const terrains = new Set<string>()
     for (let y = 0; y < height; y += 1) {
@@ -189,13 +189,15 @@ describe('open world map', () => {
     expect(terrains.has('grass')).toBe(true)
     expect(terrains.has('water')).toBe(true)
 
-    expect(getTerrain(42, 16, JS_FOREST_MAP_ID)).toBe('grass')
-    expect(getTerrain(34, 12, JS_FOREST_MAP_ID)).toBe('woods')
-    expect(getTerrain(28, 8, JS_FOREST_MAP_ID)).toBe('grass')
-    expect(getTerrain(28, 9, JS_FOREST_MAP_ID)).toBe('water')
-    expect(getTerrain(24, 15, JS_FOREST_MAP_ID)).toBe('woods')
-    expect(getTerrain(21, 20, JS_FOREST_MAP_ID)).toBe('woods')
-    expect(getTerrain(14, 18, JS_FOREST_MAP_ID)).toBe('woods')
+    expect(getTerrain(52, 20, JS_FOREST_MAP_ID)).toBe('grass')
+    expect(getTerrain(47, 20, JS_FOREST_MAP_ID)).toBe('woods')
+    expect(getTerrain(32, 11, JS_FOREST_MAP_ID)).toBe('water')
+    expect(getTerrain(32, 12, JS_FOREST_MAP_ID)).toBe('grass')
+    expect(getTerrain(31, 25, JS_FOREST_MAP_ID)).toBe('water')
+    expect(getTerrain(30, 29, JS_FOREST_MAP_ID)).toBe('grass')
+    expect(getTerrain(8, 8, JS_FOREST_MAP_ID)).toBe('deep-woods')
+    expect(getTerrain(24, 25, JS_FOREST_MAP_ID)).toBe('grass')
+    expect(getTerrain(22, 32, JS_FOREST_MAP_ID)).toBe('grass')
     expect(
       getTerrain(
         JS_FOREST_MIDBOSS_POSITION.x,
@@ -203,7 +205,6 @@ describe('open world map', () => {
         JS_FOREST_MAP_ID,
       ),
     ).toBe('midboss')
-    expect(getTerrain(6, 16, JS_FOREST_MAP_ID)).toBe('grass')
     expect(
       getTerrain(
         JS_FOREST_SETTLEMENT_POSITION.x,
@@ -211,16 +212,35 @@ describe('open world map', () => {
         JS_FOREST_MAP_ID,
       ),
     ).toBe('exit')
-    expect(getTerrain(33, 4, JS_FOREST_MAP_ID)).toBe('treasure')
-    expect(['grass', 'woods']).toContain(getTerrain(19, 26, JS_FOREST_MAP_ID))
+    expect(getTerrain(40, 6, JS_FOREST_MAP_ID)).toBe('treasure')
+  })
+
+  it('Forestのgrassは1tileノイズではなく、必ず隣接するgrassを持つ面として配置する', () => {
+    const { width, height } = getWorldMapDimensions(JS_FOREST_MAP_ID)
+    const directions = [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ] as const
+
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        if (getTerrain(x, y, JS_FOREST_MAP_ID) !== 'grass') continue
+        const hasGrassNeighbor = directions.some(
+          ([dx, dy]) => getTerrain(x + dx, y + dy, JS_FOREST_MAP_ID) === 'grass',
+        )
+        expect(hasGrassNeighbor, `isolated grass at ${x},${y}`).toBe(true)
+      }
+    }
   })
 
   it('Forest固定Lessonは広いmap上の意味ある場所へ分散し、文字札だけの横並びにしない', () => {
     expect(JS_FOREST_LEARNING_POSITIONS).toEqual({
-      10: { x: 38, y: 16 },
-      11: { x: 31, y: 8 },
-      12: { x: 20, y: 20 },
-      14: { x: 10, y: 12 },
+      10: { x: 47, y: 20 },
+      11: { x: 35, y: 12 },
+      12: { x: 22, y: 25 },
+      14: { x: 9, y: 20 },
     })
     for (const position of Object.values(JS_FOREST_LEARNING_POSITIONS)) {
       expect(getTerrain(position.x, position.y, JS_FOREST_MAP_ID)).toBe('woods')
@@ -257,7 +277,7 @@ describe('open world map', () => {
       expect(getTerrain(treasure.position.x, treasure.position.y, treasure.mapId)).toBe('treasure')
       expect(getTreasureAtPosition(treasure.position, treasure.mapId)?.id).toBe(treasure.id)
     }
-    expect(getTerrain(21, 20, JS_FOREST_MAP_ID)).toBe('woods')
+    expect(getTerrain(24, 25, JS_FOREST_MAP_ID)).toBe('grass')
     expect(getTerrain(13, 22, JS_DEEP_FOREST_MAP_ID)).toBe('road')
     expect(isWalkableTerrain('treasure')).toBe(false)
   })
