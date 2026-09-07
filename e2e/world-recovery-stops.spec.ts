@@ -61,13 +61,30 @@ async function seedMap(
   await page.goto('/world')
 }
 
-test('Forest南側の寄り道野営地は0 Goldでも部分回復できる', async ({ page }) => {
+test('Forest南側の寄り道野営地は文字札ではなくテントと焚き火で見え、0 Goldでも部分回復できる', async ({ page }) => {
   await seedMap(page, 'js-forest', { x: 22, y: 33 }, [...JS_TRAINING_COMPLETE])
 
   const camp = page.getByRole('button', { name: '野営地で休む' })
   await expect(camp).toBeVisible()
   await expect(camp).toBeEnabled()
   await expect(camp).toHaveAttribute('title', /無料でHPを60%まで回復/)
+  await expect(camp.locator('.recovery-stop-label')).toBeHidden()
+
+  const campVisual = await camp.evaluate((element) => {
+    const tent = getComputedStyle(element, '::before')
+    const fire = getComputedStyle(element, '::after')
+    return {
+      tentContent: tent.content,
+      tentWidth: Number.parseFloat(tent.width),
+      fireContent: fire.content,
+      fireWidth: Number.parseFloat(fire.width),
+    }
+  })
+  expect(campVisual.tentContent).not.toBe('none')
+  expect(campVisual.tentWidth).toBeGreaterThan(0)
+  expect(campVisual.fireContent).not.toBe('none')
+  expect(campVisual.fireWidth).toBeGreaterThan(0)
+
   await camp.click()
 
   await expect(page.getByRole('status')).toContainText('野営地: HPを')
