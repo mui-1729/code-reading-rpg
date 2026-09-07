@@ -54,7 +54,7 @@ async function seedFilterLesson(page: Page, clearedMidboss: boolean) {
               byte: { weapon: null, armor: null, accessory: null },
             },
             worldMapId: 'js-forest',
-            worldPosition: { x: 10, y: 13 },
+            worldPosition: { x: 10, y: 20 },
             stepsSinceEncounter: 0,
             encounterCount: 5,
             currentHp: 100,
@@ -78,24 +78,24 @@ async function seedFilterLesson(page: Page, clearedMidboss: boolean) {
   await page.goto('/world')
 }
 
-test('Battle 13未clearでは西側Woodsへ入ってもfilter traceを先取りしない', async ({ page }) => {
+test('Battle 13未clearでは集落前のtrace地点へ入ってもfilter traceを先取りしない', async ({ page }) => {
   await seedFilterLesson(page, false)
 
   await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-map', 'js-forest')
-  await page.getByRole('button', { name: '上へ移動' }).click()
+  await page.getByRole('button', { name: '左へ移動' }).click()
 
   await expect(page).toHaveURL(/\/world$/)
-  await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-x', '10')
-  await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-y', '12')
+  await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-x', '9')
+  await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-y', '20')
 })
 
-test('Battle 13 clear済みsaveは西側WoodsでBattle 14をimpact-range traceとして固定導入する', async ({ page }) => {
+test('Battle 13 clear済みsaveは集落前のtrace地点でBattle 14をimpact-range traceとして固定導入する', async ({ page }) => {
   await seedFilterLesson(page, true)
 
   await expect(page.getByLabel('次の目的')).toContainText('影響範囲')
   await expect(page.getByLabel('次の目的')).toContainText('複数の対象へ広がる影響')
 
-  await page.getByRole('button', { name: '上へ移動' }).click()
+  await page.getByRole('button', { name: '左へ移動' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/14\?/)
   const story = page.getByRole('dialog', { name: '異常の影響を一体だけでなく全部追う' })
