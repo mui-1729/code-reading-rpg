@@ -59,7 +59,7 @@ async function seedMidboss(page: Page, state: MidbossProgress) {
               byte: { weapon: null, armor: null, accessory: null },
             },
             worldMapId: 'js-forest',
-            worldPosition: { x: 6, y: 10 },
+            worldPosition: { x: 14, y: 12 },
             stepsSinceEncounter: 8,
             encounterCount: 4,
             currentHp: 100,
@@ -126,13 +126,13 @@ test('Battle 13 clear後は守り人がいたmain trailを西へ通過できimpa
   await seedMidboss(page, 'cleared')
 
   const forest = page.getByLabel('JavaScriptの森のマップ')
-  await expect(forest).toHaveAttribute('data-world-x', '6')
+  await expect(forest).toHaveAttribute('data-world-x', '14')
   await expect(page.getByLabel('次の目的')).toContainText('影響範囲')
   await expect(page.getByLabel('次の目的')).toContainText('複数の対象へ広がる影響')
 
   await page.getByRole('button', { name: '左へ移動' }).click()
 
   await expect(page).toHaveURL(/\/world$/)
-  await expect(forest).toHaveAttribute('data-world-x', '5')
-  await expect(forest).toHaveAttribute('data-world-y', '10')
+  await expect(forest).toHaveAttribute('data-world-x', '13')
+  await expect(forest).toHaveAttribute('data-world-y', '12')
 })
