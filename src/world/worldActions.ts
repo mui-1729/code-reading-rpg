@@ -18,6 +18,7 @@ import {
   isWalkableTerrain,
   JS_BOSS_POSITION,
   JS_DEEP_FOREST_MAP_ID,
+  JS_FOREST_LEARNING_POSITIONS,
   JS_FOREST_MAP_ID,
   JS_FOREST_MIDBOSS_POSITION,
   JS_VILLAGE_MAP_ID,
@@ -106,6 +107,10 @@ function createEncounterRolls(
   return { trigger: random.next(), battle: random.next() }
 }
 
+function samePosition(a: { x: number; y: number }, b: { x: number; y: number }): boolean {
+  return a.x === b.x && a.y === b.y
+}
+
 function getForestLearningBattleId(
   mapId: WorldMapId,
   position: { x: number; y: number },
@@ -113,28 +118,14 @@ function getForestLearningBattleId(
 ): JavaScriptLearningBattleId | null {
   if (mapId !== JS_FOREST_MAP_ID) return null
 
-  if (!clearedStageIds.includes(10) && isBattleAccessible(10, clearedStageIds)) return 10
-  if (
-    !clearedStageIds.includes(11) &&
-    position.x <= 17 &&
-    isBattleAccessible(11, clearedStageIds)
-  ) {
-    return 11
-  }
-  if (
-    !clearedStageIds.includes(12) &&
-    position.x <= 8 &&
-    isBattleAccessible(12, clearedStageIds)
-  ) {
-    return 12
-  }
-  if (!clearedStageIds.includes(13)) return null
-  if (
-    !clearedStageIds.includes(14) &&
-    position.x <= 4 &&
-    isBattleAccessible(14, clearedStageIds)
-  ) {
-    return 14
+  for (const battleId of [10, 11, 12, 14] as const) {
+    if (
+      !clearedStageIds.includes(battleId) &&
+      samePosition(position, JS_FOREST_LEARNING_POSITIONS[battleId]) &&
+      isBattleAccessible(battleId, clearedStageIds)
+    ) {
+      return battleId
+    }
   }
   return null
 }
