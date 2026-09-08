@@ -60,3 +60,14 @@
 .world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='30'][data-world-y='29']::after {
   content: none;
 }
+
+/* Atlas keeps the same semantics: dense thicket is a barrier, log crossing is water with a trunk. */
+.atlas-terrain-cell.terrain-thicket {
+  background: radial-gradient(circle, #173d25 24%, transparent 26%) 0 0 / 5px 5px, #102f1d;
+}
+
+.atlas-terrain-cell.terrain-log-crossing {
+  background:
+    linear-gradient(0deg, transparent 0 42%, #68472d 43% 60%, transparent 61%),
+    #347092;
+}
