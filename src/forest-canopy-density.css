@@ -1,0 +1,23 @@
+/*
+ * Forest canopy density must come from terrain, not coordinate-only paint fixes.
+ * Earlier iterations recolored selected deep-woods cells as ordinary woods to
+ * punch holes into rectangular masses. The terrain contours are now organic, so
+ * every deep-woods cell renders consistently in both the field and Atlas.
+ */
+.world-viewport[data-world-map='js-forest'] .world-tile.terrain-deep-woods {
+  background: #23512f !important;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile.terrain-deep-woods::before {
+  background: #153a23 !important;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile.terrain-deep-woods::after {
+  background: #193f26 !important;
+}
+
+.atlas-terrain-grid[data-terrain-width='55'] .atlas-terrain-cell.terrain-deep-woods {
+  background:
+    radial-gradient(circle, #31563b 20%, transparent 22%) 0 0 / 6px 6px,
+    #1d432b !important;
+}
