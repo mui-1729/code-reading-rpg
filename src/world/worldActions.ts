@@ -5,6 +5,12 @@ import {
   type PlayerProgress,
 } from '../progression'
 import type { RpgState } from '../rpg'
+import {
+  FOREST_LEARNING_BATTLE_IDS,
+  getForestLearningZoneAtPosition,
+  getUsedForestLearningZones,
+  type ForestLearningBattleId,
+} from './forestLearningZones'
 import { getWorldNpcAtPosition } from './worldCharacters'
 import { getWorldRecoveryStopAtPosition } from './recoveryStops'
 import {
@@ -19,7 +25,6 @@ import {
   isWalkableTerrain,
   JS_BOSS_POSITION,
   JS_DEEP_FOREST_MAP_ID,
-  JS_FOREST_LEARNING_POSITIONS,
   JS_FOREST_MAP_ID,
   JS_FOREST_MIDBOSS_POSITION,
   JS_VILLAGE_MAP_ID,
@@ -108,23 +113,18 @@ function createEncounterRolls(
   return { trigger: random.next(), battle: random.next() }
 }
 
-function samePosition(a: { x: number; y: number }, b: { x: number; y: number }): boolean {
-  return a.x === b.x && a.y === b.y
+function normalizeTraversalTerrain(mapId: WorldMapId, terrain: Terrain): Terrain {
+  // The old Phase-4 thicket stripes no longer gate Forest progression. Keep old
+  // saves/layout cells compatible while treating those cells exactly like woods.
+  if (mapId === JS_FOREST_MAP_ID && terrain === 'thicket') return 'woods'
+  return terrain
 }
 
-function getForestLearningBattleId(
-  mapId: WorldMapId,
-  position: { x: number; y: number },
+function getNextForestLearningBattleId(
   clearedStageIds: readonly number[],
-): JavaScriptLearningBattleId | null {
-  if (mapId !== JS_FOREST_MAP_ID) return null
-
-  for (const battleId of [10, 11, 12, 14] as const) {
-    if (
-      !clearedStageIds.includes(battleId) &&
-      samePosition(position, JS_FOREST_LEARNING_POSITIONS[battleId]) &&
-      isBattleAccessible(battleId, clearedStageIds)
-    ) {
+): ForestLearningBattleId | null {
+  for (const battleId of FOREST_LEARNING_BATTLE_IDS) {
+    if (!clearedStageIds.includes(battleId) && isBattleAccessible(battleId, clearedStageIds)) {
       return battleId
     }
   }
@@ -220,7 +220,10 @@ function createJavaScriptFixedEncounter(
   return {
     kind: 'encounter',
     nextState: encounterState,
-    terrain: getTerrain(next.x, next.y, rpgState.worldMapId),
+    terrain: normalizeTraversalTerrain(
+      rpgState.worldMapId,
+      getTerrain(next.x, next.y, rpgState.worldMapId),
+    ),
     region: 'javascript',
     battle: {
       battleId,
@@ -228,6 +231,44 @@ function createJavaScriptFixedEncounter(
       seed: `encounter:${rpgState.worldMapId}:${encounterNumber}:${next.x}:${next.y}`,
     },
   }
+}
+
+function resolveForestLearningEncounter(
+  rpgState: RpgState,
+  movedState: RpgState,
+  next: { x: number; y: number },
+  clearedStageIds: readonly number[],
+): WorldMoveResult | null {
+  if (rpgState.worldMapId !== JS_FOREST_MAP_ID) return null
+
+  const battleId = getNextForestLearningBattleId(clearedStageIds)
+  if (battleId === null) return null
+
+  const zoneId = getForestLearningZoneAtPosition(next)
+  if (zoneId === null) return null
+
+  const assignments = rpgState.forestLearningBattleZones
+  const assignedZone = assignments?.[battleId]
+
+  // After the first encounter (including a loss), this lesson remains attached
+  // to that player's chosen zone instead of jumping to a different part of the map.
+  if (assignedZone) {
+    if (zoneId !== assignedZone) return null
+    return createJavaScriptFixedEncounter(rpgState, movedState, next, battleId)
+  }
+
+  // A zone already used by an earlier lesson cannot immediately host the next
+  // lesson. The player must continue exploring and reach a different region.
+  if (getUsedForestLearningZones(assignments).has(zoneId)) return null
+
+  const assignedState: RpgState = {
+    ...movedState,
+    forestLearningBattleZones: {
+      ...assignments,
+      [battleId]: zoneId,
+    },
+  }
+  return createJavaScriptFixedEncounter(rpgState, assignedState, next, battleId)
 }
 
 export function resolveWorldMove({
@@ -262,7 +303,9 @@ export function resolveWorldMove({
     mapId === JS_FOREST_MAP_ID &&
     rawTerrain === 'midboss' &&
     progress.clearedStageIds.includes(13)
-  const terrain: Terrain = midbossCleared ? 'grass' : rawTerrain
+  const terrain: Terrain = midbossCleared
+    ? 'grass'
+    : normalizeTraversalTerrain(mapId, rawTerrain)
 
   if (
     !isWalkableTerrain(terrain) ||
@@ -308,10 +351,19 @@ export function resolveWorldMove({
     return createJavaScriptFixedEncounter(rpgState, movedState, next, 2)
   }
 
+  // Forest lessons are attached to the order in which this player discovers
+  // invisible geographic zones. The map itself stays open; progression order is
+  // enforced only by the progression graph (10 -> 11 -> 12 -> 13 -> 14).
+  const forestLearningEncounter = resolveForestLearningEncounter(
+    rpgState,
+    movedState,
+    next,
+    progress.clearedStageIds,
+  )
+  if (forestLearningEncounter) return forestLearningEncounter
+
   if (isEncounterTerrain(terrain)) {
-    const lessonBattleId =
-      getForestLearningBattleId(mapId, next, progress.clearedStageIds) ??
-      getDeepForestLearningBattleId(mapId, next, progress.clearedStageIds)
+    const lessonBattleId = getDeepForestLearningBattleId(mapId, next, progress.clearedStageIds)
     if (lessonBattleId !== null) {
       return createJavaScriptFixedEncounter(rpgState, movedState, next, lessonBattleId)
     }
