@@ -62,7 +62,7 @@ async function seedMap(
 }
 
 test('Forest南側の野営地は通り抜けられず、正面を向いて共通アクションから部分回復できる', async ({ page }) => {
-  await seedMap(page, 'js-forest', { x: 22, y: 33 }, [...JS_TRAINING_COMPLETE])
+  await seedMap(page, 'js-forest', { x: 21, y: 33 }, [...JS_TRAINING_COMPLETE])
 
   const map = page.getByLabel('JavaScriptの森のマップ')
   const campObject = page.locator('[data-recovery-stop="forest-traveler-camp"]')
@@ -89,7 +89,7 @@ test('Forest南側の野営地は通り抜けられず、正面を向いて共�
 
   // Walking into the camp only turns the player toward it; the camp tile stays blocked.
   await page.getByRole('button', { name: '上へ移動' }).click()
-  await expect(map).toHaveAttribute('data-world-x', '22')
+  await expect(map).toHaveAttribute('data-world-x', '21')
   await expect(map).toHaveAttribute('data-world-y', '33')
 
   const action = page.getByRole('button', { name: '野営地で休む' })
