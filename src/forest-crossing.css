@@ -1,0 +1,62 @@
+/* Forest river crossing: the fallen trunk sits on top of the stream, never on grass. */
+.world-viewport[data-world-map='js-forest'] .world-tile:is(
+  [data-world-x='32'][data-world-y='12'],
+  [data-world-x='33'][data-world-y='12']
+) {
+  --forest-landmark-kind: fallen-log-crossing;
+  overflow: visible;
+  background: #4aaed6;
+  box-shadow: none;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile:is(
+  [data-world-x='32'][data-world-y='12'],
+  [data-world-x='33'][data-world-y='12']
+)::before,
+.world-viewport[data-world-map='js-forest'] .world-tile:is(
+  [data-world-x='32'][data-world-y='12'],
+  [data-world-x='33'][data-world-y='12']
+)::after {
+  content: none;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='32'][data-world-y='12']::before {
+  content: '';
+  position: absolute;
+  z-index: 4;
+  left: -12%;
+  right: -112%;
+  top: 42%;
+  height: 18%;
+  border: 2px solid #3d2b1c;
+  border-radius: 45%;
+  background: repeating-linear-gradient(90deg, #705034 0 9px, #5b3d28 9px 12px);
+  box-shadow: 0 3px 0 rgba(22, 36, 23, .45);
+  transform: rotate(-3deg);
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='32'][data-world-y='12']::after {
+  content: '';
+  position: absolute;
+  z-index: 5;
+  left: 24%;
+  top: 34%;
+  width: 12%;
+  height: 12%;
+  border-radius: 50%;
+  background: #77a45a;
+  box-shadow: 18px 7px 0 #5f8f4b, 35px -2px 0 #82ad61;
+}
+
+/* The old southern crossing is no longer a route gate. Remove the stale trunk artwork. */
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='30'][data-world-y='29'] {
+  --forest-landmark-kind: none;
+  overflow: hidden;
+  background: #4aaed6;
+  box-shadow: none;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='30'][data-world-y='29']::before,
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='30'][data-world-y='29']::after {
+  content: none;
+}
