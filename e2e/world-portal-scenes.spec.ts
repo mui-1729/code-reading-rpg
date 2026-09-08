@@ -131,7 +131,7 @@ test('Forestの川横断はroadではなく倒木として見える', async ({ p
 
   const crossing = page.locator('.world-tile[data-world-x="32"][data-world-y="12"]')
   await expect(crossing).toBeVisible()
-  await expect(crossing).toHaveClass(/terrain-grass/)
+  await expect(crossing).toHaveClass(/terrain-log-crossing/)
   await expect(crossing).not.toHaveClass(/terrain-road/)
   expect(
     await crossing.evaluate((element) =>
