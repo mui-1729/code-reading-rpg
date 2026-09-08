@@ -62,11 +62,11 @@ async function seedWorld(
   await page.goto('/world')
 }
 
-test('@responsive Forestでは固定Battle 11の前に文字札ではなく川辺の足跡が見え、倒木へ踏み込むとそのBattleが始まる', async ({ page }) => {
+test('@responsive Forestでは固定Battle 11の前に文字札ではなく川辺の足跡が見え、倒木の手前へ踏み込むとそのBattleが始まる', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedWorld(page, {
     mapId: 'js-forest',
-    position: { x: 34, y: 12 },
+    position: { x: 35, y: 12 },
     clearedStageIds: [1, 7, 8, 9, 10],
     unlockedStageIds: [1, 7, 8, 9, 10, 11],
   })
