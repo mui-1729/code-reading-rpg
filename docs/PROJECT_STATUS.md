@@ -1,6 +1,6 @@
 # CODE//READ RPG — Project Status
 
-最終更新: 2026-09-07
+最終更新: 2026-09-08
 
 この文書は、**このゲームが何を目指していて、今どこまで実装され、次に何を作るべきか**を短く把握するためのcurrent snapshotです。
 
@@ -127,7 +127,7 @@ stable map:
 
 - `overworld` — 70 × 50（地域間を旅するField scale）
 - `js-village` — GREENFIELD VILLAGE 21 × 15
-- `js-forest` — JAVASCRIPT FOREST 45 × 35
+- `js-forest` — JAVASCRIPT FOREST 55 × 41
 - `js-forest-settlement` — FOREST SETTLEMENT 23 × 17
 - `js-deep-forest` — JAVASCRIPT DEEP FOREST 31 × 27
 - `ts-frontier` — TYPESCRIPT FRONTIER 31 × 21
@@ -139,10 +139,11 @@ stable map:
 - safe checkpointをRpgState v7へsemantic IDとして保存
 - Hub → GREENFIELD → ForestのOverworld本道は複数回曲がり、川・橋・森の景観を通る
 - GREENFIELD南側に本道へ再合流する川辺loopとTreasureがある
-- Forestは45×35のLocal Mapだが、内部には`road` terrainを置かない
-- Forestは森 / 深い森 / 局所的な空き地 / 川 / 池 / 湿地で構成し、東西を分ける川は倒木で横断する
-- Forestの空き地は入口・川辺・Treasure・野営地・中ボス・第二集落付近に限定し、空き地同士を一本道で接続しない
-- ForestのJS-05 / 06 / 07 / 09は単純なx座標閾値ではなく、折れ枝・分かれ跡・川の合流・散る足跡という明示的な地理地点で固定導入する
+- Forestは55×41のLocal Mapで、内部には`road` terrainを置かない
+- Forestは森 / 深い森 / 局所的な空き地 / 川 / 池 / 密生した藪で構成し、川は水面上の倒木で横断する
+- Forestの空き地は入口・川辺・Treasure・野営地・中ボス・第二集落付近など意味のある場所として配置し、空き地同士を一本道で接続しない
+- ForestのJS-05 / 06 / 07 / 08 / 09は、藪・川・倒木・中Bossを自然な関門として**10 → 11 → 12 → 13 → 14の順でしか次の探索区間へ抜けられない**構造にする
+- 各Learning Battle間では複数方向へ探索でき、hidden coordinateを探させるのではなく折れ枝・泥の足跡・踏み荒らされた草・木々へ続く足跡など実物の痕跡で場所を読む
 - Forest → Forest Settlement → Deep Forestの順に進み、Forest SettlementはRandom Encounterのない第二有人safe hub
 - Forest Settlementへ初回入場すると敗北時の復帰先が同集落へ更新される
 - Forest Settlementには宿・道具屋・NPCがあり、Deep Forest前に立て直せる
@@ -296,9 +297,11 @@ numeric IDを維持するのは互換性のためであり、将来のchapter追
 - JS-02 → JS-03 → JS-04
 - JS-04前はForestへ入れない
 - JS-04後にForestへ進める
-- Forestは45×35で`road` terrainを持たず、森・空き地・川・池・湿地で探索できる
-- Forestの川横断点は人工roadではなく倒木として視認できる
-- Forest JS-05〜09のfixed Battleは地理的landmarkで導入し、hidden x-thresholdへ戻さない
+- Forestは55×41で`road` terrainを持たず、森・空き地・川・池・密生した藪で探索できる
+- Forestの川横断点は**水面の上に倒木が乗る**専用`log-crossing`として視認・通行できる
+- Forestは10未clearで11側へ抜けられず、11→12→13→14→Forest Settlementも同様に自然地形で順序保証される
+- 各Lesson間の探索区間は一本道ではなく、寄り道や複数方向の移動を残す
+- Forest JS-05〜09のfixed Battleは実物の痕跡と地理的landmarkで導入し、hidden x-thresholdへ戻さない
 - current Lessonの新SkillはTRIALとして使える
 - clear後のSkillは後続BattleでMASTEREDとして利用できる
 - 未MASTERED / 非TRIAL SkillはBattleへ出ない
