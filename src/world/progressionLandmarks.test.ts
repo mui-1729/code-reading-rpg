@@ -10,7 +10,7 @@ describe('progression landmarks', () => {
       ),
     ).toEqual([
       [10, 47, 20],
-      [11, 35, 12],
+      [11, 33, 12],
       [12, 22, 25],
       [14, 9, 20],
     ])
@@ -39,7 +39,7 @@ describe('progression landmarks', () => {
   })
 
   it('Forestの痕跡は進行都合の地名ではなく現場で見える物として記述する', () => {
-    expect(getProgressionLandmarkAtPosition(JS_FOREST_MAP_ID, { x: 35, y: 12 })).toMatchObject({
+    expect(getProgressionLandmarkAtPosition(JS_FOREST_MAP_ID, { x: 33, y: 12 })).toMatchObject({
       battleId: 11,
       shortLabel: '足跡',
       label: '川辺の泥に足跡が残っている',
