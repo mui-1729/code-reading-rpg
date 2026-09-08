@@ -40,6 +40,7 @@ export type WorldRegion = 'javascript' | 'hub' | 'typescript'
 export type Terrain =
   | 'mountain'
   | 'water'
+  | 'log-crossing'
   | 'road'
   | 'stone'
   | 'crystal'
@@ -94,7 +95,7 @@ export const TS_FRONTIER_EXIT_POSITION = { x: 1, y: 10 } as const
 
 export const JS_FOREST_LEARNING_POSITIONS = {
   10: { x: 47, y: 20 },
-  11: { x: 33, y: 12 },
+  11: { x: 34, y: 12 },
   12: { x: 22, y: 25 },
   14: { x: 9, y: 20 },
 } as const
@@ -494,8 +495,7 @@ function isForestGrassClearing(x: number, y: number): boolean {
     isForestCentralClearing(x, y) ||
     isForestCampClearing(x, y) ||
     isForestMidbossClearing(x, y) ||
-    isForestSettlementClearing(x, y) ||
-    isForestRiverCrossing(x, y)
+    isForestSettlementClearing(x, y)
   )
 }
 
@@ -504,6 +504,8 @@ function getForestTerrain(x: number, y: number): Terrain {
   if (x <= 0 || y <= 0 || x >= 54 || y >= 40) return 'mountain'
   if (samePosition(position, JS_FOREST_MIDBOSS_POSITION)) return 'midboss'
   if (getTreasureAtPosition(position, JS_FOREST_MAP_ID)) return 'treasure'
+
+  if (isForestRiverCrossing(x, y)) return 'log-crossing'
 
   // Each learning encounter sits in the only natural passage to the next
   // exploration section, so it can be discovered through play but not skipped.
