@@ -20,7 +20,7 @@ export const WORLD_RECOVERY_STOPS: readonly WorldRecoveryStop[] = [
     mapId: JS_FOREST_MAP_ID,
     label: '野営地',
     actionLabel: '野営地で休む',
-    position: { x: 22, y: 32 },
+    position: { x: 21, y: 32 },
     recoveryRatio: 0.6,
   },
   {
