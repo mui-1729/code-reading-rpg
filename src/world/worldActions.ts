@@ -317,7 +317,16 @@ export function resolveWorldMove({
     }
   }
 
-  if (!isEncounterTerrain(terrain) || nextSteps < 5 || region === 'hub') {
+  // The 55x41 Forest deliberately gives more room to explore than the old map.
+  // Keep that extra walking from multiplying review Battles: Forest gets seven
+  // safe steps after any Battle and starts random review rolls on step eight.
+  // Other maps retain the existing four-safe-step / step-five rule.
+  const randomEncounterStepThreshold = mapId === JS_FOREST_MAP_ID ? 8 : 5
+  if (
+    !isEncounterTerrain(terrain) ||
+    nextSteps < randomEncounterStepThreshold ||
+    region === 'hub'
+  ) {
     return { kind: 'moved', nextState: movedState, terrain, region }
   }
 
