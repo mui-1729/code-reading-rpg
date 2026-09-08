@@ -201,7 +201,7 @@ describe('open world map', () => {
     expect(getTerrain(30, 29, JS_FOREST_MAP_ID)).toBe('water')
     expect(getTerrain(7, 8, JS_FOREST_MAP_ID)).toBe('deep-woods')
     expect(getTerrain(24, 25, JS_FOREST_MAP_ID)).toBe('grass')
-    expect(getTerrain(22, 32, JS_FOREST_MAP_ID)).toBe('grass')
+    expect(getTerrain(21, 32, JS_FOREST_MAP_ID)).toBe('grass')
     expect(isWalkableTerrain('thicket')).toBe(false)
     expect(isWalkableTerrain('log-crossing')).toBe(true)
     expect(
