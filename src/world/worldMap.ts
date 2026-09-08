@@ -471,20 +471,58 @@ function isForestThicketBarrier(x: number, y: number): boolean {
   return false
 }
 
+type ForestCanopyRow = readonly [
+  y: number,
+  ranges: readonly (readonly [minX: number, maxX: number])[],
+]
+
+// Deep woods are authored as ragged canopy contours, not overlapping rectangles.
+// Each row may widen, narrow, split or reconnect. That keeps the density change
+// readable as natural forest growth instead of a fixed-width painted border.
+const FOREST_DEEP_WOODS_ROWS: readonly ForestCanopyRow[] = [
+  [2, [[5, 9], [20, 22]]],
+  [3, [[3, 11], [18, 23], [26, 27]]],
+  [4, [[2, 13], [17, 24], [27, 28]]],
+  [5, [[2, 15], [18, 26]]],
+  [6, [[3, 16], [19, 23], [26, 28]]],
+  [7, [[4, 14], [17, 22], [25, 26]]],
+  [8, [[2, 9], [12, 15], [18, 20], [24, 25]]],
+  [9, [[3, 7], [10, 13], [17, 19], [22, 24]]],
+  [10, [[4, 6], [11, 12], [18, 20], [25, 28]]],
+  [11, [[3, 5], [10, 11], [19, 21], [26, 29]]],
+  [12, [[4, 6], [20, 21], [27, 29]]],
+  [13, [[25, 28]]],
+  [14, [[26, 29]]],
+  [15, [[25, 29]]],
+  [16, [[26, 28]]],
+  [17, [[20, 21], [25, 27]]],
+  [18, [[19, 21], [26, 29]]],
+  [19, [[18, 20], [24, 28]]],
+  [20, [[17, 19], [26, 29]]],
+  [21, [[12, 14], [18, 20], [25, 27]]],
+  [22, [[11, 15], [18, 21]]],
+  [23, [[11, 13], [16, 20]]],
+  [24, [[12, 16], [18, 20]]],
+  [25, [[10, 14], [16, 20]]],
+  [26, [[11, 13], [15, 19]]],
+  [27, [[9, 12], [14, 17]]],
+  [28, [[3, 6], [11, 15]]],
+  [29, [[2, 5], [11, 16]]],
+  [30, [[2, 4], [12, 16]]],
+  [31, [[3, 5], [11, 14]]],
+  [32, [[2, 4], [12, 15]]],
+  [33, [[3, 6], [13, 16]]],
+  [34, [[2, 5], [11, 15]]],
+  [35, [[3, 6], [12, 16]]],
+  [36, [[4, 7], [11, 14]]],
+  [37, [[3, 5], [12, 15]]],
+  [38, [[5, 7], [13, 14]]],
+]
+
 function isForestDeepWoods(x: number, y: number): boolean {
-  const northWest =
-    inRect(x, y, 3, 17, 2, 10) ||
-    inRect(x, y, 2, 15, 4, 12)
-  const northCenter =
-    inRect(x, y, 19, 27, 2, 7) ||
-    inRect(x, y, 17, 24, 3, 9)
-  const southWest =
-    inRect(x, y, 2, 13, 27, 38) ||
-    inRect(x, y, 4, 15, 29, 37)
-  const midWest =
-    inRect(x, y, 11, 18, 22, 28) ||
-    inRect(x, y, 13, 20, 24, 26)
-  return northWest || northCenter || southWest || midWest
+  const row = FOREST_DEEP_WOODS_ROWS.find(([rowY]) => rowY === y)
+  if (!row) return false
+  return row[1].some(([minX, maxX]) => x >= minX && x <= maxX)
 }
 
 function isForestGrassClearing(x: number, y: number): boolean {
@@ -507,12 +545,11 @@ function getForestTerrain(x: number, y: number): Terrain {
 
   if (isForestRiverCrossing(x, y)) return 'log-crossing'
 
-  // Each learning encounter sits in the only natural passage to the next
-  // exploration section, so it can be discovered through play but not skipped.
   if (isForestLearningPosition(position)) return 'woods'
 
-  // Forest geography is hand-authored in large shapes. No coordinate noise is
-  // used to alternate grass / woods / deep-woods tile-by-tile.
+  // Forest geography is hand-authored in large, irregular contours. Clearings,
+  // water and landmarks cut through the canopy naturally; no tile-noise formula
+  // or fixed-width deep-woods border is used.
   if (isForestRiver(x, y) || isForestPond(x, y)) return 'water'
   if (isForestThicketBarrier(x, y)) return 'thicket'
   if (isForestGrassClearing(x, y)) return 'grass'
