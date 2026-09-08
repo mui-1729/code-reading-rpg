@@ -186,6 +186,7 @@ describe('open world map', () => {
     expect(terrains.has('road')).toBe(false)
     expect(terrains.has('woods')).toBe(true)
     expect(terrains.has('deep-woods')).toBe(true)
+    expect(terrains.has('thicket')).toBe(true)
     expect(terrains.has('grass')).toBe(true)
     expect(terrains.has('water')).toBe(true)
 
@@ -194,10 +195,11 @@ describe('open world map', () => {
     expect(getTerrain(32, 11, JS_FOREST_MAP_ID)).toBe('water')
     expect(getTerrain(32, 12, JS_FOREST_MAP_ID)).toBe('grass')
     expect(getTerrain(31, 25, JS_FOREST_MAP_ID)).toBe('water')
-    expect(getTerrain(30, 29, JS_FOREST_MAP_ID)).toBe('grass')
+    expect(getTerrain(30, 29, JS_FOREST_MAP_ID)).toBe('water')
     expect(getTerrain(8, 8, JS_FOREST_MAP_ID)).toBe('deep-woods')
     expect(getTerrain(24, 25, JS_FOREST_MAP_ID)).toBe('grass')
     expect(getTerrain(22, 32, JS_FOREST_MAP_ID)).toBe('grass')
+    expect(isWalkableTerrain('thicket')).toBe(false)
     expect(
       getTerrain(
         JS_FOREST_MIDBOSS_POSITION.x,
@@ -238,7 +240,7 @@ describe('open world map', () => {
   it('Forest固定Lessonは広いmap上の意味ある場所へ分散し、文字札だけの横並びにしない', () => {
     expect(JS_FOREST_LEARNING_POSITIONS).toEqual({
       10: { x: 47, y: 20 },
-      11: { x: 35, y: 12 },
+      11: { x: 33, y: 12 },
       12: { x: 22, y: 25 },
       14: { x: 9, y: 20 },
     })
