@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createInitialPlayerProgress } from '../progression'
 import { createInitialRpgState } from '../rpg'
 import { resolveWorldMove } from './worldActions'
-import { JS_FOREST_LEARNING_POSITIONS, JS_FOREST_MAP_ID } from './worldMap'
+import { JS_FOREST_MAP_ID } from './worldMap'
 
 const FOREST_PROGRESS_THROUGH_BATTLE_10 = {
   ...createInitialPlayerProgress(),
@@ -47,15 +47,15 @@ describe('Forest random encounter pacing', () => {
     expect(eighthStep.nextState.encounterCount).toBe(5)
   })
 
-  it('固定Learning BattleはForestのRandom安全歩数より優先して即時発生する', () => {
-    const target = JS_FOREST_LEARNING_POSITIONS[11]
+  it('次のLearning BattleはRandom安全歩数より優先して新しい候補地域へ入った時点で発生する', () => {
     const result = resolveWorldMove({
       rpgState: {
         ...createInitialRpgState(),
         worldMapId: JS_FOREST_MAP_ID,
-        worldPosition: { x: target.x + 1, y: target.y },
+        worldPosition: { x: 41, y: 12 },
         stepsSinceEncounter: 0,
         encounterCount: 2,
+        forestLearningBattleZones: { 10: 'east-entry' },
       },
       progress: FOREST_PROGRESS_THROUGH_BATTLE_10,
       dx: -1,
@@ -67,5 +67,6 @@ describe('Forest random encounter pacing', () => {
     if (result.kind !== 'encounter') return
     expect(result.battle.battleId).toBe(11)
     expect(result.nextState.stepsSinceEncounter).toBe(0)
+    expect(result.nextState.forestLearningBattleZones?.[11]).toBe('riverbank')
   })
 })
