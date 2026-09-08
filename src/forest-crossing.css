@@ -86,8 +86,10 @@
   transform-origin: bottom center;
 }
 
+/* Atlas must hide the same legacy stripes as the playable field. Match its
+   compact woods pattern exactly rather than leaving a solid-green region wall. */
 .atlas-terrain-cell.terrain-thicket {
-  background: #356f3d;
+  background: radial-gradient(circle, #477b4e 20%, transparent 22%) 0 0 / 6px 6px, #2e6039;
 }
 
 .atlas-terrain-cell.terrain-log-crossing {
