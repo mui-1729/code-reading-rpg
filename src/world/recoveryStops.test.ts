@@ -7,7 +7,7 @@ import { JS_FOREST_MAP_ID } from './worldMap'
 
 describe('world recovery stops', () => {
   it('Forestの野営地はfield上の物体として座標から取得できる', () => {
-    expect(getWorldRecoveryStopAtPosition(JS_FOREST_MAP_ID, { x: 22, y: 32 })).toMatchObject({
+    expect(getWorldRecoveryStopAtPosition(JS_FOREST_MAP_ID, { x: 21, y: 32 })).toMatchObject({
       id: 'forest-traveler-camp',
       label: '野営地',
       recoveryRatio: 0.6,
@@ -18,7 +18,7 @@ describe('world recovery stops', () => {
     const state = {
       ...createInitialRpgState(),
       worldMapId: JS_FOREST_MAP_ID,
-      worldPosition: { x: 22, y: 33 },
+      worldPosition: { x: 21, y: 33 },
     }
 
     const result = resolveWorldMove({
@@ -30,6 +30,6 @@ describe('world recovery stops', () => {
 
     expect(result.kind).toBe('blocked')
     expect(result.nextState).toBe(state)
-    expect(result.nextState.worldPosition).toEqual({ x: 22, y: 33 })
+    expect(result.nextState.worldPosition).toEqual({ x: 21, y: 33 })
   })
 })
