@@ -140,10 +140,15 @@ stable map:
 - Hub → GREENFIELD → ForestのOverworld本道は複数回曲がり、川・橋・森の景観を通る
 - GREENFIELD南側に本道へ再合流する川辺loopとTreasureがある
 - Forestは55×41のLocal Mapで、内部には`road` terrainを置かない
-- Forestは森 / 深い森 / 局所的な空き地 / 川 / 池 / 密生した藪で構成し、川は水面上の倒木で横断する
+- Forestは森 / 深い森 / 局所的な空き地 / 川 / 池で構成し、川は水面上の倒木で横断する
 - Forestの空き地は入口・川辺・Treasure・野営地・中ボス・第二集落付近など意味のある場所として配置し、空き地同士を一本道で接続しない
-- ForestのJS-05 / 06 / 07 / 08 / 09は、藪・川・倒木・中Bossを自然な関門として**10 → 11 → 12 → 13 → 14の順でしか次の探索区間へ抜けられない**構造にする
-- 各Learning Battle間では複数方向へ探索でき、hidden coordinateを探させるのではなく折れ枝・泥の足跡・踏み荒らされた草・木々へ続く足跡など実物の痕跡で場所を読む
+- ForestのJS-05 / 06 / 07 / 09（Battle 10 / 11 / 12 / 14）は固定座標や地形壁で順番を強制せず、**Playerが最初に入った未使用の見えない候補regionをその人の発生地域として確定する**
+- Battle 10 / 11 / 12 / 14のregion assignmentはRpgStateへ保存し、敗北・reload後もclearまでは別regionへ移動しない
+- 一度使った候補regionは次のLearning Battleへ再利用せず、探索順によってPlayerごとにBattle位置が変わる
+- JS-08（Battle 13）のForest MID BOSSだけは固定Guardianとして残し、その周辺はadaptive候補regionから外す
+- 学習順そのものは地形ではなくsemantic progression graphで**10 → 11 → 12 → 13 → 14**を保証する
+- 旧thicket stripeは進行壁として扱わず、Field / Atlasの双方で通常のwoodsと同じ見た目にして、内部都合のregion境界を地形へ露出しない
+- 各Learning Battle間では複数方向へ探索でき、折れ枝・泥の足跡・踏み荒らされた草・木々へ続く足跡など実物の痕跡は世界のsceneryとして読む
 - Forest → Forest Settlement → Deep Forestの順に進み、Forest SettlementはRandom Encounterのない第二有人safe hub
 - Forest Settlementへ初回入場すると敗北時の復帰先が同集落へ更新される
 - Forest Settlementには宿・道具屋・NPCがあり、Deep Forest前に立て直せる
@@ -261,8 +266,9 @@ JavaScript編をRPGとして完成形に近づけ、World topology / safe hub / 
 - `PlayerProgress` schema v4
 - `RpgState` schema v7
   - v6: 70 × 50 Overworldを旧40 × 28 layoutと区別
-  - v7: persistent `safeCheckpoint`を追加
+  - v7: persistent `safeCheckpoint`を追加し、Forestのadaptive Learning Battle region assignmentもoptional stateとして保存する
 - RpgState v1〜v6からcurrent schemaへmigrationし、安全なcheckpoint fallbackを補う
+- Forestの未知 / 不正なLearning Battle region IDはrestore時に除外する
 - Progress / RPGの単一revision snapshot、backup recovery、storage event同期、stale tab上書き回避
 - root schema v2にBattle開始snapshotを保持する
 - Battle中HP / Itemはtentative stateとして同じroot transaction内で扱う
@@ -297,11 +303,16 @@ numeric IDを維持するのは互換性のためであり、将来のchapter追
 - JS-02 → JS-03 → JS-04
 - JS-04前はForestへ入れない
 - JS-04後にForestへ進める
-- Forestは55×41で`road` terrainを持たず、森・空き地・川・池・密生した藪で探索できる
+- Forestは55×41で`road` terrainを持たず、森・空き地・川・池を大きな地形として探索できる
 - Forestの川横断点は**水面の上に倒木が乗る**専用`log-crossing`として視認・通行できる
-- Forestは10未clearで11側へ抜けられず、11→12→13→14→Forest Settlementも同様に自然地形で順序保証される
-- 各Lesson間の探索区間は一本道ではなく、寄り道や複数方向の移動を残す
-- Forest JS-05〜09のfixed Battleは実物の痕跡と地理的landmarkで導入し、hidden x-thresholdへ戻さない
+- 旧thicket stripeはPlayer移動を遮らず、Field / Atlasで通常woodsと同じ見た目になり、4区画の進行壁として読めない
+- Forest Battle 10 / 11 / 12 / 14は固定座標ではなく、Playerが最初に入った未使用adaptive zoneへ割り当てられる
+- 同じ進行状態でも探索順が違えばBattle 10の発生regionが変わる
+- 一度割り当てられた未clear Battleは敗北 / reload後も別regionへ移動しない
+- 次のLearning Battleは前のBattleと同じzoneを再利用しない
+- Battle 13 Guardianは固定地点で、12 clearまでは開始できない
+- Guardian地点はadaptive zone外で、13 clear直後の1歩でBattle 14を消費しない
+- Learning Battleの順序はsemantic progression graphで10 → 11 → 12 → 13 → 14を保証する
 - current Lessonの新SkillはTRIALとして使える
 - clear後のSkillは後続BattleでMASTEREDとして利用できる
 - 未MASTERED / 非TRIAL SkillはBattleへ出ない
