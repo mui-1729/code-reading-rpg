@@ -10,7 +10,9 @@ export const FOREST_LEARNING_ZONES = [
   { id: 'center-north', minX: 18, maxX: 28, minY: 3, maxY: 10 },
   { id: 'center-south', minX: 22, maxX: 28, minY: 22, maxY: 29 },
   { id: 'west-north', minX: 3, maxX: 17, minY: 3, maxY: 12 },
-  { id: 'west-mid', minX: 6, maxX: 18, minY: 14, maxY: 25 },
+  // Keep the fixed Guardian clearing outside adaptive zones. Clearing Battle 13
+  // should reopen exploration, not immediately consume Battle 14 on the next step.
+  { id: 'west-mid', minX: 3, maxX: 10, minY: 14, maxY: 25 },
   { id: 'west-south', minX: 3, maxX: 16, minY: 28, maxY: 38 },
 ] as const
 
