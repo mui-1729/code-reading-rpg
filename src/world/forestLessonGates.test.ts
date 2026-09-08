@@ -3,7 +3,7 @@ import { createInitialPlayerProgress } from '../progression'
 import { createInitialRpgState } from '../rpg'
 import { resolveWorldMove } from './worldActions'
 import { getForestLearningZoneAtPosition } from './forestLearningZones'
-import { JS_FOREST_MAP_ID } from './worldMap'
+import { JS_FOREST_MAP_ID, JS_FOREST_MIDBOSS_POSITION } from './worldMap'
 
 describe('Forest learning geography', () => {
   it('旧thicket境界は進行壁として扱わず通常の森として通過できる', () => {
@@ -37,7 +37,8 @@ describe('Forest learning geography', () => {
     expect(getForestLearningZoneAtPosition({ x: 44, y: 6 })).toBe('east-north')
     expect(getForestLearningZoneAtPosition({ x: 40, y: 12 })).toBe('riverbank')
     expect(getForestLearningZoneAtPosition({ x: 28, y: 25 })).toBe('center-south')
-    expect(getForestLearningZoneAtPosition({ x: 12, y: 20 })).toBe('west-mid')
+    expect(getForestLearningZoneAtPosition({ x: 9, y: 20 })).toBe('west-mid')
+    expect(getForestLearningZoneAtPosition(JS_FOREST_MIDBOSS_POSITION)).toBeNull()
     expect(getForestLearningZoneAtPosition({ x: 52, y: 20 })).toBeNull()
   })
 })
