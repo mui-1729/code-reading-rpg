@@ -104,9 +104,121 @@
     -3px 72px 0 #4f7945;
 }
 
-/* West Forest landmarks are deliberately uneven. The old version placed one
-   large tree, one stump, and pond reeds at tidy intervals; that made the west
-   half feel landscaped. These anchors now lean, overlap and cluster irregularly. */
+/* The west side used to read as three contiguous dark-green blocks. Keep the
+   underlying deep-woods encounter semantics, but visually open irregular holes
+   through those masses so the west half has the same broken canopy rhythm as the
+   east side. The selected cells are intentionally asymmetric and non-periodic. */
+.world-viewport[data-world-map='js-forest'] .world-tile.terrain-deep-woods:is(
+  [data-world-x='4'][data-world-y='4'],
+  [data-world-x='7'][data-world-y='4'],
+  [data-world-x='11'][data-world-y='5'],
+  [data-world-x='14'][data-world-y='6'],
+  [data-world-x='3'][data-world-y='8'],
+  [data-world-x='8'][data-world-y='8'],
+  [data-world-x='12'][data-world-y='9'],
+  [data-world-x='6'][data-world-y='11'],
+  [data-world-x='14'][data-world-y='11'],
+  [data-world-x='12'][data-world-y='23'],
+  [data-world-x='17'][data-world-y='23'],
+  [data-world-x='14'][data-world-y='25'],
+  [data-world-x='19'][data-world-y='26'],
+  [data-world-x='11'][data-world-y='27'],
+  [data-world-x='3'][data-world-y='29'],
+  [data-world-x='12'][data-world-y='29'],
+  [data-world-x='5'][data-world-y='31'],
+  [data-world-x='13'][data-world-y='32'],
+  [data-world-x='4'][data-world-y='34'],
+  [data-world-x='12'][data-world-y='35'],
+  [data-world-x='6'][data-world-y='37'],
+  [data-world-x='14'][data-world-y='37']
+) {
+  background: #356f3d;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile.terrain-deep-woods:is(
+  [data-world-x='4'][data-world-y='4'],
+  [data-world-x='7'][data-world-y='4'],
+  [data-world-x='11'][data-world-y='5'],
+  [data-world-x='14'][data-world-y='6'],
+  [data-world-x='3'][data-world-y='8'],
+  [data-world-x='8'][data-world-y='8'],
+  [data-world-x='12'][data-world-y='9'],
+  [data-world-x='6'][data-world-y='11'],
+  [data-world-x='14'][data-world-y='11'],
+  [data-world-x='12'][data-world-y='23'],
+  [data-world-x='17'][data-world-y='23'],
+  [data-world-x='14'][data-world-y='25'],
+  [data-world-x='19'][data-world-y='26'],
+  [data-world-x='11'][data-world-y='27'],
+  [data-world-x='3'][data-world-y='29'],
+  [data-world-x='12'][data-world-y='29'],
+  [data-world-x='5'][data-world-y='31'],
+  [data-world-x='13'][data-world-y='32'],
+  [data-world-x='4'][data-world-y='34'],
+  [data-world-x='12'][data-world-y='35'],
+  [data-world-x='6'][data-world-y='37'],
+  [data-world-x='14'][data-world-y='37']
+)::before {
+  background: #1f512b;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile.terrain-deep-woods:is(
+  [data-world-x='4'][data-world-y='4'],
+  [data-world-x='7'][data-world-y='4'],
+  [data-world-x='11'][data-world-y='5'],
+  [data-world-x='14'][data-world-y='6'],
+  [data-world-x='3'][data-world-y='8'],
+  [data-world-x='8'][data-world-y='8'],
+  [data-world-x='12'][data-world-y='9'],
+  [data-world-x='6'][data-world-y='11'],
+  [data-world-x='14'][data-world-y='11'],
+  [data-world-x='12'][data-world-y='23'],
+  [data-world-x='17'][data-world-y='23'],
+  [data-world-x='14'][data-world-y='25'],
+  [data-world-x='19'][data-world-y='26'],
+  [data-world-x='11'][data-world-y='27'],
+  [data-world-x='3'][data-world-y='29'],
+  [data-world-x='12'][data-world-y='29'],
+  [data-world-x='5'][data-world-y='31'],
+  [data-world-x='13'][data-world-y='32'],
+  [data-world-x='4'][data-world-y='34'],
+  [data-world-x='12'][data-world-y='35'],
+  [data-world-x='6'][data-world-y='37'],
+  [data-world-x='14'][data-world-y='37']
+)::after {
+  background: #285f33;
+}
+
+/* Mirror the same canopy breakup in the 55x41 Atlas. nth-child is stable here
+   because Atlas renders map cells row-major and the Forest width is fixed at 55. */
+.atlas-terrain-grid[data-terrain-width='55'] .atlas-terrain-cell.terrain-deep-woods:is(
+  :nth-child(225),
+  :nth-child(228),
+  :nth-child(287),
+  :nth-child(345),
+  :nth-child(444),
+  :nth-child(449),
+  :nth-child(508),
+  :nth-child(612),
+  :nth-child(620),
+  :nth-child(1278),
+  :nth-child(1283),
+  :nth-child(1390),
+  :nth-child(1450),
+  :nth-child(1497),
+  :nth-child(1599),
+  :nth-child(1608),
+  :nth-child(1711),
+  :nth-child(1774),
+  :nth-child(1875),
+  :nth-child(1938),
+  :nth-child(2042),
+  :nth-child(2050)
+) {
+  background: radial-gradient(circle, #477b4e 20%, transparent 22%) 0 0 / 6px 6px, #2e6039;
+}
+
+/* West Forest landmarks stay sparse; they are anchors, not a decorated cluster. */
 .world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='5'][data-world-y='13'] {
   --forest-landmark-kind: ancient-west-tree;
   overflow: visible;
@@ -187,8 +299,7 @@
   transform: rotate(6deg);
 }
 
-/* Pond vegetation is intentionally heavier on the south-west edge and sparse
-   elsewhere instead of framing the pond symmetrically. */
+/* Pond vegetation is intentionally heavier on one edge and sparse elsewhere. */
 .world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='6'][data-world-y='33']::before {
   content: '';
   position: absolute;
@@ -208,22 +319,6 @@
   transform-origin: bottom center;
 }
 
-.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='8'][data-world-y='36']::before {
-  content: '';
-  position: absolute;
-  z-index: 3;
-  left: 39%;
-  bottom: -2%;
-  width: 4%;
-  height: 37%;
-  background: #456f3e;
-  box-shadow:
-    9px -2px 0 #648f50,
-    19px 5px 0 #4d7c43;
-  transform: rotate(-12deg);
-  transform-origin: bottom center;
-}
-
 .world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='10'][data-world-y='31']::before {
   content: '';
   position: absolute;
@@ -238,8 +333,6 @@
   transform-origin: bottom center;
 }
 
-/* A small broken branch near the west-middle clearing prevents the remaining
-   landmarks from reading as a north/south pair. */
 .world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='11'][data-world-y='21']::before {
   content: '';
   position: absolute;
