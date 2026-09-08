@@ -50,6 +50,7 @@ export type Terrain =
   | 'tall-grass'
   | 'woods'
   | 'deep-woods'
+  | 'thicket'
   | 'forest'
   | 'boss'
   | 'midboss'
@@ -93,7 +94,7 @@ export const TS_FRONTIER_EXIT_POSITION = { x: 1, y: 10 } as const
 
 export const JS_FOREST_LEARNING_POSITIONS = {
   10: { x: 47, y: 20 },
-  11: { x: 35, y: 12 },
+  11: { x: 33, y: 12 },
   12: { x: 22, y: 25 },
   14: { x: 9, y: 20 },
 } as const
@@ -385,16 +386,16 @@ function isForestSettlementClearing(x: number, y: number): boolean {
 }
 
 function getForestRiverX(y: number): number | null {
-  if (y >= 3 && y <= 9) return 33
+  if (y >= 1 && y <= 9) return 33
   if (y >= 10 && y <= 16) return 32
   if (y >= 17 && y <= 24) return 31
   if (y >= 25 && y <= 32) return 30
-  if (y >= 33 && y <= 37) return 29
+  if (y >= 33 && y <= 39) return 29
   return null
 }
 
 function isForestRiverCrossing(x: number, y: number): boolean {
-  if (y !== 12 && y !== 29) return false
+  if (y !== 12) return false
   const riverX = getForestRiverX(y)
   return riverX !== null && (x === riverX || x === riverX + 1)
 }
@@ -416,6 +417,57 @@ function isForestPond(x: number, y: number): boolean {
     inRect(x, y, 22, 23, 13, 18) ||
     inRect(x, y, 21, 24, 14, 16)
   return easternPond || westernPond || centralPool
+}
+
+const FOREST_THICKET_BARRIERS = [
+  {
+    gateY: 20,
+    segments: [
+      [1, 8, 46],
+      [9, 18, 47],
+      [19, 24, 46],
+      [25, 32, 46],
+      [33, 39, 47],
+    ],
+  },
+  {
+    gateY: 25,
+    segments: [
+      [1, 8, 21],
+      [9, 18, 22],
+      [19, 29, 21],
+      [30, 39, 22],
+    ],
+  },
+  {
+    gateY: 16,
+    segments: [
+      [1, 10, 14],
+      [11, 20, 15],
+      [21, 30, 14],
+      [31, 39, 15],
+    ],
+  },
+  {
+    gateY: 20,
+    segments: [
+      [1, 10, 8],
+      [11, 24, 9],
+      [25, 34, 8],
+      [35, 39, 9],
+    ],
+  },
+] as const
+
+function isForestThicketBarrier(x: number, y: number): boolean {
+  for (const barrier of FOREST_THICKET_BARRIERS) {
+    if (y === barrier.gateY) continue
+    const segment = barrier.segments.find(([minY, maxY]) => y >= minY && y <= maxY)
+    if (!segment) continue
+    const leftX = segment[2]
+    if (x === leftX || x === leftX + 1) return true
+  }
+  return false
 }
 
 function isForestDeepWoods(x: number, y: number): boolean {
@@ -453,13 +505,14 @@ function getForestTerrain(x: number, y: number): Terrain {
   if (samePosition(position, JS_FOREST_MIDBOSS_POSITION)) return 'midboss'
   if (getTreasureAtPosition(position, JS_FOREST_MAP_ID)) return 'treasure'
 
-  // Fixed Lessons happen in the woodland itself. Their surrounding regions are
-  // intentionally kept as coherent forest masses instead of isolated dark tiles.
+  // Each learning encounter sits in the only natural passage to the next
+  // exploration section, so it can be discovered through play but not skipped.
   if (isForestLearningPosition(position)) return 'woods'
 
   // Forest geography is hand-authored in large shapes. No coordinate noise is
   // used to alternate grass / woods / deep-woods tile-by-tile.
   if (isForestRiver(x, y) || isForestPond(x, y)) return 'water'
+  if (isForestThicketBarrier(x, y)) return 'thicket'
   if (isForestGrassClearing(x, y)) return 'grass'
   if (isForestDeepWoods(x, y)) return 'deep-woods'
   return 'woods'
@@ -626,6 +679,7 @@ export function isWalkableTerrain(terrain: Terrain): boolean {
   return ![
     'mountain',
     'water',
+    'thicket',
     'boss',
     'midboss',
     'shop',
