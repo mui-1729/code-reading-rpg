@@ -1,9 +1,27 @@
 import { expect, test, type Page } from '@playwright/test'
-import { WORLD_STEP_MS } from '../src/world/worldPresentation'
 
 const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
+
+type RapidVisualOffset = {
+  id: string
+  x: number
+  y: number
+}
+
+type RapidVisualFrame = {
+  tileWidth: number
+  tileHeight: number
+  partyOffsets: RapidVisualOffset[]
+  npcOffsets: RapidVisualOffset[]
+  snapshotCount: number
+}
+
+type RapidVisualCaptureState = {
+  frames: RapidVisualFrame[]
+  done: boolean
+}
 
 async function seedVillageRoad(page: Page) {
   await page.goto('/')
@@ -98,40 +116,80 @@ async function currentVisualAlignment(page: Page) {
   })
 }
 
-async function currentRapidFrame(page: Page) {
-  return page.evaluate(() => {
+async function beginRapidVisualCapture(page: Page, expectedPlayerX: number) {
+  await page.evaluate((expectedX) => {
+    const captureWindow = window as Window & { __rapidMoveVisualCapture?: RapidVisualCaptureState }
+    const capture: RapidVisualCaptureState = { frames: [], done: false }
+    captureWindow.__rapidMoveVisualCapture = capture
+    const startedAt = performance.now()
+
     const centerOf = (element: HTMLElement | null) => {
       if (!element) return null
       const rect = element.getBoundingClientRect()
       return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
     }
 
-    const npcOffsets = Array.from(document.querySelectorAll<HTMLElement>('.world-npc-sprite')).flatMap((npc) => {
-      const npcId = npc.dataset.worldNpc
-      const x = npc.dataset.worldX
-      const y = npc.dataset.worldY
-      if (!npcId || x === undefined || y === undefined) return []
+    const relativeOffset = (overlay: HTMLElement, id: string): RapidVisualOffset | null => {
+      const x = overlay.dataset.worldX
+      const y = overlay.dataset.worldY
+      if (x === undefined || y === undefined) return null
       const tile = document.querySelector<HTMLElement>(
         `.world-tile[data-world-x="${x}"][data-world-y="${y}"]`,
       )
-      const npcCenter = centerOf(npc)
+      const overlayCenter = centerOf(overlay)
       const tileCenter = centerOf(tile)
-      if (!npcCenter || !tileCenter) return []
-      return [{
-        id: npcId,
-        x: npcCenter.x - tileCenter.x,
-        y: npcCenter.y - tileCenter.y,
-      }]
-    })
-
-    const tile = document.querySelector<HTMLElement>('.world-tile')
-    return {
-      sampledAt: performance.now(),
-      tileWidth: tile?.getBoundingClientRect().width ?? 0,
-      player: centerOf(document.querySelector<HTMLElement>('.world-player-sprite')),
-      follower: centerOf(document.querySelector<HTMLElement>('.world-follower-sprite')),
-      npcOffsets,
+      if (!overlayCenter || !tileCenter) return null
+      return {
+        id,
+        x: overlayCenter.x - tileCenter.x,
+        y: overlayCenter.y - tileCenter.y,
+      }
     }
+
+    const sample = () => {
+      const tile = document.querySelector<HTMLElement>('.world-tile')
+      const tileRect = tile?.getBoundingClientRect()
+      const player = document.querySelector<HTMLElement>('.world-player-sprite')
+      const follower = document.querySelector<HTMLElement>('.world-follower-sprite')
+      const partyOffsets = [
+        player ? relativeOffset(player, 'player') : null,
+        follower ? relativeOffset(follower, 'follower') : null,
+      ].filter((offset): offset is RapidVisualOffset => offset !== null)
+      const npcOffsets = Array.from(document.querySelectorAll<HTMLElement>('.world-npc-sprite')).flatMap((npc) => {
+        const npcId = npc.dataset.worldNpc
+        if (!npcId) return []
+        const offset = relativeOffset(npc, npcId)
+        return offset ? [offset] : []
+      })
+
+      capture.frames.push({
+        tileWidth: tileRect?.width ?? 0,
+        tileHeight: tileRect?.height ?? 0,
+        partyOffsets,
+        npcOffsets,
+        snapshotCount: document.querySelectorAll('.world-camera-snapshot').length,
+      })
+
+      const settled =
+        player?.dataset.worldX === String(expectedX)
+        && document.querySelectorAll('.world-camera-snapshot').length === 0
+        && capture.frames.length > 2
+      const timedOut = performance.now() - startedAt >= 2_500
+      if (settled || timedOut) {
+        capture.done = true
+        return
+      }
+      requestAnimationFrame(sample)
+    }
+
+    requestAnimationFrame(sample)
+  }, expectedPlayerX)
+}
+
+async function readRapidVisualCapture(page: Page) {
+  return page.evaluate(() => {
+    const captureWindow = window as Window & { __rapidMoveVisualCapture?: RapidVisualCaptureState }
+    return captureWindow.__rapidMoveVisualCapture ?? { frames: [], done: false }
   })
 }
 
@@ -174,51 +232,36 @@ test('20ms級の連打中もterrain / Player / follower / NPCを同じvisual tra
   await page.setViewportSize({ width: 390, height: 844 })
   await seedVillageRoad(page)
 
+  await beginRapidVisualCapture(page, 14)
   await rapidClick(page, Array(8).fill('右へ移動'))
 
-  const npcBaselines = new Map<string, { x: number; y: number }>()
-  let previousPlayer: { x: number; y: number } | null = null
-  let previousFollower: { x: number; y: number } | null = null
-  let previousSampledAt: number | null = null
+  await expect.poll(async () => (await readRapidVisualCapture(page)).done, { timeout: 3_000 }).toBe(true)
+  const capture = await readRapidVisualCapture(page)
+  expect(capture.frames.length).toBeGreaterThan(5)
+
+  let comparedPartyFrames = 0
   let comparedNpcFrames = 0
-
-  for (let frameIndex = 0; frameIndex < 42; frameIndex += 1) {
-    const frame = await currentRapidFrame(page)
+  for (const frame of capture.frames) {
     expect(frame.tileWidth).toBeGreaterThan(0)
-    expect(frame.player).not.toBeNull()
-    expect(frame.follower).not.toBeNull()
+    expect(frame.tileHeight).toBeGreaterThan(0)
+    expect(frame.snapshotCount).toBeLessThanOrEqual(1)
 
+    // Player / BYTEは1stepのleft/top transition中なので、対応するlogical tileから
+    // 1tileを超えて離れたframeがあればvisual transactionのsnap/破綻とみなす。
+    const oneTileTolerance = Math.max(frame.tileWidth, frame.tileHeight) * 1.05
+    for (const party of frame.partyOffsets) {
+      expect(Math.hypot(party.x, party.y)).toBeLessThanOrEqual(oneTileTolerance)
+      comparedPartyFrames += 1
+    }
+
+    // static NPCはterrainと同じcamera transformを受けるため、対応tileとのoffsetは不変であるべき。
     for (const npc of frame.npcOffsets) {
-      const baseline = npcBaselines.get(npc.id)
-      if (baseline) {
-        expect(Math.hypot(npc.x - baseline.x, npc.y - baseline.y)).toBeLessThan(1.5)
-        comparedNpcFrames += 1
-      } else {
-        npcBaselines.set(npc.id, { x: npc.x, y: npc.y })
-      }
+      expect(Math.hypot(npc.x, npc.y)).toBeLessThan(1.5)
+      comparedNpcFrames += 1
     }
-
-    // Playwright側の20ms待機はCI負荷で遅延し得る。固定pixel量ではなく実際の経過時間と
-    // 150ms linear transitionから許容移動量を決め、短時間の1tile snapだけを検出する。
-    if (previousSampledAt !== null) {
-      const elapsedMs = Math.max(0, frame.sampledAt - previousSampledAt)
-      const continuityTolerance =
-        frame.tileWidth * Math.max(0.55, elapsedMs / WORLD_STEP_MS + 0.12)
-      if (previousPlayer && frame.player) {
-        expect(Math.hypot(frame.player.x - previousPlayer.x, frame.player.y - previousPlayer.y))
-          .toBeLessThanOrEqual(continuityTolerance)
-      }
-      if (previousFollower && frame.follower) {
-        expect(Math.hypot(frame.follower.x - previousFollower.x, frame.follower.y - previousFollower.y))
-          .toBeLessThanOrEqual(continuityTolerance)
-      }
-    }
-    previousPlayer = frame.player
-    previousFollower = frame.follower
-    previousSampledAt = frame.sampledAt
-    await page.waitForTimeout(20)
   }
 
+  expect(comparedPartyFrames).toBeGreaterThan(0)
   expect(comparedNpcFrames).toBeGreaterThan(0)
   await expect.poll(async () => Number(await page.locator('.world-player-sprite').getAttribute('data-world-x')), {
     timeout: 2_000,
