@@ -79,7 +79,7 @@ test('@responsive Village portalは旧mapを覆ってからstateを切り替え�
 })
 
 test('Forest portalも第二集落へのActionで同じtransition sequenceを使う', async ({ page }) => {
-  await seedWorld(page, 'js-forest', { x: 2, y: 10 }, [1, 7, 8, 9, 10, 11, 12, 13, 14])
+  await seedWorld(page, 'js-forest', { x: 2, y: 23 }, [1, 7, 8, 9, 10, 11, 12, 13, 14])
 
   const viewport = page.locator('.world-viewport')
   const transition = page.locator('.world-map-transition')
@@ -109,6 +109,7 @@ test('TypeScript辺境から中央Hubへ戻る境界も向いてActionする共�
   await expect(transition).toHaveAttribute('data-world-transition-phase', 'covering')
   await expect(transition).toHaveAttribute('data-world-transition-from', 'ts-frontier')
   await expect(transition).toHaveAttribute('data-world-transition-to', 'overworld')
+  await expect(viewport).toHaveAttribute('data-world-map', 'ts-frontier')
   await expect(transition).toHaveAttribute('data-world-transition-phase', 'revealing')
   await expect(viewport).toHaveAttribute('data-world-map', 'overworld')
   await expect(viewport).toHaveAttribute('data-world-x', '61')

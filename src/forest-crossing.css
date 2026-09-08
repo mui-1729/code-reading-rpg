@@ -1,0 +1,383 @@
+/* Forest river crossing: the fallen trunk sits on top of the stream, never on grass. */
+.world-viewport[data-world-map='js-forest'] .world-tile:is(
+  [data-world-x='32'][data-world-y='12'],
+  [data-world-x='33'][data-world-y='12']
+) {
+  --forest-landmark-kind: fallen-log-crossing;
+  overflow: visible;
+  background: #4aaed6;
+  box-shadow: none;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile:is(
+  [data-world-x='32'][data-world-y='12'],
+  [data-world-x='33'][data-world-y='12']
+)::before,
+.world-viewport[data-world-map='js-forest'] .world-tile:is(
+  [data-world-x='32'][data-world-y='12'],
+  [data-world-x='33'][data-world-y='12']
+)::after {
+  content: none;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='32'][data-world-y='12']::before {
+  content: '';
+  position: absolute;
+  z-index: 4;
+  left: -12%;
+  right: -112%;
+  top: 42%;
+  height: 18%;
+  border: 2px solid #3d2b1c;
+  border-radius: 45%;
+  background: repeating-linear-gradient(90deg, #705034 0 9px, #5b3d28 9px 12px);
+  box-shadow: 0 3px 0 rgba(22, 36, 23, .45);
+  transform: rotate(-3deg);
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='32'][data-world-y='12']::after {
+  content: '';
+  position: absolute;
+  z-index: 5;
+  left: 24%;
+  top: 34%;
+  width: 12%;
+  height: 12%;
+  border-radius: 50%;
+  background: #77a45a;
+  box-shadow: 18px 7px 0 #5f8f4b, 35px -2px 0 #82ad61;
+}
+
+/* A second large fallen tree gives the southern river its own landmark. It lies
+   partly submerged along the stream, so it reads as scenery rather than a hidden
+   progression gate. The water remains visibly underneath the trunk. */
+.world-viewport[data-world-map='js-forest'] .world-tile:is(
+  [data-world-x='30'][data-world-y='29'],
+  [data-world-x='31'][data-world-y='29']
+) {
+  --forest-landmark-kind: lower-fallen-log;
+  overflow: visible;
+  background: #4aaed6;
+  box-shadow: none;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile:is(
+  [data-world-x='30'][data-world-y='29'],
+  [data-world-x='31'][data-world-y='29']
+)::before,
+.world-viewport[data-world-map='js-forest'] .world-tile:is(
+  [data-world-x='30'][data-world-y='29'],
+  [data-world-x='31'][data-world-y='29']
+)::after {
+  content: none;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='30'][data-world-y='29']::before {
+  content: '';
+  position: absolute;
+  z-index: 4;
+  left: 4%;
+  top: -64%;
+  width: 23%;
+  height: 228%;
+  border: 2px solid #3b291c;
+  border-radius: 46%;
+  background: repeating-linear-gradient(180deg, #745137 0 9px, #5c3e2a 9px 13px);
+  box-shadow: 3px 2px 0 rgba(18, 33, 25, .42);
+  transform: rotate(24deg);
+  transform-origin: center;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='30'][data-world-y='29']::after {
+  content: '';
+  position: absolute;
+  z-index: 5;
+  left: 22%;
+  top: 7%;
+  width: 14%;
+  height: 14%;
+  border-radius: 50%;
+  background: #6f9c55;
+  box-shadow:
+    7px 23px 0 #527f47,
+    16px 48px 0 #7ba55e,
+    -3px 72px 0 #4f7945;
+}
+
+/* The west side used to read as three contiguous dark-green blocks. Keep the
+   underlying deep-woods encounter semantics, but visually open irregular holes
+   through those masses so the west half has the same broken canopy rhythm as the
+   east side. The selected cells are intentionally asymmetric and non-periodic. */
+.world-viewport[data-world-map='js-forest'] .world-tile.terrain-deep-woods:is(
+  [data-world-x='4'][data-world-y='4'],
+  [data-world-x='7'][data-world-y='4'],
+  [data-world-x='11'][data-world-y='5'],
+  [data-world-x='14'][data-world-y='6'],
+  [data-world-x='3'][data-world-y='8'],
+  [data-world-x='8'][data-world-y='8'],
+  [data-world-x='12'][data-world-y='9'],
+  [data-world-x='6'][data-world-y='11'],
+  [data-world-x='14'][data-world-y='11'],
+  [data-world-x='12'][data-world-y='23'],
+  [data-world-x='17'][data-world-y='23'],
+  [data-world-x='14'][data-world-y='25'],
+  [data-world-x='19'][data-world-y='26'],
+  [data-world-x='11'][data-world-y='27'],
+  [data-world-x='3'][data-world-y='29'],
+  [data-world-x='12'][data-world-y='29'],
+  [data-world-x='5'][data-world-y='31'],
+  [data-world-x='13'][data-world-y='32'],
+  [data-world-x='4'][data-world-y='34'],
+  [data-world-x='12'][data-world-y='35'],
+  [data-world-x='6'][data-world-y='37'],
+  [data-world-x='14'][data-world-y='37']
+) {
+  background: #356f3d;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile.terrain-deep-woods:is(
+  [data-world-x='4'][data-world-y='4'],
+  [data-world-x='7'][data-world-y='4'],
+  [data-world-x='11'][data-world-y='5'],
+  [data-world-x='14'][data-world-y='6'],
+  [data-world-x='3'][data-world-y='8'],
+  [data-world-x='8'][data-world-y='8'],
+  [data-world-x='12'][data-world-y='9'],
+  [data-world-x='6'][data-world-y='11'],
+  [data-world-x='14'][data-world-y='11'],
+  [data-world-x='12'][data-world-y='23'],
+  [data-world-x='17'][data-world-y='23'],
+  [data-world-x='14'][data-world-y='25'],
+  [data-world-x='19'][data-world-y='26'],
+  [data-world-x='11'][data-world-y='27'],
+  [data-world-x='3'][data-world-y='29'],
+  [data-world-x='12'][data-world-y='29'],
+  [data-world-x='5'][data-world-y='31'],
+  [data-world-x='13'][data-world-y='32'],
+  [data-world-x='4'][data-world-y='34'],
+  [data-world-x='12'][data-world-y='35'],
+  [data-world-x='6'][data-world-y='37'],
+  [data-world-x='14'][data-world-y='37']
+)::before {
+  background: #1f512b;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile.terrain-deep-woods:is(
+  [data-world-x='4'][data-world-y='4'],
+  [data-world-x='7'][data-world-y='4'],
+  [data-world-x='11'][data-world-y='5'],
+  [data-world-x='14'][data-world-y='6'],
+  [data-world-x='3'][data-world-y='8'],
+  [data-world-x='8'][data-world-y='8'],
+  [data-world-x='12'][data-world-y='9'],
+  [data-world-x='6'][data-world-y='11'],
+  [data-world-x='14'][data-world-y='11'],
+  [data-world-x='12'][data-world-y='23'],
+  [data-world-x='17'][data-world-y='23'],
+  [data-world-x='14'][data-world-y='25'],
+  [data-world-x='19'][data-world-y='26'],
+  [data-world-x='11'][data-world-y='27'],
+  [data-world-x='3'][data-world-y='29'],
+  [data-world-x='12'][data-world-y='29'],
+  [data-world-x='5'][data-world-y='31'],
+  [data-world-x='13'][data-world-y='32'],
+  [data-world-x='4'][data-world-y='34'],
+  [data-world-x='12'][data-world-y='35'],
+  [data-world-x='6'][data-world-y='37'],
+  [data-world-x='14'][data-world-y='37']
+)::after {
+  background: #285f33;
+}
+
+/* Mirror the same canopy breakup in the 55x41 Atlas. nth-child is stable here
+   because Atlas renders map cells row-major and the Forest width is fixed at 55. */
+.atlas-terrain-grid[data-terrain-width='55'] .atlas-terrain-cell.terrain-deep-woods:is(
+  :nth-child(225),
+  :nth-child(228),
+  :nth-child(287),
+  :nth-child(345),
+  :nth-child(444),
+  :nth-child(449),
+  :nth-child(508),
+  :nth-child(612),
+  :nth-child(620),
+  :nth-child(1278),
+  :nth-child(1283),
+  :nth-child(1390),
+  :nth-child(1450),
+  :nth-child(1497),
+  :nth-child(1599),
+  :nth-child(1608),
+  :nth-child(1711),
+  :nth-child(1774),
+  :nth-child(1875),
+  :nth-child(1938),
+  :nth-child(2042),
+  :nth-child(2050)
+) {
+  background: radial-gradient(circle, #477b4e 20%, transparent 22%) 0 0 / 6px 6px, #2e6039;
+}
+
+/* West Forest landmarks stay sparse; they are anchors, not a decorated cluster. */
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='5'][data-world-y='13'] {
+  --forest-landmark-kind: ancient-west-tree;
+  overflow: visible;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='5'][data-world-y='13']::before {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  left: 43%;
+  bottom: -7%;
+  width: 34%;
+  height: 88%;
+  background:
+    linear-gradient(88deg, #46301e 0 18%, #69492c 19% 61%, #503622 62% 100%);
+  border-radius: 52% 38% 18% 29%;
+  box-shadow:
+    -18px 20px 0 -10px #3b281b,
+    10px 24px 0 -7px #432d1e;
+  transform: rotate(7deg);
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='5'][data-world-y='13']::after {
+  content: '';
+  position: absolute;
+  z-index: 4;
+  left: -46%;
+  top: -45%;
+  width: 178%;
+  height: 104%;
+  border-radius: 61% 39% 53% 47%;
+  background:
+    radial-gradient(circle at 18% 67%, #35683a 0 14%, transparent 15%),
+    radial-gradient(circle at 43% 31%, #244d2c 0 27%, transparent 28%),
+    radial-gradient(circle at 71% 48%, #2f6335 0 18%, transparent 19%),
+    radial-gradient(circle at 54% 73%, #28572f 0 29%, transparent 30%),
+    radial-gradient(circle at 88% 70%, #3b733e 0 12%, transparent 13%);
+  filter: drop-shadow(1px 4px 0 rgba(15, 35, 20, .45));
+  transform: rotate(-5deg);
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='14'][data-world-y='29'] {
+  --forest-landmark-kind: mossy-stump;
+  overflow: visible;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='14'][data-world-y='29']::before {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  left: 11%;
+  bottom: 8%;
+  width: 61%;
+  height: 31%;
+  border: 2px solid #3b2a1e;
+  border-radius: 58% 36% 28% 19%;
+  background:
+    radial-gradient(ellipse at 61% 17%, #9b774d 0 22%, #6b4b30 23% 38%, transparent 39%),
+    #604229;
+  box-shadow: inset 0 -7px 0 #4a321f;
+  transform: rotate(-9deg);
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='14'][data-world-y='29']::after {
+  content: '';
+  position: absolute;
+  z-index: 4;
+  left: 9%;
+  bottom: 3%;
+  width: 14%;
+  height: 12%;
+  border-radius: 50%;
+  background: #739b54;
+  box-shadow:
+    11px -5px 0 #5f8a4b,
+    31px 1px 0 #82a85e,
+    38px -8px 0 #527f47;
+  transform: rotate(6deg);
+}
+
+/* Pond vegetation is intentionally heavier on one edge and sparse elsewhere. */
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='6'][data-world-y='33']::before {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  left: 4%;
+  bottom: -5%;
+  width: 5%;
+  height: 58%;
+  background: #507f46;
+  box-shadow:
+    8px 6px 0 #5c8f4e,
+    15px -4px 0 #456f3e,
+    24px 9px 0 #6a9854,
+    31px -8px 0 #4d7c43,
+    43px 3px 0 #5a8749;
+  transform: rotate(8deg);
+  transform-origin: bottom center;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='10'][data-world-y='31']::before {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  left: 58%;
+  bottom: 1%;
+  width: 4%;
+  height: 27%;
+  background: #557f45;
+  box-shadow: 8px 3px 0 #47703d;
+  transform: rotate(15deg);
+  transform-origin: bottom center;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='11'][data-world-y='21']::before {
+  content: '';
+  position: absolute;
+  z-index: 3;
+  left: 8%;
+  top: 58%;
+  width: 76%;
+  height: 8%;
+  border-radius: 70% 20% 60% 30%;
+  background: #543923;
+  box-shadow: 17px -6px 0 -2px #49301e;
+  transform: rotate(-17deg);
+}
+
+/* Phase-4 thicket stripes used to expose progression gates as four dark walls.
+   Adaptive lesson zones no longer use those walls, so legacy thicket cells render
+   exactly like ordinary woods instead of visually partitioning the Forest. */
+.world-viewport[data-world-map='js-forest'] .terrain-thicket {
+  background: #356f3d;
+}
+
+.world-viewport[data-world-map='js-forest'] .terrain-thicket::before {
+  left: 11%;
+  bottom: 6%;
+  width: 28%;
+  height: 54%;
+  background: #1f512b;
+}
+
+.world-viewport[data-world-map='js-forest'] .terrain-thicket::after {
+  right: 9%;
+  bottom: 6%;
+  width: 28%;
+  height: 54%;
+  background: #285f33;
+  transform: scale(.82);
+  transform-origin: bottom center;
+}
+
+.atlas-terrain-cell.terrain-thicket {
+  background: radial-gradient(circle, #477b4e 20%, transparent 22%) 0 0 / 6px 6px, #2e6039;
+}
+
+.atlas-terrain-cell.terrain-log-crossing {
+  background:
+    linear-gradient(0deg, transparent 0 42%, #68472d 43% 60%, transparent 61%),
+    #347092;
+}

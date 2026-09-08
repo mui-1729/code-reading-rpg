@@ -5,7 +5,14 @@ import {
   type PlayerProgress,
 } from '../progression'
 import type { RpgState } from '../rpg'
+import {
+  FOREST_LEARNING_BATTLE_IDS,
+  getForestLearningZoneAtPosition,
+  getUsedForestLearningZones,
+  type ForestLearningBattleId,
+} from './forestLearningZones'
 import { getWorldNpcAtPosition } from './worldCharacters'
+import { getWorldRecoveryStopAtPosition } from './recoveryStops'
 import {
   BYTE_POSITION,
   getEncounterBattleId,
@@ -106,35 +113,20 @@ function createEncounterRolls(
   return { trigger: random.next(), battle: random.next() }
 }
 
-function getForestLearningBattleId(
-  mapId: WorldMapId,
-  position: { x: number; y: number },
-  clearedStageIds: readonly number[],
-): JavaScriptLearningBattleId | null {
-  if (mapId !== JS_FOREST_MAP_ID) return null
+function normalizeTraversalTerrain(mapId: WorldMapId, terrain: Terrain): Terrain {
+  // The old Phase-4 thicket stripes no longer gate Forest progression. Keep old
+  // saves/layout cells compatible while treating those cells exactly like woods.
+  if (mapId === JS_FOREST_MAP_ID && terrain === 'thicket') return 'woods'
+  return terrain
+}
 
-  if (!clearedStageIds.includes(10) && isBattleAccessible(10, clearedStageIds)) return 10
-  if (
-    !clearedStageIds.includes(11) &&
-    position.x <= 17 &&
-    isBattleAccessible(11, clearedStageIds)
-  ) {
-    return 11
-  }
-  if (
-    !clearedStageIds.includes(12) &&
-    position.x <= 8 &&
-    isBattleAccessible(12, clearedStageIds)
-  ) {
-    return 12
-  }
-  if (!clearedStageIds.includes(13)) return null
-  if (
-    !clearedStageIds.includes(14) &&
-    position.x <= 4 &&
-    isBattleAccessible(14, clearedStageIds)
-  ) {
-    return 14
+function getNextForestLearningBattleId(
+  clearedStageIds: readonly number[],
+): ForestLearningBattleId | null {
+  for (const battleId of FOREST_LEARNING_BATTLE_IDS) {
+    if (!clearedStageIds.includes(battleId) && isBattleAccessible(battleId, clearedStageIds)) {
+      return battleId
+    }
   }
   return null
 }
@@ -228,7 +220,10 @@ function createJavaScriptFixedEncounter(
   return {
     kind: 'encounter',
     nextState: encounterState,
-    terrain: getTerrain(next.x, next.y, rpgState.worldMapId),
+    terrain: normalizeTraversalTerrain(
+      rpgState.worldMapId,
+      getTerrain(next.x, next.y, rpgState.worldMapId),
+    ),
     region: 'javascript',
     battle: {
       battleId,
@@ -236,6 +231,44 @@ function createJavaScriptFixedEncounter(
       seed: `encounter:${rpgState.worldMapId}:${encounterNumber}:${next.x}:${next.y}`,
     },
   }
+}
+
+function resolveForestLearningEncounter(
+  rpgState: RpgState,
+  movedState: RpgState,
+  next: { x: number; y: number },
+  clearedStageIds: readonly number[],
+): WorldMoveResult | null {
+  if (rpgState.worldMapId !== JS_FOREST_MAP_ID) return null
+
+  const battleId = getNextForestLearningBattleId(clearedStageIds)
+  if (battleId === null) return null
+
+  const zoneId = getForestLearningZoneAtPosition(next)
+  if (zoneId === null) return null
+
+  const assignments = rpgState.forestLearningBattleZones
+  const assignedZone = assignments?.[battleId]
+
+  // After the first encounter (including a loss), this lesson remains attached
+  // to that player's chosen zone instead of jumping to a different part of the map.
+  if (assignedZone) {
+    if (zoneId !== assignedZone) return null
+    return createJavaScriptFixedEncounter(rpgState, movedState, next, battleId)
+  }
+
+  // A zone already used by an earlier lesson cannot immediately host the next
+  // lesson. The player must continue exploring and reach a different region.
+  if (getUsedForestLearningZones(assignments).has(zoneId)) return null
+
+  const assignedState: RpgState = {
+    ...movedState,
+    forestLearningBattleZones: {
+      ...assignments,
+      [battleId]: zoneId,
+    },
+  }
+  return createJavaScriptFixedEncounter(rpgState, assignedState, next, battleId)
 }
 
 export function resolveWorldMove({
@@ -270,9 +303,15 @@ export function resolveWorldMove({
     mapId === JS_FOREST_MAP_ID &&
     rawTerrain === 'midboss' &&
     progress.clearedStageIds.includes(13)
-  const terrain: Terrain = midbossCleared ? 'road' : rawTerrain
+  const terrain: Terrain = midbossCleared
+    ? 'grass'
+    : normalizeTraversalTerrain(mapId, rawTerrain)
 
-  if (!isWalkableTerrain(terrain) || getWorldNpcAtPosition(mapId, next)) {
+  if (
+    !isWalkableTerrain(terrain) ||
+    getWorldNpcAtPosition(mapId, next) ||
+    getWorldRecoveryStopAtPosition(mapId, next)
+  ) {
     return { kind: 'blocked', nextState: rpgState, terrain }
   }
 
@@ -312,16 +351,34 @@ export function resolveWorldMove({
     return createJavaScriptFixedEncounter(rpgState, movedState, next, 2)
   }
 
+  // Forest lessons are attached to the order in which this player discovers
+  // invisible geographic zones. The map itself stays open; progression order is
+  // enforced only by the progression graph (10 -> 11 -> 12 -> 13 -> 14).
+  const forestLearningEncounter = resolveForestLearningEncounter(
+    rpgState,
+    movedState,
+    next,
+    progress.clearedStageIds,
+  )
+  if (forestLearningEncounter) return forestLearningEncounter
+
   if (isEncounterTerrain(terrain)) {
-    const lessonBattleId =
-      getForestLearningBattleId(mapId, next, progress.clearedStageIds) ??
-      getDeepForestLearningBattleId(mapId, next, progress.clearedStageIds)
+    const lessonBattleId = getDeepForestLearningBattleId(mapId, next, progress.clearedStageIds)
     if (lessonBattleId !== null) {
       return createJavaScriptFixedEncounter(rpgState, movedState, next, lessonBattleId)
     }
   }
 
-  if (!isEncounterTerrain(terrain) || nextSteps < 5 || region === 'hub') {
+  // The 55x41 Forest deliberately gives more room to explore than the old map.
+  // Keep that extra walking from multiplying review Battles: Forest gets seven
+  // safe steps after any Battle and starts random review rolls on step eight.
+  // Other maps retain the existing four-safe-step / step-five rule.
+  const randomEncounterStepThreshold = mapId === JS_FOREST_MAP_ID ? 8 : 5
+  if (
+    !isEncounterTerrain(terrain) ||
+    nextSteps < randomEncounterStepThreshold ||
+    region === 'hub'
+  ) {
     return { kind: 'moved', nextState: movedState, terrain, region }
   }
 

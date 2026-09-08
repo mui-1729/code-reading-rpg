@@ -112,17 +112,26 @@ test('Village training完了後はForestへ入りreload後もlocal mapを保持�
   await expect(page.locator('.world-header')).toBeHidden()
 })
 
-test('Forest最初のWoodsはRandom抽選ではなくBattle 10の固定traceになる', async ({ page }) => {
+test('Forest最初の地理的trace地点はRandom抽選ではなくBattle 10の固定traceになる', async ({ page }) => {
   await seedForestGate(page, 'training-complete')
 
   await page.getByRole('button', { name: '下へ移動' }).click()
   await page.getByRole('button', { name: 'JavaScriptの森へ入る' }).click()
-  await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-map', 'js-forest')
+  const forest = page.getByLabel('JavaScriptの森のマップ')
+  await expect(forest).toHaveAttribute('data-world-map', 'js-forest')
+  await expect(forest).toHaveAttribute('data-world-x', '52')
+  await expect(forest).toHaveAttribute('data-world-y', '20')
+  await expect(page.locator('.world-map-transition')).toHaveCount(0, { timeout: 1_000 })
 
   await page.getByRole('button', { name: '左へ移動' }).click()
+  await expect(forest).toHaveAttribute('data-world-x', '51')
   await page.getByRole('button', { name: '左へ移動' }).click()
+  await expect(forest).toHaveAttribute('data-world-x', '50')
   await page.getByRole('button', { name: '左へ移動' }).click()
-  await page.getByRole('button', { name: '上へ移動' }).click()
+  await expect(forest).toHaveAttribute('data-world-x', '49')
+  await page.getByRole('button', { name: '左へ移動' }).click()
+  await expect(forest).toHaveAttribute('data-world-x', '48')
+  await page.getByRole('button', { name: '左へ移動' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/10\?/)
   await expect(page.getByRole('dialog', { name: 'Forestで自分の読み順を決める' })).toBeVisible()

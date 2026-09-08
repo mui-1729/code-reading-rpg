@@ -8,6 +8,8 @@ import {
 } from './worldActions'
 import {
   JS_BOSS_POSITION,
+  JS_FOREST_EXIT_POSITION,
+  JS_FOREST_LEARNING_POSITIONS,
   JS_FOREST_MAP_ID,
   JS_FOREST_POSITION,
   JS_VILLAGE_MAP_ID,
@@ -246,7 +248,7 @@ describe('World action resolver', () => {
     const exitState = {
       ...createInitialRpgState(),
       worldMapId: JS_FOREST_MAP_ID,
-      worldPosition: { x: 29, y: 10 },
+      worldPosition: { x: JS_FOREST_EXIT_POSITION.x - 1, y: JS_FOREST_EXIT_POSITION.y },
       stepsSinceEncounter: 9,
     }
     const exit = resolveWorldMove({
@@ -282,17 +284,18 @@ describe('World action resolver', () => {
     expect(result.nextState.encounterCount).toBe(7)
   })
 
-  it('ForestではTraining完了後の最初のEncounterとしてBattle 10を返す', () => {
+  it('Forestでは最初の地理的trace地点でBattle 10を固定導入する', () => {
     const initialProgress = createInitialPlayerProgress()
     const progress = {
       ...initialProgress,
       clearedStageIds: [1, 7, 8, 9],
       unlockedStageIds: [1, 7, 8, 9, 10],
     }
+    const target = JS_FOREST_LEARNING_POSITIONS[10]
     const state = {
       ...createInitialRpgState(),
       worldMapId: JS_FOREST_MAP_ID,
-      worldPosition: { x: 25, y: 10 },
+      worldPosition: { x: target.x + 1, y: target.y },
       stepsSinceEncounter: 4,
       encounterCount: 2,
     }
@@ -300,8 +303,8 @@ describe('World action resolver', () => {
     const result = resolveWorldMove({
       rpgState: state,
       progress,
-      dx: 0,
-      dy: -1,
+      dx: -1,
+      dy: 0,
       encounterRolls: { trigger: 0, battle: 0.9 },
     })
 
@@ -312,7 +315,7 @@ describe('World action resolver', () => {
     expect(result.battle).toEqual({
       battleId: 10,
       region: 'javascript',
-      seed: 'encounter:js-forest:3:25:9',
+      seed: `encounter:js-forest:3:${target.x}:${target.y}`,
     })
   })
 

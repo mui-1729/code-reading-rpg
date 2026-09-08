@@ -41,7 +41,10 @@ describe('JavaScript Deep Forest', () => {
     const forestState = {
       ...createInitialRpgState(),
       worldMapId: JS_FOREST_MAP_ID,
-      worldPosition: { x: 2, y: 10 },
+      worldPosition: {
+        x: JS_FOREST_SETTLEMENT_POSITION.x + 1,
+        y: JS_FOREST_SETTLEMENT_POSITION.y,
+      },
     }
 
     expect(resolveWorldMove({ rpgState: forestState, progress, dx: -1, dy: 0 }).kind).toBe('blocked')

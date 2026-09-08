@@ -1,4 +1,9 @@
-import { JS_DEEP_FOREST_MAP_ID, JS_FOREST_MAP_ID, type WorldMapId } from './worldMap'
+import {
+  JS_DEEP_FOREST_MAP_ID,
+  JS_FOREST_LEARNING_POSITIONS,
+  JS_FOREST_MAP_ID,
+  type WorldMapId,
+} from './worldMap'
 
 export type ProgressionLandmark = {
   mapId: WorldMapId
@@ -11,33 +16,40 @@ export type ProgressionLandmark = {
 
 /**
  * Fixed-story Battle thresholds must have a player-visible place in the world.
- * Each landmark sits on encounter terrain directly beside the main trail at the
- * matching progression threshold, so following the visible clue triggers the
- * same fixed Battle instead of asking the player to guess an invisible x value.
+ * Forest Phase 4 spreads a small number of landmarks across real geographic
+ * transitions instead of lining labels along one horizontal corridor or road.
  */
 export const PROGRESSION_LANDMARKS: readonly ProgressionLandmark[] = [
   {
     mapId: JS_FOREST_MAP_ID,
-    position: { x: 17, y: 9 },
-    battleId: 11,
-    label: '二手に割れた異変の痕跡',
-    shortLabel: '分岐痕',
+    position: JS_FOREST_LEARNING_POSITIONS[10],
+    battleId: 10,
+    label: '折れた枝が地面に散らばっている',
+    shortLabel: '折れ枝',
     kind: 'trace',
   },
   {
     mapId: JS_FOREST_MAP_ID,
-    position: { x: 8, y: 9 },
+    position: JS_FOREST_LEARNING_POSITIONS[11],
+    battleId: 11,
+    label: '川辺の泥に足跡が残っている',
+    shortLabel: '足跡',
+    kind: 'trace',
+  },
+  {
+    mapId: JS_FOREST_MAP_ID,
+    position: JS_FOREST_LEARNING_POSITIONS[12],
     battleId: 12,
-    label: '二つの痕跡が重なる合流点',
-    shortLabel: '合流痕',
+    label: '踏み荒らされた草に足跡が重なっている',
+    shortLabel: '足跡',
     kind: 'junction',
   },
   {
     mapId: JS_FOREST_MAP_ID,
-    position: { x: 4, y: 9 },
+    position: JS_FOREST_LEARNING_POSITIONS[14],
     battleId: 14,
-    label: '守り人の先で広がる複数の足跡',
-    shortLabel: '拡散痕',
+    label: '木々の間へ複数の足跡が続いている',
+    shortLabel: '足跡',
     kind: 'trace',
   },
   {

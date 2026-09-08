@@ -21,7 +21,7 @@ export type WorldMapId =
 const WORLD_MAP_DIMENSIONS: Record<WorldMapId, { width: number; height: number }> = {
   [OVERWORLD_MAP_ID]: { width: WORLD_WIDTH, height: WORLD_HEIGHT },
   [JS_VILLAGE_MAP_ID]: { width: 21, height: 15 },
-  [JS_FOREST_MAP_ID]: { width: 31, height: 27 },
+  [JS_FOREST_MAP_ID]: { width: 55, height: 41 },
   [JS_FOREST_SETTLEMENT_MAP_ID]: { width: 23, height: 17 },
   [JS_DEEP_FOREST_MAP_ID]: { width: 31, height: 27 },
   [TS_FRONTIER_MAP_ID]: { width: 31, height: 21 },
@@ -30,7 +30,7 @@ const WORLD_MAP_DIMENSIONS: Record<WorldMapId, { width: number; height: number }
 export const WORLD_MAP_STARTS: Record<WorldMapId, { x: number; y: number }> = {
   [OVERWORLD_MAP_ID]: { ...WORLD_START },
   [JS_VILLAGE_MAP_ID]: { x: 10, y: 12 },
-  [JS_FOREST_MAP_ID]: { x: 28, y: 10 },
+  [JS_FOREST_MAP_ID]: { x: 52, y: 20 },
   [JS_FOREST_SETTLEMENT_MAP_ID]: { x: 20, y: 8 },
   [JS_DEEP_FOREST_MAP_ID]: { x: 28, y: 10 },
   [TS_FRONTIER_MAP_ID]: { x: 2, y: 10 },
@@ -40,6 +40,7 @@ export type WorldRegion = 'javascript' | 'hub' | 'typescript'
 export type Terrain =
   | 'mountain'
   | 'water'
+  | 'log-crossing'
   | 'road'
   | 'stone'
   | 'crystal'
@@ -50,6 +51,7 @@ export type Terrain =
   | 'tall-grass'
   | 'woods'
   | 'deep-woods'
+  | 'thicket'
   | 'forest'
   | 'boss'
   | 'midboss'
@@ -79,9 +81,9 @@ export const JS_VILLAGE_POSITION = { x: 10, y: 22 } as const
 export const JS_VILLAGE_EXIT_POSITION = { x: 10, y: 14 } as const
 export const JS_VILLAGE_TRAINING_POSITION = { x: 12, y: 7 } as const
 export const JS_FOREST_POSITION = { x: 34, y: 34 } as const
-export const JS_FOREST_EXIT_POSITION = { x: 30, y: 10 } as const
-export const JS_FOREST_MIDBOSS_POSITION = { x: 5, y: 10 } as const
-export const JS_FOREST_SETTLEMENT_POSITION = { x: 1, y: 10 } as const
+export const JS_FOREST_EXIT_POSITION = { x: 54, y: 20 } as const
+export const JS_FOREST_MIDBOSS_POSITION = { x: 15, y: 16 } as const
+export const JS_FOREST_SETTLEMENT_POSITION = { x: 1, y: 23 } as const
 // Compatibility alias while callers move from the old Forest -> Deep Forest direct topology.
 export const JS_FOREST_DEEP_FOREST_POSITION = JS_FOREST_SETTLEMENT_POSITION
 export const JS_FOREST_SETTLEMENT_FOREST_EXIT_POSITION = { x: 22, y: 8 } as const
@@ -90,6 +92,13 @@ export const JS_DEEP_FOREST_EXIT_POSITION = { x: 30, y: 10 } as const
 export const JS_DEEP_FOREST_CORE_EXIT_POSITION = { x: 1, y: 10 } as const
 export const TS_FRONTIER_GATE_POSITION = { x: 62, y: 14 } as const
 export const TS_FRONTIER_EXIT_POSITION = { x: 1, y: 10 } as const
+
+export const JS_FOREST_LEARNING_POSITIONS = {
+  10: { x: 47, y: 20 },
+  11: { x: 34, y: 12 },
+  12: { x: 22, y: 25 },
+  14: { x: 9, y: 20 },
+} as const
 
 export const WORLD_TREASURES = [
   {
@@ -103,7 +112,7 @@ export const WORLD_TREASURES = [
     id: 'js-forest-supply',
     name: 'FOREST SUPPLY',
     mapId: JS_FOREST_MAP_ID,
-    position: { x: 20, y: 20 },
+    position: { x: 40, y: 6 },
     region: 'javascript',
   },
   {
@@ -176,7 +185,7 @@ export const WORLD_PORTALS: readonly WorldPortal[] = [
     fromMapId: JS_FOREST_SETTLEMENT_MAP_ID,
     position: JS_FOREST_SETTLEMENT_FOREST_EXIT_POSITION,
     toMapId: JS_FOREST_MAP_ID,
-    targetPosition: { x: 2, y: 10 },
+    targetPosition: { x: 2, y: 23 },
     label: 'JavaScriptの森',
   },
   {
@@ -310,34 +319,242 @@ function getVillageTerrain(x: number, y: number): Terrain {
   return 'town'
 }
 
+function isForestLearningPosition(position: { x: number; y: number }): boolean {
+  return Object.values(JS_FOREST_LEARNING_POSITIONS).some((candidate) => samePosition(position, candidate))
+}
+
+function inRect(
+  x: number,
+  y: number,
+  minX: number,
+  maxX: number,
+  minY: number,
+  maxY: number,
+): boolean {
+  return x >= minX && x <= maxX && y >= minY && y <= maxY
+}
+
+function isForestEntryClearing(x: number, y: number): boolean {
+  if (y === 17) return x >= 50 && x <= 52
+  if (y === 18) return x >= 48 && x <= 53
+  if (y >= 19 && y <= 22) return x >= 49 && x <= 53
+  if (y === 23) return x >= 48 && x <= 52
+  if (y === 24) return x >= 49 && x <= 51
+  return false
+}
+
+function isForestTreasureClearing(x: number, y: number): boolean {
+  if (y === 4) return x >= 39 && x <= 42
+  if (y >= 5 && y <= 7) return x >= 37 && x <= 44
+  if (y === 8) return x >= 38 && x <= 43
+  if (y === 9) return x >= 39 && x <= 42
+  return false
+}
+
+function isForestRiverbankClearing(x: number, y: number): boolean {
+  if (y >= 9 && y <= 11) return x >= 35 && x <= 39
+  if (y >= 12 && y <= 14) return x >= 34 && x <= 40
+  if (y >= 15 && y <= 16) return x >= 36 && x <= 40
+  return false
+}
+
+function isForestCentralClearing(x: number, y: number): boolean {
+  if (y >= 22 && y <= 23) return x >= 24 && x <= 28
+  if (y >= 24 && y <= 27) return x >= 23 && x <= 29
+  if (y >= 28 && y <= 29) return x >= 21 && x <= 27
+  return false
+}
+
+function isForestCampClearing(x: number, y: number): boolean {
+  if (y === 29) return x >= 21 && x <= 24
+  if (y >= 30 && y <= 34) return x >= 18 && x <= 26
+  if (y === 35) return x >= 20 && x <= 24
+  return false
+}
+
+function isForestMidbossClearing(x: number, y: number): boolean {
+  if (y === 13) return x >= 14 && x <= 16
+  if (y >= 14 && y <= 18) return x >= 12 && x <= 18
+  if (y >= 19 && y <= 20) return x >= 11 && x <= 16
+  return false
+}
+
+function isForestSettlementClearing(x: number, y: number): boolean {
+  if (y === 18) return x >= 6 && x <= 9
+  if (y >= 19 && y <= 24) return x >= 3 && x <= 10
+  if (y >= 25 && y <= 26) return x >= 2 && x <= 8
+  return false
+}
+
+function getForestRiverX(y: number): number | null {
+  if (y >= 1 && y <= 9) return 33
+  if (y >= 10 && y <= 16) return 32
+  if (y >= 17 && y <= 24) return 31
+  if (y >= 25 && y <= 32) return 30
+  if (y >= 33 && y <= 39) return 29
+  return null
+}
+
+function isForestRiverCrossing(x: number, y: number): boolean {
+  if (y !== 12) return false
+  const riverX = getForestRiverX(y)
+  return riverX !== null && (x === riverX || x === riverX + 1)
+}
+
+function isForestRiver(x: number, y: number): boolean {
+  const riverX = getForestRiverX(y)
+  if (riverX === null || isForestRiverCrossing(x, y)) return false
+  return x === riverX || x === riverX + 1
+}
+
+function isForestPond(x: number, y: number): boolean {
+  const easternPond =
+    inRect(x, y, 45, 47, 26, 33) ||
+    inRect(x, y, 44, 48, 28, 31)
+  const westernPond =
+    inRect(x, y, 7, 9, 28, 36) ||
+    inRect(x, y, 6, 10, 30, 34)
+  const centralPool =
+    inRect(x, y, 22, 23, 13, 18) ||
+    inRect(x, y, 21, 24, 14, 16)
+  return easternPond || westernPond || centralPool
+}
+
+const FOREST_THICKET_BARRIERS = [
+  {
+    gateY: 20,
+    segments: [
+      [1, 8, 46],
+      [9, 18, 47],
+      [19, 24, 46],
+      [25, 32, 46],
+      [33, 39, 47],
+    ],
+  },
+  {
+    gateY: 25,
+    segments: [
+      [1, 8, 21],
+      [9, 18, 22],
+      [19, 29, 21],
+      [30, 39, 22],
+    ],
+  },
+  {
+    gateY: 16,
+    segments: [
+      [1, 10, 14],
+      [11, 20, 15],
+      [21, 30, 14],
+      [31, 39, 15],
+    ],
+  },
+  {
+    gateY: 20,
+    segments: [
+      [1, 10, 8],
+      [11, 24, 9],
+      [25, 34, 8],
+      [35, 39, 9],
+    ],
+  },
+] as const
+
+function isForestThicketBarrier(x: number, y: number): boolean {
+  for (const barrier of FOREST_THICKET_BARRIERS) {
+    if (y === barrier.gateY) continue
+    const segment = barrier.segments.find(([minY, maxY]) => y >= minY && y <= maxY)
+    if (!segment) continue
+    const leftX = segment[2]
+    if (x === leftX || x === leftX + 1) return true
+  }
+  return false
+}
+
+type ForestCanopyRow = readonly [
+  y: number,
+  ranges: readonly (readonly [minX: number, maxX: number])[],
+]
+
+// Deep woods are authored as ragged canopy contours, not overlapping rectangles.
+// Each row may widen, narrow, split or reconnect. That keeps the density change
+// readable as natural forest growth instead of a fixed-width painted border.
+const FOREST_DEEP_WOODS_ROWS: readonly ForestCanopyRow[] = [
+  [2, [[5, 9], [20, 22]]],
+  [3, [[3, 11], [18, 23], [26, 27]]],
+  [4, [[2, 13], [17, 24], [27, 28]]],
+  [5, [[2, 15], [18, 26]]],
+  [6, [[3, 16], [19, 23], [26, 28]]],
+  [7, [[4, 14], [17, 22], [25, 26]]],
+  [8, [[2, 9], [12, 15], [18, 20], [24, 25]]],
+  [9, [[3, 7], [10, 13], [17, 19], [22, 24]]],
+  [10, [[4, 6], [11, 12], [18, 20], [25, 28]]],
+  [11, [[3, 5], [10, 11], [19, 21], [26, 29]]],
+  [12, [[4, 6], [20, 21], [27, 29]]],
+  [13, [[25, 28]]],
+  [14, [[26, 29]]],
+  [15, [[25, 29]]],
+  [16, [[26, 28]]],
+  [17, [[20, 21], [25, 27]]],
+  [18, [[19, 21], [26, 29]]],
+  [19, [[18, 20], [24, 28]]],
+  [20, [[17, 19], [26, 29]]],
+  [21, [[12, 14], [18, 20], [25, 27]]],
+  [22, [[11, 15], [18, 21]]],
+  [23, [[11, 13], [16, 20]]],
+  [24, [[12, 16], [18, 20]]],
+  [25, [[10, 14], [16, 20]]],
+  [26, [[11, 13], [15, 19]]],
+  [27, [[9, 12], [14, 17]]],
+  [28, [[3, 6], [11, 15]]],
+  [29, [[2, 5], [11, 16]]],
+  [30, [[2, 4], [12, 16]]],
+  [31, [[3, 5], [11, 14]]],
+  [32, [[2, 4], [12, 15]]],
+  [33, [[3, 6], [13, 16]]],
+  [34, [[2, 5], [11, 15]]],
+  [35, [[3, 6], [12, 16]]],
+  [36, [[4, 7], [11, 14]]],
+  [37, [[3, 5], [12, 15]]],
+  [38, [[5, 7], [13, 14]]],
+]
+
+function isForestDeepWoods(x: number, y: number): boolean {
+  const row = FOREST_DEEP_WOODS_ROWS.find(([rowY]) => rowY === y)
+  if (!row) return false
+  return row[1].some(([minX, maxX]) => x >= minX && x <= maxX)
+}
+
+function isForestGrassClearing(x: number, y: number): boolean {
+  return (
+    isForestEntryClearing(x, y) ||
+    isForestTreasureClearing(x, y) ||
+    isForestRiverbankClearing(x, y) ||
+    isForestCentralClearing(x, y) ||
+    isForestCampClearing(x, y) ||
+    isForestMidbossClearing(x, y) ||
+    isForestSettlementClearing(x, y)
+  )
+}
+
 function getForestTerrain(x: number, y: number): Terrain {
   const position = { x, y }
-  if (x <= 0 || y <= 0 || x >= 30 || y >= 26) return 'mountain'
+  if (x <= 0 || y <= 0 || x >= 54 || y >= 40) return 'mountain'
   if (samePosition(position, JS_FOREST_MIDBOSS_POSITION)) return 'midboss'
   if (getTreasureAtPosition(position, JS_FOREST_MAP_ID)) return 'treasure'
 
-  if (
-    y === 10 ||
-    (x === 22 && y >= 4 && y <= 10) ||
-    (y === 4 && x >= 14 && x <= 22) ||
-    (x === 24 && y >= 10 && y <= 20) ||
-    (y === 20 && x >= 20 && x <= 24)
-  ) {
-    return 'road'
-  }
+  if (isForestRiverCrossing(x, y)) return 'log-crossing'
 
-  if (x === 18 && y <= 18) return 'water'
+  if (isForestLearningPosition(position)) return 'woods'
 
-  if (
-    (x >= 21 && x <= 25 && y >= 7 && y <= 13) ||
-    (x >= 12 && x <= 16 && y >= 2 && y <= 6) ||
-    (x >= 3 && x <= 8 && y >= 7 && y <= 13) ||
-    (x >= 18 && x <= 26 && y >= 17 && y <= 23)
-  ) {
-    return (x + y) % 3 === 0 ? 'grass' : 'woods'
-  }
-
-  return (x * 5 + y * 3) % 5 <= 1 ? 'deep-woods' : 'woods'
+  // Forest geography is hand-authored in large, irregular contours. Clearings,
+  // water and landmarks cut through the canopy naturally; no tile-noise formula
+  // or fixed-width deep-woods border is used.
+  if (isForestRiver(x, y) || isForestPond(x, y)) return 'water'
+  if (isForestThicketBarrier(x, y)) return 'thicket'
+  if (isForestGrassClearing(x, y)) return 'grass'
+  if (isForestDeepWoods(x, y)) return 'deep-woods'
+  return 'woods'
 }
 
 function getForestSettlementTerrain(x: number, y: number): Terrain {
@@ -501,6 +718,7 @@ export function isWalkableTerrain(terrain: Terrain): boolean {
   return ![
     'mountain',
     'water',
+    'thicket',
     'boss',
     'midboss',
     'shop',
