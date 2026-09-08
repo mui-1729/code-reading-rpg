@@ -61,9 +61,33 @@
   content: none;
 }
 
-/* Atlas keeps the same semantics: dense thicket is a barrier, log crossing is water with a trunk. */
+/* Phase-4 thicket stripes used to expose progression gates as four dark walls.
+   Adaptive lesson zones no longer use those walls, so legacy thicket cells render
+   exactly like ordinary woods instead of visually partitioning the Forest. */
+.world-viewport[data-world-map='js-forest'] .terrain-thicket {
+  background: #356f3d;
+}
+
+.world-viewport[data-world-map='js-forest'] .terrain-thicket::before {
+  left: 11%;
+  bottom: 6%;
+  width: 28%;
+  height: 54%;
+  background: #1f512b;
+}
+
+.world-viewport[data-world-map='js-forest'] .terrain-thicket::after {
+  right: 9%;
+  bottom: 6%;
+  width: 28%;
+  height: 54%;
+  background: #285f33;
+  transform: scale(.82);
+  transform-origin: bottom center;
+}
+
 .atlas-terrain-cell.terrain-thicket {
-  background: radial-gradient(circle, #173d25 24%, transparent 26%) 0 0 / 5px 5px, #102f1d;
+  background: #356f3d;
 }
 
 .atlas-terrain-cell.terrain-log-crossing {
