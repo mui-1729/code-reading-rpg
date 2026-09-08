@@ -1,5 +1,10 @@
 import { BASE_PLAYER_HP } from '../progression/constants'
 import {
+  FOREST_LEARNING_BATTLE_IDS,
+  isForestLearningZoneId,
+  type ForestLearningBattleZones,
+} from '../world/forestLearningZones'
+import {
   getWorldMapDimensions,
   isWorldMapId,
   isWorldPositionInBounds,
@@ -38,6 +43,7 @@ export type RpgState = {
   encounterCount: number
   currentHp: number
   openedTreasureIds: WorldTreasureId[]
+  forestLearningBattleZones?: ForestLearningBattleZones
 }
 
 export type StoredRpgState = {
@@ -149,6 +155,19 @@ function uniqueKnownTreasureIds(value: unknown): WorldTreasureId[] {
       ),
     ),
   )
+}
+
+function normalizeForestLearningBattleZones(value: unknown): ForestLearningBattleZones | undefined {
+  if (!value || typeof value !== 'object') return undefined
+  const candidate = value as Record<string, unknown>
+  const normalized: ForestLearningBattleZones = {}
+
+  for (const battleId of FOREST_LEARNING_BATTLE_IDS) {
+    const zoneId = candidate[String(battleId)]
+    if (isForestLearningZoneId(zoneId)) normalized[battleId] = zoneId
+  }
+
+  return Object.keys(normalized).length > 0 ? normalized : undefined
 }
 
 function emptyLoadout(): EquipmentLoadout {
@@ -317,6 +336,7 @@ export function restoreRpgState(raw: string | null, baseMaxHp = BASE_PLAYER_HP):
         parsed.version === 7
           ? uniqueKnownTreasureIds(state.openedTreasureIds)
           : [],
+      forestLearningBattleZones: normalizeForestLearningBattleZones(state.forestLearningBattleZones),
     }
   } catch {
     return initial
