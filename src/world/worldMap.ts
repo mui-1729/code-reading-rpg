@@ -430,11 +430,6 @@ function isForestPond(x: number, y: number): boolean {
   return easternWetland || westernPond || centralPool
 }
 
-function isForestThicketPatch(_x: number, _y: number): boolean {
-  // Forest Phase 4 no longer uses thicket as collision or progression terrain.
-  return false
-}
-
 type ForestCanopyRow = readonly [
   y: number,
   ranges: readonly (readonly [minX: number, maxX: number])[],
@@ -515,7 +510,6 @@ function getForestTerrain(x: number, y: number): Terrain {
   // water and landmarks cut through the canopy naturally; no tile-noise formula
   // or fixed-width deep-woods border is used.
   if (isForestRiver(x, y) || isForestPond(x, y)) return 'water'
-  if (isForestThicketPatch(x, y)) return 'thicket'
   if (isForestGrassClearing(x, y)) return 'grass'
   if (isForestDeepWoods(x, y)) return 'deep-woods'
   return 'woods'
