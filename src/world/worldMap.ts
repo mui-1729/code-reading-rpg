@@ -430,24 +430,9 @@ function isForestPond(x: number, y: number): boolean {
   return easternWetland || westernPond || centralPool
 }
 
-const FOREST_THICKET_PATCHES = [
-  { y: 5, minX: 46, maxX: 48 },
-  { y: 6, minX: 46, maxX: 49 },
-  { y: 7, minX: 47, maxX: 49 },
-  { y: 9, minX: 17, maxX: 19 },
-  { y: 10, minX: 18, maxX: 20 },
-  { y: 11, minX: 19, maxX: 20 },
-  { y: 26, minX: 11, maxX: 13 },
-  { y: 27, minX: 10, maxX: 13 },
-  { y: 34, minX: 4, maxX: 6 },
-  { y: 35, minX: 4, maxX: 7 },
-  { y: 36, minX: 5, maxX: 7 },
-] as const
-
-function isForestThicketPatch(x: number, y: number): boolean {
-  return FOREST_THICKET_PATCHES.some(
-    (patch) => y === patch.y && x >= patch.minX && x <= patch.maxX,
-  )
+function isForestThicketPatch(_x: number, _y: number): boolean {
+  // Forest Phase 4 no longer uses thicket as collision or progression terrain.
+  return false
 }
 
 type ForestCanopyRow = readonly [
