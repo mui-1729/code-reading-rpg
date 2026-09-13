@@ -6,6 +6,7 @@ import { PROGRESSION_LANDMARKS } from './progressionLandmarks'
 type LandmarkPortalTarget = {
   key: string
   target: Element
+  mapId: string
   label: string
   shortLabel: string
   kind: string
@@ -48,6 +49,7 @@ export function WorldCharacterDecorations() {
           {
             key: `${landmark.mapId}:${landmark.position.x}:${landmark.position.y}`,
             target,
+            mapId: landmark.mapId,
             label: landmark.label,
             shortLabel: landmark.shortLabel,
             kind: landmark.kind,
@@ -89,6 +91,7 @@ export function WorldCharacterDecorations() {
         createPortal(
           <span
             className="world-progression-landmark"
+            data-landmark-map={landmark.mapId}
             data-landmark-kind={landmark.kind}
             data-progression-battle={landmark.battleId}
             aria-label={landmark.label}

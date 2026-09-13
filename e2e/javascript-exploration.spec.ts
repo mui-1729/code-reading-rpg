@@ -72,14 +72,15 @@ async function seedExploration(
   await page.goto('/world')
 }
 
-test('Forestの南branchには寄り道Treasureがあり取得後もreloadでOPENを保つ', async ({ page }) => {
-  await seedExploration(page, 'js-forest', { x: 21, y: 20 })
+test('Forest北側の寄り道空き地にはTreasureがあり取得後もreloadでOPENを保つ', async ({ page }) => {
+  await seedExploration(page, 'js-forest', { x: 40, y: 7 })
 
   const map = page.getByLabel('JavaScriptの森のマップ')
-  await expect(map).toHaveAttribute('data-world-y', '20')
+  await expect(map).toHaveAttribute('data-world-x', '40')
+  await expect(map).toHaveAttribute('data-world-y', '7')
   await expect(page.getByLabel('FOREST SUPPLY 未開封')).toBeVisible()
 
-  await page.getByRole('button', { name: '左へ移動' }).click()
+  await page.getByRole('button', { name: '上へ移動' }).click()
   await page.getByRole('button', { name: '宝箱を開ける' }).click()
   await expect(page.getByText(/FOREST SUPPLY 開封/)).toBeVisible()
   await expect(page.getByLabel('FOREST SUPPLY 開封済み')).toBeVisible()

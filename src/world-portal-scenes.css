@@ -122,16 +122,84 @@
 .world-viewport[data-world-map='js-village'] .world-tile[data-world-x='10'][data-world-y='14']::before { left: 13%; }
 .world-viewport[data-world-map='js-village'] .world-tile[data-world-x='10'][data-world-y='14']::after { right: 13%; }
 
-/* Forest east edge -> grassland: a bright break in the trees. */
-.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='30'][data-world-y='10'] {
+/* Expanded Forest east edge -> grassland: a bright break in the trees. */
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='54'][data-world-y='20'] {
   --portal-scene-kind: forest-light-gap;
   background:
     radial-gradient(ellipse at 82% 50%, #93b96d 0 18%, #5b8b4b 19% 34%, transparent 35%),
     linear-gradient(90deg, #24562f 0 28%, #8e7149 29% 100%);
 }
 
-/* Forest -> Forest Settlement: roots open into a timber-marked inhabited path. */
-.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='10'] {
+/* Forest itself has no road network. If the cleared midboss presentation ever
+   supplies a road class, keep it visually woodland rather than revealing a hidden corridor. */
+.world-viewport[data-world-map='js-forest'] .world-tile.terrain-road {
+  background: #356f3d;
+}
+.world-viewport[data-world-map='js-forest'] .world-tile.terrain-road::before,
+.world-viewport[data-world-map='js-forest'] .world-tile.terrain-road::after {
+  content: '';
+  position: absolute;
+  bottom: 6%;
+  width: 28%;
+  height: 54%;
+  background: #1f512b;
+  clip-path: polygon(50% 0, 92% 44%, 72% 44%, 100% 72%, 66% 72%, 86% 100%, 14% 100%, 34% 72%, 0 72%, 28% 44%, 8% 44%);
+}
+.world-viewport[data-world-map='js-forest'] .world-tile.terrain-road::before { left: 11%; }
+.world-viewport[data-world-map='js-forest'] .world-tile.terrain-road::after {
+  right: 9%;
+  transform: scale(.82);
+  transform-origin: bottom center;
+  background: #285f33;
+}
+
+/* The handcrafted stream has two natural east/west crossings. Each crossing is
+   read as a fallen trunk spanning the two river cells, never as a road tile. */
+.world-viewport[data-world-map='js-forest'] .world-tile:is(
+  [data-world-x='32'][data-world-y='12'],
+  [data-world-x='30'][data-world-y='29']
+) {
+  --forest-landmark-kind: fallen-log-crossing;
+  overflow: visible;
+  background:
+    linear-gradient(90deg, rgba(36, 88, 48, .9) 0 20%, transparent 21% 79%, rgba(36, 88, 48, .9) 80%),
+    #3a7441;
+}
+.world-viewport[data-world-map='js-forest'] .world-tile:is(
+  [data-world-x='32'][data-world-y='12'],
+  [data-world-x='30'][data-world-y='29']
+)::before {
+  content: '';
+  position: absolute;
+  z-index: 4;
+  left: -12%;
+  right: -112%;
+  top: 42%;
+  height: 18%;
+  border: 2px solid #3d2b1c;
+  border-radius: 45%;
+  background: repeating-linear-gradient(90deg, #705034 0 9px, #5b3d28 9px 12px);
+  box-shadow: 0 3px 0 rgba(22, 36, 23, .45);
+  transform: rotate(-3deg);
+}
+.world-viewport[data-world-map='js-forest'] .world-tile:is(
+  [data-world-x='32'][data-world-y='12'],
+  [data-world-x='30'][data-world-y='29']
+)::after {
+  content: '';
+  position: absolute;
+  z-index: 5;
+  left: 24%;
+  top: 34%;
+  width: 12%;
+  height: 12%;
+  border-radius: 50%;
+  background: #77a45a;
+  box-shadow: 18px 7px 0 #5f8f4b, 35px -2px 0 #82ad61;
+}
+
+/* Forest -> Forest Settlement: roots open into a timber-marked inhabited opening. */
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='23'] {
   --portal-scene-kind: forest-settlement-gate;
   overflow: visible;
   background:
@@ -139,7 +207,7 @@
     linear-gradient(#5a4931 0 58%, #856b45 59% 100%);
 }
 
-.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='10']::before {
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='23']::before {
   content: '';
   position: absolute;
   z-index: 3;
@@ -153,7 +221,7 @@
   box-shadow: inset 0 4px 0 #6e5131, 0 -4px 0 #21482a;
 }
 
-.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='10']::after {
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='1'][data-world-y='23']::after {
   content: '';
   position: absolute;
   z-index: 4;

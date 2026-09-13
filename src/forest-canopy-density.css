@@ -1,0 +1,117 @@
+/*
+ * Forest canopy density must come from terrain, not coordinate-only paint fixes.
+ * Earlier iterations recolored selected deep-woods cells as ordinary woods to
+ * punch holes into rectangular masses. The terrain contours are now organic, so
+ * every deep-woods cell renders consistently in both the field and Atlas.
+ */
+.world-viewport[data-world-map='js-forest'] .world-tile.terrain-deep-woods {
+  background: #23512f !important;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile.terrain-deep-woods::before {
+  background: #153a23 !important;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile.terrain-deep-woods::after {
+  background: #193f26 !important;
+}
+
+.atlas-terrain-grid[data-terrain-width='55'] .atlas-terrain-cell.terrain-deep-woods {
+  background:
+    radial-gradient(circle, #31563b 20%, transparent 22%) 0 0 / 6px 6px,
+    #1d432b !important;
+}
+
+/* Legacy `thicket` cells are no longer progression walls. A few compact patches
+ * remain in the terrain data only as denser brush, but in the Forest they read
+ * exactly like normal woods in both the field and Atlas. */
+.world-viewport[data-world-map='js-forest'] .world-tile.terrain-thicket {
+  background: #356f3d !important;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile.terrain-thicket::before {
+  left: 11% !important;
+  bottom: 6% !important;
+  width: 28% !important;
+  height: 54% !important;
+  background: #1f512b !important;
+  transform: none !important;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile.terrain-thicket::after {
+  right: 9% !important;
+  bottom: 6% !important;
+  width: 28% !important;
+  height: 54% !important;
+  background: #285f33 !important;
+  transform: scale(.82) !important;
+  transform-origin: bottom center !important;
+}
+
+.atlas-terrain-grid[data-terrain-width='55'] .atlas-terrain-cell.terrain-thicket {
+  background:
+    radial-gradient(circle, #477b4e 20%, transparent 22%) 0 0 / 6px 6px,
+    #2e6039 !important;
+}
+
+/* The old decorative lower log at y=29 did not create a usable crossing.
+ * Remove that visual and place the landmark on the actual southern crossing. */
+.world-viewport[data-world-map='js-forest'] .world-tile:is(
+  [data-world-x='30'][data-world-y='29'],
+  [data-world-x='31'][data-world-y='29']
+)::before,
+.world-viewport[data-world-map='js-forest'] .world-tile:is(
+  [data-world-x='30'][data-world-y='29'],
+  [data-world-x='31'][data-world-y='29']
+)::after {
+  content: none !important;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile:is(
+  [data-world-x='30'][data-world-y='31'],
+  [data-world-x='31'][data-world-y='31']
+) {
+  overflow: visible;
+  border: 0;
+  background: #4aaed6 !important;
+  box-shadow: none !important;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile:is(
+  [data-world-x='30'][data-world-y='31'],
+  [data-world-x='31'][data-world-y='31']
+)::before,
+.world-viewport[data-world-map='js-forest'] .world-tile:is(
+  [data-world-x='30'][data-world-y='31'],
+  [data-world-x='31'][data-world-y='31']
+)::after {
+  content: none;
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='30'][data-world-y='31']::before {
+  content: '';
+  position: absolute;
+  z-index: 4;
+  left: -12%;
+  right: -112%;
+  top: 41%;
+  height: 18%;
+  border: 2px solid #3d2b1c;
+  border-radius: 45%;
+  background: repeating-linear-gradient(90deg, #705034 0 9px, #5b3d28 9px 12px);
+  box-shadow: 0 3px 0 rgba(22, 36, 23, .45);
+  transform: rotate(4deg);
+}
+
+.world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='30'][data-world-y='31']::after {
+  content: '';
+  position: absolute;
+  z-index: 5;
+  left: 19%;
+  top: 31%;
+  width: 12%;
+  height: 12%;
+  border-radius: 50%;
+  background: #77a45a;
+  box-shadow: 20px 9px 0 #5f8f4b, 37px 0 0 #82ad61;
+}

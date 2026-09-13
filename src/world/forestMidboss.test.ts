@@ -18,7 +18,7 @@ function forestState(position: { x: number; y: number }) {
 }
 
 describe('JavaScript Forest trace guardian', () => {
-  it('main trail西側へ固定Guardian objectを置き、clear前は直接踏めない', () => {
+  it('森の空き地へ固定Guardian objectを置き、clear前は直接踏めない', () => {
     expect(
       getTerrain(JS_FOREST_MIDBOSS_POSITION.x, JS_FOREST_MIDBOSS_POSITION.y, JS_FOREST_MAP_ID),
     ).toBe('midboss')
@@ -38,7 +38,7 @@ describe('JavaScript Forest trace guardian', () => {
     expect(result.terrain).toBe('midboss')
   })
 
-  it('condition junction未clearではGuardian interactionを開始できない', () => {
+  it('Battle 12未clearではGuardian interactionを開始できない', () => {
     const progress = createInitialPlayerProgress()
     const intent = resolveWorldInteraction(
       forestState({
@@ -56,7 +56,7 @@ describe('JavaScript Forest trace guardian', () => {
     })
   })
 
-  it('condition junction clear後は固定Guardian Battleを開始できる', () => {
+  it('Battle 12 clear後は固定Guardian Battleを開始できる', () => {
     const progress = createInitialPlayerProgress()
     const intent = resolveWorldInteraction(
       forestState({
@@ -79,7 +79,7 @@ describe('JavaScript Forest trace guardian', () => {
     })
   })
 
-  it('Guardian clear後は地点をroadとして通過でき、interactionも消える', () => {
+  it('Guardian clear後は跡地を草地として通過でき、interactionも消える', () => {
     const progress = createInitialPlayerProgress()
     const clearedProgress = {
       ...progress,
@@ -99,7 +99,7 @@ describe('JavaScript Forest trace guardian', () => {
     })
 
     expect(moveResult.kind).toBe('moved')
-    expect(moveResult.terrain).toBe('road')
+    expect(moveResult.terrain).toBe('grass')
     expect(moveResult.nextState.worldPosition).toEqual(JS_FOREST_MIDBOSS_POSITION)
     expect(resolveWorldInteraction(state, clearedProgress)).toEqual({ kind: 'none' })
   })

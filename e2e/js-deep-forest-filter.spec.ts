@@ -61,7 +61,7 @@ async function seedDeepForestGate(page: Page, state: DeepForestState) {
               byte: { weapon: null, armor: null, accessory: null },
             },
             worldMapId: atSettlement ? 'js-forest-settlement' : 'js-forest',
-            worldPosition: atSettlement ? { x: 11, y: 2 } : { x: 2, y: 10 },
+            worldPosition: atSettlement ? { x: 11, y: 2 } : { x: 2, y: 23 },
             safeCheckpoint: atSettlement
               ? { id: 'forest-settlement', mapId: 'js-forest-settlement', position: { x: 11, y: 11 } }
               : { id: 'greenfield-village', mapId: 'js-village', position: { x: 10, y: 12 } },
@@ -107,6 +107,7 @@ test('Battle 14未clearでは第二集落入口が閉じている', async ({ pag
 
   await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-map', 'js-forest')
   await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-x', '2')
+  await expect(page.getByLabel('JavaScriptの森のマップ')).toHaveAttribute('data-world-y', '23')
 })
 
 test('Battle 14 clear後は第二集落からDeep Forestへ入り、! → swirlを挟んでsecond incident Battle 2を固定再現する', async ({ page }) => {

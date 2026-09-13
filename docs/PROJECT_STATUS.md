@@ -1,6 +1,6 @@
 # CODE//READ RPG — Project Status
 
-最終更新: 2026-09-07
+最終更新: 2026-09-08
 
 この文書は、**このゲームが何を目指していて、今どこまで実装され、次に何を作るべきか**を短く把握するためのcurrent snapshotです。
 
@@ -127,7 +127,7 @@ stable map:
 
 - `overworld` — 70 × 50（地域間を旅するField scale）
 - `js-village` — GREENFIELD VILLAGE 21 × 15
-- `js-forest` — JAVASCRIPT FOREST 31 × 27
+- `js-forest` — JAVASCRIPT FOREST 55 × 41
 - `js-forest-settlement` — FOREST SETTLEMENT 23 × 17
 - `js-deep-forest` — JAVASCRIPT DEEP FOREST 31 × 27
 - `ts-frontier` — TYPESCRIPT FRONTIER 31 × 21
@@ -137,8 +137,18 @@ stable map:
 - viewport 11 × 9
 - `worldMapId + local worldPosition`をRpgStateへ保存
 - safe checkpointをRpgState v7へsemantic IDとして保存
-- Hub → GREENFIELD → Forestの本道は複数回曲がり、川・橋・森の景観を通る
+- Hub → GREENFIELD → ForestのOverworld本道は複数回曲がり、川・橋・森の景観を通る
 - GREENFIELD南側に本道へ再合流する川辺loopとTreasureがある
+- Forestは55×41のLocal Mapで、内部には`road` terrainを置かない
+- Forestは森 / 深い森 / 局所的な空き地 / 川 / 池で構成し、川は水面上の倒木で横断する
+- Forestの空き地は入口・川辺・Treasure・野営地・中ボス・第二集落付近など意味のある場所として配置し、空き地同士を一本道で接続しない
+- ForestのJS-05 / 06 / 07 / 09（Battle 10 / 11 / 12 / 14）は固定座標や地形壁で順番を強制せず、**Playerが最初に入った未使用の見えない候補regionをその人の発生地域として確定する**
+- Battle 10 / 11 / 12 / 14のregion assignmentはRpgStateへ保存し、敗北・reload後もclearまでは別regionへ移動しない
+- 一度使った候補regionは次のLearning Battleへ再利用せず、探索順によってPlayerごとにBattle位置が変わる
+- JS-08（Battle 13）のForest MID BOSSだけは固定Guardianとして残し、その周辺はadaptive候補regionから外す
+- 学習順そのものは地形ではなくsemantic progression graphで**10 → 11 → 12 → 13 → 14**を保証する
+- 旧thicket stripeは進行壁として扱わず、Field / Atlasの双方で通常のwoodsと同じ見た目にして、内部都合のregion境界を地形へ露出しない
+- 各Learning Battle間では複数方向へ探索でき、折れ枝・泥の足跡・踏み荒らされた草・木々へ続く足跡など実物の痕跡は世界のsceneryとして読む
 - Forest → Forest Settlement → Deep Forestの順に進み、Forest SettlementはRandom Encounterのない第二有人safe hub
 - Forest Settlementへ初回入場すると敗北時の復帰先が同集落へ更新される
 - Forest Settlementには宿・道具屋・NPCがあり、Deep Forest前に立て直せる
@@ -256,8 +266,9 @@ JavaScript編をRPGとして完成形に近づけ、World topology / safe hub / 
 - `PlayerProgress` schema v4
 - `RpgState` schema v7
   - v6: 70 × 50 Overworldを旧40 × 28 layoutと区別
-  - v7: persistent `safeCheckpoint`を追加
+  - v7: persistent `safeCheckpoint`を追加し、Forestのadaptive Learning Battle region assignmentもoptional stateとして保存する
 - RpgState v1〜v6からcurrent schemaへmigrationし、安全なcheckpoint fallbackを補う
+- Forestの未知 / 不正なLearning Battle region IDはrestore時に除外する
 - Progress / RPGの単一revision snapshot、backup recovery、storage event同期、stale tab上書き回避
 - root schema v2にBattle開始snapshotを保持する
 - Battle中HP / Itemはtentative stateとして同じroot transaction内で扱う
@@ -292,7 +303,16 @@ numeric IDを維持するのは互換性のためであり、将来のchapter追
 - JS-02 → JS-03 → JS-04
 - JS-04前はForestへ入れない
 - JS-04後にForestへ進める
-- Forest JS-05〜09
+- Forestは55×41で`road` terrainを持たず、森・空き地・川・池を大きな地形として探索できる
+- Forestの川横断点は**水面の上に倒木が乗る**専用`log-crossing`として視認・通行できる
+- 旧thicket stripeはPlayer移動を遮らず、Field / Atlasで通常woodsと同じ見た目になり、4区画の進行壁として読めない
+- Forest Battle 10 / 11 / 12 / 14は固定座標ではなく、Playerが最初に入った未使用adaptive zoneへ割り当てられる
+- 同じ進行状態でも探索順が違えばBattle 10の発生regionが変わる
+- 一度割り当てられた未clear Battleは敗北 / reload後も別regionへ移動しない
+- 次のLearning Battleは前のBattleと同じzoneを再利用しない
+- Battle 13 Guardianは固定地点で、12 clearまでは開始できない
+- Guardian地点はadaptive zone外で、13 clear直後の1歩でBattle 14を消費しない
+- Learning Battleの順序はsemantic progression graphで10 → 11 → 12 → 13 → 14を保証する
 - current Lessonの新SkillはTRIALとして使える
 - clear後のSkillは後続BattleでMASTEREDとして利用できる
 - 未MASTERED / 非TRIAL SkillはBattleへ出ない
@@ -335,12 +355,11 @@ npm run test:e2e
 
 JavaScript編を完成形の基準にする。
 
-1. #377 / #330 / #375 — JavaScript Worldの拠点・旅loopを完成させる
-2. #352 — Forest / Deep Forestを探索型layoutへ再設計する
-3. #373 — cell-level Fog of War / 地域地図をJavaScript topologyへ統合する
-4. JavaScript編を通しplayし、拠点間隔・Encounter・Economy・Story pacingを調整する
-5. その基準を使ってTypeScriptを本格拡張する
-6. #246 — Database prototype
+1. #352 Phase 5 — Deep ForestをForestより長く・濃く、探索型layoutへ再設計する
+2. #373 — cell-level Fog of War / 地域地図をJavaScript topologyへ統合する
+3. JavaScript編を通しplayし、拠点間隔・Encounter・Economy・Story pacingを調整する
+4. その基準を使ってTypeScriptを本格拡張する
+5. #246 — Database prototype
 
 新region追加時も、
 
