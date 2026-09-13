@@ -411,10 +411,9 @@ function isForestPond(x: number, y: number): boolean {
   // Water is kept as compact landmarks rather than large decorative basins.
   // The shapes are irregular but never create isolated walkable islands.
   const easternWetland =
+    inRect(x, y, 45, 48, 29, 30) ||
     (y === 27 && x >= 46 && x <= 47) ||
     (y === 28 && x >= 45 && x <= 47) ||
-    (y === 29 && x >= 45 && x <= 48) ||
-    (y === 30 && x >= 45 && x <= 48) ||
     (y === 31 && x >= 46 && x <= 48) ||
     (y === 32 && x >= 47 && x <= 48)
   const westernPond =
