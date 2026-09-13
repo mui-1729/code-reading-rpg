@@ -396,7 +396,7 @@ function getForestRiverX(y: number): number | null {
 }
 
 function isForestRiverCrossing(x: number, y: number): boolean {
-  if (y !== 12) return false
+  if (y !== 12 && y !== 31) return false
   const riverX = getForestRiverX(y)
   return riverX !== null && (x === riverX || x === riverX + 1)
 }
@@ -408,67 +408,47 @@ function isForestRiver(x: number, y: number): boolean {
 }
 
 function isForestPond(x: number, y: number): boolean {
-  const easternPond =
-    inRect(x, y, 45, 47, 26, 33) ||
-    inRect(x, y, 44, 48, 28, 31)
+  // Water is kept as compact landmarks rather than large decorative basins.
+  // The shapes are irregular but never create isolated walkable islands.
+  const easternWetland =
+    (y === 27 && x >= 46 && x <= 47) ||
+    (y === 28 && x >= 45 && x <= 47) ||
+    (y === 29 && x >= 45 && x <= 48) ||
+    (y === 30 && x >= 45 && x <= 48) ||
+    (y === 31 && x >= 46 && x <= 48) ||
+    (y === 32 && x >= 47 && x <= 48)
   const westernPond =
-    inRect(x, y, 7, 9, 28, 36) ||
-    inRect(x, y, 6, 10, 30, 34)
+    (y === 30 && x >= 8 && x <= 9) ||
+    (y === 31 && x >= 7 && x <= 10) ||
+    (y === 32 && x >= 6 && x <= 10) ||
+    (y === 33 && x >= 6 && x <= 10) ||
+    (y === 34 && x >= 7 && x <= 9) ||
+    (y === 35 && x === 8)
   const centralPool =
-    inRect(x, y, 22, 23, 13, 18) ||
-    inRect(x, y, 21, 24, 14, 16)
-  return easternPond || westernPond || centralPool
+    (y === 15 && x >= 22 && x <= 23) ||
+    (y === 16 && x >= 22 && x <= 24) ||
+    (y === 17 && x === 23)
+  return easternWetland || westernPond || centralPool
 }
 
-const FOREST_THICKET_BARRIERS = [
-  {
-    gateY: 20,
-    segments: [
-      [1, 8, 46],
-      [9, 18, 47],
-      [19, 24, 46],
-      [25, 32, 46],
-      [33, 39, 47],
-    ],
-  },
-  {
-    gateY: 25,
-    segments: [
-      [1, 8, 21],
-      [9, 18, 22],
-      [19, 29, 21],
-      [30, 39, 22],
-    ],
-  },
-  {
-    gateY: 16,
-    segments: [
-      [1, 10, 14],
-      [11, 20, 15],
-      [21, 30, 14],
-      [31, 39, 15],
-    ],
-  },
-  {
-    gateY: 20,
-    segments: [
-      [1, 10, 8],
-      [11, 24, 9],
-      [25, 34, 8],
-      [35, 39, 9],
-    ],
-  },
+const FOREST_THICKET_PATCHES = [
+  { y: 5, minX: 46, maxX: 48 },
+  { y: 6, minX: 46, maxX: 49 },
+  { y: 7, minX: 47, maxX: 49 },
+  { y: 9, minX: 17, maxX: 19 },
+  { y: 10, minX: 18, maxX: 20 },
+  { y: 11, minX: 19, maxX: 20 },
+  { y: 26, minX: 11, maxX: 13 },
+  { y: 27, minX: 10, maxX: 13 },
+  { y: 34, minX: 4, maxX: 6 },
+  { y: 35, minX: 4, maxX: 7 },
+  { y: 36, minX: 5, maxX: 7 },
 ] as const
 
-function isForestThicketBarrier(x: number, y: number): boolean {
-  for (const barrier of FOREST_THICKET_BARRIERS) {
-    if (y === barrier.gateY) continue
-    const segment = barrier.segments.find(([minY, maxY]) => y >= minY && y <= maxY)
-    if (!segment) continue
-    const leftX = segment[2]
-    if (x === leftX || x === leftX + 1) return true
-  }
-  return false
+function isForestThicketPatch(x: number, y: number): boolean {
+  return FOREST_THICKET_PATCHES.some(
+    (patch) => y === patch.y && x >= patch.minX && x <= patch.maxX,
+  )
 }
 
 type ForestCanopyRow = readonly [
@@ -551,7 +531,7 @@ function getForestTerrain(x: number, y: number): Terrain {
   // water and landmarks cut through the canopy naturally; no tile-noise formula
   // or fixed-width deep-woods border is used.
   if (isForestRiver(x, y) || isForestPond(x, y)) return 'water'
-  if (isForestThicketBarrier(x, y)) return 'thicket'
+  if (isForestThicketPatch(x, y)) return 'thicket'
   if (isForestGrassClearing(x, y)) return 'grass'
   if (isForestDeepWoods(x, y)) return 'deep-woods'
   return 'woods'
