@@ -187,7 +187,7 @@ describe('open world map', () => {
     expect(terrains.has('road')).toBe(false)
     expect(terrains.has('woods')).toBe(true)
     expect(terrains.has('deep-woods')).toBe(true)
-    expect(terrains.has('thicket')).toBe(true)
+    expect(terrains.has('thicket')).toBe(false)
     expect(terrains.has('grass')).toBe(true)
     expect(terrains.has('water')).toBe(true)
     expect(terrains.has('log-crossing')).toBe(true)
