@@ -4,7 +4,7 @@ const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
-test('Villageのhouseは複数tileで屋根・壁・扉を描き入口文字に依存しない', async ({ page }) => {
+test('Villageのhouseは複数tileで屋根・壁・扉を描き施設文字に依存しない', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   await page.evaluate(
@@ -83,6 +83,38 @@ test('Villageのhouseは複数tileで屋根・壁・扉を描き入口文字に�
     .locator('[data-world-x="14"][data-world-y="9"].terrain-house')
     .evaluate((element) => getComputedStyle(element, '::before').clipPath)
   expect(slopedRoof).not.toBe('none')
+
+  const facilityMarkers = village.locator('.facility-object[data-facility-icon]')
+  await expect(facilityMarkers).toHaveCount(3)
+  for (const kind of ['inn', 'item-shop', 'equipment-shop']) {
+    const marker = village.locator(`.facility-object[data-facility-icon="${kind}"]`)
+    await expect(marker).toHaveText('')
+    const visual = await marker.evaluate((element) => {
+      const before = getComputedStyle(element, '::before')
+      const after = getComputedStyle(element, '::after')
+      return {
+        width: Number.parseFloat(getComputedStyle(element).width),
+        beforeContent: before.content,
+        beforeWidth: Number.parseFloat(before.width),
+        beforeHeight: Number.parseFloat(before.height),
+        afterContent: after.content,
+        afterWidth: Number.parseFloat(after.width),
+        afterHeight: Number.parseFloat(after.height),
+      }
+    })
+    expect(visual.width).toBeGreaterThanOrEqual(20)
+    expect(visual.beforeContent).not.toBe('none')
+    expect(visual.beforeWidth).toBeGreaterThan(2)
+    expect(visual.beforeHeight).toBeGreaterThan(2)
+    expect(visual.afterContent).not.toBe('none')
+    expect(visual.afterWidth).toBeGreaterThan(2)
+    expect(visual.afterHeight).toBeGreaterThan(2)
+  }
+
+  const fieldText = await village.textContent()
+  expect(fieldText).not.toContain('道具屋')
+  expect(fieldText).not.toContain('装備屋')
+  expect(fieldText).not.toContain('宿')
 
   const lane = village.locator('[data-world-x="7"][data-world-y="12"]')
   await expect(lane).toBeVisible()
