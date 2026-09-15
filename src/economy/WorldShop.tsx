@@ -21,10 +21,14 @@ import {
   type ShopItemQuote,
 } from './shop'
 
+export type WorldShopKind = 'all' | 'items' | 'equipment'
+
 type WorldShopProps = {
   open: boolean
   onClose: () => void
   onMessage: (message: string) => void
+  kind?: WorldShopKind
+  locationLabel?: string
 }
 
 const equipmentSlotLabels = {
@@ -40,13 +44,24 @@ const equipmentStateLabels = {
   equipped: '装備中',
 } as const
 
-export function WorldShop({ open, onClose, onMessage }: WorldShopProps) {
+export function WorldShop({
+  open,
+  onClose,
+  onMessage,
+  kind = 'all',
+  locationLabel = 'CENTRAL HUB',
+}: WorldShopProps) {
   const { progress, setProgress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
 
   const dialogRef = useModalFocus<HTMLElement>({ open, onEscape: onClose })
 
   if (!open) return null
+
+  const shopLabel = kind === 'items' ? '道具屋' : kind === 'equipment' ? '装備屋' : 'ショップ'
+  const heading = kind === 'items' ? '道具を補充する' : kind === 'equipment' ? '装備を整える' : 'アイテム・装備'
+  const showConsumables = kind !== 'equipment'
+  const showEquipment = kind !== 'items'
 
   const buy = (itemId: string) => {
     const item = worldShopItems.find((entry) => entry.id === itemId)
@@ -238,40 +253,44 @@ export function WorldShop({ open, onClose, onMessage }: WorldShopProps) {
         className="shop-panel pixel-window world-shop-panel"
         role="dialog"
         aria-modal="true"
-        aria-label="ショップ"
+        aria-label={shopLabel}
         tabIndex={-1}
         onClick={(event) => event.stopPropagation()}
       >
-        <button type="button" className="close-button" onClick={onClose} aria-label="ショップを閉じる">
+        <button type="button" className="close-button" onClick={onClose} aria-label={`${shopLabel}を閉じる`}>
           ×
         </button>
-        <div className="eyebrow">CENTRAL HUB // ショップ</div>
-        <h2>アイテム・装備</h2>
+        <div className="eyebrow">{locationLabel} // {shopLabel}</div>
+        <h2>{heading}</h2>
 
         <div className="shop-wallet pixel-inner-window">
           <span>所持ゴールド</span>
           <strong>{progress.gold} G</strong>
         </div>
 
-        <section className="world-shop-section" aria-label="消耗品">
-          <header className="world-shop-section-head">
-            <strong>消耗品</strong>
-            <span>戦闘で使うアイテム</span>
-          </header>
-          <div className="world-shop-list is-consumable">
-            {consumables.map(renderShopItem)}
-          </div>
-        </section>
+        {showConsumables && (
+          <section className="world-shop-section" aria-label="消耗品">
+            <header className="world-shop-section-head">
+              <strong>消耗品</strong>
+              <span>戦闘で使うアイテム</span>
+            </header>
+            <div className="world-shop-list is-consumable">
+              {consumables.map(renderShopItem)}
+            </div>
+          </section>
+        )}
 
-        <section className="world-shop-section" aria-label="装備品">
-          <header className="world-shop-section-head">
-            <strong>装備品</strong>
-            <span>能力を継続的に変える装備</span>
-          </header>
-          <div className="world-shop-list is-equipment">
-            {equipment.map(renderShopItem)}
-          </div>
-        </section>
+        {showEquipment && (
+          <section className="world-shop-section" aria-label="装備品">
+            <header className="world-shop-section-head">
+              <strong>装備品</strong>
+              <span>能力を継続的に変える装備</span>
+            </header>
+            <div className="world-shop-list is-equipment">
+              {equipment.map(renderShopItem)}
+            </div>
+          </section>
+        )}
       </section>
     </div>
   )
