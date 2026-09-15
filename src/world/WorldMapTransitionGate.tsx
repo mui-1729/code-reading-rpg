@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { useProgress } from '../progression'
 import { useRpg } from '../rpg'
-import { useSceneTransition } from '../transition/SceneTransitionContext'
+import { useSceneTransition } from '../transition/useSceneTransition'
 import { resolveWorldMove } from './worldActions'
 import { getWorldInteractionTarget } from './worldInteractionTarget'
 import type { WorldFacing } from './worldPresentation'
@@ -39,11 +39,20 @@ function isWorldInteractButton(target: EventTarget | null) {
     : null
 }
 
-function getRenderedWorldFacing(): WorldFacing | null {
-  const facing = document.querySelector<HTMLElement>('.world-player-sprite')?.dataset.facing
-  return facing === 'up' || facing === 'down' || facing === 'left' || facing === 'right'
-    ? facing
-    : null
+function replayPointerClick(button: HTMLButtonElement) {
+  button.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+}
+
+function replayKeyboard(key: string) {
+  window.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }))
+}
+
+function getFacingForDirection(direction: Direction): WorldFacing | null {
+  if (direction.dx === -1 && direction.dy === 0) return 'left'
+  if (direction.dx === 1 && direction.dy === 0) return 'right'
+  if (direction.dx === 0 && direction.dy === -1) return 'up'
+  if (direction.dx === 0 && direction.dy === 1) return 'down'
+  return null
 }
 
 /**
@@ -74,8 +83,8 @@ export function WorldMapTransitionGate() {
     replay: () => void,
   ) => {
     if (isTransitioning) return false
-    const fromMapId = rpgStateRef.current.worldMapId
     heldDirectionRef.current = null
+    const fromMapId = rpgStateRef.current.worldMapId
     void runSceneTransition(
       'map',
       () => {
@@ -107,144 +116,96 @@ export function WorldMapTransitionGate() {
       dx,
       dy,
     })
-    if (result.kind !== 'transition') return false
-    return beginTransition(result.toMapId, result.label, replay)
+    if (result.kind !== 'portal') return false
+    return beginTransition(result.portal.toMapId, result.portal.label, replay)
   }, [beginTransition])
 
   const tryInteractTransition = useCallback((replay: () => void) => {
-    const facing = getRenderedWorldFacing()
-    if (!facing) return false
-    const target = getWorldInteractionTarget(rpgStateRef.current.worldPosition, facing)
-    const intent = resolveWorldTargetInteraction(rpgStateRef.current, progressRef.current, target)
-    if (intent.kind !== 'map-transition') return false
-    return beginTransition(intent.toMapId, intent.label, replay)
+    const state = rpgStateRef.current
+    const target = getWorldInteractionTarget(state.worldMapId, state.worldPosition, state.worldFacing)
+    if (!target) return false
+    const result = resolveWorldTargetInteraction({
+      rpgState: state,
+      progress: progressRef.current,
+      target,
+    })
+    if (result.kind !== 'portal') return false
+    return beginTransition(result.portal.toMapId, result.portal.label, replay)
   }, [beginTransition])
 
   useEffect(() => {
     const onPointerDown = (event: PointerEvent) => {
-      if (bypassRef.current) return
-      if (isTransitioning) {
-        if (event.target instanceof Element && event.target.closest('.world-controls, .pause-trigger')) {
-          stopNativeEvent(event)
-        }
-        return
-      }
-
-      const control = getDirectionButton(event.target)
-      if (!control || event.button !== 0) return
-      const { button, direction } = control
-      const replay = () => button.click()
-      if (tryMoveTransition(direction.dx, direction.dy, replay)) {
-        stopNativeEvent(event)
-        return
-      }
-      heldDirectionRef.current = { button, ...direction }
+      if (bypassRef.current || isTransitioning) return
+      const found = getDirectionButton(event.target)
+      if (!found) return
+      heldDirectionRef.current = { ...found.direction, button: found.button }
     }
 
-    const onPointerEnd = () => {
+    const onPointerUp = () => {
       heldDirectionRef.current = null
     }
 
     const onClick = (event: MouseEvent) => {
-      if (bypassRef.current) return
-      const directionControl = getDirectionButton(event.target)
+      if (bypassRef.current || isTransitioning) return
+
+      const found = getDirectionButton(event.target)
+      if (found) {
+        const transitioned = tryMoveTransition(
+          found.direction.dx,
+          found.direction.dy,
+          () => replayPointerClick(found.button),
+        )
+        if (transitioned) stopNativeEvent(event)
+        return
+      }
+
       const interactButton = isWorldInteractButton(event.target)
-
-      if (isTransitioning) {
-        if (directionControl || interactButton || (event.target instanceof Element && event.target.closest('.pause-trigger'))) {
-          stopNativeEvent(event)
-        }
-        return
-      }
-
-      if (directionControl && event.detail === 0) {
-        const { button, direction } = directionControl
-        if (tryMoveTransition(direction.dx, direction.dy, () => button.click())) {
-          stopNativeEvent(event)
-        }
-        return
-      }
-
-      if (interactButton && tryInteractTransition(() => interactButton.click())) {
-        stopNativeEvent(event)
-      }
+      if (!interactButton) return
+      const transitioned = tryInteractTransition(() => replayPointerClick(interactButton))
+      if (transitioned) stopNativeEvent(event)
     }
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (bypassRef.current) return
-      const target = event.target
-      const nativeControl = target instanceof Element &&
-        (event.key === 'Enter' || event.key === ' ') &&
-        Boolean(target.closest('button, a'))
-      if (nativeControl) return
-
-      const key = event.key.toLowerCase()
-      const direction = key === 'arrowup' || key === 'w'
-        ? { dx: 0, dy: -1 }
-        : key === 'arrowdown' || key === 's'
-          ? { dx: 0, dy: 1 }
-          : key === 'arrowleft' || key === 'a'
-            ? { dx: -1, dy: 0 }
-            : key === 'arrowright' || key === 'd'
-              ? { dx: 1, dy: 0 }
-              : null
-      const interactionKey = event.key === 'Enter' || event.key === ' '
-
-      if (isTransitioning) {
-        if (direction || interactionKey) stopNativeEvent(event)
+      if (bypassRef.current || isTransitioning) return
+      const direction = DIRECTION_BY_LABEL[
+        event.key === 'ArrowUp'
+          ? '上へ移動'
+          : event.key === 'ArrowDown'
+            ? '下へ移動'
+            : event.key === 'ArrowLeft'
+              ? '左へ移動'
+              : event.key === 'ArrowRight'
+                ? '右へ移動'
+                : ''
+      ]
+      if (direction) {
+        const facing = getFacingForDirection(direction)
+        if (!facing) return
+        const transitioned = tryMoveTransition(direction.dx, direction.dy, () => replayKeyboard(event.key))
+        if (transitioned) stopNativeEvent(event)
         return
       }
 
-      const replay = () => {
-        window.dispatchEvent(new KeyboardEvent('keydown', {
-          key: event.key,
-          code: event.code,
-          bubbles: true,
-          cancelable: true,
-        }))
-      }
-
-      if (direction && tryMoveTransition(direction.dx, direction.dy, replay)) {
-        stopNativeEvent(event)
-      } else if (interactionKey && tryInteractTransition(replay)) {
-        stopNativeEvent(event)
-      }
+      if (event.key !== 'Enter' && event.key !== ' ') return
+      const target = event.target
+      if (target instanceof HTMLElement && target.closest('button, input, textarea, select, a')) return
+      const transitioned = tryInteractTransition(() => replayKeyboard(event.key))
+      if (transitioned) stopNativeEvent(event)
     }
 
     window.addEventListener('pointerdown', onPointerDown, true)
-    window.addEventListener('pointerup', onPointerEnd, true)
-    window.addEventListener('pointercancel', onPointerEnd, true)
+    window.addEventListener('pointerup', onPointerUp, true)
+    window.addEventListener('pointercancel', onPointerUp, true)
     window.addEventListener('click', onClick, true)
     window.addEventListener('keydown', onKeyDown, true)
     return () => {
       window.removeEventListener('pointerdown', onPointerDown, true)
-      window.removeEventListener('pointerup', onPointerEnd, true)
-      window.removeEventListener('pointercancel', onPointerEnd, true)
+      window.removeEventListener('pointerup', onPointerUp, true)
+      window.removeEventListener('pointercancel', onPointerUp, true)
       window.removeEventListener('click', onClick, true)
       window.removeEventListener('keydown', onKeyDown, true)
     }
   }, [isTransitioning, tryInteractTransition, tryMoveTransition])
-
-  // D-pad hold repeats inside WorldControls without another DOM event. Stop the
-  // hold before its next tick and let the shared transition own the boundary.
-  useEffect(() => {
-    const held = heldDirectionRef.current
-    if (!held || isTransitioning) return
-    const result = resolveWorldMove({
-      rpgState,
-      progress,
-      dx: held.dx,
-      dy: held.dy,
-    })
-    if (result.kind !== 'transition') return
-
-    held.button.dispatchEvent(new PointerEvent('pointerup', {
-      bubbles: true,
-      button: 0,
-      pointerType: 'mouse',
-    }))
-    beginTransition(result.toMapId, result.label, () => held.button.click())
-  }, [beginTransition, isTransitioning, progress, rpgState])
 
   return null
 }
