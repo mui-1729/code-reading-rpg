@@ -93,11 +93,11 @@ async function faceFinalBoss(page: Page) {
   await expect(page.locator('.world-player-sprite')).toHaveAttribute('data-facing', 'up')
 }
 
-test('Battle 15後のDeep ForestでBattle 16 map()をtrace変換として固定導入する', async ({ page }) => {
+test('Battle 15後のDeep ForestでBattle 16 map()を割れた実の場所に固定導入する', async ({ page }) => {
   await seedWorld(page, {
     clearedStageIds: throughDeepFilter,
     mapId: 'js-deep-forest',
-    position: { x: 24, y: 8 },
+    position: { x: 53, y: 17 },
   })
 
   await page.getByRole('button', { name: '左へ移動' }).click()
@@ -115,11 +115,11 @@ test('Battle 15後のDeep ForestでBattle 16 map()をtrace変換として固定�
   await expect(story).toContainText('新しい配列')
 })
 
-test('Battle 18後のDeep ForestでRoot Guardian Battle 19を固定する', async ({ page }) => {
+test('Battle 18後のDeep Forestで交差する巨大根にRoot Guardian Battle 19を固定する', async ({ page }) => {
   await seedWorld(page, {
     clearedStageIds: [...throughDeepFilter, 16, 17, 18],
     mapId: 'js-deep-forest',
-    position: { x: 11, y: 9 },
+    position: { x: 31, y: 27 },
   })
 
   await page.getByRole('button', { name: '左へ移動' }).click()
@@ -136,11 +136,11 @@ test('Battle 18後のDeep ForestでRoot Guardian Battle 19を固定する', asyn
   await expect(story).toContainText('every()')
 })
 
-test('最深部ではBattle 22 reduce()をfinal traceとして固定導入する', async ({ page }) => {
+test('最深部では巨大根が集まる場所にBattle 22 reduce()をfinal traceとして固定導入する', async ({ page }) => {
   await seedWorld(page, {
     clearedStageIds: throughBattle21,
     mapId: 'js-deep-forest',
-    position: { x: 6, y: 9 },
+    position: { x: 9, y: 15 },
   })
 
   await page.getByRole('button', { name: '左へ移動' }).click()
