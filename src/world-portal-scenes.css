@@ -271,21 +271,22 @@
   clip-path: polygon(0 70%, 22% 25%, 43% 62%, 65% 0, 100% 70%, 100% 100%, 0 100%);
 }
 
-/* Deep Forest east edge now returns to the inhabited settlement, not directly to Forest. */
-.world-viewport[data-world-map='js-deep-forest'] .world-tile[data-world-x='30'][data-world-y='10'] {
+/* Deep Forest east edge returns to the inhabited settlement after the expanded Phase 5 map. */
+.world-viewport[data-world-map='js-deep-forest'] .world-tile[data-world-x='64'][data-world-y='24'] {
   --portal-scene-kind: settlement-light-gap;
   background:
     radial-gradient(ellipse at 86% 50%, #779b61 0 22%, #466d43 23% 40%, transparent 41%),
     linear-gradient(90deg, #163b24 0 32%, #7d6745 33% 100%);
 }
 
-.world-viewport[data-world-map='js-deep-forest'] .world-tile[data-world-x='1'][data-world-y='10'] {
+/* The final exit is the giant-root opening at the western-most Deep Forest approach. */
+.world-viewport[data-world-map='js-deep-forest'] .world-tile[data-world-x='1'][data-world-y='15'] {
   --portal-scene-kind: giant-root-gate;
   overflow: visible;
   background: #142f20;
 }
 
-.world-viewport[data-world-map='js-deep-forest'] .world-tile[data-world-x='1'][data-world-y='10']::before {
+.world-viewport[data-world-map='js-deep-forest'] .world-tile[data-world-x='1'][data-world-y='15']::before {
   content: '';
   position: absolute;
   z-index: 3;
@@ -296,7 +297,7 @@
   box-shadow: inset 0 0 0 5px #0f2a1b, 0 -6px 0 #1c3b24;
 }
 
-.world-viewport[data-world-map='js-deep-forest'] .world-tile[data-world-x='1'][data-world-y='10']::after {
+.world-viewport[data-world-map='js-deep-forest'] .world-tile[data-world-x='1'][data-world-y='15']::after {
   content: '';
   position: absolute;
   z-index: 4;
