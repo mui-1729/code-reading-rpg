@@ -1,4 +1,6 @@
+import { getLevelForExp, getPlayerStats } from '../progression/progression'
 import type { PlayerProgress } from '../progression/types'
+import { getCombatStats } from '../rpg/combat'
 import type { RpgState } from '../rpg/state'
 import { getSafeBattleReturnState } from './safeReturn'
 
@@ -73,5 +75,16 @@ export function commitBattleSession<T extends BattleTransactionState>(
 ): T {
   if (state.battleSession?.identity.id !== id) return state
   if (event !== 'VICTORY') return state
-  return { ...state, ...action(state), battleSession: undefined }
+
+  const committed = action(state)
+  const previousLevel = getLevelForExp(state.progress.exp)
+  const nextLevel = getLevelForExp(committed.progress.exp)
+  const rpgState = nextLevel > previousLevel
+    ? {
+        ...committed.rpgState,
+        currentHp: getCombatStats(getPlayerStats(committed.progress.exp), committed.rpgState).maxHp,
+      }
+    : committed.rpgState
+
+  return { ...state, ...committed, rpgState, battleSession: undefined }
 }
