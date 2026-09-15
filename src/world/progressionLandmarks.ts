@@ -1,4 +1,5 @@
 import {
+  JS_DEEP_FOREST_LEARNING_POSITIONS,
   JS_DEEP_FOREST_MAP_ID,
   JS_FOREST_LEARNING_POSITIONS,
   JS_FOREST_MAP_ID,
@@ -15,9 +16,9 @@ export type ProgressionLandmark = {
 }
 
 /**
- * Fixed-story Battle thresholds must have a player-visible place in the world.
- * Forest Phase 4 spreads a small number of landmarks across real geographic
- * transitions instead of lining labels along one horizontal corridor or road.
+ * Fixed-story Battles are tied to places the player can recognize in the field.
+ * Labels describe the scenery for accessibility; CSS renders the physical clue
+ * itself instead of painting developer-facing Battle names onto the map.
  */
 export const PROGRESSION_LANDMARKS: readonly ProgressionLandmark[] = [
   {
@@ -54,58 +55,66 @@ export const PROGRESSION_LANDMARKS: readonly ProgressionLandmark[] = [
   },
   {
     mapId: JS_DEEP_FOREST_MAP_ID,
-    position: { x: 24, y: 11 },
-    battleId: 16,
-    label: '形の違う記録片が散る場所',
-    shortLabel: '変換痕',
-    kind: 'archive',
-  },
-  {
-    mapId: JS_DEEP_FOREST_MAP_ID,
-    position: { x: 19, y: 11 },
-    battleId: 17,
-    label: '一つの警報灯だけが残る痕跡',
-    shortLabel: '警報痕',
+    position: JS_DEEP_FOREST_LEARNING_POSITIONS[15],
+    battleId: 15,
+    label: '湿った地面に同じ足跡が何本も重なっている',
+    shortLabel: '湿地の足跡',
     kind: 'trace',
   },
   {
     mapId: JS_DEEP_FOREST_MAP_ID,
-    position: { x: 14, y: 9 },
+    position: JS_DEEP_FOREST_LEARNING_POSITIONS[16],
+    battleId: 16,
+    label: '割れた実と形の違う種子が一緒に散らばっている',
+    shortLabel: '割れた実',
+    kind: 'archive',
+  },
+  {
+    mapId: JS_DEEP_FOREST_MAP_ID,
+    position: JS_DEEP_FOREST_LEARNING_POSITIONS[17],
+    battleId: 17,
+    label: '鳥が一斉に飛び立った羽根の跡が残っている',
+    shortLabel: '散った羽根',
+    kind: 'trace',
+  },
+  {
+    mapId: JS_DEEP_FOREST_MAP_ID,
+    position: JS_DEEP_FOREST_LEARNING_POSITIONS[18],
     battleId: 18,
-    label: '群れ全体を囲う古い障壁',
-    shortLabel: '群れの障壁',
+    label: '太い根が円を描くように広場を囲んでいる',
+    shortLabel: '根囲い',
     kind: 'barrier',
   },
   {
     mapId: JS_DEEP_FOREST_MAP_ID,
-    position: { x: 10, y: 9 },
+    position: JS_DEEP_FOREST_LEARNING_POSITIONS[19],
     battleId: 19,
-    label: '二つの根が絡む合流門',
-    shortLabel: '根の合流門',
+    label: '二本の巨大な根が交差して奥を塞いでいる',
+    shortLabel: '交差する根',
     kind: 'barrier',
   },
   {
     mapId: JS_DEEP_FOREST_MAP_ID,
-    position: { x: 9, y: 9 },
+    position: JS_DEEP_FOREST_LEARNING_POSITIONS[20],
     battleId: 20,
-    label: '優先順を刻んだ石列',
-    shortLabel: '順序石',
+    label: '倒木に大きさの違う爪痕が順に残っている',
+    shortLabel: '爪痕の倒木',
     kind: 'archive',
   },
   {
     mapId: JS_DEEP_FOREST_MAP_ID,
-    position: { x: 7, y: 9 },
+    position: JS_DEEP_FOREST_LEARNING_POSITIONS[21],
     battleId: 21,
-    label: '欠けた記録が積まれた場所',
-    shortLabel: '欠損記録',
+    label: '苔むした根の一部だけが空洞になっている',
+    shortLabel: '根の空洞',
     kind: 'archive',
   },
   {
     mapId: JS_DEEP_FOREST_MAP_ID,
-    position: { x: 5, y: 9 },
+    position: JS_DEEP_FOREST_LEARNING_POSITIONS[22],
     battleId: 22,
-    label: 'すべての痕跡が一本へ集まる根',
-    shortLabel: '集約根',
+    label: '周囲の巨大根が一本の幹へ集まっている',
+    shortLabel: '巨大根',
     kind: 'junction',
   },
 ]
