@@ -110,6 +110,8 @@ describe('world shop', () => {
     const prices = Object.fromEntries(worldShopItems.map((item) => [item.id, getShopItemPrice(item)]))
     expect(prices).toEqual({
       'patch-kit': 30,
+      'js-forest-chart': 45,
+      'js-deep-forest-chart': 70,
       'guard-edge': 55,
       'vital-coat': 60,
       'life-charm': 50,
@@ -144,6 +146,7 @@ describe('world shop', () => {
     expect(javascriptFirstClearGold).toBe(100)
     expect(javascriptWithTreasure).toBe(120)
     expect(javascriptFirstClearGold).toBeGreaterThanOrEqual(prices['patch-kit'] + cheapestEquipment)
+    expect(allShopProducts).toBe(310)
     expect(javascriptWithTreasure).toBeLessThan(allShopProducts)
   })
 
