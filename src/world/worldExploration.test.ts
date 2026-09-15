@@ -51,8 +51,9 @@ describe('world exploration state', () => {
   })
 
   it('version 7 saveは壊さず現在地周辺だけを初期探索記録として移行する', () => {
-    const current = createInitialRpgState()
-    const { revealedWorldCells: _revealed, ownedWorldMapIds: _charts, ...legacyState } = current
+    const legacyState: Record<string, unknown> = { ...createInitialRpgState() }
+    delete legacyState.revealedWorldCells
+    delete legacyState.ownedWorldMapIds
     const restored = restoreRpgState(JSON.stringify({ version: 7, state: legacyState }))
 
     expect(restored.revealedWorldCells.overworld).toHaveLength(25)
