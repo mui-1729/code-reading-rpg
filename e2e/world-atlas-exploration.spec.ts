@@ -25,18 +25,28 @@ async function openForestAtlas(page: Page, openedTreasureIds: string[]) {
         },
       }))
       localStorage.setItem(rpgKey, JSON.stringify({
-        version: 5,
+        version: 8,
         state: {
           equipment: { weapon: 'training-blade', armor: 'traveler-coat', accessory: null },
           ownedEquipmentIds: ['training-blade', 'traveler-coat'],
           partyMemberIds: ['byte'],
-          partyEquipment: { byte: { weapon: null, armor: null, accessory: null } },
           worldMapId: 'js-forest',
           worldPosition: { x: 52, y: 20 },
+          safeCheckpoint: {
+            id: 'greenfield-village',
+            mapId: 'js-village',
+            position: { x: 10, y: 12 },
+          },
           stepsSinceEncounter: 0,
           encounterCount: 0,
           currentHp: 108,
           openedTreasureIds,
+          revealedWorldCells: {
+            'js-forest': openedTreasureIds.includes('js-forest-supply')
+              ? ['52:20', '40:6']
+              : ['52:20'],
+          },
+          ownedWorldMapIds: ['js-forest'],
         },
       }))
       localStorage.setItem(tutorialKey, JSON.stringify({ version: 1, status: 'skipped', phase: 'battle' }))
@@ -56,7 +66,7 @@ async function openForestAtlas(page: Page, openedTreasureIds: string[]) {
   return page.locator('[data-atlas-map="js-forest"]')
 }
 
-test('拡張したForest Atlasは55×41を描画し未開封宝箱の正確な位置を隠す', async ({ page }) => {
+test('拡張したForest Atlasは55×41を描画し地域地図でも未踏宝箱の正確な位置を漏らさない', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   const forest = await openForestAtlas(page, [])
 
@@ -64,14 +74,11 @@ test('拡張したForest Atlasは55×41を描画し未開封宝箱の正確な�
   await expect(terrain).toHaveAttribute('data-terrain-width', '55')
   await expect(terrain).toHaveAttribute('data-terrain-height', '41')
 
-  const unopenedTreasure = forest.locator('.atlas-landmark-pin.is-treasure:not(.is-opened)')
-  await expect(unopenedTreasure).toHaveCount(1)
-  await expect(unopenedTreasure).toBeHidden()
-
+  await expect(forest.locator('.atlas-landmark-pin.is-treasure')).toHaveCount(0)
   await expect(forest.locator('.atlas-landmark-pin.is-exit').first()).toBeVisible()
 })
 
-test('発見済み宝箱だけは探索履歴として控えめにAtlasへ残せる', async ({ page }) => {
+test('実際に探索済みの開封宝箱だけは探索履歴として控えめにAtlasへ残せる', async ({ page }) => {
   const forest = await openForestAtlas(page, ['js-forest-supply'])
 
   const openedTreasure = forest.locator('.atlas-landmark-pin.is-treasure.is-opened')
