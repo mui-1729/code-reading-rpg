@@ -1,7 +1,5 @@
 import {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -9,17 +7,11 @@ import {
   type ReactNode,
 } from 'react'
 import { gameAudio, type SoundEffect } from '../audio/gameAudio'
-
-export type SceneTransitionKind =
-  | 'map'
-  | 'encounter'
-  | 'battle-start'
-  | 'boss-start'
-  | 'battle-return'
-  | 'defeat-return'
-  | 'connect'
-  | 'return-real-world'
-  | 'story-to-world'
+import {
+  SceneTransitionContext,
+  type SceneTransitionContextValue,
+  type SceneTransitionKind,
+} from './sceneTransitionState'
 
 type SceneTransitionPhase = 'covering' | 'revealing'
 
@@ -29,22 +21,6 @@ type ActiveSceneTransition = {
   label?: string
   fromMapId?: string
   toMapId?: string
-}
-
-type SceneTransitionOptions = {
-  label?: string
-  fromMapId?: string
-  toMapId?: string
-  waitFor?: () => boolean
-}
-
-type SceneTransitionContextValue = {
-  isTransitioning: boolean
-  runSceneTransition: (
-    kind: SceneTransitionKind,
-    swap: () => void | Promise<void>,
-    options?: SceneTransitionOptions,
-  ) => Promise<boolean>
 }
 
 type TransitionTiming = {
@@ -67,8 +43,6 @@ const NORMAL_TIMINGS: Record<SceneTransitionKind, TransitionTiming> = {
 
 const REDUCED_TIMING = { coverMs: 24, revealMs: 70 }
 const SCENE_SWAP_WATCHDOG_MS = 1_200
-
-const SceneTransitionContext = createContext<SceneTransitionContextValue | null>(null)
 
 function delay(ms: number) {
   return new Promise<void>((resolve) => window.setTimeout(resolve, ms))
@@ -194,10 +168,4 @@ export function SceneTransitionProvider({ children }: { children: ReactNode }) {
       )}
     </SceneTransitionContext.Provider>
   )
-}
-
-export function useSceneTransition() {
-  const value = useContext(SceneTransitionContext)
-  if (!value) throw new Error('useSceneTransition must be used within SceneTransitionProvider')
-  return value
 }
