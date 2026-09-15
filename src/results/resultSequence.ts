@@ -63,7 +63,7 @@ export function createVictoryResultSequence(
     items.push({
       id: 'level',
       title: `レベルアップ！ · 最大HP +${maxHpDelta} · 威力 +${powerDelta}%`,
-      detail: `${reward.previousLevel} → ${reward.newLevel}`,
+      detail: `${reward.previousLevel} → ${reward.newLevel} · HP全回復`,
       tone: 'level',
     })
   }
