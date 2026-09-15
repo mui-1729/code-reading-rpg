@@ -172,3 +172,26 @@ test('Forestから第二集落を経由し、集落北口だけがDeep Forestの
   await page.getByRole('button', { name: 'JavaScript深層の森へ入る' }).click()
   await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-map', 'js-deep-forest')
 })
+
+test('拡張Deep Forestでは東の集落口と巨大根の最深部出口が新座標で別sceneになる', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  const throughForest = [1, 7, 8, 9, 10, 11, 12, 13, 14]
+  await seedWorld(page, 'js-deep-forest', { x: 63, y: 24 }, throughForest)
+
+  const settlementExit = '.world-tile[data-world-x="64"][data-world-y="24"]'
+  await expect(page.locator(settlementExit)).toBeVisible()
+  expect(await portalSceneKind(page, settlementExit)).toBe('settlement-light-gap')
+
+  const throughDeepForest = [...throughForest, 2, 15, 16, 17, 18, 19, 20, 21, 22]
+  await seedWorld(page, 'js-deep-forest', { x: 2, y: 15 }, throughDeepForest)
+
+  const coreExit = '.world-tile[data-world-x="1"][data-world-y="15"]'
+  await expect(page.locator(coreExit)).toBeVisible()
+  expect(await portalSceneKind(page, coreExit)).toBe('giant-root-gate')
+  const rootArch = await page.locator(coreExit).evaluate((element) => {
+    const style = getComputedStyle(element, '::before')
+    return { content: style.content, borderTopWidth: Number.parseFloat(style.borderTopWidth) }
+  })
+  expect(rootArch.content).not.toBe('none')
+  expect(rootArch.borderTopWidth).toBeGreaterThan(0)
+})
