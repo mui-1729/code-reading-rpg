@@ -1,0 +1,80 @@
+/* Forest Settlement reuses the same text-free facility sign language as GREENFIELD. */
+.world-viewport[data-world-map='js-forest-settlement'] .facility-object {
+  position: absolute;
+  z-index: 8;
+  left: 50%;
+  top: 1px;
+  translate: -50% 0;
+  width: 22px;
+  height: 22px;
+  border: 2px solid #30251d;
+  border-radius: 1px;
+  background: #efe0b7;
+  box-shadow: 0 2px 0 rgba(28, 21, 17, .75), inset 0 0 0 1px rgba(255, 255, 255, .22);
+  font-size: 0;
+  line-height: 0;
+  pointer-events: none;
+}
+
+.world-viewport[data-world-map='js-forest-settlement'] .facility-object::before,
+.world-viewport[data-world-map='js-forest-settlement'] .facility-object::after {
+  content: '';
+  position: absolute;
+  image-rendering: pixelated;
+}
+
+.world-viewport[data-world-map='js-forest-settlement'] .facility-object[data-village-facility='inn'] {
+  background: #f4d8ae;
+}
+
+.world-viewport[data-world-map='js-forest-settlement'] .facility-object[data-village-facility='inn']::before {
+  left: 3px;
+  bottom: 4px;
+  width: 14px;
+  height: 7px;
+  border: 2px solid #51352b;
+  border-top-width: 3px;
+  background: #d88962;
+  box-shadow: -2px 4px 0 -1px #51352b, 12px 4px 0 -1px #51352b;
+}
+
+.world-viewport[data-world-map='js-forest-settlement'] .facility-object[data-village-facility='inn']::after {
+  left: 4px;
+  top: 4px;
+  width: 6px;
+  height: 5px;
+  border: 2px solid #51352b;
+  background: #fff1c9;
+}
+
+.world-viewport[data-world-map='js-forest-settlement'] .facility-object[data-village-facility='item-shop'] {
+  background: #cfe2b7;
+}
+
+.world-viewport[data-world-map='js-forest-settlement'] .facility-object[data-village-facility='item-shop']::before {
+  left: 6px;
+  top: 7px;
+  width: 8px;
+  height: 10px;
+  border: 2px solid #30452d;
+  border-radius: 1px 1px 3px 3px;
+  background: linear-gradient(0deg, #78a85f 0 55%, #dff0c8 56%);
+}
+
+.world-viewport[data-world-map='js-forest-settlement'] .facility-object[data-village-facility='item-shop']::after {
+  left: 8px;
+  top: 3px;
+  width: 4px;
+  height: 5px;
+  border: 2px solid #30452d;
+  border-bottom: 0;
+  background: #dff0c8;
+  box-shadow: -1px -2px 0 #30452d, 1px -2px 0 #30452d;
+}
+
+@media (max-width: 700px) {
+  .world-viewport[data-world-map='js-forest-settlement'] .facility-object {
+    width: 20px;
+    height: 20px;
+  }
+}
