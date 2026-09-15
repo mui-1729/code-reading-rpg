@@ -61,7 +61,8 @@ export function revealWorldPosition(
   radius = WORLD_REVEAL_RADIUS,
 ): RpgState {
   const safeRadius = Math.max(0, Math.floor(radius))
-  const existing = new Set(state.revealedWorldCells[state.worldMapId] ?? [])
+  const revealedWorldCells = state.revealedWorldCells ?? {}
+  const existing = new Set(revealedWorldCells[state.worldMapId] ?? [])
   const { width, height } = getWorldMapDimensions(state.worldMapId)
 
   for (let y = state.worldPosition.y - safeRadius; y <= state.worldPosition.y + safeRadius; y += 1) {
@@ -72,15 +73,19 @@ export function revealWorldPosition(
   }
 
   const nextCells = Array.from(existing)
-  const previous = state.revealedWorldCells[state.worldMapId] ?? []
-  if (nextCells.length === previous.length && nextCells.every((cell) => previous.includes(cell))) {
+  const previous = revealedWorldCells[state.worldMapId] ?? []
+  if (
+    state.revealedWorldCells !== undefined &&
+    nextCells.length === previous.length &&
+    nextCells.every((cell) => previous.includes(cell))
+  ) {
     return state
   }
 
   return {
     ...state,
     revealedWorldCells: {
-      ...state.revealedWorldCells,
+      ...revealedWorldCells,
       [state.worldMapId]: nextCells,
     },
   }
@@ -91,14 +96,14 @@ export function isWorldCellRevealed(
   mapId: WorldMapId,
   position: WorldPosition,
 ): boolean {
-  return (state.revealedWorldCells[mapId] ?? []).includes(encodeWorldCell(position))
+  return (state.revealedWorldCells?.[mapId] ?? []).includes(encodeWorldCell(position))
 }
 
 export function hasWorldMapChart(
   state: Pick<RpgState, 'ownedWorldMapIds'>,
   mapId: WorldMapId,
 ): boolean {
-  return state.ownedWorldMapIds.includes(mapId)
+  return (state.ownedWorldMapIds ?? []).includes(mapId)
 }
 
 export function isWorldTerrainVisible(
