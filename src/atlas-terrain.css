@@ -137,6 +137,16 @@
 .atlas-terrain-cell::before,
 .atlas-terrain-cell::after { content: none; }
 
+.atlas-terrain-cell.is-fogged {
+  background: repeating-linear-gradient(135deg, #0a0a11 0 4px, #10101a 4px 6px);
+  color: transparent;
+  box-shadow: inset 0 0 0 1px rgba(73, 72, 91, .16);
+}
+
+.atlas-terrain-cell.is-charted:not(.is-player) {
+  filter: saturate(.72) brightness(.82);
+}
+
 .atlas-terrain-cell.terrain-mountain,
 .atlas-terrain-cell.terrain-house {
   background: repeating-linear-gradient(135deg, #292830 0 4px, #383740 4px 6px);
@@ -191,6 +201,7 @@
   background: #fff;
   color: #1c1018;
   box-shadow: 0 0 0 1px #ff4f8b, 0 0 5px #ff4f8b;
+  filter: none;
 }
 
 .atlas-landmark-layer {

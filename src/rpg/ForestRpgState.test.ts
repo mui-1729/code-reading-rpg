@@ -1,16 +1,18 @@
 import { describe, expect, it } from 'vitest'
+import { revealWorldPosition } from '../world/worldExploration'
 import { JS_FOREST_MAP_ID, OVERWORLD_MAP_ID, WORLD_START } from '../world/worldMap'
 import { createInitialRpgState, restoreRpgState, serializeRpgState } from './state'
 
 describe('JavaScript forest RPG state', () => {
   it('Forest map IDとlocal positionを保存・復元する', () => {
-    const state = {
+    const state = revealWorldPosition({
       ...createInitialRpgState(),
       worldMapId: JS_FOREST_MAP_ID,
       worldPosition: { x: 24, y: 25 },
       stepsSinceEncounter: 6,
       encounterCount: 3,
-    }
+      forestLearningBattleZones: undefined,
+    })
 
     expect(restoreRpgState(serializeRpgState(state))).toEqual(state)
   })

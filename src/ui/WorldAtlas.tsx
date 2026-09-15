@@ -2,11 +2,19 @@ import { useLayoutEffect, useMemo, useRef, useState, type PointerEvent as ReactP
 import type { PlayerProgress } from '../progression'
 import { areBattlePrerequisitesMet, getBattleDisplayCode } from '../progression/progressionGraph'
 import type { RpgState } from '../rpg'
+import { VILLAGE_FACILITIES } from '../world/villageFacilityData'
+import {
+  getChartSafeTerrain,
+  hasWorldMapChart,
+  isWorldCellRevealed,
+  isWorldTerrainVisible,
+} from '../world/worldExploration'
 import {
   getTerrain,
   getWorldMapDimensions,
   JS_DEEP_FOREST_MAP_ID,
   JS_FOREST_MAP_ID,
+  JS_FOREST_SETTLEMENT_MAP_ID,
   JS_VILLAGE_MAP_ID,
   OVERWORLD_MAP_ID,
   TS_FRONTIER_MAP_ID,
@@ -30,7 +38,9 @@ type AtlasMap = {
 type AtlasCell = {
   x: number
   y: number
-  terrain: Terrain
+  terrain: Terrain | null
+  actuallyRevealed: boolean
+  chartRevealed: boolean
   locked: boolean
 }
 
@@ -71,6 +81,7 @@ const atlasMaps: AtlasMap[] = [
   { id: OVERWORLD_MAP_ID, label: 'JavaScript草原', subtitle: 'Hub · 交差点' },
   { id: JS_VILLAGE_MAP_ID, label: 'グリーンフィールド村', subtitle: 'JavaScript · 村' },
   { id: JS_FOREST_MAP_ID, label: 'JavaScriptの森', subtitle: 'JavaScript · 分岐路' },
+  { id: JS_FOREST_SETTLEMENT_MAP_ID, label: '森番の集落', subtitle: 'JavaScript · 補給拠点' },
   { id: JS_DEEP_FOREST_MAP_ID, label: 'JavaScript深層の森', subtitle: 'JavaScript · 最深部' },
   { id: TS_FRONTIER_MAP_ID, label: 'TypeScript辺境', subtitle: 'TypeScript · 辺境' },
 ]
@@ -129,7 +140,12 @@ function isMapDiscovered(
   progress: PlayerProgress,
   rpgState: RpgState,
 ): boolean {
-  if (mapId === rpgState.worldMapId || mapId === OVERWORLD_MAP_ID) return true
+  if (
+    mapId === rpgState.worldMapId ||
+    mapId === OVERWORLD_MAP_ID ||
+    hasWorldMapChart(rpgState, mapId) ||
+    (rpgState.revealedWorldCells[mapId]?.length ?? 0) > 0
+  ) return true
   const gate = getMapGateStatus(mapId, progress.clearedStageIds)
   return gate === null || gate === OPEN_GATE_LABEL
 }
@@ -166,23 +182,40 @@ function getDiscoveredRoutes(progress: PlayerProgress, rpgState: RpgState): Atla
   return routes
 }
 
-function buildMapCells(mapId: WorldMapId, clearedStageIds: readonly number[]): AtlasCell[] {
+function buildMapCells(
+  mapId: WorldMapId,
+  clearedStageIds: readonly number[],
+  rpgState: RpgState,
+): AtlasCell[] {
   const dimensions = getWorldMapDimensions(mapId)
   const cells: AtlasCell[] = []
+  const chartOwned = hasWorldMapChart(rpgState, mapId)
 
   for (let y = 0; y < dimensions.height; y += 1) {
     for (let x = 0; x < dimensions.width; x += 1) {
-      const terrain = getTerrain(x, y, mapId)
-      const portal = WORLD_PORTALS.find(
-        (candidate) =>
-          candidate.fromMapId === mapId &&
-          candidate.position.x === x &&
-          candidate.position.y === y,
-      )
+      const position = { x, y }
+      const actuallyRevealed = isWorldCellRevealed(rpgState, mapId, position)
+      const visible = isWorldTerrainVisible(rpgState, mapId, position)
+      const rawTerrain = visible ? getTerrain(x, y, mapId) : null
+      const terrain = rawTerrain === null
+        ? null
+        : actuallyRevealed
+          ? rawTerrain
+          : getChartSafeTerrain(mapId, rawTerrain)
+      const portal = visible
+        ? WORLD_PORTALS.find(
+            (candidate) =>
+              candidate.fromMapId === mapId &&
+              candidate.position.x === x &&
+              candidate.position.y === y,
+          )
+        : undefined
       cells.push({
         x,
         y,
         terrain,
+        actuallyRevealed,
+        chartRevealed: chartOwned && !actuallyRevealed,
         locked:
           portal?.requiredClearedStageId !== undefined &&
           !isRequiredStageSatisfied(portal.requiredClearedStageId, clearedStageIds),
@@ -198,10 +231,14 @@ function buildLandmarks(
   openedTreasureIds: readonly string[],
 ): AtlasLandmark[] {
   const landmarks: AtlasLandmark[] = []
+  const visibleCell = new Map(cells.map((cell) => [`${cell.x}:${cell.y}`, cell]))
+
   for (const cell of cells) {
+    if (!cell.terrain) continue
     const definition = LANDMARK_BY_TERRAIN[cell.terrain]
     if (!definition) continue
     if (cell.terrain === 'treasure') {
+      if (!cell.actuallyRevealed) continue
       const treasure = WORLD_TREASURES.find(
         (candidate) => candidate.mapId === mapId && candidate.position.x === cell.x && candidate.position.y === cell.y,
       )
@@ -217,14 +254,28 @@ function buildLandmarks(
     }
     landmarks.push({ id: `${mapId}:${cell.terrain}:${cell.x}:${cell.y}`, x: cell.x, y: cell.y, ...definition })
   }
+
+  for (const facility of VILLAGE_FACILITIES) {
+    if (facility.mapId !== mapId) continue
+    const cell = visibleCell.get(`${facility.position.x}:${facility.position.y}`)
+    if (!cell?.terrain) continue
+    landmarks.push({
+      id: `${mapId}:facility:${facility.kind}:${facility.position.x}:${facility.position.y}`,
+      x: facility.position.x,
+      y: facility.position.y,
+      kind: facility.kind === 'inn' ? 'inn' : 'shop',
+      label: facility.label,
+    })
+  }
+
   return landmarks
 }
 
 function AtlasTerrainMap({ map, progress, rpgState }: { map: AtlasMap; progress: PlayerProgress; rpgState: RpgState }) {
   const dimensions = getWorldMapDimensions(map.id)
   const cells = useMemo(
-    () => buildMapCells(map.id, progress.clearedStageIds),
-    [map.id, progress.clearedStageIds],
+    () => buildMapCells(map.id, progress.clearedStageIds, rpgState),
+    [map.id, progress.clearedStageIds, rpgState],
   )
   const landmarks = useMemo(
     () => buildLandmarks(map.id, cells, rpgState.openedTreasureIds),
@@ -232,6 +283,8 @@ function AtlasTerrainMap({ map, progress, rpgState }: { map: AtlasMap; progress:
   )
   const isCurrent = map.id === rpgState.worldMapId
   const gateStatus = getMapGateStatus(map.id, progress.clearedStageIds)
+  const chartOwned = hasWorldMapChart(rpgState, map.id)
+  const exploredCount = cells.filter((cell) => cell.actuallyRevealed).length
 
   return (
     <article className={`atlas-map atlas-map-detail ${isCurrent ? 'is-current' : ''}`} data-atlas-map={map.id}>
@@ -257,14 +310,16 @@ function AtlasTerrainMap({ map, progress, rpgState }: { map: AtlasMap; progress:
           >
             {cells.map((cell) => {
               const playerHere = isCurrent && rpgState.worldPosition.x === cell.x && rpgState.worldPosition.y === cell.y
+              const terrainClass = cell.terrain ? `terrain-${cell.terrain}` : 'is-fogged'
               return (
                 <span
                   key={`${cell.x}:${cell.y}`}
-                  className={`atlas-terrain-cell terrain-${cell.terrain} ${cell.locked ? 'is-locked' : ''} ${playerHere ? 'is-player' : ''}`}
+                  className={`atlas-terrain-cell ${terrainClass} ${cell.chartRevealed ? 'is-charted' : ''} ${cell.locked ? 'is-locked' : ''} ${playerHere ? 'is-player' : ''}`}
                   aria-label={playerHere ? '現在地' : undefined}
                   aria-hidden={playerHere ? undefined : true}
+                  data-atlas-visibility={cell.actuallyRevealed ? 'explored' : cell.chartRevealed ? 'charted' : 'fog'}
                 >
-                  {playerHere ? '●' : TERRAIN_GLYPH[cell.terrain] ?? ''}
+                  {playerHere ? '●' : cell.terrain ? TERRAIN_GLYPH[cell.terrain] ?? '' : ''}
                 </span>
               )
             })}
@@ -305,7 +360,7 @@ function AtlasTerrainMap({ map, progress, rpgState }: { map: AtlasMap; progress:
       </div>
 
       <footer>
-        <span>未確認の目印 {landmarks.filter((landmark) => !landmark.opened).length}</span>
+        <span>{chartOwned ? `地域地図購入済み · 実踏 ${exploredCount}/${cells.length}` : `探索記録 ${exploredCount}/${cells.length}`}</span>
         {gateStatus && <strong className={gateStatus === OPEN_GATE_LABEL ? 'is-open' : 'is-locked'}>{gateStatus}</strong>}
       </footer>
     </article>
@@ -490,8 +545,9 @@ export function WorldAtlas({ progress, rpgState }: WorldAtlasProps) {
         <span><b>★</b>ボス</span>
         <span><b>◆</b>宝箱</span>
         <span><b>●</b>現在地</span>
+        <span><b>■</b>未踏</span>
       </div>
-      <p className="atlas-legend">発見済みエリアだけを表示します。エリアを選ぶと出口や目印を確認できます。</p>
+      <p className="atlas-legend">歩いた周辺だけを記録します。地域地図を買うと通常地形は見えますが、宝箱などの探索要素は自動表示しません。</p>
     </section>
   )
 }
