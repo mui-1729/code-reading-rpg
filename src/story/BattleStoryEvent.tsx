@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { getStorySpeakerVisual } from '../rpg'
+import { useSceneTransition } from '../transition/useSceneTransition'
 import { useModalFocus } from '../ui/useModalFocus'
+import { getStoryLayerTransitionKind } from './storyLayerTransition'
 import type {
   BattleStoryEvent as BattleStoryEventData,
   StoryWorldLayer,
@@ -22,20 +24,42 @@ const storyLayerLabels: Record<StoryWorldLayer, string> = {
 
 export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEventProps) {
   const [lineIndex, setLineIndex] = useState(0)
+  const { isTransitioning, runSceneTransition } = useSceneTransition()
   const line = event.lines[lineIndex]
+  const layer = line?.layer ?? 'code-world'
   const isLast = lineIndex === event.lines.length - 1
   const dialogRef = useModalFocus<HTMLElement>({
     open: true,
     onEscape: onSkip ?? onComplete,
   })
 
-  const advance = () => {
+  const advance = useCallback(() => {
+    if (isTransitioning || !line) return
     if (isLast) {
       onComplete()
       return
     }
-    setLineIndex((current) => current + 1)
-  }
+
+    const nextLine = event.lines[lineIndex + 1]
+    const nextLayer = nextLine?.layer ?? 'code-world'
+    const transitionKind = getStoryLayerTransitionKind(layer, nextLayer)
+    const swap = () => setLineIndex((current) => current + 1)
+
+    if (!transitionKind) {
+      swap()
+      return
+    }
+
+    void runSceneTransition(
+      transitionKind,
+      swap,
+      {
+        label: transitionKind === 'connect'
+          ? 'CONNECT // CODE WORLD'
+          : 'RETURN // REAL WORLD',
+      },
+    )
+  }, [event.lines, isLast, isTransitioning, layer, line, lineIndex, onComplete, runSceneTransition])
 
   useEffect(() => {
     const onKeyDown = (keyboardEvent: KeyboardEvent) => {
@@ -50,11 +74,10 @@ export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEvent
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  })
+  }, [advance])
 
   if (!line) return null
 
-  const layer = line.layer ?? 'code-world'
   const speakerVisual = getStorySpeakerVisual(line.speakerId)
 
   return (
@@ -96,8 +119,8 @@ export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEvent
         </div>
         <p>{line.text}</p>
         <div className="dialogue-actions">
-          <button type="button" className="secondary-button" onClick={onSkip ?? onComplete}>スキップ</button>
-          <button type="button" className="primary-button" onClick={advance}>
+          <button type="button" className="secondary-button" onClick={onSkip ?? onComplete} disabled={isTransitioning}>スキップ</button>
+          <button type="button" className="primary-button" onClick={advance} disabled={isTransitioning}>
             {isLast ? '▶ 続ける' : '▶ 次へ'}
           </button>
         </div>
