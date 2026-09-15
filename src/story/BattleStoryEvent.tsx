@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { getStorySpeakerVisual } from '../rpg'
+import { useSceneTransition } from '../transition/useSceneTransition'
 import { useModalFocus } from '../ui/useModalFocus'
+import { getStoryLayerTransitionKind } from './storyLayerTransition'
 import type {
   BattleStoryEvent as BattleStoryEventData,
   StoryWorldLayer,
@@ -22,20 +24,73 @@ const storyLayerLabels: Record<StoryWorldLayer, string> = {
 
 export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEventProps) {
   const [lineIndex, setLineIndex] = useState(0)
+  const { isTransitioning, runSceneTransition } = useSceneTransition()
   const line = event.lines[lineIndex]
+  const layer = line?.layer ?? 'code-world'
   const isLast = lineIndex === event.lines.length - 1
-  const dialogRef = useModalFocus<HTMLElement>({
-    open: true,
-    onEscape: onSkip ?? onComplete,
-  })
+  const containsReturn = useMemo(
+    () => event.lines.some((candidate) => candidate.layer === 'return'),
+    [event.lines],
+  )
 
-  const advance = () => {
-    if (isLast) {
-      onComplete()
+  const completeStory = useCallback((skip: boolean) => {
+    if (isTransitioning) return
+    const complete = skip ? (onSkip ?? onComplete) : onComplete
+
+    const transitionKind = containsReturn && layer !== 'real-world'
+      ? 'return-real-world'
+      : !containsReturn && (layer === 'real-world' || layer === 'remote' || layer === 'connect')
+        ? 'connect'
+        : null
+
+    if (!transitionKind) {
+      complete()
       return
     }
-    setLineIndex((current) => current + 1)
-  }
+
+    void runSceneTransition(
+      transitionKind,
+      complete,
+      {
+        label: transitionKind === 'connect'
+          ? 'CONNECT // CODE WORLD'
+          : 'RETURN // REAL WORLD',
+      },
+    )
+  }, [containsReturn, isTransitioning, layer, onComplete, onSkip, runSceneTransition])
+
+  const dialogRef = useModalFocus<HTMLElement>({
+    open: true,
+    onEscape: () => completeStory(true),
+  })
+
+  const advance = useCallback(() => {
+    if (isTransitioning || !line) return
+    if (isLast) {
+      completeStory(false)
+      return
+    }
+
+    const nextLine = event.lines[lineIndex + 1]
+    const nextLayer = nextLine?.layer ?? 'code-world'
+    const transitionKind = getStoryLayerTransitionKind(layer, nextLayer)
+    const swap = () => setLineIndex((current) => current + 1)
+
+    if (!transitionKind) {
+      swap()
+      return
+    }
+
+    void runSceneTransition(
+      transitionKind,
+      swap,
+      {
+        label: transitionKind === 'connect'
+          ? 'CONNECT // CODE WORLD'
+          : 'RETURN // REAL WORLD',
+      },
+    )
+  }, [completeStory, event.lines, isLast, isTransitioning, layer, line, lineIndex, runSceneTransition])
 
   useEffect(() => {
     const onKeyDown = (keyboardEvent: KeyboardEvent) => {
@@ -50,18 +105,17 @@ export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEvent
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  })
+  }, [advance])
 
   if (!line) return null
 
-  const layer = line.layer ?? 'code-world'
   const speakerVisual = getStorySpeakerVisual(line.speakerId)
 
   return (
     <div
       className="overlay modal-overlay battle-story-overlay"
       role="presentation"
-      onClick={onSkip ?? onComplete}
+      onClick={() => completeStory(true)}
     >
       <section
         ref={dialogRef}
@@ -71,7 +125,7 @@ export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEvent
         aria-label={event.title}
         tabIndex={-1}
         data-story-layer={layer}
-        onClick={(event) => event.stopPropagation()}
+        onClick={(clickEvent) => clickEvent.stopPropagation()}
       >
         <div className="battle-story-heading">
           <span>{event.label}</span>
@@ -96,8 +150,8 @@ export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEvent
         </div>
         <p>{line.text}</p>
         <div className="dialogue-actions">
-          <button type="button" className="secondary-button" onClick={onSkip ?? onComplete}>スキップ</button>
-          <button type="button" className="primary-button" onClick={advance}>
+          <button type="button" className="secondary-button" onClick={() => completeStory(true)} disabled={isTransitioning}>スキップ</button>
+          <button type="button" className="primary-button" onClick={advance} disabled={isTransitioning}>
             {isLast ? '▶ 続ける' : '▶ 次へ'}
           </button>
         </div>

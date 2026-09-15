@@ -1,0 +1,165 @@
+body[data-scene-transitioning='true'] .pause-trigger {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.scene-transition:not(.world-map-transition) {
+  position: fixed;
+  inset: 0;
+  z-index: 1900;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  pointer-events: auto;
+  background: #090a12;
+}
+
+.scene-transition:not(.world-map-transition)[data-scene-transition-phase='covering'] {
+  animation: scene-cover 180ms steps(6, end) both;
+}
+
+.scene-transition:not(.world-map-transition)[data-scene-transition-phase='revealing'] {
+  animation: scene-reveal 220ms steps(7, end) both;
+}
+
+.scene-transition:not(.world-map-transition) .scene-transition-mark {
+  width: min(54vmin, 360px);
+  aspect-ratio: 1;
+  border: 7px solid currentColor;
+  box-shadow: 0 0 0 7px #090a12, 0 0 0 14px currentColor;
+  transform: rotate(45deg) scale(.2);
+}
+
+.scene-transition[data-scene-transition-kind='encounter'],
+.scene-transition[data-scene-transition-kind='battle-start'] {
+  color: #f2c56b;
+  background:
+    repeating-linear-gradient(135deg, rgba(219, 82, 90, .18) 0 8px, transparent 8px 16px),
+    #12090b;
+}
+
+.scene-transition[data-scene-transition-kind='boss-start'] {
+  color: #ff718a;
+  background:
+    repeating-conic-gradient(from 45deg, rgba(255, 113, 138, .22) 0 12.5%, transparent 0 25%) 50% / 36px 36px,
+    #12070b;
+}
+
+.scene-transition[data-scene-transition-kind='battle-return'] {
+  color: #8ec4ff;
+  background:
+    linear-gradient(90deg, rgba(142, 196, 255, .12) 50%, transparent 50%) 0 0 / 16px 16px,
+    #07101a;
+}
+
+.scene-transition[data-scene-transition-kind='defeat-return'] {
+  color: #9ee6f6;
+  background:
+    repeating-linear-gradient(0deg, rgba(158, 230, 246, .08) 0 5px, transparent 5px 10px),
+    #0a1117;
+}
+
+.scene-transition[data-scene-transition-kind='connect'] {
+  color: #70f2df;
+  background:
+    linear-gradient(rgba(112, 242, 223, .13) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(199, 105, 255, .12) 1px, transparent 1px),
+    #060b16;
+  background-size: 18px 18px;
+}
+
+.scene-transition[data-scene-transition-kind='return-real-world'] {
+  color: #f4e291;
+  background:
+    linear-gradient(90deg, rgba(244, 226, 145, .1) 50%, transparent 50%) 0 0 / 14px 14px,
+    #15120c;
+}
+
+.scene-transition[data-scene-transition-kind='story-to-world'] {
+  color: #b9a66d;
+  background: #0b100d;
+}
+
+.scene-transition:not(.world-map-transition)[data-scene-transition-phase='covering'] .scene-transition-mark {
+  animation: scene-mark-in 180ms steps(6, end) both;
+}
+
+.scene-transition:not(.world-map-transition)[data-scene-transition-phase='revealing'] .scene-transition-mark {
+  animation: scene-mark-out 220ms steps(7, end) both;
+}
+
+.scene-transition[data-scene-transition-kind='boss-start'][data-scene-transition-phase='covering'] {
+  animation-duration: 250ms;
+}
+
+.scene-transition[data-scene-transition-kind='boss-start'][data-scene-transition-phase='revealing'] {
+  animation-duration: 260ms;
+}
+
+.scene-transition[data-scene-transition-kind='connect'][data-scene-transition-phase='covering'] {
+  animation-duration: 260ms;
+}
+
+.scene-transition[data-scene-transition-kind='connect'][data-scene-transition-phase='revealing'] {
+  animation-duration: 300ms;
+}
+
+.scene-transition[data-scene-transition-kind='defeat-return'][data-scene-transition-phase='covering'] {
+  animation-duration: 220ms;
+}
+
+.scene-transition[data-scene-transition-kind='defeat-return'][data-scene-transition-phase='revealing'] {
+  animation-duration: 260ms;
+}
+
+.scene-transition[data-scene-transition-kind='return-real-world'][data-scene-transition-phase='covering'] {
+  animation-duration: 240ms;
+}
+
+.scene-transition[data-scene-transition-kind='return-real-world'][data-scene-transition-phase='revealing'] {
+  animation-duration: 280ms;
+}
+
+.scene-transition[data-scene-transition-kind='story-to-world'][data-scene-transition-phase='covering'] {
+  animation-duration: 170ms;
+}
+
+@keyframes scene-cover {
+  from { clip-path: inset(50% 0 50% 0); opacity: .45; }
+  to { clip-path: inset(0); opacity: 1; }
+}
+
+@keyframes scene-reveal {
+  from { clip-path: inset(0); opacity: 1; }
+  to { clip-path: inset(0 50% 0 50%); opacity: 0; }
+}
+
+@keyframes scene-mark-in {
+  from { transform: rotate(45deg) scale(.2); opacity: .25; }
+  to { transform: rotate(225deg) scale(1.05); opacity: 1; }
+}
+
+@keyframes scene-mark-out {
+  from { transform: rotate(225deg) scale(1.05); opacity: 1; }
+  to { transform: rotate(315deg) scale(.15); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-transition:not(.world-map-transition) {
+    animation: none !important;
+    clip-path: inset(0) !important;
+  }
+
+  .scene-transition:not(.world-map-transition)[data-scene-transition-phase='covering'] {
+    opacity: 1;
+  }
+
+  .scene-transition:not(.world-map-transition)[data-scene-transition-phase='revealing'] {
+    opacity: 0;
+    transition: opacity 70ms linear;
+  }
+
+  .scene-transition:not(.world-map-transition) .scene-transition-mark {
+    display: none;
+  }
+}

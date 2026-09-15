@@ -1,23 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { useProgress } from '../progression'
 import { useRpg } from '../rpg'
+import { useSceneTransition } from '../transition/useSceneTransition'
 import { resolveWorldMove } from './worldActions'
 import { getWorldInteractionTarget } from './worldInteractionTarget'
 import type { WorldFacing } from './worldPresentation'
 import type { WorldMapId } from './worldMap'
 import { resolveWorldTargetInteraction } from './worldTargetInteraction'
 
-type TransitionPhase = 'covering' | 'revealing'
-
-type ActiveTransition = {
-  phase: TransitionPhase
-  fromMapId: WorldMapId
-  toMapId: WorldMapId
-  label: string
-}
-
 type Direction = { dx: number; dy: number }
-
 type HeldDirection = Direction & { button: HTMLButtonElement }
 
 const DIRECTION_BY_LABEL: Record<string, Direction> = {
@@ -25,17 +16,6 @@ const DIRECTION_BY_LABEL: Record<string, Direction> = {
   '下へ移動': { dx: 0, dy: 1 },
   '左へ移動': { dx: -1, dy: 0 },
   '右へ移動': { dx: 1, dy: 0 },
-}
-
-const NORMAL_COVER_MS = 180
-const NORMAL_REVEAL_MS = 220
-const REDUCED_COVER_MS = 24
-const REDUCED_REVEAL_MS = 70
-const TRANSITION_WATCHDOG_MS = 1_200
-
-function prefersReducedMotion() {
-  return typeof window !== 'undefined' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
 function stopNativeEvent(event: Event) {
@@ -67,16 +47,14 @@ function getRenderedWorldFacing(): WorldFacing | null {
 }
 
 /**
- * Portal authority stays in the exact-target interaction resolver. This
- * component only gates the native Action event when the faced tile crosses a
- * map boundary: cover the old map -> replay Action -> reveal the new map.
+ * Portal authority stays in the exact-target interaction resolver. This gate
+ * only identifies map-boundary actions and hands their timing/input lock to
+ * the shared scene-transition engine.
  */
 export function WorldMapTransitionGate() {
   const { progress } = useProgress()
   const { rpgState } = useRpg()
-  const [transition, setTransition] = useState<ActiveTransition | null>(null)
-  const transitionRef = useRef<ActiveTransition | null>(null)
-  const replayRef = useRef<(() => void) | null>(null)
+  const { isTransitioning, runSceneTransition } = useSceneTransition()
   const bypassRef = useRef(false)
   const heldDirectionRef = useRef<HeldDirection | null>(null)
   const progressRef = useRef(progress)
@@ -90,33 +68,35 @@ export function WorldMapTransitionGate() {
     rpgStateRef.current = rpgState
   }, [rpgState])
 
-  const finishTransition = useCallback(() => {
-    transitionRef.current = null
-    replayRef.current = null
-    heldDirectionRef.current = null
-    setTransition(null)
-    if (typeof document !== 'undefined') delete document.body.dataset.worldTransitioning
-  }, [])
-
   const beginTransition = useCallback((
     toMapId: WorldMapId,
     label: string,
     replay: () => void,
   ) => {
-    if (transitionRef.current) return false
-    const next: ActiveTransition = {
-      phase: 'covering',
-      fromMapId: rpgStateRef.current.worldMapId,
-      toMapId,
-      label,
-    }
-    transitionRef.current = next
-    replayRef.current = replay
+    if (isTransitioning) return false
+    const fromMapId = rpgStateRef.current.worldMapId
     heldDirectionRef.current = null
-    document.body.dataset.worldTransitioning = 'true'
-    setTransition(next)
+    void runSceneTransition(
+      'map',
+      () => {
+        bypassRef.current = true
+        try {
+          replay()
+        } finally {
+          bypassRef.current = false
+        }
+      },
+      {
+        label,
+        fromMapId,
+        toMapId,
+        waitFor: () => rpgStateRef.current.worldMapId === toMapId,
+        // The replayed World handler already owns the map-confirm SE.
+        playSound: false,
+      },
+    )
     return true
-  }, [])
+  }, [isTransitioning, runSceneTransition])
 
   const tryMoveTransition = useCallback((
     dx: number,
@@ -145,7 +125,7 @@ export function WorldMapTransitionGate() {
   useEffect(() => {
     const onPointerDown = (event: PointerEvent) => {
       if (bypassRef.current) return
-      if (transitionRef.current) {
+      if (isTransitioning) {
         if (event.target instanceof Element && event.target.closest('.world-controls, .pause-trigger')) {
           stopNativeEvent(event)
         }
@@ -172,16 +152,13 @@ export function WorldMapTransitionGate() {
       const directionControl = getDirectionButton(event.target)
       const interactButton = isWorldInteractButton(event.target)
 
-      if (transitionRef.current) {
+      if (isTransitioning) {
         if (directionControl || interactButton || (event.target instanceof Element && event.target.closest('.pause-trigger'))) {
           stopNativeEvent(event)
         }
         return
       }
 
-      // Pointer D-pad movement already belongs to onPointerDown. A detail=0
-      // click is keyboard/programmatic activation and is the only click path
-      // WorldControls itself treats as a movement step.
       if (directionControl && event.detail === 0) {
         const { button, direction } = directionControl
         if (tryMoveTransition(direction.dx, direction.dy, () => button.click())) {
@@ -215,7 +192,7 @@ export function WorldMapTransitionGate() {
               : null
       const interactionKey = event.key === 'Enter' || event.key === ' '
 
-      if (transitionRef.current) {
+      if (isTransitioning) {
         if (direction || interactionKey) stopNativeEvent(event)
         return
       }
@@ -248,14 +225,11 @@ export function WorldMapTransitionGate() {
       window.removeEventListener('click', onClick, true)
       window.removeEventListener('keydown', onKeyDown, true)
     }
-  }, [tryInteractTransition, tryMoveTransition])
+  }, [isTransitioning, tryInteractTransition, tryMoveTransition])
 
-  // D-pad hold repeats inside WorldControls without another DOM event. When a
-  // repeat lands one tile before a portal, stop the hold before its next tick
-  // and hand that final boundary step to the same transition sequence.
   useEffect(() => {
     const held = heldDirectionRef.current
-    if (!held || transitionRef.current) return
+    if (!held || isTransitioning) return
     const result = resolveWorldMove({
       rpgState,
       progress,
@@ -270,68 +244,7 @@ export function WorldMapTransitionGate() {
       pointerType: 'mouse',
     }))
     beginTransition(result.toMapId, result.label, () => held.button.click())
-  }, [beginTransition, progress, rpgState])
+  }, [beginTransition, isTransitioning, progress, rpgState])
 
-  useEffect(() => {
-    if (!transition || transition.phase !== 'covering') return
-    const delay = prefersReducedMotion() ? REDUCED_COVER_MS : NORMAL_COVER_MS
-    const timer = window.setTimeout(() => {
-      const replay = replayRef.current
-      replayRef.current = null
-      if (!replay) return
-      bypassRef.current = true
-      try {
-        replay()
-      } finally {
-        bypassRef.current = false
-      }
-    }, delay)
-    return () => window.clearTimeout(timer)
-  }, [transition])
-
-  useEffect(() => {
-    if (!transition || transition.phase !== 'covering') return
-    if (rpgState.worldMapId !== transition.toMapId) return
-
-    const timer = window.setTimeout(() => {
-      const current = transitionRef.current
-      if (!current || current.phase !== 'covering') return
-      if (rpgStateRef.current.worldMapId !== current.toMapId) return
-      const next: ActiveTransition = { ...current, phase: 'revealing' }
-      transitionRef.current = next
-      setTransition(next)
-    }, 0)
-    return () => window.clearTimeout(timer)
-  }, [rpgState.worldMapId, transition])
-
-  useEffect(() => {
-    if (!transition || transition.phase !== 'revealing') return
-    const delay = prefersReducedMotion() ? REDUCED_REVEAL_MS : NORMAL_REVEAL_MS
-    const timer = window.setTimeout(finishTransition, delay)
-    return () => window.clearTimeout(timer)
-  }, [finishTransition, transition])
-
-  useEffect(() => {
-    if (!transition) return
-    const timer = window.setTimeout(finishTransition, TRANSITION_WATCHDOG_MS)
-    return () => window.clearTimeout(timer)
-  }, [finishTransition, transition])
-
-  useEffect(() => () => {
-    delete document.body.dataset.worldTransitioning
-  }, [])
-
-  if (!transition) return null
-
-  return (
-    <div
-      className="world-map-transition"
-      data-world-transition-phase={transition.phase}
-      data-world-transition-from={transition.fromMapId}
-      data-world-transition-to={transition.toMapId}
-      aria-hidden="true"
-    >
-      <span className="world-map-transition-vortex" />
-    </div>
-  )
+  return null
 }
