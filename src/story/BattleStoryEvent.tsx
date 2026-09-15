@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { getStorySpeakerVisual } from '../rpg'
 import { useSceneTransition } from '../transition/useSceneTransition'
 import { useModalFocus } from '../ui/useModalFocus'
@@ -28,15 +28,46 @@ export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEvent
   const line = event.lines[lineIndex]
   const layer = line?.layer ?? 'code-world'
   const isLast = lineIndex === event.lines.length - 1
+  const containsReturn = useMemo(
+    () => event.lines.some((candidate) => candidate.layer === 'return'),
+    [event.lines],
+  )
+
+  const completeStory = useCallback((skip: boolean) => {
+    if (isTransitioning) return
+    const complete = skip ? (onSkip ?? onComplete) : onComplete
+
+    const transitionKind = containsReturn && layer !== 'real-world'
+      ? 'return-real-world'
+      : !containsReturn && (layer === 'real-world' || layer === 'remote' || layer === 'connect')
+        ? 'connect'
+        : null
+
+    if (!transitionKind) {
+      complete()
+      return
+    }
+
+    void runSceneTransition(
+      transitionKind,
+      complete,
+      {
+        label: transitionKind === 'connect'
+          ? 'CONNECT // CODE WORLD'
+          : 'RETURN // REAL WORLD',
+      },
+    )
+  }, [containsReturn, isTransitioning, layer, onComplete, onSkip, runSceneTransition])
+
   const dialogRef = useModalFocus<HTMLElement>({
     open: true,
-    onEscape: onSkip ?? onComplete,
+    onEscape: () => completeStory(true),
   })
 
   const advance = useCallback(() => {
     if (isTransitioning || !line) return
     if (isLast) {
-      onComplete()
+      completeStory(false)
       return
     }
 
@@ -59,7 +90,7 @@ export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEvent
           : 'RETURN // REAL WORLD',
       },
     )
-  }, [event.lines, isLast, isTransitioning, layer, line, lineIndex, onComplete, runSceneTransition])
+  }, [completeStory, event.lines, isLast, isTransitioning, layer, line, lineIndex, runSceneTransition])
 
   useEffect(() => {
     const onKeyDown = (keyboardEvent: KeyboardEvent) => {
@@ -84,7 +115,7 @@ export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEvent
     <div
       className="overlay modal-overlay battle-story-overlay"
       role="presentation"
-      onClick={onSkip ?? onComplete}
+      onClick={() => completeStory(true)}
     >
       <section
         ref={dialogRef}
@@ -94,7 +125,7 @@ export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEvent
         aria-label={event.title}
         tabIndex={-1}
         data-story-layer={layer}
-        onClick={(event) => event.stopPropagation()}
+        onClick={(clickEvent) => clickEvent.stopPropagation()}
       >
         <div className="battle-story-heading">
           <span>{event.label}</span>
@@ -119,7 +150,7 @@ export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEvent
         </div>
         <p>{line.text}</p>
         <div className="dialogue-actions">
-          <button type="button" className="secondary-button" onClick={onSkip ?? onComplete} disabled={isTransitioning}>スキップ</button>
+          <button type="button" className="secondary-button" onClick={() => completeStory(true)} disabled={isTransitioning}>スキップ</button>
           <button type="button" className="primary-button" onClick={advance} disabled={isTransitioning}>
             {isLast ? '▶ 続ける' : '▶ 次へ'}
           </button>
