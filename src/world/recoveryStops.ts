@@ -11,8 +11,8 @@ export type WorldRecoveryStop = {
 
 /**
  * Recovery stops are optional safety valves, not paid Inn replacements.
- * Forest Phase 4 places the camp in a distinct southern clearing so exploration
- * has a practical reward without turning the clearing into a mandatory road.
+ * Forest keeps the southern camp, while Deep Forest puts its spring on a
+ * southern branch so finding it rewards exploration without becoming a road.
  */
 export const WORLD_RECOVERY_STOPS: readonly WorldRecoveryStop[] = [
   {
@@ -28,7 +28,7 @@ export const WORLD_RECOVERY_STOPS: readonly WorldRecoveryStop[] = [
     mapId: JS_DEEP_FOREST_MAP_ID,
     label: '湧き水',
     actionLabel: '湧き水で休む',
-    position: { x: 16, y: 11 },
+    position: { x: 36, y: 39 },
     recoveryRatio: 0.6,
   },
 ] as const
