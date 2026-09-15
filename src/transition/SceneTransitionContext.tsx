@@ -27,10 +27,14 @@ type ActiveSceneTransition = {
   kind: SceneTransitionKind
   phase: SceneTransitionPhase
   label?: string
+  fromMapId?: string
+  toMapId?: string
 }
 
 type SceneTransitionOptions = {
   label?: string
+  fromMapId?: string
+  toMapId?: string
   waitFor?: () => boolean
 }
 
@@ -119,7 +123,13 @@ export function SceneTransitionProvider({ children }: { children: ReactNode }) {
     const timing = reduced
       ? { ...baseTiming, ...REDUCED_TIMING }
       : baseTiming
-    const covering: ActiveSceneTransition = { kind, phase: 'covering', label: options.label }
+    const covering: ActiveSceneTransition = {
+      kind,
+      phase: 'covering',
+      label: options.label,
+      fromMapId: options.fromMapId,
+      toMapId: options.toMapId,
+    }
 
     activeRef.current = covering
     setActive(covering)
@@ -175,6 +185,8 @@ export function SceneTransitionProvider({ children }: { children: ReactNode }) {
           data-scene-transition-kind={active.kind}
           data-scene-transition-phase={active.phase}
           data-world-transition-phase={active.kind === 'map' ? active.phase : undefined}
+          data-world-transition-from={active.kind === 'map' ? active.fromMapId : undefined}
+          data-world-transition-to={active.kind === 'map' ? active.toMapId : undefined}
           aria-hidden="true"
         >
           <span className="scene-transition-mark world-map-transition-vortex" />
