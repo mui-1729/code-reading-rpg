@@ -24,6 +24,7 @@ import {
   isEncounterTerrain,
   isWalkableTerrain,
   JS_BOSS_POSITION,
+  JS_DEEP_FOREST_LEARNING_POSITIONS,
   JS_DEEP_FOREST_MAP_ID,
   JS_FOREST_MAP_ID,
   JS_FOREST_MIDBOSS_POSITION,
@@ -49,6 +50,8 @@ type JavaScriptTrainingBattleId = 7 | 8 | 9
 type JavaScriptStoryBattleId = 1 | 2
 type JavaScriptLearningBattleId = 10 | 11 | 12 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22
 type JavaScriptFixedBattleId = JavaScriptStoryBattleId | JavaScriptLearningBattleId
+const DEEP_FOREST_LEARNING_BATTLE_IDS = [15, 16, 17, 18, 19, 20, 21, 22] as const
+type DeepForestLearningBattleId = (typeof DEEP_FOREST_LEARNING_BATTLE_IDS)[number]
 
 export type EncounterRolls = {
   trigger: number
@@ -135,58 +138,15 @@ function getDeepForestLearningBattleId(
   mapId: WorldMapId,
   position: { x: number; y: number },
   clearedStageIds: readonly number[],
-): JavaScriptLearningBattleId | null {
+): DeepForestLearningBattleId | null {
   if (mapId !== JS_DEEP_FOREST_MAP_ID) return null
 
-  if (!clearedStageIds.includes(15) && isBattleAccessible(15, clearedStageIds)) return 15
-  if (
-    !clearedStageIds.includes(16) &&
-    position.x <= 24 &&
-    isBattleAccessible(16, clearedStageIds)
-  ) {
-    return 16
-  }
-  if (
-    !clearedStageIds.includes(17) &&
-    position.x <= 19 &&
-    isBattleAccessible(17, clearedStageIds)
-  ) {
-    return 17
-  }
-  if (
-    !clearedStageIds.includes(18) &&
-    position.x <= 14 &&
-    isBattleAccessible(18, clearedStageIds)
-  ) {
-    return 18
-  }
-  if (
-    !clearedStageIds.includes(19) &&
-    position.x <= 10 &&
-    isBattleAccessible(19, clearedStageIds)
-  ) {
-    return 19
-  }
-  if (
-    !clearedStageIds.includes(20) &&
-    position.x <= 9 &&
-    isBattleAccessible(20, clearedStageIds)
-  ) {
-    return 20
-  }
-  if (
-    !clearedStageIds.includes(21) &&
-    position.x <= 7 &&
-    isBattleAccessible(21, clearedStageIds)
-  ) {
-    return 21
-  }
-  if (
-    !clearedStageIds.includes(22) &&
-    position.x <= 5 &&
-    isBattleAccessible(22, clearedStageIds)
-  ) {
-    return 22
+  for (const battleId of DEEP_FOREST_LEARNING_BATTLE_IDS) {
+    const target = JS_DEEP_FOREST_LEARNING_POSITIONS[battleId]
+    if (target.x !== position.x || target.y !== position.y) continue
+    if (!clearedStageIds.includes(battleId) && isBattleAccessible(battleId, clearedStageIds)) {
+      return battleId
+    }
   }
   return null
 }
@@ -250,15 +210,11 @@ function resolveForestLearningEncounter(
   const assignments = rpgState.forestLearningBattleZones
   const assignedZone = assignments?.[battleId]
 
-  // After the first encounter (including a loss), this lesson remains attached
-  // to that player's chosen zone instead of jumping to a different part of the map.
   if (assignedZone) {
     if (zoneId !== assignedZone) return null
     return createJavaScriptFixedEncounter(rpgState, movedState, next, battleId)
   }
 
-  // A zone already used by an earlier lesson cannot immediately host the next
-  // lesson. The player must continue exploring and reach a different region.
   if (getUsedForestLearningZones(assignments).has(zoneId)) return null
 
   const assignedState: RpgState = {
@@ -315,9 +271,6 @@ export function resolveWorldMove({
     return { kind: 'blocked', nextState: rpgState, terrain }
   }
 
-  // A portal is an interaction target, not a walk-on trigger. Direction input
-  // only faces the entrance; the explicit Action resolves locked/unlocked state
-  // and performs the map transition.
   if (getWorldPortalAtPosition(mapId, next)) {
     return { kind: 'blocked', nextState: rpgState, terrain }
   }
@@ -330,9 +283,6 @@ export function resolveWorldMove({
     stepsSinceEncounter: nextSteps,
   }
 
-  // Story Battles are deterministic route beats, not lucky random encounters.
-  // The first symptom is witnessed before training, after BYTE joins the party.
-  // The second symptom happens after Forest investigation at Deep Forest entry.
   if (
     mapId === OVERWORLD_MAP_ID &&
     region === 'javascript' &&
@@ -351,9 +301,6 @@ export function resolveWorldMove({
     return createJavaScriptFixedEncounter(rpgState, movedState, next, 2)
   }
 
-  // Forest lessons are attached to the order in which this player discovers
-  // invisible geographic zones. The map itself stays open; progression order is
-  // enforced only by the progression graph (10 -> 11 -> 12 -> 13 -> 14).
   const forestLearningEncounter = resolveForestLearningEncounter(
     rpgState,
     movedState,
@@ -369,11 +316,10 @@ export function resolveWorldMove({
     }
   }
 
-  // The 55x41 Forest deliberately gives more room to explore than the old map.
-  // Keep that extra walking from multiplying review Battles: Forest gets seven
-  // safe steps after any Battle and starts random review rolls on step eight.
-  // Other maps retain the existing four-safe-step / step-five rule.
-  const randomEncounterStepThreshold = mapId === JS_FOREST_MAP_ID ? 8 : 5
+  // Expanded exploration maps use longer post-Battle safety windows so added
+  // walking creates geography, not a proportional increase in review Battles.
+  const randomEncounterStepThreshold =
+    mapId === JS_DEEP_FOREST_MAP_ID ? 10 : mapId === JS_FOREST_MAP_ID ? 8 : 5
   if (
     !isEncounterTerrain(terrain) ||
     nextSteps < randomEncounterStepThreshold ||
@@ -382,9 +328,6 @@ export function resolveWorldMove({
     return { kind: 'moved', nextState: movedState, terrain, region }
   }
 
-  // During the JavaScript main story, Overworld movement carries narrative
-  // beats rather than replay encounters. Forest and Deep Forest still provide
-  // the progressive random-review pools.
   if (
     mapId === OVERWORLD_MAP_ID &&
     region === 'javascript' &&
