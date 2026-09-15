@@ -37,10 +37,16 @@ export function HomeSceneTransitionGate() {
       if (!button.closest('.opening-actions')) return
 
       const text = button.textContent ?? ''
+      const currentLayer = document.querySelector<HTMLElement>('.opening-scene')?.dataset.storyLayer
       const isStoryExit = text.includes('CODE WORLDを探索する') || text.includes('スキップ')
       if (isStoryExit) {
         stopNativeEvent(event)
-        void runSceneTransition('story-to-world', replay, { label: 'MISSION START' })
+        const exitsFromRealWorld = currentLayer === 'real-world'
+        void runSceneTransition(
+          exitsFromRealWorld ? 'connect' : 'story-to-world',
+          replay,
+          { label: exitsFromRealWorld ? 'CONNECT // CODE WORLD' : 'MISSION START' },
+        )
         return
       }
 
