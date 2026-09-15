@@ -83,7 +83,7 @@ test('World各mapはcontentがviewport内に収まる時に旧bottom spacer由�
     ['overworld', { x: 20, y: 14 }],
     ['js-village', { x: 10, y: 12 }],
     ['js-forest', { x: 52, y: 20 }],
-    ['js-deep-forest', { x: 28, y: 10 }],
+    ['js-deep-forest', { x: 61, y: 24 }],
     ['ts-frontier', { x: 2, y: 10 }],
   ] as const
 
