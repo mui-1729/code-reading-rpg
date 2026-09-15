@@ -4,6 +4,7 @@ import { createInitialRpgState } from '../rpg'
 import { getDeepForestReviewBattleId, resolveWorldMove } from './worldActions'
 import {
   getTerrain,
+  JS_DEEP_FOREST_LEARNING_POSITIONS,
   JS_DEEP_FOREST_MAP_ID,
   JS_FOREST_MAP_ID,
   JS_FOREST_SETTLEMENT_DEEP_FOREST_POSITION,
@@ -101,26 +102,41 @@ describe('JavaScript Deep Forest', () => {
     expect(result.battle.battleId).toBe(2)
   })
 
-  it('二つ目のincident後、最初のEncounter terrainではshared trace Battle 15を固定導入する', () => {
+  it('二つ目のincident後は通常の森を歩くだけではBattle 15を始めず、湿地の足跡へ到達すると固定導入する', () => {
     const progress = createInitialPlayerProgress()
-    const rpgState = {
+    const clearedStageIds = [...clearedThrough14, 2]
+    const ordinaryState = {
       ...createInitialRpgState(),
       worldMapId: JS_DEEP_FOREST_MAP_ID,
       worldPosition: { ...WORLD_MAP_STARTS[JS_DEEP_FOREST_MAP_ID] },
       stepsSinceEncounter: 0,
     }
 
-    const result = resolveWorldMove({
-      rpgState,
-      progress: { ...progress, clearedStageIds: [...clearedThrough14, 2] },
+    const ordinaryMove = resolveWorldMove({
+      rpgState: ordinaryState,
+      progress: { ...progress, clearedStageIds },
       dx: 0,
       dy: -1,
       encounterRolls: { trigger: 0.99, battle: 0.99 },
     })
+    expect(ordinaryMove.kind).toBe('moved')
 
-    expect(result.kind).toBe('encounter')
-    if (result.kind !== 'encounter') return
-    expect(result.battle.battleId).toBe(15)
+    const target = JS_DEEP_FOREST_LEARNING_POSITIONS[15]
+    const landmarkState = {
+      ...ordinaryState,
+      worldPosition: { x: target.x + 1, y: target.y },
+    }
+    const landmarkMove = resolveWorldMove({
+      rpgState: landmarkState,
+      progress: { ...progress, clearedStageIds },
+      dx: -1,
+      dy: 0,
+      encounterRolls: { trigger: 0.99, battle: 0.99 },
+    })
+
+    expect(landmarkMove.kind).toBe('encounter')
+    if (landmarkMove.kind !== 'encounter') return
+    expect(landmarkMove.battle.battleId).toBe(15)
   })
 
   it('Battle 15 clear前はRandomが14だけ、clear後は14 / 15を反復する', () => {

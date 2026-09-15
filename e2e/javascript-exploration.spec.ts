@@ -94,20 +94,21 @@ test('Forest北側の寄り道空き地にはTreasureがあり取得後もreload
   expect(stored.rpg.state.openedTreasureIds).toContain('js-forest-supply')
 })
 
-test('390px幅でもDeep Forestの南branchを安全なtrailとして移動できる', async ({ page }) => {
+test('390px幅でもDeep Forest東南のoptional branchを移動しTreasureへ寄り道できる', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  await seedExploration(page, 'js-deep-forest', { x: 10, y: 20 })
+  await seedExploration(page, 'js-deep-forest', { x: 51, y: 41 })
 
   const map = page.getByLabel('JavaScript深層の森のマップ')
-  await page.getByRole('button', { name: '下へ移動' }).click()
-  await page.getByRole('button', { name: '下へ移動' }).click()
   await page.getByRole('button', { name: '右へ移動' }).click()
-  await page.getByRole('button', { name: '右へ移動' }).click()
-  await page.getByRole('button', { name: '右へ移動' }).click()
+  await expect(map).toHaveAttribute('data-world-x', '52')
+  await expect(map).toHaveAttribute('data-world-y', '41')
 
-  await expect(map).toHaveAttribute('data-world-x', '13')
-  await expect(map).toHaveAttribute('data-world-y', '22')
+  // Treasureは1tile北のobject。方向入力では踏み込まず、正面Actionの対象になる。
+  await page.getByRole('button', { name: '上へ移動' }).click()
+  await expect(map).toHaveAttribute('data-world-x', '52')
+  await expect(map).toHaveAttribute('data-world-y', '41')
   await expect(page.getByLabel('DEEP CACHE 未開封')).toBeVisible()
+  await expect(page.getByRole('button', { name: '宝箱を開ける' })).toBeEnabled()
   await expect(page).toHaveURL(/\/world$/)
 
   const overflows = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)
