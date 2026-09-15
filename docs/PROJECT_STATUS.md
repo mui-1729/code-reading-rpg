@@ -1,6 +1,6 @@
 # CODE//READ RPG — Project Status
 
-最終更新: 2026-09-08
+最終更新: 2026-09-15
 
 この文書は、**このゲームが何を目指していて、今どこまで実装され、次に何を作るべきか**を短く把握するためのcurrent snapshotです。
 
@@ -90,7 +90,7 @@ JS-19  Code Core ROOT CAUSE
 - Forest以降はsyntax syllabusではなく、同じincidentのtraceを追うために必要な読み方を導入する
 - JS-09後は森を抜けた到達点としてForest Settlementで休息・補給し、第二safe checkpointを得る
 - JS-10でREAL WORLD側にも影響が広がっていることを再確認する
-- JS-18後はDeep Forest西口からCode Coreへ直接前進する
+- JS-18後はDeep Forest最深部からCode Coreへ直接前進する
 - 終盤に草原へ戻って古いBattleを消化するbacktrackは行わない
 
 ### Internal compatibility IDs
@@ -129,7 +129,7 @@ stable map:
 - `js-village` — GREENFIELD VILLAGE 21 × 15
 - `js-forest` — JAVASCRIPT FOREST 55 × 41
 - `js-forest-settlement` — FOREST SETTLEMENT 23 × 17
-- `js-deep-forest` — JAVASCRIPT DEEP FOREST 31 × 27
+- `js-deep-forest` — JAVASCRIPT DEEP FOREST 65 × 49
 - `ts-frontier` — TYPESCRIPT FRONTIER 31 × 21
 
 共通:
@@ -152,6 +152,11 @@ stable map:
 - Forest → Forest Settlement → Deep Forestの順に進み、Forest SettlementはRandom Encounterのない第二有人safe hub
 - Forest Settlementへ初回入場すると敗北時の復帰先が同集落へ更新される
 - Forest Settlementには宿・道具屋・NPCがあり、Deep Forest前に立て直せる
+- Deep Forestは65×49のLocal Mapで、内部には`road` terrainを置かない
+- Deep Forestは渓流・湿地・倒木横断・湧き水・巨大根をnavigation landmarkにし、Forestより長く濃い探索区間を作る
+- JS-11〜18（Battle 15〜22）は旧`x <= N` thresholdではなく、湿地の足跡・割れた実・羽根・根囲い・巨大根など実際のlandmarkへ到達した時だけ固定発生する
+- Deep Forest南側の湧き水はoptional部分回復、Treasureはmain trace外の寄り道として配置する
+- Deep ForestはBattle後9歩を安全区間にし、10歩目からRandom reviewを抽選してmap拡張をBattle回数の水増しに使わない
 - TypeScript Frontier入口はField東端側にあり、Hubと同一viewportへ詰め込まない
 - `/world` route上でmap transition
 - local mapからBattleへ入り、Victory / RUN / checkpoint returnで既定policyに従う
@@ -322,6 +327,13 @@ numeric IDを維持するのは互換性のためであり、将来のchapter追
 - Forest Settlementに宿 / 道具補給 / NPCがある
 - Forest SettlementからDeep Forestへ進める
 - JS-09後にDeep ForestでJS-10 fixed second symptom
+- Deep Forestは65×49で`road` terrainを持たず、渓流・湿地・倒木・巨大根で複数方向へ探索できる
+- Deep Forest Battle 15〜22は旧x thresholdではなく、対応するscenery landmarkへ到達した時だけ固定発生する
+- 同じx座標付近の別tileへ入っただけでは未clearのDeep Forest Learning Battleを開始しない
+- Deep Forestの渓流はwater、横断点は専用`log-crossing`として通行できる
+- Deep Forest springは南branchの部分回復地点として正面Actionから利用できる
+- Deep Forest Treasureはmain trace外のoptional branchにある
+- Deep ForestのRandom reviewはBattle後10歩目から抽選し、clear済みLessonだけを返す
 - Deep Forestで敗北した時、最後のsafe checkpointがForest SettlementならそこへRETURNする
 - JS-10後にDeep Forest JS-11〜18
 - MID BOSSをRandom poolへ入れない
@@ -355,11 +367,10 @@ npm run test:e2e
 
 JavaScript編を完成形の基準にする。
 
-1. #352 Phase 5 — Deep ForestをForestより長く・濃く、探索型layoutへ再設計する
-2. #373 — cell-level Fog of War / 地域地図をJavaScript topologyへ統合する
-3. JavaScript編を通しplayし、拠点間隔・Encounter・Economy・Story pacingを調整する
-4. その基準を使ってTypeScriptを本格拡張する
-5. #246 — Database prototype
+1. #373 — cell-level Fog of War / 地域地図をJavaScript topologyへ統合する
+2. JavaScript編を通しplayし、拠点間隔・Encounter・Economy・Story pacingを調整する
+3. その基準を使ってTypeScriptを本格拡張する
+4. #246 — Database prototype
 
 新region追加時も、
 
