@@ -73,7 +73,7 @@ export function WorldShop({
       gameAudio.playSe('cancel')
       onMessage(
         result.reason === 'owned'
-          ? 'その装備品はすでに持っている。'
+          ? 'その商品はすでに持っている。'
           : result.reason === 'insufficient-gold'
             ? `ゴールドが足りない。あと ${quote?.shortage ?? 0} G必要。`
             : 'その商品は購入できない。',
@@ -87,7 +87,9 @@ export function WorldShop({
     const name =
       item.kind === 'consumable'
         ? itemById[item.itemId]?.name ?? item.itemId
-        : equipmentById[item.equipmentId]?.name ?? item.equipmentId
+        : item.kind === 'equipment'
+          ? equipmentById[item.equipmentId]?.name ?? item.equipmentId
+          : item.name
     onMessage(`${name}を購入した。残り ${result.progress.gold} G。`)
   }
 
@@ -174,6 +176,49 @@ export function WorldShop({
       )
     }
 
+    if (item.kind === 'map-chart') {
+      return (
+        <article
+          className={`shop-item item-shop-item map-chart-shop-item pixel-inner-window is-${quote.state}`}
+          key={item.id}
+          data-map-chart={item.mapId}
+          data-item-state={quote.state}
+        >
+          <div className="item-shop-head">
+            <span className="shop-item-name shop-item-name-with-icon">
+              <span className="map-chart-icon" aria-hidden="true">▧</span>
+              <span className="item-shop-title">
+                <small>探索アイテム</small>
+                <strong>{item.name}</strong>
+              </span>
+            </span>
+            <strong>{quote.price} G</strong>
+          </div>
+          <p>{item.description}</p>
+          <div className="item-rule-row">
+            <strong>通常地形を全体表示</strong>
+            <span>宝箱・隠し要素は未表示</span>
+          </div>
+          <div className={`equipment-state-badge is-${quote.state}`}>
+            {quote.state === 'owned' ? '購入済み' : equipmentStateLabels[quote.state]}
+          </div>
+          {renderCostPreview(quote)}
+          <button
+            type="button"
+            className="primary-button"
+            onClick={() => buy(item.id)}
+            disabled={quote.state === 'owned' || quote.state === 'unavailable'}
+          >
+            {quote.state === 'owned'
+              ? '購入済み'
+              : quote.state === 'available'
+                ? '▶ 購入'
+                : `あと ${quote.shortage} G`}
+          </button>
+        </article>
+      )
+    }
+
     const equipment = equipmentById[item.equipmentId]
     if (!equipment) return null
     const presentation = getEquipmentPresentation(equipment.id, rpgState.equipment)
@@ -244,6 +289,7 @@ export function WorldShop({
   }
 
   const consumables = worldShopItems.filter((item) => item.kind === 'consumable')
+  const mapCharts = worldShopItems.filter((item) => item.kind === 'map-chart')
   const equipment = worldShopItems.filter((item) => item.kind === 'equipment')
 
   return (
@@ -276,6 +322,18 @@ export function WorldShop({
             </header>
             <div className="world-shop-list is-consumable">
               {consumables.map(renderShopItem)}
+            </div>
+          </section>
+        )}
+
+        {showConsumables && (
+          <section className="world-shop-section" aria-label="地域地図">
+            <header className="world-shop-section-head">
+              <strong>地域地図</strong>
+              <span>Goldで探索情報を先に得る任意アイテム</span>
+            </header>
+            <div className="world-shop-list is-consumable">
+              {mapCharts.map(renderShopItem)}
             </div>
           </section>
         )}
