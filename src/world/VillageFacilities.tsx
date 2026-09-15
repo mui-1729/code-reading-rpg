@@ -100,11 +100,10 @@ export function VillageFacilities() {
           <span
             className="world-object facility-object"
             data-village-facility={facility.kind}
+            data-facility-icon={facility.kind}
             aria-hidden="true"
             style={{ cursor: 'default', outline: 'none', outlineOffset: 0 }}
-          >
-            {facility.label}
-          </span>,
+          />,
           target,
           `${facility.mapId}:${facility.kind}`,
         ),
