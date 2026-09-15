@@ -102,17 +102,22 @@ test('Forest南側の野営地は通り抜けられず、正面を向いて共�
   expect(stored.state.currentHp).toBeGreaterThan(20)
 })
 
-test('Deep Forestの湧き水も通り抜けず、正面の共通アクションから利用できる', async ({ page }) => {
-  await seedMap(page, 'js-deep-forest', { x: 16, y: 10 }, [...JS_SECOND_INCIDENT_PREREQS])
+test('Deep Forest南側の湧き水も通り抜けず、正面の共通アクションから利用できる', async ({ page }) => {
+  await seedMap(page, 'js-deep-forest', { x: 36, y: 38 }, [...JS_SECOND_INCIDENT_PREREQS])
 
   const map = page.getByLabel('JavaScript深層の森のマップ')
+  const springObject = page.locator('[data-recovery-stop="deep-forest-spring"]')
+  await expect(springObject).toBeVisible()
+  await expect(springObject).not.toHaveAttribute('role', 'button')
+
   const action = page.getByRole('button', { name: '湧き水で休む' })
   await expect(action).toBeVisible()
   await expect(action).toBeEnabled()
 
+  // Spring is directly below the player. Movement faces it but cannot enter the object tile.
   await page.getByRole('button', { name: '下へ移動' }).click()
-  await expect(map).toHaveAttribute('data-world-x', '16')
-  await expect(map).toHaveAttribute('data-world-y', '10')
+  await expect(map).toHaveAttribute('data-world-x', '36')
+  await expect(map).toHaveAttribute('data-world-y', '38')
   await expect(action).toBeEnabled()
 
   await action.click()
