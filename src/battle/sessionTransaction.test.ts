@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createInitialPlayerProgress } from '../progression/progression'
+import { applyBattleVictory, createInitialPlayerProgress } from '../progression/progression'
 import { createInitialRpgState } from '../rpg/state'
 import { OVERWORLD_MAP_ID, WORLD_MAP_STARTS } from '../world/worldMap'
 import {
@@ -77,7 +77,7 @@ describe('Battle attempt transaction', () => {
     expect(escaped.battleSession).toBeUndefined()
   })
 
-  it('VICTORY commits reward and current HP atomically and only once', () => {
+  it('VICTORY commits reward and current HP atomically and only once without healing when Level is unchanged', () => {
     const changed = useKit(startBattleSession(initial(), identity))
     const reward = (state: BattleTransactionState) => ({
       ...state, progress: { ...state.progress, gold: state.progress.gold + 20 },
@@ -87,6 +87,75 @@ describe('Battle attempt transaction', () => {
     expect(committed.progress.inventory.patchKit).toBe(1)
     expect(committed.rpgState.currentHp).toBe(64)
     expect(commitBattleSession(committed, identity.id, 'VICTORY', reward)).toBe(committed)
+  })
+
+  it('VICTORY fully recovers to the new effective max HP when Level increases', () => {
+    const before = initial()
+    before.progress = { ...before.progress, exp: 35 }
+    before.rpgState = { ...before.rpgState, currentHp: 12 }
+    const started = startBattleSession(before, identity)
+    const committed = commitBattleSession(started, identity.id, 'VICTORY', (current) => ({
+      ...current,
+      progress: { ...current.progress, exp: 47 },
+    }))
+
+    expect(committed.progress.exp).toBe(47)
+    expect(committed.rpgState.currentHp).toBe(116)
+  })
+
+  it('Level Up recovery includes currently equipped max HP bonuses', () => {
+    const before = initial()
+    before.progress = { ...before.progress, exp: 35 }
+    before.rpgState = {
+      ...before.rpgState,
+      currentHp: 10,
+      equipment: { weapon: 'training-blade', armor: 'vital-coat', accessory: 'life-charm' },
+      ownedEquipmentIds: [
+        ...before.rpgState.ownedEquipmentIds,
+        'vital-coat',
+        'life-charm',
+      ],
+    }
+    const started = startBattleSession(before, identity)
+    const committed = commitBattleSession(started, identity.id, 'VICTORY', (current) => ({
+      ...current,
+      progress: { ...current.progress, exp: 47 },
+    }))
+
+    expect(committed.rpgState.currentHp).toBe(146)
+  })
+
+  it('a multi-Level victory recovers to the final Level effective max HP', () => {
+    const before = initial()
+    before.rpgState = { ...before.rpgState, currentHp: 1 }
+    const started = startBattleSession(before, identity)
+    const committed = commitBattleSession(started, identity.id, 'VICTORY', (current) => ({
+      ...current,
+      progress: { ...current.progress, exp: 330 },
+    }))
+
+    expect(committed.rpgState.currentHp).toBe(132)
+  })
+
+  it('Replay EXP that crosses a Level boundary also triggers full recovery', () => {
+    const before = initial()
+    before.progress = { ...before.progress, exp: 35, clearedStageIds: [7] }
+    before.rpgState = { ...before.rpgState, currentHp: 18 }
+    const battleResult = applyBattleVictory(before.progress, {
+      stageId: 7,
+      expReward: 12,
+      goldReward: 20,
+    })
+    expect(battleResult.reward.firstClear).toBe(false)
+    expect(battleResult.reward.newLevel).toBeGreaterThan(battleResult.reward.previousLevel)
+
+    const started = startBattleSession(before, identity)
+    const committed = commitBattleSession(started, identity.id, 'VICTORY', (current) => ({
+      ...current,
+      progress: battleResult.progress,
+    }))
+
+    expect(committed.rpgState.currentHp).toBe(116)
   })
 
   it('changing battle first rolls back; stale callbacks/cleanup cannot mutate the next attempt', () => {
