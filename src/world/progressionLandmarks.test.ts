@@ -16,19 +16,20 @@ describe('progression landmarks', () => {
     ])
   })
 
-  it('Deep Forestの各major thresholdを西へ続くlandmarkへ対応させる', () => {
+  it('Deep Forestの15〜22を東西だけでなく上下にも大きく分散する', () => {
     expect(
       PROGRESSION_LANDMARKS.filter(
         (landmark) => landmark.mapId === JS_DEEP_FOREST_MAP_ID,
-      ).map((landmark) => [landmark.battleId, landmark.position.x]),
+      ).map((landmark) => [landmark.battleId, landmark.position.x, landmark.position.y]),
     ).toEqual([
-      [16, 24],
-      [17, 19],
-      [18, 14],
-      [19, 10],
-      [20, 9],
-      [21, 7],
-      [22, 5],
+      [15, 57, 31],
+      [16, 52, 17],
+      [17, 46, 10],
+      [18, 37, 20],
+      [19, 30, 27],
+      [20, 23, 35],
+      [21, 15, 28],
+      [22, 8, 15],
     ])
   })
 
@@ -50,5 +51,22 @@ describe('progression landmarks', () => {
       label: '踏み荒らされた草に足跡が重なっている',
     })
     expect(getProgressionLandmarkAtPosition(JS_FOREST_MAP_ID, { x: 35, y: 13 })).toBeUndefined()
+  })
+
+  it('Deep Forestもsyntax名やBattle番号ではなく自然物をlandmark名にする', () => {
+    expect(getProgressionLandmarkAtPosition(JS_DEEP_FOREST_MAP_ID, { x: 52, y: 17 })).toMatchObject({
+      battleId: 16,
+      shortLabel: '割れた実',
+      label: '割れた実と形の違う種子が一緒に散らばっている',
+    })
+    expect(getProgressionLandmarkAtPosition(JS_DEEP_FOREST_MAP_ID, { x: 30, y: 27 })).toMatchObject({
+      battleId: 19,
+      shortLabel: '交差する根',
+      label: '二本の巨大な根が交差して奥を塞いでいる',
+    })
+    expect(getProgressionLandmarkAtPosition(JS_DEEP_FOREST_MAP_ID, { x: 8, y: 15 })).toMatchObject({
+      battleId: 22,
+      shortLabel: '巨大根',
+    })
   })
 })
