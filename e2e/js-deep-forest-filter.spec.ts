@@ -6,18 +6,23 @@ const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
 type DeepForestState = 'filter-locked' | 'incident-pending' | 'incident-cleared'
 
-async function seedDeepForestGate(page: Page, state: DeepForestState) {
+async function seedDeepForestGate(
+  page: Page,
+  state: DeepForestState,
+  deepForestPosition?: { x: number; y: number },
+) {
   const clearedStageIds =
     state === 'filter-locked'
       ? [7, 8, 9, 1, 10, 11, 12, 13]
       : state === 'incident-pending'
         ? [7, 8, 9, 1, 10, 11, 12, 13, 14]
         : [7, 8, 9, 1, 10, 11, 12, 13, 14, 2]
-  const atSettlement = state !== 'filter-locked'
+  const inDeepForest = deepForestPosition !== undefined
+  const atSettlement = state !== 'filter-locked' && !inDeepForest
 
   await page.goto('/')
   await page.evaluate(
-    ({ progressKey, rpgKey, tutorialKey, cleared, atSettlement }) => {
+    ({ progressKey, rpgKey, tutorialKey, cleared, atSettlement, deepForestPosition }) => {
       localStorage.clear()
       localStorage.setItem(
         progressKey,
@@ -60,9 +65,13 @@ async function seedDeepForestGate(page: Page, state: DeepForestState) {
             partyEquipment: {
               byte: { weapon: null, armor: null, accessory: null },
             },
-            worldMapId: atSettlement ? 'js-forest-settlement' : 'js-forest',
-            worldPosition: atSettlement ? { x: 11, y: 2 } : { x: 2, y: 23 },
-            safeCheckpoint: atSettlement
+            worldMapId: deepForestPosition
+              ? 'js-deep-forest'
+              : atSettlement
+                ? 'js-forest-settlement'
+                : 'js-forest',
+            worldPosition: deepForestPosition ?? (atSettlement ? { x: 11, y: 2 } : { x: 2, y: 23 }),
+            safeCheckpoint: atSettlement || deepForestPosition
               ? { id: 'forest-settlement', mapId: 'js-forest-settlement', position: { x: 11, y: 11 } }
               : { id: 'greenfield-village', mapId: 'js-village', position: { x: 10, y: 12 } },
             stepsSinceEncounter: 0,
@@ -83,6 +92,7 @@ async function seedDeepForestGate(page: Page, state: DeepForestState) {
       tutorialKey: TUTORIAL_KEY,
       cleared: clearedStageIds,
       atSettlement,
+      deepForestPosition,
     },
   )
   await page.goto('/world')
@@ -194,14 +204,16 @@ test('reduced-motionでも! cueの意味を残し、回転せず短いfadeから
   await expect(page).toHaveURL(/\/javascript\/battle\/2\?/, { timeout: 2_000 })
 })
 
-test('second incident clear後はDeep ForestでBattle 15を固定導入し共有traceを追う', async ({ page }) => {
-  await seedDeepForestGate(page, 'incident-cleared')
-  await enterDeepForest(page)
-  await expect(page.getByLabel('JavaScript深層の森のマップ')).toHaveAttribute('data-world-map', 'js-deep-forest')
-  await expect(page.getByLabel('次の目的')).toContainText('共通経路 · FILTER')
-  await waitForMapTransition(page)
+test('second incident clear後はDeep Forestの湿地の足跡でBattle 15を固定導入し共有traceを追う', async ({ page }) => {
+  await seedDeepForestGate(page, 'incident-cleared', { x: 58, y: 31 })
 
-  await page.getByRole('button', { name: '上へ移動' }).click()
+  const deepForest = page.getByLabel('JavaScript深層の森のマップ')
+  await expect(deepForest).toHaveAttribute('data-world-map', 'js-deep-forest')
+  await expect(deepForest).toHaveAttribute('data-world-x', '58')
+  await expect(deepForest).toHaveAttribute('data-world-y', '31')
+  await expect(page.getByLabel('次の目的')).toContainText('共通経路 · FILTER')
+
+  await page.getByRole('button', { name: '左へ移動' }).click()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/15\?/)
   const story = page.getByRole('dialog', { name: '同じfilter()でも条件が変わる' })
