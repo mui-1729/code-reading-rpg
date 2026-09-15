@@ -50,15 +50,15 @@ type TransitionTiming = {
 }
 
 const NORMAL_TIMINGS: Record<SceneTransitionKind, TransitionTiming> = {
-  map: { coverMs: 180, revealMs: 220, se: 'mapEnter' },
+  map: { coverMs: 180, revealMs: 220, se: 'confirm' },
   encounter: { coverMs: 150, revealMs: 190, se: null },
-  'battle-start': { coverMs: 180, revealMs: 220, se: 'battleStart' },
-  'boss-start': { coverMs: 250, revealMs: 260, se: 'battleStart' },
-  'battle-return': { coverMs: 150, revealMs: 220, se: 'battleReturn' },
-  'defeat-return': { coverMs: 220, revealMs: 260, se: 'battleReturn' },
-  connect: { coverMs: 260, revealMs: 300, se: 'connect' },
-  'return-real-world': { coverMs: 240, revealMs: 280, se: 'worldReturn' },
-  'story-to-world': { coverMs: 170, revealMs: 220, se: 'mapEnter' },
+  'battle-start': { coverMs: 180, revealMs: 220, se: 'execute' },
+  'boss-start': { coverMs: 250, revealMs: 260, se: 'execute' },
+  'battle-return': { coverMs: 150, revealMs: 220, se: 'cancel' },
+  'defeat-return': { coverMs: 220, revealMs: 260, se: 'cancel' },
+  connect: { coverMs: 260, revealMs: 300, se: 'skillUnlock' },
+  'return-real-world': { coverMs: 240, revealMs: 280, se: 'stageClear' },
+  'story-to-world': { coverMs: 170, revealMs: 220, se: 'confirm' },
 }
 
 const REDUCED_TIMING = { coverMs: 24, revealMs: 70 }
