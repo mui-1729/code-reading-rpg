@@ -88,14 +88,40 @@ body[data-scene-transitioning='true'] .pause-trigger {
   animation: scene-mark-out 220ms steps(7, end) both;
 }
 
-.scene-transition[data-scene-transition-kind='boss-start'][data-scene-transition-phase='covering'],
-.scene-transition[data-scene-transition-kind='connect'][data-scene-transition-phase='covering'] {
+.scene-transition[data-scene-transition-kind='boss-start'][data-scene-transition-phase='covering'] {
   animation-duration: 250ms;
 }
 
-.scene-transition[data-scene-transition-kind='boss-start'][data-scene-transition-phase='revealing'],
+.scene-transition[data-scene-transition-kind='boss-start'][data-scene-transition-phase='revealing'] {
+  animation-duration: 260ms;
+}
+
+.scene-transition[data-scene-transition-kind='connect'][data-scene-transition-phase='covering'] {
+  animation-duration: 260ms;
+}
+
 .scene-transition[data-scene-transition-kind='connect'][data-scene-transition-phase='revealing'] {
+  animation-duration: 300ms;
+}
+
+.scene-transition[data-scene-transition-kind='defeat-return'][data-scene-transition-phase='covering'] {
+  animation-duration: 220ms;
+}
+
+.scene-transition[data-scene-transition-kind='defeat-return'][data-scene-transition-phase='revealing'] {
+  animation-duration: 260ms;
+}
+
+.scene-transition[data-scene-transition-kind='return-real-world'][data-scene-transition-phase='covering'] {
+  animation-duration: 240ms;
+}
+
+.scene-transition[data-scene-transition-kind='return-real-world'][data-scene-transition-phase='revealing'] {
   animation-duration: 280ms;
+}
+
+.scene-transition[data-scene-transition-kind='story-to-world'][data-scene-transition-phase='covering'] {
+  animation-duration: 170ms;
 }
 
 @keyframes scene-cover {
