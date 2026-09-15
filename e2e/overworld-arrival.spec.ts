@@ -92,7 +92,7 @@ test('@responsive 初期Overworldは到着Hubを読めるが遠方のVillage / F
   ).toBe(false)
 })
 
-test('World Atlasも70×50 Fieldの到着地点・Village・Forest・TypeScript gateを離れた実位置で共有する', async ({ page }) => {
+test('World Atlasは到着地点の周辺だけを開示し遠方terrain情報をDOMへ漏らさない', async ({ page }) => {
   await seedArrival(page)
   await page.goto('/world')
 
@@ -110,8 +110,12 @@ test('World Atlasも70×50 Fieldの到着地点・Village・Forest・TypeScript 
 
   await expect(at(19, 14)).toHaveClass(/terrain-road/)
   await expect(at(20, 14)).toHaveClass(/terrain-road/)
-  await expect(at(10, 22)).toHaveClass(/terrain-village/)
-  await expect(at(34, 34)).toHaveClass(/terrain-woods/)
-  await expect(at(52, 14)).toHaveClass(/terrain-stone/)
-  await expect(at(62, 14)).toHaveClass(/terrain-gate/)
+  await expect(at(20, 14)).toHaveAttribute('data-atlas-visibility', 'explored')
+
+  for (const [x, y] of [[10, 22], [34, 34], [52, 14], [62, 14]]) {
+    await expect(at(x, y)).toHaveClass(/is-fogged/)
+    await expect(at(x, y)).toHaveAttribute('data-atlas-visibility', 'fog')
+  }
+  await expect(at(10, 22)).not.toHaveClass(/terrain-village/)
+  await expect(at(62, 14)).not.toHaveClass(/terrain-gate/)
 })
