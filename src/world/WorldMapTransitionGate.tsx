@@ -74,6 +74,7 @@ export function WorldMapTransitionGate() {
     replay: () => void,
   ) => {
     if (isTransitioning) return false
+    const fromMapId = rpgStateRef.current.worldMapId
     heldDirectionRef.current = null
     void runSceneTransition(
       'map',
@@ -87,6 +88,8 @@ export function WorldMapTransitionGate() {
       },
       {
         label,
+        fromMapId,
+        toMapId,
         waitFor: () => rpgStateRef.current.worldMapId === toMapId,
       },
     )
