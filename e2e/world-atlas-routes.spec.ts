@@ -51,7 +51,8 @@ test('ワールドマップは接続cardを積み上げず各mapの出口pinで�
   const atlas = page.getByRole('region', { name: 'ワールドマップ' })
   await expect(atlas.locator('.atlas-route-network')).toHaveCount(0)
   await expect(atlas.getByText('エリアのつながり', { exact: true })).toHaveCount(0)
-  await expect(atlas.locator('[data-atlas-region]')).toHaveCount(5)
+  await expect(atlas.locator('[data-atlas-region]')).toHaveCount(6)
+  await expect(atlas.locator('[data-atlas-region="js-forest-settlement"]')).toContainText('森番の集落')
   await expect(atlas.locator('[data-atlas-landmark="exit"]')).not.toHaveCount(0)
   await expect(atlas.locator('.atlas-terrain-legend')).toContainText('↔出口')
 
