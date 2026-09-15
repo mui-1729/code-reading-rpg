@@ -95,20 +95,29 @@ export function TypeScriptFrontierPage() {
     [interactionTarget, progress, rpgState],
   )
 
+  const navigateToBattle = useCallback(
+    (battleId: number, seed: string) => navigate({
+      to: '/typescript/battle/$battleId',
+      params: { battleId: String(battleId) },
+      search: { seed, returnTo: '/world' },
+    }),
+    [navigate],
+  )
+
   const enterBattle = useCallback(
-    (battleId: number, seed: string) => {
+    (battleId: number, seed: string, withSceneTransition = true) => {
       if (isTransitioning) return
+      if (!withSceneTransition) {
+        void navigateToBattle(battleId, seed)
+        return
+      }
       void runSceneTransition(
         battleId === 6 ? 'boss-start' : 'battle-start',
-        () => navigate({
-          to: '/typescript/battle/$battleId',
-          params: { battleId: String(battleId) },
-          search: { seed, returnTo: '/world' },
-        }),
+        () => navigateToBattle(battleId, seed),
         { label: battleId === 6 ? 'FRONTIER COMPILER' : `TypeScript Battle ${battleId}` },
       )
     },
-    [isTransitioning, navigate, runSceneTransition],
+    [isTransitioning, navigateToBattle, runSceneTransition],
   )
 
   const move = useCallback(
@@ -130,7 +139,9 @@ export function TypeScriptFrontierPage() {
       setRpgState(result.nextState)
       if (result.kind === 'encounter') {
         startEncounterCue(() => {
-          enterBattle(result.battle.battleId, result.battle.seed)
+          // Random Encounter already owns `! + encounter SE + short transition`.
+          // Do not stack a second scene-cover over that surprise cue.
+          enterBattle(result.battle.battleId, result.battle.seed, false)
         })
         return
       }
