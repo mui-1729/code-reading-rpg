@@ -88,6 +88,8 @@ Lv8   2,590 EXP
 
 Equipment bonusを加えた`CombatStats`をBattleへ渡す。Skill damage、Defense mitigation、BYTE follow-up、Boss Guard、persistent HPはpure combat turn resolverで解決し、runtimeとsolvabilityが同じ計算を使う。
 
+Battle勝利でEXP加算後のLevelが上がった場合は、同じVICTORY transaction内で`currentHp`を**新Levelと現在装備を反映した実効maxHPまで全回復**する。Levelが変わらない勝利ではBattle終了時HPをそのまま保持する。ReplayでもEXPによってLevel Upした場合は同じ全回復を適用し、Stage Clear / Skill Unlock / Boss Clearだけでは回復条件にしない。
+
 Level / Equipmentはdamageと生存余地を増やすが、`TargetRule`を変更しない。十分に時間をかけてLevelを上げたPlayerが多少楽になること自体は許容するが、通常進行ではcode readingを主な攻略手段にする。
 
 ## 4. Canonical progression graph
