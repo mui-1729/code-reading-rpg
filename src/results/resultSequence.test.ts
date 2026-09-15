@@ -12,11 +12,11 @@ describe('typed victory result handoff', () => {
     ])
   })
 
-  it('Level Upは実際に増えた最大HP / 威力をvisible eventへ含める', () => {
+  it('Level Upは実際に増えた最大HP / 威力とHP全回復をvisible eventへ含める', () => {
     expect(createVictoryResultSequence(reward).find((item) => item.id === 'level')).toEqual({
       id: 'level',
       title: 'レベルアップ！ · 最大HP +8 · 威力 +2%',
-      detail: '1 → 2',
+      detail: '1 → 2 · HP全回復',
       tone: 'level',
     })
   })
