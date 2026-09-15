@@ -2,6 +2,7 @@ import { RouterProvider } from '@tanstack/react-router'
 import { BattleRuntimeProvider } from './battle/BattleRuntimeProvider'
 import { GameStateProvider } from './persistence'
 import { router } from './router'
+import { BattleResultTransitionGate } from './transition/BattleResultTransitionGate'
 import { SceneTransitionProvider } from './transition/SceneTransitionContext'
 import { TutorialProvider } from './tutorial'
 import { WorldCharacterDecorations } from './world/WorldCharacterDecorations'
@@ -16,6 +17,7 @@ export function AppRouter() {
         <BattleRuntimeProvider>
           <SceneTransitionProvider>
             <RouterProvider router={router} />
+            <BattleResultTransitionGate />
             <WorldMapTransitionGate />
             <WorldCharacterDecorations />
             <VillageFacilities />
