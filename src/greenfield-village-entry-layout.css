@@ -95,47 +95,110 @@
   box-shadow: inset 0 7px 0 rgba(0, 0, 0, .12);
 }
 
-/* Facility controls look like signs attached to the actual building facade. */
+/*
+ * Facility markers are scenery, not explanatory labels. Each facade gets a
+ * small pixel-style hanging sign whose silhouette communicates the role.
+ * Precise Japanese names remain available through the contextual Action UI.
+ */
 .world-viewport[data-world-map='js-village'] .facility-object {
   position: absolute;
   z-index: 8;
   left: 50%;
-  top: 2px;
+  top: 1px;
   translate: -50% 0;
-  min-width: max-content;
-  padding: 1px 3px !important;
-  border: 2px solid #30251d !important;
+  width: 22px;
+  height: 22px;
+  border: 2px solid #30251d;
   border-radius: 1px;
   background: #efe0b7;
-  color: #32271f;
-  box-shadow: 0 2px 0 rgba(28, 21, 17, .75);
-  font-family: ui-monospace, 'Courier New', monospace !important;
-  font-size: 6px !important;
-  font-weight: 900 !important;
-  line-height: 1.15 !important;
-  letter-spacing: 0 !important;
-  white-space: nowrap;
+  box-shadow: 0 2px 0 rgba(28, 21, 17, .75), inset 0 0 0 1px rgba(255, 255, 255, .22);
+  font-size: 0;
+  line-height: 0;
+  pointer-events: none;
 }
 
+.world-viewport[data-world-map='js-village'] .facility-object::before,
+.world-viewport[data-world-map='js-village'] .facility-object::after {
+  content: '';
+  position: absolute;
+  image-rendering: pixelated;
+}
+
+/* Inn: bed silhouette with pillow / headboard. */
 .world-viewport[data-world-map='js-village'] .facility-object[data-village-facility='inn'] {
   background: #f4d8ae;
 }
 
+.world-viewport[data-world-map='js-village'] .facility-object[data-village-facility='inn']::before {
+  left: 3px;
+  bottom: 4px;
+  width: 14px;
+  height: 7px;
+  border: 2px solid #51352b;
+  border-top-width: 3px;
+  background: #d88962;
+  box-shadow: -2px 4px 0 -1px #51352b, 12px 4px 0 -1px #51352b;
+}
+
+.world-viewport[data-world-map='js-village'] .facility-object[data-village-facility='inn']::after {
+  left: 4px;
+  top: 4px;
+  width: 6px;
+  height: 5px;
+  border: 2px solid #51352b;
+  background: #fff1c9;
+}
+
+/* Item shop: small potion bottle, readable without text or colour alone. */
 .world-viewport[data-world-map='js-village'] .facility-object[data-village-facility='item-shop'] {
   background: #cfe2b7;
 }
 
+.world-viewport[data-world-map='js-village'] .facility-object[data-village-facility='item-shop']::before {
+  left: 6px;
+  top: 7px;
+  width: 8px;
+  height: 10px;
+  border: 2px solid #30452d;
+  border-radius: 1px 1px 3px 3px;
+  background: linear-gradient(0deg, #78a85f 0 55%, #dff0c8 56%);
+}
+
+.world-viewport[data-world-map='js-village'] .facility-object[data-village-facility='item-shop']::after {
+  left: 8px;
+  top: 3px;
+  width: 4px;
+  height: 5px;
+  border: 2px solid #30452d;
+  border-bottom: 0;
+  background: #dff0c8;
+  box-shadow: -1px -2px 0 #30452d, 1px -2px 0 #30452d;
+}
+
+/* Equipment shop: shield plus diagonal blade. */
 .world-viewport[data-world-map='js-village'] .facility-object[data-village-facility='equipment-shop'] {
   background: #c9d7ee;
 }
 
-.world-viewport[data-world-map='js-village'] .facility-object:disabled {
-  opacity: .92 !important;
+.world-viewport[data-world-map='js-village'] .facility-object[data-village-facility='equipment-shop']::before {
+  left: 3px;
+  top: 4px;
+  width: 12px;
+  height: 14px;
+  background: #6e86aa;
+  box-shadow: inset 0 0 0 2px #2e3a4e;
+  clip-path: polygon(50% 0, 100% 18%, 88% 72%, 50% 100%, 12% 72%, 0 18%);
 }
 
-.world-viewport[data-world-map='js-village'] .facility-object:not(:disabled) {
-  outline: 2px solid rgba(255, 229, 145, .72);
-  outline-offset: 1px;
+.world-viewport[data-world-map='js-village'] .facility-object[data-village-facility='equipment-shop']::after {
+  right: 3px;
+  top: 2px;
+  width: 3px;
+  height: 16px;
+  background: #f3e6ba;
+  box-shadow: 0 0 0 1px #3a3027, -3px 10px 0 -1px #3a3027, 3px 10px 0 -1px #3a3027;
+  rotate: 38deg;
+  transform-origin: center;
 }
 
 /* The entry lane visually ties the player start to both buildings and exit. */
@@ -152,7 +215,7 @@
 
 @media (max-width: 700px) {
   .world-viewport[data-world-map='js-village'] .facility-object {
-    font-size: 5.5px !important;
-    padding-inline: 2px !important;
+    width: 20px;
+    height: 20px;
   }
 }
