@@ -1,6 +1,11 @@
 import type { PlayerProgress } from '../progression'
 import { equipmentById } from '../rpg/equipment'
 import type { RpgState } from '../rpg/state'
+import {
+  JS_DEEP_FOREST_MAP_ID,
+  JS_FOREST_MAP_ID,
+  type WorldMapId,
+} from '../world/worldMap'
 import { purchasePatchKit } from './economy'
 import { itemById, type ItemId } from './items'
 
@@ -14,6 +19,14 @@ export type ShopItemDefinition =
       id: string
       kind: 'equipment'
       equipmentId: string
+      price: number
+    }
+  | {
+      id: string
+      kind: 'map-chart'
+      mapId: WorldMapId
+      name: string
+      description: string
       price: number
     }
 
@@ -39,6 +52,22 @@ export type ShopPurchaseResult = {
 
 export const worldShopItems: readonly ShopItemDefinition[] = [
   { id: 'patch-kit', kind: 'consumable', itemId: 'patch-kit' },
+  {
+    id: 'js-forest-chart',
+    kind: 'map-chart',
+    mapId: JS_FOREST_MAP_ID,
+    name: 'JavaScriptの森 地図',
+    description: '森の通常地形・入口・補給拠点をAtlasへ記録する。宝箱などの探索要素は載らない。',
+    price: 45,
+  },
+  {
+    id: 'js-deep-forest-chart',
+    kind: 'map-chart',
+    mapId: JS_DEEP_FOREST_MAP_ID,
+    name: 'JavaScript深層の森 地図',
+    description: '深層の森の通常地形をAtlasへ記録する。宝箱や隠し要素の位置は載らない。',
+    price: 70,
+  },
   { id: 'guard-edge', kind: 'equipment', equipmentId: 'guard-edge', price: 55 },
   { id: 'vital-coat', kind: 'equipment', equipmentId: 'vital-coat', price: 60 },
   { id: 'life-charm', kind: 'equipment', equipmentId: 'life-charm', price: 50 },
@@ -71,6 +100,8 @@ export function getShopItemQuote(
     } else if (rpgState.ownedEquipmentIds.includes(equipment.id)) {
       state = 'owned'
     }
+  } else if (item.kind === 'map-chart' && rpgState.ownedWorldMapIds.includes(item.mapId)) {
+    state = 'owned'
   }
 
   return {
@@ -110,6 +141,18 @@ export function purchaseShopItem(
       rpgState,
       purchased: result.purchased,
       reason: result.purchased ? 'purchased' : 'insufficient-gold',
+    }
+  }
+
+  if (item.kind === 'map-chart') {
+    return {
+      purchased: true,
+      reason: 'purchased',
+      progress: { ...progress, gold: quote.afterPurchaseGold ?? progress.gold },
+      rpgState: {
+        ...rpgState,
+        ownedWorldMapIds: [...rpgState.ownedWorldMapIds, item.mapId],
+      },
     }
   }
 
