@@ -110,7 +110,7 @@ export function SceneTransitionProvider({ children }: { children: ReactNode }) {
     document.body.dataset.sceneTransitioning = 'true'
     document.body.dataset.sceneTransitionKind = kind
     if (kind === 'map') document.body.dataset.worldTransitioning = 'true'
-    if (timing.se) gameAudio.playSe(timing.se)
+    if (options.playSound !== false && timing.se) gameAudio.playSe(timing.se)
 
     try {
       await delay(timing.coverMs)
