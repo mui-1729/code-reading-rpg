@@ -195,8 +195,8 @@ test('Victoryだけattempt-local HP / Itemとrewardをpersistent stateへcommit�
   void storedHp
 })
 
-test('Level Upは増加statを、ReplayはEXP 100% / Gold 50%をresultで明示する', async ({ page }) => {
-  await seedBattleState(page, { exp: 35 })
+test('Level Upは増加statとHP全回復をresultで明示しWorld復帰後も全快を保持する', async ({ page }) => {
+  await seedBattleState(page, { exp: 35, currentHp: 70 })
   await page.goto(`/javascript/battle/1?seed=${BATTLE_1_WIN_SEED}&returnTo=%2Fworld`)
   await dismissStory(page)
   await executeSkill(page, 'TRACE')
@@ -205,6 +205,14 @@ test('Level Upは増加statを、ReplayはEXP 100% / Gold 50%をresultで明示�
   await expect(page.getByText('勝利', { exact: true })).toBeVisible()
   await completeStory(page)
   await expectAnimatedResult(page, 'レベルアップ！ · 最大HP +8 · 威力 +2%')
+  await expect(page.getByText('1 → 2 · HP全回復', { exact: true })).toBeVisible()
+  await expect.poll(async () => (await readStoredRpg(page))?.state.currentHp).toBe(116)
+
+  const result = page.getByRole('dialog', { name: '勝利結果' })
+  await result.getByRole('button', { name: 'スキップ', exact: true }).click()
+  await result.getByRole('button', { name: /ワールドへ戻る/ }).click()
+  await expect(page).toHaveURL(/\/world$/)
+  await expect.poll(async () => (await readStoredRpg(page))?.state.currentHp).toBe(116)
 
   await seedBattleState(page, { exp: 47, gold: 20, clearedStageIds: [1] })
   await page.goto(`/javascript/battle/1?seed=${BATTLE_1_WIN_SEED}&returnTo=%2Fworld`)
