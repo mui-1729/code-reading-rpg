@@ -13,9 +13,9 @@ function getResultReturn(button: HTMLButtonElement) {
 }
 
 /**
- * Battle result handlers own commit/rollback and navigation. This gate keeps
- * that domain logic untouched, but delays the original click until the shared
- * scene cover is opaque so Battle -> World never becomes a naked route swap.
+ * Battle result handlers own commit/rollback, confirm SE, and navigation. This
+ * gate delays the original click until the shared scene cover is opaque so
+ * Battle -> World never becomes a naked route swap without duplicating sound.
  */
 export function BattleResultTransitionGate() {
   const { isTransitioning, runSceneTransition } = useSceneTransition()
@@ -44,7 +44,10 @@ export function BattleResultTransitionGate() {
             bypassRef.current = false
           }
         },
-        { label: transition.label },
+        {
+          label: transition.label,
+          playSound: false,
+        },
       )
     }
 
