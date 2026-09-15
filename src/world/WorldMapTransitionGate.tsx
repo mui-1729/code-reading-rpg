@@ -91,6 +91,8 @@ export function WorldMapTransitionGate() {
         fromMapId,
         toMapId,
         waitFor: () => rpgStateRef.current.worldMapId === toMapId,
+        // The replayed World handler already owns the map-confirm SE.
+        playSound: false,
       },
     )
     return true
