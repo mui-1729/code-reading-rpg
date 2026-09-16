@@ -3,6 +3,10 @@ body[data-scene-transitioning='true'] .pause-trigger {
   pointer-events: none;
 }
 
+body[data-scene-transitioning='true'] .world-controls {
+  pointer-events: none;
+}
+
 .scene-transition:not(.world-map-transition) {
   position: fixed;
   inset: 0;
