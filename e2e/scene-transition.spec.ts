@@ -13,6 +13,7 @@ type TimelineEntry = {
   phase: string | null
   path: string
   layer: string | null
+  encounterCue: string | null
 }
 
 type TimelineWindow = Window & {
@@ -33,6 +34,7 @@ async function installTimeline(page: Page) {
         phase: transition?.dataset.sceneTransitionPhase ?? null,
         path: window.location.pathname,
         layer: document.querySelector<HTMLElement>('.opening-scene')?.dataset.storyLayer ?? null,
+        encounterCue: document.body.dataset.worldEncounterCue ?? null,
       })
     }
 
@@ -41,7 +43,7 @@ async function installTimeline(page: Page) {
       subtree: true,
       childList: true,
       attributes: true,
-      attributeFilter: ['data-scene-transition-phase'],
+      attributeFilter: ['data-scene-transition-phase', 'data-world-encounter-cue'],
     })
     state.__sceneTransitionObserver = observer
     record()
@@ -161,6 +163,28 @@ test('OpeningはREAL→CONNECTを強いvariantで覆い、最終Story→Worldも
 
   entries = await readTimeline(page)
   expectOrderedSwap(entries, 'story-to-world', { path: '/', layer: 'code-world' }, { path: '/world' })
+})
+
+test('movementで始まるfixed incidentはsurprise cueを使わずbattle-startでBattleへ入る', async ({ page }) => {
+  await seedWorld(page, {
+    mapId: 'overworld',
+    position: { x: 10, y: 10 },
+    clearedStageIds: [],
+  })
+
+  await installTimeline(page)
+  await page.getByRole('button', { name: '下へ移動' }).click()
+  await expect(page).toHaveURL(/\/javascript\/battle\/1\?/)
+  await expect(page.locator('.scene-transition')).toHaveCount(0)
+
+  const entries = await readTimeline(page)
+  expectOrderedSwap(
+    entries,
+    'battle-start',
+    { path: '/world' },
+    { path: '/javascript/battle/1' },
+  )
+  expect(entries.some((entry) => entry.encounterCue !== null)).toBe(false)
 })
 
 test('Village fixed Battleはbattle-startでWorldを覆ってからBattleへ入る', async ({ page }) => {
