@@ -150,8 +150,8 @@ export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEvent
         </div>
         <p>{line.text}</p>
         <div className="dialogue-actions">
-          <button type="button" className="secondary-button" onClick={() => completeStory(true)} disabled={isTransitioning}>スキップ</button>
-          <button type="button" className="primary-button" onClick={advance} disabled={isTransitioning}>
+          <button type="button" className="secondary-button" onClick={() => completeStory(true)}>スキップ</button>
+          <button type="button" className="primary-button" onClick={advance}>
             {isLast ? '▶ 続ける' : '▶ 次へ'}
           </button>
         </div>
