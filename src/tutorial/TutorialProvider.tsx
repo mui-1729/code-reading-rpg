@@ -29,6 +29,12 @@ function loadInitialTutorialState() {
   }
 }
 
+function isReadyWorldAction(element: Element | null): element is HTMLButtonElement {
+  return element instanceof HTMLButtonElement &&
+    element.classList.contains('world-interact') &&
+    !element.disabled
+}
+
 export function TutorialProvider({ children }: TutorialProviderProps) {
   const { setRpgState } = useRpg()
   const { abort: abortBattle } = useBattleSessionContext()
@@ -80,7 +86,8 @@ export function TutorialProvider({ children }: TutorialProviderProps) {
   useEffect(() => {
     const confirmWorldInteraction = (target: EventTarget | null) => {
       if (!(target instanceof Element)) return
-      if (!target.closest('.world-interact.tutorial-highlight')) return
+      const action = target.closest('.world-interact')
+      if (!isReadyWorldAction(action)) return
       worldInteractionConfirmed.current = true
       setState((current) => advanceFieldInteraction(current))
     }
@@ -88,8 +95,8 @@ export function TutorialProvider({ children }: TutorialProviderProps) {
     const onClick = (event: MouseEvent) => confirmWorldInteraction(event.target)
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Enter' && event.key !== ' ') return
-      const highlighted = document.querySelector('.world-interact.tutorial-highlight')
-      if (!highlighted) return
+      const action = document.querySelector('.world-interact')
+      if (!isReadyWorldAction(action)) return
       worldInteractionConfirmed.current = true
       setState((current) => advanceFieldInteraction(current))
     }
