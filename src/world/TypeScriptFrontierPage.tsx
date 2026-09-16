@@ -4,6 +4,7 @@ import { gameAudio } from '../audio/gameAudio'
 import { useBgm } from '../audio/useBgm'
 import { useProgress } from '../progression'
 import { useRpg } from '../rpg'
+import { useSceneTransition } from '../transition/useSceneTransition'
 import { openWorldTreasure } from './treasures'
 import { useEncounterCue } from './useEncounterCue'
 import { resolveWorldMove } from './worldActions'
@@ -68,6 +69,7 @@ export function TypeScriptFrontierPage() {
   const navigate = useNavigate()
   const { progress, setProgress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
+  const { isTransitioning, runSceneTransition } = useSceneTransition()
   const [message, setMessage] = useState(
     'ルーン石の道を進み、クリスタル地帯 / 古代遺跡でTypeScriptのルールを読もう。',
   )
@@ -93,21 +95,34 @@ export function TypeScriptFrontierPage() {
     [interactionTarget, progress, rpgState],
   )
 
-  const enterBattle = useCallback(
-    (battleId: number, seed: string, playConfirm = true) => {
-      if (playConfirm) gameAudio.playSe('confirm')
-      navigate({
-        to: '/typescript/battle/$battleId',
-        params: { battleId: String(battleId) },
-        search: { seed, returnTo: '/world' },
-      })
-    },
+  const navigateToBattle = useCallback(
+    (battleId: number, seed: string) => navigate({
+      to: '/typescript/battle/$battleId',
+      params: { battleId: String(battleId) },
+      search: { seed, returnTo: '/world' },
+    }),
     [navigate],
+  )
+
+  const enterBattle = useCallback(
+    (battleId: number, seed: string, withSceneTransition = true) => {
+      if (isTransitioning) return
+      if (!withSceneTransition) {
+        void navigateToBattle(battleId, seed)
+        return
+      }
+      void runSceneTransition(
+        battleId === 6 ? 'boss-start' : 'battle-start',
+        () => navigateToBattle(battleId, seed),
+        { label: battleId === 6 ? 'FRONTIER COMPILER' : `TypeScript Battle ${battleId}` },
+      )
+    },
+    [isTransitioning, navigateToBattle, runSceneTransition],
   )
 
   const move = useCallback(
     (dx: number, dy: number) => {
-      if (encounterCueActive || document.body.dataset.rpgPaused === 'true') return
+      if (encounterCueActive || isTransitioning || document.body.dataset.rpgPaused === 'true') return
 
       setPlayerFacing((current) => getWorldFacingFromMove(dx, dy, current))
       const result = resolveWorldMove({ rpgState, progress, dx, dy })
@@ -124,6 +139,8 @@ export function TypeScriptFrontierPage() {
       setRpgState(result.nextState)
       if (result.kind === 'encounter') {
         startEncounterCue(() => {
+          // Random Encounter already owns `! + encounter SE + short transition`.
+          // Do not stack a second scene-cover over that surprise cue.
           enterBattle(result.battle.battleId, result.battle.seed, false)
         })
         return
@@ -131,11 +148,11 @@ export function TypeScriptFrontierPage() {
 
       setMessage(terrainLabels[result.terrain] ?? result.terrain)
     },
-    [byteJoined, encounterCueActive, enterBattle, position, progress, rpgState, setRpgState, startEncounterCue],
+    [byteJoined, encounterCueActive, enterBattle, isTransitioning, position, progress, rpgState, setRpgState, startEncounterCue],
   )
 
   const interact = useCallback(() => {
-    if (encounterCueActive || document.body.dataset.rpgPaused === 'true') return
+    if (encounterCueActive || isTransitioning || document.body.dataset.rpgPaused === 'true') return
 
     const intent = interactionIntent
 
@@ -181,9 +198,9 @@ export function TypeScriptFrontierPage() {
       }
       enterBattle(intent.battleId, intent.seed)
     }
-  }, [encounterCueActive, enterBattle, interactionIntent, progress, rpgState, setProgress, setRpgState])
+  }, [encounterCueActive, enterBattle, interactionIntent, isTransitioning, progress, rpgState, setProgress, setRpgState])
 
-  useWorldKeyboardControls({ interact, move, disabled: encounterCueActive })
+  useWorldKeyboardControls({ interact, move, disabled: encounterCueActive || isTransitioning })
 
   return (
     <main className="app-shell world-shell title-screen">

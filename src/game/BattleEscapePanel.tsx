@@ -1,6 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
-import { gameAudio } from '../audio/gameAudio'
 import { useProgress } from '../progression'
+import { useSceneTransition } from '../transition/useSceneTransition'
 import { getAreaCapability } from './areas'
 import { isBattleEscapeAllowed } from './battleEscape'
 
@@ -16,6 +16,7 @@ type BattleEscapePanelProps = {
 export function BattleEscapePanel({ areaId, battleId, seed, returnTo, actionLocked, onRun }: BattleEscapePanelProps) {
   const navigate = useNavigate()
   const { progress } = useProgress()
+  const { isTransitioning, runSceneTransition } = useSceneTransition()
   if (!getAreaCapability(areaId, 'escape')) return null
   const allowed = isBattleEscapeAllowed({
     battleId,
@@ -29,10 +30,15 @@ export function BattleEscapePanel({ areaId, battleId, seed, returnTo, actionLock
   if (!allowed) return <div className="battle-escape-row" hidden aria-hidden="true" />
 
   const escape = () => {
-    if (actionLocked) return
-    gameAudio.playSe('confirm')
-    onRun()
-    navigate({ to: '/world' })
+    if (actionLocked || isTransitioning) return
+    void runSceneTransition(
+      'battle-return',
+      () => {
+        onRun()
+        return navigate({ to: '/world' })
+      },
+      { label: '戦闘から離脱' },
+    )
   }
 
   return (
@@ -41,7 +47,7 @@ export function BattleEscapePanel({ areaId, battleId, seed, returnTo, actionLock
         type="button"
         className="secondary-button battle-escape-action"
         onClick={escape}
-        disabled={actionLocked}
+        disabled={actionLocked || isTransitioning}
         aria-label="逃げる"
         title="この戦闘から離脱してワールドへ戻る"
       >
