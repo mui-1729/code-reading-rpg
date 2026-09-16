@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { useProgress } from '../progression'
-import { useRpg } from '../rpg'
+import { useRpg, type RpgState } from '../rpg'
 import { useSceneTransition } from '../transition/useSceneTransition'
 import { resolveWorldMove } from './worldActions'
 import { getWorldInteractionTarget } from './worldInteractionTarget'
 import type { WorldFacing } from './worldPresentation'
-import type { WorldMapId } from './worldMap'
+import { TS_FRONTIER_MAP_ID, type WorldMapId } from './worldMap'
 import { resolveWorldTargetInteraction } from './worldTargetInteraction'
 
 type Direction = { dx: number; dy: number }
@@ -53,7 +53,7 @@ function getRenderedWorldFacing(): WorldFacing | null {
  */
 export function WorldMapTransitionGate() {
   const { progress } = useProgress()
-  const { rpgState } = useRpg()
+  const { rpgState, setRpgState } = useRpg()
   const { isTransitioning, runSceneTransition } = useSceneTransition()
   const bypassRef = useRef(false)
   const heldDirectionRef = useRef<HeldDirection | null>(null)
@@ -72,13 +72,25 @@ export function WorldMapTransitionGate() {
     toMapId: WorldMapId,
     label: string,
     replay: () => void,
+    nextState: RpgState,
   ) => {
     if (isTransitioning) return false
     const fromMapId = rpgStateRef.current.worldMapId
+    const commitDirectly = fromMapId === TS_FRONTIER_MAP_ID
     heldDirectionRef.current = null
     void runSceneTransition(
       'map',
       () => {
+        if (commitDirectly) {
+          // TypeScriptFrontierPage intentionally ignores normal controls while a
+          // scene transition is active. Replaying its Action/Move handler would
+          // therefore be rejected by that guard. The resolver already produced
+          // the authoritative next state, so commit that state while fully
+          // covered instead of synthesizing a second user action.
+          setRpgState(nextState)
+          return
+        }
+
         bypassRef.current = true
         try {
           replay()
@@ -91,12 +103,13 @@ export function WorldMapTransitionGate() {
         fromMapId,
         toMapId,
         waitFor: () => rpgStateRef.current.worldMapId === toMapId,
-        // The replayed World handler already owns the map-confirm SE.
-        playSound: false,
+        // Replayed World handlers own their confirm SE. The direct TypeScript
+        // state commit has no handler to do so, so let the engine own it there.
+        playSound: commitDirectly,
       },
     )
     return true
-  }, [isTransitioning, runSceneTransition])
+  }, [isTransitioning, runSceneTransition, setRpgState])
 
   const tryMoveTransition = useCallback((
     dx: number,
@@ -110,7 +123,7 @@ export function WorldMapTransitionGate() {
       dy,
     })
     if (result.kind !== 'transition') return false
-    return beginTransition(result.toMapId, result.label, replay)
+    return beginTransition(result.toMapId, result.label, replay, result.nextState)
   }, [beginTransition])
 
   const tryInteractTransition = useCallback((replay: () => void) => {
@@ -119,7 +132,7 @@ export function WorldMapTransitionGate() {
     const target = getWorldInteractionTarget(rpgStateRef.current.worldPosition, facing)
     const intent = resolveWorldTargetInteraction(rpgStateRef.current, progressRef.current, target)
     if (intent.kind !== 'map-transition') return false
-    return beginTransition(intent.toMapId, intent.label, replay)
+    return beginTransition(intent.toMapId, intent.label, replay, intent.nextState)
   }, [beginTransition])
 
   useEffect(() => {
@@ -243,7 +256,7 @@ export function WorldMapTransitionGate() {
       button: 0,
       pointerType: 'mouse',
     }))
-    beginTransition(result.toMapId, result.label, () => held.button.click())
+    beginTransition(result.toMapId, result.label, () => held.button.click(), result.nextState)
   }, [beginTransition, isTransitioning, progress, rpgState])
 
   return null
