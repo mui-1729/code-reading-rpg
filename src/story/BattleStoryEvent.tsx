@@ -32,12 +32,6 @@ export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEvent
     () => event.lines.some((candidate) => candidate.layer === 'return'),
     [event.lines],
   )
-  const activeTransitionKind = typeof document === 'undefined'
-    ? undefined
-    : document.body.dataset.sceneTransitionKind
-  const storyOwnsTransition =
-    activeTransitionKind === 'connect' || activeTransitionKind === 'return-real-world'
-  const controlsDisabled = isTransitioning && !storyOwnsTransition
 
   const completeStory = useCallback((skip: boolean) => {
     if (isTransitioning) return
@@ -156,8 +150,8 @@ export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEvent
         </div>
         <p>{line.text}</p>
         <div className="dialogue-actions">
-          <button type="button" className="secondary-button" onClick={() => completeStory(true)} disabled={controlsDisabled}>スキップ</button>
-          <button type="button" className="primary-button" onClick={advance} disabled={controlsDisabled}>
+          <button type="button" className="secondary-button" onClick={() => completeStory(true)} disabled={isTransitioning}>スキップ</button>
+          <button type="button" className="primary-button" onClick={advance} disabled={isTransitioning}>
             {isLast ? '▶ 続ける' : '▶ 次へ'}
           </button>
         </div>
