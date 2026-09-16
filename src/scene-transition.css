@@ -14,7 +14,7 @@ body[data-scene-transitioning='true'] .world-controls {
   display: grid;
   place-items: center;
   overflow: hidden;
-  pointer-events: auto;
+  pointer-events: none;
   background: #090a12;
 }
 
