@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from 'react'
-import { useNavigate } from '@tanstack/react-router'
 import { useProgress } from '../progression'
 import { useRpg } from '../rpg'
+import { router } from '../router'
 import { getWorldInteractionTarget } from '../world/worldInteractionTarget'
 import type { WorldFacing } from '../world/worldPresentation'
 import { TS_FRONTIER_MAP_ID } from '../world/worldMap'
@@ -22,7 +22,6 @@ function stopNativeEvent(event: Event) {
 }
 
 export function WorldBattleTransitionGate() {
-  const navigate = useNavigate()
   const { progress } = useProgress()
   const { rpgState } = useRpg()
   const { isTransitioning, runSceneTransition } = useSceneTransition()
@@ -62,7 +61,7 @@ export function WorldBattleTransitionGate() {
       return false
     }
 
-    void runSceneTransition(kind, () => navigate({
+    void runSceneTransition(kind, () => router.navigate({
       to: region === 'javascript'
         ? '/javascript/battle/$battleId'
         : '/typescript/battle/$battleId',
@@ -70,7 +69,7 @@ export function WorldBattleTransitionGate() {
       search: { seed, returnTo: '/world' },
     }), { label: kind === 'boss-start' ? 'BOSS BATTLE' : 'BATTLE' })
     return true
-  }, [navigate, progress, rpgState, runSceneTransition])
+  }, [progress, rpgState, runSceneTransition])
 
   useEffect(() => {
     const onClick = (event: MouseEvent) => {
