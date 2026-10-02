@@ -15,6 +15,8 @@ import {
   javascriptOpeningScenes,
 } from './story/javascriptOpening'
 import type { StoryWorldLayer } from './story/types'
+import { useSceneTransition } from './transition/useSceneTransition'
+import { getStoryLayerTransitionKind } from './story/storyLayerTransition'
 
 const createRunSeed = () => crypto.randomUUID()
 
@@ -41,6 +43,7 @@ const readOpeningSeen = () => {
 
 export function HomePage() {
   const navigate = useNavigate()
+  const { isTransitioning, runSceneTransition } = useSceneTransition()
   const { rpgState } = useRpg()
   const { progress } = useProgress()
   const [openingIndex, setOpeningIndex] = useState<number | null>(null)
@@ -48,16 +51,18 @@ export function HomePage() {
   useBgm('menu')
 
   const enterWorld = () => {
-    if (typeof window !== 'undefined') {
+    const layer = openingIndex === null ? 'real-world' : javascriptOpeningScenes[openingIndex].layer
+    void runSceneTransition(layer === 'code-world' ? 'story-to-world' : 'connect', () => {
       window.localStorage.setItem(JAVASCRIPT_OPENING_STORAGE_KEY, 'seen')
-    }
-    setOpeningSeen(true)
-    navigate({ to: '/world' })
+      setOpeningSeen(true)
+      return navigate({ to: '/world' })
+    })
   }
 
   const start = () => {
+    if (isTransitioning) return
     if (openingSeen) {
-      navigate({ to: '/world' })
+      enterWorld()
       return
     }
     setOpeningIndex(0)
@@ -73,7 +78,12 @@ export function HomePage() {
         enterWorld()
         return
       }
-      setOpeningIndex((current) => (current === null ? 0 : current + 1))
+      if (isTransitioning) return
+      const nextScene = javascriptOpeningScenes[openingIndex + 1]
+      const kind = getStoryLayerTransitionKind(scene.layer, nextScene.layer)
+      const swap = () => setOpeningIndex(openingIndex + 1)
+      if (kind) void runSceneTransition(kind, swap)
+      else swap()
     }
 
     return (
@@ -121,10 +131,10 @@ export function HomePage() {
           </section>
 
           <div className="opening-actions">
-            <button type="button" className="secondary-button" onClick={enterWorld}>
+            <button type="button" className="secondary-button" onClick={enterWorld} disabled={isTransitioning}>
               スキップ
             </button>
-            <button type="button" className="primary-button" onClick={next}>
+            <button type="button" className="primary-button" onClick={next} disabled={isTransitioning}>
               {isLast ? '▶ CODE WORLDを探索する' : '次へ ▶'}
             </button>
           </div>

@@ -6,7 +6,6 @@ import { useProgress } from '../progression'
 import { useRpg } from '../rpg'
 import { useSceneTransition } from '../transition/useSceneTransition'
 import { openWorldTreasure } from './treasures'
-import { useEncounterCue } from './useEncounterCue'
 import { resolveWorldMove } from './worldActions'
 import {
   getTreasureAtPosition,
@@ -74,7 +73,6 @@ export function TypeScriptFrontierPage() {
     'ルーン石の道を進み、クリスタル地帯 / 古代遺跡でTypeScriptのルールを読もう。',
   )
   useBgm('field')
-  const { encounterCueActive, startEncounterCue } = useEncounterCue()
 
   const position = rpgState.worldPosition
   const [playerFacing, setPlayerFacing] = useState<WorldFacing>('down')
@@ -105,14 +103,10 @@ export function TypeScriptFrontierPage() {
   )
 
   const enterBattle = useCallback(
-    (battleId: number, seed: string, withSceneTransition = true) => {
+    (battleId: number, seed: string, surprise = false) => {
       if (isTransitioning) return
-      if (!withSceneTransition) {
-        void navigateToBattle(battleId, seed)
-        return
-      }
       void runSceneTransition(
-        battleId === 6 ? 'boss-start' : 'battle-start',
+        surprise ? 'encounter' : battleId === 6 ? 'boss-start' : 'battle-start',
         () => navigateToBattle(battleId, seed),
         { label: battleId === 6 ? 'FRONTIER COMPILER' : `TypeScript Battle ${battleId}` },
       )
@@ -122,7 +116,7 @@ export function TypeScriptFrontierPage() {
 
   const move = useCallback(
     (dx: number, dy: number) => {
-      if (encounterCueActive || isTransitioning || document.body.dataset.rpgPaused === 'true') return
+      if (isTransitioning || document.body.dataset.rpgPaused === 'true') return
 
       setPlayerFacing((current) => getWorldFacingFromMove(dx, dy, current))
       const result = resolveWorldMove({ rpgState, progress, dx, dy })
@@ -138,28 +132,26 @@ export function TypeScriptFrontierPage() {
       if (byteJoined) setFollowerPosition(position)
       setRpgState(result.nextState)
       if (result.kind === 'encounter') {
-        startEncounterCue(() => {
-          // Random Encounter already owns `! + encounter SE + short transition`.
-          // Do not stack a second scene-cover over that surprise cue.
-          enterBattle(result.battle.battleId, result.battle.seed, false)
-        })
+        enterBattle(result.battle.battleId, result.battle.seed,
+          true)
         return
       }
 
       setMessage(terrainLabels[result.terrain] ?? result.terrain)
     },
-    [byteJoined, encounterCueActive, enterBattle, isTransitioning, position, progress, rpgState, setRpgState, startEncounterCue],
+    [byteJoined, enterBattle, isTransitioning, position, progress, rpgState, setRpgState],
   )
 
   const interact = useCallback(() => {
-    if (encounterCueActive || isTransitioning || document.body.dataset.rpgPaused === 'true') return
+    if (isTransitioning || document.body.dataset.rpgPaused === 'true') return
 
     const intent = interactionIntent
 
     if (intent.kind === 'map-transition') {
+      void runSceneTransition('map', () => {
       setRpgState(intent.nextState)
-      gameAudio.playSe('confirm')
       setMessage(`${intent.label}へ戻った。JavaScript地方とTypeScript地方は門で分かれている。`)
+      }, { fromMapId: rpgState.worldMapId, toMapId: intent.toMapId, label: intent.label })
       return
     }
 
@@ -198,9 +190,9 @@ export function TypeScriptFrontierPage() {
       }
       enterBattle(intent.battleId, intent.seed)
     }
-  }, [encounterCueActive, enterBattle, interactionIntent, isTransitioning, progress, rpgState, setProgress, setRpgState])
+  }, [enterBattle, interactionIntent, isTransitioning, runSceneTransition, progress, rpgState, setProgress, setRpgState])
 
-  useWorldKeyboardControls({ interact, move, disabled: encounterCueActive || isTransitioning })
+  useWorldKeyboardControls({ interact, move, disabled: isTransitioning })
 
   return (
     <main className="app-shell world-shell title-screen">

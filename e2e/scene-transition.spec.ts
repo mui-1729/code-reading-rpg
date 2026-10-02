@@ -165,7 +165,7 @@ test('OpeningはREAL→CONNECTを強いvariantで覆い、最終Story→Worldも
   expectOrderedSwap(entries, 'story-to-world', { path: '/', layer: 'code-world' }, { path: '/world' })
 })
 
-test('movementで始まるfixed incidentはsurprise cueを使わずbattle-startでBattleへ入る', async ({ page }) => {
+test('movementで突然始まるincidentは共通encounter cueからBattleへ入る', async ({ page }) => {
   await seedWorld(page, {
     mapId: 'overworld',
     position: { x: 10, y: 10 },
@@ -180,11 +180,11 @@ test('movementで始まるfixed incidentはsurprise cueを使わずbattle-start�
   const entries = await readTimeline(page)
   expectOrderedSwap(
     entries,
-    'battle-start',
+    'encounter',
     { path: '/world' },
     { path: '/javascript/battle/1' },
   )
-  expect(entries.some((entry) => entry.encounterCue !== null)).toBe(false)
+  expect(entries.some((entry) => entry.encounterCue === 'alert')).toBe(true)
 })
 
 test('Village fixed Battleはbattle-startでWorldを覆ってからBattleへ入る', async ({ page }) => {

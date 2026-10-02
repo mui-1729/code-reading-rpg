@@ -1,3 +1,4 @@
+import { useSceneTransition } from '../transition/useSceneTransition'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { useProgress } from '../progression'
 import { useRpg } from '../rpg'
@@ -463,7 +464,9 @@ export function WorldControls(props: {
       : null
   const delayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const repeatRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const queuedMove = useQueuedWorldMove(move, activeConversation !== null)
+  const { isTransitioning } = useSceneTransition()
+  const inputLocked = activeConversation !== null || isTransitioning
+  const queuedMove = useQueuedWorldMove(move, inputLocked)
 
   const stopHold = useCallback(() => {
     if (delayRef.current !== null) clearTimeout(delayRef.current)
@@ -473,21 +476,24 @@ export function WorldControls(props: {
   }, [])
 
   useEffect(() => stopHold, [stopHold])
+  useEffect(() => {
+    if (inputLocked) stopHold()
+  }, [inputLocked, stopHold])
 
   const startHold = useCallback((dx: number, dy: number) => {
-    if (activeConversation) return
+    if (inputLocked) return
     stopHold()
     queuedMove(dx, dy)
     delayRef.current = setTimeout(() => {
       repeatRef.current = setInterval(() => queuedMove(dx, dy), 120)
     }, 280)
-  }, [activeConversation, queuedMove, stopHold])
+  }, [inputLocked, queuedMove, stopHold])
 
   const directionButton = (label: string, glyph: string, dx: number, dy: number) => (
     <button
       type="button"
       aria-label={label}
-      disabled={activeConversation !== null}
+      disabled={inputLocked}
       onPointerDown={(event) => {
         if (event.button !== 0) return
         startHold(dx, dy)
@@ -496,7 +502,7 @@ export function WorldControls(props: {
       onPointerCancel={stopHold}
       onPointerLeave={stopHold}
       onClick={(event) => {
-        if (activeConversation) return
+        if (inputLocked) return
         if (event.detail !== 0) return
         queuedMove(dx, dy)
       }}
@@ -506,6 +512,7 @@ export function WorldControls(props: {
   )
 
   const openConversation = () => {
+    if (inputLocked) return
     if (!conversationalNpc) {
       interact()
       return
@@ -550,7 +557,7 @@ export function WorldControls(props: {
         className="primary-button world-interact"
         aria-label={interactLabel}
         onClick={openConversation}
-        disabled={interactDisabled || activeConversation !== null}
+        disabled={interactDisabled || inputLocked}
       >
         {interactLabel}
       </button>

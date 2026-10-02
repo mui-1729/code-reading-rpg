@@ -1,12 +1,3 @@
-body[data-scene-transitioning='true'] .pause-trigger {
-  visibility: hidden;
-  pointer-events: none;
-}
-
-body[data-scene-transitioning='true'] .world-controls {
-  pointer-events: none;
-}
-
 .scene-transition:not(.world-map-transition) {
   position: fixed;
   inset: 0;
@@ -19,11 +10,11 @@ body[data-scene-transitioning='true'] .world-controls {
 }
 
 .scene-transition:not(.world-map-transition)[data-scene-transition-phase='covering'] {
-  animation: scene-cover 180ms steps(6, end) both;
+  animation: scene-cover var(--scene-cover-ms) steps(6, end) both;
 }
 
 .scene-transition:not(.world-map-transition)[data-scene-transition-phase='revealing'] {
-  animation: scene-reveal 220ms steps(7, end) both;
+  animation: scene-reveal var(--scene-reveal-ms) steps(7, end) both;
 }
 
 .scene-transition:not(.world-map-transition) .scene-transition-mark {
@@ -85,47 +76,11 @@ body[data-scene-transitioning='true'] .world-controls {
 }
 
 .scene-transition:not(.world-map-transition)[data-scene-transition-phase='covering'] .scene-transition-mark {
-  animation: scene-mark-in 180ms steps(6, end) both;
+  animation: scene-mark-in var(--scene-cover-ms) steps(6, end) both;
 }
 
 .scene-transition:not(.world-map-transition)[data-scene-transition-phase='revealing'] .scene-transition-mark {
-  animation: scene-mark-out 220ms steps(7, end) both;
-}
-
-.scene-transition[data-scene-transition-kind='boss-start'][data-scene-transition-phase='covering'] {
-  animation-duration: 250ms;
-}
-
-.scene-transition[data-scene-transition-kind='boss-start'][data-scene-transition-phase='revealing'] {
-  animation-duration: 260ms;
-}
-
-.scene-transition[data-scene-transition-kind='connect'][data-scene-transition-phase='covering'] {
-  animation-duration: 260ms;
-}
-
-.scene-transition[data-scene-transition-kind='connect'][data-scene-transition-phase='revealing'] {
-  animation-duration: 300ms;
-}
-
-.scene-transition[data-scene-transition-kind='defeat-return'][data-scene-transition-phase='covering'] {
-  animation-duration: 220ms;
-}
-
-.scene-transition[data-scene-transition-kind='defeat-return'][data-scene-transition-phase='revealing'] {
-  animation-duration: 260ms;
-}
-
-.scene-transition[data-scene-transition-kind='return-real-world'][data-scene-transition-phase='covering'] {
-  animation-duration: 240ms;
-}
-
-.scene-transition[data-scene-transition-kind='return-real-world'][data-scene-transition-phase='revealing'] {
-  animation-duration: 280ms;
-}
-
-.scene-transition[data-scene-transition-kind='story-to-world'][data-scene-transition-phase='covering'] {
-  animation-duration: 170ms;
+  animation: scene-mark-out var(--scene-reveal-ms) steps(7, end) both;
 }
 
 @keyframes scene-cover {
@@ -151,6 +106,7 @@ body[data-scene-transitioning='true'] .world-controls {
 @media (prefers-reduced-motion: reduce) {
   .scene-transition:not(.world-map-transition) {
     animation: none !important;
+    background-image: none !important;
     clip-path: inset(0) !important;
   }
 
@@ -167,3 +123,6 @@ body[data-scene-transitioning='true'] .world-controls {
     display: none;
   }
 }
+
+.scene-transition[data-scene-transition-phase='alert'] { visibility: hidden; }
+.scene-transition[data-scene-transition-kind='encounter'][data-scene-transition-phase='covering'] .scene-transition-mark { animation-name: scene-mark-in; }

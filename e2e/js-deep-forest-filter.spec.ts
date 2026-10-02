@@ -156,12 +156,12 @@ test('Battle 14 clear後は第二集落からDeep Forestへ入り、! → swirl�
 
   await expect(page.locator('body')).toHaveAttribute('data-world-encounter-cue', 'transition')
   await expect(page).toHaveURL(/\/world$/)
-  const transitionVisual = await deepForest.evaluate((viewport) => {
-    const style = getComputedStyle(viewport, '::after')
+  const transitionVisual = await page.locator('.scene-transition').evaluate((viewport) => {
+    const style = getComputedStyle(viewport)
     return { animationName: style.animationName, backgroundImage: style.backgroundImage }
   })
-  expect(transitionVisual.animationName).toBe('world-encounter-swirl')
-  expect(transitionVisual.backgroundImage).toContain('conic-gradient')
+  expect(transitionVisual.animationName).toBe('scene-cover')
+  expect(transitionVisual.backgroundImage).toContain('gradient')
   await expect(page.getByRole('button', { name: 'メニューを開く' })).toBeDisabled()
 
   await expect(page).toHaveURL(/\/javascript\/battle\/2\?/, { timeout: 2_000 })
@@ -195,11 +195,11 @@ test('reduced-motionでも! cueの意味を残し、回転せず短いfadeから
   expect(cueVisual.animationName).toBe('none')
 
   await expect(page.locator('body')).toHaveAttribute('data-world-encounter-cue', 'transition')
-  const transitionVisual = await deepForest.evaluate((viewport) => {
-    const style = getComputedStyle(viewport, '::after')
+  const transitionVisual = await page.locator('.scene-transition').evaluate((viewport) => {
+    const style = getComputedStyle(viewport)
     return { animationName: style.animationName, backgroundImage: style.backgroundImage }
   })
-  expect(transitionVisual.animationName).toBe('world-encounter-reduced-fade')
+  expect(transitionVisual.animationName).toBe('none')
   expect(transitionVisual.backgroundImage).toBe('none')
   await expect(page).toHaveURL(/\/javascript\/battle\/2\?/, { timeout: 2_000 })
 })

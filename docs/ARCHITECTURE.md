@@ -28,6 +28,8 @@ TutorialProvider
   ↓
 BattleRuntimeProvider
   ↓
+SceneTransitionProvider
+  ↓
 RouterProvider
   ├─ Home / Opening
   ├─ WorldPage
@@ -477,3 +479,9 @@ local / branch checks
 現在不要。
 
 Login / Cloud Save / Ranking / Shared Challenge等の具体的要件が出た時点で追加を検討する。
+
+## Scene transition ownership
+
+`transition/SceneTransitionContext.tsx`はscene演出と入力lockを共通管理する。World / Opening / Battle / Storyの実際の操作handlerが`runSceneTransition(kind, swap)`へscene更新を渡し、cover完了後にswapし、commitを待ってrevealする。DOM buttonの文言・正面sprite・合成clickをscene authorityとして読まない。
+
+map / encounter / battle-start / boss-start / battle-return / defeat-return / connect / return-real-world / story-to-worldはsemantic variant。同一engineがSE・時間・reduced-motion・unmount時cancelを担当する。encounterは頭上の`!`を先に表示し、入力lockをalertからreveal終了まで保持する。Worldのhold / queueもlockで破棄する。Pause / HELP / DATA / tab操作はscene transitionを使わない。Battle commit / rollbackのauthorityは既存session handlerのまま維持する。

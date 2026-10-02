@@ -54,6 +54,7 @@ import { BattleStoryEvent } from './story/BattleStoryEvent'
 import { getBattleStoryEventForBattle } from './story/battleStoryEvents'
 import { getWorldProgressChange } from './world/worldObjective'
 import { useModalFocus } from './ui/useModalFocus'
+import { useSceneTransition } from './transition/useSceneTransition'
 
 type Phase = 'battle' | 'victory' | 'defeat'
 
@@ -73,6 +74,7 @@ const cloneEnemies = (enemies: Enemy[]) => enemies.map((enemy) => ({ ...enemy })
 
 function App({ battleId, seed, returnTo }: AppProps) {
   const navigate = useNavigate()
+  const { isTransitioning, runSceneTransition } = useSceneTransition()
   const { setSnapshot } = useBattleRuntime()
   const { progress, stats: baseStats } = useProgress()
   const { rpgState } = useRpg()
@@ -151,7 +153,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
   )
   const bossGuardEnabled = hasBossGuard(battle)
   const bossGuardActive = isBossGuardActive(battle, enemies)
-  const actionLocked = isResolving || phase !== 'battle' || Boolean(storyEvent || explainedSkill || codeDataOpen)
+  const actionLocked = isTransitioning || isResolving || phase !== 'battle' || Boolean(storyEvent || explainedSkill || codeDataOpen)
 
   useLayoutEffect(() => {
     setSnapshot({
@@ -427,22 +429,20 @@ function App({ battleId, seed, returnTo }: AppProps) {
     setSelectedSkillId(null)
   }
 
+  const goReturnDestination = () => {
+    void runSceneTransition('battle-return', () => navigate({ to: '/world' }))
+  }
+
   const goNextBattle = () => {
-    gameAudio.playSe('confirm')
     if (returnTo === '/world' || !nextBattle) {
-      navigate({ to: '/world' })
+      goReturnDestination()
       return
     }
-    navigate({
+    void runSceneTransition('battle-start', () => navigate({
       to: '/$areaId/battle/$battleId',
       params: { areaId: nextBattle.areaId, battleId: String(nextBattle.id) },
       search: { seed: String(seed), returnTo },
-    })
-  }
-
-  const goReturnDestination = () => {
-    gameAudio.playSe('confirm')
-    navigate({ to: '/world' })
+    }))
   }
 
   const retryBattle = () => {
@@ -452,9 +452,10 @@ function App({ battleId, seed, returnTo }: AppProps) {
   }
 
   const returnToCheckpoint = () => {
-    gameAudio.playSe('confirm')
-    rollback('checkpoint')
-    requestAnimationFrame(() => void navigate({ to: '/world' }))
+    void runSceneTransition('defeat-return', () => {
+      rollback('checkpoint')
+      return navigate({ to: '/world' })
+    })
   }
 
   const openCodeHelp = (skill: SkillCard, opener: HTMLElement) => {
@@ -803,11 +804,11 @@ function App({ battleId, seed, returnTo }: AppProps) {
               </div>
             )}
             <div className="result-actions">
-              <button className="primary-button" onClick={goNextBattle}>
+              <button className="primary-button" onClick={goNextBattle} disabled={isTransitioning}>
                 {returnTo === '/world' ? '▶ ワールドへ戻る' : nextBattle ? '▶ 次のステージ' : '▶ ワールドへ戻る'}
               </button>
               {returnTo !== '/world' && (
-                <button className="secondary-button" onClick={goReturnDestination}>◀ ワールドへ戻る</button>
+                <button className="secondary-button" onClick={goReturnDestination} disabled={isTransitioning}>◀ ワールドへ戻る</button>
               )}
             </div>
           </section>
@@ -833,7 +834,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
             <p className="result-note">再挑戦ではBattle開始時のHP / Itemへ戻る。チェックポイントへ戻っても全回復せず、開始地点へ戻る。</p>
             <div className="defeat-actions">
               <button className="primary-button" onClick={retryBattle}>▶ 再挑戦</button>
-              <button className="secondary-button" onClick={returnToCheckpoint}>◀ チェックポイントへ戻る</button>
+              <button className="secondary-button" onClick={returnToCheckpoint} disabled={isTransitioning}>◀ チェックポイントへ戻る</button>
               <button className="secondary-button" onClick={(event) => openCodeHelp(selectedSkill ?? availableSkills[0], event.currentTarget)}>コード解説</button>
             </div>
           </section>

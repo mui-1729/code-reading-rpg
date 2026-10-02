@@ -7,7 +7,7 @@ import { useProgress } from '../progression'
 import { characterVisuals, equipmentById, useRpg } from '../rpg'
 import { TYPESCRIPT_REGION_LOCKED_MESSAGE } from './regionAccess'
 import { openWorldTreasure } from './treasures'
-import { useEncounterCue } from './useEncounterCue'
+import { useSceneTransition } from '../transition/useSceneTransition'
 import { activateVillageFacility } from './villageFacilityEvents'
 import { getNextJavaScriptTrainingBattleId, resolveWorldMove } from './worldActions'
 import {
@@ -66,7 +66,7 @@ export function WorldPage() {
   const [shopOpen, setShopOpen] = useState(false)
   const [innOpen, setInnOpen] = useState(false)
   useBgm('field')
-  const { encounterCueActive, startEncounterCue } = useEncounterCue()
+  const { isTransitioning, runSceneTransition } = useSceneTransition()
 
   const mapId = rpgState.worldMapId
   const position = rpgState.worldPosition
@@ -465,29 +465,23 @@ export function WorldPage() {
           : javascriptNextObjective
 
   const enterBattle = useCallback(
-    (battleId: number, battleRegion: 'javascript' | 'typescript', seed: string, playConfirm = true) => {
-      if (playConfirm) gameAudio.playSe('confirm')
-      if (battleRegion === 'javascript') {
-        navigate({
-          to: '/javascript/battle/$battleId',
-          params: { battleId: String(battleId) },
+    (battleId: number, battleRegion: 'javascript' | 'typescript', seed: string, surprise = false) => {
+      void runSceneTransition(
+        surprise ? 'encounter' : [3, 6, 13, 19].includes(battleId) ? 'boss-start' : 'battle-start',
+        () => navigate({
+          to: '/$areaId/battle/$battleId',
+          params: { areaId: battleRegion, battleId: String(battleId) },
           search: { seed, returnTo: '/world' },
-        })
-        return
-      }
-      navigate({
-        to: '/typescript/battle/$battleId',
-        params: { battleId: String(battleId) },
-        search: { seed, returnTo: '/world' },
-      })
+        }),
+      )
     },
-    [navigate],
+    [navigate, runSceneTransition],
   )
 
   const move = useCallback(
     (dx: number, dy: number) => {
       if (
-        encounterCueActive ||
+        isTransitioning ||
         shopOpen ||
         innOpen ||
         document.body.dataset.rpgPaused === 'true'
@@ -497,39 +491,12 @@ export function WorldPage() {
       const result = resolveWorldMove({ rpgState, progress, dx, dy })
       if (result.kind === 'blocked') return
 
-      if (result.kind === 'transition') {
-        if (byteJoined) {
-          setFollowerPosition({
-            x: result.nextState.worldPosition.x,
-            y: result.nextState.worldPosition.y + 1,
-          })
-        }
-        setRpgState(result.nextState)
-        gameAudio.playSe('confirm')
-        setMessage(
-          result.label === 'Code Core前'
-            ? 'JavaScript深層の森の経路を抜けてCode Core手前へ出た。北へ進めば最終ボスだ。'
-            : result.toMapId === JS_VILLAGE_MAP_ID
-              ? `${result.label}へ入った。さっきの異常で読めなかった部分だけMIOと確認しよう。`
-              : result.toMapId === JS_FOREST_SETTLEMENT_MAP_ID
-                ? `${result.label}へ着いた。ここが新しい安全拠点だ。宿と道具屋で準備して、北のDeep Forestへ進もう。`
-                : result.toMapId === JS_DEEP_FOREST_MAP_ID
-                  ? progress.clearedStageIds.includes(2)
-                    ? `${result.label}へ入った。共有経路はさらに西へ続いている。`
-                    : `${result.label}へ入った。最初の移動で二つ目の実際の症状を確認する。`
-                  : result.toMapId === JS_FOREST_MAP_ID
-                    ? `${result.label}へ入った。最初の異常で見た選択処理の経路を西へ追おう。`
-                    : `${result.label}へ移動した。`,
-        )
-        return
-      }
 
       if (byteJoined) setFollowerPosition(position)
       setRpgState(result.nextState)
       if (result.kind === 'encounter') {
-        startEncounterCue(() => {
-          enterBattle(result.battle.battleId, result.battle.region, result.battle.seed, false)
-        })
+        enterBattle(result.battle.battleId, result.battle.region, result.battle.seed,
+          true)
         return
       }
 
@@ -537,7 +504,7 @@ export function WorldPage() {
     },
     [
       byteJoined,
-      encounterCueActive,
+      isTransitioning,
       enterBattle,
       innOpen,
       position,
@@ -545,13 +512,12 @@ export function WorldPage() {
       rpgState,
       setRpgState,
       shopOpen,
-      startEncounterCue,
     ],
   )
 
   const interact = useCallback(() => {
     if (
-      encounterCueActive ||
+      isTransitioning ||
       shopOpen ||
       innOpen ||
       document.body.dataset.rpgPaused === 'true'
@@ -582,6 +548,7 @@ export function WorldPage() {
     }
 
     if (intent.kind === 'map-transition') {
+      void runSceneTransition('map', () => {
       if (byteJoined) {
         setFollowerPosition({
           x: intent.nextState.worldPosition.x,
@@ -589,7 +556,6 @@ export function WorldPage() {
         })
       }
       setRpgState(intent.nextState)
-      gameAudio.playSe('confirm')
       setMessage(
         intent.label === 'Code Core前'
           ? 'JavaScript深層の森の経路を抜けてCode Core手前へ出た。北へ進めば最終ボスだ。'
@@ -605,6 +571,7 @@ export function WorldPage() {
                   ? `${intent.label}へ入った。最初の異常で見た選択処理の経路を西へ追おう。`
                   : `${intent.label}へ移動した。`,
       )
+      }, { fromMapId: mapId, toMapId: intent.toMapId, label: intent.label })
       return
     }
 
@@ -747,8 +714,10 @@ export function WorldPage() {
     }
   }, [
     byteJoined,
-    encounterCueActive,
+    isTransitioning,
     enterBattle,
+    mapId,
+    runSceneTransition,
     innOpen,
     interactionIntent,
     nextTrainingBattleId,
@@ -760,7 +729,7 @@ export function WorldPage() {
     shopOpen,
   ])
 
-  useWorldKeyboardControls({ interact, move, disabled: shopOpen || innOpen || encounterCueActive })
+  useWorldKeyboardControls({ interact, move, disabled: shopOpen || innOpen || isTransitioning })
 
   return (
     <main className="app-shell world-shell title-screen">

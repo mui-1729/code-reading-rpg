@@ -6,13 +6,7 @@ export type SceneTransitionOptions = {
   label?: string
   fromMapId?: string
   toMapId?: string
-  waitFor?: () => boolean
-  /**
-   * Replay gates can keep an existing domain handler as the SE authority while
-   * still using the shared visual/input-lock timing. Direct scene transitions
-   * leave this true (the default) so the semantic variant owns its sound.
-   */
-  playSound?: boolean
+
 }
 
 export type SceneTransitionContextValue = {

@@ -41,7 +41,7 @@ export function BattleStoryEvent({ event, onComplete, onSkip }: BattleStoryEvent
       ? 'return-real-world'
       : !containsReturn && (layer === 'real-world' || layer === 'remote' || layer === 'connect')
         ? 'connect'
-        : null
+        : 'battle-start'
 
     if (!transitionKind) {
       complete()

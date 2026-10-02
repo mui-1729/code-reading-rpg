@@ -1,138 +1,98 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react'
-import { gameAudio, type SoundEffect } from '../audio/gameAudio'
-import {
-  SceneTransitionContext,
-  type SceneTransitionContextValue,
-  type SceneTransitionKind,
-} from './sceneTransitionState'
-
-type SceneTransitionPhase = 'covering' | 'revealing'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { gameAudio } from '../audio/gameAudio'
+import { SceneTransitionContext, type SceneTransitionContextValue, type SceneTransitionKind } from './sceneTransitionState'
+import { getSceneTransitionTiming } from './sceneTransitionTiming'
 
 type ActiveSceneTransition = {
   kind: SceneTransitionKind
-  phase: SceneTransitionPhase
-  label?: string
+  phase: 'alert' | 'covering' | 'revealing'
   fromMapId?: string
   toMapId?: string
-}
-
-type TransitionTiming = {
   coverMs: number
   revealMs: number
-  se: SoundEffect | null
 }
 
-const NORMAL_TIMINGS: Record<SceneTransitionKind, TransitionTiming> = {
-  map: { coverMs: 180, revealMs: 220, se: 'confirm' },
-  encounter: { coverMs: 150, revealMs: 190, se: null },
-  'battle-start': { coverMs: 180, revealMs: 220, se: 'execute' },
-  'boss-start': { coverMs: 250, revealMs: 260, se: 'execute' },
-  'battle-return': { coverMs: 150, revealMs: 220, se: 'cancel' },
-  'defeat-return': { coverMs: 220, revealMs: 260, se: 'cancel' },
-  connect: { coverMs: 260, revealMs: 300, se: 'skillUnlock' },
-  'return-real-world': { coverMs: 240, revealMs: 280, se: 'stageClear' },
-  'story-to-world': { coverMs: 170, revealMs: 220, se: 'confirm' },
+function wait(ms: number, signal: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    const abort = () => {
+      window.clearTimeout(timer)
+      reject(new DOMException('Transition cancelled', 'AbortError'))
+    }
+    const timer = window.setTimeout(() => {
+      signal.removeEventListener('abort', abort)
+      resolve()
+    }, ms)
+    signal.addEventListener('abort', abort, { once: true })
+  })
 }
 
-const REDUCED_TIMING = { coverMs: 24, revealMs: 70 }
-const SCENE_SWAP_WATCHDOG_MS = 1_200
-
-function delay(ms: number) {
-  return new Promise<void>((resolve) => window.setTimeout(resolve, ms))
-}
-
-function nextFrame() {
-  return new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()))
-}
-
-function prefersReducedMotion() {
-  return typeof window !== 'undefined' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
-}
-
-async function waitUntil(predicate: () => boolean) {
-  const startedAt = performance.now()
-  while (!predicate() && performance.now() - startedAt < SCENE_SWAP_WATCHDOG_MS) {
-    await nextFrame()
-  }
-}
-
-function stopTrustedInput(event: Event) {
-  if (!event.isTrusted) return
-  if (event.cancelable) event.preventDefault()
-  event.stopPropagation()
-  event.stopImmediatePropagation()
+function clearInputLock() {
+  delete document.body.dataset.sceneTransitioning
+  delete document.body.dataset.sceneTransitionKind
+  delete document.body.dataset.worldTransitioning
+  delete document.body.dataset.worldEncounterCue
 }
 
 export function SceneTransitionProvider({ children }: { children: ReactNode }) {
   const [active, setActive] = useState<ActiveSceneTransition | null>(null)
-  const activeRef = useRef<ActiveSceneTransition | null>(null)
-
-  const finish = useCallback(() => {
-    activeRef.current = null
-    setActive(null)
-    if (typeof document !== 'undefined') {
-      delete document.body.dataset.sceneTransitioning
-      delete document.body.dataset.sceneTransitionKind
-      delete document.body.dataset.worldTransitioning
-    }
-  }, [])
+  const pendingRef = useRef<AbortController | null>(null)
 
   const runSceneTransition = useCallback<SceneTransitionContextValue['runSceneTransition']>(async (
-    kind,
-    swap,
-    options = {},
+    kind, swap, options = {},
   ) => {
-    if (activeRef.current || typeof window === 'undefined') return false
-
-    const reduced = prefersReducedMotion()
-    const baseTiming = NORMAL_TIMINGS[kind]
-    const timing = reduced
-      ? { ...baseTiming, ...REDUCED_TIMING }
-      : baseTiming
-    const covering: ActiveSceneTransition = {
-      kind,
-      phase: 'covering',
-      label: options.label,
-      fromMapId: options.fromMapId,
-      toMapId: options.toMapId,
+    if (pendingRef.current) return false
+    const pending = new AbortController()
+    pendingRef.current = pending
+    const { signal } = pending
+    const timing = getSceneTransitionTiming(kind, window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+    const transition: ActiveSceneTransition = {
+      kind, phase: kind === 'encounter' ? 'alert' : 'covering',
+      fromMapId: options.fromMapId, toMapId: options.toMapId,
+      coverMs: timing.coverMs, revealMs: timing.revealMs,
     }
-
-    activeRef.current = covering
-    setActive(covering)
     document.body.dataset.sceneTransitioning = 'true'
     document.body.dataset.sceneTransitionKind = kind
     if (kind === 'map') document.body.dataset.worldTransitioning = 'true'
-    if (options.playSound !== false && timing.se) gameAudio.playSe(timing.se)
+    setActive(transition)
+    gameAudio.playSe(timing.se)
 
     try {
-      await delay(timing.coverMs)
+      if (kind === 'encounter') {
+        document.body.dataset.worldEncounterCue = 'alert'
+        await wait(timing.alertMs, signal)
+        document.body.dataset.worldEncounterCue = 'transition'
+        setActive({ ...transition, phase: 'covering' })
+      }
+      await wait(timing.coverMs, signal)
       await swap()
-      if (options.waitFor) await waitUntil(options.waitFor)
-      await nextFrame()
-
-      const revealing: ActiveSceneTransition = { ...covering, phase: 'revealing' }
-      activeRef.current = revealing
-      setActive(revealing)
-      await delay(timing.revealMs)
-      finish()
+      if (signal.aborted) return false
+      // Allow React's map/Story state update to commit before revealing. Router
+      // navigation is awaited by its caller, so this also covers lazy routes.
+      await wait(32, signal)
+      setActive({ ...transition, phase: 'revealing' })
+      await wait(timing.revealMs, signal)
       return true
     } catch (error) {
-      finish()
-      throw error
+      if (!signal.aborted) throw error
+      return false
+    } finally {
+      if (pendingRef.current === pending) {
+        pendingRef.current = null
+        clearInputLock()
+        setActive(null)
+      }
     }
-  }, [finish])
+  }, [])
 
   useEffect(() => {
-    if (!active) return
-    const block = (event: Event) => stopTrustedInput(event)
+    // The ref is set synchronously by the trigger. Capture input without
+    // replaying native events or depending on a subsequent React effect.
+    const block = (event: Event) => {
+      if (!pendingRef.current) return
+      if (event.cancelable) event.preventDefault()
+      event.stopPropagation()
+      event.stopImmediatePropagation()
+    }
     window.addEventListener('pointerdown', block, true)
     window.addEventListener('click', block, true)
     window.addEventListener('keydown', block, true)
@@ -140,16 +100,14 @@ export function SceneTransitionProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('pointerdown', block, true)
       window.removeEventListener('click', block, true)
       window.removeEventListener('keydown', block, true)
+      const pending = pendingRef.current
+      pendingRef.current = null
+      pending?.abort()
+      clearInputLock()
     }
-  }, [active])
+  }, [])
 
-  useEffect(() => finish, [finish])
-
-  const value = useMemo(() => ({
-    isTransitioning: active !== null,
-    runSceneTransition,
-  }), [active, runSceneTransition])
-
+  const value = useMemo(() => ({ isTransitioning: active !== null, runSceneTransition }), [active, runSceneTransition])
   return (
     <SceneTransitionContext.Provider value={value}>
       {children}
@@ -161,6 +119,7 @@ export function SceneTransitionProvider({ children }: { children: ReactNode }) {
           data-world-transition-phase={active.kind === 'map' ? active.phase : undefined}
           data-world-transition-from={active.kind === 'map' ? active.fromMapId : undefined}
           data-world-transition-to={active.kind === 'map' ? active.toMapId : undefined}
+          style={{ '--scene-cover-ms': `${active.coverMs}ms`, '--scene-reveal-ms': `${active.revealMs}ms` } as CSSProperties}
           aria-hidden="true"
         >
           <span className="scene-transition-mark world-map-transition-vortex" />
