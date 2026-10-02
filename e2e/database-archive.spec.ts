@@ -109,7 +109,13 @@ test('@cross-browser @responsive 地下書庫は二つのfinal後に開き、階
   await expect(page.getByLabel('地域ごとの目的')).toContainText('DATABASE ARCHIVE')
   await expect(page.getByLabel('地域ごとの目的')).toContainText('北東の閲覧台でtableとqueryを読む')
   await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog', { name: 'メニュー', exact: true })).toBeHidden()
   await page.keyboard.press('ArrowDown')
+  const returnAction = page.getByRole('button', { name: 'TypeScript辺境へ入る', exact: true })
+  await expect(returnAction).toBeEnabled()
+  // Closing Pause restores its opener. Focus the map Action before Enter so
+  // the native MENU button does not correctly reopen itself.
+  await returnAction.focus()
   await page.keyboard.press('Enter')
   await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-map', 'ts-frontier')
   expect(
