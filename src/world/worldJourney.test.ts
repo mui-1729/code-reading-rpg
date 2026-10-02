@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import type { WorldPosition } from '../rpg'
 import { getWorldNpcAtPosition } from './worldCharacters'
 import { getWorldRecoveryStopAtPosition } from './recoveryStops'
 import {
@@ -6,7 +7,7 @@ import {
   isWalkableTerrain, JS_FOREST_LEARNING_POSITIONS, JS_FOREST_MIDBOSS_POSITION,
   JS_FOREST_SETTLEMENT_POSITION, JS_FOREST_MAP_ID, JS_DEEP_FOREST_LEARNING_POSITIONS,
   JS_DEEP_FOREST_CORE_EXIT_POSITION, JS_DEEP_FOREST_MAP_ID, WORLD_MAP_STARTS,
-  VIEWPORT_WIDTH, VIEWPORT_HEIGHT, type WorldMapId, type WorldPosition,
+  VIEWPORT_WIDTH, VIEWPORT_HEIGHT, type WorldMapId,
 } from './worldMap'
 
 const moves = [{ x: 0, y: -1 }, { x: 1, y: 0 }, { x: 0, y: 1 }, { x: -1, y: 0 }]

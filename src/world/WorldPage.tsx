@@ -358,7 +358,7 @@ export function WorldPage() {
       detail: '調査は後戻りせず西へ続く。JavaScript深層の森で共有経路を根本原因まで追おう。',
       clear: true,
     }
-  }, [progress.clearedStageIds])
+  }, [progress.clearedStageIds, rpgState.forestLearningBattleZones])
 
   const settlementObjective = useMemo(() => {
     if (!progress.clearedStageIds.includes(2)) {
