@@ -58,6 +58,32 @@ async function clickDirection(page: Page, name: string) {
   await page.getByRole('button', { name }).click()
 }
 
+// The pan lasts only 150ms. Record its visible frame inside the browser so
+// Playwright transport / tracing latency cannot miss it before an assertion.
+async function observeFirstCameraPan(page: Page) {
+  await page.evaluate(() => {
+    const state = window as Window & { cameraPanSeen?: boolean }
+    state.cameraPanSeen = false
+    const observer = new MutationObserver(() => {
+      const snapshot = document.querySelector('.world-camera-snapshot')
+      if (!snapshot) return
+      const rect = snapshot.getBoundingClientRect()
+      const style = getComputedStyle(snapshot)
+      if (rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none') {
+        state.cameraPanSeen = true
+        observer.disconnect()
+      }
+    })
+    observer.observe(document.body, { childList: true, subtree: true })
+  })
+}
+
+async function expectCameraPanWasVisible(page: Page) {
+  await expect.poll(() => page.evaluate(() =>
+    (window as Window & { cameraPanSeen?: boolean }).cameraPanSeen,
+  )).toBe(true)
+}
+
 test('@responsive rapid D-pad入力では途中animationを再開始せず最終cameraがlogical位置へ一致する', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedHub(page)
@@ -65,9 +91,10 @@ test('@responsive rapid D-pad入力では途中animationを再開始せず最終
   const viewport = page.getByLabel('ワールドマップ')
   const snapshot = page.locator('.world-camera-snapshot')
 
+  await observeFirstCameraPan(page)
   await clickDirection(page, '右へ移動')
   await expect(viewport).toHaveAttribute('data-world-x', '21')
-  await expect(snapshot).toBeVisible()
+  await expectCameraPanWasVisible(page)
 
   await page.waitForTimeout(20)
   await clickDirection(page, '左へ移動')
@@ -100,9 +127,10 @@ test('rapid keyboard入力でもcamera snapshotを積み重ねず入力を捨て
   const viewport = page.getByLabel('ワールドマップ')
   const snapshot = page.locator('.world-camera-snapshot')
 
+  await observeFirstCameraPan(page)
   await page.keyboard.press('ArrowRight')
   await expect(viewport).toHaveAttribute('data-world-x', '21')
-  await expect(snapshot).toBeVisible()
+  await expectCameraPanWasVisible(page)
 
   await page.waitForTimeout(20)
   await page.keyboard.press('ArrowLeft')
