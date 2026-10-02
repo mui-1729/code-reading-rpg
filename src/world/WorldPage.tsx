@@ -238,7 +238,9 @@ export function WorldPage() {
                   : '最後に一つへ集約する処理'
       return {
         label: 'ROOT TRACE',
-        title: `JavaScript深層の森を西へ進み${nextTrace}を追う`,
+        title: !progress.clearedStageIds.includes(20) && progress.clearedStageIds.includes(19)
+          ? `泉の北側へ回り込み、爪痕の倒木で${nextTrace}を追う`
+          : `JavaScript深層の森の手がかりから${nextTrace}を追う`,
         detail: '新しい構文を覚えるためではなく、二つの異常がどこへ集約されるかを現在のデータの流れから追い続けよう。',
         clear: false,
       }
@@ -337,7 +339,9 @@ export function WorldPage() {
       return {
         label: 'IMPACT RANGE',
         title: '複数の対象へ広がる影響を全部追う',
-        detail: '守り人の先の森へ入り、find()の一体ではなくfilter()で条件に合うもの全部を追う。',
+        detail: rpgState.forestLearningBattleZones?.[14] && rpgState.forestLearningBattleZones[14] !== 'guardian-east'
+          ? '前に足跡を調べた地域へ戻り、影響範囲を再調査する。find()の一体ではなくfilter()で条件に合うもの全部を追う。'
+          : '守り人から東へ回り込み、踏み荒らされた草の北側へ続く複数の足跡を調べる。find()の一体ではなくfilter()で条件に合うもの全部を追う。',
         clear: false,
       }
     }
@@ -355,7 +359,7 @@ export function WorldPage() {
       detail: '調査は後戻りせず西へ続く。JavaScript深層の森で共有経路を根本原因まで追おう。',
       clear: true,
     }
-  }, [progress.clearedStageIds])
+  }, [progress.clearedStageIds, rpgState.forestLearningBattleZones])
 
   const settlementObjective = useMemo(() => {
     if (!progress.clearedStageIds.includes(2)) {

@@ -230,6 +230,8 @@ fixed Battleは「座標当て」ではなく、Playerが認識できる場所 /
 
 Battle数だけ文字札を並べない。hidden `x <= N` progressionへ戻さない。
 
+Forestの10 / 11 / 12は初めて訪れた未使用地域へ割り当てる。14は守り人の東の足跡地域で導入し、旧saveに保存された未clear Lessonの割当先は変えない。
+
 Forest Phase 4ではJS-05 / JS-06 / JS-07 / JS-09を、**折れた枝・川辺の泥に残る足跡・踏み荒らされた草と重なる足跡・木々の間へ続く足跡**としてfield上に描画する。「合流」「分岐」など進行実装を説明する名前をmap上へ表示しない。
 
 Deep Forest Phase 5ではJS-11〜18を、**湿地の足跡・割れた実・羽根・根囲い・交差する巨大根・爪痕の残る倒木・苔むした根・一本へ集まる巨大根**など、その場所に実在するsceneryへ対応させる。固定Battleはそのlandmarkへ実際に到達した時だけ発生し、同じx座標の別地点を歩いただけでは発生しない。Random Encounterはclear済みconceptの復習だけを担当する。
@@ -357,3 +359,7 @@ JavaScript地方を広げるために後続Regionの主要景観を消費しな�
 TypeScript辺境の南東の階段はTS finalとその全prerequisite（JS finalを含む）を完了すると開く。19×15の書庫は書棚・通路・閲覧台を持ち、Random Encounterは発生しない。閲覧台のActionでDB-01を開始し、既習の再調査ではescapeを選べる。
 
 村・集落と異なり書庫はsafe checkpointを更新しない。勝利・escapeは元の書庫位置、敗北は既存checkpointへ戻す。全回復やGoldを減らす独自ルールを追加しない。Atlasも訪問済みの書庫を探索Fogで参照できる。
+
+Deep ForestのRoot Guardian後のsort traceは泉の北側の爪痕の倒木に置く。主要経路も東へ回り込んでから西の最深部へ向かい、単純な西向きのlesson列を避ける。PauseとWorldの目的は同じ泉側の手がかりを案内する。
+
+Forestの守り人後は、東へ回り込んで踏み荒らされた草の北に続く複数の足跡を追う。主要地点を実際のlearning順に巡る最短の歩行経路も上下左右を使うことを検証し、寄り道だけで方向転換を満たさない。

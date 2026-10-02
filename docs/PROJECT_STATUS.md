@@ -311,7 +311,7 @@ numeric IDを維持するのは互換性のためであり、将来のchapter追
 - Forestは55×41で`road` terrainを持たず、森・空き地・川・池を大きな地形として探索できる
 - Forestの川横断点は**水面の上に倒木が乗る**専用`log-crossing`として視認・通行できる
 - 旧thicket stripeはPlayer移動を遮らず、Field / Atlasで通常woodsと同じ見た目になり、4区画の進行壁として読めない
-- Forest Battle 10 / 11 / 12 / 14は固定座標ではなく、Playerが最初に入った未使用adaptive zoneへ割り当てられる
+- Forest Battle 10 / 11 / 12は固定座標ではなく、Playerが最初に入った未使用adaptive zoneへ割り当てられる。14は守り人から東へ回り込んだ足跡の地域で導入し、旧saveの割当済みregionは再開のため保持する
 - 同じ進行状態でも探索順が違えばBattle 10の発生regionが変わる
 - 一度割り当てられた未clear Battleは敗北 / reload後も別regionへ移動しない
 - 次のLearning Battleは前のBattleと同じzoneを再利用しない

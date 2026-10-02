@@ -255,7 +255,7 @@ describe('open world map', () => {
       10: { x: 47, y: 20 },
       11: { x: 34, y: 12 },
       12: { x: 22, y: 25 },
-      14: { x: 9, y: 20 },
+      14: { x: 22, y: 20 },
     })
     for (const position of Object.values(JS_FOREST_LEARNING_POSITIONS)) {
       expect(getTerrain(position.x, position.y, JS_FOREST_MAP_ID)).toBe('woods')
@@ -299,7 +299,7 @@ describe('open world map', () => {
       17: { x: 46, y: 10 },
       18: { x: 37, y: 20 },
       19: { x: 30, y: 27 },
-      20: { x: 23, y: 35 },
+      20: { x: 36, y: 35 },
       21: { x: 15, y: 28 },
       22: { x: 8, y: 15 },
     })

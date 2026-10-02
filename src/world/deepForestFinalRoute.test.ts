@@ -110,7 +110,7 @@ describe('JavaScript incident-driven final world route', () => {
   it('18後はRoot Guardian 19、その後20 → 21 → 22を別方向のlandmarkで追う', () => {
     const through18 = [...through15, 16, 17, 18]
     expectFixedBattle(through18, { x: 31, y: 27 }, { dx: -1, dy: 0 }, 19)
-    expectFixedBattle([...through18, 19], { x: 23, y: 34 }, { dx: 0, dy: 1 }, 20)
+    expectFixedBattle([...through18, 19], { x: 35, y: 35 }, { dx: 1, dy: 0 }, 20)
     expectFixedBattle([...through18, 19, 20], { x: 16, y: 28 }, { dx: -1, dy: 0 }, 21)
     expectFixedBattle([...through18, 19, 20, 21], { x: 8, y: 16 }, { dx: 0, dy: -1 }, 22)
   })
