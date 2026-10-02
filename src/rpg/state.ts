@@ -16,6 +16,12 @@ import {
   type WorldTreasureId,
 } from '../world/worldMap'
 import {
+  normalizeOwnedWorldMapIds,
+  normalizeRevealedWorldCells,
+  revealWorldPosition,
+  type RevealedWorldCells,
+} from '../world/worldExploration'
+import {
   createWorldCheckpoint,
   inferLegacyWorldCheckpoint,
   normalizeWorldCheckpoint,
@@ -43,15 +49,23 @@ export type RpgState = {
   encounterCount: number
   currentHp: number
   openedTreasureIds: WorldTreasureId[]
+  revealedWorldCells: RevealedWorldCells
+  ownedWorldMapIds: WorldMapId[]
   forestLearningBattleZones?: ForestLearningBattleZones
 }
 
 export type StoredRpgState = {
-  version: 7
+  version: 8
   state: RpgState
 }
 
-type RpgStateWithoutCheckpoint = Omit<RpgState, 'safeCheckpoint'>
+type RpgStateWithoutExploration = Omit<RpgState, 'revealedWorldCells' | 'ownedWorldMapIds'>
+type RpgStateWithoutCheckpoint = Omit<RpgStateWithoutExploration, 'safeCheckpoint'>
+
+type LegacyStoredRpgStateV7 = {
+  version: 7
+  state: RpgStateWithoutExploration
+}
 
 type LegacyStoredRpgStateV6 = {
   version: 6
@@ -84,7 +98,7 @@ type LegacyStoredRpgStateV1 = {
 }
 
 export const RPG_STORAGE_KEY = 'code-reading-rpg:rpg-state'
-export const RPG_STATE_SCHEMA_VERSION = 7
+export const RPG_STATE_SCHEMA_VERSION = 8
 
 const equipmentSlots: EquipmentSlot[] = ['weapon', 'armor', 'accessory']
 
@@ -101,8 +115,7 @@ export function getMaxHpForRpgState(baseMaxHp: number, state: Pick<RpgState, 'eq
 export function createInitialRpgState(baseMaxHp = BASE_PLAYER_HP): RpgState {
   const equipment = initialEquipment()
   const currentHp = getMaxHpForRpgState(baseMaxHp, { equipment })
-
-  return {
+  const initial: RpgState = {
     equipment,
     ownedEquipmentIds: [...starterEquipmentIds],
     partyMemberIds: [],
@@ -113,7 +126,10 @@ export function createInitialRpgState(baseMaxHp = BASE_PLAYER_HP): RpgState {
     encounterCount: 0,
     currentHp,
     openedTreasureIds: [],
+    revealedWorldCells: {},
+    ownedWorldMapIds: [],
   }
+  return revealWorldPosition(initial)
 }
 
 function isLoadout(value: unknown): value is EquipmentLoadout {
@@ -275,6 +291,7 @@ export function restoreRpgState(raw: string | null, baseMaxHp = BASE_PLAYER_HP):
   try {
     const parsed = JSON.parse(raw) as Partial<
       | StoredRpgState
+      | LegacyStoredRpgStateV7
       | LegacyStoredRpgStateV6
       | LegacyStoredRpgStateV5
       | LegacyStoredRpgStateV4
@@ -289,6 +306,7 @@ export function restoreRpgState(raw: string | null, baseMaxHp = BASE_PLAYER_HP):
         parsed.version !== 4 &&
         parsed.version !== 5 &&
         parsed.version !== 6 &&
+        parsed.version !== 7 &&
         parsed.version !== RPG_STATE_SCHEMA_VERSION) ||
       !parsed.state
     ) {
@@ -301,17 +319,21 @@ export function restoreRpgState(raw: string | null, baseMaxHp = BASE_PLAYER_HP):
     const equipment = normalizeLoadout(state.equipment, ownedEquipmentIds)
     const maxHp = getMaxHpForRpgState(baseMaxHp, { equipment })
     const hasStableMapId =
-      parsed.version === 4 || parsed.version === 5 || parsed.version === 6 || parsed.version === 7
+      parsed.version === 4 ||
+      parsed.version === 5 ||
+      parsed.version === 6 ||
+      parsed.version === 7 ||
+      parsed.version === 8
     const worldLocation = normalizeWorldLocation(
       hasStableMapId ? state.worldMapId : OVERWORLD_MAP_ID,
       state.worldPosition,
-      parsed.version !== 6 && parsed.version !== 7,
+      parsed.version !== 6 && parsed.version !== 7 && parsed.version !== 8,
     )
-    const safeCheckpoint = parsed.version === RPG_STATE_SCHEMA_VERSION
+    const safeCheckpoint = parsed.version === 7 || parsed.version === RPG_STATE_SCHEMA_VERSION
       ? normalizeWorldCheckpoint(state.safeCheckpoint)
       : inferLegacyWorldCheckpoint(worldLocation.mapId)
 
-    return {
+    const restored: RpgState = {
       equipment,
       ownedEquipmentIds,
       partyMemberIds,
@@ -333,11 +355,22 @@ export function restoreRpgState(raw: string | null, baseMaxHp = BASE_PLAYER_HP):
         parsed.version === 4 ||
         parsed.version === 5 ||
         parsed.version === 6 ||
-        parsed.version === 7
+        parsed.version === 7 ||
+        parsed.version === 8
           ? uniqueKnownTreasureIds(state.openedTreasureIds)
+          : [],
+      revealedWorldCells:
+        parsed.version === RPG_STATE_SCHEMA_VERSION
+          ? normalizeRevealedWorldCells(state.revealedWorldCells)
+          : {},
+      ownedWorldMapIds:
+        parsed.version === RPG_STATE_SCHEMA_VERSION
+          ? normalizeOwnedWorldMapIds(state.ownedWorldMapIds)
           : [],
       forestLearningBattleZones: normalizeForestLearningBattleZones(state.forestLearningBattleZones),
     }
+
+    return revealWorldPosition(restored)
   } catch {
     return initial
   }

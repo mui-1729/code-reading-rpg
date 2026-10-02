@@ -37,7 +37,7 @@ describe('logical game-state storage', () => {
       version: 2,
       revision: 12,
       progress: { version: 4 },
-      rpg: { version: 7 },
+      rpg: { version: 8 },
     })
   })
 

@@ -6,15 +6,21 @@ const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
+type ExplorationSeed = {
+  revealedWorldCells?: Record<string, string[]>
+  ownedWorldMapIds?: string[]
+}
+
 async function seedWorldAtlas(
   page: Page,
   clearedStageIds: readonly number[] = [],
   worldMapId = 'js-forest',
   worldPosition = { x: 24, y: 25 },
+  exploration: ExplorationSeed = {},
 ) {
   await page.goto('/')
   await page.evaluate(
-    ({ progressKey, rpgKey, tutorialKey, clearedStageIds, worldMapId, worldPosition }) => {
+    ({ progressKey, rpgKey, tutorialKey, clearedStageIds, worldMapId, worldPosition, exploration }) => {
       localStorage.clear()
       sessionStorage.clear()
       localStorage.setItem(
@@ -28,7 +34,7 @@ async function seedWorldAtlas(
             clearedStageIds,
             clearedAreaIds: clearedStageIds.includes(3) ? ['javascript'] : [],
             completedSideQuestIds: [],
-            unlockedStageIds: [7],
+            unlockedStageIds: [1, 7],
             unlockedSkillIds: ['trace', 'pulse', 'nova'],
           },
         }),
@@ -36,7 +42,7 @@ async function seedWorldAtlas(
       localStorage.setItem(
         rpgKey,
         JSON.stringify({
-          version: 6,
+          version: 8,
           state: {
             equipment: { weapon: 'training-blade', armor: 'traveler-coat', accessory: null },
             ownedEquipmentIds: ['training-blade', 'traveler-coat'],
@@ -44,10 +50,17 @@ async function seedWorldAtlas(
             partyEquipment: {},
             worldMapId,
             worldPosition,
+            safeCheckpoint: {
+              id: 'central-hub',
+              mapId: 'overworld',
+              position: { x: 20, y: 14 },
+            },
             stepsSinceEncounter: 0,
             encounterCount: 0,
             currentHp: 100,
             openedTreasureIds: [],
+            revealedWorldCells: exploration.revealedWorldCells ?? {},
+            ownedWorldMapIds: exploration.ownedWorldMapIds ?? [],
           },
         }),
       )
@@ -63,6 +76,7 @@ async function seedWorldAtlas(
       clearedStageIds,
       worldMapId,
       worldPosition,
+      exploration,
     },
   )
   await page.goto('/world')
@@ -116,6 +130,19 @@ test('Atlasは現在地のエリアを最初に開きraw座標を通常UIへ出�
   await expect(atlas.locator('[data-atlas-region="js-forest"]')).toHaveAttribute('aria-pressed', 'true')
   await expect(atlas.locator('[data-atlas-map="js-forest"]')).toBeVisible()
   await expect(atlas.getByLabel('現在地', { exact: true })).toBeVisible()
+  await expect(atlas.locator('[data-atlas-visibility="explored"]')).toHaveCount(25)
+  await expect(atlas.locator('[data-atlas-visibility="fog"]')).toHaveCount(55 * 41 - 25)
+})
+
+test('歩くごとに探索済みcellが蓄積してAtlasへ残る', async ({ page }) => {
+  await seedWorldAtlas(page, [], 'overworld', { x: 20, y: 14 })
+  let atlas = await openAtlas(page)
+  await expect(atlas.locator('[data-atlas-visibility="explored"]')).toHaveCount(25)
+
+  await page.getByRole('button', { name: 'メニューを閉じる' }).click()
+  await page.keyboard.press('ArrowRight')
+  atlas = await openAtlas(page)
+  await expect(atlas.locator('[data-atlas-visibility="explored"]')).toHaveCount(30)
 })
 
 test('選択した1 regionだけをrenderしmap追加で全terrain cellを積み上げない', async ({ page }) => {
@@ -136,8 +163,14 @@ test('選択した1 regionだけをrenderしmap追加で全terrain cellを積み
   await expect(atlas.locator('[data-atlas-map]')).toHaveCount(1)
 })
 
-test('出口 / 中ボス / 宝箱はterrain下の文字一覧ではなく実位置pinで見える', async ({ page }) => {
-  await seedWorldAtlas(page, JS_MIDBOSS_PREREQS)
+test('探索済みの出口 / 中ボス / 宝箱だけを実位置pinで見せる', async ({ page }) => {
+  await seedWorldAtlas(
+    page,
+    JS_MIDBOSS_PREREQS,
+    'js-forest',
+    { x: 24, y: 25 },
+    { revealedWorldCells: { 'js-forest': ['54:20', '1:23', '15:16', '40:6'] } },
+  )
   const atlas = await openAtlas(page)
 
   await expect(atlas.locator('[data-atlas-landmark="exit"]')).toHaveCount(2)
@@ -166,13 +199,40 @@ test('未解放regionは個別placeholderを増やさずcompactな未発見summa
   await page.getByRole('button', { name: 'メニューを閉じる' }).click()
   await seedWorldAtlas(page, JS_COMPLETE, 'overworld', { x: 20, y: 14 })
   const discoveredAtlas = await openAtlas(page)
-  await expect(discoveredAtlas.locator('[data-atlas-region]')).toHaveCount(5)
+  await expect(discoveredAtlas.locator('[data-atlas-region]')).toHaveCount(6)
+  await expect(discoveredAtlas.locator('[data-atlas-region="js-forest-settlement"]')).toContainText('森番の集落')
   await expect(discoveredAtlas.locator('[data-atlas-region="ts-frontier"]')).toContainText('TypeScript辺境')
   await expect(discoveredAtlas.getByText('未発見エリアあり', { exact: true })).toHaveCount(0)
 })
 
+test('地域地図は通常terrainを表示するが未探索の宝箱位置を漏らさない', async ({ page }) => {
+  await seedWorldAtlas(
+    page,
+    JS_COMPLETE,
+    'js-forest',
+    { x: 24, y: 25 },
+    { ownedWorldMapIds: ['js-forest'] },
+  )
+  const atlas = await openAtlas(page)
+  const cells = atlas.locator('.atlas-terrain-cell')
+  const treasureCell = cells.nth(6 * 55 + 40)
+
+  await expect(atlas.locator('[data-atlas-visibility="fog"]')).toHaveCount(0)
+  await expect(treasureCell).toHaveAttribute('data-atlas-visibility', 'charted')
+  await expect(treasureCell).toHaveClass(/terrain-woods/)
+  await expect(treasureCell).not.toHaveClass(/terrain-treasure/)
+  await expect(atlas.locator('[data-atlas-landmark="treasure"]')).toHaveCount(0)
+  await expect(atlas.getByText(/地域地図購入済み/)).toBeVisible()
+})
+
 test('terrainは色だけでなくpattern / glyphを持つ', async ({ page }) => {
-  await seedWorldAtlas(page, JS_COMPLETE)
+  await seedWorldAtlas(
+    page,
+    JS_COMPLETE,
+    'js-forest',
+    { x: 24, y: 25 },
+    { ownedWorldMapIds: ['js-forest'] },
+  )
   const atlas = await openAtlas(page)
 
   const patterns = await atlas.evaluate(() => {
@@ -183,12 +243,15 @@ test('terrainは色だけでなくpattern / glyphを持つ', async ({ page }) =>
     return {
       water: style('.atlas-terrain-cell.terrain-water'),
       woods: style('.atlas-terrain-cell.terrain-woods'),
+      fog: style('.atlas-terrain-cell.is-fogged'),
     }
   })
   expect(patterns.water).not.toBe('none')
   expect(patterns.woods).not.toBe('none')
+  expect(patterns.fog).toBe('')
   await expect(atlas.locator('.atlas-terrain-legend')).toContainText('≈水')
   await expect(atlas.locator('.atlas-terrain-legend')).toContainText('♠森')
+  await expect(atlas.locator('.atlas-terrain-legend')).toContainText('■未踏')
 })
 
 test('390pxでは100%で全体を収め、拡大後は実際のdragで地図を縦横にpanできる', async ({ page }) => {

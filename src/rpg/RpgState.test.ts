@@ -7,6 +7,7 @@ import {
   WORLD_START,
 } from '../world/worldMap'
 import { registerWorldCheckpoint } from '../world/worldCheckpoints'
+import { revealWorldPosition } from '../world/worldExploration'
 import {
   createInitialRpgState,
   restoreRpgState,
@@ -24,7 +25,7 @@ function withoutSafeCheckpoint(state: RpgState) {
 describe('RPG state storage', () => {
   it('validな装備・仲間・Map座標・safe checkpoint・Encounter状態・current HP・Treasure状態を保存して復元する', () => {
     const initial = registerWorldCheckpoint(createInitialRpgState(), 'greenfield-village')
-    const state: RpgState = {
+    const state: RpgState = revealWorldPosition({
       ...initial,
       ownedEquipmentIds: [...initial.ownedEquipmentIds, 'debug-charm'],
       partyMemberIds: ['byte'],
@@ -35,11 +36,11 @@ describe('RPG state storage', () => {
       encounterCount: 4,
       currentHp: 57,
       openedTreasureIds: ['js-debug-cache'],
-    }
+    })
 
     const raw = serializeRpgState(state)
     expect(JSON.parse(raw).version).toBe(RPG_STATE_SCHEMA_VERSION)
-    expect(JSON.parse(raw).version).toBe(7)
+    expect(JSON.parse(raw).version).toBe(8)
     expect(restoreRpgState(raw)).toEqual(state)
   })
 

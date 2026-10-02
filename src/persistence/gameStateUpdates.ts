@@ -2,6 +2,7 @@ import { getPlayerStats } from '../progression/progression'
 import type { PlayerProgress } from '../progression/types'
 import { getCombatStats } from '../rpg/combat'
 import type { RpgState } from '../rpg/state'
+import { revealWorldPosition } from '../world/worldExploration'
 import { normalizeRpgStateForProgress, type GameStateSnapshot } from './gameStateStorage'
 
 export type GameStateStoreState = GameStateSnapshot & { dirty: boolean }
@@ -33,7 +34,8 @@ export function updateGameRpgState(
   current: GameStateStoreState,
   action: StateAction<RpgState>,
 ): GameStateStoreState {
-  const rpgState = typeof action === 'function' ? action(current.rpgState) : action
+  const nextRpgState = typeof action === 'function' ? action(current.rpgState) : action
+  const rpgState = revealWorldPosition(nextRpgState)
   if (Object.is(rpgState, current.rpgState)) return current
   return {
     ...current,

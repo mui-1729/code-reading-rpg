@@ -96,7 +96,7 @@ describe('RPG economy integration', () => {
     expect(firstClearGold + treasureGold).toBe(120)
     expect(oneReplayGold).toBe(50)
     expect(firstClearGold + treasureGold + oneReplayGold).toBe(170)
-    expect(allShopGold).toBe(195)
+    expect(allShopGold).toBe(310)
     expect(firstClearGold + treasureGold + oneReplayGold).toBeLessThan(allShopGold)
   })
 
