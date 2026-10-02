@@ -493,3 +493,5 @@ map / encounter / battle-start / boss-start / battle-return / defeat-return / co
 `game/databaseQueries.ts`のtyped DatabaseQueryからSQL表示とtarget resolverを導出する。WHEREの生存条件、任意の数値下限、ORDER BYとidによる同値順序、LIMITをpure resolverで適用し、code文字列を評価しない。SQLの表示とresolverはtest-onlyのSQLite SELECTで独立比較する。
 
 地下書庫も`WorldRoutePage`から同じWorldViewport / CharacterLayer / Controlsを使う。portal graphのTS final prerequisiteはJS finalを含む全祖先を検証し、移動・direct Battle・save restoreのlockを一致させる。Areaの最終Battleは`getAreaClearIdForBattle()`がregistry sequenceから判定する。bossBattleIdはbossを持つAreaだけが設定し、単一Lesson prototypeもclearを記録できる。
+
+Database prototypeのWorld Objective / Pause / clear feedbackも`worldObjective.ts`の同じ進行定義から解決する。単発のquery Lessonを地域完了として扱い、存在しないBossの解放表示は作らない。

@@ -7,7 +7,7 @@ import {
   type PlayerProgress,
 } from '../progression'
 
-export type WorldObjectiveRegion = 'javascript' | 'typescript'
+export type WorldObjectiveRegion = 'javascript' | 'typescript' | 'database'
 export type WorldObjectiveStatus = 'encounter' | 'boss' | 'clear'
 
 export type WorldObjective = {
@@ -38,7 +38,8 @@ type RegionDefinition = {
   region: WorldObjectiveRegion
   label: string
   areaId: string
-  bossBattleId: number
+  bossBattleId?: number
+  completionBattleId: number
   clearNext: string
 }
 
@@ -48,6 +49,7 @@ const definitions: readonly RegionDefinition[] = [
     label: 'JAVASCRIPT KINGDOM',
     areaId: 'javascript',
     bossBattleId: 3,
+    completionBattleId: 3,
     clearNext: '事件解決 // TypeScript地方へ進む',
   },
   {
@@ -55,7 +57,15 @@ const definitions: readonly RegionDefinition[] = [
     label: 'TYPESCRIPT FRONTIER',
     areaId: 'typescript',
     bossBattleId: 6,
+    completionBattleId: 6,
     clearNext: '事件解決 // REAL WORLDへ帰還済み',
+  },
+  {
+    region: 'database',
+    label: 'DATABASE ARCHIVE',
+    areaId: 'database',
+    completionBattleId: 23,
+    clearNext: '記録復元 // 南の階段からTypeScript辺境へ戻る',
   },
 ]
 
@@ -67,6 +77,8 @@ function getNextLabel(region: WorldObjectiveRegion, battleId: number | undefined
   if (battleId === undefined) return '次の目的 // Worldを探索する'
 
   const progressionKey = getProgressionNode(battleId)?.key
+
+  if (region === 'database') return '台帳の調査 // 北東の閲覧台でtableとqueryを読む'
 
   if (region === 'typescript') {
     if (progressionKey === 'ts-api-contract') return '調査 // API更新後の対象ずれを再現する'
@@ -101,9 +113,10 @@ export function getWorldObjective(
   const clearedBattles = getAreaClearedBattleCount(region, progress.clearedStageIds)
   const areaCleared =
     progress.clearedAreaIds.includes(definition.areaId) ||
-    progress.clearedStageIds.includes(definition.bossBattleId)
+    progress.clearedStageIds.includes(definition.completionBattleId)
   const bossUnlocked =
-    areaCleared || isBattleAccessible(definition.bossBattleId, progress.clearedStageIds)
+    definition.bossBattleId !== undefined &&
+    (areaCleared || isBattleAccessible(definition.bossBattleId, progress.clearedStageIds))
   const nextBattleId = getNextAccessibleBattleId(region, progress.clearedStageIds)
 
   if (areaCleared) {
@@ -114,7 +127,7 @@ export function getWorldObjective(
       totalBattles,
       status: 'clear',
       next: definition.clearNext,
-      bossUnlocked: true,
+      bossUnlocked,
     }
   }
 
@@ -142,7 +155,13 @@ export function getWorldObjective(
 }
 
 export function getWorldObjectives(progress: WorldProgressSnapshot): WorldObjective[] {
-  return definitions.map((definition) => getWorldObjective(definition.region, progress))
+  return definitions
+    .filter(
+      (definition) =>
+        definition.region !== 'database' ||
+        isBattleAccessible(definition.completionBattleId, progress.clearedStageIds),
+    )
+    .map((definition) => getWorldObjective(definition.region, progress))
 }
 
 export function getWorldProgressChange(
@@ -188,4 +207,21 @@ export function getWorldProgressChange(
   }
 
   return null
+}
+
+export function getDatabaseArchiveObjective(clearedStageIds: readonly number[]) {
+  const objective = getWorldObjective('database', {
+    clearedStageIds: [...clearedStageIds],
+    clearedAreaIds: [],
+    unlockedStageIds: [],
+  })
+  const clear = objective.status === 'clear'
+  return {
+    label: clear ? 'Database 記録復元' : 'Database · 台帳の調査',
+    title: clear ? '書庫に灯が戻った' : objective.next.split(' // ')[1],
+    detail: clear
+      ? '閲覧台で再調査できる。南の階段からTypeScript辺境へ戻ろう。'
+      : '書棚の間を進み、閲覧台の前でアクション。table / row / columnとSQLの読み方をBYTEが教えてくれる。',
+    clear,
+  }
 }

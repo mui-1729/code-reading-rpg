@@ -16,8 +16,13 @@ export function renderDatabaseQuery(query: DatabaseQuery): string {
 export function resolveDatabaseQuery(enemies: readonly Enemy[], query: DatabaseQuery): Enemy[] {
   const direction = query.direction === 'ASC' ? 1 : -1
   return enemies
-    .filter((enemy) => enemy.hp > 0 && (!query.where || enemy[query.where.column] >= query.where.minimum))
-    .sort((left, right) => (left[query.orderBy] - right[query.orderBy]) * direction ||
-      (left.id < right.id ? -1 : left.id > right.id ? 1 : 0))
+    .filter(
+      (enemy) => enemy.hp > 0 && (!query.where || enemy[query.where.column] >= query.where.minimum),
+    )
+    .sort(
+      (left, right) =>
+        (left[query.orderBy] - right[query.orderBy]) * direction ||
+        (left.id < right.id ? -1 : left.id > right.id ? 1 : 0),
+    )
     .slice(0, query.limit)
 }
