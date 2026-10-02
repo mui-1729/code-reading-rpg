@@ -387,3 +387,11 @@ JavaScriptは自然Regionとして:
 を中心にする。
 
 地下 / 鉱山はDatabase、石造遺跡 / crystal / runeはTypeScript等、後続Regionのvisual categoryをJavaScript拡張で消費しない。
+
+## 実装済みの旅（#377）
+
+Overworld 70×50、GREENFIELD 31×25、Forest 55×41、Forest Settlement 23×17、Deep Forest 65×49。草原の街道は川・橋を通って曲がり、森と深層の森は川辺・倒木・広場・泉・巨大根を上下左右に探索する。集落でsafe checkpointを登録し、camp / springは部分回復だけを担当する。cell revealと地域地図はAtlasへ統合済み。
+
+GREENFIELDでは南の宿・道具屋から中央の訓練場、東の住宅広場、南東の装備工房へ道が続く。川辺の宝箱への寄り道は南の道へ再合流する。全施設・全住民を入口viewportへ収めることは要件にしない。入口・宿・訓練場の既存座標を保ち、既存saveのHP・所持品・clear・位置・探索履歴を維持する。
+
+第三集落は現段階で追加しない。SettlementからFinalまでの移動はDeep Forest一地域で、泉の部分回復と既存の戻り道がある。Battle数の水増しをせず、追加拠点の必要性は実playでの探索時間に応じて再評価する。

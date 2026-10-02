@@ -44,7 +44,7 @@ describe('open world map', () => {
 
   it('OverworldをField scaleへ広げ、local mapとは別の縮尺で管理する', () => {
     expect(getWorldMapDimensions(OVERWORLD_MAP_ID)).toEqual({ width: 70, height: 50 })
-    expect(getWorldMapDimensions(JS_VILLAGE_MAP_ID)).toEqual({ width: 21, height: 15 })
+    expect(getWorldMapDimensions(JS_VILLAGE_MAP_ID)).toEqual({ width: 31, height: 25 })
     expect(getWorldMapDimensions(JS_FOREST_MAP_ID)).toEqual({ width: 55, height: 41 })
     expect(getWorldMapDimensions(JS_DEEP_FOREST_MAP_ID)).toEqual({ width: 65, height: 49 })
     expect(getWorldMapDimensions(TS_FRONTIER_MAP_ID)).toEqual({ width: 31, height: 21 })
@@ -54,7 +54,7 @@ describe('open world map', () => {
     expect(isWorldPositionInBounds(OVERWORLD_MAP_ID, { x: 68, y: 48 })).toBe(true)
     expect(isWorldPositionInBounds(OVERWORLD_MAP_ID, { x: 70, y: 48 })).toBe(false)
     expect(isWorldPositionInBounds(JS_VILLAGE_MAP_ID, { x: 10, y: 12 })).toBe(true)
-    expect(isWorldPositionInBounds(JS_VILLAGE_MAP_ID, { x: 21, y: 12 })).toBe(false)
+    expect(isWorldPositionInBounds(JS_VILLAGE_MAP_ID, { x: 31, y: 12 })).toBe(false)
     expect(isWorldPositionInBounds(JS_FOREST_MAP_ID, { x: 53, y: 39 })).toBe(true)
     expect(isWorldPositionInBounds(JS_FOREST_MAP_ID, { x: 55, y: 20 })).toBe(false)
     expect(isWorldPositionInBounds(JS_DEEP_FOREST_MAP_ID, { x: 63, y: 47 })).toBe(true)
@@ -168,7 +168,7 @@ describe('open world map', () => {
   })
 
   it('Villageのhouse / TRAINは歩けず、road / exitは歩ける', () => {
-    expect(getTerrain(0, 0, JS_VILLAGE_MAP_ID)).toBe('house')
+    expect(getTerrain(3, 9, JS_VILLAGE_MAP_ID)).toBe('house')
     expect(getTerrain(10, 7, JS_VILLAGE_MAP_ID)).toBe('road')
     expect(
       getTerrain(
@@ -317,8 +317,8 @@ describe('open world map', () => {
   })
 
   it('各地方のTreasureを直接踏めないWorld objectとして扱う', () => {
-    expect(WORLD_TREASURES).toHaveLength(4)
-    expect(WORLD_TREASURES.filter((treasure) => treasure.region === 'javascript')).toHaveLength(3)
+    expect(WORLD_TREASURES).toHaveLength(5)
+    expect(WORLD_TREASURES.filter((treasure) => treasure.region === 'javascript')).toHaveLength(4)
     expect(WORLD_TREASURES.filter((treasure) => treasure.region === 'typescript')).toHaveLength(1)
     for (const treasure of WORLD_TREASURES) {
       expect(getTerrain(treasure.position.x, treasure.position.y, treasure.mapId)).toBe('treasure')

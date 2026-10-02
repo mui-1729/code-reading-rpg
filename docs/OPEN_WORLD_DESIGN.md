@@ -29,7 +29,7 @@ Open Worldを「1枚の巨大grid」とは定義しない。Overworld / Village 
 以下は**現時点のruntime snapshot**。
 
 - `overworld` — 70 × 50
-- `js-village` — 21 × 15
+- `js-village` — 31 × 25
 - `js-forest` — 55 × 41
 - `js-forest-settlement` — 23 × 17
 - `js-deep-forest` — 65 × 49

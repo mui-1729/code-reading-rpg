@@ -1,3 +1,5 @@
+import { GREENFIELD_DIMENSIONS, GREENFIELD_RIVERSIDE_CHEST, getGreenfieldTerrain } from './greenfieldLayout'
+
 export const WORLD_WIDTH = 70
 export const WORLD_HEIGHT = 50
 export const VIEWPORT_WIDTH = 11
@@ -20,7 +22,7 @@ export type WorldMapId =
 
 const WORLD_MAP_DIMENSIONS: Record<WorldMapId, { width: number; height: number }> = {
   [OVERWORLD_MAP_ID]: { width: WORLD_WIDTH, height: WORLD_HEIGHT },
-  [JS_VILLAGE_MAP_ID]: { width: 21, height: 15 },
+  [JS_VILLAGE_MAP_ID]: GREENFIELD_DIMENSIONS,
   [JS_FOREST_MAP_ID]: { width: 55, height: 41 },
   [JS_FOREST_SETTLEMENT_MAP_ID]: { width: 23, height: 17 },
   [JS_DEEP_FOREST_MAP_ID]: { width: 65, height: 49 },
@@ -112,6 +114,10 @@ export const JS_DEEP_FOREST_LEARNING_POSITIONS = {
 } as const
 
 export const WORLD_TREASURES = [
+  {
+    id: 'greenfield-riverside-cache', name: '川辺の旅支度',
+    mapId: JS_VILLAGE_MAP_ID, position: GREENFIELD_RIVERSIDE_CHEST, region: 'javascript',
+  },
   {
     id: 'js-debug-cache',
     name: 'DEBUG CACHE',
@@ -311,23 +317,8 @@ export function getWorldRegion(
 }
 
 function getVillageTerrain(x: number, y: number): Terrain {
-  const position = { x, y }
-  if (samePosition(position, JS_VILLAGE_EXIT_POSITION)) return 'exit'
-  if (samePosition(position, JS_VILLAGE_TRAINING_POSITION)) return 'training'
-  if (x <= 0 || y <= 0 || x >= 20 || y >= 14) return 'house'
-
-  if (
-    (x >= 2 && x <= 5 && y >= 2 && y <= 5) ||
-    (x >= 15 && x <= 18 && y >= 2 && y <= 5) ||
-    (x >= 3 && x <= 6 && y >= 9 && y <= 11) ||
-    (x >= 14 && x <= 17 && y >= 9 && y <= 11)
-  ) {
-    return 'house'
-  }
-
-  if ((x >= 9 && x <= 11) || y === 7) return 'road'
-  if ((x + y) % 7 === 0) return 'grass'
-  return 'town'
+  if (samePosition({ x, y }, JS_VILLAGE_TRAINING_POSITION)) return 'training'
+  return getGreenfieldTerrain(x, y)
 }
 
 function isForestLearningPosition(position: { x: number; y: number }): boolean {

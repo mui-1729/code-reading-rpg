@@ -126,7 +126,7 @@ Story順のauthorityはsemantic progression key。numeric IDの大小をchapter�
 stable map:
 
 - `overworld` — 70 × 50（地域間を旅するField scale）
-- `js-village` — GREENFIELD VILLAGE 21 × 15
+- `js-village` — GREENFIELD VILLAGE 31 × 25
 - `js-forest` — JAVASCRIPT FOREST 55 × 41
 - `js-forest-settlement` — FOREST SETTLEMENT 23 × 17
 - `js-deep-forest` — JAVASCRIPT DEEP FOREST 65 × 49
