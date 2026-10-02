@@ -429,8 +429,8 @@ export function WorldPage() {
     if (!progress.clearedStageIds.includes(20)) {
       return {
         label: 'TARGET PRIORITY',
-        title: 'sort()で候補の優先順を読む',
-        detail: 'living → byHp → byHp[0]と途中結果へ分け、複数行コードで対象が決まる順序を追う。',
+        title: '泉の北側の爪痕で候補の優先順を読む',
+        detail: '泉の北側へ回り込み、爪痕の倒木を調べよう。living → byHp → byHp[0]と途中結果へ分け、複数行コードで対象が決まる順序を追う。',
         clear: false,
       }
     }
