@@ -9,6 +9,8 @@ export const FOREST_LEARNING_ZONES = [
   { id: 'riverbank', minX: 34, maxX: 40, minY: 10, maxY: 16 },
   { id: 'center-north', minX: 18, maxX: 28, minY: 3, maxY: 10 },
   { id: 'center-south', minX: 22, maxX: 28, minY: 22, maxY: 29 },
+  // The tracks beyond the Guardian loop back east before the settlement exit.
+  { id: 'guardian-east', minX: 20, maxX: 25, minY: 18, maxY: 21 },
   { id: 'west-north', minX: 3, maxX: 17, minY: 3, maxY: 12 },
   // Keep the fixed Guardian clearing outside adaptive zones. Clearing Battle 13
   // should reopen exploration, not immediately consume Battle 14 on the next step.

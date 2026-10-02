@@ -81,7 +81,7 @@ test('Village道具屋は最初のShopと同じitem card / cost previewを使う
 })
 
 test('MobileのVillage装備屋も最初のShopと同じ比較・state表示を使う', async ({ page }) => {
-  await seedVillageShop(page, { x: 15, y: 12 }, 390, 844)
+  await seedVillageShop(page, { x: 24, y: 19 }, 390, 844)
 
   await page.getByRole('button', { name: '装備屋を見る' }).click()
   const shop = page.getByRole('dialog', { name: '装備屋' })

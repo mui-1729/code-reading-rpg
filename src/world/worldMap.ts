@@ -99,7 +99,7 @@ export const JS_FOREST_LEARNING_POSITIONS = {
   10: { x: 47, y: 20 },
   11: { x: 34, y: 12 },
   12: { x: 22, y: 25 },
-  14: { x: 9, y: 20 },
+  14: { x: 22, y: 20 },
 } as const
 
 export const JS_DEEP_FOREST_LEARNING_POSITIONS = {
@@ -108,7 +108,7 @@ export const JS_DEEP_FOREST_LEARNING_POSITIONS = {
   17: { x: 46, y: 10 },
   18: { x: 37, y: 20 },
   19: { x: 30, y: 27 },
-  20: { x: 23, y: 35 },
+  20: { x: 36, y: 35 },
   21: { x: 15, y: 28 },
   22: { x: 8, y: 15 },
 } as const
@@ -593,7 +593,7 @@ function isDeepForestLightWoods(x: number, y: number): boolean {
     [46, 10, 4, 4],
     [37, 20, 5, 5],
     [30, 27, 6, 5],
-    [23, 35, 5, 5],
+    [36, 35, 5, 5],
     [15, 28, 5, 4],
     [8, 15, 6, 5],
     [52, 40, 5, 4],

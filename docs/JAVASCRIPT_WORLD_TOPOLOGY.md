@@ -336,7 +336,7 @@ Forestではroadを消したことを理由に全tileを高Encounter化しない
 
 ## 11. Fog of War / Atlas
 
-cell-level Fog of Warは、このbranch探索が成立してから導入する。
+cell-level Fog of Warはbranch探索と統合済み。
 
 - 歩いた周辺だけreveal
 - 未探索方向へ歩く理由を作る
@@ -345,7 +345,7 @@ cell-level Fog of Warは、このbranch探索が成立してから導入する�
 
 横一本道のままFogを導入して「一本道を順に塗る」状態にはしない。
 
-## 12. 実装順
+## 12. 実装順（各Phaseは実装済み）
 
 ```text
 Phase 1  このtopologyをdocsで固定
@@ -395,3 +395,7 @@ Overworld 70×50、GREENFIELD 31×25、Forest 55×41、Forest Settlement 23×17�
 GREENFIELDでは南の宿・道具屋から中央の訓練場、東の住宅広場、南東の装備工房へ道が続く。川辺の宝箱への寄り道は南の道へ再合流する。全施設・全住民を入口viewportへ収めることは要件にしない。入口・宿・訓練場の既存座標を保ち、既存saveのHP・所持品・clear・位置・探索履歴を維持する。
 
 第三集落は現段階で追加しない。SettlementからFinalまでの移動はDeep Forest一地域で、泉の部分回復と既存の戻り道がある。Battle数の水増しをせず、追加拠点の必要性は実playでの探索時間に応じて再評価する。
+
+Forestの守り人後は、踏み荒らされた草の北へ東側から回り込み、複数の足跡を追う。Battle 14のclear IDと旧地点の通行性は保持する。
+
+Deep ForestのRoot Guardian後は、爪痕の倒木を泉の北側へ置き、東へ回り込んでから西の巨大根へ戻る。主要learning地点を巡る経路自体が上下左右を使う。旧Battle 20地点に保存されたPlayer座標はwalkableなまま保ち、battle / clear IDは変更しない。

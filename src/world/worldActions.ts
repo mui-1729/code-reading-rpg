@@ -215,6 +215,10 @@ function resolveForestLearningEncounter(
     return createJavaScriptFixedEncounter(rpgState, movedState, next, battleId)
   }
 
+  // New journeys follow the Guardian's tracks east. Previously assigned save
+  // zones retain their location, so an interrupted lesson can still resume.
+  if (battleId === 14 ? zoneId !== 'guardian-east' : zoneId === 'guardian-east') return null
+
   if (getUsedForestLearningZones(assignments).has(zoneId)) return null
 
   const assignedState: RpgState = {
