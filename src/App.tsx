@@ -478,7 +478,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
   const resultCovered = Boolean(storyEvent || explainedSkill)
   const resultDialogRef = useModalFocus<HTMLElement>({
     open: phase !== 'battle',
-    active: !resultCovered,
+    active: !resultCovered && !isTransitioning,
     onEscape: phase === 'defeat' ? returnToCheckpoint : goReturnDestination,
   })
 

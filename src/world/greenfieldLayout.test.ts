@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { GREENFIELD_DIMENSIONS, GREENFIELD_EQUIPMENT_SHOP, GREENFIELD_RIVERSIDE_CHEST, GREENFIELD_TRAVELER } from './greenfieldLayout'
-import { getTerrain, isWalkableTerrain, isEncounterTerrain, JS_VILLAGE_MAP_ID, WORLD_MAP_STARTS } from './worldMap'
+import { getTerrain, getWorldPortalAtPosition, isWalkableTerrain, isEncounterTerrain, JS_VILLAGE_MAP_ID, WORLD_MAP_STARTS } from './worldMap'
 import { VILLAGE_FACILITIES } from './villageFacilityData'
 import { WORLD_NPC_PLACEMENTS } from './worldCharacters'
 
@@ -19,7 +19,7 @@ describe('Greenfield walking routes', () => {
         if (next.x < 0 || next.y < 0 || next.x >= GREENFIELD_DIMENSIONS.width || next.y >= GREENFIELD_DIMENSIONS.height) continue
         const terrain = getTerrain(next.x, next.y, JS_VILLAGE_MAP_ID)
         expect(isEncounterTerrain(terrain)).toBe(false)
-        if (!isWalkableTerrain(terrain) || distances.has(key)) continue
+        if (!isWalkableTerrain(terrain) || getWorldPortalAtPosition(JS_VILLAGE_MAP_ID,next) || distances.has(key)) continue
         distances.set(key, distance + 1)
         queue.push(next)
       }
@@ -37,7 +37,7 @@ describe('Greenfield walking routes', () => {
   })
 
   it('住宅街→工房→川辺→入口を接続する周回路を持つ', () => {
-    const corners = [{x:8,y:14},{x:20,y:14},{x:20,y:19},{x:8,y:19}]
+    const corners = [{x:8,y:13},{x:20,y:13},{x:20,y:19},{x:8,y:19}]
     for (let index=0; index<corners.length; index+=1) {
       const from=corners[index]
       const to=corners[(index+1)%corners.length]
