@@ -361,3 +361,8 @@ click / tap / auto advance / skipを維持する。
 4. Accessibility上必要
 
 単に機能を説明するだけなら追加しない。
+## Scene change feedback
+
+Worldのportal、Battleへの挑戦、Battle結果・逃走からの帰還、Opening終了、Storyの世界層切替には共通engineによる短いcover → scene swap → revealを適用する。遭遇は頭上の`!`とencounter SE、自分で挑む訓練/Bossはbattle-start/boss-start、CONNECT/RETURNは専用のtechnical patternを使う。通常map移動に`!`を使わない。SE設定を守り、BGMは既存sceneに応じて切り替える。
+
+演出中は移動・Action・Pause・Story送りをlockし、D-Pad長押しと未処理move queueを破棄する。reduced-motionではrotationを止め、短い不透明cover/fadeで意味を残す。メニューやコード参照の小UI操作へ重いscene演出を追加しない。

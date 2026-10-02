@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { gameAudio } from '../audio/gameAudio'
 import { useProgress } from '../progression'
+import { useSceneTransition } from '../transition/useSceneTransition'
 import { getAreaCapability } from './areas'
 import { isBattleEscapeAllowed } from './battleEscape'
 
@@ -30,6 +31,7 @@ export function BattleCommandBar({
 }: BattleCommandBarProps) {
   const navigate = useNavigate()
   const { progress } = useProgress()
+  const { isTransitioning, runSceneTransition } = useSceneTransition()
   const [escapeConfirmOpen, setEscapeConfirmOpen] = useState(false)
   const escapeBackRef = useRef<HTMLButtonElement>(null)
   const escapeAllowed = getAreaCapability(areaId, 'escape') && isBattleEscapeAllowed({
@@ -45,14 +47,14 @@ export function BattleCommandBar({
   }, [escapeConfirmOpen])
 
   const select = (next: Exclude<BattleCommand, null>) => {
-    if (actionLocked) return
+    if (actionLocked || isTransitioning) return
     gameAudio.playSe('confirm')
     setEscapeConfirmOpen(false)
     onCommandChange(next)
   }
 
   const backToRoot = () => {
-    if (actionLocked) return
+    if (actionLocked || isTransitioning) return
     gameAudio.playSe('cancel')
     setEscapeConfirmOpen(false)
     // App's command selector also clears Skill preview/arming for every non-fight value.
@@ -62,16 +64,21 @@ export function BattleCommandBar({
   }
 
   const requestEscape = () => {
-    if (actionLocked || !escapeAllowed) return
+    if (actionLocked || isTransitioning || !escapeAllowed) return
     gameAudio.playSe('select')
     setEscapeConfirmOpen(true)
   }
 
   const confirmEscape = () => {
-    if (actionLocked || !escapeAllowed) return
-    gameAudio.playSe('confirm')
-    onRun()
-    navigate({ to: '/world' })
+    if (actionLocked || isTransitioning || !escapeAllowed) return
+    void runSceneTransition(
+      'battle-return',
+      () => {
+        onRun()
+        return navigate({ to: '/world' })
+      },
+      { label: '戦闘から離脱' },
+    )
   }
 
   if (escapeConfirmOpen) {
@@ -93,7 +100,7 @@ export function BattleCommandBar({
         <button
           type="button"
           className="battle-command-button battle-escape-action"
-          disabled={actionLocked}
+          disabled={actionLocked || isTransitioning}
           onClick={confirmEscape}
         >
           逃げる
@@ -102,7 +109,7 @@ export function BattleCommandBar({
           ref={escapeBackRef}
           type="button"
           className="battle-command-button battle-submenu-back"
-          disabled={actionLocked}
+          disabled={actionLocked || isTransitioning}
           onClick={backToRoot}
         >
           ← 戻る
@@ -117,7 +124,7 @@ export function BattleCommandBar({
         <button
           type="button"
           className="battle-command-button battle-submenu-back"
-          disabled={actionLocked}
+          disabled={actionLocked || isTransitioning}
           onClick={backToRoot}
         >
           ← 戻る
@@ -131,13 +138,13 @@ export function BattleCommandBar({
       className="battle-command-bar battle-command-root"
       role="group"
       aria-label="戦闘コマンド"
-      data-action-locked={actionLocked}
+      data-action-locked={actionLocked || isTransitioning}
       data-choice-count={escapeAllowed ? 3 : 2}
     >
       <button
         type="button"
         className="battle-command-button"
-        disabled={actionLocked}
+        disabled={actionLocked || isTransitioning}
         onClick={() => select('fight')}
       >
         戦う
@@ -145,7 +152,7 @@ export function BattleCommandBar({
       <button
         type="button"
         className="battle-command-button"
-        disabled={actionLocked}
+        disabled={actionLocked || isTransitioning}
         onClick={() => select('items')}
       >
         アイテム
@@ -154,7 +161,7 @@ export function BattleCommandBar({
         <button
           type="button"
           className="battle-command-button"
-          disabled={actionLocked}
+          disabled={actionLocked || isTransitioning}
           onClick={requestEscape}
           aria-label="逃げる"
         >

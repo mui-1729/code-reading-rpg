@@ -1,3 +1,4 @@
+import { useSceneTransition } from '../transition/useSceneTransition'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { writeStoredAudioSettings } from '../audio/audioSettingsStorage'
@@ -60,6 +61,7 @@ function focusPauseOption(current: HTMLElement, offset: number) {
 
 export function PauseMenu() {
   const location = useLocation()
+  const { isTransitioning } = useSceneTransition()
   const { snapshot: battleRuntime } = useBattleRuntime()
   const { progress, stats, resetProgress } = useProgress()
   const { rpgState, setRpgState } = useRpg()
@@ -183,11 +185,12 @@ export function PauseMenu() {
           type="button"
           className="pause-trigger secondary-button"
           onClick={(event) => {
-            if (!battleMenuAvailable) return
+            if (!battleMenuAvailable || isTransitioning) return
             event.currentTarget.focus()
             setAudioSettings(gameAudio.getSettings())
             setOpen(true)
           }}
+          disabled={isTransitioning}
           aria-label="メニューを開く"
         >
           メニュー

@@ -101,6 +101,7 @@ async function completeStory(page: Page) {
 
   for (let index = 0; index < 10 && await story.isVisible(); index += 1) {
     await story.locator('.primary-button').click()
+    await page.locator('.scene-transition').waitFor({ state: 'detached' })
   }
 
   await expect(story).toBeHidden()

@@ -4,6 +4,9 @@
     top 150ms linear;
 }
 
+/* Static residents move only with the camera, including interrupted pans. */
+.world-npc-sprite { transition: none; }
+
 .world-player-pixel,
 .world-follower-pixel {
   transform-origin: 50% 75%;

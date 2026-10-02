@@ -23,32 +23,6 @@ body[data-world-encounter-cue='alert'] .world-player-sprite::before {
 }
 
 body[data-world-encounter-cue='alert'] .world-viewport::after,
-body[data-world-encounter-cue='transition'] .world-viewport::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 9;
-  pointer-events: none;
-}
-
-body[data-world-encounter-cue='alert'] .world-viewport::after {
-  box-shadow: inset 0 0 0 4px rgba(255, 246, 168, .72);
-  animation: world-encounter-pulse 260ms steps(2, end) both;
-}
-
-body[data-world-encounter-cue='transition'] .world-viewport::after {
-  inset: -28%;
-  background:
-    repeating-conic-gradient(
-      from 0deg,
-      rgba(17, 17, 27, .96) 0 14deg,
-      rgba(210, 74, 63, .92) 14deg 28deg,
-      rgba(255, 246, 168, .9) 28deg 42deg,
-      rgba(17, 17, 27, .96) 42deg 56deg
-    );
-  transform-origin: 50% 50%;
-  animation: world-encounter-swirl 180ms steps(6, end) both;
-}
 
 body[data-world-encounter-cue] .world-controls,
 body[data-world-encounter-cue] .pause-trigger {
@@ -88,9 +62,5 @@ body[data-world-encounter-cue] .pause-trigger {
     opacity: .55;
   }
 
-  body[data-world-encounter-cue='transition'] .world-viewport::after {
-    inset: 0;
-    background: rgba(17, 17, 27, .88);
-    animation: world-encounter-reduced-fade 180ms steps(2, end) both;
-  }
+
 }
