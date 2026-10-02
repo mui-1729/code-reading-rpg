@@ -127,9 +127,9 @@ test('@responsive Villageの東住宅街と工房は歩いて探索でき、川�
       await expect(village).toHaveAttribute('data-world-y', String(y))
     }
   }
-  await move('下へ移動', 2)
+  await move('下へ移動', 1)
   await move('右へ移動', 10)
-  await move('上へ移動', 6)
+  await move('上へ移動', 5)
   await expect(village.locator('[data-world-npc="forest-traveler"]')).toBeVisible()
   await move('下へ移動', 11)
   await move('右へ移動', 4)

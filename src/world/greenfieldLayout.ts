@@ -28,8 +28,8 @@ export function getGreenfieldTerrain(x: number, y: number): Terrain {
     (y === 7 && x >= 2 && x <= 28) ||
     (x === 20 && y >= 7 && y <= 20) ||
     (y === 19 && x >= 8 && x <= 27) ||
-    (x === 8 && y >= 14 && y <= 20) ||
-    (y === 14 && x >= 6 && x <= 20)
+    (x === 8 && y >= 13 && y <= 20) ||
+    ((y === 13 || y === 14) && x >= 6 && x <= 20)
   ) return 'road'
   if (x >= 3 && x <= 6 && y >= 16 && y <= 22) return 'water'
   if (x >= 19 && x <= 28 && y >= 6 && y <= 10) return 'town'
