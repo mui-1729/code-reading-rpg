@@ -185,7 +185,7 @@ internal compatibility IDは4 / 5 / 6。
 
 ## 03. Database編 — データを正しく取り出し、壊さない
 
-**次に追加する新規learning編の第一候補。**
+**入口の試作を実装済み。** 地下書庫のDB-01では「型は正しいのに必要な記録が届かない」調査を、台帳のrowとSELECT / WHERE / ORDER BY / LIMITへつなぐ。以下のJOIN以降は今後の候補。
 
 `SQL編`として細かく切らず、DBを扱う仕事として必要な基礎をまとめる。
 

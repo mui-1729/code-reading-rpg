@@ -9,6 +9,7 @@ import {
   JAVASCRIPT_AREA_ID,
   parseBattleRoute,
   TYPESCRIPT_AREA_ID,
+  DATABASE_AREA_ID,
   type AreaDefinition,
 } from './areas'
 import { battles } from './battles'
@@ -36,6 +37,7 @@ describe('area definitions', () => {
     expect(availableAreas.map((area) => area.id)).toEqual([
       JAVASCRIPT_AREA_ID,
       TYPESCRIPT_AREA_ID,
+      DATABASE_AREA_ID,
     ])
 
     for (const area of areas) {
@@ -95,21 +97,21 @@ describe('area definitions', () => {
     }
   })
 
-  it('第三Areaもregistry一件からrouteとsidecar capability/storyを接続できる', () => {
+  it('追加Areaもregistry一件からrouteとsidecar capability/storyを接続できる', () => {
     const database: AreaDefinition = {
-      id: 'database', label: 'WORLD 03', title: 'Database', description: 'test',
+      id: 'fourth-area', label: 'WORLD 04', title: 'Fourth Area', description: 'test',
       availability: 'available',
-      routes: { battleBase: '/database/battle', field: '/database/field', world: '/world' },
+      routes: { battleBase: '/fourth-area/battle', field: '/fourth-area/field', world: '/world' },
       battleIds: [101], worldMapIds: ['database'], bossBattleId: 101,
       capabilities: { codeData: true, escape: true, tutorial: true, story: true },
       storyEvent: () => ({ id: 'database-intro', label: 'TEST', title: 'TEST', lines: [] }),
     }
     const registry = [...areas, database]
-    const route = parseBattleRoute('/database/battle/101', registry)
+    const route = parseBattleRoute('/fourth-area/battle/101', registry)
     expect(route?.area).toBe(database)
     expect(route?.area.capabilities).toEqual(database.capabilities)
     expect(route?.area.storyEvent?.(101, 'pre')?.id).toBe('database-intro')
-    expect(getBattleRoutePath('database', 101, registry)).toBe('/database/battle/101')
+    expect(getBattleRoutePath('fourth-area', 101, registry)).toBe('/fourth-area/battle/101')
   })
 
   it('unregistered・malformed battle routeをrejectする', () => {

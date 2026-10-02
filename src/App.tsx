@@ -1,3 +1,4 @@
+import { getAreaClearIdForBattle } from './game/areaProgression'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { gameAudio } from './audio/gameAudio'
@@ -203,7 +204,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
       goldReward: battle.goldReward,
       nextStageId: nextBattle?.id,
       unlockSkillId: battle.unlockSkillId,
-      clearAreaId: battle.isBoss ? battle.areaId : undefined,
+      clearAreaId: getAreaClearIdForBattle(battle),
     })
     const reward: BattleVictoryReward = battleResult.reward
 
@@ -586,6 +587,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
                 key={enemy.id}
                 role={battleArea.capabilities.codeData ? 'button' : undefined}
                 tabIndex={battleArea.capabilities.codeData ? actionLocked ? -1 : 0 : undefined}
+                data-enemy-id={enemy.id}
                 data-enemy-role={enemy.role}
                 data-boss-display-name={isBossEnemy ? displayName : undefined}
                 data-semantic-traced={semanticTraced || undefined}
@@ -620,6 +622,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
                 <div className="enemy-name-row">
                   <div>
                     <h2>{displayName}</h2>
+                    {battle.areaId === 'database' && <code className="database-enemy-id">id: {enemy.id}</code>}
                     {displayName !== enemy.name && (
                       <small className="enemy-code-name">コード名 · {enemy.name}</small>
                     )}
@@ -759,6 +762,7 @@ function App({ battleId, seed, returnTo }: AppProps) {
         <div className="battle-reference-actions">
           {battleArea.capabilities.codeData && (
             <BattleCodeData
+              language={battle.areaId === 'database' ? 'sql' : undefined}
               enemies={codeDataEnemies}
               selectedCode={selectedSkill?.code ?? null}
               selectedSkillName={selectedSkill?.name ?? null}

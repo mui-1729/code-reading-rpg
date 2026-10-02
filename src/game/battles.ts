@@ -1,4 +1,4 @@
-import { JAVASCRIPT_AREA_ID, TYPESCRIPT_AREA_ID } from './areas'
+import { DATABASE_AREA_ID, JAVASCRIPT_AREA_ID, TYPESCRIPT_AREA_ID } from './areas'
 import type { Battle, Enemy } from './types'
 
 const enemy = (
@@ -400,5 +400,17 @@ export const battles: Battle[] = [
     skillIds: ['reduce-focus', 'safe-path', 'order', 'signal', 'sync'],
     multiLineSkillIds: ['reduce-focus', 'safe-path', 'order'],
     unlockSkillId: 'reduce-focus',
+  },
+  {
+    id:23,areaId:DATABASE_AREA_ID,label:'DB-01 · THE LOST RECORD',title:'書庫の台帳に届く術',
+    subtitle:'必要な記録が届かない。enemiesテーブルの行を読み、条件・順序・取得上限で対象が変わるSQLを追う。',
+    recommendedLevel:5,expReward:46,goldReward:24,
+    enemies:[
+      enemy('row-a','Ledger Slime','standard','slime',42,'Ink Splash',5,'●'),
+      enemy('row-b','Archive Goblin','standard','goblin',76,'Page Slash',8,'▲'),
+      enemy('row-c','Shelf Guardian','standard','guardian',98,'Stone Seal',11,'◆'),
+    ],
+    skillIds:['record-spark','record-storm','record-flare'],
+    multiLineSkillIds:['record-spark','record-storm','record-flare'],
   },
 ]

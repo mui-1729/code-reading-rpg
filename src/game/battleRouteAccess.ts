@@ -31,6 +31,8 @@ export function getBattleRouteLockReason(area: BattleRouteArea, battleId: number
   const node = getProgressionNode(battleId)
   if (!node || node.area !== area) return 'このBattleは存在しない。Worldへ戻ろう。'
 
+  if (area === 'database') return '地下書庫は未開通。JavaScriptとTypeScriptのFinal Bossを倒してから向かおう。'
+
   if (area === 'typescript') {
     return 'JavaScript地方のFinal Bossと、TypeScript地方の前のStory beatを先に完了しよう。'
   }

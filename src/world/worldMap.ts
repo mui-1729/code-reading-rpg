@@ -1,3 +1,5 @@
+import { DATABASE_ARCHIVE_MAP_ID, DATABASE_ARCHIVE_DIMENSIONS, DATABASE_ARCHIVE_START, DATABASE_ARCHIVE_EXIT, DATABASE_FRONTIER_GATE, getDatabaseArchiveTerrain } from './databaseArchive'
+export { DATABASE_ARCHIVE_MAP_ID } from './databaseArchive'
 import { GREENFIELD_DIMENSIONS, GREENFIELD_RIVERSIDE_CHEST, getGreenfieldTerrain } from './greenfieldLayout'
 
 export const WORLD_WIDTH = 70
@@ -13,6 +15,7 @@ export const JS_FOREST_SETTLEMENT_MAP_ID = 'js-forest-settlement' as const
 export const JS_DEEP_FOREST_MAP_ID = 'js-deep-forest' as const
 export const TS_FRONTIER_MAP_ID = 'ts-frontier' as const
 export type WorldMapId =
+  | typeof DATABASE_ARCHIVE_MAP_ID
   | typeof OVERWORLD_MAP_ID
   | typeof JS_VILLAGE_MAP_ID
   | typeof JS_FOREST_MAP_ID
@@ -21,6 +24,7 @@ export type WorldMapId =
   | typeof TS_FRONTIER_MAP_ID
 
 const WORLD_MAP_DIMENSIONS: Record<WorldMapId, { width: number; height: number }> = {
+  [DATABASE_ARCHIVE_MAP_ID]: DATABASE_ARCHIVE_DIMENSIONS,
   [OVERWORLD_MAP_ID]: { width: WORLD_WIDTH, height: WORLD_HEIGHT },
   [JS_VILLAGE_MAP_ID]: GREENFIELD_DIMENSIONS,
   [JS_FOREST_MAP_ID]: { width: 55, height: 41 },
@@ -30,6 +34,7 @@ const WORLD_MAP_DIMENSIONS: Record<WorldMapId, { width: number; height: number }
 }
 
 export const WORLD_MAP_STARTS: Record<WorldMapId, { x: number; y: number }> = {
+  [DATABASE_ARCHIVE_MAP_ID]: DATABASE_ARCHIVE_START,
   [OVERWORLD_MAP_ID]: { ...WORLD_START },
   [JS_VILLAGE_MAP_ID]: { x: 10, y: 12 },
   [JS_FOREST_MAP_ID]: { x: 52, y: 20 },
@@ -38,7 +43,7 @@ export const WORLD_MAP_STARTS: Record<WorldMapId, { x: number; y: number }> = {
   [TS_FRONTIER_MAP_ID]: { x: 2, y: 10 },
 }
 
-export type WorldRegion = 'javascript' | 'hub' | 'typescript'
+export type WorldRegion = 'javascript' | 'hub' | 'typescript' | 'database'
 export type Terrain =
   | 'mountain'
   | 'water'
@@ -160,6 +165,8 @@ type WorldPortal = {
 }
 
 export const WORLD_PORTALS: readonly WorldPortal[] = [
+  {fromMapId:TS_FRONTIER_MAP_ID,position:DATABASE_FRONTIER_GATE,toMapId:DATABASE_ARCHIVE_MAP_ID,targetPosition:DATABASE_ARCHIVE_START,label:'地下書庫',requiredClearedStageId:6},
+  {fromMapId:DATABASE_ARCHIVE_MAP_ID,position:DATABASE_ARCHIVE_EXIT,toMapId:TS_FRONTIER_MAP_ID,targetPosition:{x:27,y:15},label:'TypeScript辺境'},
   {
     fromMapId: OVERWORLD_MAP_ID,
     position: JS_VILLAGE_POSITION,
@@ -255,7 +262,7 @@ export function isWorldMapId(value: unknown): value is WorldMapId {
     value === JS_FOREST_MAP_ID ||
     value === JS_FOREST_SETTLEMENT_MAP_ID ||
     value === JS_DEEP_FOREST_MAP_ID ||
-    value === TS_FRONTIER_MAP_ID
+    value === TS_FRONTIER_MAP_ID || value === DATABASE_ARCHIVE_MAP_ID
   )
 }
 
@@ -264,6 +271,7 @@ export function getWorldMapDimensions(mapId: WorldMapId) {
 }
 
 export function getWorldMapLabel(mapId: WorldMapId) {
+  if (mapId === DATABASE_ARCHIVE_MAP_ID) return '地下書庫'
   if (mapId === JS_VILLAGE_MAP_ID) return 'グリーンフィールド村'
   if (mapId === JS_FOREST_MAP_ID) return 'JavaScriptの森'
   if (mapId === JS_FOREST_SETTLEMENT_MAP_ID) return '森番の集落'
@@ -302,6 +310,7 @@ export function getWorldRegion(
   x: number,
   mapId: WorldMapId = OVERWORLD_MAP_ID,
 ): WorldRegion {
+  if (mapId === DATABASE_ARCHIVE_MAP_ID) return 'database'
   if (mapId === TS_FRONTIER_MAP_ID) return 'typescript'
   if (
     mapId === JS_VILLAGE_MAP_ID ||
@@ -695,6 +704,7 @@ export function getTerrain(
   const position = { x, y }
   const portal = getWorldPortalAtPosition(mapId, position)
   if (portal) {
+    if (mapId === DATABASE_ARCHIVE_MAP_ID) return 'exit'
     if (mapId === TS_FRONTIER_MAP_ID) return 'gate'
     if (
       mapId === JS_VILLAGE_MAP_ID ||
@@ -709,6 +719,7 @@ export function getTerrain(
     return 'woods'
   }
 
+  if (mapId === DATABASE_ARCHIVE_MAP_ID) return getDatabaseArchiveTerrain(x,y)
   if (mapId === JS_VILLAGE_MAP_ID) return getVillageTerrain(x, y)
   if (mapId === JS_FOREST_MAP_ID) return getForestTerrain(x, y)
   if (mapId === JS_FOREST_SETTLEMENT_MAP_ID) return getForestSettlementTerrain(x, y)

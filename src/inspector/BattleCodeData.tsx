@@ -16,6 +16,7 @@ type BattleCodeDataProps = {
   onOpenChange: (open: boolean) => void
   selectedEnemyKey: string | null
   actionLocked: boolean
+  language?: 'sql'
 }
 
 function formatScalar(value: string | number | boolean | null) {
@@ -52,6 +53,7 @@ export function BattleCodeData({
   onOpenChange: setOpen,
   selectedEnemyKey,
   actionLocked,
+  language,
 }: BattleCodeDataProps) {
   const selectedEnemy = selectedEnemyKey
     ? enemies.find((enemy) => enemy.key === selectedEnemyKey) ?? null
@@ -104,16 +106,23 @@ export function BattleCodeData({
             </button>
           </header>
 
-          <p className="code-data-note">
+          {language === 'sql' ? <>
+            <p className="code-data-note">enemiesテーブルの全行。idが敵の識別子、hpは現在HP、attackDamageはDEF適用前の攻撃力。queryの結果は実行後に確認しよう。</p>
+            <div className="database-table-scroll"><table className="database-table">
+              <caption>enemies · 読み取り元の台帳</caption>
+              <thead><tr><th scope="col">id</th><th scope="col">name</th><th scope="col">hp</th><th scope="col">attackDamage</th></tr></thead>
+              <tbody>{enemies.map((enemy) => <tr key={enemy.key}><th scope="row">{enemy.key}</th><td>{enemy.name}</td><td>{enemy.hp}</td><td>{enemy.attackDamage}</td></tr>)}</tbody>
+            </table></div>
+          </> : <p className="code-data-note">
             表示中のコードにある <code>enemies</code> は現在生存中（HP &gt; 0）のEnemy配列です。
             <code> attackDamage</code> はraw値、<code>incomingDamage</code> はPlayer DEF適用後の次のダメージです。
-          </p>
+          </p>}
 
           {!selectedCode && (
-            <p className="code-data-note">Skillを選択すると、そのコード内で作られる途中の値も表示されます。</p>
+            <p className="code-data-note">{language === 'sql' ? 'Skillのqueryを元の台帳に当てはめて読もう。query結果はEXECUTE後に表示する。' : 'Skillを選択すると、そのコード内で作られる途中の値も表示されます。'}</p>
           )}
 
-          <section className="code-data-section">
+          {language !== 'sql' && <section className="code-data-section">
             <div className="code-data-section-title">実行時の値</div>
             <div className="code-data-variables">
               {codeVariables.map((variable) => (
@@ -127,7 +136,7 @@ export function BattleCodeData({
                 </div>
               ))}
             </div>
-          </section>
+          </section>}
 
           <section className="code-data-section">
             <div className="code-data-section-title">敵オブジェクト</div>

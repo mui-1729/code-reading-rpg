@@ -57,6 +57,9 @@ const definitionFingerprint = (definition: (typeof allSkillDefinitions)[number])
  * independent from TargetRule implementation; the fingerprint freezes every base code variant.
  */
 const fixtures: Record<string, SemanticFixture> = {
+  'record-spark': {targetIds:["sprout"],power:40,baseCodeFingerprint:'e5f6f4d69173c052'},
+  'record-storm': {targetIds:["guardian", "goblin-low"],power:32,baseCodeFingerprint:'2a1915893afc0e59'},
+  'record-flare': {targetIds:["guardian"],power:48,baseCodeFingerprint:'7f3d441a5adf2ea4'},
   trace: { targetIds: ['sprout'], power: 34, baseCodeFingerprint: '2fd6451c1524e382' },
   pulse: { targetIds: ['goblin-low'], power: 48, baseCodeFingerprint: '0ce45f7c1b93ea9c' },
   nova: { targetIds: ['goblin-high'], power: 62, baseCodeFingerprint: '33f87017cb0445c7' },
@@ -176,7 +179,7 @@ describe('displayed code target/effect independent oracle', () => {
   it('semantic variation対象外Skillはbase TargetRuleを維持する', () => {
     for (const battle of battles) {
       for (const card of getSkillCardsForBattle(battle, 'semantic-base-check')) {
-        if (card.id === 'pulse' || card.id === 'ts-union') continue
+        if (['pulse','ts-union','record-spark','record-storm','record-flare'].includes(card.id)) continue
         expect(card.rule).toEqual(allSkillDefinitionById[card.id].rule)
       }
     }

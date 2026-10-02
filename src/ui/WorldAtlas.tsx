@@ -10,6 +10,7 @@ import {
   isWorldTerrainVisible,
 } from '../world/worldExploration'
 import {
+  DATABASE_ARCHIVE_MAP_ID,
   getTerrain,
   getWorldMapDimensions,
   JS_DEEP_FOREST_MAP_ID,
@@ -84,6 +85,7 @@ const atlasMaps: AtlasMap[] = [
   { id: JS_FOREST_SETTLEMENT_MAP_ID, label: '森番の集落', subtitle: 'JavaScript · 補給拠点' },
   { id: JS_DEEP_FOREST_MAP_ID, label: 'JavaScript深層の森', subtitle: 'JavaScript · 最深部' },
   { id: TS_FRONTIER_MAP_ID, label: 'TypeScript辺境', subtitle: 'TypeScript · 辺境' },
+  { id:DATABASE_ARCHIVE_MAP_ID,label:'地下書庫',subtitle:'Database · 台帳の調査'},
 ]
 
 const TERRAIN_GLYPH: Partial<Record<Terrain, string>> = {

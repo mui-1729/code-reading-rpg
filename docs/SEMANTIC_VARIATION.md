@@ -55,3 +55,8 @@ TypeScript Stage 5 / 6では`type-relevant`なsemantic variantだけを許可し
 3. battle全体に勝ち筋があること
 
 semantic variationを追加するときは、固定SkillDefinitionだけのsolvability testでは不十分です。
+
+
+## Database prototype
+
+RECORD SPARK / STORM / FLAREは各4種類のtyped queryを持つ。同名でもWHERE下限・ORDER BYの方向・LIMITが変わる。新たなSQL句を無説明で混ぜず、DB-01のStoryと行対応HELPでSELECT / FROM / WHERE / ORDER BY / LIMITを先に説明する。queryはseedで固定され、battle generatorは初期targetとsolvabilityを確認する。

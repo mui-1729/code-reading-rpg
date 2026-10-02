@@ -351,3 +351,9 @@ TypeScript / Database等も:
 - Database: underground / archive / mine / library
 
 JavaScript地方を広げるために後続Regionの主要景観を消費しない。
+
+### 地下書庫
+
+TypeScript辺境の南東の階段はTS finalとその全prerequisite（JS finalを含む）を完了すると開く。19×15の書庫は書棚・通路・閲覧台を持ち、Random Encounterは発生しない。閲覧台のActionでDB-01を開始し、既習の再調査ではescapeを選べる。
+
+村・集落と異なり書庫はsafe checkpointを更新しない。勝利・escapeは元の書庫位置、敗北は既存checkpointへ戻す。全回復やGoldを減らす独自ルールを追加しない。Atlasも訪問済みの書庫を探索Fogで参照できる。

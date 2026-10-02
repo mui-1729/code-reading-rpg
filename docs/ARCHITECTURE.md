@@ -57,6 +57,7 @@ CODE DATA / Item / Escape / Result / StoryはBattle runtimeがpropsで組み立�
 /world
 /javascript/battle/$battleId?seed=...&returnTo=/world
 /typescript/battle/$battleId?seed=...&returnTo=/world
+/database/battle/23?seed=...&returnTo=/world
 ```
 
 Legacy redirect:
@@ -485,3 +486,10 @@ Login / Cloud Save / Ranking / Shared Challenge等の具体的要件が出た時
 `transition/SceneTransitionContext.tsx`はscene演出と入力lockを共通管理する。World / Opening / Battle / Storyの実際の操作handlerが`runSceneTransition(kind, swap)`へscene更新を渡し、cover完了後にswapし、commitを待ってrevealする。DOM buttonの文言・正面sprite・合成clickをscene authorityとして読まない。
 
 map / encounter / battle-start / boss-start / battle-return / defeat-return / connect / return-real-world / story-to-worldはsemantic variant。同一engineがSE・時間・reduced-motion・unmount時cancelを担当する。encounterは頭上の`!`を先に表示し、入力lockをalertからreveal終了まで保持する。Worldのhold / queueもlockで破棄する。Pause / HELP / DATA / tab操作はscene transitionを使わない。Battle commit / rollbackのauthorityは既存session handlerのまま維持する。
+
+
+## Database query / Area completion
+
+`game/databaseQueries.ts`のtyped DatabaseQueryからSQL表示とtarget resolverを導出する。WHEREの生存条件、任意の数値下限、ORDER BYとidによる同値順序、LIMITをpure resolverで適用し、code文字列を評価しない。SQLの表示とresolverはtest-onlyのSQLite SELECTで独立比較する。
+
+地下書庫も`WorldRoutePage`から同じWorldViewport / CharacterLayer / Controlsを使う。portal graphのTS final prerequisiteはJS finalを含む全祖先を検証し、移動・direct Battle・save restoreのlockを一致させる。Areaの最終Battleは`getAreaClearIdForBattle()`がregistry sequenceから判定する。bossBattleIdはbossを持つAreaだけが設定し、単一Lesson prototypeもclearを記録できる。

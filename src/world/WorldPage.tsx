@@ -32,6 +32,7 @@ const regionLabels = {
   javascript: 'JavaScript 西部',
   hub: '中央ハブ',
   typescript: 'TypeScript辺境',
+  database: '地下書庫',
 } as const
 
 const terrainLabels: Record<string, string> = {
@@ -465,7 +466,7 @@ export function WorldPage() {
           : javascriptNextObjective
 
   const enterBattle = useCallback(
-    (battleId: number, battleRegion: 'javascript' | 'typescript', seed: string, surprise = false) => {
+    (battleId: number, battleRegion: 'javascript' | 'typescript' | 'database', seed: string, surprise = false) => {
       void runSceneTransition(
         surprise ? 'encounter' : [3, 6, 13, 19].includes(battleId) ? 'boss-start' : 'battle-start',
         () => navigate({

@@ -1,3 +1,5 @@
+import type { DatabaseQuery } from './databaseQueries'
+
 export type Enemy = {
   id: string
   name: string
@@ -11,6 +13,7 @@ export type Enemy = {
 }
 
 export type TargetRule =
+  | { kind: 'databaseQuery'; query: DatabaseQuery }
   | { kind: 'firstBelow'; hp: number }
   | { kind: 'allBelow'; hp: number }
   | { kind: 'named'; name: string }

@@ -1,7 +1,9 @@
-import { JAVASCRIPT_BATTLE_SEQUENCE, TYPESCRIPT_BATTLE_SEQUENCE } from '../progression/progressionGraph'
+import { getDatabaseBattleEvent } from '../story/databaseBattleEvents'
+import { DATABASE_BATTLE_SEQUENCE, JAVASCRIPT_BATTLE_SEQUENCE, TYPESCRIPT_BATTLE_SEQUENCE } from '../progression/progressionGraph'
 
 export const JAVASCRIPT_AREA_ID = 'javascript' as const
 export const TYPESCRIPT_AREA_ID = 'typescript' as const
+export const DATABASE_AREA_ID = 'database' as const
 
 export type AreaAvailability = 'available' | 'comingSoon'
 export type AreaRoutePath = `/${string}/field`
@@ -31,7 +33,7 @@ export type AreaDefinition = {
   battleIds: readonly number[]
   worldMapIds: readonly string[]
   capabilities: AreaCapabilities
-  bossBattleId: number
+  bossBattleId?: number
   clearRewardEquipmentId?: string
   storyEvent?: (battleId: number, phase: 'pre' | 'post') => BattleStoryEvent | undefined
 }
@@ -93,6 +95,13 @@ export const areas: readonly AreaDefinition[] = [
     storyEvent: (battleId: number, phase: 'pre' | 'post') =>
       getTypeScriptCharacterStoryEvent(battleId, phase) ??
       (phase === 'pre' ? getTypeScriptPreBattleEvent(battleId) : getTypeScriptPostBattleEvent(battleId)),
+  },
+  {
+    id: DATABASE_AREA_ID, label:'WORLD 03', title:'Database Archive',
+    description:'地下書庫の台帳とSQLを照らし合わせ、必要な行を取り出す。',
+    availability:'available', routes:{field:'/database/field',world:'/world',battleBase:'/database/battle'},
+    battleIds:DATABASE_BATTLE_SEQUENCE,worldMapIds:['database-archive'],capabilities:sharedBattleCapabilities,
+    storyEvent:getDatabaseBattleEvent,
   },
 ]
 

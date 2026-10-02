@@ -427,3 +427,12 @@
     transform-origin: bottom center;
   }
 }
+
+/* Underground record room: lamps, shelves, and stone, rather than an open sky. */
+.battle-scene-database-archive { background: linear-gradient(#211b2b 0 55%, #514033 55% 70%, #28252d 70%); }
+.battle-scene-database-archive .stage-star,
+.battle-scene-database-archive .stage-mountain { display: none; }
+.battle-scene-database-archive .stage-landmark { display: block; bottom: 55px; width: 90px; height: 104px; border: 8px solid #382b2b; background: repeating-linear-gradient(0deg, #73513b 0 8px, transparent 8px 29px), repeating-linear-gradient(90deg, #977a57 0 7px, #524652 7px 15px, #416562 15px 23px); }
+.battle-scene-database-archive .landmark-a { left: 9%; }
+.battle-scene-database-archive .landmark-b { right: 9%; }
+.battle-scene-database-archive .stage-ground { border-top: 4px solid #a77c48; background: repeating-linear-gradient(90deg, #38313b 0 32px, #4b424c 32px 34px); }

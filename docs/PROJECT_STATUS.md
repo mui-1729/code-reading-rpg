@@ -370,7 +370,7 @@ JavaScript編を完成形の基準にする。
 1. #373 — cell-level Fog of War / 地域地図をJavaScript topologyへ統合する
 2. JavaScript編を通しplayし、拠点間隔・Encounter・Economy・Story pacingを調整する
 3. その基準を使ってTypeScriptを本格拡張する
-4. #246 — Database prototype
+4. Database試作を基準に、JOIN / NULL / 集計等を1beatずつ段階的に検討する
 
 新region追加時も、
 
@@ -383,3 +383,12 @@ JavaScript編を完成形の基準にする。
 ```
 
 を基本にする。
+
+
+## Database prototype（実装済み）
+
+JS / TSのFinal Bossを含む正規の進行を完了すると、TypeScript辺境の南東の階段から19×15の地下書庫へ入れる。書棚を回り、閲覧台でDB-01「書庫の台帳に届く術」を始める。
+
+SELECT / WHERE / ORDER BY / LIMITを使うSQLと、CODE DATAのenemiesテーブル（id / name / hp / attackDamage）を照らし合わせる。同名の術にも条件・順序・上限のsemantic variantがあり、表示SQLとsafe query resolverは同じtyped queryをsourceにする。SQLiteはunit testの独立oracleとしてのみ使用する。
+
+戦闘は既存App runtime、Story、HP、EXP / Gold、clear / mastery、単一save、MENU / DATA / HELPを共有する。勝利・既習queryのescapeは同じ書庫の位置へ戻り、敗北は既存safe checkpointへ戻る。新しいsave schemaやresetは不要。JOIN / NULL / 集計 / 更新 / 外部DB接続は試作に含めない。
