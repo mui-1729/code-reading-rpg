@@ -16,6 +16,9 @@ export type WorldTreasureDefinition = {
 }
 
 export const worldTreasureDefinitions: Record<WorldTreasureId, WorldTreasureDefinition> = {
+  'greenfield-riverside-cache': {
+    id: 'greenfield-riverside-cache', name: '川辺の旅支度', reward: { gold: 10, patchKit: 1 },
+  },
   'js-debug-cache': {
     id: 'js-debug-cache',
     name: 'DEBUG CACHE',

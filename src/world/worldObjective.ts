@@ -80,6 +80,9 @@ function getNextLabel(region: WorldObjectiveRegion, battleId: number | undefined
   if (progressionKey === 'js-incident-first') {
     return '最初の異常 // 草原で対象の異常を再現する'
   }
+  if (progressionKey === 'js-forest-filter') {
+    return '影響範囲 // 守り人の先に続く複数の足跡を調べる'
+  }
   if (progressionKey?.startsWith('js-forest-')) {
     return '手がかりを追う // Forestで対象条件の流れを追う'
   }
@@ -87,7 +90,9 @@ function getNextLabel(region: WorldObjectiveRegion, battleId: number | undefined
     return '第二の異常 // Deep Forest入口で影響拡大を確認する'
   }
   if (progressionKey?.startsWith('js-deep-')) {
-    return '原因を追う // Deep Forestを西へ進み原因へ近づく'
+    return progressionKey === 'js-deep-sort'
+      ? '原因を追う // 泉の北側へ回り込み、爪痕の倒木を調べる'
+      : '原因を追う // Deep Forestの地理的な手がかりをたどる'
   }
   return '根本原因 // Code Coreを確認する'
 }

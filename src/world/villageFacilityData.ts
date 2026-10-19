@@ -1,3 +1,4 @@
+import { GREENFIELD_EQUIPMENT_SHOP } from './greenfieldLayout'
 import type { WorldCheckpointId } from './worldCheckpoints'
 import {
   JS_FOREST_SETTLEMENT_MAP_ID,
@@ -41,7 +42,7 @@ export const VILLAGE_FACILITIES: readonly VillageFacility[] = [
     label: '装備屋',
     actionLabel: '装備屋を見る',
     locationLabel: 'グリーンフィールド村',
-    position: { x: 15, y: 11 },
+    position: GREENFIELD_EQUIPMENT_SHOP,
   },
   {
     kind: 'inn',

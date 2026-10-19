@@ -25,6 +25,17 @@ function forestProgress(clearedStageIds: number[]) {
 }
 
 describe('JavaScript Forest filter trace trigger', () => {
+  it('新しいfilter traceは守り人から東へ回り込む地域で導入する', () => {
+    const state = { ...forestState(), worldPosition: { x: 10, y: 20 } }
+    const progress = forestProgress([7, 8, 9, 1, 10, 11, 12, 13])
+    const input = { rpgState: state, progress, dx: -1, dy: 0, encounterRolls: { trigger: 1, battle: 1 } }
+    expect(resolveWorldMove(input).kind).toBe('moved')
+    const resumed = resolveWorldMove({ ...input, rpgState: { ...state, forestLearningBattleZones: { 14: 'west-mid' } } })
+    expect(resumed.kind).toBe('encounter')
+    if (resumed.kind !== 'encounter') throw new Error('expected saved filter trace')
+    expect(resumed.battle.battleId).toBe(14)
+  })
+
   it('Guardian未clearでは散る足跡へ入ってもfilter traceを固定導入しない', () => {
     const result = resolveWorldMove({
       rpgState: forestState(),

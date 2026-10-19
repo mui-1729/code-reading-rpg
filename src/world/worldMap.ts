@@ -1,3 +1,5 @@
+import { GREENFIELD_DIMENSIONS, GREENFIELD_RIVERSIDE_CHEST, getGreenfieldTerrain } from './greenfieldLayout'
+
 export const WORLD_WIDTH = 70
 export const WORLD_HEIGHT = 50
 export const VIEWPORT_WIDTH = 11
@@ -20,7 +22,7 @@ export type WorldMapId =
 
 const WORLD_MAP_DIMENSIONS: Record<WorldMapId, { width: number; height: number }> = {
   [OVERWORLD_MAP_ID]: { width: WORLD_WIDTH, height: WORLD_HEIGHT },
-  [JS_VILLAGE_MAP_ID]: { width: 21, height: 15 },
+  [JS_VILLAGE_MAP_ID]: GREENFIELD_DIMENSIONS,
   [JS_FOREST_MAP_ID]: { width: 55, height: 41 },
   [JS_FOREST_SETTLEMENT_MAP_ID]: { width: 23, height: 17 },
   [JS_DEEP_FOREST_MAP_ID]: { width: 65, height: 49 },
@@ -97,7 +99,7 @@ export const JS_FOREST_LEARNING_POSITIONS = {
   10: { x: 47, y: 20 },
   11: { x: 34, y: 12 },
   12: { x: 22, y: 25 },
-  14: { x: 9, y: 20 },
+  14: { x: 22, y: 20 },
 } as const
 
 export const JS_DEEP_FOREST_LEARNING_POSITIONS = {
@@ -106,12 +108,16 @@ export const JS_DEEP_FOREST_LEARNING_POSITIONS = {
   17: { x: 46, y: 10 },
   18: { x: 37, y: 20 },
   19: { x: 30, y: 27 },
-  20: { x: 23, y: 35 },
+  20: { x: 36, y: 35 },
   21: { x: 15, y: 28 },
   22: { x: 8, y: 15 },
 } as const
 
 export const WORLD_TREASURES = [
+  {
+    id: 'greenfield-riverside-cache', name: '川辺の旅支度',
+    mapId: JS_VILLAGE_MAP_ID, position: GREENFIELD_RIVERSIDE_CHEST, region: 'javascript',
+  },
   {
     id: 'js-debug-cache',
     name: 'DEBUG CACHE',
@@ -311,23 +317,8 @@ export function getWorldRegion(
 }
 
 function getVillageTerrain(x: number, y: number): Terrain {
-  const position = { x, y }
-  if (samePosition(position, JS_VILLAGE_EXIT_POSITION)) return 'exit'
-  if (samePosition(position, JS_VILLAGE_TRAINING_POSITION)) return 'training'
-  if (x <= 0 || y <= 0 || x >= 20 || y >= 14) return 'house'
-
-  if (
-    (x >= 2 && x <= 5 && y >= 2 && y <= 5) ||
-    (x >= 15 && x <= 18 && y >= 2 && y <= 5) ||
-    (x >= 3 && x <= 6 && y >= 9 && y <= 11) ||
-    (x >= 14 && x <= 17 && y >= 9 && y <= 11)
-  ) {
-    return 'house'
-  }
-
-  if ((x >= 9 && x <= 11) || y === 7) return 'road'
-  if ((x + y) % 7 === 0) return 'grass'
-  return 'town'
+  if (samePosition({ x, y }, JS_VILLAGE_TRAINING_POSITION)) return 'training'
+  return getGreenfieldTerrain(x, y)
 }
 
 function isForestLearningPosition(position: { x: number; y: number }): boolean {
@@ -602,7 +593,7 @@ function isDeepForestLightWoods(x: number, y: number): boolean {
     [46, 10, 4, 4],
     [37, 20, 5, 5],
     [30, 27, 6, 5],
-    [23, 35, 5, 5],
+    [36, 35, 5, 5],
     [15, 28, 5, 4],
     [8, 15, 6, 5],
     [52, 40, 5, 4],

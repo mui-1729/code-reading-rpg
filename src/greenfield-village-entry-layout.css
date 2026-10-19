@@ -219,3 +219,25 @@
     height: 20px;
   }
 }
+
+/* The southeast workshop is a separate destination reached along the river road. */
+.world-viewport[data-world-map='js-village'] .terrain-house:is([data-world-x='23'], [data-world-x='24'], [data-world-x='25'], [data-world-x='26']):is([data-world-y='16'], [data-world-y='17'], [data-world-y='18']) {
+  --house-roof: #5f6f8d;
+  --house-wall: #c8b792;
+  background: var(--house-wall);
+}
+.world-viewport[data-world-map='js-village'] .terrain-house[data-world-y='16']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, #5f6f8d 0 6px, #38435a 6px 8px);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+.world-viewport[data-world-map='js-village'] .terrain-house[data-world-x='24'][data-world-y='18']::after {
+  content: '';
+  position: absolute;
+  inset: 20% 29% 0;
+  background: #604a38;
+  border: 3px solid #9e8461;
+  border-bottom: 0;
+}

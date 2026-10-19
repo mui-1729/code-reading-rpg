@@ -1,3 +1,4 @@
+import { GREENFIELD_TRAVELER } from './greenfieldLayout'
 import { getDialogueForNpc } from '../dialogue/dialogue'
 import { npcById } from '../dialogue/npcs'
 import type { DialogueEntry, NpcDefinition } from '../dialogue/types'
@@ -35,7 +36,7 @@ export const WORLD_NPC_PLACEMENTS: readonly WorldNpcPlacement[] = [
   {
     npcId: 'forest-traveler',
     mapId: JS_VILLAGE_MAP_ID,
-    position: { x: 14, y: 8 },
+    position: GREENFIELD_TRAVELER,
     optional: true,
     storyThread: 'forest-road',
   },

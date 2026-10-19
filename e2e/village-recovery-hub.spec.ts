@@ -109,7 +109,7 @@ test('Villageの道具屋は向いてActionすると消耗品だけを扱う', a
 })
 
 test('Villageの装備屋は向いてActionすると装備だけを扱い既存purchase domainを使える', async ({ page }) => {
-  await seedVillage(page, { x: 15, y: 12 }, 100)
+  await seedVillage(page, { x: 24, y: 19 }, 100)
   await faceUpWithoutChangingLog(page)
 
   await page.getByRole('button', { name: '装備屋を見る' }).click()

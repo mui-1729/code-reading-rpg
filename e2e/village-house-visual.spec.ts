@@ -85,8 +85,8 @@ test('Villageのhouseは複数tileで屋根・壁・扉を描き施設文字に�
   expect(slopedRoof).not.toBe('none')
 
   const facilityMarkers = village.locator('.facility-object[data-facility-icon]')
-  await expect(facilityMarkers).toHaveCount(3)
-  for (const kind of ['inn', 'item-shop', 'equipment-shop']) {
+  await expect(facilityMarkers).toHaveCount(2)
+  for (const kind of ['inn', 'item-shop']) {
     const marker = village.locator(`.facility-object[data-facility-icon="${kind}"]`)
     await expect(marker).toHaveText('')
     const visual = await marker.evaluate((element) => {

@@ -125,3 +125,16 @@ test('@responsive Deep Forestでも固定Battle 16は文字札ではなく割れ
   await page.getByRole('button', { name: '左へ移動' }).click()
   await expect(page).toHaveURL(/\/javascript\/battle\/16/)
 })
+
+
+test('@responsive Root Guardian後は泉の北へ案内し、東の爪痕で次のtraceが始まる', async ({ page }) => {
+  const clearedStageIds = [1, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19]
+  await seedWorld(page, {
+    mapId: 'js-deep-forest', position: { x: 35, y: 35 },
+    clearedStageIds, unlockedStageIds: [...clearedStageIds, 20],
+  })
+  await expect(page.getByLabel('次の目的')).toContainText('泉の北側の爪痕')
+  await expect(page.locator('[data-progression-battle="20"]')).toBeVisible()
+  await page.getByRole('button', { name: '右へ移動' }).click()
+  await expect(page).toHaveURL(/\/javascript\/battle\/20/)
+})
