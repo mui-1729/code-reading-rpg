@@ -58,12 +58,20 @@ test('ワールドマップは接続cardを積み上げず、探索済み/地図
   const atlas = page.getByRole('region', { name: 'ワールドマップ' })
   await expect(atlas.locator('.atlas-route-network')).toHaveCount(0)
   await expect(atlas.getByText('エリアのつながり', { exact: true })).toHaveCount(0)
-  await expect(atlas.locator('[data-atlas-region]')).toHaveCount(6)
+  await expect(atlas.locator('[data-atlas-region]')).toHaveCount(7)
   await expect(atlas.locator('[data-atlas-region="js-forest-settlement"]')).toContainText('森番の集落')
+  await expect(atlas.locator('[data-atlas-region="database-archive"]')).toContainText('地下書庫')
 
   // Overworldの現在地周辺しか探索していないため、遠方の出口位置はまだ漏らさない。
   await expect(atlas.locator('[data-atlas-map="overworld"] [data-atlas-landmark="exit"]')).toHaveCount(0)
   await expect(atlas.locator('.atlas-terrain-legend')).toContainText('↔出口')
+
+  // 両final後は書庫の存在が分かるが、未探索の地形や出口は明かさない。
+  await atlas.locator('[data-atlas-region="database-archive"]').click()
+  await expect(atlas.locator('[data-atlas-map="database-archive"]')).toBeVisible()
+  await expect(atlas.locator('.atlas-terrain-cell')).toHaveCount(19 * 15)
+  await expect(atlas.locator('[data-atlas-visibility="fog"]')).toHaveCount(19 * 15)
+  await expect(atlas.locator('[data-atlas-landmark="exit"]')).toHaveCount(0)
 
   // 所持しているForest地域地図は通常地形とpublicな出口を確認できる。
   await atlas.locator('[data-atlas-region="js-forest"]').click()
