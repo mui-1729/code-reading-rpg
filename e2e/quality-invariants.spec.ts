@@ -241,7 +241,9 @@ test('@cross-browser Victory/Defeat result dialog traps focus and blocks Battle 
   await expect(page).toHaveURL(/\/world$/)
 })
 
-test('@cross-browser post-Battle Story exclusively owns focus until the Victory result is revealed', async ({ page }) => {
+test('@cross-browser post-Battle Story exclusively owns focus until the Victory result is revealed', async ({ page, browserName }) => {
+  // Three battle turns and both Story/result focus traps exceed 30s on WebKit.
+  if (browserName === 'webkit') test.setTimeout(60_000)
   await seedState(page, { clearedStageIds: JS_BATTLE_1_PREREQS })
   await page.goto('/javascript/battle/1?seed=encounter%3A5%3A10%3A11&returnTo=%2Fworld')
   await dismissStory(page)

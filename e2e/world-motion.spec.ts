@@ -16,8 +16,8 @@ async function seedWorld(
   const position = options.position ?? { x: 20, y: 14 }
   const clearedStageIds = options.clearedStageIds ?? []
 
-  await page.goto('/')
-  await page.evaluate(
+  // Seed before providers mount so their initial save cannot replace the fixture.
+  await page.addInitScript(
     ({ progressKey, rpgKey, tutorialKey, mapIdValue, positionValue, cleared }) => {
       localStorage.clear()
       localStorage.setItem(
