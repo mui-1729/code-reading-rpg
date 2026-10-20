@@ -63,6 +63,12 @@ async function expectControlsInsideScreen(page: Page) {
   expect(controls).not.toBeNull()
   expect(controls!.y + controls!.height).toBeLessThanOrEqual(page.viewportSize()!.height + 1)
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
+  const objective = await page.locator('.world-next-objective strong').boundingBox()
+  const menu = await page.getByRole('button', { name: 'メニューを開く' }).boundingBox()
+  expect(
+    objective!.x < menu!.x + menu!.width && objective!.x + objective!.width > menu!.x &&
+    objective!.y < menu!.y + menu!.height && objective!.y + objective!.height > menu!.y,
+  ).toBe(false)
 }
 
 test('@responsive @cross-browser 書庫の壁・棚・閲覧台と地図の物体名が一致する', async ({

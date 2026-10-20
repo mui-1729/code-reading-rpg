@@ -80,9 +80,11 @@ test('World常設objectiveは一行に絞りdetailはmapを隠さない', async 
   await expect(objective.locator('p')).toHaveCount(0)
 })
 
-test('対象へ向くだけではログを変えずActionを正面対象へ切り替える', async ({ page }) => {
+test('操作対象がなければ同行者へ話せ、対象へ向くだけではログを変えない', async ({ page }) => {
   await seedWorld(page, { position: { x: 20, y: 14 }, partyMemberIds: ['byte'] })
-  await expect(page.getByRole('button', { name: 'アクション', exact: true })).toBeDisabled()
+  await expect(page.locator('.world-follower-sprite')).toBeVisible()
+  await page.getByRole('button', { name: 'BYTEと話す', exact: true }).click()
+  await expect(page.locator('.world-message p')).toContainText('BYTE:')
 
   await seedWorld(page, { position: { x: 20, y: 13 }, partyMemberIds: [] })
   const log = page.locator('.world-message p')
