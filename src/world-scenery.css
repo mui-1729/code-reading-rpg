@@ -234,10 +234,10 @@
 
 /* Reserve space for the objective, messages and controls before sizing the map. */
 .world-shell .world-viewport {
-  width: min(100%, 880px, calc((100svh - 330px) * 1.222222));
+  width: min(100%, 880px, max(360px, calc((100svh - 330px) * 1.222222)));
 }
 .world-shell :is(.world-next-objective, .world-message, .world-controls) {
-  width: min(100%, 880px, calc((100svh - 330px) * 1.222222));
+  width: min(100%, 880px, max(360px, calc((100svh - 330px) * 1.222222)));
 }
 @media (max-height: 600px) and (min-width: 600px) {
   .world-shell {

@@ -71,6 +71,24 @@ async function expectControlsInsideScreen(page: Page) {
   ).toBe(false)
 }
 
+test('@cross-browser 狭く低い横画面でも地図を潰さず操作部へスクロールできる', async ({ page }) => {
+  await page.setViewportSize({ width: 568, height: 320 })
+  await seedWorld(page, 'overworld', 20, 14)
+  const map = page.locator('.world-viewport')
+  const bounds = await map.boundingBox()
+  expect(bounds!.width).toBeGreaterThanOrEqual(320)
+  expect(bounds!.height).toBeGreaterThanOrEqual(260)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
+  const move = page.getByRole('button', { name: '右へ移動', exact: true })
+  await move.scrollIntoViewIfNeeded()
+  await move.click()
+  await expect(map).toHaveAttribute('data-world-x', '21')
+  const buttonBounds = await move.boundingBox()
+  expect(buttonBounds!.width).toBeGreaterThanOrEqual(44)
+  expect(buttonBounds!.height).toBeGreaterThanOrEqual(44)
+  expect(buttonBounds!.y + buttonBounds!.height).toBeLessThanOrEqual(320)
+})
+
 test('@responsive @cross-browser 書庫の壁・棚・閲覧台と地図の物体名が一致する', async ({
   page,
 }) => {
