@@ -1,0 +1,12 @@
+.database-archive-viewport { border-color: #927047; background: #241e2b; }
+.database-archive-viewport .terrain-stone { background: repeating-linear-gradient(0deg, #403942 0 26px, #282331 26px 28px); box-shadow: inset 1px 0 #68564c; }
+.database-archive-viewport .terrain-road { background: #70573f; box-shadow: inset 0 2px #92714d; }
+.database-archive-viewport .terrain-mountain { background: repeating-linear-gradient(0deg, #302a37 0 12px, #443949 12px 14px); }
+.database-archive-viewport .terrain-house { background: repeating-linear-gradient(0deg, #725137 0 5px, transparent 5px 16px), repeating-linear-gradient(90deg, #aa8655 0 5px, #5b5470 5px 11px, #376665 11px 18px); border: 2px solid #382d30; }
+.database-archive-viewport .terrain-training { background: #82664a; }
+.archive-lectern { color: #f3d69b; text-shadow: 0 2px #362b29; }
+.database-table-scroll { max-width: 100%; overflow-x: auto; }
+.database-table { width: 100%; border-collapse: collapse; font-family: monospace; font-size: 12px; }
+.database-table caption { padding: 8px; text-align: left; color: #eacf9f; }
+.database-table th, .database-table td { padding: 8px; border: 1px solid #78604b; text-align: left; white-space: nowrap; }
+.database-enemy-id { display: block; font-size: 10px; color: #eacf9f; }

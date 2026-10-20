@@ -1,9 +1,11 @@
+import { resolveDatabaseQuery } from './databaseQueries'
 import type { Enemy, TargetRule } from './types'
 
 export function getTargets(enemies: Enemy[], rule: TargetRule): Enemy[] {
   const alive = enemies.filter((enemy) => enemy.hp > 0)
 
   switch (rule.kind) {
+    case 'databaseQuery': return resolveDatabaseQuery(enemies, rule.query)
     case 'firstBelow': {
       const target = alive.find((enemy) => enemy.hp < rule.hp)
       return target ? [target] : []

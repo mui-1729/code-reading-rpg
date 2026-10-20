@@ -217,12 +217,7 @@ JavaScript自然地域の色違いにしない。
 
 # P2 — Database prototype (#246)
 
-次の新規technical Region候補。
-
-- underground / archive / mine / library
-- SELECT / WHERE / ORDER BY / LIMITを読む1 Battle prototype
-
-**現在のopen-issue一括実装では#246を対象外とする。** JavaScript World redesignのためにDatabase地域を先行実装しない。
+地下書庫とSELECT / WHERE / ORDER BY / LIMITを読むDB-01を実装済み。JS / TS完了後に同じWorld・Battle・save基盤で体験できる。次の候補は台帳調査の体験を確認した上で、JOIN / NULL / 集計を個別のlearning beatへ分けること。
 
 ---
 

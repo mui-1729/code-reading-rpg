@@ -1,3 +1,4 @@
+import { DATABASE_ARCHIVE_MAP_ID, DATABASE_ARCHIVE_LECTERN } from './databaseArchive'
 import { isBattleAccessible, type PlayerProgress } from '../progression'
 import type { RpgState } from '../rpg'
 import { getWorldNpcAtPosition, type WorldNpcPlacement } from './worldCharacters'
@@ -29,6 +30,7 @@ type BattleRegion = Exclude<WorldRegion, 'hub'>
 
 type BaseTargetIntent =
   | { kind: 'none' }
+  | {kind:'archive-trial';battleId:23;unlocked:boolean;seed:string}
   | { kind: 'npc'; placement: WorldNpcPlacement }
   | { kind: 'party'; memberId: 'byte'; alreadyJoined: boolean }
   | { kind: 'shop' }
@@ -100,6 +102,8 @@ export function resolveWorldTargetInteraction(
   target: WorldPosition,
 ): WorldTargetInteractionIntent {
   const mapId = rpgState.worldMapId
+  if(mapId === DATABASE_ARCHIVE_MAP_ID && samePosition(target,DATABASE_ARCHIVE_LECTERN)) return {kind:'archive-trial',battleId:23,unlocked:isBattleAccessible(23,progress.clearedStageIds),seed:progress.clearedStageIds.includes(23)?`encounter:database:${rpgState.encounterCount}:15:4`:`archive-trial:${rpgState.encounterCount}`}
+
 
   const treasure = WORLD_TREASURES.find(
     (candidate) => candidate.mapId === mapId && samePosition(candidate.position, target),

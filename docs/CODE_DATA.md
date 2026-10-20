@@ -192,3 +192,10 @@ Manual QA:
 - defeated Enemy
 - Victory / Defeat時に邪魔しない
 - target / correct表示がない
+
+
+## Databaseの台帳
+
+Database Battleは同じDATA dialogにenemiesテーブルの全行を表示する。id / name / hp / attackDamageを元のrow順で並べ、撃破済みの行もhp = 0として残す。Skill未選択でも参照可能。Enemy cardのidとtableのidで対応を確認できる。
+
+WHEREを通過した行、ORDER BY後の並び、LIMIT後の取得件数・idはEXECUTE前に表示しない。HELPは句の読み方を教え、結果はEXECUTE後のQUERY RESULT feedbackで示す。hpの減少は既存Battle stateへ追従する。

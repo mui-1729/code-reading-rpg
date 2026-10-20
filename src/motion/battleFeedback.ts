@@ -87,6 +87,10 @@ export function getBattleSemanticFeedback(
     }
   }
 
+  if (rule.kind === 'databaseQuery') {
+    return {family:'ordered',label:'QUERY RESULT',detail:targets.length ? `条件・順序・上限を適用 → ${targets.map((target)=>target.id).join(', ')}` : '条件に合う行なし',tracedEnemyIds:alive.map((enemy)=>enemy.id),targetEnemyIds}
+  }
+
   if (rule.kind === 'lowestHp') {
     const ordered = [...alive].sort((a, b) => a.hp - b.hp)
     return {

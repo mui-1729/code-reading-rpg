@@ -23,6 +23,7 @@ const TRIAL_SKILLS_BY_STAGE_ID: Readonly<Record<number, readonly string[]>> = {
   4: ['ts-scan', 'ts-guard', 'ts-label'],
   5: ['ts-union', 'ts-optional'],
   6: ['ts-narrow', 'ts-keyof'],
+  23: ['record-spark', 'record-storm', 'record-flare'],
 }
 
 // Clearing a Lesson can also unlock later combat variants once every syntax
@@ -42,6 +43,7 @@ const SKILL_UNLOCKS_BY_STAGE_ID: Readonly<Record<number, readonly string[]>> = {
   4: ['ts-scan', 'ts-guard', 'ts-label'],
   5: ['ts-union', 'ts-optional'],
   6: ['ts-narrow', 'ts-keyof'],
+  23: ['record-spark', 'record-storm', 'record-flare'],
 }
 
 export function getSkillUnlocksForStage(stageId: number): string[] {

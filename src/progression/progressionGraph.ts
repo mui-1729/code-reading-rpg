@@ -1,4 +1,4 @@
-export type ProgressionArea = 'javascript' | 'typescript'
+export type ProgressionArea = 'javascript' | 'typescript' | 'database'
 
 export type ProgressionNode = {
   key: string
@@ -55,7 +55,10 @@ const typescriptNodes = [
   },
 ] as const satisfies readonly ProgressionNode[]
 
-const nodes: readonly ProgressionNode[] = [...javascriptNodes, ...typescriptNodes]
+const databaseNodes = [{key:'db-first-record-query', battleId:23, area:'database', prerequisites:['js-final-code-core', 'ts-final-shared-contract']}] as const satisfies readonly ProgressionNode[]
+export const DATABASE_BATTLE_SEQUENCE = databaseNodes.map((node) => node.battleId)
+
+const nodes: readonly ProgressionNode[] = [...javascriptNodes, ...typescriptNodes, ...databaseNodes]
 
 export const progressionNodes = nodes
 export const JAVASCRIPT_BATTLE_SEQUENCE = javascriptNodes.map((node) => node.battleId)
@@ -66,6 +69,7 @@ const nodeByKey = new Map(nodes.map((node) => [node.key, node]))
 const nodesByArea: Record<ProgressionArea, readonly ProgressionNode[]> = {
   javascript: javascriptNodes,
   typescript: typescriptNodes,
+  database: databaseNodes,
 }
 
 export function getProgressionNode(battleId: number): ProgressionNode | undefined {
@@ -95,7 +99,7 @@ export function getBattleDisplayCode(battleId: number): string | undefined {
   const node = getProgressionNode(battleId)
   const storyNumber = getBattleStoryNumber(battleId)
   if (!node || storyNumber === undefined) return undefined
-  const prefix = node.area === 'javascript' ? 'JS' : 'TS'
+  const prefix = node.area === 'javascript' ? 'JS' : node.area === 'typescript' ? 'TS' : 'DB'
   return `${prefix}-${String(storyNumber).padStart(2, '0')}`
 }
 
@@ -130,7 +134,10 @@ export function isBattleAccessible(
   battleId: number,
   clearedStageIds: readonly number[],
 ): boolean {
-  if (!getProgressionNode(battleId)) return false
+  const node = getProgressionNode(battleId)
+  if (!node) return false
+  // Database has no legacy out-of-order clears; both completed regions remain mandatory on replay.
+  if (node.area === 'database') return areBattlePrerequisitesMet(battleId, clearedStageIds)
   // An already-cleared Battle remains replayable for compatibility, but its
   // clear bit does not authorize later nodes unless its own ancestry is valid.
   if (clearedStageIds.includes(battleId)) return true

@@ -56,6 +56,12 @@ test('390pxのPause selectorは7種類のpixel iconとlabelから1件を選べ�
   const pageOverflows = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)
   expect(pageOverflows).toBe(false)
 
-  const screenshot = await selector.screenshot({ path: testInfo.outputPath('pause-selector.png') })
-  expect(screenshot.byteLength).toBeGreaterThan(1000)
+  const bounds = await selector.boundingBox()
+  expect(bounds).not.toBeNull()
+  const screenshot = await selector.screenshot({ path: testInfo.outputPath('pause-selector.png'), scale: 'css' })
+  // PNG compression differs across platforms; verify the image and captured
+  // region instead of treating its compressed byte count as visual quality.
+  expect(screenshot.subarray(0, 8)).toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+  expect(Math.abs(screenshot.readUInt32BE(16) - bounds!.width)).toBeLessThanOrEqual(1)
+  expect(Math.abs(screenshot.readUInt32BE(20) - bounds!.height)).toBeLessThanOrEqual(1)
 })

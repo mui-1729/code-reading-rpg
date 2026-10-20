@@ -1,4 +1,5 @@
 export type LearningSyntax =
+  | 'sql-select' | 'sql-where' | 'sql-order-by' | 'sql-limit'
   | 'find'
   | 'filter'
   | 'map'
@@ -81,6 +82,7 @@ function policy(allowedSyntax: readonly LearningSyntax[]): BattleLearningPolicy 
 }
 
 const policies: Readonly<Record<number, BattleLearningPolicy>> = {
+  23: {allowedSyntax:['sql-select','sql-where','sql-order-by','sql-limit'],allowedTransforms:[]},
   1: policy(javascriptAll),
   2: policy(javascriptAll),
   3: policy(javascriptAll),

@@ -1,5 +1,6 @@
 import type { BgmTrack } from '../audio/gameAudio'
 import {
+  DATABASE_ARCHIVE_MAP_ID,
   JS_DEEP_FOREST_MAP_ID,
   JS_FOREST_MAP_ID,
   JS_FOREST_SETTLEMENT_MAP_ID,
@@ -29,6 +30,7 @@ const WORLD_SCENES: Record<
   WorldMapId,
   { sceneId: string; title: string; bgmTrack: WorldFieldTrack }
 > = {
+  [DATABASE_ARCHIVE_MAP_ID]: {sceneId:'database-archive',title:'地下書庫',bgmTrack:'fieldDeepForest'},
   [OVERWORLD_MAP_ID]: {
     sceneId: 'javascript-grassland',
     title: 'JavaScript草原',

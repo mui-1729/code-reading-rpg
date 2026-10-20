@@ -1,3 +1,4 @@
+import { databaseSkillDefinitions } from './databaseSkillDefinitions'
 import { getBattleLearningPolicy, isSyntaxAllowed } from './battleLearningPolicy'
 import { battles } from './battles'
 import { deepForestSkillDefinitions } from './deepForestSkillDefinitions'
@@ -18,6 +19,7 @@ export const allSkillDefinitions: readonly SkillDefinition[] = [
   ...forestSkillDefinitions,
   ...deepForestSkillDefinitions,
   ...typescriptSkillDefinitions,
+  ...databaseSkillDefinitions,
 ]
 
 export const allSkillDefinitionById: Record<string, SkillDefinition> = Object.fromEntries(

@@ -46,6 +46,11 @@ test('@responsive GREENFIELD VILLAGEは入口からTRAIN・宿・道具屋を読
   await page.goto('/world')
   const village = page.locator('.world-viewport[data-world-map="js-village"]')
   await expect(village).toBeVisible()
+  // Read the short-lived arrival caption before movement and facility checks.
+  const entryPurpose = await village.locator('.world-entry-transition').evaluate((element) =>
+    getComputedStyle(element, '::after').content,
+  )
+  expect(entryPurpose).toContain('安全な中継地点')
   await page.getByRole('button', {name: '上へ移動', exact: true}).click()
   await expect(village.locator('[data-world-x="12"][data-world-y="7"].terrain-training')).toBeVisible()
   await expect(village.locator('[data-world-x="10"][data-world-y="8"]')).toBeVisible()
@@ -95,10 +100,6 @@ test('@responsive GREENFIELD VILLAGEは入口からTRAIN・宿・道具屋を読
   expect(leftRoofShape).not.toBe('none')
   expect(rightRoofShape).not.toBe('none')
 
-  const entryPurpose = await village.locator('.world-entry-transition').evaluate((element) =>
-    getComputedStyle(element, '::after').content,
-  )
-  expect(entryPurpose).toContain('安全な中継地点')
 })
 
 

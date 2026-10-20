@@ -68,6 +68,10 @@ const typescriptCompleteRoute = createRoute({
   beforeLoad: () => { throw redirect({ to: '/world' }) },
 })
 
+const registeredFieldRoute = createRoute({
+  getParentRoute:()=>rootRoute,path:'$areaId/field',beforeLoad:()=>{throw redirect({to:'/world'})},
+})
+
 // New registered Areas use the same adapter without adding another route component.
 const registeredBattleRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -88,6 +92,7 @@ const routeTree = rootRoute.addChildren([
   typescriptBattleRoute,
   typescriptCompleteRoute,
   registeredBattleRoute,
+  registeredFieldRoute,
 ])
 
 export const router = createRouter({

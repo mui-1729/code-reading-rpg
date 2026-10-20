@@ -25,3 +25,9 @@ export function getBossBattleForArea(areaId: string): Battle | undefined {
   const boss = battles.find((battle) => battle.id === area.bossBattleId)
   return boss?.areaId === area.id ? boss : undefined
 }
+
+/** Prototype Areas may end with a lesson instead of a boss. */
+export function getAreaClearIdForBattle(battle:Pick<Battle,'id'|'areaId'>):string|undefined {
+  const area=areaById[battle.areaId]
+  return area?.battleIds.at(-1)===battle.id?area.id:undefined
+}

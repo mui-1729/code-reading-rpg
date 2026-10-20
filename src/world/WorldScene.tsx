@@ -211,6 +211,7 @@ function getInteractionPresentation(intent: WorldTargetInteractionIntent): { lab
               : '装備屋を見る',
         disabled: false,
       }
+    case 'archive-trial': return {label:'台帳を調べる',disabled:!intent.unlocked}
     case 'treasure':
       return { label: intent.opened ? '宝箱を調べる' : '宝箱を開ける', disabled: false }
     case 'training':

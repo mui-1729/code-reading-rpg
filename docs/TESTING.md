@@ -294,3 +294,6 @@ bug fixでは原因に対応するtestを残す。
 - [ ] Squash Merge
 - [ ] main CI
 - [ ] Cloudflare Production
+
+
+DatabaseのSQL oracleはNode.js 24標準の`node:sqlite`をunit testだけで使用する。数値条件、ASC / DESC、同値id順、LIMIT、空結果、撃破済みrow、row順の不変性を実際のSELECT結果と比較する。production bundleへSQLiteを入れず、JavaScript / TypeScriptの表示codeは従来通り評価しない。

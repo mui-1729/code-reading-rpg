@@ -1,3 +1,4 @@
+import { databaseSemanticVariants } from './databaseSkillDefinitions'
 import type { LearningSyntax } from './battleLearningPolicy'
 import type { CodeVariant } from './skillDefinitions'
 import type { TargetRule } from './types'
@@ -16,6 +17,7 @@ export type SemanticSkillVariant = {
 export const semanticSkillVariantsById: Readonly<
   Partial<Record<string, readonly SemanticSkillVariant[]>>
 > = {
+  ...databaseSemanticVariants,
   pulse: [
     {
       id: 'named-slime',

@@ -1,3 +1,4 @@
+import { DATABASE_ARCHIVE_MAP_ID, DATABASE_LOCKED_MESSAGE, DATABASE_FRONTIER_GATE } from './databaseArchive'
 import { useCallback, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { gameAudio } from '../audio/gameAudio'
@@ -59,7 +60,7 @@ function getObjective(clearedStageIds: readonly number[]) {
   return {
     label: 'TypeScript クリア',
     title: 'TypeScript辺境の異変を止めた',
-    detail: '西の門から中央ハブへ戻れる。',
+    detail: '西の門から中央ハブへ戻れる。南東の階段から地下書庫の台帳調査へ向かえる。',
     clear: true,
   }
 }
@@ -157,7 +158,7 @@ export function TypeScriptFrontierPage() {
 
     if (intent.kind === 'locked-portal') {
       gameAudio.playSe('cancel')
-      setMessage(`${intent.label}への道はまだ開いていない。`)
+      setMessage(intent.toMapId === DATABASE_ARCHIVE_MAP_ID ? DATABASE_LOCKED_MESSAGE : `${intent.label}への道はまだ開いていない。`)
       return
     }
 
@@ -228,7 +229,7 @@ export function TypeScriptFrontierPage() {
             return (
               <>
                 {cell.terrain === 'gate' && (
-                  <span className="world-object ts-gate-object">門</span>
+                  <span className="world-object ts-gate-object">{cell.x === DATABASE_FRONTIER_GATE.x && cell.y === DATABASE_FRONTIER_GATE.y ? '地下書庫' : '門'}</span>
                 )}
                 {cell.terrain === 'boss' && (
                   <span className="world-object boss-object">FRONTIER COMPILER</span>

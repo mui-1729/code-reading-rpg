@@ -2,6 +2,7 @@ import type { BgmTrack } from '../audio/gameAudio'
 import type { Battle } from './types'
 
 export type BattleSceneId =
+  | 'database-archive'
   | 'overworld-incident'
   | 'village-training'
   | 'javascript-forest'
@@ -22,6 +23,7 @@ export type BattlePresentation = {
 }
 
 const PRESENTATION_BY_BATTLE_ID: Readonly<Record<number, BattlePresentation>> = {
+  23: {sceneId:'database-archive',arenaKind:'field',locationLabel:'DATABASE · UNDERGROUND ARCHIVE',bgmTrack:'battle'},
   1: {
     sceneId: 'overworld-incident',
     arenaKind: 'incident',

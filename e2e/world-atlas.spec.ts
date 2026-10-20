@@ -202,7 +202,9 @@ test('未解放regionは個別placeholderを増やさずcompactな未発見summa
   await expect(discoveredAtlas.locator('[data-atlas-region]')).toHaveCount(6)
   await expect(discoveredAtlas.locator('[data-atlas-region="js-forest-settlement"]')).toContainText('森番の集落')
   await expect(discoveredAtlas.locator('[data-atlas-region="ts-frontier"]')).toContainText('TypeScript辺境')
-  await expect(discoveredAtlas.getByText('未発見エリアあり', { exact: true })).toHaveCount(0)
+  await expect(discoveredAtlas.locator('[data-atlas-region="database-archive"]')).toHaveCount(0)
+  await expect(discoveredAtlas.getByText('地下書庫', { exact: true })).toHaveCount(0)
+  await expect(discoveredAtlas.getByText('未発見エリアあり', { exact: true })).toHaveCount(1)
 })
 
 test('地域地図は通常terrainを表示するが未探索の宝箱位置を漏らさない', async ({ page }) => {

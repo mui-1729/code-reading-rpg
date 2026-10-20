@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createInitialPlayerProgress } from '../progression'
-import { getWorldObjective, getWorldProgressChange } from './worldObjective'
+import { getWorldObjective, getWorldProgressChange, getWorldObjectives, getDatabaseArchiveObjective } from './worldObjective'
 
 const JS_BEFORE_BOSS = [1, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 19, 20, 21, 22]
 const JS_COMPLETE = [...JS_BEFORE_BOSS, 3]
@@ -181,6 +181,17 @@ describe('World Objective', () => {
       progressLabel: '2 / 3',
       next: '根本原因 // 東のFrontier Compilerを確認する',
     })
+  })
+
+  it('Databaseは両final後にWorldとPauseへ同じ調査を示し、Bossを捏造しない', () => {
+    expect(getWorldObjectives(withClears(JS_COMPLETE)).some((objective) => objective.region === 'database')).toBe(false)
+    const unlocked = withClears([...JS_COMPLETE, 4, 5, 6], ['javascript', 'typescript'])
+    const objective = getWorldObjectives(unlocked).find((candidate) => candidate.region === 'database')!
+    expect(objective).toMatchObject({ totalBattles: 1, clearedBattles: 0, status: 'encounter', bossUnlocked: false })
+    expect(objective.next).toContain(getDatabaseArchiveObjective(unlocked.clearedStageIds).title)
+    const completed = withClears([...unlocked.clearedStageIds, 23], ['javascript', 'typescript', 'database'])
+    expect(getWorldObjective('database', completed)).toMatchObject({ status: 'clear', bossUnlocked: false, clearedBattles: 1 })
+    expect(getWorldProgressChange(unlocked, completed)).toMatchObject({ heading: 'WORLD COMPLETE', region: 'database', progressLabel: '1 / 1' })
   })
 
   it('replayではWorld progress feedbackを出さない', () => {
