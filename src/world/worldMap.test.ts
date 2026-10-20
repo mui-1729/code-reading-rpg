@@ -66,10 +66,10 @@ describe('open world map', () => {
     expect(getWorldPortalAtPosition(OVERWORLD_MAP_ID, JS_VILLAGE_POSITION)).toMatchObject({
       fromMapId: OVERWORLD_MAP_ID,
       toMapId: JS_VILLAGE_MAP_ID,
-      targetPosition: { x: 10, y: 12 },
+      targetPosition: { x: 10, y: 23 },
       requiredClearedStageId: 1,
     })
-    expect(getWorldPortalAtPosition(JS_VILLAGE_MAP_ID, { x: 10, y: 14 })).toMatchObject({
+    expect(getWorldPortalAtPosition(JS_VILLAGE_MAP_ID, { x: 10, y: 24 })).toMatchObject({
       toMapId: OVERWORLD_MAP_ID,
       targetPosition: { x: 10, y: 21 },
     })
@@ -177,7 +177,7 @@ describe('open world map', () => {
         JS_VILLAGE_MAP_ID,
       ),
     ).toBe('training')
-    expect(getTerrain(10, 14, JS_VILLAGE_MAP_ID)).toBe('exit')
+    expect(getTerrain(10, 24, JS_VILLAGE_MAP_ID)).toBe('exit')
     expect(isWalkableTerrain('house')).toBe(false)
     expect(isWalkableTerrain('training')).toBe(false)
     expect(isWalkableTerrain('road')).toBe(true)

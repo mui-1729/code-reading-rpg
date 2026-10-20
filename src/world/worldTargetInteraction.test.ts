@@ -13,6 +13,30 @@ import {
 import { resolveWorldTargetInteraction } from './worldTargetInteraction'
 
 describe('facing-based world interaction', () => {
+  it('addresses the visible companion without leaving a conversation on the empty recruitment tile', () => {
+    const progress = createInitialPlayerProgress()
+    const state = {
+      ...createInitialRpgState(),
+      partyMemberIds: ['byte'],
+      worldPosition: { x: 19, y: 14 },
+    }
+    expect(resolveWorldTargetInteraction(state, progress, BYTE_POSITION)).toEqual({ kind: 'none' })
+    expect(resolveWorldTargetInteraction(state, progress, BYTE_POSITION, { x: 20, y: 14 })).toEqual({
+      kind: 'party',
+      memberId: 'byte',
+      alreadyJoined: true,
+    })
+    expect(resolveWorldTargetInteraction(state, progress, BYTE_POSITION, { x: 25, y: 14 })).toEqual({
+      kind: 'none',
+    })
+    const inn = VILLAGE_FACILITIES.find(
+      facility => facility.mapId === JS_VILLAGE_MAP_ID && facility.kind === 'inn',
+    )!
+    expect(resolveWorldTargetInteraction(
+      { ...state, worldMapId: JS_VILLAGE_MAP_ID }, progress, inn.position, { x: 20, y: 14 },
+    )).toEqual({ kind: 'village-facility', facility: 'inn' })
+  })
+
   it('does not select another adjacent object when the faced target is empty', () => {
     const progress = createInitialPlayerProgress()
     const rpgState = {

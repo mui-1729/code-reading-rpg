@@ -82,11 +82,14 @@ test('desktop TutorialでもKeyboardでBYTEの方を向いて加入まで操作�
   await expect.poll(async () => (await storedTutorial(page))?.phase).toBe('party-join')
 })
 
-test('party-joinはreload後もBYTE加入状態を保ち重複加入しない', async ({ page }) => {
+test('@responsive @cross-browser 案内が操作部を覆わずparty-joinはreload後もBYTE加入状態を保つ', async ({ page }) => {
   await seedTutorial(page, 'field-interact')
   await page.goto('/world')
   await page.getByRole('button', { name: '左へ移動' }).click()
   await faceByte(page)
+  const promptBounds = await page.locator('.tutorial-prompt-field').boundingBox()
+  const controlsBounds = await page.locator('.world-controls').boundingBox()
+  expect(promptBounds!.y + promptBounds!.height).toBeLessThanOrEqual(controlsBounds!.y)
   await page.getByRole('button', { name: 'BYTEと話す' }).click()
   await expect.poll(async () => (await storedTutorial(page))?.phase).toBe('party-join')
 
@@ -129,6 +132,9 @@ test('設定からTutorialを最初からやり直しても加入済みBYTEを�
   await expect.poll(async () => (await storedTutorial(page))?.phase).toBe('field-interact')
   await expect(page.locator('.tutorial-prompt-field')).toContainText('アクション')
   await faceByte(page)
+  await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-y', '13')
+  await expect(page.locator('.npc-object[aria-label="BYTE NPC"]')).toHaveCount(0)
+  await expect(page.locator('.world-follower-sprite')).toBeVisible()
   await page.getByRole('button', { name: 'BYTEと話す' }).click()
   await expect.poll(async () => (await storedTutorial(page))?.phase).toBe('party-join')
   expect((await storedRpg(page))?.state?.partyMemberIds).toEqual(['byte'])

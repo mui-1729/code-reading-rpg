@@ -93,7 +93,7 @@ test('Villageの宿は向いてActionした時だけ開きGoldを払いHPを回�
   expect(stored.rpg.state.safeCheckpoint).toEqual({
     id: 'greenfield-village',
     mapId: 'js-village',
-    position: { x: 10, y: 12 },
+    position: { x: 10, y: 23 },
   })
 })
 

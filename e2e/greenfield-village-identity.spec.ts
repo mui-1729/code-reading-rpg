@@ -4,7 +4,7 @@ const PROGRESS_KEY = 'code-reading-rpg:player-progress'
 const RPG_KEY = 'code-reading-rpg:rpg-state'
 const TUTORIAL_KEY = 'code-reading-rpg:tutorial'
 
-test('@responsive GREENFIELD VILLAGEは入口からTRAIN・宿・道具屋を読み取り、工房へ歩いて訪れる', async ({ page }) => {
+test('@responsive GREENFIELD VILLAGEは中央からTRAIN・宿・道具屋を読み取り、工房へ歩いて訪れる', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   await page.evaluate(
@@ -54,7 +54,9 @@ test('@responsive GREENFIELD VILLAGEは入口からTRAIN・宿・道具屋を読
   await page.getByRole('button', {name: '上へ移動', exact: true}).click()
   await expect(village.locator('[data-world-x="12"][data-world-y="7"].terrain-training')).toBeVisible()
   await expect(village.locator('[data-world-x="10"][data-world-y="8"]')).toBeVisible()
-  await expect(village.locator('[data-world-x="10"][data-world-y="14"].terrain-exit')).toBeVisible()
+  await expect(village.locator('[data-world-x="10"][data-world-y="14"].terrain-road')).toBeVisible()
+  const oldGateArtwork = await village.locator('.terrain-road[data-world-x="10"][data-world-y="14"]').evaluate((element) => ({ before: getComputedStyle(element, '::before').content, after: getComputedStyle(element, '::after').content }))
+  expect(oldGateArtwork).toEqual({ before: 'none', after: 'none' })
 
   for (const npcId of ['trainer-mio', 'village-child', 'misfire-adventurer']) {
     await expect(village.locator(`[data-world-npc="${npcId}"]`)).toBeVisible()
@@ -91,14 +93,12 @@ test('@responsive GREENFIELD VILLAGEは入口からTRAIN・宿・道具屋を読
   expect(entryGeometry.visibleFacilities).toBe(2)
   expect(entryGeometry.allFacilitiesInsideViewport).toBe(true)
 
-  const leftRoof = village.locator('.terrain-house[data-world-x="5"][data-world-y="9"]')
-  const rightRoof = village.locator('.terrain-house[data-world-x="14"][data-world-y="9"]')
-  const [leftRoofShape, rightRoofShape] = await Promise.all([
-    leftRoof.evaluate((element) => getComputedStyle(element, '::before').clipPath),
-    rightRoof.evaluate((element) => getComputedStyle(element, '::before').clipPath),
-  ])
-  expect(leftRoofShape).not.toBe('none')
-  expect(rightRoofShape).not.toBe('none')
+  for (const id of ['greenfield-inn', 'greenfield-market']) {
+    const building = village.locator(`[data-world-building="${id}"]`)
+    await expect(building).toHaveCount(1)
+    await expect(building.locator('[data-building-roof]')).toHaveCount(1)
+    await expect(building.locator('[data-building-entrance]')).toHaveCount(1)
+  }
 
 })
 

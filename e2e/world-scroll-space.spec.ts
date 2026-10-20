@@ -95,15 +95,14 @@ test('World各mapはcontentがviewport内に収まる時に旧bottom spacer由�
   }
 })
 
-test('low landscapeでは必要なcontent scrollだけを維持しdocument末尾に追加spacerを残さない', async ({ page }) => {
+test('low landscapeでも探索画面と操作部を同時に収め、ページscrollを必要にしない', async ({ page }) => {
   await page.setViewportSize({ width: 844, height: 390 })
   await seedMap(page, 'js-forest', { x: 52, y: 20 })
 
   const metrics = await layoutMetrics(page)
   expect(metrics.paddingBottom).toBeLessThanOrEqual(16)
-  expect(metrics.scrollRange).toBeGreaterThan(0)
-  expect(metrics.spaceAfterShell).toBeLessThanOrEqual(2)
-
-  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+  expect(metrics.scrollRange).toBeLessThanOrEqual(2)
+  const controls = await page.locator('.world-controls').boundingBox()
+  expect(controls!.y + controls!.height).toBeLessThanOrEqual(390)
   await expect(page.locator('.world-controls')).toBeVisible()
 })

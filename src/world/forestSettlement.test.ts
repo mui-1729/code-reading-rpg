@@ -49,12 +49,12 @@ describe('Forest Settlement', () => {
   })
 
   it('宿・補給所・住民を持ち、GREENFIELDの単なる通過点にならない', () => {
-    expect(getVillageFacilityAtPosition(JS_FOREST_SETTLEMENT_MAP_ID, { x: 7, y: 11 })).toMatchObject({
+    expect(getVillageFacilityAtPosition(JS_FOREST_SETTLEMENT_MAP_ID, { x: 6, y: 13 })).toMatchObject({
       kind: 'inn',
       checkpointId: 'forest-settlement',
       locationLabel: '森番の集落',
     })
-    expect(getVillageFacilityAtPosition(JS_FOREST_SETTLEMENT_MAP_ID, { x: 15, y: 11 })).toMatchObject({
+    expect(getVillageFacilityAtPosition(JS_FOREST_SETTLEMENT_MAP_ID, { x: 16, y: 13 })).toMatchObject({
       kind: 'item-shop',
       locationLabel: '森番の集落',
     })
