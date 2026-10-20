@@ -1,0 +1,293 @@
+/* Ground and complete physical objects have separate rendering responsibilities. */
+.world-scenery-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+}
+.world-structure {
+  position: absolute;
+}
+.world-structure svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  image-rendering: pixelated;
+  shape-rendering: crispEdges;
+}
+.world-cell-object {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 7;
+  overflow: visible;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+.world-viewport .world-tile[data-world-structure] {
+  background: #96957b;
+  box-shadow: none;
+}
+.world-viewport .world-tile[data-world-structure]:has(.facility-object) {
+  z-index: 7;
+  background: transparent;
+}
+.world-viewport .terrain-npc {
+  background: #96957b;
+}
+.world-viewport .world-tile[data-world-structure]::before,
+.world-viewport .world-tile[data-world-structure]::after {
+  content: none;
+}
+
+.world-viewport .terrain-town {
+  background: radial-gradient(circle at 22% 34%, #a7a388 0 1px, transparent 2px), #96957b;
+}
+.world-viewport:is(
+    [data-world-map='overworld'],
+    [data-world-map='js-village'],
+    [data-world-map='js-forest-settlement']
+  )
+  .terrain-road {
+  background: linear-gradient(0deg, #8d7854 0 5%, transparent 6% 94%, #8d7854 95%), #aa9568;
+  box-shadow: none;
+}
+
+/* Wall and furniture are not recolored versions of mountains or houses. */
+.database-archive-viewport .terrain-wall {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 12px, #302a32 12px 15px),
+    repeating-linear-gradient(90deg, #71685e 0 22px, #453e3c 22px 25px);
+  box-shadow:
+    inset 0 -5px #302932,
+    inset 0 3px #8d8069;
+}
+.database-archive-viewport
+  :is(.terrain-bookshelf, .terrain-lectern, .terrain-stone, .terrain-road, .terrain-stairs-up) {
+  background: linear-gradient(0deg, transparent 94%, #665c57 95%), #51494a;
+  box-shadow: none;
+}
+.database-archive-viewport .terrain-bookshelf {
+  background: #423b3d;
+}
+.world-viewport .terrain-fence {
+  background:
+    linear-gradient(
+      0deg,
+      transparent 0 40%,
+      #9a784b 41% 48%,
+      transparent 49% 65%,
+      #9a784b 66% 73%,
+      transparent 74%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 8px,
+      #705638 8px 12px,
+      #b28b56 12px 16px,
+      transparent 16px 24px
+    ),
+    #5f7b48;
+}
+.world-viewport .terrain-tree-wall {
+  background:
+    radial-gradient(ellipse at 25% 22%, #35653b 0 33%, transparent 34%),
+    radial-gradient(ellipse at 75% 35%, #204b2d 0 40%, transparent 41%), #173d24;
+  box-shadow: inset 0 -6px #193e25;
+}
+
+/* The same two-cell log object is used on every real crossing. */
+.world-viewport .world-tile.terrain-log-crossing {
+  background: #4aaed6 !important;
+  box-shadow: none !important;
+}
+.world-viewport .world-tile.terrain-log-crossing::before,
+.world-viewport .world-tile.terrain-log-crossing::after {
+  content: none !important;
+}
+
+/* Walkable crystal fragments and fallen masonry stay below the player's feet. */
+.typescript-frontier-viewport .terrain-crystal {
+  background: #46515f;
+}
+.typescript-frontier-viewport .terrain-crystal::before,
+.typescript-frontier-viewport .terrain-crystal::after {
+  bottom: 15%;
+  height: 16%;
+  width: 24%;
+  filter: none;
+  clip-path: polygon(0 70%, 65% 0, 100% 45%, 70% 100%);
+  background: linear-gradient(135deg, #b1d6d4, #7b91ac 65%, #576a88);
+}
+.typescript-frontier-viewport .terrain-crystal::after {
+  height: 12%;
+  bottom: 40%;
+}
+.typescript-frontier-viewport .terrain-ruins {
+  background: #55575e;
+}
+.typescript-frontier-viewport .terrain-ruins::before,
+.typescript-frontier-viewport .terrain-ruins::after {
+  bottom: 20%;
+  width: 34%;
+  height: 12%;
+  background: #7b7d7e;
+  box-shadow: 0 2px #3d424b;
+}
+.typescript-frontier-viewport .terrain-ruins::after {
+  bottom: 49%;
+  width: 27%;
+  height: 10%;
+}
+.typescript-frontier-viewport .terrain-stone::after {
+  content: none;
+}
+
+/* Physical objects carry their own silhouette; text stays available to assistive UI. */
+.world-viewport .world-tile[data-world-object] {
+  background: #96957b;
+  box-shadow: none;
+}
+.world-viewport .world-tile[data-world-object]::before,
+.world-viewport .world-tile[data-world-object]::after {
+  content: none;
+}
+.world-viewport .world-tile[data-world-object] > .world-object {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.world-viewport
+  .world-tile:is(
+    [data-world-object='stairs-up'],
+    [data-world-object='stairs-down'],
+    [data-world-object='lectern']
+  ) {
+  background: #51494a;
+}
+.world-viewport .world-tile[data-world-object='village-exit'] {
+  background: #aa9568;
+  outline: none;
+}
+.world-viewport[data-world-map='overworld'] .world-tile[data-world-object='village'] {
+  background: #5e8249;
+}
+.chest-lid-open {
+  display: none;
+}
+.world-viewport:is([data-world-map='js-village'], [data-world-map='js-forest-settlement'])
+  .facility-object {
+  left: calc(80% + 12px);
+  top: -1px;
+}
+.world-tile:has(.treasure-object.opened) .chest-lid-open {
+  display: initial;
+}
+.world-tile:has(.treasure-object.opened) .chest-lid-closed {
+  display: none;
+}
+
+.atlas-terrain-cell.terrain-wall {
+  background: #655e59;
+  color: #a49b87;
+}
+.atlas-terrain-cell.terrain-bookshelf {
+  background: #725840;
+  color: #d1b878;
+}
+.atlas-terrain-cell.terrain-fence {
+  background: #67784d;
+  color: #c2a773;
+}
+.atlas-terrain-cell.terrain-tree-wall {
+  background: #173d24;
+  color: #4e7850;
+}
+.atlas-terrain-cell:is(.terrain-stairs-up, .terrain-stairs-down, .terrain-lectern) {
+  background: #62594b;
+}
+.atlas-landmark-pin.is-archive {
+  background: #d9c699;
+  color: #30262d;
+  border-color: #82643d;
+}
+
+/* Complete scenery follows the same camera transform as the live terrain. */
+.world-viewport:has(.world-camera-snapshot[data-camera-facing='right']) .world-scenery-layer {
+  animation: world-current-layer-right 150ms linear forwards;
+}
+.world-viewport:has(.world-camera-snapshot[data-camera-facing='left']) .world-scenery-layer {
+  animation: world-current-layer-left 150ms linear forwards;
+}
+.world-viewport:has(.world-camera-snapshot[data-camera-facing='down']) .world-scenery-layer {
+  animation: world-current-layer-down 150ms linear forwards;
+}
+.world-viewport:has(.world-camera-snapshot[data-camera-facing='up']) .world-scenery-layer {
+  animation: world-current-layer-up 150ms linear forwards;
+}
+
+/* Reserve space for the objective, messages and controls before sizing the map. */
+.world-shell .world-viewport {
+  width: min(100%, 880px, calc((100svh - 330px) * 1.222222));
+}
+.world-shell :is(.world-next-objective, .world-message, .world-controls) {
+  width: min(100%, 880px, calc((100svh - 330px) * 1.222222));
+}
+@media (max-height: 600px) and (min-width: 600px) {
+  .world-shell {
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+  .world-shell .world-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 190px;
+    gap: 10px 14px;
+    padding: 10px;
+    align-items: start;
+  }
+  .world-shell .world-viewport {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    width: min(100%, calc((100svh - 50px) * 1.222222));
+  }
+  .world-shell :is(.world-next-objective, .world-message, .world-controls) {
+    grid-column: 2;
+    width: 100%;
+    margin: 0;
+  }
+  .world-shell .world-next-objective {
+    grid-row: 1;
+    grid-template-columns: 1fr;
+    padding: 7px;
+  }
+  .world-shell .world-next-objective strong {
+    font-size: 12px;
+  }
+  .world-shell .world-message {
+    grid-row: 2;
+    height: 58px;
+    min-height: 58px;
+  }
+  .world-shell .world-controls {
+    grid-row: 3;
+    flex-direction: column;
+    align-items: center;
+    gap: 9px;
+  }
+  .world-shell .world-interact {
+    width: 100%;
+    min-width: 0;
+    font-size: 9px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .world-scenery-layer {
+    animation: none !important;
+  }
+}

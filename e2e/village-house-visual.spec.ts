@@ -57,33 +57,27 @@ test('Villageのhouseは複数tileで屋根・壁・扉を描き施設文字に�
   await expect(westDoor).toBeVisible()
   await expect(eastDoor).toBeVisible()
 
-  const palettes = await Promise.all([
-    westRoof.evaluate((element) => getComputedStyle(element).getPropertyValue('--house-roof').trim()),
-    eastRoof.evaluate((element) => getComputedStyle(element).getPropertyValue('--house-roof').trim()),
-  ])
-  expect(palettes[0]).not.toBe(palettes[1])
-
-  for (const door of [westDoor, eastDoor]) {
-    const visual = await door.evaluate((element) => {
-      const style = getComputedStyle(element, '::after')
-      return {
-        content: style.content,
-        width: Number.parseFloat(style.width),
-        height: Number.parseFloat(style.height),
-        backgroundImage: style.backgroundImage,
-      }
-    })
-    expect(visual.content).not.toContain('入口')
-    expect(visual.width).toBeGreaterThan(8)
-    expect(visual.height).toBeGreaterThan(12)
-    expect(visual.backgroundImage).toContain('radial-gradient')
+  // A whole building has one roof and one functional entrance, independently
+  // of how many collision cells it occupies.
+  const inn = village.locator('[data-world-building="greenfield-inn"]')
+  const market = village.locator('[data-world-building="greenfield-market"]')
+  for (const building of [inn, market]) {
+    await expect(building).toHaveCount(1)
+    await expect(building.locator('[data-building-roof]')).toHaveCount(1)
+    await expect(building.locator('[data-building-entrance]')).toHaveCount(1)
   }
-
-  const slopedRoof = await village
-    .locator('[data-world-x="14"][data-world-y="9"].terrain-house')
-    .evaluate((element) => getComputedStyle(element, '::before').clipPath)
-  expect(slopedRoof).not.toBe('none')
-
+  expect(await inn.locator('[data-building-roof]').getAttribute('fill')).not.toBe(
+    await market.locator('[data-building-roof]').getAttribute('fill'),
+  )
+  for (const [building, x] of [[inn, '5'], [market, '14']] as const) {
+    const door = await building.locator('[data-building-entrance]').boundingBox()
+    const tile = await village.locator(`.terrain-house[data-world-x="${x}"][data-world-y="11"]`).boundingBox()
+    expect(door).not.toBeNull()
+    expect(tile).not.toBeNull()
+    expect(Math.abs(door!.x + door!.width / 2 - tile!.x - tile!.width / 2)).toBeLessThan(1)
+    expect(door!.y).toBeGreaterThanOrEqual(tile!.y)
+    expect(door!.y + door!.height).toBeLessThanOrEqual(tile!.y + tile!.height)
+  }
   const facilityMarkers = village.locator('.facility-object[data-facility-icon]')
   await expect(facilityMarkers).toHaveCount(2)
   for (const kind of ['inn', 'item-shop']) {
@@ -116,9 +110,16 @@ test('Villageのhouseは複数tileで屋根・壁・扉を描き施設文字に�
   expect(fieldText).not.toContain('装備屋')
   expect(fieldText).not.toContain('宿')
 
-  const lane = village.locator('[data-world-x="7"][data-world-y="12"]')
-  await expect(lane).toBeVisible()
-  expect(await lane.evaluate((element) => getComputedStyle(element).backgroundImage)).not.toBe('none')
+  // The entrance drawn on the inn must also be the place where it can be used.
+  for (let step = 0; step < 5; step += 1) {
+    await page.getByRole('button', { name: '左へ移動', exact: true }).click()
+  }
+  await expect(village).toHaveAttribute('data-world-x', '5')
+  await page.getByRole('button', { name: '上へ移動', exact: true }).click()
+  await expect(village).toHaveAttribute('data-world-y', '12')
+  await page.getByRole('button', { name: '宿で休む', exact: true }).click()
+  await expect(page.getByRole('dialog', { name: '宿', exact: true })).toBeVisible()
+  await page.keyboard.press('Escape')
 
   expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)).toBe(false)
 })

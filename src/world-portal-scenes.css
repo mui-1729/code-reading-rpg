@@ -21,38 +21,6 @@
   clip-path: polygon(0 100%, 0 36%, 16% 36%, 16% 18%, 36% 18%, 36% 0, 64% 0, 64% 18%, 84% 18%, 84% 36%, 100% 36%, 100% 100%);
 }
 
-/* Overworld -> GREENFIELD VILLAGE: a timber gate and fenced village road. */
-.world-viewport[data-world-map='overworld'] .world-tile[data-world-x='10'][data-world-y='22'] {
-  --portal-scene-kind: village-gate;
-  background:
-    linear-gradient(90deg, transparent 0 39%, #aa8a56 40% 60%, transparent 61%),
-    #667544;
-  box-shadow: inset 0 -5px 0 rgba(77, 58, 34, .32);
-}
-
-.world-viewport[data-world-map='overworld'] .world-tile[data-world-x='10'][data-world-y='22']::before,
-.world-viewport[data-world-map='overworld'] .world-tile[data-world-x='10'][data-world-y='22']::after {
-  content: '';
-  position: absolute;
-  z-index: 2;
-  bottom: 8%;
-  width: 18%;
-  height: 68%;
-  border: 2px solid #3a2a1e;
-  background: #8c633e;
-  box-shadow: inset 0 7px 0 #bb8956;
-}
-
-.world-viewport[data-world-map='overworld'] .world-tile[data-world-x='10'][data-world-y='22']::before { left: 8%; }
-.world-viewport[data-world-map='overworld'] .world-tile[data-world-x='10'][data-world-y='22']::after { right: 8%; }
-
-.world-viewport[data-world-map='overworld'] .world-tile[data-world-y='22']:is([data-world-x='9'], [data-world-x='11']) {
-  background:
-    linear-gradient(0deg, transparent 0 58%, #8c633e 59% 67%, transparent 68%),
-    linear-gradient(90deg, transparent 0 18%, #4e3928 19% 25%, transparent 26% 74%, #4e3928 75% 81%, transparent 82%),
-    #4b8744;
-}
-
 /* Overworld -> JavaScript Forest: the road narrows into a dark tree arch. */
 .world-viewport[data-world-map='overworld'] .world-tile[data-world-x='34'][data-world-y='34'] {
   --portal-scene-kind: forest-arch;
@@ -99,28 +67,6 @@
   background-color: #23552f;
   box-shadow: inset 0 0 0 3px rgba(22, 62, 34, .55);
 }
-
-/* Village -> grassland: timber fence opening, not a generic EXIT sign. */
-.world-viewport[data-world-map='js-village'] .world-tile[data-world-x='10'][data-world-y='14'] {
-  --portal-scene-kind: village-outgate;
-  background:
-    linear-gradient(90deg, #5c4a32 0 12%, transparent 13% 87%, #5c4a32 88% 100%),
-    linear-gradient(#a88753 0 54%, #4b8744 55% 100%);
-}
-
-.world-viewport[data-world-map='js-village'] .world-tile[data-world-x='10'][data-world-y='14']::before,
-.world-viewport[data-world-map='js-village'] .world-tile[data-world-x='10'][data-world-y='14']::after {
-  content: '';
-  position: absolute;
-  z-index: 2;
-  bottom: 10%;
-  width: 13%;
-  height: 62%;
-  background: #7b5d3c;
-  box-shadow: inset 0 5px 0 #ad8454;
-}
-.world-viewport[data-world-map='js-village'] .world-tile[data-world-x='10'][data-world-y='14']::before { left: 13%; }
-.world-viewport[data-world-map='js-village'] .world-tile[data-world-x='10'][data-world-y='14']::after { right: 13%; }
 
 /* Expanded Forest east edge -> grassland: a bright break in the trees. */
 .world-viewport[data-world-map='js-forest'] .world-tile[data-world-x='54'][data-world-y='20'] {

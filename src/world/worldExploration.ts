@@ -115,7 +115,8 @@ export function isWorldTerrainVisible(
 }
 
 export function getChartSafeTerrain(mapId: WorldMapId, terrain: Terrain): Terrain {
-  if (!['treasure', 'boss', 'midboss', 'training'].includes(terrain)) return terrain
+  if (!['treasure', 'boss', 'midboss', 'training', 'lectern'].includes(terrain)) return terrain
+  if (mapId === 'database-archive') return 'stone'
   if (mapId === JS_FOREST_MAP_ID) return 'woods'
   if (mapId === JS_DEEP_FOREST_MAP_ID) return 'deep-woods'
   if (mapId === TS_FRONTIER_MAP_ID) return 'stone'

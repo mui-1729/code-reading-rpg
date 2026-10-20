@@ -64,5 +64,8 @@ describe('world exploration state', () => {
     expect(getChartSafeTerrain(JS_FOREST_MAP_ID, 'treasure')).toBe('woods')
     expect(getChartSafeTerrain(JS_DEEP_FOREST_MAP_ID, 'boss')).toBe('deep-woods')
     expect(getChartSafeTerrain(JS_FOREST_MAP_ID, 'water')).toBe('water')
+    expect(getChartSafeTerrain('database-archive', 'lectern')).toBe('stone')
+    expect(getChartSafeTerrain('database-archive', 'wall')).toBe('wall')
+    expect(getChartSafeTerrain('database-archive', 'bookshelf')).toBe('bookshelf')
   })
 })

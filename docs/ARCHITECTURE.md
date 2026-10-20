@@ -495,3 +495,11 @@ map / encounter / battle-start / boss-start / battle-return / defeat-return / co
 地下書庫も`WorldRoutePage`から同じWorldViewport / CharacterLayer / Controlsを使う。portal graphのTS final prerequisiteはJS finalを含む全祖先を検証し、移動・direct Battle・save restoreのlockを一致させる。Areaの最終Battleは`getAreaClearIdForBattle()`がregistry sequenceから判定する。bossBattleIdはbossを持つAreaだけが設定し、単一Lesson prototypeもclearを記録できる。
 
 Database prototypeのWorld Objective / Pause / clear feedbackも`worldObjective.ts`の同じ進行定義から解決する。単発のquery Lessonを地域完了として扱い、存在しないBossの解放表示は作らない。
+
+## Worldの物体表現
+
+`worldStructures.ts`が村・集落の建物と川の丸太渡りの設置範囲を定義する。`worldMap.ts` / `greenfieldLayout.ts`は同じ範囲を通行判定に使い、`WorldScenery.tsx`は一軒・一つの橋として描画する。各マスへ小さい建物を反復描画しない。建物の入口と施設の操作点も同じ定義を参照する。
+
+書庫は`wall` / `bookshelf` / `lectern` / `stairs-up`、辺境の書庫入口は`stairs-down`を使い、house / mountain / trainingの別名にはしない。書棚は`databaseArchive.ts`の設置範囲を通行と描画で共有する。Atlasもこれらの意味から閲覧台・上り下りの階段を表示する。
+
+`worldFollowers.ts`は同行者の表示位置を、出入口・家具・NPC・回復地点へ重ならない隣接マスへ解決する。ゲームの現在地やセーブを書き換えるための処理ではない。草原・村・森では正面に操作対象がないとき、表示中の同行者へ声をかけられる。加入前の待機地点へ見えない会話を残さない。
