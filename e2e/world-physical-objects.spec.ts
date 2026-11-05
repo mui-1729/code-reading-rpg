@@ -66,10 +66,70 @@ async function expectControlsInsideScreen(page: Page) {
   const objective = await page.locator('.world-next-objective strong').boundingBox()
   const menu = await page.getByRole('button', { name: 'メニューを開く' }).boundingBox()
   expect(
-    objective!.x < menu!.x + menu!.width && objective!.x + objective!.width > menu!.x &&
-    objective!.y < menu!.y + menu!.height && objective!.y + objective!.height > menu!.y,
+    objective!.x < menu!.x + menu!.width &&
+      objective!.x + objective!.width > menu!.x &&
+      objective!.y < menu!.y + menu!.height &&
+      objective!.y + objective!.height > menu!.y,
   ).toBe(false)
 }
+
+test('@responsive @cross-browser 全7mapで地形と物体が粗いpixel assetとして読み込める', async ({
+  page,
+}) => {
+  const failures: string[] = []
+  page.on('response', (response) => {
+    if (response.url().includes('/pixel-art/world/') && response.status() >= 400)
+      failures.push(response.url())
+  })
+  for (const [mapId, x, y] of [
+    ['overworld', 34, 33],
+    ['js-village', 10, 12],
+    ['js-forest', 34, 12],
+    ['js-forest-settlement', 11, 2],
+    ['js-deep-forest', 42, 14],
+    ['ts-frontier', 27, 15],
+    ['database-archive', 15, 5],
+  ] as const) {
+    await seedWorld(page, mapId, x, y)
+    const map = page.locator('.world-viewport')
+    const terrainStyles = await map.locator('.world-tile').evaluateAll((tiles) =>
+      tiles.map((tile) => {
+        const style = getComputedStyle(tile)
+        return { background: style.backgroundImage, rendering: style.imageRendering }
+      }),
+    )
+    expect(terrainStyles.length).toBe(99)
+    for (const style of terrainStyles) {
+      expect(style.background).not.toContain('gradient')
+      expect(style.background === 'none' || style.background.includes('/pixel-art/world/')).toBe(
+        true,
+      )
+      expect(style.rendering).toBe('pixelated')
+    }
+    const objectAssets = await map
+      .locator('.world-cell-object image')
+      .evaluateAll((images) => [...new Set(images.map((image) => image.getAttribute('href')!))])
+    expect(
+      objectAssets.length +
+        (await map
+          .locator('[data-world-building], [data-world-bridge], [data-world-furniture]')
+          .count()),
+    ).toBeGreaterThan(0)
+    const assets = new Set([
+      ...objectAssets,
+      ...terrainStyles.flatMap((style) =>
+        [...style.background.matchAll(/url\("([^"]+)"\)/g)].map((match) => match[1]),
+      ),
+    ])
+    for (const asset of assets) {
+      const response = await page.request.get(asset)
+      expect(response.ok(), asset).toBe(true)
+      expect(await response.text()).toContain('viewBox="0 0 16 16"')
+    }
+    await expectControlsInsideScreen(page)
+  }
+  expect(failures).toEqual([])
+})
 
 test('@cross-browser 狭く低い横画面でも地図を潰さず操作部へスクロールできる', async ({ page }) => {
   await page.setViewportSize({ width: 568, height: 320 })

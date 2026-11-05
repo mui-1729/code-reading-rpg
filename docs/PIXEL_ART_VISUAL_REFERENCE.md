@@ -1,8 +1,12 @@
 # Pixel Art Visual Reference
 
-画像生成で作成した16-bit JRPG mockupを今回のvisual directionの参考にする。
+Worldは**8-bit調の粗いドット絵**を基準にする。1セル16×16の整数pixel、限定色、階段状の輪郭で草・水・木・石・建物・家具を揃える。連続gradient、曲線、斜めのvector線で描いた景観は使わない。
 
-実ゲームassetはmockupそのものを切り抜かず、そこから得た以下の特徴を小さいpixel SVG / CSS pixel artへ落とす。
+参考は[任天堂の公式ファミコン資料](https://www.nintendo.co.jp/clv/index.html)に掲載された当時の画面。色面の分離、反復する地形模様、輪郭のpixel密度を観察する。既存作品の名前・キャラクター・map・画像は実装へ取り込まず、`public/pixel-art/world/`へ独自のSVGを作る。
+
+建物・本棚・倒木は1物体として描き、16pixel単位で既存footprintへ合わせる。木の壁は密な冠、歩ける森は幹と隙間、歩けるcrystal / ruinsは低い欠片にする。出入口の絵はportal graphの行き先で決め、UIへ座標条件を増やさない。回復拠点と読解の手掛かりも同じpixel密度の専用assetを使う。
+
+Battleの構成・Enemyの個性と下記のPlayer / Party identityは維持する。粗い表現をCODEの可読性へ適用しない。
 
 ## Player / Party
 
@@ -92,11 +96,11 @@ ForestとTypeScript、通常戦とBossはscreenshotだけでも判別できる�
 
 この方式にする理由:
 
-1. 生成mockupの世界観は利用できる
+1. fantasyの世界観を少ない色と輪郭で伝えられる
 2. UIから切り抜いたPNGに背景が混ざらない
 3. SVG / CSSをsourceとしてGit管理しやすい
 4. 少ない色数 / 粗いpixel密度をコードレビューできる
 5. 装備差分やEnemy silhouetteを段階的に追加しやすい
 6. learning semanticsとpresentationを分離したままRPG identityを強化できる
 
-生成画像はデザイン参考であり、runtimeでは軽量な専用pixel asset / CSS pixel artを使う。
+参考画面は観察だけに使い、runtimeでは軽量な独自pixel assetを使う。

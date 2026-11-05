@@ -136,10 +136,16 @@ export type WorldCellObjectKind =
   | 'stairs-down'
   | 'village'
   | 'village-exit'
+  | 'forest-arch'
+  | 'root-arch'
+  | 'stone-gate'
+  | 'timber-gate'
+  | 'light-gap'
 
 export function getWorldCellObjectKind(
   mapId: WorldMapId,
   terrain: Terrain,
+  destination?: WorldMapId,
 ): WorldCellObjectKind | undefined {
   if (terrain === 'shop') return 'market-stall'
   if (terrain === 'recovery') return 'inn'
@@ -147,6 +153,16 @@ export function getWorldCellObjectKind(
   if (terrain === 'lectern' || terrain === 'stairs-up' || terrain === 'stairs-down') return terrain
   if (terrain === 'village') return 'village'
   if (terrain === 'exit' && mapId === 'js-village') return 'village-exit'
+  if (terrain === 'gate') return 'stone-gate'
+  if (destination) {
+    if (mapId === 'ts-frontier' || destination === 'ts-frontier') return 'stone-gate'
+    if (mapId === 'js-deep-forest') return destination === 'overworld' ? 'root-arch' : 'light-gap'
+    if (destination === 'js-deep-forest') return 'root-arch'
+    if (destination === 'js-forest-settlement' || mapId === 'js-forest-settlement')
+      return 'timber-gate'
+    if (destination === 'js-forest') return 'forest-arch'
+    if (destination === 'overworld') return 'light-gap'
+  }
   return undefined
 }
 

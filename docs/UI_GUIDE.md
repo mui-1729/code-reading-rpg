@@ -369,6 +369,13 @@ click / tap / auto advance / skipを維持する。
 4. Accessibility上必要
 
 単に機能を説明するだけなら追加しない。
+
+## World pixel art
+
+Worldの景観は1セル16×16の整数pixelと限定色で統一する。建物の階段状の屋根、木の冠と幹、水面の矩形の波、本棚・台帳・階段・回復拠点の輪郭は独自SVGで描く。歩ける地形は隙間と低い模様を残し、壁や木の壁・家具は遮る形で区別する。portalは行き先に対応する森の入口・根の門・木の門・石門で識別できる。物体の意味とfootprint、入口の操作位置を色やpixel化の都合で変えない。
+
+CODEやcontextual actionの文章は可読性を優先し、ドット絵化のために小さくしない。新しい常設HUDや色だけの状態表現は追加しない。
+
 ## Scene change feedback
 
 Worldのportal、Battleへの挑戦、Battle結果・逃走からの帰還、Opening終了、Storyの世界層切替には共通engineによる短いcover → scene swap → revealを適用する。遭遇は頭上の`!`とencounter SE、自分で挑む訓練/Bossはbattle-start/boss-start、CONNECT/RETURNは専用のtechnical patternを使う。通常map移動に`!`を使わない。SE設定を守り、BGMは既存sceneに応じて切り替える。

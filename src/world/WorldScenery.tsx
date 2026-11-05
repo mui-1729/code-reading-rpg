@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react'
+import type { CSSProperties } from 'react'
 import { DATABASE_SHELVES } from './databaseArchive'
 import {
   WORLD_BUILDINGS,
@@ -28,108 +28,83 @@ function footprintVisible(bounds: Footprint, start: WorldPosition): boolean {
   )
 }
 
+// One logical pixel is shared by scenery, terrain and furniture: 16 per cell.
 function BuildingArt({ building }: { building: WorldBuilding }) {
-  const width = (building.bounds.right - building.bounds.left + 1) * 32
-  const height = (building.bounds.bottom - building.bounds.top + 1) * 32
-  const eave = Math.round(height * 0.48)
-  const colors = {
-    clay: ['#99583f', '#64382d'],
-    moss: ['#647347', '#384a32'],
-    slate: ['#657c91', '#37475c'],
+  const width = (building.bounds.right - building.bounds.left + 1) * 16
+  const height = (building.bounds.bottom - building.bounds.top + 1) * 16
+  const eave = Math.floor(height / 4) * 2
+  const [roof, shade, light] = {
+    clay: ['#b55b39', '#703b2b', '#e18b53'],
+    moss: ['#5b873b', '#294d31', '#8fb84b'],
+    slate: ['#527baf', '#293e68', '#8bb8cf'],
   }[building.roof]
   const doorX = building.entrance
-    ? (building.entrance.x - building.bounds.left) * 32 + 16
+    ? (building.entrance.x - building.bounds.left) * 16 + 8
     : width / 2
-  const roofId = `${building.id}-roof`
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}
       className="world-building-art"
       data-world-building={building.id}
+      shapeRendering="crispEdges"
       data-building-door={
         building.entrance ? `${building.entrance.x}:${building.entrance.y}` : undefined
       }
     >
-      <defs>
-        <clipPath id={roofId}>
-          <polygon points={`0,${eave} ${width / 2},2 ${width},${eave}`} />
-        </clipPath>
-      </defs>
-      <ellipse
-        cx={width / 2}
-        cy={height - 4}
-        rx={width / 2 - 2}
-        ry="5"
-        fill="#263228"
-        opacity=".45"
-      />
-      <rect
-        x="5"
-        y={eave - 2}
-        width={width - 10}
-        height={height - eave - 3}
-        fill="#d1b586"
-        stroke="#49372a"
-        strokeWidth="3"
-      />
-      <path
-        d={`M8 ${height - 11}H${width - 8}M9 ${eave + 10}H${width - 9}`}
-        stroke="#9a7950"
-        strokeWidth="4"
-      />
-      <polygon
-        data-building-roof="true"
-        points={`0,${eave} ${width / 2},2 ${width},${eave}`}
-        fill={colors[0]}
-        stroke={colors[1]}
-        strokeWidth="4"
-      />
-      <g clipPath={`url(#${roofId})`} stroke={colors[1]} strokeWidth="2" opacity=".65">
-        {[1, 2, 3, 4].map((line) => (
-          <path key={line} d={`M0 ${(line * eave) / 5}H${width}`} />
-        ))}
+      <rect x="2" y={eave} width={width - 4} height={height - eave} fill="#282c39" />
+      <rect x="4" y={eave} width={width - 8} height={height - eave - 2} fill="#e6cc91" />
+      <rect x="4" y={eave} width={width - 8} height="4" fill="#a88152" />
+      <rect x="4" y={height - 5} width={width - 8} height="3" fill="#a88152" />
+      {[8, width - 10].map((x) => (
+        <rect key={x} x={x} y={eave} width="2" height={height - eave - 2} fill="#705039" />
+      ))}
+      <g data-building-roof="true" fill={roof}>
+        {Array.from({ length: eave / 2 }, (_, row) => {
+          const inset = Math.max(0, eave - row * 2 - 2)
+          return (
+            <g key={row}>
+              <rect x={inset} y={row * 2} width={width - inset * 2} height="2" fill={shade} />
+              <rect
+                x={inset + 2}
+                y={row * 2}
+                width={width - inset * 2 - 4}
+                height="2"
+                fill={row % 3 === 0 ? light : roof}
+              />
+            </g>
+          )
+        })}
+        <rect x="0" y={eave - 2} width={width} height="2" fill={shade} />
       </g>
-      {[22, width - 22]
-        .filter((x) => Math.abs(x - doorX) > 15)
+      {[14, width - 16]
+        .filter((x) => Math.abs(x - doorX) > 9)
         .map((x) => (
           <g key={x}>
-            <rect
-              x={x - 8}
-              y={eave + 12}
-              width="16"
-              height="18"
-              fill="#9cbfbb"
-              stroke="#5e4934"
-              strokeWidth="3"
-            />
-            <path
-              d={`M${x} ${eave + 12}v18M${x - 8} ${eave + 21}h16`}
-              stroke="#5e4934"
-              strokeWidth="2"
-            />
+            <rect x={x - 4} y={eave + 5} width="10" height="10" fill="#705039" />
+            <rect x={x - 2} y={eave + 6} width="6" height="7" fill="#293e68" />
+            <rect x={x - 2} y={eave + 6} width="2" height="3" fill="#8bb8cf" />
+            <rect x={x - 4} y={eave + 14} width="10" height="1" fill="#f4e5b3" />
           </g>
         ))}
       <rect
         data-building-entrance={building.entrance ? 'true' : undefined}
-        x={doorX - 9}
-        y={height - 29}
-        width="18"
-        height="25"
-        fill={building.entrance ? '#382b25' : '#806446'}
-        stroke="#49372a"
-        strokeWidth="3"
+        x={doorX - 4}
+        y={height - 14}
+        width="8"
+        height="12"
+        fill="#282c39"
       />
       {building.entrance ? (
         <>
-          <rect x={doorX - 12} y={height - 5} width="24" height="5" fill="#a7a68c" />
-          <circle cx={doorX + 5} cy={height - 15} r="1.5" fill="#dfc77b" />
+          <rect x={doorX - 3} y={height - 13} width="6" height="10" fill="#493b39" />
+          <rect x={doorX + 1} y={height - 8} width="1" height="1" fill="#e6cc91" />
+          <rect x={doorX - 5} y={height - 2} width="10" height="2" fill="#bab69c" />
         </>
       ) : (
-        <path
-          d={`M${doorX - 7} ${height - 22}l14 12M${doorX - 7} ${height - 10}l14 -12`}
-          stroke="#bca16d"
-          strokeWidth="3"
-        />
+        <>
+          <rect x={doorX - 3} y={height - 12} width="6" height="3" fill="#a88152" />
+          <rect x={doorX - 3} y={height - 7} width="6" height="3" fill="#a88152" />
+        </>
       )}
     </svg>
   )
@@ -137,37 +112,46 @@ function BuildingArt({ building }: { building: WorldBuilding }) {
 
 function ShelfArt() {
   return (
-    <svg viewBox="0 0 96 64" data-world-furniture="bookshelf">
-      <rect x="3" y="4" width="90" height="57" fill="#3a2925" stroke="#281f22" strokeWidth="3" />
-      <path d="M4 7H92M4 33H92M4 58H92M7 8V59M89 8V59" stroke="#a17a4e" strokeWidth="6" />
-      {[13, 39].map((y) => (
+    <svg viewBox="0 0 48 32" data-world-furniture="bookshelf" shapeRendering="crispEdges">
+      <rect x="1" y="1" width="46" height="31" fill="#282c39" />
+      <rect x="2" y="2" width="44" height="28" fill="#705039" />
+      {[4, 17].map((y) => (
         <g key={y}>
-          {Array.from({ length: 10 }, (_, index) => (
-            <g key={index}>
+          <rect x="4" y={y} width="40" height="10" fill="#352e39" />
+          {Array.from({ length: 10 }, (_, i) => (
+            <g key={i}>
               <rect
-                x={12 + index * 7}
-                y={y + (index % 3)}
-                width="5"
-                height={17 - (index % 3)}
-                fill={['#9c6562', '#799078', '#ac985a', '#7786a2'][index % 4]}
+                x={5 + i * 4}
+                y={y + (i % 3)}
+                width="3"
+                height={9 - (i % 3)}
+                fill={['#b55b39', '#5b873b', '#e6cc91', '#527baf'][i % 4]}
               />
-              <path d={`M${13 + index * 7} ${y + 5}h3`} stroke="#d6c38f" strokeWidth="1" />
+              <rect x={5 + i * 4} y={y + 5} width="2" height="1" fill="#f4e5b3" />
             </g>
           ))}
+          <rect x="2" y={y + 10} width="44" height="2" fill="#a88152" />
         </g>
       ))}
+      <rect x="2" y="2" width="44" height="2" fill="#e6cc91" />
     </svg>
   )
 }
 
 function LogBridgeArt() {
   return (
-    <svg viewBox="0 0 64 32" data-world-bridge="log">
-      <path d="M-5 18L68 17V25L-5 26Z" fill="#254f4f" opacity=".55" />
-      <path d="M-6 12L68 13V22L-6 21Z" fill="#9b7749" stroke="#493421" strokeWidth="2" />
-      <path d="M-2 16L64 17M7 20L33 19M39 15L61 16" stroke="#6a4b2e" strokeWidth="1.5" />
-      <path d="M-3 12V21M65 14V21" stroke="#c4a16b" strokeWidth="3" />
-      <path d="M15 12l2 -4 5 1 -3 4M45 13l3 -4 4 2 -4 3" fill="#638147" stroke="#354f2e" />
+    <svg viewBox="0 0 32 16" data-world-bridge="log" shapeRendering="crispEdges">
+      <rect x="-2" y="8" width="36" height="5" fill="#293e68" />
+      <rect x="-2" y="5" width="36" height="6" fill="#493b39" />
+      <rect x="-2" y="6" width="36" height="4" fill="#a88152" />
+      <rect x="-1" y="6" width="34" height="1" fill="#e6cc91" />
+      <rect x="0" y="7" width="1" height="3" fill="#e6cc91" />
+      <rect x="31" y="7" width="1" height="3" fill="#e6cc91" />
+      <rect x="5" y="8" width="8" height="1" fill="#705039" />
+      <rect x="18" y="9" width="7" height="1" fill="#705039" />
+      <rect x="9" y="4" width="2" height="2" fill="#705039" />
+      <rect x="10" y="3" width="3" height="2" fill="#5b873b" />
+      <rect x="23" y="4" width="3" height="2" fill="#5b873b" />
     </svg>
   )
 }
@@ -218,108 +202,31 @@ export function WorldSceneryLayer({
 }
 
 export function WorldCellObject({ kind }: { kind: WorldCellObjectKind }) {
-  let art: ReactNode
-  if (kind === 'stairs-up' || kind === 'stairs-down') {
-    const down = kind === 'stairs-down'
-    art = (
-      <>
-        <rect x="3" y="3" width="26" height="27" fill="#26242b" stroke="#a29885" strokeWidth="2" />
-        {[0, 1, 2, 3, 4].map((step) => (
-          <path
-            key={step}
-            d={`M${6 + (down ? step : 4 - step)} ${7 + step * 4}h${20 - 2 * (down ? step : 4 - step)}`}
-            stroke={down ? '#a8a18d' : '#d1c4a1'}
-            strokeWidth="3"
-          />
-        ))}
-        <path d="M3 2V30M29 2V30" stroke="#736c61" strokeWidth="3" />
-      </>
-    )
-  } else if (kind === 'lectern') {
-    art = (
-      <>
-        <path d="M9 19V29M24 19V29M7 28H26" stroke="#705039" strokeWidth="4" />
-        <path d="M3 7H29L26 21H6Z" fill="#9b754e" stroke="#473326" strokeWidth="2" />
-        <path
-          d="M6 8Q11 5 16 9Q21 5 26 8L24 18Q20 15 16 19Q11 15 8 18Z"
-          fill="#e6d7a6"
-          stroke="#73583e"
-        />
-        <path d="M16 9V19M9 11l4 1M20 11l3 -1M10 14l3 1M20 14l3 -1" stroke="#826e50" />
-      </>
-    )
-  } else if (kind === 'chest') {
-    art = (
-      <>
-        <rect x="5" y="15" width="23" height="12" fill="#8f5f34" stroke="#3d2e25" strokeWidth="2" />
-        <path
-          className="chest-lid-closed"
-          d="M5 15V10Q16 2 28 10V15Z"
-          fill="#ae7b43"
-          stroke="#3d2e25"
-          strokeWidth="2"
-        />
-        <path
-          className="chest-lid-open"
-          d="M5 14L4 3H27L28 14Z"
-          fill="#5b422c"
-          stroke="#d0a25c"
-          strokeWidth="2"
-        />
-        <path d="M10 15V26M23 15V26" stroke="#d0a25c" strokeWidth="3" />
-        <rect x="14" y="14" width="5" height="7" fill="#e2c17a" />
-      </>
-    )
-  } else if (kind === 'market-stall') {
-    art = (
-      <>
-        <path d="M5 11V28M27 11V28" stroke="#65432b" strokeWidth="3" />
-        <path d="M3 4H29L31 13H1Z" fill="#527862" stroke="#293f37" strokeWidth="2" />
-        <path d="M7 5l-2 8M16 4v9M25 5l2 8" stroke="#d7bd7e" strokeWidth="4" />
-        <rect x="5" y="22" width="23" height="7" fill="#a27b4c" stroke="#543b27" strokeWidth="2" />
-        <path d="M9 22v-5h4v5M20 22v-6h5v6" stroke="#c4b37a" strokeWidth="3" />
-        <circle cx="16" cy="20" r="3" fill="#a86b4d" />
-      </>
-    )
-  } else if (kind === 'inn' || kind === 'village') {
-    art = (
-      <>
-        <rect x="5" y="13" width="23" height="16" fill="#d0b688" stroke="#5d4631" strokeWidth="2" />
-        <path d="M1 14L16 2L31 14Z" fill="#996344" stroke="#563e2e" strokeWidth="2" />
-        <rect x="13" y="18" width="6" height="11" fill="#46372a" />
-        <rect x="7" y="17" width="4" height="5" fill="#b4d5cc" />
-        {kind === 'inn' ? (
-          <>
-            <rect x="23" y="15" width="8" height="8" fill="#ebd5a5" stroke="#5d4631" />
-            <path d="M24 17v4h6v-3h-4" fill="none" stroke="#806046" />
-          </>
-        ) : (
-          <>
-            <path d="M0 22L7 16L14 22M20 24l6 -6 6 6" fill="#7b8a53" stroke="#435339" />
-            <rect x="2" y="22" width="8" height="7" fill="#c2ae81" />
-            <rect x="24" y="24" width="6" height="5" fill="#c2ae81" />
-          </>
-        )}
-      </>
-    )
-  } else {
-    art = (
-      <>
-        <path d="M5 7V29M27 7V29" stroke="#64462d" strokeWidth="4" />
-        <path d="M3 9H29" stroke="#ae8b56" strokeWidth="4" />
-        <path d="M-4 16H5M27 16H36M-4 23H5M27 23H36" stroke="#9b774b" strokeWidth="3" />
-        <path d="M10 28V17H22V28" fill="#a48b58" />
-      </>
-    )
-  }
   return (
     <svg
       className="world-cell-object"
-      viewBox="0 0 32 32"
+      viewBox="0 0 16 16"
       data-scenery-object={kind}
+      shapeRendering="crispEdges"
       aria-hidden="true"
     >
-      {art}
+      <image href={`/pixel-art/world/${kind}.svg`} width="16" height="16" />
+      {kind === 'chest' && (
+        <>
+          <image
+            className="chest-lid-closed"
+            href="/pixel-art/world/chest-closed.svg"
+            width="16"
+            height="16"
+          />
+          <image
+            className="chest-lid-open"
+            href="/pixel-art/world/chest-open.svg"
+            width="16"
+            height="16"
+          />
+        </>
+      )}
     </svg>
   )
 }
