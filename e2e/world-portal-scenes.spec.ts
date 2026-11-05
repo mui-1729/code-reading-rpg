@@ -75,18 +75,18 @@ test('Overworldの森入口は文字札ではなく木のarchとして見え、�
   await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-map', 'js-forest')
 })
 
-test('村入口は木柵門、Village出口は草原へ抜ける門として別sceneになる', async ({ page }) => {
+test('広域の村は家屋群、村の南端は草原へ抜ける門として識別できる', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedWorld(page, 'overworld', { x: 10, y: 21 }, [1])
 
   const villageGate = '.world-tile[data-world-x="10"][data-world-y="22"]'
-  expect(await portalSceneKind(page, villageGate)).toBe('village-gate')
+  await expect(page.locator(`${villageGate} [data-scenery-object="village"]`)).toBeVisible()
   await expect(page.locator(`${villageGate} .village-object`)).toHaveCSS('font-size', '0px')
   await expect(page.getByRole('button', { name: 'グリーンフィールド村へ入る' })).toBeEnabled()
 
-  await seedWorld(page, 'js-village', { x: 10, y: 13 }, [1])
-  const outGate = '.world-tile[data-world-x="10"][data-world-y="14"]'
-  expect(await portalSceneKind(page, outGate)).toBe('village-outgate')
+  await seedWorld(page, 'js-village', { x: 10, y: 23 }, [1])
+  const outGate = '.world-tile[data-world-x="10"][data-world-y="24"]'
+  await expect(page.locator(`${outGate} [data-scenery-object="village-exit"]`)).toBeVisible()
   await expect(page.locator(`${outGate} .exit-object`)).toHaveCSS('font-size', '0px')
 
   await page.getByRole('button', { name: '下へ移動' }).click()
@@ -138,12 +138,11 @@ test('Forestの川横断はroadではなく倒木として見える', async ({ p
       getComputedStyle(element).getPropertyValue('--forest-landmark-kind').trim(),
     ),
   ).toBe('fallen-log-crossing')
-  const log = await crossing.evaluate((element) => {
-    const style = getComputedStyle(element, '::before')
-    return { content: style.content, width: Number.parseFloat(style.width) }
-  })
-  expect(log.content).not.toBe('none')
-  expect(log.width).toBeGreaterThan(0)
+  const log = page.locator('[data-world-bridge="log"]')
+  await expect(log).toHaveCount(1)
+  const logBounds = await log.boundingBox()
+  const cellBounds = await crossing.boundingBox()
+  expect(logBounds!.width).toBeCloseTo(cellBounds!.width * 2, 0)
 })
 
 test('Forestから第二集落を経由し、集落北口だけがDeep Forestのroot archになる', async ({ page }) => {

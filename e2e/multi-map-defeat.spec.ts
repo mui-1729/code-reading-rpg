@@ -111,16 +111,16 @@ test('Village保存状態からBattleで敗北すると開始tileではなく保
   await expect(page).toHaveURL(/\/world$/)
   await expect(page.getByLabel('グリーンフィールド村のマップ')).toHaveAttribute('data-world-map', 'js-village')
   await expect(page.getByLabel('グリーンフィールド村のマップ')).toHaveAttribute('data-world-x', '10')
-  await expect(page.getByLabel('グリーンフィールド村のマップ')).toHaveAttribute('data-world-y', '12')
+  await expect(page.getByLabel('グリーンフィールド村のマップ')).toHaveAttribute('data-world-y', '23')
   await expect.poll(async () => readStoredRpg(page)).toMatchObject({
     version: 8,
     state: {
       worldMapId: 'js-village',
-      worldPosition: { x: 10, y: 12 },
+      worldPosition: { x: 10, y: 23 },
       safeCheckpoint: {
         id: 'greenfield-village',
         mapId: 'js-village',
-        position: { x: 10, y: 12 },
+        position: { x: 10, y: 23 },
       },
       currentHp: 1,
       stepsSinceEncounter: 0,

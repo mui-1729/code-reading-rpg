@@ -100,6 +100,7 @@ export function resolveWorldTargetInteraction(
   rpgState: RpgState,
   progress: PlayerProgress,
   target: WorldPosition,
+  followerPosition?: WorldPosition | null,
 ): WorldTargetInteractionIntent {
   const mapId = rpgState.worldMapId
   if(mapId === DATABASE_ARCHIVE_MAP_ID && samePosition(target,DATABASE_ARCHIVE_LECTERN)) return {kind:'archive-trial',battleId:23,unlocked:isBattleAccessible(23,progress.clearedStageIds),seed:progress.clearedStageIds.includes(23)?`encounter:database:${rpgState.encounterCount}:15:4`:`archive-trial:${rpgState.encounterCount}`}
@@ -146,7 +147,7 @@ export function resolveWorldTargetInteraction(
   }
 
   if (mapId === OVERWORLD_MAP_ID) {
-    if (samePosition(BYTE_POSITION, target)) {
+    if (samePosition(BYTE_POSITION, target) && !rpgState.partyMemberIds.includes('byte')) {
       return {
         kind: 'party',
         memberId: 'byte',
@@ -171,6 +172,14 @@ export function resolveWorldTargetInteraction(
 
   const npc = getWorldNpcAtPosition(mapId, target)
   if (npc) return { kind: 'npc', placement: npc }
+
+  // With no faced object, the action can address the visible companion. Do not
+  // leave a conversation attached to BYTE's empty recruitment tile.
+  if (
+    rpgState.partyMemberIds.includes('byte') && followerPosition &&
+    Math.abs(followerPosition.x - rpgState.worldPosition.x) +
+      Math.abs(followerPosition.y - rpgState.worldPosition.y) === 1
+  ) return { kind: 'party', memberId: 'byte', alreadyJoined: true }
 
   return { kind: 'none' }
 }

@@ -15,12 +15,12 @@ import { WorldCharacterLayer, WorldControls, WorldObjectiveCard, WorldViewport }
 import { useWorldKeyboardControls } from './useWorldKeyboardControls'
 
 const terrainLabels = {
-  mountain: '書庫の石壁',
-  house: '記録を収めた書棚',
+  wall: '書庫の石壁',
+  bookshelf: '記録を収めた書棚',
   stone: '書庫の床',
   road: '閲覧通路',
-  training: '台帳の閲覧台',
-  exit: 'TypeScript辺境への階段',
+  lectern: '台帳の閲覧台',
+  'stairs-up': 'TypeScript辺境への上り階段',
 }
 
 export function DatabaseArchivePage() {
@@ -91,11 +91,11 @@ export function DatabaseArchivePage() {
           className="database-archive-viewport"
           label="地下書庫のマップ"
           renderObject={(cell) =>
-            cell.terrain === 'training' ? (
+            cell.terrain === 'lectern' ? (
               <span className="world-object archive-lectern" aria-label="台帳の閲覧台">
                 台帳
               </span>
-            ) : cell.terrain === 'exit' ? (
+            ) : cell.terrain === 'stairs-up' ? (
               <span className="world-object archive-stairs" aria-label="TypeScript辺境への階段">
                 階段
               </span>

@@ -70,7 +70,7 @@ test('camera pan中も固定objectはterrain snapshotより前面に残る', asy
   await seedWorld(page, { mapId: 'overworld', position: { x: 20, y: 14 } })
   await page.goto('/world')
 
-  const shop = page.locator('[data-world-x="20"][data-world-y="12"] .world-object').first()
+  const shop = page.locator('[data-world-x="20"][data-world-y="12"] .world-cell-object').first()
   await expect(shop).toBeVisible()
 
   await page.getByRole('button', { name: '右へ移動' }).click()
@@ -79,7 +79,7 @@ test('camera pan中も固定objectはterrain snapshotより前面に残る', asy
 
   const layers = await page.evaluate(() => {
     const snapshotElement = document.querySelector<HTMLElement>('.world-camera-snapshot')
-    const objectElement = document.querySelector<HTMLElement>('.world-object')
+    const objectElement = document.querySelector<HTMLElement>('.world-cell-object')
     if (!snapshotElement || !objectElement) return null
     return {
       snapshot: Number(getComputedStyle(snapshotElement).zIndex),

@@ -53,6 +53,7 @@ import './battle-reading.css'
 import './battle-command-hierarchy.css'
 import './battle-command-menu.css'
 import './battle-stable-workspace.css'
+import './world-scenery.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -358,6 +358,8 @@ JavaScript地方を広げるために後続Regionの主要景観を消費しな�
 
 TypeScript辺境の南東の階段はTS finalとその全prerequisite（JS finalを含む）を完了すると開く。19×15の書庫は書棚・通路・閲覧台を持ち、Random Encounterは発生しない。閲覧台のActionでDB-01を開始し、既習の再調査ではescapeを選べる。
 
+壁・書棚・閲覧台・上り下りの階段はそれぞれの物体として描き、地域地図でも同じ意味を保つ。書棚は3×2の家具で、同じ設置範囲を通行判定と描画に使う。
+
 村・集落と異なり書庫はsafe checkpointを更新しない。勝利・escapeは元の書庫位置、敗北は既存checkpointへ戻す。全回復やGoldを減らす独自ルールを追加しない。Atlasも訪問済みの書庫を探索Fogで参照できる。
 
 Deep ForestのRoot Guardian後のsort traceは泉の北側の爪痕の倒木に置く。主要経路も東へ回り込んでから西の最深部へ向かい、単純な西向きのlesson列を避ける。PauseとWorldの目的は同じ泉側の手がかりを案内する。

@@ -17,6 +17,14 @@
   bottom: auto;
 }
 
+.tutorial-prompt-field {
+  top: max(8px, env(safe-area-inset-top));
+  bottom: auto;
+  pointer-events: none;
+}
+
+.tutorial-prompt-field .tutorial-skip { pointer-events: auto; }
+
 .tutorial-prompt-copy { display: grid; gap: 4px; }
 .tutorial-prompt-copy > span { font-size: .72rem; letter-spacing: .16em; opacity: .72; }
 .tutorial-prompt-copy > strong { font-size: .9rem; line-height: 1.5; }
@@ -60,14 +68,6 @@
     gap: 10px;
     padding: 10px 12px;
   }
-
-  .tutorial-prompt-field {
-    top: max(8px, env(safe-area-inset-top));
-    bottom: auto;
-    pointer-events: none;
-  }
-
-  .tutorial-prompt-field .tutorial-skip { pointer-events: auto; }
 
   .tutorial-prompt-battle {
     top: max(72px, calc(env(safe-area-inset-top) + 58px));

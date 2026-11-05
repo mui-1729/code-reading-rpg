@@ -1,4 +1,5 @@
 import { GREENFIELD_EQUIPMENT_SHOP } from './greenfieldLayout'
+import { SETTLEMENT_INN_ENTRANCE, SETTLEMENT_SHOP_ENTRANCE } from './worldStructures'
 import type { WorldCheckpointId } from './worldCheckpoints'
 import {
   JS_FOREST_SETTLEMENT_MAP_ID,
@@ -51,7 +52,7 @@ export const VILLAGE_FACILITIES: readonly VillageFacility[] = [
     actionLabel: '森番の宿で休む',
     locationLabel: '森番の集落',
     checkpointId: 'forest-settlement',
-    position: { x: 7, y: 11 },
+    position: SETTLEMENT_INN_ENTRANCE,
   },
   {
     kind: 'item-shop',
@@ -59,7 +60,7 @@ export const VILLAGE_FACILITIES: readonly VillageFacility[] = [
     label: '道具屋',
     actionLabel: '補給所を見る',
     locationLabel: '森番の集落',
-    position: { x: 15, y: 11 },
+    position: SETTLEMENT_SHOP_ENTRANCE,
   },
 ] as const
 

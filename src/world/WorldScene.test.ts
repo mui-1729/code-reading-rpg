@@ -61,7 +61,8 @@ describe('shared World viewport', () => {
       expect(html).toContain(`data-world-bgm-track="${presentation.bgmTrack}"`)
       expect(html).toContain('class="world-tile terrain-road" title="Open road"')
       expect(html).toContain('data-world-x="9"')
-      expect(html).toContain(`${mapId}:road</div>character layer`)
+      expect(html).toContain(`${mapId}:road</div>`)
+      expect(html.indexOf('character layer')).toBeGreaterThan(html.indexOf('world-scenery-layer'))
       expect(html).toContain(presentation.title)
       expect(html).not.toContain('terrain-midboss')
     },

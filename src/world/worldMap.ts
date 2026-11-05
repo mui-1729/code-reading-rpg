@@ -1,5 +1,6 @@
 import { DATABASE_ARCHIVE_MAP_ID, DATABASE_ARCHIVE_DIMENSIONS, DATABASE_ARCHIVE_START, DATABASE_ARCHIVE_EXIT, DATABASE_FRONTIER_GATE, getDatabaseArchiveTerrain } from './databaseArchive'
 export { DATABASE_ARCHIVE_MAP_ID } from './databaseArchive'
+import { getWorldBuildingAtPosition, getWorldLogBridgeAtPosition } from './worldStructures'
 import { GREENFIELD_DIMENSIONS, GREENFIELD_RIVERSIDE_CHEST, getGreenfieldTerrain } from './greenfieldLayout'
 
 export const WORLD_WIDTH = 70
@@ -36,7 +37,7 @@ const WORLD_MAP_DIMENSIONS: Record<WorldMapId, { width: number; height: number }
 export const WORLD_MAP_STARTS: Record<WorldMapId, { x: number; y: number }> = {
   [DATABASE_ARCHIVE_MAP_ID]: DATABASE_ARCHIVE_START,
   [OVERWORLD_MAP_ID]: { ...WORLD_START },
-  [JS_VILLAGE_MAP_ID]: { x: 10, y: 12 },
+  [JS_VILLAGE_MAP_ID]: { x: 10, y: 23 },
   [JS_FOREST_MAP_ID]: { x: 52, y: 20 },
   [JS_FOREST_SETTLEMENT_MAP_ID]: { x: 20, y: 8 },
   [JS_DEEP_FOREST_MAP_ID]: { x: 61, y: 24 },
@@ -45,6 +46,13 @@ export const WORLD_MAP_STARTS: Record<WorldMapId, { x: number; y: number }> = {
 
 export type WorldRegion = 'javascript' | 'hub' | 'typescript' | 'database'
 export type Terrain =
+  | 'fence'
+  | 'tree-wall'
+  | 'wall'
+  | 'bookshelf'
+  | 'lectern'
+  | 'stairs-up'
+  | 'stairs-down'
   | 'mountain'
   | 'water'
   | 'log-crossing'
@@ -85,7 +93,7 @@ export const SHOP_POSITION = { x: 20, y: 12 } as const
 export const BYTE_POSITION = { x: 19, y: 13 } as const
 export const RECOVERY_POSITION = { x: 21, y: 16 } as const
 export const JS_VILLAGE_POSITION = { x: 10, y: 22 } as const
-export const JS_VILLAGE_EXIT_POSITION = { x: 10, y: 14 } as const
+export const JS_VILLAGE_EXIT_POSITION = { x: 10, y: 24 } as const
 export const JS_VILLAGE_TRAINING_POSITION = { x: 12, y: 7 } as const
 export const JS_FOREST_POSITION = { x: 34, y: 34 } as const
 export const JS_FOREST_EXIT_POSITION = { x: 54, y: 20 } as const
@@ -411,9 +419,7 @@ function getForestRiverX(y: number): number | null {
 }
 
 function isForestRiverCrossing(x: number, y: number): boolean {
-  if (y !== 12 && y !== 31) return false
-  const riverX = getForestRiverX(y)
-  return riverX !== null && (x === riverX || x === riverX + 1)
+  return getWorldLogBridgeAtPosition(JS_FOREST_MAP_ID, x, y) !== undefined
 }
 
 function isForestRiver(x: number, y: number): boolean {
@@ -508,7 +514,7 @@ function isForestGrassClearing(x: number, y: number): boolean {
 
 function getForestTerrain(x: number, y: number): Terrain {
   const position = { x, y }
-  if (x <= 0 || y <= 0 || x >= 54 || y >= 40) return 'mountain'
+  if (x <= 0 || y <= 0 || x >= 54 || y >= 40) return 'tree-wall'
   if (samePosition(position, JS_FOREST_MIDBOSS_POSITION)) return 'midboss'
   if (getTreasureAtPosition(position, JS_FOREST_MAP_ID)) return 'treasure'
 
@@ -521,16 +527,9 @@ function getForestTerrain(x: number, y: number): Terrain {
 }
 
 function getForestSettlementTerrain(x: number, y: number): Terrain {
-  if (x <= 0 || y <= 0 || x >= 22 || y >= 16) return 'mountain'
+  if (x <= 0 || y <= 0 || x >= 22 || y >= 16) return 'fence'
 
-  if (
-    (x >= 4 && x <= 7 && y >= 3 && y <= 6) ||
-    (x >= 15 && x <= 18 && y >= 3 && y <= 6) ||
-    (x >= 4 && x <= 7 && y >= 10 && y <= 13) ||
-    (x >= 15 && x <= 18 && y >= 10 && y <= 13)
-  ) {
-    return 'house'
-  }
+  if (getWorldBuildingAtPosition(JS_FOREST_SETTLEMENT_MAP_ID, x, y)) return 'house'
 
   if (x === 3 && y >= 2 && y <= 14) return 'water'
   if ((x >= 4 && x <= 21 && y === 8) || (x === 11 && y >= 1 && y <= 14)) return 'road'
@@ -548,9 +547,7 @@ function getDeepForestStreamX(y: number): number | null {
 }
 
 function isDeepForestStreamCrossing(x: number, y: number): boolean {
-  if (y !== 14 && y !== 33) return false
-  const streamX = getDeepForestStreamX(y)
-  return streamX !== null && (x === streamX || x === streamX + 1)
+  return getWorldLogBridgeAtPosition(JS_DEEP_FOREST_MAP_ID, x, y) !== undefined
 }
 
 function isDeepForestWater(x: number, y: number): boolean {
@@ -614,9 +611,9 @@ function isDeepForestLightWoods(x: number, y: number): boolean {
 
 function getDeepForestTerrain(x: number, y: number): Terrain {
   const position = { x, y }
-  if (x <= 0 || y <= 0 || x >= 64 || y >= 48) return 'mountain'
+  if (x <= 0 || y <= 0 || x >= 64 || y >= 48) return 'tree-wall'
   if (getTreasureAtPosition(position, JS_DEEP_FOREST_MAP_ID)) return 'treasure'
-  if (isDeepForestStreamCrossing(x, y)) return 'log-crossing'
+  if (getWorldLogBridgeAtPosition(JS_DEEP_FOREST_MAP_ID, x, y)) return 'log-crossing'
   if (isDeepForestLearningPosition(position)) return 'woods'
   if (isDeepForestWater(x, y)) return 'water'
   if (isDeepForestSpringClearing(x, y)) return 'grass'
@@ -704,7 +701,8 @@ export function getTerrain(
   const position = { x, y }
   const portal = getWorldPortalAtPosition(mapId, position)
   if (portal) {
-    if (mapId === DATABASE_ARCHIVE_MAP_ID) return 'exit'
+    if (mapId === DATABASE_ARCHIVE_MAP_ID) return 'stairs-up'
+    if (portal.toMapId === DATABASE_ARCHIVE_MAP_ID) return 'stairs-down'
     if (mapId === TS_FRONTIER_MAP_ID) return 'gate'
     if (
       mapId === JS_VILLAGE_MAP_ID ||
@@ -730,6 +728,11 @@ export function getTerrain(
 
 export function isWalkableTerrain(terrain: Terrain): boolean {
   return ![
+    'fence',
+    'tree-wall',
+    'wall',
+    'bookshelf',
+    'lectern',
     'mountain',
     'water',
     'thicket',

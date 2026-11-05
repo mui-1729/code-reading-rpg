@@ -27,6 +27,7 @@ import { WorldCharacterLayer, WorldControls, WorldObjectiveCard, WorldViewport }
 import { useWorldKeyboardControls } from './useWorldKeyboardControls'
 import type { WorldPosition } from './worldSceneGeometry'
 import { resolveWorldTargetInteraction } from './worldTargetInteraction'
+import { getWorldFollowerPosition } from './worldFollowers'
 
 const regionLabels = {
   javascript: 'JavaScript 西部',
@@ -36,6 +37,8 @@ const regionLabels = {
 } as const
 
 const terrainLabels: Record<string, string> = {
+  fence: '村の柵',
+  'tree-wall': '行く手をふさぐ木立',
   mountain: '山',
   water: '水辺',
   road: '道',
@@ -55,6 +58,7 @@ const terrainLabels: Record<string, string> = {
   exit: 'エリア出口',
   house: '家',
   training: 'JavaScript 訓練場',
+  'log-crossing': '川を渡る丸太',
 }
 
 export function WorldPage() {
@@ -86,13 +90,16 @@ export function WorldPage() {
   const isDeepForest = mapId === JS_DEEP_FOREST_MAP_ID
   const isLocalMap = isVillage || isForest || isSettlement || isDeepForest
   const nextTrainingBattleId = getNextJavaScriptTrainingBattleId(progress.clearedStageIds)
+  const visibleFollowerPosition = byteJoined
+    ? getWorldFollowerPosition(mapId, position, followerPosition)
+    : null
   const interactionTarget = useMemo(
     () => getWorldInteractionTarget(position, playerFacing),
     [playerFacing, position],
   )
   const interactionIntent = useMemo(
-    () => resolveWorldTargetInteraction(rpgState, progress, interactionTarget),
-    [interactionTarget, progress, rpgState],
+    () => resolveWorldTargetInteraction(rpgState, progress, interactionTarget, visibleFollowerPosition),
+    [interactionTarget, progress, rpgState, visibleFollowerPosition],
   )
 
   const javascriptStoryBrief = useMemo(() => {
@@ -785,6 +792,8 @@ export function WorldPage() {
           getTerrain={(cell) =>
             cell.terrain === 'midboss' && progress.clearedStageIds.includes(13)
               ? 'road'
+              : cell.terrain === 'npc' && byteJoined
+                ? 'town'
               : cell.terrain
           }
           renderObject={(cell, renderedTerrain) => {

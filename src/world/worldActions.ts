@@ -116,10 +116,11 @@ function createEncounterRolls(
   return { trigger: random.next(), battle: random.next() }
 }
 
-function normalizeTraversalTerrain(mapId: WorldMapId, terrain: Terrain): Terrain {
+function normalizeTraversalTerrain(rpgState: RpgState, terrain: Terrain): Terrain {
   // The old Phase-4 thicket stripes no longer gate Forest progression. Keep old
   // saves/layout cells compatible while treating those cells exactly like woods.
-  if (mapId === JS_FOREST_MAP_ID && terrain === 'thicket') return 'woods'
+  if (rpgState.worldMapId === JS_FOREST_MAP_ID && terrain === 'thicket') return 'woods'
+  if (rpgState.worldMapId === OVERWORLD_MAP_ID && terrain === 'npc' && rpgState.partyMemberIds.includes('byte')) return 'town'
   return terrain
 }
 
@@ -181,7 +182,7 @@ function createJavaScriptFixedEncounter(
     kind: 'encounter',
     nextState: encounterState,
     terrain: normalizeTraversalTerrain(
-      rpgState.worldMapId,
+      rpgState,
       getTerrain(next.x, next.y, rpgState.worldMapId),
     ),
     region: 'javascript',
@@ -265,7 +266,7 @@ export function resolveWorldMove({
     progress.clearedStageIds.includes(13)
   const terrain: Terrain = midbossCleared
     ? 'grass'
-    : normalizeTraversalTerrain(mapId, rawTerrain)
+    : normalizeTraversalTerrain(rpgState, rawTerrain)
 
   if (
     !isWalkableTerrain(terrain) ||

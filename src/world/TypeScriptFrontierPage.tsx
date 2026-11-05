@@ -21,6 +21,7 @@ import type { WorldPosition } from './worldSceneGeometry'
 import { resolveWorldTargetInteraction } from './worldTargetInteraction'
 
 const terrainLabels: Record<string, string> = {
+  'stairs-down': '地下書庫への下り階段',
   mountain: '崩れた境界',
   stone: 'ルーン石の道',
   crystal: 'クリスタル地帯 · TypeScript戦闘',

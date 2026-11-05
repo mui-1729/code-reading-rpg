@@ -28,6 +28,9 @@ import {
 } from './worldSceneGeometry'
 import type { WorldTargetInteractionIntent } from './worldTargetInteraction'
 import { useQueuedWorldMove } from './useQueuedWorldMove'
+import { getWorldFollowerPosition } from './worldFollowers'
+import { WorldCellObject, WorldSceneryLayer } from './WorldScenery'
+import { getWorldCellObjectKind, getWorldStructureId } from './worldStructures'
 
 export type WorldObjective = {
   label: string
@@ -310,6 +313,7 @@ export function WorldViewport(props: {
   const renderCell = (cell: WorldCell) => {
     const terrain = props.getTerrain?.(cell) ?? cell.terrain
     const isFrontierCompiler = props.mapId === TS_FRONTIER_MAP_ID && terrain === 'boss'
+    const objectKind = getWorldCellObjectKind(props.mapId, terrain)
     return (
       <div
         key={`${cell.mapId}:${cell.x}:${cell.y}`}
@@ -318,7 +322,10 @@ export function WorldViewport(props: {
         data-world-map={cell.mapId}
         data-world-x={cell.x}
         data-world-y={cell.y}
+        data-world-structure={getWorldStructureId(cell)}
+        data-world-object={objectKind}
       >
+        {objectKind && <WorldCellObject kind={objectKind} />}
         {isFrontierCompiler ? (
           <span className="world-object boss-object" aria-label="FRONTIER COMPILER ボス">
             COMPILER
@@ -356,6 +363,7 @@ export function WorldViewport(props: {
           {cameraPan.cells.map(renderSnapshotTerrain)}
         </div>
       )}
+      <WorldSceneryLayer mapId={props.mapId} viewportStart={viewportStart} />
       {props.children}
       <WorldEntryTransition key={props.mapId} mapId={props.mapId} />
     </div>
@@ -371,8 +379,9 @@ export function WorldCharacterLayer(props: {
   followerJoined: boolean
 }) {
   const { followerJoined, followerPosition, mapId, playerFacing, playerPosition, viewportStart } = props
+  const safeFollowerPosition = getWorldFollowerPosition(mapId, playerPosition, followerPosition)
   const playerMotion = useWorldSpriteMotion(mapId, playerPosition)
-  const followerMotion = useWorldSpriteMotion(mapId, followerPosition)
+  const followerMotion = useWorldSpriteMotion(mapId, safeFollowerPosition ?? playerPosition)
   const renderedPlayerFacing = playerFacing ?? playerMotion.facing
   const worldNpcs = getWorldNpcPlacementsForMap(mapId)
 
@@ -409,14 +418,14 @@ export function WorldCharacterLayer(props: {
           )
         })}
 
-      {followerJoined && isWorldPositionVisible(followerPosition, viewportStart) && (
+      {followerJoined && safeFollowerPosition && isWorldPositionVisible(safeFollowerPosition, viewportStart) && (
         <span
           key={`follower:${mapId}`}
           className="world-follower-sprite world-character-overlay"
-          style={getWorldSpriteStyle(followerPosition, viewportStart)}
+          style={getWorldSpriteStyle(safeFollowerPosition, viewportStart)}
           data-world-map={mapId}
-          data-world-x={followerPosition.x}
-          data-world-y={followerPosition.y}
+          data-world-x={safeFollowerPosition.x}
+          data-world-y={safeFollowerPosition.y}
           data-facing={followerMotion.facing}
           data-walking={followerMotion.walking || undefined}
           data-step-frame={followerMotion.stepFrame}

@@ -5,9 +5,8 @@ import { VILLAGE_FACILITIES } from './villageFacilityData'
 import { WORLD_NPC_PLACEMENTS } from './worldCharacters'
 
 describe('Greenfield walking routes', () => {
-  it('旧saveの入口から全施設・住人・川辺Treasureへ歩け、村内にRandom Encounterを置かない', () => {
-    const start = WORLD_MAP_STARTS[JS_VILLAGE_MAP_ID]
-    expect(start).toEqual({ x: 10, y: 12 })
+  it.each([{ x: 10, y: 12 }, { x: 10, y: 23 }])('旧saveと新しい入口の%sから全施設・住人・川辺Treasureへ歩ける', (start) => {
+    expect(WORLD_MAP_STARTS[JS_VILLAGE_MAP_ID]).toEqual({ x: 10, y: 23 })
     const distances = new Map([[`${start.x}:${start.y}`, 0]])
     const queue = [start]
     for (let index = 0; index < queue.length; index += 1) {
@@ -44,7 +43,7 @@ describe('Greenfield walking routes', () => {
       const dx=Math.sign(to.x-from.x)
       const dy=Math.sign(to.y-from.y)
       for(let x=from.x,y=from.y; x!==to.x || y!==to.y; x+=dx,y+=dy) {
-        expect(getTerrain(x,y,JS_VILLAGE_MAP_ID)).toBe(x === 10 && y === 14 ? 'exit' : 'road')
+        expect(getTerrain(x,y,JS_VILLAGE_MAP_ID)).toBe('road')
       }
     }
   })

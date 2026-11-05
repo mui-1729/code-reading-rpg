@@ -49,7 +49,7 @@ type AtlasLandmark = {
   id: string
   x: number
   y: number
-  kind: 'exit' | 'boss' | 'midboss' | 'treasure' | 'shop' | 'inn' | 'training' | 'village'
+  kind: 'exit' | 'boss' | 'midboss' | 'treasure' | 'shop' | 'inn' | 'training' | 'village' | 'archive'
   label: string
   opened?: boolean
 }
@@ -89,6 +89,10 @@ const atlasMaps: AtlasMap[] = [
 ]
 
 const TERRAIN_GLYPH: Partial<Record<Terrain, string>> = {
+  fence: '▦',
+  'tree-wall': '♠',
+  wall: '▪',
+  bookshelf: '▤',
   mountain: '▲',
   water: '≈',
   road: '·',
@@ -105,6 +109,9 @@ const TERRAIN_GLYPH: Partial<Record<Terrain, string>> = {
 }
 
 const LANDMARK_BY_TERRAIN: Partial<Record<Terrain, Pick<AtlasLandmark, 'kind' | 'label'>>> = {
+  'stairs-up': { kind: 'exit', label: '上り階段' },
+  'stairs-down': { kind: 'exit', label: '地下書庫への下り階段' },
+  lectern: { kind: 'archive', label: '台帳の閲覧台' },
   gate: { kind: 'exit', label: '門' },
   exit: { kind: 'exit', label: '出口' },
   boss: { kind: 'boss', label: 'ボス' },
@@ -198,7 +205,8 @@ function buildMapCells(
       const position = { x, y }
       const actuallyRevealed = isWorldCellRevealed(rpgState, mapId, position)
       const visible = isWorldTerrainVisible(rpgState, mapId, position)
-      const rawTerrain = visible ? getTerrain(x, y, mapId) : null
+      const resolvedTerrain = visible ? getTerrain(x, y, mapId) : null
+      const rawTerrain = resolvedTerrain === 'npc' && rpgState.partyMemberIds.includes('byte') ? 'town' : resolvedTerrain
       const terrain = rawTerrain === null
         ? null
         : actuallyRevealed
@@ -352,6 +360,8 @@ function AtlasTerrainMap({ map, progress, rpgState }: { map: AtlasMap; progress:
                           ? '$'
                           : landmark.kind === 'inn'
                             ? '✚'
+                            : landmark.kind === 'archive'
+                              ? '▤'
                             : landmark.kind === 'training'
                               ? '!'
                               : '⌂'}

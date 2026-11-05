@@ -72,7 +72,7 @@ test('@responsive Village portalは旧mapを覆ってからstateを切り替え�
   await expect(transition).toHaveAttribute('data-world-transition-phase', 'revealing')
   await expect(viewport).toHaveAttribute('data-world-map', 'js-village')
   await expect(viewport).toHaveAttribute('data-world-x', '10')
-  await expect(viewport).toHaveAttribute('data-world-y', '12')
+  await expect(viewport).toHaveAttribute('data-world-y', '23')
   await expect(transition).toHaveCount(0, { timeout: 1_000 })
   await expect(page.locator('body')).not.toHaveAttribute('data-world-transitioning', 'true')
   await expect(page.getByRole('button', { name: 'メニューを開く' })).toBeVisible()
