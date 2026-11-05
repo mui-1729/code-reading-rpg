@@ -22,7 +22,6 @@ import './village-exit-label.css'
 import './typescript-frontier.css'
 import './database-archive.css'
 import './world-portal-scenes.css'
-import './forest-crossing.css'
 import './world-objective.css'
 import './world-navigation.css'
 import './progression-landmarks.css'
@@ -54,6 +53,7 @@ import './battle-command-hierarchy.css'
 import './battle-command-menu.css'
 import './battle-stable-workspace.css'
 import './world-scenery.css'
+import './world-pixel-art.css'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

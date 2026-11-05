@@ -75,17 +75,12 @@ test('@responsive Forestでは固定Battle 11の前に文字札ではなく川�
   await expect(landmark).toBeVisible()
   await expect(landmark).toHaveAttribute('aria-label', '川辺の泥に足跡が残っている')
   await expect(landmark).toHaveCSS('font-size', '0px')
-  const footprint = await landmark.evaluate((element) => {
-    const style = getComputedStyle(element, '::before')
-    return {
-      content: style.content,
-      width: Number.parseFloat(style.width),
-      backgroundColor: style.backgroundColor,
-    }
-  })
-  expect(footprint.content).not.toBe('none')
-  expect(footprint.width).toBeGreaterThan(0)
-  expect(footprint.backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
+  await expect(landmark).toHaveCSS('image-rendering', 'pixelated')
+  const footprint = await landmark.evaluate(element => getComputedStyle(element).backgroundImage)
+  expect(footprint).toContain('/pixel-art/world/clue-tracks.svg')
+  const image = await page.request.get('/pixel-art/world/clue-tracks.svg')
+  expect(image.ok()).toBe(true)
+  expect(await image.text()).toContain('viewBox="0 0 16 16"')
 
   await page.getByRole('button', { name: '左へ移動' }).click()
   await expect(page).toHaveURL(/\/javascript\/battle\/11/)
@@ -107,20 +102,12 @@ test('@responsive Deep Forestでも固定Battle 16は文字札ではなく割れ
     '割れた実と形の違う種子が一緒に散らばっている',
   )
   await expect(landmark).toHaveCSS('font-size', '0px')
-  const fruit = await landmark.evaluate((element) => {
-    const before = getComputedStyle(element, '::before')
-    const after = getComputedStyle(element, '::after')
-    return {
-      beforeContent: before.content,
-      beforeWidth: Number.parseFloat(before.width),
-      afterContent: after.content,
-      afterWidth: Number.parseFloat(after.width),
-    }
-  })
-  expect(fruit.beforeContent).not.toBe('none')
-  expect(fruit.beforeWidth).toBeGreaterThan(0)
-  expect(fruit.afterContent).not.toBe('none')
-  expect(fruit.afterWidth).toBeGreaterThan(0)
+  await expect(landmark).toHaveCSS('image-rendering', 'pixelated')
+  const fruit = await landmark.evaluate(element => getComputedStyle(element).backgroundImage)
+  expect(fruit).toContain('/pixel-art/world/clue-seeds.svg')
+  const image = await page.request.get('/pixel-art/world/clue-seeds.svg')
+  expect(image.ok()).toBe(true)
+  expect(await image.text()).toContain('viewBox="0 0 16 16"')
 
   await page.getByRole('button', { name: '左へ移動' }).click()
   await expect(page).toHaveURL(/\/javascript\/battle\/16/)

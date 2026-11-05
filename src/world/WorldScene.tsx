@@ -20,7 +20,13 @@ import {
   type WorldFacing,
   type WorldSceneEventDetail,
 } from './worldPresentation'
-import { TS_FRONTIER_MAP_ID, type Terrain, type WorldCell, type WorldMapId } from './worldMap'
+import {
+  getWorldPortalAtPosition,
+  TS_FRONTIER_MAP_ID,
+  type Terrain,
+  type WorldCell,
+  type WorldMapId,
+} from './worldMap'
 import {
   getWorldSpriteStyle,
   isWorldPositionVisible,
@@ -313,7 +319,11 @@ export function WorldViewport(props: {
   const renderCell = (cell: WorldCell) => {
     const terrain = props.getTerrain?.(cell) ?? cell.terrain
     const isFrontierCompiler = props.mapId === TS_FRONTIER_MAP_ID && terrain === 'boss'
-    const objectKind = getWorldCellObjectKind(props.mapId, terrain)
+    const objectKind = getWorldCellObjectKind(
+      props.mapId,
+      terrain,
+      getWorldPortalAtPosition(props.mapId, cell)?.toMapId,
+    )
     return (
       <div
         key={`${cell.mapId}:${cell.x}:${cell.y}`}

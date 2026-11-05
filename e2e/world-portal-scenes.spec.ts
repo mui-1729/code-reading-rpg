@@ -14,60 +14,75 @@ async function seedWorld(
   await page.evaluate(
     ({ progressKey, rpgKey, tutorialKey, mapId, position, clearedStageIds }) => {
       localStorage.clear()
-      localStorage.setItem(progressKey, JSON.stringify({
-        version: 4,
-        progress: {
-          exp: 0,
-          gold: 0,
-          inventory: { patchKit: 0 },
-          clearedStageIds,
-          clearedAreaIds: [],
-          completedSideQuestIds: [],
-          unlockedStageIds: [1, 7, 8, 9, 10, 11, 12, 13, 14],
-          unlockedSkillIds: ['trace', 'pulse', 'nova'],
-        },
-      }))
-      localStorage.setItem(rpgKey, JSON.stringify({
-        version: 6,
-        state: {
-          equipment: { weapon: 'training-blade', armor: 'traveler-coat', accessory: null },
-          ownedEquipmentIds: ['training-blade', 'traveler-coat'],
-          partyMemberIds: ['byte'],
-          partyEquipment: { byte: { weapon: null, armor: null, accessory: null } },
-          worldMapId: mapId,
-          worldPosition: position,
-          stepsSinceEncounter: 0,
-          encounterCount: 0,
-          currentHp: 108,
-          openedTreasureIds: [],
-        },
-      }))
-      localStorage.setItem(tutorialKey, JSON.stringify({ version: 1, status: 'skipped', phase: 'battle' }))
+      localStorage.setItem(
+        progressKey,
+        JSON.stringify({
+          version: 4,
+          progress: {
+            exp: 0,
+            gold: 0,
+            inventory: { patchKit: 0 },
+            clearedStageIds,
+            clearedAreaIds: [],
+            completedSideQuestIds: [],
+            unlockedStageIds: [1, 7, 8, 9, 10, 11, 12, 13, 14],
+            unlockedSkillIds: ['trace', 'pulse', 'nova'],
+          },
+        }),
+      )
+      localStorage.setItem(
+        rpgKey,
+        JSON.stringify({
+          version: 6,
+          state: {
+            equipment: { weapon: 'training-blade', armor: 'traveler-coat', accessory: null },
+            ownedEquipmentIds: ['training-blade', 'traveler-coat'],
+            partyMemberIds: ['byte'],
+            partyEquipment: { byte: { weapon: null, armor: null, accessory: null } },
+            worldMapId: mapId,
+            worldPosition: position,
+            stepsSinceEncounter: 0,
+            encounterCount: 0,
+            currentHp: 108,
+            openedTreasureIds: [],
+          },
+        }),
+      )
+      localStorage.setItem(
+        tutorialKey,
+        JSON.stringify({ version: 1, status: 'skipped', phase: 'battle' }),
+      )
     },
-    { progressKey: PROGRESS_KEY, rpgKey: RPG_KEY, tutorialKey: TUTORIAL_KEY, mapId, position, clearedStageIds },
+    {
+      progressKey: PROGRESS_KEY,
+      rpgKey: RPG_KEY,
+      tutorialKey: TUTORIAL_KEY,
+      mapId,
+      position,
+      clearedStageIds,
+    },
   )
   await page.goto('/world')
 }
 
 async function portalSceneKind(page: Page, selector: string) {
-  return page.locator(selector).evaluate((element) =>
-    getComputedStyle(element).getPropertyValue('--portal-scene-kind').trim(),
-  )
+  return page
+    .locator(selector)
+    .evaluate((element) => getComputedStyle(element).getPropertyValue('--portal-scene-kind').trim())
 }
 
-test('Overworldの森入口は文字札ではなく木のarchとして見え、向いてActionすると森へ遷移する', async ({ page }) => {
+test('Overworldの森入口は文字札ではなく木のarchとして見え、向いてActionすると森へ遷移する', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedWorld(page, 'overworld', { x: 34, y: 33 }, [1, 7, 8, 9])
 
   const entrance = '.world-tile[data-world-x="34"][data-world-y="34"]'
   await expect(page.locator(entrance)).toBeVisible()
   expect(await portalSceneKind(page, entrance)).toBe('forest-arch')
-  const arch = await page.locator(entrance).evaluate((element) => {
-    const style = getComputedStyle(element, '::before')
-    return { content: style.content, borderTopWidth: parseFloat(style.borderTopWidth) }
-  })
-  expect(arch.content).not.toBe('none')
-  expect(arch.borderTopWidth).toBeGreaterThan(0)
+  await expect(
+    page.locator(`${entrance} [data-scenery-object="forest-arch"] image`),
+  ).toHaveAttribute('href', '/pixel-art/world/forest-arch.svg')
 
   await page.getByRole('button', { name: '下へ移動' }).click()
   await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-map', 'overworld')
@@ -97,7 +112,9 @@ test('広域の村は家屋群、村の南端は草原へ抜ける門として�
   await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-y', '21')
 })
 
-test('Forestの川は一続きの青い水面として見え、water tileごとの境界線を持たない', async ({ page }) => {
+test('Forestの川は一続きの青い水面として見え、water tileごとの境界線を持たない', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seedWorld(page, 'js-forest', { x: 35, y: 13 }, [1, 7, 8, 9, 10])
 
@@ -113,16 +130,15 @@ test('Forestの川は一続きの青い水面として見え、water tileごと�
       borderTopWidth: style.borderTopWidth,
       borderRightWidth: style.borderRightWidth,
       highlightContent: highlight.content,
-      highlightWidth: Number.parseFloat(highlight.width),
     }
   })
-  expect(visual.backgroundImage).toContain('linear-gradient')
-  expect(visual.backgroundColor).toBe('rgb(82, 184, 223)')
+  expect(visual.backgroundImage).toContain('/pixel-art/world/water.svg')
+  expect(visual.backgroundImage).not.toContain('gradient')
+  expect(visual.backgroundColor).toBe('rgb(82, 123, 175)')
   expect(visual.boxShadow).toBe('none')
   expect(visual.borderTopWidth).toBe('0px')
   expect(visual.borderRightWidth).toBe('0px')
-  expect(visual.highlightContent).not.toBe('none')
-  expect(visual.highlightWidth).toBeGreaterThan(0)
+  expect(visual.highlightContent).toBe('none')
 })
 
 test('Forestの川横断はroadではなく倒木として見える', async ({ page }) => {
@@ -158,7 +174,10 @@ test('Forestから第二集落を経由し、集落北口だけがDeep Forestの
   await page.getByRole('button', { name: '左へ移動' }).click()
   await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-map', 'js-forest')
   await page.getByRole('button', { name: '森番の集落へ入る' }).click()
-  await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-map', 'js-forest-settlement')
+  await expect(page.locator('.world-viewport')).toHaveAttribute(
+    'data-world-map',
+    'js-forest-settlement',
+  )
 
   await seedWorld(page, 'js-forest-settlement', { x: 11, y: 2 }, clearedThroughForest)
   const deepGate = '.world-tile[data-world-x="11"][data-world-y="1"]'
@@ -167,12 +186,17 @@ test('Forestから第二集落を経由し、集落北口だけがDeep Forestの
   await expect(page.locator(`${deepGate} .exit-object`)).toHaveCSS('font-size', '0px')
 
   await page.getByRole('button', { name: '上へ移動' }).click()
-  await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-map', 'js-forest-settlement')
+  await expect(page.locator('.world-viewport')).toHaveAttribute(
+    'data-world-map',
+    'js-forest-settlement',
+  )
   await page.getByRole('button', { name: 'JavaScript深層の森へ入る' }).click()
   await expect(page.locator('.world-viewport')).toHaveAttribute('data-world-map', 'js-deep-forest')
 })
 
-test('拡張Deep Forestでは東の集落口と巨大根の最深部出口が新座標で別sceneになる', async ({ page }) => {
+test('拡張Deep Forestでは東の集落口と巨大根の最深部出口が新座標で別sceneになる', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 390, height: 844 })
   const throughForest = [1, 7, 8, 9, 10, 11, 12, 13, 14]
   await seedWorld(page, 'js-deep-forest', { x: 63, y: 24 }, throughForest)
@@ -187,10 +211,8 @@ test('拡張Deep Forestでは東の集落口と巨大根の最深部出口が新
   const coreExit = '.world-tile[data-world-x="1"][data-world-y="15"]'
   await expect(page.locator(coreExit)).toBeVisible()
   expect(await portalSceneKind(page, coreExit)).toBe('giant-root-gate')
-  const rootArch = await page.locator(coreExit).evaluate((element) => {
-    const style = getComputedStyle(element, '::before')
-    return { content: style.content, borderTopWidth: Number.parseFloat(style.borderTopWidth) }
-  })
-  expect(rootArch.content).not.toBe('none')
-  expect(rootArch.borderTopWidth).toBeGreaterThan(0)
+  await expect(page.locator(`${coreExit} [data-scenery-object="root-arch"] image`)).toHaveAttribute(
+    'href',
+    '/pixel-art/world/root-arch.svg',
+  )
 })

@@ -1,0 +1,136 @@
+/* World art uses an original 16px grid. The explicit background reset also
+   retires older coordinate-painted gradients without affecting the Atlas. */
+.world-shell .world-viewport[data-world-map] .world-tile {
+  background: #5b873b var(--world-pattern, url('/pixel-art/world/grass.svg')) center / 100% 100% !important;
+  image-rendering: pixelated;
+  box-shadow: none !important;
+  outline: none;
+}
+.world-viewport .world-tile::before,
+.world-viewport .world-tile::after {
+  content: none !important;
+}
+.world-viewport .terrain-tall-grass {
+  --world-pattern: url('/pixel-art/world/tall-grass.svg');
+}
+.world-viewport :is(.terrain-woods, .terrain-forest, .terrain-thicket) {
+  --world-pattern: url('/pixel-art/world/woods.svg');
+}
+.world-viewport .terrain-deep-woods {
+  --world-pattern: url('/pixel-art/world/deep-woods.svg');
+}
+.world-viewport .terrain-tree-wall {
+  --world-pattern: url('/pixel-art/world/tree-wall.svg');
+}
+.world-viewport .terrain-fence {
+  --world-pattern: url('/pixel-art/world/fence.svg');
+}
+.world-viewport
+  :is(
+    .terrain-town,
+    .terrain-house,
+    .terrain-npc,
+    .terrain-shop,
+    .terrain-recovery,
+    .terrain-training
+  ) {
+  --world-pattern: url('/pixel-art/world/town.svg');
+}
+.world-viewport :is(.terrain-road, .terrain-exit) {
+  --world-pattern: url('/pixel-art/world/road.svg');
+}
+.world-shell .world-viewport[data-world-map] :is(.terrain-water, .terrain-log-crossing) {
+  --world-pattern: url('/pixel-art/world/water.svg');
+  background-color: #527baf !important;
+}
+.world-viewport .terrain-log-crossing {
+  --forest-landmark-kind: fallen-log-crossing;
+}
+.world-viewport .terrain-mountain {
+  --world-pattern: url('/pixel-art/world/mountain.svg');
+}
+.world-viewport
+  :is(.terrain-stone, .terrain-gate, .terrain-stairs-up, .terrain-stairs-down, .terrain-lectern) {
+  --world-pattern: url('/pixel-art/world/stone.svg');
+}
+.world-viewport .terrain-wall {
+  --world-pattern: url('/pixel-art/world/wall.svg');
+}
+.world-viewport .terrain-crystal {
+  --world-pattern: url('/pixel-art/world/crystal.svg');
+}
+.world-viewport .terrain-ruins {
+  --world-pattern: url('/pixel-art/world/ruins.svg');
+}
+.world-viewport[data-world-map='js-forest'] .terrain-road {
+  --world-pattern: url('/pixel-art/world/woods.svg');
+}
+.world-viewport[data-world-map='js-deep-forest'] :is(.terrain-grass, .terrain-tall-grass) {
+  --world-pattern: url('/pixel-art/world/deep-grass.svg');
+}
+.world-viewport[data-world-map='database-archive']
+  :is(
+    .terrain-road,
+    .terrain-stone,
+    .terrain-bookshelf,
+    .terrain-lectern,
+    .terrain-stairs-up,
+    .terrain-treasure
+  ) {
+  --world-pattern: url('/pixel-art/world/archive-floor.svg');
+}
+.world-viewport[data-world-map='ts-frontier'] .terrain-treasure {
+  --world-pattern: url('/pixel-art/world/stone.svg');
+}
+.world-shell
+  .world-viewport[data-world-map]
+  .world-tile[data-world-structure]:has(.facility-object) {
+  --world-pattern: none;
+  background: transparent !important;
+}
+.world-cell-object {
+  shape-rendering: crispEdges;
+}
+.world-viewport {
+  filter: none;
+}
+.world-viewport :is(.world-player-pixel, .world-follower-pixel, .world-npc-pixel) {
+  filter: none;
+  image-rendering: pixelated;
+}
+
+/* Portal identity comes from the portal graph, so art follows relocated exits. */
+.world-viewport[data-world-map='overworld'] [data-world-object='forest-arch'] {
+  --portal-scene-kind: forest-arch;
+}
+.world-viewport[data-world-map='js-forest'] [data-world-object='light-gap'] {
+  --portal-scene-kind: forest-light-gap;
+}
+.world-viewport[data-world-map='js-forest'] [data-world-object='timber-gate'] {
+  --portal-scene-kind: forest-settlement-gate;
+}
+.world-viewport[data-world-map='js-forest-settlement'] [data-world-object='timber-gate'] {
+  --portal-scene-kind: settlement-forest-gate;
+}
+.world-viewport[data-world-map='js-forest-settlement'] [data-world-object='root-arch'] {
+  --portal-scene-kind: deep-forest-root-arch;
+}
+.world-viewport[data-world-map='js-deep-forest'] [data-world-object='light-gap'] {
+  --portal-scene-kind: settlement-light-gap;
+}
+.world-viewport[data-world-map='js-deep-forest'] [data-world-object='root-arch'] {
+  --portal-scene-kind: giant-root-gate;
+}
+.world-viewport [data-world-object='stone-gate'] {
+  --portal-scene-kind: typescript-stone-gate;
+}
+
+.world-viewport .facility-object,
+.world-viewport .facility-object::before,
+.world-viewport .facility-object::after {
+  border-radius: 0;
+  box-shadow: none;
+}
+.world-viewport .facility-object[data-facility-icon='item-shop']::before {
+  background: #8fb84b;
+}
